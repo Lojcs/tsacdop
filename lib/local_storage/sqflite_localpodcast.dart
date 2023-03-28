@@ -30,7 +30,7 @@ class DBHelper {
     var documentsDirectory = await getDatabasesPath();
     var path = join(documentsDirectory, "podcasts.db");
     var theDb = await openDatabase(path,
-        version: 7, onCreate: _onCreate, onUpgrade: _onUpgrade);
+        version: 8, onCreate: _onCreate, onUpgrade: _onUpgrade);
     return theDb;
   }
 
@@ -74,27 +74,35 @@ class DBHelper {
         await _v4Update(db);
         await _v5Update(db);
         await _v6Update(db);
+        await _v7Update(db);
         break;
       case (2):
         await _v3Update(db);
         await _v4Update(db);
         await _v5Update(db);
         await _v6Update(db);
+        await _v7Update(db);
         break;
       case (3):
         await _v4Update(db);
         await _v5Update(db);
         await _v6Update(db);
+        await _v7Update(db);
         break;
       case (4):
         await _v5Update(db);
         await _v6Update(db);
+        await _v7Update(db);
         break;
       case (5):
         await _v6Update(db);
+        await _v7Update(db);
         break;
       case (6):
         await _v7Update(db);
+        break;
+      case (7):
+        await _v7Fix(db);
     }
   }
 
@@ -134,6 +142,11 @@ class DBHelper {
   Future<void> _v7Update(Database db) async {
     await db.execute(
         "ALTER TABLE PodcastLocal ADD hide_new_mark INTEGER DEFAULT 0");
+  }
+
+  Future<void> _v7Fix(Database db) async {
+    await db.execute(
+        "IF COL_LENGTH(PodcastLocal, hide_new_mark) IS NULL ALTER TABLE PodcastLocal ADD hide_new_mark INTEGER DEFAULT 0");
   }
 
   Future<List<PodcastLocal>> getPodcastLocal(List<String?> podcasts,
