@@ -145,8 +145,12 @@ class DBHelper {
   }
 
   Future<void> _v7Fix(Database db) async {
-    await db.execute(
-        "IF COL_LENGTH(PodcastLocal, hide_new_mark) IS NULL ALTER TABLE PodcastLocal ADD hide_new_mark INTEGER DEFAULT 0");
+    try {
+      await db.rawQuery("SELECT hide_new_mark FROM PodcastLocal");
+    } catch (e) {
+      await db.execute(
+          "ALTER TABLE PodcastLocal ADD hide_new_mark INTEGER DEFAULT 0");
+    }
   }
 
   Future<List<PodcastLocal>> getPodcastLocal(List<String?> podcasts,
