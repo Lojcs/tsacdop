@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart';
+import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:webfeed/webfeed.dart';
 
@@ -13,6 +14,7 @@ import '../type/episodebrief.dart';
 import '../type/play_histroy.dart';
 import '../type/podcastlocal.dart';
 import '../type/sub_history.dart';
+import '../state/setting_state.dart';
 
 enum Filter { downloaded, liked, search, all }
 
@@ -30,7 +32,7 @@ class DBHelper {
     var documentsDirectory = await getDatabasesPath();
     var path = join(documentsDirectory, "podcasts.db");
     var theDb = await openDatabase(path,
-        version: 8, onCreate: _onCreate, onUpgrade: _onUpgrade);
+        version: 9, onCreate: _onCreate, onUpgrade: _onUpgrade);
     return theDb;
   }
 
@@ -43,13 +45,13 @@ class DBHelper {
         episode_count INTEGER DEFAULT 0, skip_seconds INTEGER DEFAULT 0, 
         auto_download INTEGER DEFAULT 0, skip_seconds_end INTEGER DEFAULT 0,
         never_update INTEGER DEFAULT 0, funding TEXT DEFAULT '[]', 
-        hide_new_mark INTEGER DEFAULT 0 )""");
+        hide_new_mark INTEGER DEFAULT 0, duplicate_policy TEXT DEFAULT 'NewIfNotDownloaded')""");
     await db
         .execute("""CREATE TABLE Episodes(id INTEGER PRIMARY KEY,title TEXT, 
         enclosure_url TEXT UNIQUE, enclosure_length INTEGER, pubDate TEXT, 
-        description TEXT, feed_id TEXT, feed_link TEXT, milliseconds INTEGER, 
-        duration INTEGER DEFAULT 0, explicit INTEGER DEFAULT 0, liked INTEGER DEFAULT 0, 
-        liked_date INTEGER DEFAULT 0, downloaded TEXT DEFAULT 'ND', 
+        description TEXT, feed_id TEXT, feed_link TEXT, milliseconds INTEGER,
+        duplicate_status TEXT, duration INTEGER DEFAULT 0, explicit INTEGER DEFAULT 0,
+        liked INTEGER DEFAULT 0, liked_date INTEGER DEFAULT 0, downloaded TEXT DEFAULT 'ND', 
         download_date INTEGER DEFAULT 0, media_id TEXT, is_new INTEGER DEFAULT 0, 
         chapter_link TEXT DEFAULT '', hosts TEXT DEFAULT '', episode_image TEXT DEFAULT '')""");
     await db.execute(
@@ -75,6 +77,7 @@ class DBHelper {
         await _v5Update(db);
         await _v6Update(db);
         await _v7Update(db);
+        await _v9Update(db);
         break;
       case (2):
         await _v3Update(db);
@@ -82,27 +85,36 @@ class DBHelper {
         await _v5Update(db);
         await _v6Update(db);
         await _v7Update(db);
+        await _v9Update(db);
         break;
       case (3):
         await _v4Update(db);
         await _v5Update(db);
         await _v6Update(db);
         await _v7Update(db);
+        await _v9Update(db);
         break;
       case (4):
         await _v5Update(db);
         await _v6Update(db);
         await _v7Update(db);
+        await _v9Update(db);
         break;
       case (5):
         await _v6Update(db);
         await _v7Update(db);
+        await _v9Update(db);
         break;
       case (6):
         await _v7Update(db);
+        await _v9Update(db);
         break;
       case (7):
         await _v7Fix(db);
+        await _v9Update(db);
+        break;
+      case (8):
+        await _v9Update(db);
     }
   }
 
@@ -151,6 +163,18 @@ class DBHelper {
       await db.execute(
           "ALTER TABLE PodcastLocal ADD hide_new_mark INTEGER DEFAULT 0");
     }
+  }
+
+  Future<void> _v9Update(Database db) async {
+    await db.execute("ALTER TABLE Episodes ADD duplicate_status TEXT");
+    await db.execute(
+        "ALTER TABLE PodcastLocal ADD duplicate_policy TEXT DEFAULT 'NewIfNotDownloaded'");
+    List<Map> podcasts = await db.rawQuery("SELECT id FROM PodcastLocal");
+    List<Future> futures = [];
+    for (var podcast in podcasts) {
+      futures.add(_rescanPodcastEpisodesDuplicates(podcast['id']));
+    }
+    await Future.wait(futures);
   }
 
   Future<List<PodcastLocal>> getPodcastLocal(List<String?> podcasts,
@@ -671,6 +695,231 @@ class DBHelper {
     }
   }
 
+  Future<void> _rescanPodcastEpisodesDuplicates(String id) async {
+    var dbClient = await database;
+    List<Map> episodesList = await dbClient.rawQuery(
+        """SELECT E.enclosure_url, E.milliseconds, E.downloaded, E.title,
+        P.duplicate_policy FROM Episodes E INNER JOIN PodcastLocal P ON
+        E.feed_id = P.id WHERE E.feed_id = ?""", [id]);
+    Map<String, List<Map>> episodes = {};
+    for (var episode in episodesList) {
+      if (episodes.containsKey(episode['title'])) {
+        episodes[episode['title']]!.add(episode);
+      } else {
+        episodes[episode['title']] = [episode];
+      }
+    }
+    var batchOp = dbClient.batch();
+    for (var episodeTitle in episodes.keys) {
+      List<List<Map>> subDuplicates = [episodes[episodeTitle]!];
+      subDuplicates[0].sort((a, b) {
+        if (a['milliseconds'] == b['milliseconds']) {
+          return a['enclosure_url']
+              .hashCode
+              .compareTo(b['enclosure_url'].hashCode);
+        } else {
+          return a['milliseconds'].compareTo(b['milliseconds']);
+        }
+      });
+      int i = 0;
+      while (i < subDuplicates.length) {
+        var duplicates = subDuplicates[i];
+        for (var duplicate in duplicates) {
+          if ((duplicate['milliseconds'] - duplicates.last['milliseconds'])
+                  .abs() >
+              duplicates.length * 86400000) {
+            if (i == subDuplicates.length - 1) {
+              subDuplicates.add([]);
+            }
+            duplicates.remove(duplicate);
+            subDuplicates[i + 1].add(duplicate);
+          }
+        }
+        if (duplicates.length == 1) {
+          batchOp.rawUpdate(
+              "UPDATE Episodes SET duplicate_status = 'NO' WHERE enclosure_url = ?",
+              [duplicates.first["enclosure_url"]]);
+        } else {
+          switch (duplicates.first['duplicate_policy']) {
+            case "NewIfNotDownloaded":
+              var candidate = duplicates.last;
+              for (var duplicate in duplicates.reversed) {
+                if (duplicate['downloaded'] != "ND") {
+                  candidate = duplicate;
+                  break;
+                }
+              }
+              duplicates.remove(candidate);
+              batchOp.rawUpdate(
+                  "UPDATE Episodes SET duplicate_status = 'HAS' WHERE enclosure_url = ?",
+                  [candidate["enclosure_url"]]);
+              for (var duplicate in duplicates) {
+                batchOp.rawUpdate(
+                    "UPDATE Episodes SET duplicate_status = 'IS' WHERE enclosure_url = ?",
+                    [duplicate["enclosure_url"]]);
+              }
+              break;
+            case "ForceOld":
+              batchOp.rawUpdate(
+                  "UPDATE Episodes SET duplicate_status = 'HAS' WHERE enclosure_url = ?",
+                  [duplicates.first["enclosure_url"]]);
+              duplicates.removeAt(0);
+              for (var duplicate in duplicates) {
+                batchOp.rawUpdate(
+                    "UPDATE Episodes SET duplicate_status = 'IS' WHERE enclosure_url = ?",
+                    [duplicate["enclosure_url"]]);
+              }
+              break;
+            default: // case "ForceNew"
+              batchOp.rawUpdate(
+                  "UPDATE Episodes SET duplicate_status = 'HAS' WHERE enclosure_url = ?",
+                  [duplicates.last["enclosure_url"]]);
+              duplicates.removeAt(duplicates.length - 1);
+              for (var duplicate in duplicates) {
+                batchOp.rawUpdate(
+                    "UPDATE Episodes SET duplicate_status = 'IS' WHERE enclosure_url = ?",
+                    [duplicate["enclosure_url"]]);
+              }
+              break;
+          }
+          i++;
+        }
+      }
+    }
+    await batchOp.commit();
+  }
+
+  Future<String>? _updateNewEpisodeDuplicates(
+      // @TODO make atomic inside and with new episode entry
+      String? id,
+      String? title,
+      String url,
+      int? milliseconds) async {
+    var dbClient = await database;
+    List<Map> duplicates = await dbClient.rawQuery(
+        """SELECT E.enclosure_url, E.milliseconds, E.duplicate_status, E.downloaded,
+        P.duplicate_policy FROM Episodes E INNER JOIN PodcastLocal P ON
+        E.feed_id = P.id WHERE E.feed_id = ? AND E.title = ?""", [id, title]);
+    duplicates.sort((a, b) {
+      if (a['milliseconds'] == b['milliseconds']) {
+        return a['enclosure_url']
+            .hashCode
+            .compareTo(b['enclosure_url'].hashCode);
+      } else {
+        return a['milliseconds'].compareTo(b['milliseconds']);
+      }
+    });
+    for (var duplicate in duplicates) {
+      if (url == duplicate['enclosure_url']) {
+        return duplicate['duplicate_status'];
+      } else if ((duplicate['milliseconds'] - milliseconds).abs() >
+          duplicates.length * 86400000) {
+        duplicates.remove(duplicate);
+      }
+    }
+    if (duplicates.isNotEmpty) {
+      switch (duplicates.first['duplicate_policy']) {
+        case "NewIfNotDownloaded":
+          var result = "HAS";
+          for (var duplicate in duplicates) {
+            if (duplicate['downloaded'] != "ND") {
+              result = "IS";
+              if (duplicate['duplicate_status'] == "NO") {
+                dbClient.rawUpdate(
+                    "UPDATE Episodes SET duplicate_status = 'HAS' WHERE enclosure_url = ?",
+                    [duplicate["enclosure_url"]]);
+              }
+            } else if (duplicate['duplicate_status'] != "IS") {
+              dbClient.rawUpdate(
+                  "UPDATE Episodes SET duplicate_status = 'IS' WHERE enclosure_url = ?",
+                  [duplicate["enclosure_url"]]);
+            }
+          }
+          return result;
+        case "KeepOld":
+          if (duplicates.length == 1) {
+            await dbClient.rawUpdate(
+                "UPDATE Episodes SET duplicate_status = 'HAS' WHERE enclosure_url = ?",
+                [duplicates.first['enclosure_url']]);
+          }
+          return "IS";
+        default: // case "ForceNew"
+          for (var duplicate in duplicates) {
+            if (duplicate['duplicate_status'] != "IS") {
+              dbClient.rawUpdate(
+                  "UPDATE Episodes SET duplicate_status = 'IS' WHERE enclosure_url = ?",
+                  [duplicate["enclosure_url"]]);
+            }
+          }
+          return "HAS";
+      }
+    } else {
+      return "NO";
+    }
+  }
+
+  Future<void> _updateDeletedEpisodeDuplicates(
+      // @TODO make atomic with new episode deletion, check if await is needed for database ops.
+      String? id,
+      String? title,
+      String url,
+      int? milliseconds,
+      String? duplicatestatus) async {
+    var dbClient = await database;
+    List<Map> duplicates = await dbClient.rawQuery(
+        """SELECT E.enclosure_url, E.milliseconds, E.duplicate_status, E.downloaded,
+        P.duplicate_policy FROM Episodes E INNER JOIN PodcastLocal P ON
+        E.feed_id = P.id WHERE E.feed_id = ? AND E.title = ? AND E.enclosure_url != ?""",
+        [id, title, url]);
+    duplicates.sort((a, b) {
+      if (a['milliseconds'] == b['milliseconds']) {
+        return a['enclosure_url']
+            .hashCode
+            .compareTo(b['enclosure_url'].hashCode);
+      } else {
+        return a['milliseconds'].compareTo(b['milliseconds']);
+      }
+    });
+    for (var duplicate in duplicates) {
+      if ((duplicate['milliseconds'] - milliseconds).abs() >
+          duplicates.length * 86400000) {
+        duplicates.remove(duplicate);
+      }
+    }
+    if (duplicates.isNotEmpty) {
+      if (duplicates.length == 1) {
+        dbClient.rawUpdate(
+            "UPDATE Episodes SET duplicate_status = 'NO' WHERE enclosure_url = ?",
+            [duplicates.first['enclosure_url']]);
+      } else if (duplicatestatus == "HAS") {
+        switch (duplicates.first['duplicate_policy']) {
+          case "NewIfNotDownloaded":
+            var fduplicate = duplicates.last;
+            for (var duplicate in duplicates.reversed) {
+              if (duplicate['downloaded'] != "ND") {
+                fduplicate = duplicate;
+                break;
+              }
+            }
+            dbClient.rawUpdate(
+                "UPDATE Episodes SET duplicate_status = 'HAS' WHERE enclosure_url = ?",
+                [fduplicate["enclosure_url"]]);
+            break;
+          case "ForceOld":
+            dbClient.rawUpdate(
+                "UPDATE Episodes SET duplicate_status = 'HAS' WHERE enclosure_url = ?",
+                [duplicates.first["enclosure_url"]]);
+            break;
+          default: // case "ForceNew"
+            dbClient.rawUpdate(
+                "UPDATE Episodes SET duplicate_status = 'HAS' WHERE enclosure_url = ?",
+                [duplicates.last["enclosure_url"]]);
+            break;
+        }
+      }
+    }
+  }
+
   Future<int> savePodcastRss(RssFeed feed, String id) async {
     feed.items!.removeWhere((item) => item == null);
     var result = feed.items!.length;
@@ -697,12 +946,14 @@ class DBHelper {
       final explicit = _getExplicit(feed.items![i].itunes!.explicit);
       final chapter = feed.items![i].podcastChapters?.url ?? '';
       final image = feed.items![i].itunes!.image?.href ?? '';
+      final duplicatestatus =
+          await _updateNewEpisodeDuplicates(id, title, url!, milliseconds);
       if (url != null) {
         await dbClient.transaction((txn) {
           return txn.rawInsert(
               """INSERT OR REPLACE INTO Episodes(title, enclosure_url, enclosure_length, pubDate, 
                 description, feed_id, milliseconds, duration, explicit, media_id, chapter_link,
-                episode_image) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                episode_image, duplicate_status) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
               [
                 title,
                 url,
@@ -715,7 +966,8 @@ class DBHelper {
                 explicit,
                 url,
                 chapter,
-                image
+                image,
+                duplicatestatus
               ]);
         });
       }
@@ -772,13 +1024,15 @@ class DBHelper {
           final explicit = _getExplicit(item.itunes!.explicit);
           final chapter = item.podcastChapters?.url ?? '';
           final image = item.itunes!.image?.href ?? '';
+          final duplicatestatus = await _updateNewEpisodeDuplicates(
+              podcastLocal.id, title, url!, milliseconds);
 
           if (url != null) {
             await dbClient.transaction((txn) async {
               await txn.rawInsert(
                   """INSERT OR IGNORE INTO Episodes(title, enclosure_url, enclosure_length, pubDate, 
                 description, feed_id, milliseconds, duration, explicit, media_id, chapter_link,
-                episode_image, is_new) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                episode_image, is_new, duplicate_status) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                   [
                     title,
                     url,
@@ -792,7 +1046,8 @@ class DBHelper {
                     url,
                     chapter,
                     image,
-                    hideNewMark ? 0 : 1
+                    hideNewMark ? 0 : 1,
+                    duplicatestatus
                   ]);
             });
           }
@@ -815,11 +1070,13 @@ class DBHelper {
 
   Future<void> saveLocalEpisode(EpisodeBrief episode) async {
     var dbClient = await database;
+    final duplicatestatus = await _updateNewEpisodeDuplicates(
+        localFolderId, episode.title, episode.enclosureUrl, episode.pubDate);
     await dbClient.transaction((txn) async {
       await txn.rawInsert(
           """INSERT OR REPLACE INTO Episodes(title, enclosure_url, enclosure_length, pubDate, 
-                description, feed_id, milliseconds, duration, explicit, media_id, episode_image) 
-                VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                description, feed_id, milliseconds, duration, explicit, media_id, episode_image, duplicate_status) 
+                VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
           [
             episode.title,
             episode.enclosureUrl,
@@ -831,7 +1088,8 @@ class DBHelper {
             episode.duration,
             0,
             episode.enclosureUrl,
-            episode.episodeImage
+            episode.episodeImage,
+            duplicatestatus
           ]);
     });
   }
@@ -839,6 +1097,16 @@ class DBHelper {
   Future<void> deleteLocalEpisodes(List<String> files) async {
     var dbClient = await database;
     var s = files.map<String>((e) => "'$e'").toList();
+    List<Map> episodes = await dbClient.rawQuery(
+        "SELECT feed_id, title, enclosure_url, milliseconds, duplicate_status FROM Episodes WHERE enclosure_url in (${s.join(',')})");
+    for (var episode in episodes) {
+      await _updateDeletedEpisodeDuplicates(
+          episode['feed_id'],
+          episode['title'],
+          episode['enclosure_url'],
+          episode['milliseconds'],
+          episode['duplicate_status']);
+    }
     await dbClient.rawDelete(
         'DELETE FROM Episodes WHERE enclosure_url in (${s.join(',')})');
   }
