@@ -980,6 +980,7 @@ class __NewPlaylistState extends State<_NewPlaylist> {
         0,
         '',
         0,
+        "NO",
         episodeImage: imagePath ?? '');
   }
 
