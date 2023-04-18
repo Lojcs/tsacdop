@@ -1091,6 +1091,101 @@ class DBHelper {
         'DELETE FROM Episodes WHERE enclosure_url in (${s.join(',')})');
   }
 
+  /// Queries the database with the options provided and returns found episodes.
+  Future<List<EpisodeBrief>> getEpisodes(
+      {List<String>? feedIds,
+      int? limit,
+      String? sortBy,
+      String sortOrder = "DESC",
+      int filterNew = 0,
+      int filterLiked = 0,
+      int filterPlayed = 0,
+      int filterDuplicates = 1}) async {
+    bool appendAnd = false;
+    Map<String, String> sorters = {
+      "pubDate": " E.milliseconds",
+      "downloadDate": " E.download_date",
+      "enclosureLength": " E.enclosure_length",
+      "likedDate": " E.liked_date",
+      "random": " RANDOM()"
+    };
+    List<String> query = [
+      """SELECT E.title, E.enclosure_url, E.enclosure_length, E.milliseconds,
+      P.title as feed_title, P.primaryColor, E.duration, E.explicit, P.imagePath,
+      E.is_new, E.duplicate_status, E.media_id, E.download_date"""
+    ];
+    bool appendFilters(String filter) {
+      if (appendAnd) {
+        query.add(" AND");
+      }
+      query.add(filter);
+      return true;
+    }
+
+    query.add(" FROM Episodes E INNER JOIN PodcastLocal P ON E.feed_id = P.id");
+    if (filterPlayed != 0) {
+      query
+          .add(" LEFT JOIN PlayHistory H ON E.enclosure_url = H.enclosure_url");
+    }
+    query.add(" WHERE");
+    if (feedIds != null) {
+      query.addAll([" P.id in (", feedIds.join(", "), ")"]);
+      appendAnd = true;
+    }
+
+    if (filterNew == 1) {
+      appendAnd = appendFilters(" E.is_new = 0");
+    } else if (filterNew == -1) {
+      appendAnd = appendFilters(" E.is_new = 1");
+    }
+    if (filterLiked == 1) {
+      appendAnd = appendFilters(" E.liked = 0");
+    } else if (filterLiked == -1) {
+      appendAnd = appendFilters(" E.liked = 1");
+    }
+    if (filterDuplicates == 1) {
+      appendAnd = appendFilters(" E.duplicate_status != 'YES'");
+    } else if (filterDuplicates == -1) {
+      appendAnd = appendFilters(" E.duplicate_status = 'YES'");
+    }
+    if (filterPlayed == 1) {
+      query.add(
+          " GROUP BY E.enclosure_url HAVING SUM(H.listen_time) is null OR SUM(H.listen_time) = 0");
+    } else if (filterPlayed == -1) {
+      query.add(" GROUP BY E.enclosure_url HAVING SUM(H.listen_time) > 0");
+    }
+
+    if (sortBy != null) {
+      query.addAll([" ORDER BY", sorters[sortBy]!, " ", sortOrder]);
+    }
+    if (limit != null) {
+      query.addAll([" LIMIT", limit.toString()]);
+    }
+
+    var dbClient = await database;
+    List<EpisodeBrief> episodes = [];
+    List<Map> list = await dbClient.rawQuery(query.join());
+    if (list.isNotEmpty) {
+      for (var i in list) {
+        episodes.add(EpisodeBrief(
+            i['title'],
+            i['enclosure_url'],
+            i['enclosure_length'],
+            i['milliseconds'],
+            i['feed_title'],
+            i['primaryColor'],
+            i['duration'],
+            i['explicit'],
+            i['imagePath'],
+            i['is_new'],
+            i['duplicate_status'],
+            mediaId: i['media_id'],
+            downloadDate: i['download_date']));
+      }
+    }
+    return episodes;
+  }
+
   Future<List<EpisodeBrief>> getRssItem(String? id, int? count,
       {bool? reverse,
       Filter? filter = Filter.all,
@@ -1107,7 +1202,7 @@ class DBHelper {
               list = await dbClient.rawQuery(
                   """SELECT E.title, E.enclosure_url, E.enclosure_length, 
         E.milliseconds, P.imagePath, P.title as feed_title, E.duration, E.explicit, 
-        P.primaryColor,, E.duplicate_status FROM Episodes E INNER JOIN PodcastLocal P ON E.feed_id = P.id
+        P.primaryColor, E.duplicate_status FROM Episodes E INNER JOIN PodcastLocal P ON E.feed_id = P.id
         LEFT JOIN PlayHistory H ON E.enclosure_url = H.enclosure_url 
         WHERE P.id = ? GROUP BY E.enclosure_url HAVING SUM(H.listen_time) is null 
         OR SUM(H.listen_time) = 0 ORDER BY E.milliseconds ASC""", [id]);
