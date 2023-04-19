@@ -15,19 +15,20 @@ class EpisodeBrief extends Equatable {
   final String enclosureUrl;
   final String? feedTitle;
   final String? primaryColor;
-  final int? liked;
-  final String? downloaded;
+  bool? liked;
+  bool? downloaded;
   final int? duration;
   final int? explicit;
   final String? imagePath;
-  final String? mediaId;
-  final int? isNew;
-  final int? skipSecondsStart;
-  final int? skipSecondsEnd;
-  final int? downloadDate;
+  String? mediaId;
+  bool? isNew;
+  int? skipSecondsStart;
+  int? skipSecondsEnd;
+  int? downloadDate;
   final String? episodeImage;
   final String? chapterLink;
-  final String? duplicateStatus;
+  String? duplicateStatus;
+  bool? played;
   EpisodeBrief(
       this.title,
       this.enclosureUrl,
@@ -38,11 +39,12 @@ class EpisodeBrief extends Equatable {
       this.duration,
       this.explicit,
       this.imagePath,
-      this.isNew,
+      {this.isNew,
       this.duplicateStatus,
-      {this.mediaId,
+      this.mediaId,
       this.liked,
       this.downloaded,
+      this.played,
       this.skipSecondsStart,
       this.skipSecondsEnd,
       this.description = '',
@@ -96,7 +98,9 @@ class EpisodeBrief extends Equatable {
     String? mediaId,
   }) =>
       EpisodeBrief(title, enclosureUrl, enclosureLength, pubDate, feedTitle,
-          primaryColor, duration, explicit, imagePath, isNew, duplicateStatus,
+          primaryColor, duration, explicit, imagePath,
+          isNew: isNew,
+          duplicateStatus: duplicateStatus,
           mediaId: mediaId ?? this.mediaId,
           downloaded: downloaded,
           skipSecondsStart: skipSecondsStart,

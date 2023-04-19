@@ -1094,11 +1094,14 @@ class DBHelper {
   /// Queries the database with the options provided and returns found episodes.
   Future<List<EpisodeBrief>> getEpisodes(
       {List<String>? feedIds,
-      int? limit,
+      List<String>? extraFields,
+      String? searchEpisodeName,
       String? sortBy,
       String sortOrder = "DESC",
+      int limit = 0,
       int filterNew = 0,
       int filterLiked = 0,
+      int filterDownloaded = 0,
       int filterPlayed = 0,
       int filterDuplicates = 1}) async {
     bool appendAnd = false;
@@ -1111,9 +1114,44 @@ class DBHelper {
     };
     List<String> query = [
       """SELECT E.title, E.enclosure_url, E.enclosure_length, E.milliseconds,
-      P.title as feed_title, P.primaryColor, E.duration, E.explicit, P.imagePath,
-      E.is_new, E.duplicate_status, E.media_id, E.download_date"""
+      P.title as feed_title, P.primaryColor, E.duration, E.explicit, P.imagePath"""
     ];
+    if (extraFields != null) {
+      for (var field in extraFields) {
+        switch (field) {
+          case "isNew":
+            query.add(", E.is_new");
+            break;
+          case "duplicateStatus":
+            query.add(", E.duplicate_status");
+            break;
+          case "mediaId":
+            query.add(", E.media_id");
+            break;
+          case "liked":
+            query.add(", E.liked");
+            break;
+          case "downloaded":
+            if (!query.contains(", E.media_id")) {
+              query.add(", E.media_id");
+            }
+            break;
+          case "played":
+            query.add(", SUM(H.listen_time) as play_time");
+            break;
+          case "skipSecondsStart":
+            query.add(", P.skip_seconds");
+            break;
+          case "skipSecondsEnd":
+            query.add(", E.skip_seconds_end");
+            break;
+          case "downloadDate":
+            query.add(", E.download_date");
+            break;
+        }
+      }
+    }
+
     bool appendFilters(String filter) {
       if (appendAnd) {
         query.add(" AND");
@@ -1143,10 +1181,18 @@ class DBHelper {
     } else if (filterLiked == -1) {
       appendAnd = appendFilters(" E.liked = 1");
     }
+    if (filterDownloaded == 1) {
+      appendAnd = appendFilters(" E.media_id == E.enclosure_url");
+    } else if (filterDownloaded == -1) {
+      appendAnd = appendFilters(" E.media_id != E.enclosure_url");
+    }
     if (filterDuplicates == 1) {
       appendAnd = appendFilters(" E.duplicate_status != 'YES'");
     } else if (filterDuplicates == -1) {
       appendAnd = appendFilters(" E.duplicate_status = 'YES'");
+    }
+    if (searchEpisodeName != null) {
+      appendAnd = appendFilters(" E.title LIKE ?");
     }
     if (filterPlayed == 1) {
       query.add(
@@ -1158,13 +1204,18 @@ class DBHelper {
     if (sortBy != null) {
       query.addAll([" ORDER BY", sorters[sortBy]!, " ", sortOrder]);
     }
-    if (limit != null) {
+    if (limit != 0) {
       query.addAll([" LIMIT", limit.toString()]);
     }
 
     var dbClient = await database;
     List<EpisodeBrief> episodes = [];
-    List<Map> list = await dbClient.rawQuery(query.join());
+    List<Map> list;
+    if (searchEpisodeName == null) {
+      list = await dbClient.rawQuery(query.join());
+    } else {
+      list = await dbClient.rawQuery(query.join(), [searchEpisodeName]);
+    }
     if (list.isNotEmpty) {
       for (var i in list) {
         episodes.add(EpisodeBrief(
@@ -1176,11 +1227,41 @@ class DBHelper {
             i['primaryColor'],
             i['duration'],
             i['explicit'],
-            i['imagePath'],
-            i['is_new'],
-            i['duplicate_status'],
-            mediaId: i['media_id'],
-            downloadDate: i['download_date']));
+            i['imagePath']));
+        if (extraFields != null) {
+          for (var field in extraFields) {
+            switch (field) {
+              case "isNew":
+                episodes.last.isNew = i['is_new'] == 1;
+                break;
+              case "duplicateStatus":
+                episodes.last.duplicateStatus = i['duplicate_status'];
+                break;
+              case "mediaId":
+                episodes.last.mediaId = i['media_id'];
+                break;
+              case "liked":
+                episodes.last.liked = i['liked'] == 1;
+                break;
+              case "downloaded":
+                episodes.last.downloaded = i['media_id'] == i['enclosure_url'];
+                break;
+              case "played":
+                episodes.last.played =
+                    (i['play_time'] != null && i['play_time'] != 0);
+                break;
+              case "skipSecondsStart":
+                episodes.last.mediaId = i['skip_seconds'];
+                break;
+              case "skipSecondsEnd":
+                episodes.last.mediaId = i['skip_seconds_end'];
+                break;
+              case "downloadDate":
+                episodes.last.mediaId = i['download_date'];
+                break;
+            }
+          }
+        }
       }
     }
     return episodes;
