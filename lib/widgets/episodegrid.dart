@@ -38,7 +38,7 @@ class EpisodeGrid extends StatelessWidget {
   final bool showNumber;
   final int? episodeCount;
   final Layout? layout;
-  final bool? reverse;
+  final SortOrder? sortOrder;
   final bool? multiSelect;
   final ValueChanged<List<EpisodeBrief>?>? onSelect;
   final bool openPodcast;
@@ -56,7 +56,7 @@ class EpisodeGrid extends StatelessWidget {
       this.showNumber = false,
       this.episodeCount = 0,
       this.layout = Layout.three,
-      this.reverse,
+      this.sortOrder,
       this.openPodcast = false,
       this.multiSelect = false,
       this.onSelect,
@@ -276,7 +276,7 @@ class EpisodeGrid extends StatelessWidget {
           ? Container(
               alignment: Alignment.topRight,
               child: Text(
-                reverse!
+                sortOrder == SortOrder.ASC!
                     ? (index! + 1).toString()
                     : (episodeCount! - index!).toString(),
                 style: GoogleFonts.teko(

@@ -303,7 +303,21 @@ class AudioPlayerNotifier extends ChangeNotifier {
         );
         await _playlist!.getPlaylist();
         if (state[1] != '') {
-          final episode = await _dbHelper.getRssItemWithUrl(state[1]);
+          var episode;
+          var episodes = (await _dbHelper.getEpisodes(episodeIds: [
+            state[1]
+          ], optionalFields: [
+            EpisodeField.mediaId,
+            EpisodeField.isNew,
+            EpisodeField.skipSecondsStart,
+            EpisodeField.skipSecondsEnd,
+            EpisodeField.episodeImage,
+            EpisodeField.chapterLink
+          ]));
+          if (episodes.isEmpty)
+            episode = null;
+          else
+            episode = episodes[0];
           if (episode != null &&
               ((!_playlist!.isQueue && _playlist!.contains(episode)) ||
                   (_playlist!.isQueue &&
@@ -393,7 +407,20 @@ class AudioPlayerNotifier extends ChangeNotifier {
       episodeNew = episode;
       _playFromSearchList.add(episode);
     } else {
-      episodeNew = await _dbHelper.getRssItemWithUrl(episode!.enclosureUrl);
+      var episodes = await _dbHelper.getEpisodes(episodeIds: [
+        episode!.enclosureUrl
+      ], optionalFields: [
+        EpisodeField.mediaId,
+        EpisodeField.isNew,
+        EpisodeField.skipSecondsStart,
+        EpisodeField.skipSecondsEnd,
+        EpisodeField.episodeImage,
+        EpisodeField.chapterLink
+      ]);
+      if (episodes.isEmpty)
+        episodeNew = null;
+      else
+        episodeNew = episodes[0];
     }
     // @TODO  load episode from last position when player running
     if (playerRunning) {
@@ -519,7 +546,21 @@ class AudioPlayerNotifier extends ChangeNotifier {
     _mediaitemSubscription =
         _audioHandler.mediaItem.where((event) => event != null).listen(
       (item) async {
-        var episode = await _dbHelper.getRssItemWithMediaId(item!.id);
+        var episode;
+        var episodes = await _dbHelper.getEpisodes(optionalFields: [
+          EpisodeField.mediaId,
+          EpisodeField.isNew,
+          EpisodeField.skipSecondsStart,
+          EpisodeField.skipSecondsEnd,
+          EpisodeField.episodeImage,
+          EpisodeField.chapterLink
+        ], customFilters: [
+          "E.media_id = ${item!.id}"
+        ]);
+        if (episodes.isEmpty)
+          episode = null;
+        else
+          episode = episodes[0];
         if (episode == null) {
           episode = _playFromSearchList.firstWhere((e) => e!.mediaId == item.id,
               orElse: () => null);
@@ -619,8 +660,21 @@ class AudioPlayerNotifier extends ChangeNotifier {
 
   /// Queue management
   Future<void> addToPlaylist(EpisodeBrief episode) async {
-    final episodeNew = await (_dbHelper.getRssItemWithUrl(episode.enclosureUrl)
-        as FutureOr<EpisodeBrief>);
+    var episodeNew;
+    var episodes = await _dbHelper.getEpisodes(episodeIds: [
+      episode.enclosureUrl
+    ], optionalFields: [
+      EpisodeField.mediaId,
+      EpisodeField.isNew,
+      EpisodeField.skipSecondsStart,
+      EpisodeField.skipSecondsEnd,
+      EpisodeField.episodeImage,
+      EpisodeField.chapterLink
+    ]);
+    if (episodes.isEmpty)
+      episodeNew = null;
+    else
+      episodeNew = episodes[0];
     if (episodeNew.isNew == 1) {
       await _dbHelper.removeEpisodeNewMark(episodeNew.enclosureUrl);
     }
@@ -635,8 +689,21 @@ class AudioPlayerNotifier extends ChangeNotifier {
   }
 
   Future<void> addToPlaylistAt(EpisodeBrief episode, int index) async {
-    final episodeNew = await (_dbHelper.getRssItemWithUrl(episode.enclosureUrl)
-        as FutureOr<EpisodeBrief>);
+    var episodeNew;
+    var episodes = await _dbHelper.getEpisodes(episodeIds: [
+      episode.enclosureUrl
+    ], optionalFields: [
+      EpisodeField.mediaId,
+      EpisodeField.isNew,
+      EpisodeField.skipSecondsStart,
+      EpisodeField.skipSecondsEnd,
+      EpisodeField.episodeImage,
+      EpisodeField.chapterLink
+    ]);
+    if (episodes.isEmpty)
+      episodeNew = null;
+    else
+      episodeNew = episodes[0];
     if (episodeNew.isNew == 1) {
       await _dbHelper.removeEpisodeNewMark(episodeNew.enclosureUrl);
     }
@@ -651,9 +718,18 @@ class AudioPlayerNotifier extends ChangeNotifier {
   Future<void> addNewEpisode(List<String> group) async {
     var newEpisodes = <EpisodeBrief>[];
     if (group.isEmpty) {
-      newEpisodes = await _dbHelper.getRecentNewRssItem();
+      newEpisodes = await _dbHelper.getEpisodes(
+          optionalFields: [EpisodeField.mediaId],
+          sortBy: Sorter.pubDate,
+          sortOrder: SortOrder.DESC,
+          filterNew: -1);
     } else {
-      newEpisodes = await _dbHelper.getGroupNewRssItem(group);
+      newEpisodes = await _dbHelper.getEpisodes(
+          optionalFields: [EpisodeField.mediaId],
+          feedIds: group,
+          sortBy: Sorter.pubDate,
+          sortOrder: SortOrder.DESC,
+          filterNew: -1);
     }
     if (newEpisodes.length > 0 && newEpisodes.length < 100) {
       for (var episode in newEpisodes) {
@@ -671,7 +747,21 @@ class AudioPlayerNotifier extends ChangeNotifier {
     if (episode.enclosureUrl == episode.mediaId &&
         _episode != episode &&
         _playlist!.contains(episode)) {
-      var episodeNew = await _dbHelper.getRssItemWithUrl(episode.enclosureUrl);
+      var episodeNew;
+      var episodes = await _dbHelper.getEpisodes(episodeIds: [
+        episode.enclosureUrl
+      ], optionalFields: [
+        EpisodeField.mediaId,
+        EpisodeField.isNew,
+        EpisodeField.skipSecondsStart,
+        EpisodeField.skipSecondsEnd,
+        EpisodeField.episodeImage,
+        EpisodeField.chapterLink
+      ]);
+      if (episodes.isEmpty)
+        episodeNew = null;
+      else
+        episodeNew = episodes[0];
       _playlist!.updateEpisode(episodeNew);
       if (_playerRunning) {
         await _audioHandler.updateMediaItem(episodeNew!.toMediaItem());
@@ -680,7 +770,21 @@ class AudioPlayerNotifier extends ChangeNotifier {
   }
 
   Future<int> delFromPlaylist(EpisodeBrief episode) async {
-    final episodeNew = await _dbHelper.getRssItemWithUrl(episode.enclosureUrl);
+    var episodeNew;
+    var episodes = await _dbHelper.getEpisodes(episodeIds: [
+      episode.enclosureUrl
+    ], optionalFields: [
+      EpisodeField.mediaId,
+      EpisodeField.isNew,
+      EpisodeField.skipSecondsStart,
+      EpisodeField.skipSecondsEnd,
+      EpisodeField.episodeImage,
+      EpisodeField.chapterLink
+    ]);
+    if (episodes.isEmpty)
+      episodeNew = null;
+    else
+      episodeNew = episodes[0];
     if (playerRunning && _playlist!.isQueue) {
       await _audioHandler.removeQueueItem(episodeNew!.toMediaItem());
     }
@@ -713,7 +817,21 @@ class AudioPlayerNotifier extends ChangeNotifier {
 
   Future<bool> moveToTop(EpisodeBrief episode) async {
     await delFromPlaylist(episode);
-    final episodeNew = await _dbHelper.getRssItemWithUrl(episode.enclosureUrl);
+    var episodeNew;
+    var episodes = await _dbHelper.getEpisodes(episodeIds: [
+      episode.enclosureUrl
+    ], optionalFields: [
+      EpisodeField.mediaId,
+      EpisodeField.isNew,
+      EpisodeField.skipSecondsStart,
+      EpisodeField.skipSecondsEnd,
+      EpisodeField.episodeImage,
+      EpisodeField.chapterLink
+    ]);
+    if (episodes.isEmpty)
+      episodeNew = null;
+    else
+      episodeNew = episodes[0];
     if (_playerRunning && _playlist!.isQueue) {
       await _audioHandler.customAction(
           '', {'mediaItem': episodeNew!.toMediaItem(), 'index': 1});

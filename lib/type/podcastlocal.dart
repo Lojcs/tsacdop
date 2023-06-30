@@ -12,7 +12,7 @@ class PodcastLocal extends Equatable {
   final String? author;
 
   final String? primaryColor;
-  final String? id;
+  final String id;
   final String? imagePath;
   final String? provider;
   final String? link;

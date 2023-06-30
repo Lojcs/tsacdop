@@ -186,7 +186,22 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
 
   Future<EpisodeBrief?> _getEpisode(String url) async {
     var dbHelper = DBHelper();
-    return await dbHelper.getRssItemWithUrl(url);
+    var episode;
+    var episodes = await dbHelper.getEpisodes(episodeIds: [
+      url
+    ], optionalFields: [
+      EpisodeField.mediaId,
+      EpisodeField.isNew,
+      EpisodeField.skipSecondsStart,
+      EpisodeField.skipSecondsEnd,
+      EpisodeField.episodeImage,
+      EpisodeField.chapterLink
+    ]);
+    if (episodes.isEmpty)
+      episode = null;
+    else
+      episode = episodes[0];
+    return episode;
   }
 
   Widget _buttonOnMenu({Widget? child, VoidCallback? onTap}) => Material(

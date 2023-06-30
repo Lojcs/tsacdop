@@ -9,7 +9,7 @@ import '../util/extension_helper.dart';
 
 class EpisodeBrief extends Equatable {
   final String? title;
-  final String description;
+  String description;
   final int? pubDate;
   final int? enclosureLength;
   final String enclosureUrl;
@@ -25,8 +25,8 @@ class EpisodeBrief extends Equatable {
   int? skipSecondsStart;
   int? skipSecondsEnd;
   int? downloadDate;
-  final String? episodeImage;
-  final String? chapterLink;
+  String? episodeImage;
+  String? chapterLink;
   String? duplicateStatus;
   bool? played;
   EpisodeBrief(

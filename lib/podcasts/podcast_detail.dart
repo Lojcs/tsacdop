@@ -69,7 +69,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
   bool _loadMore = false;
 
   /// Change sort by.
-  bool _reverse = false;
+  SortOrder _sortOrder = SortOrder.DESC;
 
   /// Filter type.
   Filter _filter = Filter.all;
@@ -96,7 +96,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
   void initState() {
     super.initState();
     _loadMore = false;
-    _reverse = false;
+    _sortOrder = SortOrder.DESC;
     _controller = ScrollController();
     _scroll = false;
     _multiSelect = false;
@@ -128,17 +128,13 @@ class _PodcastDetailState extends State<PodcastDetail> {
         final result = await Connectivity().checkConnectivity();
         final autoDownloadStorage = KeyValueStorage(autoDownloadNetworkKey);
         final autoDownloadNetwork = await autoDownloadStorage.getInt();
-        if (autoDownloadNetwork == 1) {
-          var episodes = await _dbHelper.getNewEpisodes(podcastLocal.id);
+        if (autoDownloadNetwork == 1 || result == ConnectivityResult.wifi) {
+          var episodes = await _dbHelper.getEpisodes(
+              feedIds: [podcastLocal.id!],
+              filterNew: -1,
+              filterDownloaded: 1,
+              filterAutoDownload: -1);
           // For safety
-          if (episodes.length < 100) {
-            for (var episode in episodes) {
-              downloader.startTask(episode, showNotification: false);
-            }
-          }
-        } else if (result == ConnectivityResult.wifi) {
-          var episodes = await _dbHelper.getNewEpisodes(podcastLocal.id);
-          //For safety
           if (episodes.length < 100) {
             for (var episode in episodes) {
               downloader.startTask(episode, showNotification: false);
@@ -156,7 +152,10 @@ class _PodcastDetailState extends State<PodcastDetail> {
   }
 
   Future<List<EpisodeBrief>> _getRssItem(PodcastLocal podcastLocal,
-      {int? count, bool? reverse, Filter? filter, String? query}) async {
+      {int? count,
+      SortOrder sortOrder = SortOrder.ASC,
+      Filter? filter,
+      String? query}) async {
     var episodes = <EpisodeBrief>[];
     _episodeCount = await _dbHelper.getPodcastCounts(podcastLocal.id);
     final layoutStorage = KeyValueStorage(podcastLayoutKey);
@@ -166,11 +165,16 @@ class _PodcastDetailState extends State<PodcastDetail> {
     if (_hideListened == null) {
       _hideListened = await hideListenedStorage.getBool(defaultValue: false);
     }
-    episodes = await _dbHelper.getRssItem(podcastLocal.id, count,
-        reverse: reverse,
-        filter: filter,
-        query: query,
-        hideListened: _hideListened!);
+    episodes = await _dbHelper.getEpisodes(
+        feedIds: [podcastLocal.id!],
+        episodeNames: [query!],
+        optionalFields: [EpisodeField.isNew],
+        sortBy: Sorter.pubDate,
+        sortOrder: sortOrder,
+        limit: count!,
+        filterLiked: filter == Filter.liked ? 1 : 0,
+        filterDownloaded: filter == Filter.downloaded ? 1 : 0,
+        filterPlayed: _hideListened! ? 1 : 0);
     _dataCount = episodes.length;
     return episodes;
   }
@@ -589,14 +593,21 @@ class _PodcastDetailState extends State<PodcastDetail> {
                           padding: EdgeInsets.zero,
                           tooltip: s.homeSubMenuSortBy,
                           icon: Icon(
-                            _reverse
+                            _sortOrder == SortOrder.ASC
                                 ? LineIcons.hourglassStart
                                 : LineIcons.hourglassEnd,
-                            color: _reverse ? context.accentColor : null,
+                            color: _sortOrder == SortOrder.ASC
+                                ? context.accentColor
+                                : null,
                           ),
                           iconSize: 18,
                           onPressed: () {
-                            setState(() => _reverse = !_reverse);
+                            setState(() => {
+                                  if (_sortOrder == SortOrder.ASC)
+                                    _sortOrder = SortOrder.DESC
+                                  else
+                                    _sortOrder = SortOrder.ASC
+                                });
                           },
                         ),
                       ),
@@ -878,7 +889,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
                                 FutureBuilder<List<EpisodeBrief>>(
                                     future: _getRssItem(widget.podcastLocal!,
                                         count: _top,
-                                        reverse: _reverse,
+                                        sortOrder: _sortOrder,
                                         filter: _filter,
                                         query: _query),
                                     builder: (context, snapshot) {
@@ -908,7 +919,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
                                               ? true
                                               : false,
                                           layout: _layout,
-                                          reverse: _reverse,
+                                          sortOrder: _sortOrder,
                                           episodeCount: _episodeCount,
                                           initNum: _scroll ? 0 : 12,
                                           multiSelect: _multiSelect,

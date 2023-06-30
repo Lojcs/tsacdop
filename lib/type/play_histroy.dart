@@ -26,6 +26,19 @@ class PlayHistory {
   EpisodeBrief? get episode => _episode;
 
   Future<void> getEpisode() async {
-    _episode = await _dbHelper.getRssItemWithUrl(url);
+    var episodes = await _dbHelper.getEpisodes(episodeIds: [
+      url!
+    ], optionalFields: [
+      EpisodeField.mediaId,
+      EpisodeField.isNew,
+      EpisodeField.skipSecondsStart,
+      EpisodeField.skipSecondsEnd,
+      EpisodeField.episodeImage,
+      EpisodeField.chapterLink
+    ]);
+    if (episodes.isEmpty)
+      _episode = null;
+    else
+      _episode = episodes[0];
   }
 }
