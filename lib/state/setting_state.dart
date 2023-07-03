@@ -34,16 +34,10 @@ void callbackDispatcher() {
     final autoDownloadStorage = KeyValueStorage(autoDownloadNetworkKey);
     final autoDownloadNetwork = await autoDownloadStorage.getInt();
     final result = await Connectivity().checkConnectivity();
-    if (autoDownloadNetwork == 1) {
-      var episodes = await dbHelper.getNewEpisodes('all');
+    if (autoDownloadNetwork == 1 || result == ConnectivityResult.wifi) {
+      final episodes = await dbHelper.getEpisodes(
+          filterNew: -1, filterDownloaded: 1, filterAutoDownload: -1);
       // For safety
-      if (episodes.length < 100 && episodes.length > 0) {
-        downloader.bindBackgroundIsolate();
-        await downloader.startTask(episodes);
-      }
-    } else if (result == ConnectivityResult.wifi) {
-      var episodes = await dbHelper.getNewEpisodes('all');
-      //For safety
       if (episodes.length < 100 && episodes.length > 0) {
         downloader.bindBackgroundIsolate();
         await downloader.startTask(episodes);

@@ -518,7 +518,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
 
   /// For group fliter.
   String? _groupName;
-  List<String?>? _group;
+  List<String>? _group;
   Layout? _layout;
   bool? _hideListened;
   late bool _scroll;
@@ -549,7 +549,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
     );
   }
 
-  Future<List<EpisodeBrief>> _getRssItem(int top, List<String?> group,
+  Future<List<EpisodeBrief>> _getRssItem(int top, List<String> group,
       {bool? hideListened}) async {
     var storage = KeyValueStorage(recentLayoutKey);
     var hideListenedStorage = KeyValueStorage(hideListenedKey);
@@ -561,22 +561,39 @@ class _RecentUpdateState extends State<_RecentUpdate>
 
     List<EpisodeBrief> episodes;
     if (group.isEmpty) {
-      episodes =
-          await _dbHelper.getRecentRssItem(top, hideListened: _hideListened!);
+      episodes = await _dbHelper.getEpisodes(
+          excludedFeedIds: [localFolderId],
+          sortBy: Sorter.pubDate,
+          sortOrder: SortOrder.DESC,
+          limit: top,
+          filterPlayed: _hideListened! ? 1 : 0);
     } else {
-      episodes = await _dbHelper.getGroupRssItem(top, group,
-          hideListened: _hideListened);
+      episodes = await _dbHelper.getEpisodes(
+          feedIds: group,
+          sortBy: Sorter.pubDate,
+          sortOrder: SortOrder.DESC,
+          limit: top,
+          filterPlayed: _hideListened! ? 1 : 0);
     }
     return episodes;
   }
 
-  Future<int> _getUpdateCounts(List<String?> group) async {
+  Future<int> _getUpdateCounts(List<String> group) async {
     var episodes = <EpisodeBrief>[];
 
     if (group.isEmpty) {
-      episodes = await _dbHelper.getRecentNewRssItem();
+      episodes = await _dbHelper.getEpisodes(
+          optionalFields: [EpisodeField.mediaId],
+          sortBy: Sorter.pubDate,
+          sortOrder: SortOrder.DESC,
+          filterNew: -1);
     } else {
-      episodes = await _dbHelper.getGroupNewRssItem(group);
+      episodes = await _dbHelper.getEpisodes(
+          feedIds: group,
+          optionalFields: [EpisodeField.mediaId],
+          sortBy: Sorter.pubDate,
+          sortOrder: SortOrder.DESC,
+          filterNew: -1);
     }
     return episodes.length;
   }
@@ -929,8 +946,25 @@ class _MyFavoriteState extends State<_MyFavorite>
       _hideListened = await hideListenedStorage.getBool(defaultValue: false);
     }
     var dbHelper = DBHelper();
-    var episodes = await dbHelper.getLikedRssItem(top, sortBy,
-        hideListened: _hideListened!);
+    Sorter sorter;
+    SortOrder order;
+    switch (sortBy) {
+      case 0:
+        sorter = Sorter.pubDate;
+        order = SortOrder.DESC;
+        break;
+      default: // case 1
+        sorter = Sorter.likedDate;
+        order = SortOrder.DESC;
+        break;
+    }
+    var episodes = await dbHelper.getEpisodes(
+        sortBy: sorter,
+        sortOrder: order,
+        limit: top,
+        filterLiked: -1,
+        filterPlayed: _hideListened! ? 1 : 0,
+        filterDownloaded: -1);
     return episodes;
   }
 
@@ -1209,8 +1243,27 @@ class _MyDownloadState extends State<_MyDownload>
       _hideListened = await hideListenedStorage.getBool(defaultValue: false);
     }
     var dbHelper = DBHelper();
-    var episodes = await dbHelper.getDownloadedEpisode(sortBy,
-        hideListened: _hideListened!);
+    Sorter sorter;
+    SortOrder order;
+    switch (sortBy) {
+      case 0:
+        sorter = Sorter.downloadDate;
+        order = SortOrder.DESC;
+        break;
+      case 1:
+        sorter = Sorter.downloadDate;
+        order = SortOrder.ASC;
+        break;
+      default: // case 2
+        sorter = Sorter.enclosureLength;
+        order = SortOrder.DESC;
+        break;
+    }
+    var episodes = await dbHelper.getEpisodes(
+        sortBy: sorter,
+        sortOrder: order,
+        filterPlayed: hideListened! ? 1 : 0,
+        filterDownloaded: -1);
     return episodes;
   }
 

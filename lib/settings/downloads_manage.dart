@@ -32,7 +32,24 @@ class _DownloadsManageState extends State<DownloadsManage> {
   Future<List<EpisodeBrief>> _getDownloadedEpisode(int? mode) async {
     var episodes = <EpisodeBrief>[];
     var dbHelper = DBHelper();
-    episodes = await dbHelper.getDownloadedEpisode(mode);
+    Sorter sorter;
+    SortOrder order;
+    switch (mode) {
+      case 0:
+        sorter = Sorter.downloadDate;
+        order = SortOrder.DESC;
+        break;
+      case 1:
+        sorter = Sorter.downloadDate;
+        order = SortOrder.ASC;
+        break;
+      default: // case 2
+        sorter = Sorter.enclosureLength;
+        order = SortOrder.DESC;
+        break;
+    }
+    episodes = await dbHelper.getEpisodes(
+        sortBy: sorter, sortOrder: order, filterDownloaded: -1);
     return episodes;
   }
 

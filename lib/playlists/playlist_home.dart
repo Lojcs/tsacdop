@@ -665,7 +665,20 @@ class _Playlists extends StatefulWidget {
 class __PlaylistsState extends State<_Playlists> {
   Future<EpisodeBrief?> _getEpisode(String url) async {
     var dbHelper = DBHelper();
-    return await dbHelper.getRssItemWithUrl(url);
+    List episodes = await dbHelper.getEpisodes(episodeIds: [
+      url
+    ], optionalFields: [
+      EpisodeField.mediaId,
+      EpisodeField.isNew,
+      EpisodeField.skipSecondsStart,
+      EpisodeField.skipSecondsEnd,
+      EpisodeField.episodeImage,
+      EpisodeField.chapterLink
+    ]);
+    if (episodes.isEmpty)
+      return null;
+    else
+      return episodes[0];
   }
 
   @override
@@ -878,11 +891,16 @@ class __NewPlaylistState extends State<_NewPlaylist> {
   }
 
   Future<List<EpisodeBrief>> _random() async {
-    return await _dbHelper.getRandomRssItem(10);
+    return await _dbHelper.getEpisodes(
+        excludedFeedIds: [localFolderId], sortBy: Sorter.random, limit: 10);
   }
 
   Future<List<EpisodeBrief>> _recent() async {
-    return await _dbHelper.getRecentRssItem(10);
+    return await _dbHelper.getEpisodes(
+        excludedFeedIds: [localFolderId],
+        sortBy: Sorter.pubDate,
+        sortOrder: SortOrder.DESC,
+        limit: 10);
   }
 
   Widget _createOption(NewPlaylistOption option) {
@@ -979,8 +997,6 @@ class __NewPlaylistState extends State<_NewPlaylist> {
         metadata.trackDuration,
         0,
         '',
-        0,
-        "NO",
         episodeImage: imagePath ?? '');
   }
 

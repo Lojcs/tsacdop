@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
+import 'package:tuple/tuple.dart';
 
 import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
@@ -155,7 +156,21 @@ class DownloadState extends ChangeNotifier {
     var tasks = await FlutterDownloader.loadTasks();
     if (tasks != null && tasks.isNotEmpty) {
       for (var task in tasks) {
-        var episode = await dbHelper.getRssItemWithUrl(task.url);
+        var episode;
+        var episodes = await _dbHelper.getEpisodes(episodeIds: [
+          task.url
+        ], optionalFields: [
+          EpisodeField.mediaId,
+          EpisodeField.isNew,
+          EpisodeField.skipSecondsStart,
+          EpisodeField.skipSecondsEnd,
+          EpisodeField.episodeImage,
+          EpisodeField.chapterLink
+        ]);
+        if (episodes.isEmpty)
+          episode = null;
+        else
+          episode = episodes[0];
         if (episode == null) {
           await FlutterDownloader.remove(
               taskId: task.taskId, shouldDeleteContent: true);
@@ -238,8 +253,21 @@ class DownloadState extends ChangeNotifier {
         .stat();
     _dbHelper.saveMediaId(episodeTask.episode!.enclosureUrl, filePath,
         episodeTask.taskId, fileStat.size);
-    final episode =
-        await _dbHelper.getRssItemWithUrl(episodeTask.episode!.enclosureUrl);
+    var episode;
+    var episodes = await _dbHelper.getEpisodes(episodeIds: [
+      episodeTask.episode!.enclosureUrl
+    ], optionalFields: [
+      EpisodeField.mediaId,
+      EpisodeField.isNew,
+      EpisodeField.skipSecondsStart,
+      EpisodeField.skipSecondsEnd,
+      EpisodeField.episodeImage,
+      EpisodeField.chapterLink
+    ]);
+    if (episodes.isEmpty)
+      episode = null;
+    else
+      episode = episodes[0];
     _removeTask(episodeTask.episode);
     _episodeTasks.add(EpisodeTask(episode, episodeTask.taskId,
         progress: 100, status: DownloadTaskStatus.complete));
@@ -366,8 +394,13 @@ class DownloadState extends ChangeNotifier {
       var deadline = DateTime.now()
           .subtract(Duration(days: autoDelete))
           .millisecondsSinceEpoch;
-      var episodes = await _dbHelper.getOutdatedEpisode(deadline,
-          deletePlayed: deletePlayed);
+      var episodes = await _dbHelper.getEpisodes(
+          rangeParameters: [Sorter.downloadDate],
+          rangeDelimiters: [Tuple2(-1, deadline)],
+          filterPlayed: 1,
+          filterDownloaded: -1);
+      episodes.addAll(
+          await _dbHelper.getEpisodes(filterPlayed: -1, filterDownloaded: -1));
       if (episodes.isNotEmpty) {
         for (var episode in episodes) {
           await delTask(episode);

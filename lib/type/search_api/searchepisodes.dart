@@ -45,7 +45,7 @@ class OnlineEpisode {
 
   EpisodeBrief get toEpisode {
     return EpisodeBrief(
-        title, audio!, 0, pubDate, title, '', length ?? 0, 0, '', 0, "NO",
+        title, audio!, 0, pubDate, title, '', length ?? 0, 0, '',
         mediaId: audio,
         skipSecondsEnd: 0,
         skipSecondsStart: 0,
