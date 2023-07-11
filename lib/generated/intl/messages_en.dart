@@ -114,6 +114,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "boostVolume": MessageLookupByLibrary.simpleMessage("Boost volume"),
         "buffering": MessageLookupByLibrary.simpleMessage("Buffering"),
         "cancel": MessageLookupByLibrary.simpleMessage("CANCEL"),
+        "capitalDefault": MessageLookupByLibrary.simpleMessage("Default"),
         "cellularConfirm":
             MessageLookupByLibrary.simpleMessage("Cellular data warning"),
         "cellularConfirmDes": MessageLookupByLibrary.simpleMessage(
@@ -149,6 +150,13 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Edit group name"),
         "endOfEpisode": MessageLookupByLibrary.simpleMessage("End of Episode"),
         "episode": m4,
+        "episodeVersioningForceNew":
+            MessageLookupByLibrary.simpleMessage("Newest"),
+        "episodeVersioningForceOld":
+            MessageLookupByLibrary.simpleMessage("Oldest"),
+        "episodeVersioningNewIfNotDownloaded":
+            MessageLookupByLibrary.simpleMessage(
+                "Downloaded if exists, else newest"),
         "fastForward": MessageLookupByLibrary.simpleMessage("Fast forward"),
         "fastRewind": MessageLookupByLibrary.simpleMessage("Fast rewind"),
         "featureDiscoveryEditGroup":
@@ -405,6 +413,12 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Enable synchronisation"),
         "settingsEnableSyncingDes": MessageLookupByLibrary.simpleMessage(
             "Refresh all podcasts in the background to get latest episodes"),
+        "settingsEpisodeManagement":
+            MessageLookupByLibrary.simpleMessage("Episode Management"),
+        "settingsEpisodeVersioning":
+            MessageLookupByLibrary.simpleMessage("Episode Versioning"),
+        "settingsEpisodeVersioningDes": MessageLookupByLibrary.simpleMessage(
+            "How the display version of an episode is chosen. Can be overridden in podcast settings."),
         "settingsExportDes": MessageLookupByLibrary.simpleMessage(
             "Export and import app settings"),
         "settingsFastForwardSec":

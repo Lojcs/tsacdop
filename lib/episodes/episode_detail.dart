@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:tsacdop/episodes/menu_bar.dart';
 import 'package:tsacdop/episodes/shownote.dart';
 import 'package:tsacdop/util/helpers.dart';
+import 'package:tsacdop/widgets/custom_dropdown.dart';
 import 'package:tuple/tuple.dart';
 
 import '../home/audioplayer.dart';
@@ -31,6 +32,7 @@ class EpisodeDetail extends StatefulWidget {
 }
 
 class _EpisodeDetailState extends State<EpisodeDetail> {
+  final _dbHelper = DBHelper();
   final textstyle = TextStyle(fontSize: 15.0, color: Colors.black);
   final GlobalKey<AudioPanelState> _playerKey = GlobalKey<AudioPanelState>();
   double? downloadProgress;
@@ -41,8 +43,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
   String? path;
 
   Future<PlayHistory> _getPosition(EpisodeBrief episode) async {
-    final dbHelper = DBHelper();
-    return await dbHelper.getPosition(episode);
+    return await _dbHelper.getPosition(episode);
   }
 
   late ScrollController _controller;
@@ -173,6 +174,45 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                           fontWeight: FontWeight.bold,
                                           color: context.error)),
                                 Spacer(),
+                                FutureBuilder<List<EpisodeBrief>>(
+                                  // TODO: Make ui responsive.
+                                  future: _dbHelper.getEpisodes(episodeTitles: [
+                                    widget.episodeItem!.title ?? ''
+                                  ], optionalFields: [
+                                    EpisodeField.duplicateStatus
+                                  ]),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.hasData &&
+                                        snapshot.data!.length > 1) {
+                                      return DropdownButton(
+                                          hint: Text("Versions"),
+                                          items: snapshot.data!
+                                              .map((e) => DropdownMenuItem(
+                                                  value: e,
+                                                  child: Text(
+                                                    formateDate(e.pubDate!),
+                                                    style: e.duplicateStatus ==
+                                                            "IS"
+                                                        ? context
+                                                            .textTheme.bodyText1
+                                                        : context.textTheme
+                                                            .bodyText1!
+                                                            .copyWith(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold),
+                                                  )))
+                                              .toList(),
+                                          onChanged: (EpisodeBrief? episode) {
+                                            _dbHelper
+                                                .setEpisodeAsDisplayVersion(
+                                                    episode!);
+                                          });
+                                    } else {
+                                      return Center();
+                                    }
+                                  },
+                                )
                               ],
                             ),
                           ),

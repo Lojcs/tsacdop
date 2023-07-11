@@ -62,6 +62,7 @@ const String playerStateKey = 'playerStateKey';
 const String openPlaylistDefaultKey = 'openPlaylistDefaultKey';
 const String openAllPodcastDefaultKey = 'openAllPodcastDefaultKey';
 const String useWallpapterThemeKey = 'useWallpaperThemeKet';
+const String duplicatePolicyKey = 'duplicatePolicyKey';
 
 class KeyValueStorage {
   final String key;
@@ -158,10 +159,10 @@ class KeyValueStorage {
     return prefs.setString(key, string);
   }
 
-  Future<String> getString() async {
+  Future<String> getString({String defaultValue = ''}) async {
     var prefs = await SharedPreferences.getInstance();
     if (prefs.getString(key) == null) {
-      await prefs.setString(key, '');
+      await prefs.setString(key, defaultValue);
     }
     return prefs.getString(key)!;
   }

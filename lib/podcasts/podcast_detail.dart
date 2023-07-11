@@ -167,7 +167,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
     }
     episodes = await _dbHelper.getEpisodes(
         feedIds: [podcastLocal.id!],
-        episodeNames: [query!],
+        likeEpisodeTitles: query == "" ? null : [query!],
         optionalFields: [EpisodeField.isNew],
         sortBy: Sorter.pubDate,
         sortOrder: sortOrder,

@@ -70,6 +70,7 @@ class SettingState extends ChangeNotifier {
   final _accentStorage = KeyValueStorage(accentsKey);
   final _autoupdateStorage = KeyValueStorage(autoUpdateKey);
   final _intervalStorage = KeyValueStorage(updateIntervalKey);
+  final _duplicatePolicyStorage = KeyValueStorage(duplicatePolicyKey);
   final _downloadUsingDataStorage = KeyValueStorage(downloadUsingDataKey);
   final _introStorage = KeyValueStorage(introKey);
   final _realDarkStorage = KeyValueStorage(realDarkKey);
@@ -109,6 +110,7 @@ class SettingState extends ChangeNotifier {
     super.addListener(listener);
     _getLocale();
     _getAutoUpdate();
+    _getDuplicatePolicy();
     _getDownloadUsingData();
     _getSleepTimerData();
     _getPlayerSeconds();
@@ -323,6 +325,15 @@ class SettingState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Global duplicatePolicy, default 'NewIfNotDownloaded'.
+  String? _duplicatePolicy;
+  String? get duplicatePolicy => _duplicatePolicy;
+  set duplicatePolicy(String? str) {
+    _duplicatePolicy = str;
+    _saveDuplicatePolicy();
+    notifyListeners();
+  }
+
   /// Confirem before using data to download episode, default true(reverse).
   bool? _downloadUsingData;
   bool? get downloadUsingData => _downloadUsingData;
@@ -472,6 +483,11 @@ class SettingState extends ChangeNotifier {
     _updateInterval = _initUpdateTag;
   }
 
+  Future _getDuplicatePolicy() async {
+    _duplicatePolicy = await _duplicatePolicyStorage.getString(
+        defaultValue: 'NewIfNotDownloaded');
+  }
+
   Future _getDownloadUsingData() async {
     _downloadUsingData = await _downloadUsingDataStorage.getBool(
         defaultValue: true, reverse: true);
@@ -581,6 +597,10 @@ class SettingState extends ChangeNotifier {
     await _autoupdateStorage.saveBool(_autoUpdate, reverse: true);
   }
 
+  Future<void> _saveDuplicatePolicy() async {
+    await _duplicatePolicyStorage.saveString(_duplicatePolicy!);
+  }
+
   Future<void> _saveAutoPlay() async {
     await _autoPlayStorage.saveBool(_autoPlay, reverse: true);
   }
@@ -632,6 +652,8 @@ class SettingState extends ChangeNotifier {
     var autoUpdate =
         await _autoupdateStorage.getBool(defaultValue: true, reverse: true);
     var updateInterval = await _intervalStorage.getInt();
+    var duplicatePolicy = await _duplicatePolicyStorage.getString(
+        defaultValue: 'NewIfNotDownloaded');
     var downloadUsingData = await _downloadUsingDataStorage.getBool(
         defaultValue: true, reverse: true);
     var cacheMax = await _cacheStorage.getInt(defaultValue: 500 * 1024 * 1024);
@@ -685,6 +707,7 @@ class SettingState extends ChangeNotifier {
         autoPlay: autoPlay,
         autoUpdate: autoUpdate,
         updateInterval: updateInterval,
+        duplicatePolicy: duplicatePolicy,
         downloadUsingData: downloadUsingData,
         cacheMax: cacheMax,
         podcastLayout: podcastLayout,
@@ -723,6 +746,7 @@ class SettingState extends ChangeNotifier {
     await _autoPlayStorage.saveBool(backup.autoPlay, reverse: true);
     await _autoupdateStorage.saveBool(backup.autoUpdate, reverse: true);
     await _intervalStorage.saveInt(backup.updateInterval!);
+    await _duplicatePolicyStorage.saveString(backup.duplicatePolicy!);
     await _downloadUsingDataStorage.saveBool(backup.downloadUsingData,
         reverse: true);
     await _cacheStorage.saveInt(backup.cacheMax!);
@@ -773,6 +797,7 @@ class SettingState extends ChangeNotifier {
     }
     await initData();
     await _getAutoUpdate();
+    await _getDuplicatePolicy();
     await _getDownloadUsingData();
     await _getSleepTimerData();
     await _getShowNotesFonts();

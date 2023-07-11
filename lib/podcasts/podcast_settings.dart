@@ -10,11 +10,13 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:webfeed/webfeed.dart';
 
+import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/podcast_group.dart';
 import '../type/play_histroy.dart';
 import '../type/podcastlocal.dart';
 import '../util/extension_helper.dart';
+import '../widgets/custom_dropdown.dart';
 import '../widgets/custom_widget.dart';
 import '../widgets/duraiton_picker.dart';
 
@@ -133,6 +135,62 @@ class _PodcastSettingState extends State<PodcastSetting> {
                       Switch(value: snapshot.data!, onChanged: _setHideNewMark),
                 ),
               );
+            }),
+        FutureBuilder<String>(
+            future: _getDuplicatePolicy(widget.podcastLocal!.id),
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                return Column(children: <Widget>[
+                  ListTile(
+                      title: Row(
+                        children: [
+                          Icon(Icons.onetwothree_outlined, size: 18),
+                          SizedBox(width: 20),
+                          Text(s.settingsEpisodeVersioning, style: textStyle),
+                        ],
+                      ),
+                      dense: true),
+                  Container(
+                      child: MyDropdownButton(
+                          hint: FutureBuilder<String>(
+                            future: _getDuplicatePolicyString(snapshot.data!),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasData) {
+                                return Text(snapshot.data!);
+                              } else {
+                                return Center();
+                              }
+                            },
+                          ),
+                          underline: Center(),
+                          displayItemCount: 4,
+                          value: snapshot.data,
+                          onChanged: (String str) async {
+                            _setDuplicatePolicy(widget.podcastLocal!.id, str);
+                          },
+                          items: <String>[
+                            "default",
+                            "NewIfNotDownloaded",
+                            "ForceNew",
+                            "ForceOld"
+                          ].map<DropdownMenuItem<String>>((e) {
+                            return DropdownMenuItem<String>(
+                                value: e,
+                                child: FutureBuilder<String>(
+                                  future: _getDuplicatePolicyString(e),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.hasData) {
+                                      return Text(snapshot.data!);
+                                    } else {
+                                      return Center();
+                                    }
+                                  },
+                                ));
+                          }).toList())),
+                ]);
+              } else {
+                return Center();
+              }
             }),
         FutureBuilder<int?>(
           future: _getSkipSecondStart(widget.podcastLocal!.id),
@@ -326,6 +384,11 @@ class _PodcastSettingState extends State<PodcastSetting> {
     if (mounted) setState(() {});
   }
 
+  Future<void> _setDuplicatePolicy(String? id, String duplicatePolicy) async {
+    await _dbHelper.saveDuplicatePolicy(id, duplicatePolicy: duplicatePolicy);
+    if (mounted) setState(() {});
+  }
+
   Future<void> _saveSkipSecondsStart(int? seconds) async {
     await _dbHelper.saveSkipSecondsStart(widget.podcastLocal!.id, seconds);
   }
@@ -344,6 +407,10 @@ class _PodcastSettingState extends State<PodcastSetting> {
 
   Future<bool> _getHideNewMark(String? id) async {
     return await _dbHelper.getHideNewMark(id);
+  }
+
+  Future<String> _getDuplicatePolicy(String? id) async {
+    return await _dbHelper.getPodcastDuplicatePolicy(id);
   }
 
   Future<int?> _getSkipSecondStart(String? id) async {
@@ -446,6 +513,23 @@ class _PodcastSettingState extends State<PodcastSetting> {
         return Icon(Icons.refresh, color: Colors.red);
       default:
         return Center();
+    }
+  }
+
+  Future<String> _getDuplicatePolicyString(String duplicatePolicy) async {
+    final s = context.s;
+    Map<String, String> sMap = {
+      "NewIfNotDownloaded": s.episodeVersioningNewIfNotDownloaded,
+      "ForceNew": s.episodeVersioningForceNew,
+      "ForceOld": s.episodeVersioningForceOld
+    };
+    if (duplicatePolicy == "default") {
+      var storage = KeyValueStorage(duplicatePolicyKey);
+      var globalDuplicatePolicy =
+          await storage.getString(defaultValue: "NewIfNotDownloaded");
+      return "${s.capitalDefault} (${sMap[globalDuplicatePolicy]})";
+    } else {
+      return sMap[duplicatePolicy]!;
     }
   }
 }

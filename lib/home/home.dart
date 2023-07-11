@@ -566,6 +566,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
           sortBy: Sorter.pubDate,
           sortOrder: SortOrder.DESC,
           limit: top,
+          filterDuplicates: 1,
           filterPlayed: _hideListened! ? 1 : 0);
     } else {
       episodes = await _dbHelper.getEpisodes(
@@ -573,6 +574,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
           sortBy: Sorter.pubDate,
           sortOrder: SortOrder.DESC,
           limit: top,
+          filterDuplicates: 1,
           filterPlayed: _hideListened! ? 1 : 0);
     }
     return episodes;
@@ -601,7 +603,9 @@ class _RecentUpdateState extends State<_RecentUpdate>
   /// Load more episodes.
   Future<void> _loadMoreEpisode() async {
     if (mounted) setState(() => _loadMore = true);
-    await Future.delayed(Duration(seconds: 3));
+    await Future.delayed(Duration(
+        seconds:
+            3)); // TODO: App is literally waiting 3 secs before loading more?
     if (mounted) {
       setState(() {
         _top = _top + 30;
@@ -963,8 +967,7 @@ class _MyFavoriteState extends State<_MyFavorite>
         sortOrder: order,
         limit: top,
         filterLiked: -1,
-        filterPlayed: _hideListened! ? 1 : 0,
-        filterDownloaded: -1);
+        filterPlayed: _hideListened! ? 1 : 0);
     return episodes;
   }
 
@@ -1262,7 +1265,7 @@ class _MyDownloadState extends State<_MyDownload>
     var episodes = await dbHelper.getEpisodes(
         sortBy: sorter,
         sortOrder: order,
-        filterPlayed: hideListened! ? 1 : 0,
+        filterPlayed: hideListened ?? false ? 1 : 0,
         filterDownloaded: -1);
     return episodes;
   }

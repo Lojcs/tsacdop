@@ -166,6 +166,16 @@ class S {
     );
   }
 
+  /// `Default`
+  String get capitalDefault {
+    return Intl.message(
+      'Default',
+      name: 'capitalDefault',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Cellular data warning`
   String get cellularConfirm {
     return Intl.message(
@@ -442,6 +452,36 @@ class S {
       name: 'episode',
       desc: '',
       args: [count],
+    );
+  }
+
+  /// `Downloaded if exists, else newest`
+  String get episodeVersioningNewIfNotDownloaded {
+    return Intl.message(
+      'Downloaded if exists, else newest',
+      name: 'episodeVersioningNewIfNotDownloaded',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Newest`
+  String get episodeVersioningForceNew {
+    return Intl.message(
+      'Newest',
+      name: 'episodeVersioningForceNew',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Oldest`
+  String get episodeVersioningForceOld {
+    return Intl.message(
+      'Oldest',
+      name: 'episodeVersioningForceOld',
+      desc: '',
+      args: [],
     );
   }
 
@@ -2177,6 +2217,36 @@ class S {
     return Intl.message(
       'Refresh all podcasts in the background to get latest episodes',
       name: 'settingsEnableSyncingDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Episode Management`
+  String get settingsEpisodeManagement {
+    return Intl.message(
+      'Episode Management',
+      name: 'settingsEpisodeManagement',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Episode Versioning`
+  String get settingsEpisodeVersioning {
+    return Intl.message(
+      'Episode Versioning',
+      name: 'settingsEpisodeVersioning',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `How the display version of an episode is chosen. Can be overridden in podcast settings.`
+  String get settingsEpisodeVersioningDes {
+    return Intl.message(
+      'How the display version of an episode is chosen. Can be overridden in podcast settings.',
+      name: 'settingsEpisodeVersioningDes',
       desc: '',
       args: [],
     );
