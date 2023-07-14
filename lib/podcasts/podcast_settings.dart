@@ -385,7 +385,7 @@ class _PodcastSettingState extends State<PodcastSetting> {
   }
 
   Future<void> _setDuplicatePolicy(String? id, String duplicatePolicy) async {
-    await _dbHelper.saveDuplicatePolicy(id, duplicatePolicy: duplicatePolicy);
+    await _dbHelper.saveVersionPolicy(id, versionPolicy: duplicatePolicy);
     if (mounted) setState(() {});
   }
 
@@ -410,7 +410,7 @@ class _PodcastSettingState extends State<PodcastSetting> {
   }
 
   Future<String> _getDuplicatePolicy(String? id) async {
-    return await _dbHelper.getPodcastDuplicatePolicy(id);
+    return await _dbHelper.getPodcastVersionPolicy(id);
   }
 
   Future<int?> _getSkipSecondStart(String? id) async {

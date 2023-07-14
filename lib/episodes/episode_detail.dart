@@ -40,6 +40,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
   /// Show page title.
   late bool _showTitle;
   late bool _showMenu;
+  final
   String? path;
 
   Future<PlayHistory> _getPosition(EpisodeBrief episode) async {
@@ -176,15 +177,11 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                 Spacer(),
                                 FutureBuilder<List<EpisodeBrief>>(
                                   // TODO: Make ui responsive.
-                                  future: _dbHelper.getEpisodes(episodeTitles: [
-                                    widget.episodeItem!.title ?? ''
-                                  ], optionalFields: [
-                                    EpisodeField.duplicateStatus
-                                  ]),
+                                  future: _getEpisodeVersions(),
                                   builder: (context, snapshot) {
                                     if (snapshot.hasData &&
                                         snapshot.data!.length > 1) {
-                                      return DropdownButton(
+                                      return MyDropdownButton(
                                           hint: Text("Versions"),
                                           items: snapshot.data!
                                               .map((e) => DropdownMenuItem(
@@ -367,5 +364,13 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
         ),
       ),
     );
+  }
+
+  Future<List<EpisodeBrief>> _getEpisodeVersions() async {
+    List<EpisodeBrief> versions = await _dbHelper.getEpisodes(
+        feedIds: ,
+        episodeTitles: [widget.episodeItem!.title ?? ''],
+        optionalFields: [EpisodeField.versionInfo]);
+    return versions;
   }
 }
