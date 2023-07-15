@@ -392,17 +392,17 @@ class EpisodeGrid extends StatelessWidget {
                             episode: episodes![index], color: color),
                       Spacer(),
                       if (layout != Layout.three &&
-                          episodes![index].duration != 0)
+                          episodes![index].enclosureDuration != 0)
                         Align(
                           alignment: Alignment.center,
                           child: Text(
-                            episodes![index].duration!.toTime,
+                            episodes![index].enclosureDuration!.toTime,
                             style: TextStyle(fontSize: width / 35),
                           ),
                         ),
-                      if (episodes![index].duration != 0 &&
-                          episodes![index].enclosureLength != null &&
-                          episodes![index].enclosureLength != 0 &&
+                      if (episodes![index].enclosureDuration != 0 &&
+                          episodes![index].enclosureSize != null &&
+                          episodes![index].enclosureSize != 0 &&
                           layout != Layout.three)
                         Text(
                           '|',
@@ -411,12 +411,12 @@ class EpisodeGrid extends StatelessWidget {
                           ),
                         ),
                       if (layout != Layout.three &&
-                          episodes![index].enclosureLength != null &&
-                          episodes![index].enclosureLength != 0)
+                          episodes![index].enclosureSize != null &&
+                          episodes![index].enclosureSize != 0)
                         Align(
                           alignment: Alignment.center,
                           child: Text(
-                            '${episodes![index].enclosureLength! ~/ 1000000}MB',
+                            '${episodes![index].enclosureSize! ~/ 1000000}MB',
                             style: TextStyle(fontSize: width / 35),
                           ),
                         ),
@@ -493,7 +493,7 @@ class EpisodeGrid extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: <Widget>[
                             Expanded(
-                              child: Text(episodes![index].feedTitle!,
+                              child: Text(episodes![index].podcastTitle!,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
@@ -520,17 +520,17 @@ class EpisodeGrid extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: <Widget>[
-                              if (episodes![index].duration != 0)
+                              if (episodes![index].enclosureDuration != 0)
                                 Align(
                                   alignment: Alignment.center,
                                   child: Text(
-                                    episodes![index].duration!.toTime,
+                                    episodes![index].enclosureDuration!.toTime,
                                     style: TextStyle(fontSize: width / 35),
                                   ),
                                 ),
-                              if (episodes![index].duration != 0 &&
-                                  episodes![index].enclosureLength != null &&
-                                  episodes![index].enclosureLength != 0 &&
+                              if (episodes![index].enclosureDuration != 0 &&
+                                  episodes![index].enclosureSize != null &&
+                                  episodes![index].enclosureSize != 0 &&
                                   layout != Layout.three)
                                 Text(
                                   '|',
@@ -538,12 +538,12 @@ class EpisodeGrid extends StatelessWidget {
                                     fontSize: width / 35,
                                   ),
                                 ),
-                              if (episodes![index].enclosureLength != null &&
-                                  episodes![index].enclosureLength != 0)
+                              if (episodes![index].enclosureSize != null &&
+                                  episodes![index].enclosureSize != 0)
                                 Align(
                                   alignment: Alignment.center,
                                   child: Text(
-                                    '${episodes![index].enclosureLength! ~/ 1000000}MB',
+                                    '${episodes![index].enclosureSize! ~/ 1000000}MB',
                                     style: TextStyle(fontSize: width / 35),
                                   ),
                                 ),

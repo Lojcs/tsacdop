@@ -255,7 +255,7 @@ class __PlaylistItemState extends State<_PlaylistItem>
                 height: 35,
                 child: Row(
                   children: <Widget>[
-                    if (episode.explicit == 1)
+                    if (episode.isExplicit == 1)
                       Container(
                           decoration: BoxDecoration(
                               color: Colors.red[800], shape: BoxShape.circle),
@@ -265,17 +265,17 @@ class __PlaylistItemState extends State<_PlaylistItem>
                           alignment: Alignment.center,
                           child:
                               Text('E', style: TextStyle(color: Colors.white))),
-                    if (episode.duration != 0)
+                    if (episode.enclosureDuration != 0)
                       _episodeTag(
-                          episode.duration == 0
+                          episode.enclosureDuration == 0
                               ? ''
-                              : s.minsCount(episode.duration! ~/ 60),
+                              : s.minsCount(episode.enclosureDuration! ~/ 60),
                           Colors.cyan[300]),
-                    if (episode.enclosureLength != null)
+                    if (episode.enclosureSize != null)
                       _episodeTag(
-                          episode.enclosureLength == 0
+                          episode.enclosureSize == 0
                               ? ''
-                              : '${episode.enclosureLength! ~/ 1000000}MB',
+                              : '${episode.enclosureSize! ~/ 1000000}MB',
                           Colors.lightBlue[300]),
                   ],
                 ),

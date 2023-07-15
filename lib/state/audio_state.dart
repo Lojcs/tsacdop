@@ -327,7 +327,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
             _lastPosition = int.parse(state[2]);
             if (_lastPosition > 0) {
               {
-                final duration = episode.duration! * 1000;
+                final duration = episode.enclosureDuration! * 1000;
                 final seekValue =
                     duration != 0 ? _lastPosition / duration : 1.0;
                 final history = PlayHistory(episode.title, episode.enclosureUrl,

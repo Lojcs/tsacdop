@@ -1655,7 +1655,7 @@ class _ControlPanelState extends State<ControlPanel>
                                           SizedBox(
                                             width: 100,
                                             child: Text(
-                                              data.item1!.feedTitle!,
+                                              data.item1!.podcastTitle!,
                                               maxLines: 1,
                                               overflow: TextOverflow.fade,
                                             ),

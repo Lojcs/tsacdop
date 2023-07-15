@@ -854,11 +854,14 @@ class ShowEpisode extends StatelessWidget {
                                         ),
                                       ),
                                       Spacer(),
-                                      if (episodes![index].duration != 0)
+                                      if (episodes![index].enclosureDuration !=
+                                          0)
                                         Align(
                                           alignment: Alignment.center,
                                           child: Text(
-                                            episodes![index].duration!.toTime,
+                                            episodes![index]
+                                                .enclosureDuration!
+                                                .toTime,
                                             style: TextStyle(
                                               fontSize: width / 35,
                                               // color: _c,
@@ -866,12 +869,10 @@ class ShowEpisode extends StatelessWidget {
                                             ),
                                           ),
                                         ),
-                                      episodes![index].duration == 0 ||
-                                              episodes![index]
-                                                      .enclosureLength ==
+                                      episodes![index].enclosureDuration == 0 ||
+                                              episodes![index].enclosureSize ==
                                                   null ||
-                                              episodes![index]
-                                                      .enclosureLength ==
+                                              episodes![index].enclosureSize ==
                                                   0
                                           ? Center()
                                           : Text(
@@ -880,13 +881,13 @@ class ShowEpisode extends StatelessWidget {
                                                 fontSize: width / 35,
                                               ),
                                             ),
-                                      if (episodes![index].enclosureLength !=
+                                      if (episodes![index].enclosureSize !=
                                               null &&
-                                          episodes![index].enclosureLength != 0)
+                                          episodes![index].enclosureSize != 0)
                                         Container(
                                           alignment: Alignment.center,
                                           child: Text(
-                                            '${episodes![index].enclosureLength! ~/ 1000000}MB',
+                                            '${episodes![index].enclosureSize! ~/ 1000000}MB',
                                             style:
                                                 TextStyle(fontSize: width / 35),
                                           ),

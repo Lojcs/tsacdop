@@ -130,7 +130,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                   overflow: TextOverflow.ellipsis,
                                 )
                               : Text(
-                                  widget.episodeItem!.feedTitle!,
+                                  widget.episodeItem!.podcastTitle!,
                                   maxLines: 1,
                                   style: TextStyle(
                                       fontSize: 15,
@@ -169,7 +169,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                     style:
                                         TextStyle(color: context.accentColor)),
                                 SizedBox(width: 10),
-                                if (widget.episodeItem!.explicit == 1)
+                                if (widget.episodeItem!.isExplicit == 1)
                                   Text('E',
                                       style: TextStyle(
                                           fontWeight: FontWeight.bold,
@@ -188,7 +188,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                                   value: e,
                                                   child: Text(
                                                     formateDate(e.pubDate!),
-                                                    style: e.duplicateStatus ==
+                                                    style: e.versionInfo ==
                                                             "IS"
                                                         ? context
                                                             .textTheme.bodyText1
@@ -218,7 +218,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                 horizontal: 20, vertical: 5),
                             child: Row(
                               children: <Widget>[
-                                if (widget.episodeItem!.duration != 0)
+                                if (widget.episodeItem!.enclosureDuration != 0)
                                   Container(
                                       decoration: BoxDecoration(
                                           color: context.secondary,
@@ -231,14 +231,14 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                       alignment: Alignment.center,
                                       child: Text(
                                         s.minsCount(
-                                          widget.episodeItem!.duration! ~/ 60,
+                                          widget.episodeItem!.enclosureDuration! ~/ 60,
                                         ),
                                         style: TextStyle(
                                             color: context.background),
                                       )),
-                                if (widget.episodeItem!.enclosureLength !=
+                                if (widget.episodeItem!.enclosureSize !=
                                         null &&
-                                    widget.episodeItem!.enclosureLength != 0)
+                                    widget.episodeItem!.enclosureSize != 0)
                                   Container(
                                     decoration: BoxDecoration(
                                         color: context.tertiary,
@@ -250,7 +250,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                         EdgeInsets.symmetric(horizontal: 10.0),
                                     alignment: Alignment.center,
                                     child: Text(
-                                      '${widget.episodeItem!.enclosureLength! ~/ 1000000}MB',
+                                      '${widget.episodeItem!.enclosureSize! ~/ 1000000}MB',
                                       style:
                                           TextStyle(color: context.background),
                                     ),
