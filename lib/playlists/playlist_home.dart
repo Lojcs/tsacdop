@@ -668,7 +668,7 @@ class _Playlists extends StatefulWidget {
 class __PlaylistsState extends State<_Playlists> {
   Future<EpisodeBrief?> _getEpisode(String url) async {
     var dbHelper = DBHelper();
-    List episodes = await dbHelper.getEpisodes(episodeIds: [
+    List episodes = await dbHelper.getEpisodes(episodeUrls: [
       url
     ], optionalFields: [
       EpisodeField.mediaId,

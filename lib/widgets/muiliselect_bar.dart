@@ -187,7 +187,7 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
   Future<EpisodeBrief?> _getEpisode(String url) async {
     var dbHelper = DBHelper();
     var episode;
-    var episodes = await dbHelper.getEpisodes(episodeIds: [
+    var episodes = await dbHelper.getEpisodes(episodeUrls: [
       url
     ], optionalFields: [
       EpisodeField.mediaId,

@@ -26,7 +26,7 @@ class PlayHistory {
   EpisodeBrief? get episode => _episode;
 
   Future<void> getEpisode() async {
-    var episodes = await _dbHelper.getEpisodes(episodeIds: [
+    var episodes = await _dbHelper.getEpisodes(episodeUrls: [
       url!
     ], optionalFields: [
       EpisodeField.mediaId,

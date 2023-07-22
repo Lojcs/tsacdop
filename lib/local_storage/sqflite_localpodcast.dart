@@ -53,6 +53,8 @@ enum EpisodeField {
   isNew,
   isPlayed,
   versionInfo,
+  versions,
+  versionsPopulated,
   skipSecondsStart,
   skipSecondsEnd,
   chapterLink
@@ -92,10 +94,11 @@ class DBHelper {
         .execute("""CREATE TABLE Episodes(id INTEGER PRIMARY KEY,title TEXT, 
         enclosure_url TEXT UNIQUE, enclosure_length INTEGER, pubDate TEXT, 
         description TEXT, feed_id TEXT, feed_link TEXT, milliseconds INTEGER,
-        version_info TEXT, duration INTEGER DEFAULT 0, explicit INTEGER DEFAULT 0,
+        version_info INTEGER, duration INTEGER DEFAULT 0, explicit INTEGER DEFAULT 0,
         liked INTEGER DEFAULT 0, liked_date INTEGER DEFAULT 0, downloaded TEXT DEFAULT 'ND', 
         download_date INTEGER DEFAULT 0, media_id TEXT, is_new INTEGER DEFAULT 0, 
-        chapter_link TEXT DEFAULT '', hosts TEXT DEFAULT '', episode_image TEXT DEFAULT '')""");
+        chapter_link TEXT DEFAULT '', hosts TEXT DEFAULT '', episode_image TEXT DEFAULT '',
+        versions TEXT DEFAULT '')""");
     await db.execute(
         """CREATE TABLE PlayHistory(id INTEGER PRIMARY KEY, title TEXT, enclosure_url TEXT,
         seconds REAL, seek_value REAL, add_date INTEGER, listen_time INTEGER DEFAULT 0)""");
@@ -108,6 +111,12 @@ class DBHelper {
     await db.execute(
         """CREATE INDEX  episode_search ON Episodes (enclosure_url, feed_id);
     """);
+    // await db.execute(
+    //     """CREATE INDEX episode_names ON Episodes (title, milliseconds ASC, feed_id);
+    // """);
+    // await db.execute(
+    //     """CREATE INDEX episode_display ON Episodes (feed_id, version_info, is_new);
+    // """);
   }
 
   void _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -205,7 +214,8 @@ class DBHelper {
   }
 
   Future<void> _v8Update(Database db) async {
-    await db.execute("ALTER TABLE Episodes ADD version_info TEXT");
+    await db.execute("ALTER TABLE Episodes ADD version_info INTEGER");
+    await db.execute("ALTER TABLE Episodes ADD versions TEXT DEFAULT ''");
     await db.execute(
         "ALTER TABLE PodcastLocal ADD version_policy TEXT DEFAULT 'NewIfNotDownloaded'");
     List<Map> podcasts = await db.rawQuery("SELECT id FROM PodcastLocal");
@@ -756,13 +766,15 @@ class DBHelper {
     }
   }
 
-  /// Checks every episode from the given podcast, gives it a unique milliseconds value among its duplicates
-  /// and sets their version_info values. Two episodes are considered duplicates if their titles match.
+  /// Checks every episode from the given podcast, gives it a unique milliseconds value among its versions
+  /// and sets their version_info values. Two episodes are considered versions of each other if their titles match.
   /// dbClient should be a Transaction or a Database wrapped in transaction.
   Future<void> _rescanPodcastEpisodesVersions(
-      DatabaseExecutor dbClient, String id) async {
+      // TODO: Optimize using versions
+      DatabaseExecutor dbClient,
+      String id) async {
     List<Map> episodesList = await dbClient.rawQuery(
-        """SELECT E.enclosure_url, E.milliseconds, E.downloaded, E.title,
+        """SELECT E.id, E.enclosure_url, E.milliseconds, E.downloaded, E.title,
         P.version_policy FROM Episodes E INNER JOIN PodcastLocal P ON
         E.feed_id = P.id WHERE E.feed_id = ? ORDER BY E.milliseconds ASC""",
         [id]);
@@ -778,15 +790,15 @@ class DBHelper {
             "UPDATE Episodes SET version_info = 'NO' WHERE enclosure_url = ?",
             [versions.first['enclosure_url']]);
       } else {
-        List<Map<String, dynamic>> duplicatesTimes = [];
-        for (Map duplicate in versions) {
-          duplicatesTimes.add({
-            'enclosure_url': duplicate['enclosure_url'],
-            'milliseconds': duplicate['milliseconds']
+        List<Map<String, dynamic>> versionsTimes = [];
+        for (Map version in versions) {
+          versionsTimes.add({
+            'enclosure_url': version['enclosure_url'],
+            'milliseconds': version['milliseconds']
           });
         }
         Map<int, List<Map>> timeline =
-            groupBy(duplicatesTimes, (duplicate) => duplicate['milliseconds']);
+            groupBy(versionsTimes, (version) => version['milliseconds']);
         List<int> times = timeline.keys.toList();
         times.sort();
         // TODO: Optimize this?
@@ -804,22 +816,27 @@ class DBHelper {
             }
           }
         }
-        for (Map duplicate in duplicatesTimes) {
+        for (Map version in versionsTimes) {
           batchOp.rawUpdate(
-              "UPDATE Episodes SET milliseconds = ? WHERE enclosure_url = ?",
-              [duplicate['milliseconds'], duplicate['enclosure_url']]);
+              "UPDATE Episodes SET milliseconds = ?, versions = ? WHERE enclosure_url = ?",
+              [
+                version['milliseconds'],
+                [for (Map eachVersion in versions) eachVersion['id'].toString()]
+                    .join(','),
+                version['enclosure_url']
+              ]);
         }
         versions.sort((a, b) => a['milliseconds'].compareTo(b['milliseconds']));
-        String duplicatePolicy = versions.first['version_policy'];
-        if (duplicatePolicy == 'default') {
-          duplicatePolicy = await _getGlobalVersionPolicy();
+        String versionPolicy = versions.first['version_policy'];
+        if (versionPolicy == 'default') {
+          versionPolicy = await _getGlobalVersionPolicy();
         }
-        switch (duplicatePolicy) {
+        switch (versionPolicy) {
           case "NewIfNotDownloaded":
             var candidate = versions.last;
-            for (var duplicate in versions.reversed) {
-              if (duplicate['downloaded'] != "ND") {
-                candidate = duplicate;
+            for (Map version in versions.reversed) {
+              if (version['downloaded'] != "ND") {
+                candidate = version;
                 break;
               }
             }
@@ -841,113 +858,117 @@ class DBHelper {
             versions.removeLast();
             break;
         }
-        Iterable<String> duplicateUrls =
-            versions.map((e) => e['enclosure_url']);
-        for (String duplicateUrl in duplicateUrls) {
+        Iterable<String> versionUrls = versions.map((e) => e['enclosure_url']);
+        for (String versionUrl in versionUrls) {
           batchOp.rawUpdate(
               "UPDATE Episodes SET version_info = 'IS' WHERE enclosure_url == ?",
-              [duplicateUrl]);
+              [versionUrl]);
         }
       }
     }
     await batchOp.commit(noResult: true);
   }
 
-  /// Checks for duplicates of an episode, gives it a unique milliseconds value among them,
-  /// sets their version_info values and sets the episode's own version_info value.
-  /// Two episodes are considered duplicates if their titles match.
+  /// Checks for other versions of an episode, gives it a unique milliseconds value among them,
+  /// sets their version_info values and the episode's own version_info value.
+  /// Two episodes are considered versions of each other if their titles match.
   /// Call this after adding the episode to the database.
-  Future<void> _updateNewEpisodeDuplicates(
+  Future<void> _updateNewEpisodeVersions(
+      // TODO: Optimize using versions
       Transaction txn,
       String?
           feedId, //TODO: Make changes to other properties also produce versions.
       String? title,
-      String url,
+      int episodeId,
       int milliseconds) async {
-    List<Map> duplicates = await txn.rawQuery(
-        """SELECT E.enclosure_url, E.milliseconds, E.version_info, E.downloaded,
+    List<Map> versions = await txn
+        .rawQuery("""SELECT E.id, E.milliseconds, E.version_info, E.downloaded,
         P.version_policy FROM Episodes E INNER JOIN PodcastLocal P ON
-        E.feed_id = P.id WHERE E.feed_id = ? AND E.title = ? AND E.enclosure_url != ?
-        ORDER BY E.milliseconds ASC""", [feedId, title, url]);
+        E.feed_id = P.id WHERE E.feed_id = ? AND E.title = ? AND E.id != ?
+        ORDER BY E.milliseconds ASC""", [feedId, title, episodeId]);
     Batch batchOp = txn.batch();
-    if (duplicates.isNotEmpty) {
-      for (int i = 0; i < duplicates.length; i++) {
-        if (duplicates[i]['milliseconds'] == milliseconds) {
-          for (; duplicates[i]['milliseconds'] == milliseconds; i++) {
+    List<String> versionIdList = [
+      for (Map eachVersion in versions) eachVersion['id'].toString()
+    ];
+    versionIdList.add(episodeId.toString());
+    batchOp.rawUpdate("UPDATE Episodes SET versions = ? WHERE id = ?",
+        [versionIdList.join(','), episodeId]);
+    if (versions.isNotEmpty) {
+      for (int i = 0; i < versions.length; i++) {
+        batchOp.rawUpdate("UPDATE Episodes SET versions = ? WHERE id = ?",
+            [versionIdList.join(','), versions[i]['id']]);
+        if (versions[i]['milliseconds'] == milliseconds) {
+          for (; versions[i]['milliseconds'] == milliseconds; i++) {
             milliseconds++;
           }
-          batchOp.rawUpdate(
-              "UPDATE Episodes SET milliseconds = ? WHERE enclosure_url = ?",
-              [milliseconds, url]);
-          break;
+          batchOp.rawUpdate("UPDATE Episodes SET milliseconds = ? WHERE id = ?",
+              [milliseconds, episodeId]);
         }
       }
-      if (duplicates.any((duplicate) => duplicate['version_info'] == 'FHAS')) {
+      if (versions.any((duplicate) => duplicate['version_info'] == 'FHAS')) {
         batchOp.rawUpdate(
-            "UPDATE Episodes SET version_info = 'IS' WHERE enclosure_url = ?",
-            [url]);
+            "UPDATE Episodes SET version_info = 'IS' WHERE id = ?",
+            [episodeId]);
       } else {
-        String duplicatePolicy = duplicates.first['version_policy'];
+        String duplicatePolicy = versions.first['version_policy'];
         if (duplicatePolicy == 'default') {
           duplicatePolicy = await _getGlobalVersionPolicy();
         }
         switch (duplicatePolicy) {
           case "NewIfNotDownloaded":
             var result = "HAS";
-            if (duplicates.length == 1) {
-              if (duplicates.first['downloaded'] != "ND") {
+            if (versions.length == 1) {
+              if (versions.first['downloaded'] != "ND") {
                 result = "IS";
                 batchOp.rawUpdate(
-                    "UPDATE Episodes SET version_info = 'HAS' WHERE enclosure_url = ?",
-                    [duplicates.first["enclosure_url"]]);
+                    "UPDATE Episodes SET version_info = 'HAS' WHERE id = ?",
+                    [versions.first["id"]]);
               }
             } else {
-              for (var duplicate in duplicates.reversed) {
+              for (var duplicate in versions.reversed) {
                 if (duplicate['version_info'] == "HAS") {
                   if (duplicate['downloaded'] != "ND") {
                     result = "IS";
                     break;
                   } else {
                     batchOp.rawUpdate(
-                        "UPDATE Episodes SET version_info = 'IS' WHERE enclosure_url = ?",
-                        [duplicate["enclosure_url"]]);
+                        "UPDATE Episodes SET version_info = 'IS' WHERE id = ?",
+                        [duplicate["id"]]);
                     break;
                   }
                 }
               }
             }
             batchOp.rawUpdate(
-                "UPDATE Episodes SET version_info = ? WHERE enclosure_url = ?",
-                [result, url]);
+                "UPDATE Episodes SET version_info = ? WHERE id = ?",
+                [result, episodeId]);
             break;
           case "ForceOld":
-            if (duplicates.length == 1) {
+            if (versions.length == 1) {
               batchOp.rawUpdate(
-                  "UPDATE Episodes SET version_info = 'HAS' WHERE enclosure_url = ?",
-                  [duplicates.first['enclosure_url']]);
+                  "UPDATE Episodes SET version_info = 'HAS' WHERE id = ?",
+                  [versions.first['id']]);
             }
             batchOp.rawUpdate(
-                "UPDATE Episodes SET version_info = 'IS' WHERE enclosure_url = ?",
-                [url]);
+                "UPDATE Episodes SET version_info = 'IS' WHERE id = ?",
+                [episodeId]);
             break;
           default: //case "ForceNew":
-            Iterable<String> duplicateUrls =
-                duplicates.map((e) => e['enclosure_url']);
+            Iterable<String> duplicateUrls = versions.map((e) => e['id']);
             for (String duplicateUrl in duplicateUrls) {
               batchOp.rawUpdate(
-                  "UPDATE Episodes SET version_info = 'IS' WHERE enclosure_url == ?",
+                  "UPDATE Episodes SET version_info = 'IS' WHERE id = ?",
                   [duplicateUrl]);
             }
             batchOp.rawUpdate(
-                "UPDATE Episodes SET version_info = 'HAS' WHERE enclosure_url = ?",
-                [url]);
+                "UPDATE Episodes SET version_info = 'HAS' WHERE id = ?",
+                [episodeId]);
             break;
         }
       }
     } else {
       batchOp.rawUpdate(
-          "UPDATE Episodes SET version_info = 'NO' WHERE enclosure_url = ?",
-          [url]);
+          "UPDATE Episodes SET version_info = 'NO' WHERE id = ?", [episodeId]);
     }
     batchOp.commit(noResult: true);
   }
@@ -957,13 +978,22 @@ class DBHelper {
   /// Call this before deleting the episode.
   Future<void> _updateDeletedEpisodeDuplicates(Transaction txn, String? id,
       String? title, String url, String duplicateStatus) async {
+    // TODO: Optimize using versions
     List<Map> duplicates = await txn.rawQuery(
-        """SELECT E.enclosure_url, E.downloaded, P.version_policy FROM Episodes E
+        """SELECT E.id E.enclosure_url, E.downloaded, P.version_policy FROM Episodes E
         INNER JOIN PodcastLocal P ON E.feed_id = P.id WHERE E.feed_id = ? AND E.title = ?
         AND E.enclosure_url != ? ORDER BY E.milliseconds ASC""",
         [id, title, url]);
     if (duplicates.isNotEmpty) {
       Batch batchOp = txn.batch();
+      for (Map version in duplicates) {
+        batchOp.rawUpdate(
+            "UPDATE Episodes SET versions = ? WHERE enclosure_url = ?", [
+          [for (Map eachVersion in duplicates) eachVersion['id'].toString()]
+              .join(','),
+          version['enclosure_url']
+        ]);
+      }
       if (duplicates.length == 1) {
         batchOp.rawUpdate(
             "UPDATE Episodes SET version_info = 'NO' WHERE enclosure_url = ?",
@@ -1033,6 +1063,33 @@ class DBHelper {
     });
   }
 
+  /// Populates the EpisodeBrief.versions map. Versions have all the
+  /// fields that the original episode has.
+  Future<EpisodeBrief> populateEpisodeVersions(EpisodeBrief episode) async {
+    var dbClient = await database;
+    if (episode.versions == null) {
+      List<Map> versions = await dbClient
+          .rawQuery("SELECT versions FROM Episodes WHERE id = ?", [episode.id]);
+      episode = episode.copyWith(versions: {
+        for (String version in versions.first['versions'].split(","))
+          int.parse(version): null
+      });
+    } else if (episode.versions!.length != 0 &&
+        episode.versions!.values.first != null) return episode;
+    Map<int, EpisodeBrief> versions = {episode.id: episode};
+    for (int versionId in episode.versions!.keys) {
+      List<EpisodeBrief> version = await getEpisodes(
+          episodeIds: [versionId], optionalFields: episode.fields);
+      versions[versionId] = version.first;
+    }
+    for (int versionId in versions.keys) {
+      for (int versionId2 in versions.keys) {
+        versions[versionId]!.versions![versionId2] = versions[versionId2];
+      }
+    }
+    return episode;
+  }
+
   Future<int> savePodcastRss(RssFeed feed, String id) async {
     feed.items!.removeWhere((item) => item == null);
     var result = feed.items!.length;
@@ -1061,7 +1118,7 @@ class DBHelper {
       final image = feed.items![i].itunes!.image?.href ?? '';
       if (url != null) {
         await dbClient.transaction((txn) async {
-          int result = await txn.rawInsert(
+          int episodeId = await txn.rawInsert(
               """INSERT OR REPLACE INTO Episodes(title, enclosure_url, enclosure_length, pubDate, 
                 description, feed_id, milliseconds, duration, explicit, media_id, chapter_link,
                 episode_image) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
@@ -1079,8 +1136,9 @@ class DBHelper {
                 chapter,
                 image
               ]);
-          await _updateNewEpisodeDuplicates(txn, id, title, url!, milliseconds);
-          return result;
+          await _updateNewEpisodeVersions(
+              txn, id, title, episodeId, milliseconds);
+          return episodeId;
         });
       }
     }
@@ -1139,7 +1197,7 @@ class DBHelper {
 
           if (url != null) {
             await dbClient.transaction((txn) async {
-              await txn.rawInsert(
+              int episodeId = await txn.rawInsert(
                   """INSERT OR IGNORE INTO Episodes(title, enclosure_url, enclosure_length, pubDate, 
                 description, feed_id, milliseconds, duration, explicit, media_id, chapter_link,
                 episode_image, is_new) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
@@ -1158,8 +1216,8 @@ class DBHelper {
                     image,
                     hideNewMark ? 0 : 1
                   ]);
-              await _updateNewEpisodeDuplicates(
-                  txn, podcastLocal.id, title, url!, milliseconds);
+              await _updateNewEpisodeVersions(
+                  txn, podcastLocal.id, title, episodeId!, milliseconds);
             });
           }
         }
@@ -1182,7 +1240,7 @@ class DBHelper {
   Future<void> saveLocalEpisode(EpisodeBrief episode) async {
     var dbClient = await database;
     await dbClient.transaction((txn) async {
-      await txn.rawInsert(
+      int episodeId = await txn.rawInsert(
           """INSERT OR REPLACE INTO Episodes(title, enclosure_url, enclosure_length, pubDate, 
                 description, feed_id, milliseconds, duration, explicit, media_id, episode_image) 
                 VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
@@ -1199,8 +1257,8 @@ class DBHelper {
             episode.enclosureUrl,
             episode.episodeImage
           ]);
-      await _updateNewEpisodeDuplicates(txn, localFolderId, episode.title,
-          episode.enclosureUrl, episode.pubDate!);
+      await _updateNewEpisodeVersions(
+          txn, localFolderId, episode.title, episodeId, episode.pubDate!);
     });
   }
 
@@ -1233,10 +1291,13 @@ class DBHelper {
 
   /// Queries the database with the provided options and returns found episodes.
   Future<List<EpisodeBrief>> getEpisodes(
+      // TODO: Optimize the query via indexes and intersects
       {List<String>? feedIds,
       List<String>? excludedFeedIds,
-      List<String>? episodeIds,
-      List<String>? excludedEpisodeIds,
+      List<int>? episodeIds,
+      List<int>? excludedEpisodeIds,
+      List<String>? episodeUrls,
+      List<String>? excludedEpisodeUrls,
       List<String>? episodeTitles,
       List<String>? excludedEpisodeTitles,
       List<String>? likeEpisodeTitles,
@@ -1255,6 +1316,8 @@ class DBHelper {
       int filterAutoDownload = 0,
       List<String>? customFilters}) async {
     bool doGroup = false;
+    bool getVersions = false;
+    bool populateVersions = false;
     List<String> query = [
       """SELECT E.id, E.title, E.enclosure_url, E.feed_id, P.title as feed_title,
       E.milliseconds"""
@@ -1307,6 +1370,19 @@ class DBHelper {
           case EpisodeField.versionInfo:
             query.add(", E.version_info");
             break;
+          case EpisodeField.versions:
+            if (!getVersions) {
+              query.add(", E.versions");
+            }
+            getVersions = true;
+            break;
+          case EpisodeField.versionsPopulated:
+            if (!getVersions) {
+              query.add(", E.versions");
+            }
+            getVersions = true;
+            populateVersions = true;
+            break;
           case EpisodeField.skipSecondsStart:
             query.add(", P.skip_seconds");
             break;
@@ -1327,40 +1403,52 @@ class DBHelper {
     query.add(" WHERE");
 
     if (feedIds != null && feedIds.isNotEmpty) {
-      filters.add(" P.id IN ('${feedIds.join("', '")}')");
+      filters.add(" P.id IN ('${(", ?" * feedIds.length).substring(2)}')");
+      arguements.addAll(feedIds);
     }
     if (excludedFeedIds != null && excludedFeedIds.isNotEmpty) {
-      filters.add(" P.id NOT IN ('${excludedFeedIds.join("', '")}')");
+      filters.add(
+          " P.id NOT IN ('${(", ?" * excludedFeedIds.length).substring(2)}')");
+      arguements.addAll(excludedFeedIds);
     }
     if (episodeIds != null && episodeIds.isNotEmpty) {
-      filters.add(" (${[
-        for (var _ in episodeIds) " E.enclosure_url = ?"
-      ].join(" OR")})");
+      filters.add(" E.id IN (${(", ?" * episodeIds.length).substring(2)})");
       arguements.addAll(episodeIds);
     }
     if (excludedEpisodeIds != null && excludedEpisodeIds.isNotEmpty) {
-      filters.add(" (${[
-        for (var _ in excludedEpisodeIds) " E.enclosure_url != ?"
-      ].join(" OR")})");
+      filters.add(
+          " E.id NOT IN (${(", ?" * excludedEpisodeIds.length).substring(2)})");
       arguements.addAll(excludedEpisodeIds);
     }
+    if (episodeUrls != null && episodeUrls.isNotEmpty) {
+      filters.add(
+          " E.enclosure_url IN (${(", ?" * episodeUrls.length).substring(2)})");
+      arguements.addAll(episodeUrls);
+    }
+    if (excludedEpisodeUrls != null && excludedEpisodeUrls.isNotEmpty) {
+      filters.add(
+          " E.enclosure_url NOT IN (${(", ?" * excludedEpisodeUrls.length).substring(2)})");
+      arguements.addAll(excludedEpisodeUrls);
+    }
     if (episodeTitles != null && episodeTitles.isNotEmpty) {
-      filters.add(" E.title IN ('${episodeTitles.join("', '")}')");
+      filters.add(
+          " E.title IN ('${(", ?" * episodeTitles.length).substring(2)}')");
+      arguements.addAll(episodeTitles);
     }
     if (excludedEpisodeTitles != null && excludedEpisodeTitles.isNotEmpty) {
-      filters.add(" E.title NOT IN ('${excludedEpisodeTitles.join("', '")}')");
+      filters.add(
+          " E.title NOT IN ('${(", ?" * excludedEpisodeTitles.length).substring(2)}')");
+      arguements.addAll(excludedEpisodeTitles);
     }
     if (likeEpisodeTitles != null && likeEpisodeTitles.isNotEmpty) {
-      filters.add(" (${[
-        for (var _ in likeEpisodeTitles) " E.title LIKE ?"
-      ].join(" OR")})");
+      filters.add(
+          " (${(" OR E.title LIKE ?" * likeEpisodeTitles.length).substring(4)})");
       arguements.addAll(likeEpisodeTitles);
     }
     if (excludedLikeEpisodeTitles != null &&
         excludedLikeEpisodeTitles.isNotEmpty) {
-      filters.add(" (${[
-        for (var _ in excludedLikeEpisodeTitles) " E.title NOT LIKE ?"
-      ].join(" OR")})");
+      filters.add(
+          " (${(" OR E.title LIKE ?" * excludedLikeEpisodeTitles.length).substring(4)})");
       arguements.addAll(excludedLikeEpisodeTitles);
     }
     if (filterDuplicates == 2) {
@@ -1398,13 +1486,15 @@ class DBHelper {
         rangeDelimiters != null &&
         rangeParameters.length == rangeDelimiters.length) {
       for (int i = 0; i < rangeParameters.length; i++) {
-        if (rangeDelimiters[i].item1 != -1) {
+        if (rangeDelimiters[i].item1 != -1 && rangeDelimiters[i].item2 != -1) {
           filters.add(
-              " ${rangeDelimiters[i].item1} < ${_sorterMap[rangeParameters[i]]}");
-        }
-        if (rangeDelimiters[i].item2 != -1) {
+              " ${_sorterMap[rangeParameters[i]]} BETWEEN ${rangeDelimiters[i].item1} AND ${rangeDelimiters[i].item2}");
+        } else if (rangeDelimiters[i].item1 != -1) {
           filters.add(
-              " ${rangeDelimiters[i].item2} > ${_sorterMap[rangeParameters[i]]}");
+              " ${_sorterMap[rangeParameters[i]]} > ${rangeDelimiters[i].item1}");
+        } else if (rangeDelimiters[i].item2 != -1) {
+          filters.add(
+              " ${_sorterMap[rangeParameters[i]]} < ${rangeDelimiters[i].item2}");
         }
       }
     }
@@ -1434,6 +1524,7 @@ class DBHelper {
       query.add(" LIMIT ${limit.toString()}");
     }
 
+    getVersions = false;
     var dbClient = await database;
     List<EpisodeBrief> episodes = [];
     List<Map> result;
@@ -1487,6 +1578,24 @@ class DBHelper {
               case EpisodeField.versionInfo:
                 fields[const Symbol("versionInfo")] = i['version_info'];
                 break;
+              case EpisodeField.versions:
+                if (!getVersions) {
+                  fields[const Symbol("versions")] = {
+                    for (String id in i['versions'].split(","))
+                      int.parse(id): null
+                  };
+                }
+                getVersions = true;
+                break;
+              case EpisodeField.versionsPopulated:
+                if (!getVersions) {
+                  fields[const Symbol("versions")] = {
+                    for (String id in i['versions'].split(","))
+                      int.parse(id): null
+                  };
+                }
+                getVersions = true;
+                break;
               case EpisodeField.skipSecondsStart:
                 fields[const Symbol("skipSecondsStart")] = i['skip_seconds'];
                 break;
@@ -1499,7 +1608,7 @@ class DBHelper {
             }
           }
         }
-        episodes.add(Function.apply(
+        EpisodeBrief episode = Function.apply(
             EpisodeBrief.new,
             [
               i['id'],
@@ -1509,7 +1618,9 @@ class DBHelper {
               i['feed_title'],
               i['milliseconds']
             ],
-            fields));
+            fields);
+        if (populateVersions) episode = await populateEpisodeVersions(episode);
+        episodes.add(episode);
       }
     }
     return episodes;

@@ -9,7 +9,7 @@ import 'package:tsacdop/local_storage/sqflite_localpodcast.dart';
 import '../util/extension_helper.dart';
 
 class EpisodeBrief extends Equatable {
-  final String id;
+  final int id;
   final String title;
   final String enclosureUrl;
   final String podcastId;
@@ -30,6 +30,7 @@ class EpisodeBrief extends Equatable {
   final bool? isNew;
   final bool? isPlayed;
   final VersionInfo? versionInfo;
+  final Map<int, EpisodeBrief?>? versions;
   final int? skipSecondsStart;
   final int? skipSecondsEnd;
   final String? chapterLink;
@@ -50,6 +51,7 @@ class EpisodeBrief extends Equatable {
       this.isNew,
       this.isPlayed,
       this.versionInfo,
+      this.versions,
       this.skipSecondsStart,
       this.skipSecondsEnd,
       this.chapterLink});
@@ -95,8 +97,44 @@ class EpisodeBrief extends Equatable {
     return schema.primaryContainer;
   }
 
+  List<EpisodeField> get fields {
+    Map<EpisodeField, dynamic> _fieldsMap = {
+      EpisodeField.description: description,
+      EpisodeField.enclosureDuration: enclosureDuration,
+      EpisodeField.enclosureSize: enclosureSize,
+      EpisodeField.downloaded: downloaded,
+      EpisodeField.downloadDate: downloadDate,
+      EpisodeField.mediaId: mediaId,
+      EpisodeField.episodeImage: episodeImage,
+      EpisodeField.podcastImage: podcastImage,
+      EpisodeField.primaryColor: primaryColor,
+      EpisodeField.isExplicit: isExplicit,
+      EpisodeField.isLiked: isLiked,
+      EpisodeField.isNew: isNew,
+      EpisodeField.isPlayed: isPlayed,
+      EpisodeField.versionInfo: versionInfo,
+      EpisodeField.versions: versions,
+      EpisodeField.skipSecondsStart: skipSecondsStart,
+      EpisodeField.skipSecondsEnd: skipSecondsEnd,
+      EpisodeField.chapterLink: chapterLink
+    };
+    List<EpisodeField> fieldList = [];
+    this.id;
+    for (EpisodeField field in EpisodeField.values) {
+      if (_fieldsMap[field] != null) fieldList.add(field);
+    }
+    if (versions != null) {
+      if (versions!.length == 0) {
+        fieldList.add(EpisodeField.versionsPopulated);
+      } else if (versions!.values.first != null) {
+        fieldList.add(EpisodeField.versionsPopulated);
+      }
+    }
+    return fieldList;
+  }
+
   EpisodeBrief copyWith(
-          {String? id,
+          {int? id,
           String? title,
           String? enclosureUrl,
           String? podcastId,
@@ -116,6 +154,7 @@ class EpisodeBrief extends Equatable {
           bool? isNew,
           bool? isPlayed,
           VersionInfo? versionInfo,
+          Map<int, EpisodeBrief?>? versions,
           int? skipSecondsStart,
           int? skipSecondsEnd,
           String? chapterLink}) =>
@@ -140,9 +179,60 @@ class EpisodeBrief extends Equatable {
           isNew: isNew ?? this.isNew,
           isPlayed: isPlayed ?? this.isPlayed,
           versionInfo: versionInfo ?? this.versionInfo,
+          versions: versions ?? this.versions,
           skipSecondsStart: skipSecondsStart ?? this.skipSecondsStart,
           skipSecondsEnd: skipSecondsEnd ?? this.skipSecondsEnd,
           chapterLink: chapterLink ?? this.chapterLink);
+
+  Future<EpisodeBrief> copyWithFromDB(List<EpisodeField> newFields) async {
+    Map<EpisodeField, List> _fieldsMap = {
+      EpisodeField.description: [const Symbol("description"), description],
+      EpisodeField.enclosureDuration: [
+        const Symbol("enclosureDuration"),
+        enclosureDuration
+      ],
+      EpisodeField.enclosureSize: [
+        const Symbol("enclosureSize"),
+        enclosureSize
+      ],
+      EpisodeField.downloaded: [const Symbol("downloaded"), downloaded],
+      EpisodeField.downloadDate: [const Symbol("downloadDate"), downloadDate],
+      EpisodeField.mediaId: [const Symbol("mediaId"), mediaId],
+      EpisodeField.episodeImage: [const Symbol("episodeImage"), episodeImage],
+      EpisodeField.podcastImage: [const Symbol("podcastImage"), podcastImage],
+      EpisodeField.primaryColor: [const Symbol("primaryColor"), primaryColor],
+      EpisodeField.isExplicit: [const Symbol("isExplicit"), isExplicit],
+      EpisodeField.isLiked: [const Symbol("isLiked"), isLiked],
+      EpisodeField.isNew: [const Symbol("isNew"), isNew],
+      EpisodeField.isPlayed: [const Symbol("isPlayed"), isPlayed],
+      EpisodeField.versionInfo: [const Symbol("versionInfo"), versionInfo],
+      EpisodeField.versions: [const Symbol("versions"), versions],
+      EpisodeField.skipSecondsStart: [
+        const Symbol("skipSecondsStart"),
+        skipSecondsStart
+      ],
+      EpisodeField.skipSecondsEnd: [
+        const Symbol("skipSecondsEnd"),
+        skipSecondsEnd
+      ],
+      EpisodeField.chapterLink: [const Symbol("chapterLink"), chapterLink]
+    };
+    var dbHelper = DBHelper();
+    Map<Symbol, dynamic> oldFields = {};
+    for (EpisodeField field in fields) {
+      newFields.remove(field);
+      oldFields[_fieldsMap[field]![0]] = _fieldsMap[field]![1];
+    }
+    bool populateVersions = newFields.remove(EpisodeField.versionsPopulated);
+    EpisodeBrief newEpisode = (await dbHelper
+            .getEpisodes(episodeIds: [id], optionalFields: newFields))
+        .first;
+    newEpisode = Function.apply(newEpisode.copyWith, [], oldFields);
+    if (populateVersions) {
+      newEpisode = await dbHelper.populateEpisodeVersions(newEpisode);
+    }
+    return newEpisode;
+  }
 
   @override
   List<Object?> get props => [id];
