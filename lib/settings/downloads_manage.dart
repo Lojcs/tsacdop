@@ -116,7 +116,7 @@ class _DownloadsManageState extends State<DownloadsManage> {
       return sum;
     } else {
       for (var episode in _selectedList) {
-        sum += episode.enclosureLength!;
+        sum += episode.enclosureSize!;
       }
       return sum;
     }
@@ -361,10 +361,10 @@ class _DownloadsManageState extends State<DownloadsManage> {
                                                                 .pubDate)),
                                                     SizedBox(width: 20),
                                                     if (_episodes[index]
-                                                            .enclosureLength !=
+                                                            .enclosureSize !=
                                                         0)
                                                       Text(
-                                                          '${_episodes[index].enclosureLength! ~/ 1000000} Mb'),
+                                                          '${_episodes[index].enclosureSize! ~/ 1000000} Mb'),
                                                   ],
                                                 ),
                                                 trailing: Checkbox(

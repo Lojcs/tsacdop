@@ -562,11 +562,22 @@ class _RecentUpdateState extends State<_RecentUpdate>
     List<EpisodeBrief> episodes;
     if (group.isEmpty) {
       episodes = await _dbHelper.getEpisodes(
-          excludedFeedIds: [localFolderId],
+          excludedFeedIds: [
+            localFolderId
+          ],
+          optionalFields: [
+            EpisodeField.description,
+            EpisodeField.enclosureDuration,
+            EpisodeField.enclosureSize,
+            EpisodeField.episodeImage,
+            EpisodeField.podcastImage,
+            EpisodeField.primaryColor,
+            EpisodeField.versionInfo
+          ],
           sortBy: Sorter.pubDate,
           sortOrder: SortOrder.DESC,
           limit: top,
-          filterDuplicates: 1,
+          filterVersions: 1,
           filterPlayed: _hideListened! ? 1 : 0);
     } else {
       episodes = await _dbHelper.getEpisodes(
@@ -574,7 +585,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
           sortBy: Sorter.pubDate,
           sortOrder: SortOrder.DESC,
           limit: top,
-          filterDuplicates: 1,
+          filterVersions: 1,
           filterPlayed: _hideListened! ? 1 : 0);
     }
     return episodes;
@@ -602,15 +613,15 @@ class _RecentUpdateState extends State<_RecentUpdate>
 
   /// Load more episodes.
   Future<void> _loadMoreEpisode() async {
-    if (mounted) setState(() => _loadMore = true);
-    await Future.delayed(Duration(
-        seconds:
-            3)); // TODO: App is literally waiting 3 secs before loading more?
-    if (mounted) {
+    if (mounted)
       setState(() {
         _top = _top + 30;
         _loadMore = false;
       });
+    await Future.delayed(Duration(
+        seconds: 1)); // TODO: Make animation dependent on when it loads
+    if (mounted) {
+      setState(() => _loadMore = true);
     }
   }
 
@@ -963,6 +974,15 @@ class _MyFavoriteState extends State<_MyFavorite>
         break;
     }
     var episodes = await dbHelper.getEpisodes(
+        optionalFields: [
+          EpisodeField.description,
+          EpisodeField.enclosureDuration,
+          EpisodeField.enclosureSize,
+          EpisodeField.episodeImage,
+          EpisodeField.podcastImage,
+          EpisodeField.primaryColor,
+          EpisodeField.versionInfo
+        ],
         sortBy: sorter,
         sortOrder: order,
         limit: top,
@@ -1263,6 +1283,15 @@ class _MyDownloadState extends State<_MyDownload>
         break;
     }
     var episodes = await dbHelper.getEpisodes(
+        optionalFields: [
+          EpisodeField.description,
+          EpisodeField.enclosureDuration,
+          EpisodeField.enclosureSize,
+          EpisodeField.episodeImage,
+          EpisodeField.podcastImage,
+          EpisodeField.primaryColor,
+          EpisodeField.versionInfo
+        ],
         sortBy: sorter,
         sortOrder: order,
         filterPlayed: hideListened ?? false ? 1 : 0,

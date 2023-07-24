@@ -100,7 +100,7 @@ class AutoDownloader {
       {bool showNotification = false}) async {
     for (var episode in episodes) {
       final dir = await _getDownloadDirectory();
-      var localPath = path.join(dir.path, episode.feedTitle);
+      var localPath = path.join(dir.path, episode.podcastTitle);
       final saveDir = Directory(localPath);
       var hasExisted = await saveDir.exists();
       if (!hasExisted) {
@@ -157,7 +157,7 @@ class DownloadState extends ChangeNotifier {
     if (tasks != null && tasks.isNotEmpty) {
       for (var task in tasks) {
         var episode;
-        var episodes = await _dbHelper.getEpisodes(episodeIds: [
+        var episodes = await _dbHelper.getEpisodes(episodeUrls: [
           task.url
         ], optionalFields: [
           EpisodeField.mediaId,
@@ -254,7 +254,7 @@ class DownloadState extends ChangeNotifier {
     _dbHelper.saveMediaId(episodeTask.episode!.enclosureUrl, filePath,
         episodeTask.taskId, fileStat.size);
     var episode;
-    var episodes = await _dbHelper.getEpisodes(episodeIds: [
+    var episodes = await _dbHelper.getEpisodes(episodeUrls: [
       episodeTask.episode!.enclosureUrl
     ], optionalFields: [
       EpisodeField.mediaId,
@@ -299,7 +299,7 @@ class DownloadState extends ChangeNotifier {
     if (!isDownloaded) {
       final dir = await _getDownloadDirectory();
       var localPath =
-          path.join(dir.path, episode.feedTitle?.replaceAll('/', ''));
+          path.join(dir.path, episode.podcastTitle?.replaceAll('/', ''));
       final saveDir = Directory(localPath);
       var hasExisted = await saveDir.exists();
       if (!hasExisted) {

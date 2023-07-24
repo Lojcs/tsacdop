@@ -304,7 +304,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
         await _playlist!.getPlaylist();
         if (state[1] != '') {
           var episode;
-          var episodes = (await _dbHelper.getEpisodes(episodeIds: [
+          var episodes = (await _dbHelper.getEpisodes(episodeUrls: [
             state[1]
           ], optionalFields: [
             EpisodeField.mediaId,
@@ -327,7 +327,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
             _lastPosition = int.parse(state[2]);
             if (_lastPosition > 0) {
               {
-                final duration = episode.duration! * 1000;
+                final duration = episode.enclosureDuration! * 1000;
                 final seekValue =
                     duration != 0 ? _lastPosition / duration : 1.0;
                 final history = PlayHistory(episode.title, episode.enclosureUrl,
@@ -407,7 +407,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
       episodeNew = episode;
       _playFromSearchList.add(episode);
     } else {
-      var episodes = await _dbHelper.getEpisodes(episodeIds: [
+      var episodes = await _dbHelper.getEpisodes(episodeUrls: [
         episode!.enclosureUrl
       ], optionalFields: [
         EpisodeField.mediaId,
@@ -661,7 +661,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
   /// Queue management
   Future<void> addToPlaylist(EpisodeBrief episode) async {
     var episodeNew;
-    var episodes = await _dbHelper.getEpisodes(episodeIds: [
+    var episodes = await _dbHelper.getEpisodes(episodeUrls: [
       episode.enclosureUrl
     ], optionalFields: [
       EpisodeField.mediaId,
@@ -690,7 +690,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
 
   Future<void> addToPlaylistAt(EpisodeBrief episode, int index) async {
     var episodeNew;
-    var episodes = await _dbHelper.getEpisodes(episodeIds: [
+    var episodes = await _dbHelper.getEpisodes(episodeUrls: [
       episode.enclosureUrl
     ], optionalFields: [
       EpisodeField.mediaId,
@@ -748,7 +748,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
         _episode != episode &&
         _playlist!.contains(episode)) {
       var episodeNew;
-      var episodes = await _dbHelper.getEpisodes(episodeIds: [
+      var episodes = await _dbHelper.getEpisodes(episodeUrls: [
         episode.enclosureUrl
       ], optionalFields: [
         EpisodeField.mediaId,
@@ -771,7 +771,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
 
   Future<int> delFromPlaylist(EpisodeBrief episode) async {
     var episodeNew;
-    var episodes = await _dbHelper.getEpisodes(episodeIds: [
+    var episodes = await _dbHelper.getEpisodes(episodeUrls: [
       episode.enclosureUrl
     ], optionalFields: [
       EpisodeField.mediaId,
@@ -818,7 +818,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
   Future<bool> moveToTop(EpisodeBrief episode) async {
     await delFromPlaylist(episode);
     var episodeNew;
-    var episodes = await _dbHelper.getEpisodes(episodeIds: [
+    var episodes = await _dbHelper.getEpisodes(episodeUrls: [
       episode.enclosureUrl
     ], optionalFields: [
       EpisodeField.mediaId,

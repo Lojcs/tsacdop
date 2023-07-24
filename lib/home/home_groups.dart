@@ -537,11 +537,17 @@ class _PodcastPreviewState extends State<PodcastPreview> {
 
   Future<List<EpisodeBrief>> _getRssItemTop(PodcastLocal podcastLocal) async {
     final dbHelper = DBHelper();
-    final episodes = await dbHelper.getEpisodes(
-        feedIds: [podcastLocal.id!],
-        sortBy: Sorter.pubDate,
-        sortOrder: SortOrder.DESC,
-        limit: 2);
+    final episodes = await dbHelper.getEpisodes(feedIds: [
+      podcastLocal.id
+    ], optionalFields: [
+      EpisodeField.description,
+      EpisodeField.enclosureDuration,
+      EpisodeField.enclosureSize,
+      EpisodeField.episodeImage,
+      EpisodeField.podcastImage,
+      EpisodeField.primaryColor,
+      EpisodeField.versionInfo
+    ], sortBy: Sorter.pubDate, sortOrder: SortOrder.DESC, limit: 2);
     return episodes;
   }
 }
@@ -854,11 +860,15 @@ class ShowEpisode extends StatelessWidget {
                                         ),
                                       ),
                                       Spacer(),
-                                      if (episodes![index].duration != 0)
+                                      if (episodes![index].enclosureDuration !=
+                                          0)
                                         Align(
                                           alignment: Alignment.center,
                                           child: Text(
-                                            episodes![index].duration!.toTime,
+                                            episodes![index]
+                                                    .enclosureDuration
+                                                    ?.toTime ??
+                                                "",
                                             style: TextStyle(
                                               fontSize: width / 35,
                                               // color: _c,
@@ -866,12 +876,10 @@ class ShowEpisode extends StatelessWidget {
                                             ),
                                           ),
                                         ),
-                                      episodes![index].duration == 0 ||
-                                              episodes![index]
-                                                      .enclosureLength ==
+                                      episodes![index].enclosureDuration == 0 ||
+                                              episodes![index].enclosureSize ==
                                                   null ||
-                                              episodes![index]
-                                                      .enclosureLength ==
+                                              episodes![index].enclosureSize ==
                                                   0
                                           ? Center()
                                           : Text(
@@ -880,13 +888,13 @@ class ShowEpisode extends StatelessWidget {
                                                 fontSize: width / 35,
                                               ),
                                             ),
-                                      if (episodes![index].enclosureLength !=
+                                      if (episodes![index].enclosureSize !=
                                               null &&
-                                          episodes![index].enclosureLength != 0)
+                                          episodes![index].enclosureSize != 0)
                                         Container(
                                           alignment: Alignment.center,
                                           child: Text(
-                                            '${episodes![index].enclosureLength! ~/ 1000000}MB',
+                                            '${episodes![index].enclosureSize! ~/ 1000000}MB',
                                             style:
                                                 TextStyle(fontSize: width / 35),
                                           ),

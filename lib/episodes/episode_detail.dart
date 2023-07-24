@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
@@ -40,6 +41,8 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
   /// Show page title.
   late bool _showTitle;
   late bool _showMenu;
+  late EpisodeBrief _episodeItem;
+  late bool updated;
   String? path;
 
   Future<PlayHistory> _getPosition(EpisodeBrief episode) async {
@@ -74,6 +77,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
     _showTitle = false;
     _controller = ScrollController();
     _controller.addListener(_scrollListener);
+    _episodeItem = widget.episodeItem!;
   }
 
   @override
@@ -88,8 +92,8 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
     final audio = context.watch<AudioPlayerNotifier>();
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
-          statusBarColor: widget.episodeItem!.cardColor(context),
-          systemNavigationBarColor: widget.episodeItem!.cardColor(context),
+          statusBarColor: _episodeItem.cardColor(context),
+          systemNavigationBarColor: _episodeItem!.cardColor(context),
           systemNavigationBarContrastEnforced: false,
           systemNavigationBarIconBrightness: context.iconBrightness,
           statusBarBrightness: context.brightness,
@@ -117,19 +121,18 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                     headerSliverBuilder: (context, innerBoxScrolled) {
                       return <Widget>[
                         SliverAppBar(
-                          backgroundColor:
-                              widget.episodeItem!.cardColor(context),
+                          backgroundColor: _episodeItem.cardColor(context),
                           floating: true,
                           pinned: true,
                           scrolledUnderElevation: 0,
                           title: _showTitle
                               ? Text(
-                                  widget.episodeItem?.title ?? '',
+                                  _episodeItem.title,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 )
                               : Text(
-                                  widget.episodeItem!.feedTitle!,
+                                  _episodeItem.podcastTitle,
                                   maxLines: 1,
                                   style: TextStyle(
                                       fontSize: 15,
@@ -151,7 +154,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                             child: Align(
                               alignment: Alignment.centerLeft,
                               child: Text(
-                                widget.episodeItem!.title!,
+                                _episodeItem.title,
                                 textAlign: TextAlign.left,
                                 style:
                                     Theme.of(context).textTheme.headlineSmall,
@@ -162,57 +165,80 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                             padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
                             child: Row(
                               children: [
-                                Text(
-                                    s.published(formateDate(
-                                        widget.episodeItem!.pubDate!)),
-                                    style:
-                                        TextStyle(color: context.accentColor)),
+                                if (_episodeItem.versionInfo ==
+                                    VersionInfo.NONE)
+                                  DropdownButton(
+                                    hint: Text(
+                                        s.published(
+                                            formateDate(_episodeItem.pubDate)),
+                                        style: TextStyle(
+                                            color: context.accentColor)),
+                                    underline: Center(),
+                                    isDense: true,
+                                    icon: Center(),
+                                    items: [
+                                      DropdownMenuItem(
+                                          child: Text(
+                                              s.published(formateDate(
+                                                  _episodeItem.pubDate)),
+                                              style: TextStyle(
+                                                  color: context.accentColor)))
+                                    ],
+                                    onChanged: null,
+                                  )
+                                else
+                                  FutureBuilder<EpisodeBrief>(
+                                    // TODO: Make ui responsive.
+                                    future: _getEpisodeVersions(),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.hasData) {
+                                        List<EpisodeBrief?> versions = snapshot
+                                            .data!.versions!.values
+                                            .toList();
+                                        versions.sort((a, b) =>
+                                            b!.pubDate.compareTo(a!.pubDate));
+                                        return MyDropdownButton(
+                                            hint: Text(
+                                                s.published(formateDate(
+                                                    _episodeItem.pubDate)),
+                                                style: TextStyle(
+                                                    color:
+                                                        context.accentColor)),
+                                            underline: Center(),
+                                            isDense: true,
+                                            value: versions.singleWhere((e) =>
+                                                e!.versionInfo !=
+                                                VersionInfo.IS),
+                                            items: versions
+                                                .map((e) => DropdownMenuItem(
+                                                    value: e,
+                                                    child: Row(
+                                                      children: [
+                                                        Text(
+                                                            s.published(
+                                                                formateDate(e!
+                                                                    .pubDate)),
+                                                            style: TextStyle(
+                                                                color: context
+                                                                    .accentColor))
+                                                      ],
+                                                    )))
+                                                .toList(),
+                                            onChanged: (EpisodeBrief? episode) {
+                                              _setEpisodeDisplayVersion(
+                                                  episode!);
+                                            });
+                                      } else {
+                                        return Center();
+                                      }
+                                    },
+                                  ),
                                 SizedBox(width: 10),
-                                if (widget.episodeItem!.explicit == 1)
+                                if (_episodeItem.isExplicit == true)
                                   Text('E',
                                       style: TextStyle(
                                           fontWeight: FontWeight.bold,
-                                          color: context.error)),
-                                Spacer(),
-                                FutureBuilder<List<EpisodeBrief>>(
-                                  // TODO: Make ui responsive.
-                                  future: _dbHelper.getEpisodes(episodeTitles: [
-                                    widget.episodeItem!.title ?? ''
-                                  ], optionalFields: [
-                                    EpisodeField.duplicateStatus
-                                  ]),
-                                  builder: (context, snapshot) {
-                                    if (snapshot.hasData &&
-                                        snapshot.data!.length > 1) {
-                                      return DropdownButton(
-                                          hint: Text("Versions"),
-                                          items: snapshot.data!
-                                              .map((e) => DropdownMenuItem(
-                                                  value: e,
-                                                  child: Text(
-                                                    formateDate(e.pubDate!),
-                                                    style: e.duplicateStatus ==
-                                                            "IS"
-                                                        ? context
-                                                            .textTheme.bodyText1
-                                                        : context.textTheme
-                                                            .bodyText1!
-                                                            .copyWith(
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold),
-                                                  )))
-                                              .toList(),
-                                          onChanged: (EpisodeBrief? episode) {
-                                            _dbHelper
-                                                .setEpisodeAsDisplayVersion(
-                                                    episode!);
-                                          });
-                                    } else {
-                                      return Center();
-                                    }
-                                  },
-                                )
+                                          color: context.error))
                               ],
                             ),
                           ),
@@ -221,7 +247,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                 horizontal: 20, vertical: 5),
                             child: Row(
                               children: <Widget>[
-                                if (widget.episodeItem!.duration != 0)
+                                if (_episodeItem.enclosureDuration != 0)
                                   Container(
                                       decoration: BoxDecoration(
                                           color: context.secondary,
@@ -234,14 +260,13 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                       alignment: Alignment.center,
                                       child: Text(
                                         s.minsCount(
-                                          widget.episodeItem!.duration! ~/ 60,
+                                          _episodeItem.enclosureDuration! ~/ 60,
                                         ),
                                         style: TextStyle(
                                             color: context.background),
                                       )),
-                                if (widget.episodeItem!.enclosureLength !=
-                                        null &&
-                                    widget.episodeItem!.enclosureLength != 0)
+                                if (_episodeItem!.enclosureSize != null &&
+                                    _episodeItem!.enclosureSize != 0)
                                   Container(
                                     decoration: BoxDecoration(
                                         color: context.tertiary,
@@ -253,13 +278,13 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                         EdgeInsets.symmetric(horizontal: 10.0),
                                     alignment: Alignment.center,
                                     child: Text(
-                                      '${widget.episodeItem!.enclosureLength! ~/ 1000000}MB',
+                                      '${_episodeItem!.enclosureSize! ~/ 1000000}MB',
                                       style:
                                           TextStyle(color: context.background),
                                     ),
                                   ),
                                 FutureBuilder<PlayHistory>(
-                                    future: _getPosition(widget.episodeItem!),
+                                    future: _getPosition(_episodeItem!),
                                     builder: (context, snapshot) {
                                       if (snapshot.hasError) {
                                         developer.log(snapshot.error as String);
@@ -282,7 +307,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                                           context.accentColor)),
                                             ),
                                             onPressed: () => audio.episodeLoad(
-                                                widget.episodeItem,
+                                                _episodeItem,
                                                 startPosition:
                                                     (snapshot.data!.seconds! *
                                                             1000)
@@ -314,7 +339,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                               ],
                             ),
                           ),
-                          ShowNote(episode: widget.episodeItem),
+                          ShowNote(episode: _episodeItem),
                           Selector<AudioPlayerNotifier,
                                   Tuple2<bool, PlayerHeight?>>(
                               selector: (_, audio) => Tuple2(
@@ -345,7 +370,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                         child: SingleChildScrollView(
                           scrollDirection: Axis.vertical,
                           child: MenuBar(
-                              episodeItem: widget.episodeItem,
+                              episodeItem: _episodeItem,
                               heroTag: widget.heroTag,
                               hide: widget.hide),
                         ),
@@ -358,7 +383,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                   builder: (_, data, __) => Container(
                     child: PlayerWidget(
                         playerKey: _playerKey,
-                        isPlayingPage: data == widget.episodeItem),
+                        isPlayingPage: data == _episodeItem),
                   ),
                 ),
               ],
@@ -367,5 +392,35 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
         ),
       ),
     );
+  }
+
+  Future<EpisodeBrief> _getEpisodeVersions() async {
+    if (_episodeItem.versions == null ||
+        _episodeItem.versions!.containsValue(null)) {
+      EpisodeBrief episode =
+          await _dbHelper.populateEpisodeVersions(_episodeItem);
+      _episodeItem = episode;
+    }
+    return _episodeItem;
+  }
+
+  Future<void> _setEpisodeDisplayVersion(EpisodeBrief episode) async {
+    await _dbHelper.setEpisodeDisplayVersion(episode);
+    Map<int, EpisodeBrief?>? versions = episode.versions!;
+    for (int version in versions.keys) {
+      if (versions[version]!.versionInfo == VersionInfo.FHAS ||
+          versions[version]!.versionInfo == VersionInfo.HAS) {
+        versions[versions[version]!.id] =
+            versions[version]!.copyWith(versionInfo: VersionInfo.IS);
+      }
+    }
+    episode =
+        episode.copyWith(versionInfo: VersionInfo.FHAS, versions: versions);
+    episode.versions![episode.id] = episode;
+    if (mounted) {
+      setState(() {
+        _episodeItem = episode;
+      });
+    }
   }
 }

@@ -85,7 +85,7 @@ class Playlist extends Equatable {
     if (episodeList.isNotEmpty) {
       for (var url in episodeList) {
         var episode;
-        var episodes = await _dbHelper.getEpisodes(episodeIds: [
+        var episodes = await _dbHelper.getEpisodes(episodeUrls: [
           url
         ], optionalFields: [
           EpisodeField.mediaId,

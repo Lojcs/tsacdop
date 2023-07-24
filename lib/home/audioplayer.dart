@@ -1636,9 +1636,32 @@ class _ControlPanelState extends State<ControlPanel>
                                           Navigator.push(
                                               context,
                                               FadeRoute(
-                                                  page: EpisodeDetail(
-                                                      episodeItem: data.item1,
-                                                      heroTag: 'playpanel')));
+                                                  page: FutureBuilder(
+                                                      // TODO: Check which fields are actually needed.
+                                                      future: data.item1!
+                                                          .copyWithFromDB([
+                                                        EpisodeField
+                                                            .description,
+                                                        EpisodeField
+                                                            .enclosureDuration,
+                                                        EpisodeField
+                                                            .enclosureSize,
+                                                        EpisodeField
+                                                            .episodeImage,
+                                                        EpisodeField
+                                                            .podcastImage,
+                                                        EpisodeField
+                                                            .primaryColor,
+                                                        EpisodeField.versionInfo
+                                                      ]),
+                                                      builder: ((context,
+                                                              snapshot) =>
+                                                          EpisodeDetail(
+                                                              episodeItem: snapshot
+                                                                      .data
+                                                                  as EpisodeBrief,
+                                                              heroTag:
+                                                                  'playpanel')))));
                                         }
                                       },
                                       child: Row(
@@ -1655,7 +1678,7 @@ class _ControlPanelState extends State<ControlPanel>
                                           SizedBox(
                                             width: 100,
                                             child: Text(
-                                              data.item1!.feedTitle!,
+                                              data.item1!.podcastTitle!,
                                               maxLines: 1,
                                               overflow: TextOverflow.fade,
                                             ),

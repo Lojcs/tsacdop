@@ -466,20 +466,20 @@ class S {
   }
 
   /// `Newest`
-  String get episodeVersioningForceNew {
+  String get episodeVersioningNew {
     return Intl.message(
       'Newest',
-      name: 'episodeVersioningForceNew',
+      name: 'episodeVersioningNew',
       desc: '',
       args: [],
     );
   }
 
   /// `Oldest`
-  String get episodeVersioningForceOld {
+  String get episodeVersioningOld {
     return Intl.message(
       'Oldest',
-      name: 'episodeVersioningForceOld',
+      name: 'episodeVersioningOld',
       desc: '',
       args: [],
     );
@@ -1112,6 +1112,16 @@ class S {
       name: 'listened',
       desc: '',
       args: [],
+    );
+  }
+
+  /// `Local episode at {filePath}`
+  String localEpisodeDescription(Object filePath) {
+    return Intl.message(
+      'Local episode at $filePath',
+      name: 'localEpisodeDescription',
+      desc: '',
+      args: [filePath],
     );
   }
 
@@ -2232,20 +2242,20 @@ class S {
     );
   }
 
-  /// `Episode Versioning`
+  /// `Default Episode Version`
   String get settingsEpisodeVersioning {
     return Intl.message(
-      'Episode Versioning',
+      'Default Episode Version',
       name: 'settingsEpisodeVersioning',
       desc: '',
       args: [],
     );
   }
 
-  /// `How the display version of an episode is chosen. Can be overridden in podcast settings.`
+  /// `Which version of an episode is displayed/downloaded by default. Can be overridden in podcast settings.`
   String get settingsEpisodeVersioningDes {
     return Intl.message(
-      'How the display version of an episode is chosen. Can be overridden in podcast settings.',
+      'Which version of an episode is displayed/downloaded by default. Can be overridden in podcast settings.',
       name: 'settingsEpisodeVersioningDes',
       desc: '',
       args: [],

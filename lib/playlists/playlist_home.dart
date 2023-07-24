@@ -204,7 +204,7 @@ class _PlaylistHomeState extends State<PlaylistHome> {
                                   selector: (_, audio) => audio.lastPosition,
                                   builder: (_, position, __) {
                                     return Text(
-                                        '${(position ~/ 1000).toTime} / ${(data.item4?.duration ?? 0).toTime}');
+                                        '${(position ~/ 1000).toTime} / ${(data.item4?.enclosureDuration ?? 0).toTime}');
                                   },
                                 ),
                             ],
@@ -223,9 +223,12 @@ class _PlaylistHomeState extends State<PlaylistHome> {
                                       Selector<AudioPlayerNotifier, int>(
                                         selector: (_, audio) {
                                           if (!audio.playerRunning &&
-                                              audio.episode!.duration != 0) {
+                                              audio.episode!
+                                                      .enclosureDuration !=
+                                                  0) {
                                             return (audio.lastPosition ~/
-                                                (audio.episode!.duration! *
+                                                (audio.episode!
+                                                        .enclosureDuration! *
                                                     10));
                                           } else if (audio.playerRunning &&
                                               audio.backgroundAudioDuration !=
@@ -665,7 +668,7 @@ class _Playlists extends StatefulWidget {
 class __PlaylistsState extends State<_Playlists> {
   Future<EpisodeBrief?> _getEpisode(String url) async {
     var dbHelper = DBHelper();
-    List episodes = await dbHelper.getEpisodes(episodeIds: [
+    List episodes = await dbHelper.getEpisodes(episodeUrls: [
       url
     ], optionalFields: [
       EpisodeField.mediaId,
@@ -987,17 +990,15 @@ class __NewPlaylistState extends State<_NewPlaylist> {
       primaryColor = await _getColor(File(imagePath));
     }
     final fileName = path.split('/').last;
-    return EpisodeBrief(
-        fileName,
-        'file://$path',
-        fileLength,
-        pubDate,
-        metadata.albumName ?? '',
-        primaryColor ?? '',
-        metadata.trackDuration,
-        0,
-        '',
-        episodeImage: imagePath ?? '');
+    return EpisodeBrief(0, fileName, 'file://$path', localFolderId,
+        metadata.albumName ?? '', pubDate, // metadata.year ?
+        description: context.s.localEpisodeDescription(path),
+        enclosureDuration: metadata.trackDuration,
+        enclosureSize: fileLength,
+        mediaId: 'file://$path',
+        podcastImage: '',
+        episodeImage: imagePath ?? '',
+        primaryColor: primaryColor);
   }
 
   Future<String> _getColor(File file) async {
