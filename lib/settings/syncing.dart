@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:tsacdop/local_storage/sqflite_localpodcast.dart';
 import 'package:tuple/tuple.dart';
 
 import '../state/setting_state.dart';
@@ -30,9 +31,9 @@ class _SyncingSettingState extends State<SyncingSetting> {
           backgroundColor: Theme.of(context).primaryColor,
         ),
         body: SingleChildScrollView(
-          child: Selector<SettingState, Tuple3<bool?, int?, String?>>(
+          child: Selector<SettingState, Tuple3<bool?, int?, VersionPolicy?>>(
             selector: (_, settings) => Tuple3(settings.autoUpdate,
-                settings.updateInterval, settings.duplicatePolicy),
+                settings.updateInterval, settings.versionPolicy),
             builder: (_, data, __) => Column(
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -113,22 +114,22 @@ class _SyncingSettingState extends State<SyncingSetting> {
                 Container(
                     padding: EdgeInsets.symmetric(horizontal: 70),
                     child: MyDropdownButton(
-                        hint: Text(_getDuplicatePolicyString(data.item3!)),
+                        hint: Text(_getVersionPolicyString(data.item3!)),
                         underline: Center(),
                         elevation: 1,
                         displayItemCount: 3,
                         value: data.item3,
-                        onChanged: (String str) async {
-                          settings.duplicatePolicy = str;
+                        onChanged: (VersionPolicy versionPolicy) async {
+                          settings.versionPolicy = versionPolicy;
                         },
-                        items: <String>[
-                          "NewIfNotDownloaded",
-                          "ForceNew",
-                          "ForceOld"
-                        ].map<DropdownMenuItem<String>>((e) {
-                          return DropdownMenuItem<String>(
+                        items: <VersionPolicy>[
+                          VersionPolicy.New,
+                          VersionPolicy.Old,
+                          VersionPolicy.NewIfNoDownloaded
+                        ].map<DropdownMenuItem<VersionPolicy>>((e) {
+                          return DropdownMenuItem<VersionPolicy>(
                               value: e,
-                              child: Text(_getDuplicatePolicyString(e)));
+                              child: Text(_getVersionPolicyString(e)));
                         }).toList())),
               ],
             ),
@@ -138,15 +139,15 @@ class _SyncingSettingState extends State<SyncingSetting> {
     );
   }
 
-  String _getDuplicatePolicyString(String? duplicatePolicy) {
+  String _getVersionPolicyString(VersionPolicy? versionPolicy) {
     final s = context.s;
-    switch (duplicatePolicy) {
-      case "NewIfNotDownloaded":
+    switch (versionPolicy) {
+      case VersionPolicy.New:
+        return s.episodeVersioningNew;
+      case VersionPolicy.Old:
+        return s.episodeVersioningOld;
+      case VersionPolicy.NewIfNoDownloaded:
         return s.episodeVersioningNewIfNotDownloaded;
-      case "ForceNew":
-        return s.episodeVersioningForceNew;
-      case "ForceOld":
-        return s.episodeVersioningForceOld;
       default:
         return '';
     }

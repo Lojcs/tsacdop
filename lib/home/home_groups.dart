@@ -537,11 +537,17 @@ class _PodcastPreviewState extends State<PodcastPreview> {
 
   Future<List<EpisodeBrief>> _getRssItemTop(PodcastLocal podcastLocal) async {
     final dbHelper = DBHelper();
-    final episodes = await dbHelper.getEpisodes(
-        feedIds: [podcastLocal.id!],
-        sortBy: Sorter.pubDate,
-        sortOrder: SortOrder.DESC,
-        limit: 2);
+    final episodes = await dbHelper.getEpisodes(feedIds: [
+      podcastLocal.id
+    ], optionalFields: [
+      EpisodeField.description,
+      EpisodeField.enclosureDuration,
+      EpisodeField.enclosureSize,
+      EpisodeField.episodeImage,
+      EpisodeField.podcastImage,
+      EpisodeField.primaryColor,
+      EpisodeField.versionInfo
+    ], sortBy: Sorter.pubDate, sortOrder: SortOrder.DESC, limit: 2);
     return episodes;
   }
 }
@@ -860,8 +866,9 @@ class ShowEpisode extends StatelessWidget {
                                           alignment: Alignment.center,
                                           child: Text(
                                             episodes![index]
-                                                .enclosureDuration!
-                                                .toTime,
+                                                    .enclosureDuration
+                                                    ?.toTime ??
+                                                "",
                                             style: TextStyle(
                                               fontSize: width / 35,
                                               // color: _c,

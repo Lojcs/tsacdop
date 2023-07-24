@@ -31,8 +31,8 @@ class EpisodeBrief extends Equatable {
   final bool? isPlayed;
   final VersionInfo? versionInfo;
   final Map<int, EpisodeBrief?>? versions;
-  final int? skipSecondsStart;
-  final int? skipSecondsEnd;
+  final int skipSecondsStart;
+  final int skipSecondsEnd;
   final String? chapterLink;
 
   EpisodeBrief(this.id, this.title, this.enclosureUrl, this.podcastId,
@@ -52,14 +52,14 @@ class EpisodeBrief extends Equatable {
       this.isPlayed,
       this.versionInfo,
       this.versions,
-      this.skipSecondsStart,
-      this.skipSecondsEnd,
+      this.skipSecondsStart = 0,
+      this.skipSecondsEnd = 0,
       this.chapterLink});
 
   MediaItem toMediaItem() {
     return MediaItem(
         id: mediaId!,
-        title: title!,
+        title: title,
         artist: podcastTitle,
         album: podcastTitle,
         duration: Duration.zero,
@@ -72,18 +72,22 @@ class EpisodeBrief extends Equatable {
   }
 
   ImageProvider get avatarImage {
-    return File(podcastImage!).existsSync()
-        ? FileImage(File(podcastImage!))
-        : File(episodeImage!).existsSync()
-            ? FileImage(File(episodeImage!))
-            : ((episodeImage != '')
-                    ? CachedNetworkImageProvider(episodeImage!)
-                    : AssetImage('assets/avatar_backup.png'))
-                as ImageProvider<Object>;
+    if (podcastImage != null) {
+      if (File(podcastImage!).existsSync()) {
+        return FileImage(File(podcastImage!));
+      }
+    } else if (episodeImage != null) {
+      if (File(episodeImage!).existsSync()) {
+        return FileImage(File(episodeImage!));
+      } else if (episodeImage != '') {
+        return CachedNetworkImageProvider(episodeImage!);
+      }
+    }
+    return AssetImage('assets/avatar_backup.png');
   }
 
   Color backgroudColor(BuildContext context) {
-    if (primaryColor == '') return context.accentColor;
+    if (primaryColor == '' || primaryColor == null) return context.accentColor;
     return context.brightness == Brightness.light
         ? primaryColor!.colorizedark()
         : primaryColor!.colorizeLight();
@@ -119,7 +123,6 @@ class EpisodeBrief extends Equatable {
       EpisodeField.chapterLink: chapterLink
     };
     List<EpisodeField> fieldList = [];
-    this.id;
     for (EpisodeField field in EpisodeField.values) {
       if (_fieldsMap[field] != null) fieldList.add(field);
     }
@@ -219,8 +222,11 @@ class EpisodeBrief extends Equatable {
     };
     var dbHelper = DBHelper();
     Map<Symbol, dynamic> oldFields = {};
+    List<EpisodeField> fields = this.fields;
+    for (EpisodeField field in newFields) {
+      fields.remove(field);
+    }
     for (EpisodeField field in fields) {
-      newFields.remove(field);
       oldFields[_fieldsMap[field]![0]] = _fieldsMap[field]![1];
     }
     bool populateVersions = newFields.remove(EpisodeField.versionsPopulated);

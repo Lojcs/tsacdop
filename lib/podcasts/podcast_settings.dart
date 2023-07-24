@@ -136,8 +136,8 @@ class _PodcastSettingState extends State<PodcastSetting> {
                 ),
               );
             }),
-        FutureBuilder<String>(
-            future: _getDuplicatePolicy(widget.podcastLocal!.id),
+        FutureBuilder<VersionPolicy>(
+            future: _getVersionPolicy(widget.podcastLocal!.id),
             builder: (context, snapshot) {
               if (snapshot.hasData) {
                 return Column(children: <Widget>[
@@ -153,7 +153,7 @@ class _PodcastSettingState extends State<PodcastSetting> {
                   Container(
                       child: MyDropdownButton(
                           hint: FutureBuilder<String>(
-                            future: _getDuplicatePolicyString(snapshot.data!),
+                            future: _getVersionPolicyText(snapshot.data!),
                             builder: (context, snapshot) {
                               if (snapshot.hasData) {
                                 return Text(snapshot.data!);
@@ -165,19 +165,19 @@ class _PodcastSettingState extends State<PodcastSetting> {
                           underline: Center(),
                           displayItemCount: 4,
                           value: snapshot.data,
-                          onChanged: (String str) async {
-                            _setDuplicatePolicy(widget.podcastLocal!.id, str);
+                          onChanged: (VersionPolicy policy) async {
+                            _setVersionPolicy(widget.podcastLocal!.id, policy);
                           },
-                          items: <String>[
-                            "default",
-                            "NewIfNotDownloaded",
-                            "ForceNew",
-                            "ForceOld"
-                          ].map<DropdownMenuItem<String>>((e) {
-                            return DropdownMenuItem<String>(
+                          items: <VersionPolicy>[
+                            VersionPolicy.Default,
+                            VersionPolicy.New,
+                            VersionPolicy.Old,
+                            VersionPolicy.NewIfNoDownloaded
+                          ].map<DropdownMenuItem<VersionPolicy>>((e) {
+                            return DropdownMenuItem<VersionPolicy>(
                                 value: e,
                                 child: FutureBuilder<String>(
-                                  future: _getDuplicatePolicyString(e),
+                                  future: _getVersionPolicyText(e),
                                   builder: (context, snapshot) {
                                     if (snapshot.hasData) {
                                       return Text(snapshot.data!);
@@ -384,8 +384,9 @@ class _PodcastSettingState extends State<PodcastSetting> {
     if (mounted) setState(() {});
   }
 
-  Future<void> _setDuplicatePolicy(String? id, String duplicatePolicy) async {
-    await _dbHelper.saveVersionPolicy(id, versionPolicy: duplicatePolicy);
+  Future<void> _setVersionPolicy(
+      String? id, VersionPolicy versionPolicy) async {
+    await _dbHelper.saveVersionPolicy(id, versionPolicy);
     if (mounted) setState(() {});
   }
 
@@ -409,7 +410,7 @@ class _PodcastSettingState extends State<PodcastSetting> {
     return await _dbHelper.getHideNewMark(id);
   }
 
-  Future<String> _getDuplicatePolicy(String? id) async {
+  Future<VersionPolicy> _getVersionPolicy(String? id) async {
     return await _dbHelper.getPodcastVersionPolicy(id);
   }
 
@@ -516,20 +517,19 @@ class _PodcastSettingState extends State<PodcastSetting> {
     }
   }
 
-  Future<String> _getDuplicatePolicyString(String duplicatePolicy) async {
+  Future<String> _getVersionPolicyText(VersionPolicy versionPolicy) async {
     final s = context.s;
-    Map<String, String> sMap = {
-      "NewIfNotDownloaded": s.episodeVersioningNewIfNotDownloaded,
-      "ForceNew": s.episodeVersioningForceNew,
-      "ForceOld": s.episodeVersioningForceOld
-    };
-    if (duplicatePolicy == "default") {
-      var storage = KeyValueStorage(duplicatePolicyKey);
-      var globalDuplicatePolicy =
-          await storage.getString(defaultValue: "NewIfNotDownloaded");
-      return "${s.capitalDefault} (${sMap[globalDuplicatePolicy]})";
-    } else {
-      return sMap[duplicatePolicy]!;
+    switch (versionPolicy) {
+      case VersionPolicy.New:
+        return s.episodeVersioningNew;
+      case VersionPolicy.Old:
+        return s.episodeVersioningOld;
+      case VersionPolicy.NewIfNoDownloaded:
+        return s.episodeVersioningNewIfNotDownloaded;
+      case VersionPolicy.Default:
+        var storage = KeyValueStorage(versionPolicyKey);
+        var globalVersionPolicy = await storage.getString(defaultValue: "DON");
+        return "${s.capitalDefault} (${await _getVersionPolicyText(versionPolicyFromString(globalVersionPolicy))})";
     }
   }
 }

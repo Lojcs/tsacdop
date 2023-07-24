@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:provider/provider.dart';
+import 'package:tsacdop/type/episodebrief.dart';
 
 import '../episodes/episode_detail.dart';
+import '../local_storage/sqflite_localpodcast.dart';
 import '../state/download_state.dart';
 import '../type/episode_task.dart';
 import '../util/pageroute.dart';
@@ -90,9 +92,21 @@ class _DownloadListState extends State<DownloadList> {
                       onTap: () => Navigator.push(
                         context,
                         ScaleRoute(
-                            page: EpisodeDetail(
-                          episodeItem: tasks[index].episode,
-                        )),
+                            page: FutureBuilder(
+                                // TODO: Check which fields are actually needed.
+                                future: tasks[index].episode!.copyWithFromDB([
+                                  EpisodeField.description,
+                                  EpisodeField.enclosureDuration,
+                                  EpisodeField.enclosureSize,
+                                  EpisodeField.episodeImage,
+                                  EpisodeField.podcastImage,
+                                  EpisodeField.primaryColor,
+                                  EpisodeField.versionInfo
+                                ]),
+                                builder: ((context, snapshot) => EpisodeDetail(
+                                      episodeItem:
+                                          snapshot.data as EpisodeBrief,
+                                    )))),
                       ),
                       title: SizedBox(
                         height: 40,

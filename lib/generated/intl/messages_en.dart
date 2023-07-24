@@ -50,6 +50,8 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m10(service) => "Integrate with ${service}";
 
+  static String m32(filePath) => "Local episode at ${filePath}";
+
   static String m11(userName) => "Logged in as ${userName}";
 
   static String m12(count) =>
@@ -150,13 +152,11 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Edit group name"),
         "endOfEpisode": MessageLookupByLibrary.simpleMessage("End of Episode"),
         "episode": m4,
-        "episodeVersioningForceNew":
-            MessageLookupByLibrary.simpleMessage("Newest"),
-        "episodeVersioningForceOld":
-            MessageLookupByLibrary.simpleMessage("Oldest"),
+        "episodeVersioningNew": MessageLookupByLibrary.simpleMessage("Newest"),
         "episodeVersioningNewIfNotDownloaded":
             MessageLookupByLibrary.simpleMessage(
                 "Downloaded if exists, else newest"),
+        "episodeVersioningOld": MessageLookupByLibrary.simpleMessage("Oldest"),
         "fastForward": MessageLookupByLibrary.simpleMessage("Fast forward"),
         "fastRewind": MessageLookupByLibrary.simpleMessage("Fast rewind"),
         "featureDiscoveryEditGroup":
@@ -250,6 +250,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "listen": MessageLookupByLibrary.simpleMessage("Listen"),
         "listened": MessageLookupByLibrary.simpleMessage("Listened"),
         "loadMore": MessageLookupByLibrary.simpleMessage("Load more"),
+        "localEpisodeDescription": m32,
         "loggedInAs": m11,
         "login": MessageLookupByLibrary.simpleMessage("Login"),
         "loginFailed": MessageLookupByLibrary.simpleMessage("Login failed"),
@@ -416,9 +417,9 @@ class MessageLookup extends MessageLookupByLibrary {
         "settingsEpisodeManagement":
             MessageLookupByLibrary.simpleMessage("Episode Management"),
         "settingsEpisodeVersioning":
-            MessageLookupByLibrary.simpleMessage("Episode Versioning"),
+            MessageLookupByLibrary.simpleMessage("Default Episode Version"),
         "settingsEpisodeVersioningDes": MessageLookupByLibrary.simpleMessage(
-            "How the display version of an episode is chosen. Can be overridden in podcast settings."),
+            "Which version of an episode is displayed/downloaded by default. Can be overridden in podcast settings."),
         "settingsExportDes": MessageLookupByLibrary.simpleMessage(
             "Export and import app settings"),
         "settingsFastForwardSec":

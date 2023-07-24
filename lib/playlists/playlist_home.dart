@@ -990,17 +990,15 @@ class __NewPlaylistState extends State<_NewPlaylist> {
       primaryColor = await _getColor(File(imagePath));
     }
     final fileName = path.split('/').last;
-    return EpisodeBrief(
-        fileName,
-        'file://$path',
-        fileLength,
-        pubDate,
-        metadata.albumName ?? '',
-        primaryColor ?? '',
-        metadata.trackDuration,
-        0,
-        '',
-        episodeImage: imagePath ?? '');
+    return EpisodeBrief(0, fileName, 'file://$path', localFolderId,
+        metadata.albumName ?? '', pubDate, // metadata.year ?
+        description: context.s.localEpisodeDescription(path),
+        enclosureDuration: metadata.trackDuration,
+        enclosureSize: fileLength,
+        mediaId: 'file://$path',
+        podcastImage: '',
+        episodeImage: imagePath ?? '',
+        primaryColor: primaryColor);
   }
 
   Future<String> _getColor(File file) async {
