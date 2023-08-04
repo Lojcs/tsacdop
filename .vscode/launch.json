@@ -8,9 +8,10 @@
             "name": "Flutter",
             "request": "launch",
             "type": "dart",
+            //"flutterMode": "profile",
             "args": [
                 "--flavor",
-                "play"
+                "fdroid"
             ]
         }
     ]
