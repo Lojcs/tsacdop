@@ -23,20 +23,31 @@ enum Filter { downloaded, liked, search, all }
 
 enum SortOrder { ASC, DESC }
 
-Map<SortOrder, String> _sortOrderMap = {
-  SortOrder.ASC: "ASC",
-  SortOrder.DESC: "DESC"
-};
+String sortOrderToString(SortOrder sortOrder) {
+  switch (sortOrder) {
+    case SortOrder.ASC:
+      return "ASC";
+    case SortOrder.DESC:
+      return "DESC";
+  }
+}
 
 enum Sorter { pubDate, downloadDate, enclosureLength, likedDate, random }
 
-Map<Sorter, String> _sorterMap = {
-  Sorter.pubDate: "E.milliseconds",
-  Sorter.downloadDate: "E.download_date",
-  Sorter.enclosureLength: "E.enclosure_length",
-  Sorter.likedDate: "E.liked_date",
-  Sorter.random: "RANDOM()"
-};
+String sorterToString(Sorter sorter) {
+  switch (sorter) {
+    case Sorter.pubDate:
+      return "E.milliseconds";
+    case Sorter.downloadDate:
+      return "E.download_date";
+    case Sorter.enclosureLength:
+      return "E.enclosure_length";
+    case Sorter.likedDate:
+      return "E.liked_date";
+    case Sorter.random:
+      return "RANDOM()";
+  }
+}
 
 enum EpisodeField {
   description,
@@ -82,9 +93,24 @@ VersionInfo versionInfoFromString(String string) {
   }
 }
 
+String versionInfoToString(VersionInfo versionInfo) {
+  switch (versionInfo) {
+    case VersionInfo.NONE:
+      return "NONE";
+    case VersionInfo.FHAS:
+      return "FHAS";
+    case VersionInfo.HAS:
+      return "HAS";
+    case VersionInfo.IS:
+      return "IS";
+    default:
+      throw "Invalid VersionInfo string";
+  }
+}
+
 enum VersionPolicy { Default, New, Old, NewIfNoDownloaded }
 
-VersionPolicy versionPolicyFromString(String string) {
+VersionPolicy versionPolicyFromString([String string = "DEF"]) {
   switch (string) {
     case "NEW":
       return VersionPolicy.New;
@@ -92,8 +118,10 @@ VersionPolicy versionPolicyFromString(String string) {
       return VersionPolicy.Old;
     case "DON":
       return VersionPolicy.NewIfNoDownloaded;
-    default: //case "DEF":
+    case "DEF":
       return VersionPolicy.Default;
+    default:
+      throw "Invalid VersionPolicy string";
   }
 }
 
@@ -1571,13 +1599,13 @@ class DBHelper {
       for (int i = 0; i < rangeParameters.length; i++) {
         if (rangeDelimiters[i].item1 != -1 && rangeDelimiters[i].item2 != -1) {
           filters.add(
-              " ${_sorterMap[rangeParameters[i]]} BETWEEN ${rangeDelimiters[i].item1} AND ${rangeDelimiters[i].item2}");
+              " ${sorterToString(rangeParameters[i])} BETWEEN ${rangeDelimiters[i].item1} AND ${rangeDelimiters[i].item2}");
         } else if (rangeDelimiters[i].item1 != -1) {
           filters.add(
-              " ${_sorterMap[rangeParameters[i]]} > ${rangeDelimiters[i].item1}");
+              " ${sorterToString(rangeParameters[i])} > ${rangeDelimiters[i].item1}");
         } else if (rangeDelimiters[i].item2 != -1) {
           filters.add(
-              " ${_sorterMap[rangeParameters[i]]} < ${rangeDelimiters[i].item2}");
+              " ${sorterToString(rangeParameters[i])} < ${rangeDelimiters[i].item2}");
         }
       }
     }
@@ -1600,10 +1628,10 @@ class DBHelper {
     }
     if (sortBy != null) {
       if (sortBy == Sorter.random) {
-        query.add(" ORDER BY ${_sorterMap[sortBy]!}");
+        query.add(" ORDER BY ${sorterToString(sortBy)}");
       } else {
         query.add(
-            " ORDER BY ${_sorterMap[sortBy]!} ${_sortOrderMap[sortOrder]!}");
+            " ORDER BY ${sorterToString(sortBy)} ${sortOrderToString(sortOrder)}");
       }
     }
     if (limit != -1) {
