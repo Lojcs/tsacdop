@@ -94,37 +94,61 @@ class EpisodeBrief extends Equatable {
   }
 
   Color cardColor(BuildContext context) {
-    final schema = ColorScheme.fromSeed(
-      seedColor: primaryColor!.colorizedark(),
+    return ColorScheme.fromSeed(
+      seedColor: primaryColor!.toColor(),
       brightness: context.brightness,
-    );
-    return schema.primaryContainer;
+    ).secondaryContainer;
   }
 
-  List<EpisodeField> get fields {
-    Map<EpisodeField, dynamic> _fieldsMap = {
-      EpisodeField.description: description,
-      EpisodeField.enclosureDuration: enclosureDuration,
-      EpisodeField.enclosureSize: enclosureSize,
-      EpisodeField.downloaded: downloaded,
-      EpisodeField.downloadDate: downloadDate,
-      EpisodeField.mediaId: mediaId,
-      EpisodeField.episodeImage: episodeImage,
-      EpisodeField.podcastImage: podcastImage,
-      EpisodeField.primaryColor: primaryColor,
-      EpisodeField.isExplicit: isExplicit,
-      EpisodeField.isLiked: isLiked,
-      EpisodeField.isNew: isNew,
-      EpisodeField.isPlayed: isPlayed,
-      EpisodeField.versionInfo: versionInfo,
-      EpisodeField.versions: versions,
-      EpisodeField.skipSecondsStart: skipSecondsStart,
-      EpisodeField.skipSecondsEnd: skipSecondsEnd,
-      EpisodeField.chapterLink: chapterLink
-    };
+  late final List<EpisodeField> fields = getfields();
+
+  dynamic _getFieldValue(EpisodeField episodeField) {
+    switch (episodeField) {
+      case EpisodeField.description:
+        return description;
+      case EpisodeField.enclosureDuration:
+        return enclosureDuration;
+      case EpisodeField.enclosureSize:
+        return enclosureSize;
+      case EpisodeField.downloaded:
+        return downloaded;
+      case EpisodeField.downloadDate:
+        return downloadDate;
+      case EpisodeField.mediaId:
+        return mediaId;
+      case EpisodeField.episodeImage:
+        return episodeImage;
+      case EpisodeField.podcastImage:
+        return podcastImage;
+      case EpisodeField.primaryColor:
+        return primaryColor;
+      case EpisodeField.isExplicit:
+        return isExplicit;
+      case EpisodeField.isLiked:
+        return isLiked;
+      case EpisodeField.isNew:
+        return isNew;
+      case EpisodeField.isPlayed:
+        return isPlayed;
+      case EpisodeField.versionInfo:
+        return versionInfo;
+      case EpisodeField.versions:
+        return versions;
+      case EpisodeField.versionsPopulated:
+        return versions;
+      case EpisodeField.skipSecondsStart:
+        return skipSecondsStart;
+      case EpisodeField.skipSecondsEnd:
+        return skipSecondsEnd;
+      case EpisodeField.chapterLink:
+        return chapterLink;
+    }
+  }
+
+  List<EpisodeField> getfields() {
     List<EpisodeField> fieldList = [];
     for (EpisodeField field in EpisodeField.values) {
-      if (_fieldsMap[field] != null) fieldList.add(field);
+      if (_getFieldValue(field) != null) fieldList.add(field);
     }
     if (versions != null) {
       if (versions!.length == 0) {
@@ -187,8 +211,12 @@ class EpisodeBrief extends Equatable {
           skipSecondsEnd: skipSecondsEnd ?? this.skipSecondsEnd,
           chapterLink: chapterLink ?? this.chapterLink);
 
-  Future<EpisodeBrief> copyWithFromDB(List<EpisodeField> newFields) async {
+  /// Returns a copy with the [newFields] filled from the database.
+  /// [keepExisting] disables overwriting existing fields.
+  Future<EpisodeBrief> copyWithFromDB(List<EpisodeField> newFields,
+      {bool keepExisting = false}) async {
     Map<EpisodeField, List> _fieldsMap = {
+      // I'm so sorry this is so ugly
       EpisodeField.description: [const Symbol("description"), description],
       EpisodeField.enclosureDuration: [
         const Symbol("enclosureDuration"),
@@ -220,11 +248,18 @@ class EpisodeBrief extends Equatable {
       ],
       EpisodeField.chapterLink: [const Symbol("chapterLink"), chapterLink]
     };
+
     var dbHelper = DBHelper();
     Map<Symbol, dynamic> oldFields = {};
     List<EpisodeField> fields = this.fields;
-    for (EpisodeField field in newFields) {
-      fields.remove(field);
+    if (keepExisting) {
+      for (EpisodeField field in newFields) {
+        fields.remove(field);
+      }
+    } else {
+      for (EpisodeField field in fields) {
+        newFields.remove(field);
+      }
     }
     for (EpisodeField field in fields) {
       oldFields[_fieldsMap[field]![0]] = _fieldsMap[field]![1];

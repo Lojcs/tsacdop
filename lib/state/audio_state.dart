@@ -407,20 +407,15 @@ class AudioPlayerNotifier extends ChangeNotifier {
       episodeNew = episode;
       _playFromSearchList.add(episode);
     } else {
-      var episodes = await _dbHelper.getEpisodes(episodeUrls: [
-        episode!.enclosureUrl
-      ], optionalFields: [
+      episodeNew = await episode!.copyWithFromDB([
         EpisodeField.mediaId,
+        EpisodeField.primaryColor,
         EpisodeField.isNew,
         EpisodeField.skipSecondsStart,
         EpisodeField.skipSecondsEnd,
         EpisodeField.episodeImage,
         EpisodeField.chapterLink
-      ]);
-      if (episodes.isEmpty)
-        episodeNew = null;
-      else
-        episodeNew = episodes[0];
+      ], keepExisting: true);
     }
     // @TODO  load episode from last position when player running
     if (playerRunning) {

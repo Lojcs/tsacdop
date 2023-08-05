@@ -110,7 +110,8 @@ String versionInfoToString(VersionInfo versionInfo) {
 
 enum VersionPolicy { Default, New, Old, NewIfNoDownloaded }
 
-VersionPolicy versionPolicyFromString([String string = "DEF"]) {
+// Maybe make this a method of String?
+VersionPolicy versionPolicyFromString(String string) {
   switch (string) {
     case "NEW":
       return VersionPolicy.New;

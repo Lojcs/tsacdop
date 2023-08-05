@@ -19,6 +19,7 @@ import '../local_storage/sqflite_localpodcast.dart';
 import '../podcasts/podcast_detail.dart';
 import '../state/audio_state.dart';
 import '../state/download_state.dart';
+import '../state/setting_state.dart';
 import '../type/episodebrief.dart';
 import '../type/play_histroy.dart';
 import '../type/podcastlocal.dart';
@@ -574,6 +575,7 @@ class EpisodeGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
+    final settings = Provider.of<SettingState>(context, listen: false);
     final options = LiveOptions(
       delay: Duration.zero,
       showItemInterval: Duration(milliseconds: 50),
@@ -694,7 +696,11 @@ class EpisodeGrid extends StatelessWidget {
                             )
                           : Container(
                               decoration: BoxDecoration(
-                                color: episodes![index].cardColor(context),
+                                color: ColorScheme.fromSeed(
+                                  seedColor:
+                                      episodes![index].primaryColor!.toColor(),
+                                  brightness: context.brightness,
+                                ).primary,
                                 borderRadius: BorderRadius.circular(20.0),
                                 border: Border.all(
                                   color: context.brightness == Brightness.light
@@ -879,8 +885,9 @@ class EpisodeGrid extends StatelessWidget {
                                   isLiked: isLiked,
                                   isListened: isListened,
                                   isDownloaded: isDownloaded,
-                                  cardColor:
-                                      episodes![index].cardColor(context),
+                                  cardColor: settings.realDark!
+                                      ? Colors.black
+                                      : episodes![index].cardColor(context),
                                   color: c,
                                   boo: boo,
                                 ),

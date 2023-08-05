@@ -58,11 +58,10 @@ class PodcastLocal extends Equatable {
   }
 
   Color cardColor(BuildContext context) {
-    final schema = ColorScheme.fromSeed(
-      seedColor: primaryColor!.colorizedark(),
+    return ColorScheme.fromSeed(
+      seedColor: primaryColor!.toColor(),
       brightness: context.brightness,
-    );
-    return schema.primaryContainer;
+    ).secondaryContainer;
   }
 
   PodcastLocal copyWith({int? updateCount, int? episodeCount}) {

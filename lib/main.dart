@@ -67,7 +67,7 @@ class MyApp extends StatelessWidget {
                 ? data.item2.copyWith(colorScheme: lightDynamic)
                 : data.item2;
             final darkTheme = data.item4!
-                ? data.item3.copyWith(colorScheme: lightDynamic)
+                ? data.item3.copyWith(colorScheme: darkDynamic)
                 : data.item3;
             return MaterialApp(
               themeMode: data.item1,

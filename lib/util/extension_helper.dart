@@ -116,4 +116,9 @@ extension StringExtension on String {
     }
     return c;
   }
+
+  Color toColor() {
+    var color = json.decode(this);
+    return Color.fromRGBO(color[0], color[1], color[2], 1);
+  }
 }

@@ -136,8 +136,12 @@ class SettingState extends ChangeNotifier {
   ThemeMode? _theme;
   ThemeMode? get theme => _theme;
 
-  ThemeData get lightTheme => ThemeData.light().copyWith(
-        colorScheme: _colors(Brightness.light, _accentSetColor!),
+  ThemeData get lightTheme => ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: _accentSetColor!,
+          primary: _accentSetColor!,
+          brightness: Brightness.light,
+        ),
         brightness: Brightness.light,
         primaryColor: Colors.grey[100],
         primaryColorLight: Colors.white,
@@ -210,10 +214,14 @@ class SettingState extends ChangeNotifier {
         useMaterial3: true,
       );
 
-  ThemeData get darkTheme => ThemeData.dark().copyWith(
-        colorScheme: _colors(Brightness.dark, _accentSetColor!),
+  ThemeData get darkTheme => ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: _accentSetColor!,
+          primary: _accentSetColor!,
+          brightness: Brightness.dark,
+          background: _realDark! ? Colors.black : null,
+        ),
         brightness: Brightness.dark,
-        primaryColorDark: Colors.grey[800],
         textTheme: TextTheme(
           headlineSmall: TextStyle(
               fontSize: 20.0,
@@ -261,7 +269,7 @@ class SettingState extends ChangeNotifier {
             scrolledUnderElevation: 0,
             systemOverlayStyle: SystemUiOverlayStyle.light),
         buttonTheme: ButtonThemeData(height: 32),
-        dialogBackgroundColor: _realDark! ? Colors.grey[900] : null,
+        dialogBackgroundColor: _realDark! ? Colors.grey : null,
         useMaterial3: true,
       );
 
@@ -269,13 +277,6 @@ class SettingState extends ChangeNotifier {
     _theme = mode;
     _saveTheme();
     notifyListeners();
-  }
-
-  ColorScheme _colors(Brightness brightness, Color targetColor) {
-    return ColorScheme.fromSeed(
-      seedColor: targetColor,
-      brightness: brightness,
-    );
   }
 
   void setWorkManager(int? hour) {
