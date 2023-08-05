@@ -380,10 +380,6 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                   children: groups[_groupIndex]!.podcasts.map<Widget>(
                     (podcastLocal) {
                       return Container(
-                        decoration: BoxDecoration(
-                            color: context.brightness == Brightness.light
-                                ? context.primaryColor
-                                : Colors.black12),
                         margin: EdgeInsets.symmetric(horizontal: 5.0),
                         key: ObjectKey(podcastLocal.title),
                         child: Material(

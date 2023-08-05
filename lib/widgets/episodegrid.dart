@@ -325,7 +325,13 @@ class EpisodeGrid extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: cardColor,
-        borderRadius: BorderRadius.circular(15.0),
+        borderRadius: BorderRadius.circular(20.0),
+        border: Border.all(
+          color: context.background == Colors.black
+              ? episodes![index!].getColorScheme(context).primary
+              : Colors.transparent,
+          width: 1.0,
+        ),
       ),
       clipBehavior: Clip.hardEdge,
       child: Stack(
@@ -695,20 +701,6 @@ class EpisodeGrid extends StatelessWidget {
                               ),
                             )
                           : Container(
-                              decoration: BoxDecoration(
-                                color: ColorScheme.fromSeed(
-                                  seedColor:
-                                      episodes![index].primaryColor!.toColor(),
-                                  brightness: context.brightness,
-                                ).primary,
-                                borderRadius: BorderRadius.circular(20.0),
-                                border: Border.all(
-                                  color: context.brightness == Brightness.light
-                                      ? context.primaryColor
-                                      : context.background,
-                                  width: 1.0,
-                                ),
-                              ),
                               child: FocusedMenuHolder(
                                 blurSize: 0.0,
                                 menuItemExtent: 45,
@@ -885,7 +877,7 @@ class EpisodeGrid extends StatelessWidget {
                                   isLiked: isLiked,
                                   isListened: isListened,
                                   isDownloaded: isDownloaded,
-                                  cardColor: settings.realDark!
+                                  cardColor: context.background == Colors.black
                                       ? Colors.black
                                       : episodes![index].cardColor(context),
                                   color: c,

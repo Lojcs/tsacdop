@@ -51,7 +51,7 @@ class EpisodeBrief extends Equatable {
       this.isNew,
       this.isPlayed,
       this.versionInfo,
-      this.versions,
+      this.versions, // Could auto polpulate maybe
       this.skipSecondsStart = 0,
       this.skipSecondsEnd = 0,
       this.chapterLink});
@@ -87,17 +87,25 @@ class EpisodeBrief extends Equatable {
   }
 
   Color backgroudColor(BuildContext context) {
-    if (primaryColor == '' || primaryColor == null) return context.accentColor;
-    return context.brightness == Brightness.light
-        ? primaryColor!.colorizedark()
-        : primaryColor!.colorizeLight();
+    return getColorScheme(context).onSecondaryContainer;
   }
 
   Color cardColor(BuildContext context) {
-    return ColorScheme.fromSeed(
-      seedColor: primaryColor!.toColor(),
-      brightness: context.brightness,
-    ).secondaryContainer;
+    return getColorScheme(context).secondaryContainer;
+  }
+
+  late final ColorScheme _colorSchemeLight = ColorScheme.fromSeed(
+    seedColor: primaryColor!.toColor(),
+    brightness: Brightness.light,
+  );
+  late final ColorScheme _colorSchemeDark = ColorScheme.fromSeed(
+    seedColor: primaryColor!.toColor(),
+    brightness: Brightness.dark,
+  );
+  ColorScheme getColorScheme(BuildContext context) {
+    return context.brightness == Brightness.light
+        ? _colorSchemeLight
+        : _colorSchemeDark;
   }
 
   late final List<EpisodeField> fields = getfields();

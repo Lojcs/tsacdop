@@ -842,81 +842,78 @@ class _RecentUpdateState extends State<_RecentUpdate>
                               children: [
                                 if (!_multiSelect!)
                                   Container(
-                                      height: 40,
-                                      color: context.primaryColor,
-                                      child: Material(
-                                        color: Colors.transparent,
-                                        child: Row(
-                                          children: <Widget>[
-                                            _switchGroupButton(),
-                                            Spacer(),
-                                            Material(
-                                              color: Colors.transparent,
-                                              child: IconButton(
-                                                  tooltip: context.s.refresh,
-                                                  icon: Icon(
-                                                      LineIcons.alternateRedo,
-                                                      size: 16),
-                                                  onPressed: () {
-                                                    _updateRssItem();
-                                                    Fluttertoast.showToast(
-                                                      msg: s.refreshStarted,
-                                                      gravity:
-                                                          ToastGravity.BOTTOM,
-                                                    );
-                                                  }),
-                                            ),
-                                            _addNewButton(),
-                                            Material(
-                                              color: Colors.transparent,
-                                              child: IconButton(
-                                                tooltip: s.hideListenedSetting,
-                                                icon: SizedBox(
-                                                  width: 30,
-                                                  height: 15,
-                                                  child: HideListened(
-                                                    hideListened:
-                                                        _hideListened ?? false,
-                                                  ),
-                                                ),
-                                                onPressed: () {
-                                                  setState(() => _hideListened =
-                                                      !_hideListened!);
-                                                },
-                                              ),
-                                            ),
-                                            Material(
-                                              color: Colors.transparent,
-                                              child: LayoutButton(
-                                                layout: _layout,
-                                                onPressed: (layout) =>
-                                                    setState(() {
-                                                  _layout = layout;
-                                                }),
-                                              ),
-                                            ),
-                                            Material(
-                                                color: Colors.transparent,
-                                                child: IconButton(
-                                                  icon: SizedBox(
-                                                    width: 20,
-                                                    height: 10,
-                                                    child: CustomPaint(
-                                                        painter:
-                                                            MultiSelectPainter(
-                                                                color: context
-                                                                    .accentColor)),
-                                                  ),
-                                                  onPressed: () {
-                                                    setState(() {
-                                                      _selectedEpisodes = [];
-                                                      _multiSelect = true;
-                                                    });
-                                                  },
-                                                )),
-                                          ],
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                        color: context
+                                            .colorScheme.primaryContainer),
+                                    child: Row(
+                                      children: <Widget>[
+                                        _switchGroupButton(),
+                                        Spacer(),
+                                        Material(
+                                          color: Colors.transparent,
+                                          child: IconButton(
+                                              tooltip: context.s.refresh,
+                                              icon: Icon(
+                                                  LineIcons.alternateRedo,
+                                                  size: 16),
+                                              onPressed: () {
+                                                _updateRssItem();
+                                                Fluttertoast.showToast(
+                                                  msg: s.refreshStarted,
+                                                  gravity: ToastGravity.BOTTOM,
+                                                );
+                                              }),
                                         ),
-                                      )),
+                                        _addNewButton(),
+                                        Material(
+                                          color: Colors.transparent,
+                                          child: IconButton(
+                                            tooltip: s.hideListenedSetting,
+                                            icon: SizedBox(
+                                              width: 30,
+                                              height: 15,
+                                              child: HideListened(
+                                                hideListened:
+                                                    _hideListened ?? false,
+                                              ),
+                                            ),
+                                            onPressed: () {
+                                              setState(() => _hideListened =
+                                                  !_hideListened!);
+                                            },
+                                          ),
+                                        ),
+                                        Material(
+                                          color: Colors.transparent,
+                                          child: LayoutButton(
+                                            layout: _layout,
+                                            onPressed: (layout) => setState(() {
+                                              _layout = layout;
+                                            }),
+                                          ),
+                                        ),
+                                        Material(
+                                            color: Colors.transparent,
+                                            child: IconButton(
+                                              icon: SizedBox(
+                                                width: 20,
+                                                height: 10,
+                                                child: CustomPaint(
+                                                    painter: MultiSelectPainter(
+                                                        color: context
+                                                            .accentColor)),
+                                              ),
+                                              onPressed: () {
+                                                setState(() {
+                                                  _selectedEpisodes = [];
+                                                  _multiSelect = true;
+                                                });
+                                              },
+                                            )),
+                                      ],
+                                    ),
+                                  ),
                                 if (_multiSelect!)
                                   MultiSelectMenuBar(
                                     selectedList: _selectedEpisodes,
