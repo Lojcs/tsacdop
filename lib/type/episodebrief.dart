@@ -147,7 +147,7 @@ class EpisodeBrief extends Equatable {
       case EpisodeField.versions:
         return versions;
       case EpisodeField.versionsPopulated:
-        return versions;
+        return null;
       case EpisodeField.skipSecondsStart:
         return skipSecondsStart;
       case EpisodeField.skipSecondsEnd:

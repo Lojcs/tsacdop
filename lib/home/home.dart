@@ -51,7 +51,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         insets: EdgeInsets.only(
           left: 10.0,
           right: 10.0,
-          top: 10.0,
         ));
   }
 
@@ -90,7 +89,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final height = (context.width - 20) / 3 + 140;
+    final height = (context.width - 20) / 3 + 141;
     final settings = Provider.of<SettingState>(context, listen: false);
     final s = context.s;
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -159,17 +158,23 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                     ),
                                   ),
                                   GestureDetector(
-                                    onTap: () => {
-                                      Theme.of(context).brightness ==
-                                              Brightness.light
-                                          ? settings.setTheme = ThemeMode.dark
-                                          : settings.setTheme = ThemeMode.light
+                                    onTap: () {
+                                      if (context.brightness ==
+                                          Brightness.light) {
+                                        settings.setTheme = ThemeMode.dark;
+                                        settings.setRealDark = false;
+                                      } else if (settings.realDark!) {
+                                        settings.setTheme = ThemeMode.light;
+                                      } else {
+                                        settings.setRealDark = true;
+                                      }
                                     },
                                     child: Text(
                                       'Tsacdop',
                                       style: GoogleFonts.quicksand(
                                           color: context.accentColor,
-                                          textStyle: TextStyle(fontSize: 25)),
+                                          textStyle:
+                                              context.textTheme.headlineLarge),
                                     ),
                                   ),
                                   featureDiscoveryOverlay(
@@ -228,6 +233,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                     children: [
                       Expanded(
                         child: TabBarView(
+                          // TODO: Add pull to refresh?
                           controller: _controller,
                           children: <Widget>[
                             NestedScrollViewInnerScrollPositionKeyWidget(
@@ -273,9 +279,9 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   final TabBar _tabBar;
 
   @override
-  double get minExtent => _tabBar.preferredSize.height + 2;
+  double get minExtent => _tabBar.preferredSize.height;
   @override
-  double get maxExtent => _tabBar.preferredSize.height + 2;
+  double get maxExtent => _tabBar.preferredSize.height;
 
   @override
   Widget build(
@@ -301,7 +307,6 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
                   child: _PlaylistButton()),
             ],
           ),
-          Container(height: 2, color: context.primaryColor),
         ],
       ),
     );
@@ -580,7 +585,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
           sortBy: Sorter.pubDate,
           sortOrder: SortOrder.DESC,
           limit: top,
-          filterVersions: -1,
+          filterVersions: 1,
           filterPlayed: _hideListened! ? 1 : 0);
     } else {
       episodes = await _dbHelper.getEpisodes(
@@ -847,8 +852,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
                                   Container(
                                     height: 40,
                                     decoration: BoxDecoration(
-                                        color: context
-                                            .colorScheme.secondaryContainer),
+                                        color: context.colorScheme.background),
                                     child: Row(
                                       children: <Widget>[
                                         _switchGroupButton(),
@@ -1106,7 +1110,7 @@ class _MyFavoriteState extends State<_MyFavorite>
                                   if (!_multiSelect!)
                                     Container(
                                       height: 40,
-                                      color: context.primaryColor,
+                                      color: context.background,
                                       child: Row(
                                         children: <Widget>[
                                           Material(
@@ -1329,7 +1333,7 @@ class _MyDownloadState extends State<_MyDownload>
                 SliverToBoxAdapter(
                   child: Container(
                       height: 40,
-                      color: context.primaryColor,
+                      color: context.background,
                       child: Row(
                         children: <Widget>[
                           Container(

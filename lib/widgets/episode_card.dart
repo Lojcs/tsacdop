@@ -252,7 +252,7 @@ Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
   } else {
     return Container(
       decoration: BoxDecoration(
-          color: settings.realDark!
+          color: settings.realDark! && context.brightness == Brightness.dark
               ? Colors.black
               : episode.getColorScheme(context).secondaryContainer,
           borderRadius: BorderRadius.circular(20.0),

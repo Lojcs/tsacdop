@@ -373,7 +373,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                 ),
               ),
               Container(
-                height: (width - 20) / 3 + 40,
+                height: (width - 20) / 3 + 41,
                 decoration: BoxDecoration(
                   color: context.background,
                   borderRadius: BorderRadius.circular(10),

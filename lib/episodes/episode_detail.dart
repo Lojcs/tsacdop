@@ -189,8 +189,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                 else
                                   FutureBuilder<EpisodeBrief>(
                                     // TODO: Make ui responsive.
-                                    future:
-                                        _getEpisodeVersions(), // TODO: This seems to have broke.
+                                    future: _getEpisodeVersions(),
                                     builder: (context, snapshot) {
                                       if (snapshot.hasData) {
                                         List<EpisodeBrief?> versions = snapshot

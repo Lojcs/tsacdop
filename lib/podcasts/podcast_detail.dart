@@ -708,17 +708,18 @@ class _PodcastDetailState extends State<PodcastDetail> {
           }
         },
         child: Scaffold(
-          body: SafeArea(
-            child: RefreshIndicator(
-              key: _refreshIndicatorKey,
-              displacement: context.paddingTop + 40,
-              color: context.accentColor,
-              onRefresh: () async {
-                await _updateRssItem(context, widget.podcastLocal!);
-              },
-              child: Stack(
-                children: <Widget>[
-                  Column(
+          backgroundColor: context.background,
+          body: Stack(
+            children: <Widget>[
+              SafeArea(
+                child: RefreshIndicator(
+                  key: _refreshIndicatorKey,
+                  displacement: context.paddingTop + 40,
+                  color: context.accentColor,
+                  onRefresh: () async {
+                    await _updateRssItem(context, widget.podcastLocal!);
+                  },
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -893,6 +894,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
                                     : SizedBox(height: 10),
                               ),
                               SliverToBoxAdapter(
+                                  // TODO: This should be pinned.
                                   child: _multiSelect!
                                       ? Center()
                                       : _actionBar(context)),
@@ -1015,13 +1017,13 @@ class _PodcastDetailState extends State<PodcastDetail> {
                           }),
                     ],
                   ),
-                  Container(
-                      child: PlayerWidget(
-                    playerKey: _playerKey,
-                  )),
-                ],
+                ),
               ),
-            ),
+              Container(
+                  child: PlayerWidget(
+                playerKey: _playerKey,
+              )),
+            ],
           ),
         ),
       ),

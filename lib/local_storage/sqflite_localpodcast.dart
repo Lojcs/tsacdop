@@ -171,7 +171,7 @@ class DBHelper {
         .execute("""CREATE TABLE Episodes(id INTEGER PRIMARY KEY,title TEXT, 
         enclosure_url TEXT UNIQUE, enclosure_length INTEGER, pubDate TEXT, 
         description TEXT, feed_id TEXT, feed_link TEXT, milliseconds INTEGER,
-        version_info INTEGER, duration INTEGER DEFAULT 0, explicit INTEGER DEFAULT 0,
+        version_info TEXT DEFAULT 'NONE', duration INTEGER DEFAULT 0, explicit INTEGER DEFAULT 0,
         liked INTEGER DEFAULT 0, liked_date INTEGER DEFAULT 0, downloaded TEXT DEFAULT 'ND', 
         download_date INTEGER DEFAULT 0, media_id TEXT, is_new INTEGER DEFAULT 0, 
         chapter_link TEXT DEFAULT '', hosts TEXT DEFAULT '', episode_image TEXT DEFAULT '',
@@ -291,7 +291,8 @@ class DBHelper {
   }
 
   Future<void> _v8Update(Database db) async {
-    await db.execute("ALTER TABLE Episodes ADD version_info INTEGER");
+    await db
+        .execute("ALTER TABLE Episodes ADD version_info TEXT DEFAULT 'NONE'");
     await db.execute("ALTER TABLE Episodes ADD versions TEXT DEFAULT ''");
     await db.execute(
         "ALTER TABLE PodcastLocal ADD version_policy TEXT DEFAULT 'DEF'");

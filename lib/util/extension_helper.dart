@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:tsacdop/class/settingstate.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import '../generated/l10n.dart';
 
@@ -38,6 +40,7 @@ extension ContextExtension on BuildContext {
         systemNavigationBarIconBrightness: iconBrightness,
       );
   S get s => S.of(this);
+  bool get realDark => Provider.of<SettingState>(this, listen: false).realDark!;
 }
 
 extension IntExtension on int {
