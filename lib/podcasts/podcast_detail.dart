@@ -166,16 +166,18 @@ class _PodcastDetailState extends State<PodcastDetail> {
       _hideListened = await hideListenedStorage.getBool(defaultValue: false);
     }
     episodes = await _dbHelper.getEpisodes(
-        feedIds: [podcastLocal.id!],
+        feedIds: [podcastLocal.id],
         likeEpisodeTitles: query == "" ? null : [query!],
         optionalFields: [
           EpisodeField.description,
           EpisodeField.enclosureDuration,
           EpisodeField.enclosureSize,
+          EpisodeField.isDownloaded,
           EpisodeField.episodeImage,
-          EpisodeField.podcastImage,
           EpisodeField.primaryColor,
+          EpisodeField.isLiked,
           EpisodeField.isNew,
+          EpisodeField.isPlayed,
           EpisodeField.versionInfo
         ],
         sortBy: Sorter.pubDate,
@@ -656,7 +658,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
                     clipBehavior: Clip.hardEdge,
                     borderRadius: BorderRadius.circular(100),
                     child: LayoutButton(
-                      layout: _layout ?? Layout.two,
+                      layout: _layout ?? Layout.medium,
                       onPressed: (layout) => setState(() {
                         _layout = layout;
                       }),

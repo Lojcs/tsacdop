@@ -64,10 +64,10 @@ class MyApp extends StatelessWidget {
         return FeatureDiscovery(
           child: DynamicColorBuilder(builder: (lightDynamic, darkDynamic) {
             final settings = Provider.of<SettingState>(context, listen: false);
-            final lightTheme = data.item4!
+            final lightTheme = data.item4! && lightDynamic != null
                 ? data.item2.copyWith(colorScheme: lightDynamic)
                 : data.item2;
-            final darkTheme = data.item4!
+            final darkTheme = data.item4! && darkDynamic != null
                 ? data.item3.copyWith(
                     colorScheme: settings.realDark!
                         ? darkDynamic!.copyWith(background: Colors.black)

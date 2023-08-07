@@ -19,7 +19,7 @@ class EpisodeBrief extends Equatable {
   final String? description;
   final int? enclosureDuration;
   final int? enclosureSize;
-  final bool? downloaded;
+  final bool? isDownloaded;
   final int? downloadDate;
   final String? mediaId;
   final String? episodeImage;
@@ -40,7 +40,7 @@ class EpisodeBrief extends Equatable {
       {this.description,
       this.enclosureDuration,
       this.enclosureSize,
-      this.downloaded,
+      this.isDownloaded,
       this.downloadDate,
       this.mediaId,
       this.episodeImage,
@@ -102,13 +102,17 @@ class EpisodeBrief extends Equatable {
     seedColor: primaryColor!.toColor(),
     brightness: Brightness.dark,
   );
+
+  /// Gets the episode color sceme for the provided [context].brightness.
+  /// Caches its results so can be used freely.
   ColorScheme getColorScheme(BuildContext context) {
     return context.brightness == Brightness.light
         ? _colorSchemeLight
         : _colorSchemeDark;
   }
 
-  late final List<EpisodeField> fields = getfields();
+  /// The list of filled fields in the form of [EpisodeField]s.
+  late final List<EpisodeField> fields = _getfields();
 
   dynamic _getFieldValue(EpisodeField episodeField) {
     switch (episodeField) {
@@ -118,8 +122,8 @@ class EpisodeBrief extends Equatable {
         return enclosureDuration;
       case EpisodeField.enclosureSize:
         return enclosureSize;
-      case EpisodeField.downloaded:
-        return downloaded;
+      case EpisodeField.isDownloaded:
+        return isDownloaded;
       case EpisodeField.downloadDate:
         return downloadDate;
       case EpisodeField.mediaId:
@@ -153,7 +157,7 @@ class EpisodeBrief extends Equatable {
     }
   }
 
-  List<EpisodeField> getfields() {
+  List<EpisodeField> _getfields() {
     List<EpisodeField> fieldList = [];
     for (EpisodeField field in EpisodeField.values) {
       if (_getFieldValue(field) != null) fieldList.add(field);
@@ -178,7 +182,7 @@ class EpisodeBrief extends Equatable {
           String? description,
           int? enclosureDuration,
           int? enclosureSize,
-          bool? downloaded,
+          bool? isDownloaded,
           int? downloadDate,
           String? mediaId,
           String? episodeImage,
@@ -203,7 +207,7 @@ class EpisodeBrief extends Equatable {
           description: description ?? this.description,
           enclosureDuration: enclosureDuration ?? this.enclosureDuration,
           enclosureSize: enclosureSize ?? this.enclosureSize,
-          downloaded: downloaded ?? this.downloaded,
+          isDownloaded: isDownloaded ?? this.isDownloaded,
           downloadDate: downloadDate ?? this.downloadDate,
           mediaId: mediaId ?? this.mediaId,
           episodeImage: episodeImage ?? this.episodeImage,
@@ -220,7 +224,7 @@ class EpisodeBrief extends Equatable {
           chapterLink: chapterLink ?? this.chapterLink);
 
   /// Returns a copy with the [newFields] filled from the database.
-  /// [keepExisting] disables overwriting existing fields.
+  /// [keepExisting] disables overwriting already existing fields.
   Future<EpisodeBrief> copyWithFromDB(List<EpisodeField> newFields,
       {bool keepExisting = false}) async {
     Map<EpisodeField, List> _fieldsMap = {
@@ -234,7 +238,7 @@ class EpisodeBrief extends Equatable {
         const Symbol("enclosureSize"),
         enclosureSize
       ],
-      EpisodeField.downloaded: [const Symbol("downloaded"), downloaded],
+      EpisodeField.isDownloaded: [const Symbol("isDownloaded"), isDownloaded],
       EpisodeField.downloadDate: [const Symbol("downloadDate"), downloadDate],
       EpisodeField.mediaId: [const Symbol("mediaId"), mediaId],
       EpisodeField.episodeImage: [const Symbol("episodeImage"), episodeImage],
@@ -258,25 +262,30 @@ class EpisodeBrief extends Equatable {
     };
 
     var dbHelper = DBHelper();
-    Map<Symbol, dynamic> oldFields = {};
-    List<EpisodeField> fields = this.fields;
+    Map<Symbol, dynamic> oldFieldsSymbolMap = {};
+    List<EpisodeField> oldFields = this.fields.toList();
     if (keepExisting) {
-      for (EpisodeField field in newFields) {
-        fields.remove(field);
-      }
-    } else {
-      for (EpisodeField field in fields) {
+      for (EpisodeField field in oldFields) {
         newFields.remove(field);
       }
+    } else {
+      for (EpisodeField field in newFields) {
+        oldFields.remove(field);
+      }
     }
-    for (EpisodeField field in fields) {
-      oldFields[_fieldsMap[field]![0]] = _fieldsMap[field]![1];
+    for (EpisodeField field in oldFields) {
+      oldFieldsSymbolMap[_fieldsMap[field]![0]] = _fieldsMap[field]![1];
     }
     bool populateVersions = newFields.remove(EpisodeField.versionsPopulated);
-    EpisodeBrief newEpisode = (await dbHelper
-            .getEpisodes(episodeIds: [id], optionalFields: newFields))
-        .first;
-    newEpisode = Function.apply(newEpisode.copyWith, [], oldFields);
+    EpisodeBrief newEpisode;
+    if (newFields.isEmpty) {
+      newEpisode = this.copyWith();
+    } else {
+      newEpisode = (await dbHelper
+              .getEpisodes(episodeIds: [id], optionalFields: newFields))
+          .first;
+      newEpisode = Function.apply(newEpisode.copyWith, [], oldFieldsSymbolMap);
+    }
     if (populateVersions) {
       newEpisode = await dbHelper.populateEpisodeVersions(newEpisode);
     }

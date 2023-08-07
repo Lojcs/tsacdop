@@ -569,15 +569,18 @@ class _RecentUpdateState extends State<_RecentUpdate>
             EpisodeField.description,
             EpisodeField.enclosureDuration,
             EpisodeField.enclosureSize,
+            EpisodeField.isDownloaded,
             EpisodeField.episodeImage,
-            EpisodeField.podcastImage,
             EpisodeField.primaryColor,
+            EpisodeField.isLiked,
+            EpisodeField.isNew,
+            EpisodeField.isPlayed,
             EpisodeField.versionInfo
           ],
           sortBy: Sorter.pubDate,
           sortOrder: SortOrder.DESC,
           limit: top,
-          filterVersions: 1,
+          filterVersions: -1,
           filterPlayed: _hideListened! ? 1 : 0);
     } else {
       episodes = await _dbHelper.getEpisodes(
@@ -845,7 +848,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
                                     height: 40,
                                     decoration: BoxDecoration(
                                         color: context
-                                            .colorScheme.primaryContainer),
+                                            .colorScheme.secondaryContainer),
                                     child: Row(
                                       children: <Widget>[
                                         _switchGroupButton(),
@@ -975,9 +978,12 @@ class _MyFavoriteState extends State<_MyFavorite>
           EpisodeField.description,
           EpisodeField.enclosureDuration,
           EpisodeField.enclosureSize,
+          EpisodeField.isDownloaded,
           EpisodeField.episodeImage,
-          EpisodeField.podcastImage,
           EpisodeField.primaryColor,
+          EpisodeField.isLiked,
+          EpisodeField.isNew,
+          EpisodeField.isPlayed,
           EpisodeField.versionInfo
         ],
         sortBy: sorter,
@@ -1284,9 +1290,12 @@ class _MyDownloadState extends State<_MyDownload>
           EpisodeField.description,
           EpisodeField.enclosureDuration,
           EpisodeField.enclosureSize,
+          EpisodeField.isDownloaded,
           EpisodeField.episodeImage,
-          EpisodeField.podcastImage,
           EpisodeField.primaryColor,
+          EpisodeField.isLiked,
+          EpisodeField.isNew,
+          EpisodeField.isPlayed,
           EpisodeField.versionInfo
         ],
         sortBy: sorter,
@@ -1345,7 +1354,7 @@ class _MyDownloadState extends State<_MyDownload>
                           Material(
                             color: Colors.transparent,
                             child: LayoutButton(
-                              layout: _layout ?? Layout.one,
+                              layout: _layout ?? Layout.large,
                               onPressed: (layout) => setState(() {
                                 _layout = layout;
                               }),

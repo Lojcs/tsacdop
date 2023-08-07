@@ -89,6 +89,7 @@ class Playlist extends Equatable {
           url
         ], optionalFields: [
           EpisodeField.mediaId,
+          EpisodeField.primaryColor,
           EpisodeField.isNew,
           EpisodeField.skipSecondsStart,
           EpisodeField.skipSecondsEnd,

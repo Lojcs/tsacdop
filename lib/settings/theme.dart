@@ -385,7 +385,6 @@ class __ColorPickerState extends State<_ColorPicker>
   }
 
   Widget _colorCircle(Color color) {
-    final settings = Provider.of<SettingState>(context, listen: false);
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -393,7 +392,9 @@ class __ColorPickerState extends State<_ColorPicker>
         onTap: () => widget.onColorChanged!(color),
         child: Container(
           decoration: BoxDecoration(
-              border: color == settings.accentSetColor
+              border: color ==
+                      Provider.of<SettingState>(context, listen: false)
+                          .accentSetColor
                   ? Border.all(color: Colors.grey[400]!, width: 4)
                   : null,
               borderRadius: BorderRadius.all(Radius.circular(10)),

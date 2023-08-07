@@ -308,6 +308,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
             state[1]
           ], optionalFields: [
             EpisodeField.mediaId,
+            EpisodeField.primaryColor,
             EpisodeField.isNew,
             EpisodeField.skipSecondsStart,
             EpisodeField.skipSecondsEnd,
@@ -345,7 +346,8 @@ class AudioPlayerNotifier extends ChangeNotifier {
         }
       } else {
         _playlist = _playlists.first;
-        _episode = _playlist!.isNotEmpty ? _playlist!.episodes.first : null;
+        _episode =
+            _playlist!.episodes.isNotEmpty ? _playlist!.episodes.first : null;
         _lastPosition = 0;
       }
       notifyListeners();
@@ -544,13 +546,16 @@ class AudioPlayerNotifier extends ChangeNotifier {
         var episode;
         var episodes = await _dbHelper.getEpisodes(optionalFields: [
           EpisodeField.mediaId,
+          EpisodeField.primaryColor,
           EpisodeField.isNew,
           EpisodeField.skipSecondsStart,
           EpisodeField.skipSecondsEnd,
           EpisodeField.episodeImage,
           EpisodeField.chapterLink
         ], customFilters: [
-          "E.media_id = ${item!.id}"
+          "E.media_id = ?"
+        ], customArguements: [
+          item!.id
         ]);
         if (episodes.isEmpty)
           episode = null;
@@ -655,22 +660,16 @@ class AudioPlayerNotifier extends ChangeNotifier {
 
   /// Queue management
   Future<void> addToPlaylist(EpisodeBrief episode) async {
-    var episodeNew;
-    var episodes = await _dbHelper.getEpisodes(episodeUrls: [
-      episode.enclosureUrl
-    ], optionalFields: [
+    var episodeNew = await episode.copyWithFromDB([
       EpisodeField.mediaId,
+      EpisodeField.primaryColor,
       EpisodeField.isNew,
       EpisodeField.skipSecondsStart,
       EpisodeField.skipSecondsEnd,
       EpisodeField.episodeImage,
       EpisodeField.chapterLink
-    ]);
-    if (episodes.isEmpty)
-      episodeNew = null;
-    else
-      episodeNew = episodes[0];
-    if (episodeNew.isNew == 1) {
+    ], keepExisting: true);
+    if (episodeNew.isNew!) {
       await _dbHelper.removeEpisodeNewMark(episodeNew.enclosureUrl);
     }
     if (!_queue.episodes.contains(episodeNew)) {
@@ -684,22 +683,16 @@ class AudioPlayerNotifier extends ChangeNotifier {
   }
 
   Future<void> addToPlaylistAt(EpisodeBrief episode, int index) async {
-    var episodeNew;
-    var episodes = await _dbHelper.getEpisodes(episodeUrls: [
-      episode.enclosureUrl
-    ], optionalFields: [
+    var episodeNew = await episode.copyWithFromDB([
       EpisodeField.mediaId,
+      EpisodeField.primaryColor,
       EpisodeField.isNew,
       EpisodeField.skipSecondsStart,
       EpisodeField.skipSecondsEnd,
       EpisodeField.episodeImage,
       EpisodeField.chapterLink
-    ]);
-    if (episodes.isEmpty)
-      episodeNew = null;
-    else
-      episodeNew = episodes[0];
-    if (episodeNew.isNew == 1) {
+    ], keepExisting: true);
+    if (episodeNew.isNew!) {
       await _dbHelper.removeEpisodeNewMark(episodeNew.enclosureUrl);
     }
     if (_playerRunning && _playlist!.isQueue) {
@@ -742,21 +735,15 @@ class AudioPlayerNotifier extends ChangeNotifier {
     if (episode.enclosureUrl == episode.mediaId &&
         _episode != episode &&
         _playlist!.contains(episode)) {
-      var episodeNew;
-      var episodes = await _dbHelper.getEpisodes(episodeUrls: [
-        episode.enclosureUrl
-      ], optionalFields: [
+      var episodeNew = await episode.copyWithFromDB([
         EpisodeField.mediaId,
+        EpisodeField.primaryColor,
         EpisodeField.isNew,
         EpisodeField.skipSecondsStart,
         EpisodeField.skipSecondsEnd,
         EpisodeField.episodeImage,
         EpisodeField.chapterLink
-      ]);
-      if (episodes.isEmpty)
-        episodeNew = null;
-      else
-        episodeNew = episodes[0];
+      ], keepExisting: true);
       _playlist!.updateEpisode(episodeNew);
       if (_playerRunning) {
         await _audioHandler.updateMediaItem(episodeNew!.toMediaItem());

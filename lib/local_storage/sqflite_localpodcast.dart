@@ -53,7 +53,7 @@ enum EpisodeField {
   description,
   enclosureDuration,
   enclosureSize,
-  downloaded,
+  isDownloaded,
   downloadDate,
   mediaId,
   episodeImage,
@@ -1427,7 +1427,8 @@ class DBHelper {
       int filterPlayed = 0,
       int filterDownloaded = 0,
       int filterAutoDownload = 0,
-      List<String>? customFilters}) async {
+      List<String>? customFilters,
+      List<String>? customArguements}) async {
     bool doGroup = false;
     bool getVersions = false;
     bool populateVersions = false;
@@ -1449,7 +1450,7 @@ class DBHelper {
           case EpisodeField.enclosureSize:
             query.add(", E.enclosure_length");
             break;
-          case EpisodeField.downloaded:
+          case EpisodeField.isDownloaded:
             query.add(", E.downloaded");
             break;
           case EpisodeField.downloadDate:
@@ -1555,13 +1556,17 @@ class DBHelper {
     if (likeEpisodeTitles != null && likeEpisodeTitles.isNotEmpty) {
       filters.add(
           " (${(" OR E.title LIKE ?" * likeEpisodeTitles.length).substring(4)})");
-      arguements.addAll(likeEpisodeTitles);
+      arguements.addAll(likeEpisodeTitles.map(
+        (e) => "%" + e + "%",
+      ));
     }
     if (excludedLikeEpisodeTitles != null &&
         excludedLikeEpisodeTitles.isNotEmpty) {
       filters.add(
           " (${(" OR E.title LIKE ?" * excludedLikeEpisodeTitles.length).substring(4)})");
-      arguements.addAll(excludedLikeEpisodeTitles);
+      arguements.addAll(excludedLikeEpisodeTitles.map(
+        (e) => "%" + e + "%",
+      ));
     }
     if (filterVersions == 2) {
       filters.add(" E.version_info = 'NONE'");
@@ -1614,6 +1619,9 @@ class DBHelper {
       for (var filter in customFilters) {
         filters.add(" $filter");
       }
+      if (customArguements != null && customFilters.isNotEmpty) {
+        arguements.addAll(customArguements);
+      }
     }
     if (filters.isNotEmpty) {
       query.add(" WHERE");
@@ -1659,8 +1667,8 @@ class DBHelper {
               case EpisodeField.enclosureSize:
                 fields[const Symbol("enclosureSize")] = i['enclosure_length'];
                 break;
-              case EpisodeField.downloaded:
-                fields[const Symbol("downloaded")] = i['downloaded'] != 'ND';
+              case EpisodeField.isDownloaded:
+                fields[const Symbol("isDownloaded")] = i['downloaded'] != 'ND';
                 break;
               case EpisodeField.downloadDate:
                 fields[const Symbol("downloadDate")] = i['download_date'];

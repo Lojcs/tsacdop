@@ -672,6 +672,7 @@ class __PlaylistsState extends State<_Playlists> {
       url
     ], optionalFields: [
       EpisodeField.mediaId,
+      EpisodeField.primaryColor,
       EpisodeField.isNew,
       EpisodeField.skipSecondsStart,
       EpisodeField.skipSecondsEnd,

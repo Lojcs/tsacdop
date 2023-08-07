@@ -189,7 +189,8 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                 else
                                   FutureBuilder<EpisodeBrief>(
                                     // TODO: Make ui responsive.
-                                    future: _getEpisodeVersions(),
+                                    future:
+                                        _getEpisodeVersions(), // TODO: This seems to have broke.
                                     builder: (context, snapshot) {
                                       if (snapshot.hasData) {
                                         List<EpisodeBrief?> versions = snapshot
@@ -397,8 +398,8 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
   Future<EpisodeBrief> _getEpisodeVersions() async {
     if (_episodeItem.versions == null ||
         _episodeItem.versions!.containsValue(null)) {
-      EpisodeBrief episode =
-          await _dbHelper.populateEpisodeVersions(_episodeItem);
+      EpisodeBrief episode = await _dbHelper.populateEpisodeVersions(
+          _episodeItem); // Not using copyWithFromDB since we need the original.
       _episodeItem = episode;
     }
     return _episodeItem;
