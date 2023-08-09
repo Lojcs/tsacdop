@@ -294,20 +294,25 @@ Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
                   width: context.width * snapshot.data!.seekValue! / tileCount,
                   color: context.realDark
                       ? context.background.withOpacity(0.8)
-                      : context.background.withOpacity(0.55),
+                      : context.background.withOpacity(0.65),
                 );
               else
                 return Center();
             },
           ),
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: EdgeInsets.all(layout == Layout.small ? 5 : 8)
+                .copyWith(bottom: layout == Layout.small ? 10 : 8),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 Expanded(
-                  flex: layout == Layout.large ? 2 : 3,
+                  flex: layout == Layout.small
+                      ? 2
+                      : layout == Layout.medium
+                          ? 3
+                          : 3,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -317,9 +322,10 @@ Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
                               episode: episode,
                               color: episode.getColorScheme(context).primary,
                               boo: hide)
-                          : _pubDate(context,
-                              episode: episode,
-                              color: episode.getColorScheme(context).primary),
+                          : _pubDate(
+                              context,
+                              episode,
+                            ),
                       Spacer(),
                       _isNewIndicator(episode),
                       _downloadIndicator(context, layout, showDownload,
@@ -331,7 +337,7 @@ Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
                   ),
                 ),
                 Expanded(
-                  flex: layout == Layout.large ? 5 : 7,
+                  flex: layout == Layout.large ? 4 : 7,
                   child: layout != Layout.large
                       ? _title(episode, layout)
                       : Row(
@@ -355,54 +361,75 @@ Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: <Widget>[
                       if (layout != Layout.large)
-                        _pubDate(context,
-                            episode: episode,
-                            color: episode.getColorScheme(context).primary),
+                        Expanded(
+                          flex: layout == Layout.small ? 100000 : 0,
+                          child: _pubDate(context, episode,
+                              small: layout == Layout.small),
+                        ),
                       Spacer(),
-                      if (layout != Layout.small &&
-                          episode.enclosureDuration != 0)
-                        Container(
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.horizontal(
-                                  left: Radius.circular(5),
-                                  right: episode.enclosureSize == 0
-                                      ? Radius.circular(5)
-                                      : Radius.zero),
-                              border: Border.all(
+                      if (episode.enclosureDuration != 0)
+                        Stack(
+                          alignment: AlignmentDirectional.centerEnd,
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.horizontal(
+                                      left: Radius.circular(5),
+                                      right: episode.enclosureSize == 0
+                                          ? Radius.circular(5)
+                                          : Radius.zero),
+                                  border: Border.all(
+                                      color: context.realDark
+                                          ? Colors.transparent
+                                          : episode
+                                              .getColorScheme(context)
+                                              .onSecondaryContainer,
+                                      width: 1),
                                   color: context.realDark
                                       ? episode.isPlayed!
                                           ? episode
                                               .getColorScheme(context)
-                                              .onSecondaryContainer
+                                              .secondaryContainer
                                           : Colors.transparent
-                                      : episode
-                                          .getColorScheme(context)
-                                          .onSecondaryContainer,
-                                  width: 1),
-                              color: context.realDark
-                                  ? Colors.transparent
-                                  : episode.isPlayed!
-                                      ? episode
-                                          .getColorScheme(context)
-                                          .onSecondaryContainer
-                                      : Colors.transparent),
-                          alignment: Alignment.center,
-                          child: Text(
-                            '${episode.enclosureSize! ~/ 1000000}MB',
-                            style: TextStyle(
-                                fontSize: context.width / 35,
-                                color: context.realDark
-                                    ? episode.getColorScheme(context).primary
-                                    : episode.isPlayed!
+                                      : episode.isPlayed!
+                                          ? episode
+                                              .getColorScheme(context)
+                                              .onSecondaryContainer
+                                          : Colors.transparent),
+                              alignment: Alignment.center,
+                              child: Text(
+                                episode.enclosureDuration!.toTime,
+                                style: TextStyle(
+                                    fontSize: layout == Layout.small
+                                        ? context.width / 40
+                                        : context.width / 35,
+                                    color: context.realDark
                                         ? episode
                                             .getColorScheme(context)
-                                            .secondaryContainer
-                                        : episode
-                                            .getColorScheme(context)
-                                            .onSecondaryContainer),
-                          ),
+                                            .onSecondaryContainer
+                                        : episode.isPlayed!
+                                            ? episode
+                                                .getColorScheme(context)
+                                                .secondaryContainer
+                                            : episode
+                                                .getColorScheme(context)
+                                                .onSecondaryContainer),
+                              ),
+                            ),
+                            Container(
+                                width: 1,
+                                height:
+                                    16, // TODO: Hardcoded height might break.
+                                color: context.realDark &&
+                                        !episode.isDownloaded! &&
+                                        !episode.isPlayed!
+                                    ? episode
+                                        .getColorScheme(context)
+                                        .onSecondaryContainer
+                                    : Colors.transparent)
+                          ],
                         ),
-                      if (layout != Layout.small && episode.enclosureSize != 0)
+                      if (episode.enclosureSize != 0)
                         Stack(
                             alignment: AlignmentDirectional.centerStart,
                             children: [
@@ -434,20 +461,20 @@ Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
                                     //                 .onSecondaryContainer),
                                     // ),
                                     // This doesn't work currently due to flutter barf https://github.com/flutter/flutter/issues/12583
-                                    // Stack is a workaround.
+                                    // TODO: Find workaround (solid color overlay with stack doesn't work as background is transparent and might mismatch if the episode is half played)
                                     border: Border.all(
                                         color: context.realDark
-                                            ? episode.isDownloaded!
-                                                ? episode
-                                                    .getColorScheme(context)
-                                                    .onSecondaryContainer
-                                                : Colors.transparent
+                                            ? Colors.transparent
                                             : episode
                                                 .getColorScheme(context)
                                                 .onSecondaryContainer,
                                         width: 1),
                                     color: context.realDark
-                                        ? Colors.transparent
+                                        ? episode.isDownloaded!
+                                            ? episode
+                                                .getColorScheme(context)
+                                                .secondaryContainer
+                                            : Colors.transparent
                                         : episode.isDownloaded!
                                             ? episode
                                                 .getColorScheme(context)
@@ -457,11 +484,13 @@ Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
                                 child: Text(
                                   '${episode.enclosureSize! ~/ 1000000}MB',
                                   style: TextStyle(
-                                      fontSize: context.width / 35,
+                                      fontSize: layout == Layout.small
+                                          ? context.width / 40
+                                          : context.width / 35,
                                       color: context.realDark
                                           ? episode
                                               .getColorScheme(context)
-                                              .primary
+                                              .onSecondaryContainer
                                           : episode.isDownloaded!
                                               ? episode
                                                   .getColorScheme(context)
@@ -472,27 +501,17 @@ Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
                                 ),
                               ),
                               Container(
-                                width: 2,
-                                height:
-                                    16, // TODO: Hardcoded height might break.
-                                color: context.realDark
-                                    ? episode.isDownloaded!
-                                        ? episode
-                                            .getColorScheme(context)
-                                            .onSecondaryContainer
-                                        : Colors.black
-                                    : episode.isDownloaded!
-                                        ? episode
-                                            .getColorScheme(context)
-                                            .onSecondaryContainer
-                                        : episode
-                                            .getColorScheme(context)
-                                            .secondaryContainer,
-                              )
+                                  width: 1,
+                                  height:
+                                      16, // TODO: Hardcoded height might break.
+                                  color: context.realDark &&
+                                          !episode.isDownloaded! &&
+                                          !episode.isPlayed!
+                                      ? episode
+                                          .getColorScheme(context)
+                                          .onSecondaryContainer
+                                      : Colors.transparent)
                             ]),
-                      Padding(
-                        padding: EdgeInsets.all(1),
-                      ),
                       if ((showFavorite || layout != Layout.small) &&
                           episode.isLiked!)
                         Icon(
@@ -629,9 +648,10 @@ Widget _layoutOneCard(BuildContext context, EpisodeBrief episode, Layout layout,
                                 size: width / 35,
                               ),
                             Spacer(),
-                            _pubDate(context,
-                                episode: episode,
-                                color: episode.getColorScheme(context).primary),
+                            _pubDate(
+                              context,
+                              episode,
+                            ),
                           ]),
                     )
                   ],
@@ -750,16 +770,15 @@ Widget _numberIndicator(BuildContext context, bool showNumber,
         : Center();
 
 /// Pubdate widget
-Widget _pubDate(BuildContext context,
-        {required EpisodeBrief episode, Color? color}) =>
+Widget _pubDate(BuildContext context, EpisodeBrief episode,
+        {bool small = false}) =>
     Text(
       episode.pubDate.toDate(context),
       overflow: TextOverflow.visible,
       textAlign: TextAlign.center,
       style: TextStyle(
-          height: 1,
-          fontSize: context.width / 35,
-          color: color,
+          fontSize: small ? context.width / 40 : context.width / 35,
+          color: episode.getColorScheme(context).primary,
           fontStyle: FontStyle.italic),
     );
 
