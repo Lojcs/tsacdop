@@ -40,7 +40,9 @@ extension ContextExtension on BuildContext {
         systemNavigationBarIconBrightness: iconBrightness,
       );
   S get s => S.of(this);
-  bool get realDark => Provider.of<SettingState>(this, listen: false).realDark!;
+  bool get realDark =>
+      Provider.of<SettingState>(this, listen: false).realDark! &&
+      this.brightness == Brightness.dark;
 }
 
 extension IntExtension on int {

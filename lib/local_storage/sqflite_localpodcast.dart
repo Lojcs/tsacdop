@@ -1229,7 +1229,8 @@ class DBHelper {
       final duration = feed.items![i].itunes!.duration?.inSeconds ?? 0;
       final explicit = _getExplicit(feed.items![i].itunes!.explicit);
       final chapter = feed.items![i].podcastChapters?.url ?? '';
-      final image = feed.items![i].itunes!.image?.href ?? '';
+      final image =
+          feed.items![i].itunes!.image?.href ?? ''; // TODO: Maybe cache these?
       if (url != null) {
         await dbClient.transaction((txn) async {
           int episodeId = await txn.rawInsert(

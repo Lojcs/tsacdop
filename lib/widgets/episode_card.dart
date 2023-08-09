@@ -31,6 +31,7 @@ Widget interactiveEpisodeCard(
   bool showFavorite = true,
   bool showDownload = true,
   bool showNumber = false,
+  bool useEpisodeImage = false,
   String? numberText,
   bool hide = false, // TODO: What does this do?
   bool selectMode = false,
@@ -41,7 +42,9 @@ Widget interactiveEpisodeCard(
   assert(!showFavorite || episode.fields.contains(EpisodeField.isLiked));
   assert(episode.fields.contains(EpisodeField.enclosureDuration));
   assert(episode.fields.contains(EpisodeField.enclosureSize));
-  assert(episode.fields.contains(EpisodeField.episodeImage));
+  assert(
+      !useEpisodeImage || episode.fields.contains(EpisodeField.episodeImage));
+  assert(useEpisodeImage || episode.fields.contains(EpisodeField.podcastImage));
   assert(episode.fields.contains(EpisodeField.primaryColor));
   assert(episode.fields.contains(EpisodeField.isNew));
   assert(episode.fields.contains(EpisodeField.isPlayed));
@@ -222,8 +225,8 @@ Widget interactiveEpisodeCard(
                         ),
                     ],
                     onPressed: selectMode ? onSelect! : action,
-                    child: episodeCard(
-                        context, episode, layout, tapToOpen, action, data,
+                    child: episodeCard(context, episode, layout, tapToOpen,
+                        action, data, useEpisodeImage,
                         numberText: numberText,
                         openPodcast: openPodcast,
                         showFavorite: showFavorite,
@@ -233,7 +236,7 @@ Widget interactiveEpisodeCard(
 }
 
 Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
-    bool tapToOpen, VoidCallback action, data,
+    bool tapToOpen, VoidCallback action, data, bool useEpisodeImage,
     {String? numberText,
     bool openPodcast = true,
     bool showFavorite = true,
@@ -241,8 +244,14 @@ Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
     bool showNumber = false,
     bool hide = false}) {
   var settings = Provider.of<SettingState>(context, listen: false);
-  if (layout == Layout.large) {
-    return _layoutOneCard(context, episode, layout,
+  DBHelper dbHelper = DBHelper();
+  int tileCount = layout == Layout.small
+      ? 3
+      : layout == Layout.medium
+          ? 2
+          : 1;
+  if (false) {
+    return _layoutOneCard(context, episode, layout, useEpisodeImage,
         numberText: numberText!,
         openPodcast: openPodcast,
         showDownload: showDownload,
@@ -251,35 +260,46 @@ Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
         boo: hide);
   } else {
     return Container(
-      decoration: BoxDecoration(
-          color: settings.realDark! && context.brightness == Brightness.dark
-              ? Colors.black
-              : episode.getColorScheme(context).secondaryContainer,
-          borderRadius: BorderRadius.circular(20.0),
-          border: Border.all(
-            color: context.background == Colors.black
-                ? episode.getColorScheme(context).primary
-                : Colors.transparent,
-            width: 1.0,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: context.brightness == Brightness.light
-                  ? context.primaryColor
-                  : Color.fromRGBO(40, 40, 40, 1),
-              blurRadius: 0.5,
-              spreadRadius: 0.5,
-            ),
-          ]),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(20.0)),
       clipBehavior: Clip.hardEdge,
       child: Stack(
-        alignment: AlignmentDirectional.bottomCenter,
+        alignment: AlignmentDirectional.bottomStart,
         children: [
-          if (episode.isPlayed!)
-            Container(
-              height: 4,
-              color: Colors.white,
+          Container(
+            decoration: BoxDecoration(
+              color: context.realDark
+                  ? Colors.black
+                  : episode.getColorScheme(context).secondaryContainer,
+              borderRadius: BorderRadius.circular(20.0),
+              border: Border.all(
+                color: context.realDark
+                    ? episode.getColorScheme(context).primary
+                    : Colors.transparent,
+                width: 1.0,
+              ),
+              // boxShadow: [
+              //   BoxShadow(
+              //     color: Color.fromRGBO(40, 40, 40, 1),
+              //     blurRadius: 0.5,
+              //     spreadRadius: 0.5,
+              //     offset: Offset.fromDirection(0, 3),
+              //   )]
             ),
+          ),
+          FutureBuilder<PlayHistory>(
+            future: dbHelper.getPosition(episode),
+            builder: (context, snapshot) {
+              if (snapshot.hasData)
+                return Container(
+                  width: context.width * snapshot.data!.seekValue! / tileCount,
+                  color: context.realDark
+                      ? context.background.withOpacity(0.8)
+                      : context.background.withOpacity(0.55),
+                );
+              else
+                return Center();
+            },
+          ),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Column(
@@ -287,13 +307,13 @@ Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 Expanded(
-                  flex: layout == Layout.large ? 1 : 2,
+                  flex: layout == Layout.large ? 2 : 3,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
                       layout != Layout.large
-                          ? _circleImage(context, openPodcast,
+                          ? _circleImage(context, openPodcast, useEpisodeImage,
                               episode: episode,
                               color: episode.getColorScheme(context).primary,
                               boo: hide)
@@ -311,13 +331,13 @@ Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
                   ),
                 ),
                 Expanded(
-                  flex: layout == Layout.large ? 3 : 5,
+                  flex: layout == Layout.large ? 5 : 7,
                   child: layout != Layout.large
                       ? _title(episode, layout)
                       : Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            _circleImage(context, openPodcast,
+                            _circleImage(context, openPodcast, useEpisodeImage,
                                 episode: episode,
                                 color: episode.getColorScheme(context).primary,
                                 boo: hide),
@@ -329,7 +349,7 @@ Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
                         ),
                 ),
                 Expanded(
-                  flex: 1,
+                  flex: 2,
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.start,
@@ -341,33 +361,135 @@ Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
                       Spacer(),
                       if (layout != Layout.small &&
                           episode.enclosureDuration != 0)
-                        Align(
-                          alignment: Alignment.center,
-                          child: Text(
-                            episode.enclosureDuration!.toTime,
-                            style: TextStyle(fontSize: context.width / 35),
-                          ),
-                        ),
-                      if (episode.enclosureDuration != 0 &&
-                          episode.enclosureSize != null &&
-                          episode.enclosureSize != 0 &&
-                          layout != Layout.small)
-                        Text(
-                          '|',
-                          style: TextStyle(
-                            fontSize: context.width / 35,
-                          ),
-                        ),
-                      if (layout != Layout.small &&
-                          episode.enclosureSize != null &&
-                          episode.enclosureSize != 0)
-                        Align(
+                        Container(
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.horizontal(
+                                  left: Radius.circular(5),
+                                  right: episode.enclosureSize == 0
+                                      ? Radius.circular(5)
+                                      : Radius.zero),
+                              border: Border.all(
+                                  color: context.realDark
+                                      ? episode.isPlayed!
+                                          ? episode
+                                              .getColorScheme(context)
+                                              .onSecondaryContainer
+                                          : Colors.transparent
+                                      : episode
+                                          .getColorScheme(context)
+                                          .onSecondaryContainer,
+                                  width: 1),
+                              color: context.realDark
+                                  ? Colors.transparent
+                                  : episode.isPlayed!
+                                      ? episode
+                                          .getColorScheme(context)
+                                          .onSecondaryContainer
+                                      : Colors.transparent),
                           alignment: Alignment.center,
                           child: Text(
                             '${episode.enclosureSize! ~/ 1000000}MB',
-                            style: TextStyle(fontSize: context.width / 35),
+                            style: TextStyle(
+                                fontSize: context.width / 35,
+                                color: context.realDark
+                                    ? episode.getColorScheme(context).primary
+                                    : episode.isPlayed!
+                                        ? episode
+                                            .getColorScheme(context)
+                                            .secondaryContainer
+                                        : episode
+                                            .getColorScheme(context)
+                                            .onSecondaryContainer),
                           ),
                         ),
+                      if (layout != Layout.small && episode.enclosureSize != 0)
+                        Stack(
+                            alignment: AlignmentDirectional.centerStart,
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.horizontal(
+                                        right: Radius.circular(5),
+                                        left: episode.enclosureDuration == 0
+                                            ? Radius.circular(5)
+                                            : Radius.zero),
+                                    // border: episode.enclosureDuration == 0
+                                    //     ? Border.all(
+                                    //         color: episode
+                                    //             .getColorScheme(context)
+                                    //             .onSecondaryContainer,
+                                    //       )
+                                    //     : Border(
+                                    //         right: BorderSide(
+                                    //             color: episode
+                                    //                 .getColorScheme(context)
+                                    //                 .onSecondaryContainer),
+                                    //         top: BorderSide(
+                                    //             color: episode
+                                    //                 .getColorScheme(context)
+                                    //                 .onSecondaryContainer),
+                                    //         bottom: BorderSide(
+                                    //             color: episode
+                                    //                 .getColorScheme(context)
+                                    //                 .onSecondaryContainer),
+                                    // ),
+                                    // This doesn't work currently due to flutter barf https://github.com/flutter/flutter/issues/12583
+                                    // Stack is a workaround.
+                                    border: Border.all(
+                                        color: context.realDark
+                                            ? episode.isDownloaded!
+                                                ? episode
+                                                    .getColorScheme(context)
+                                                    .onSecondaryContainer
+                                                : Colors.transparent
+                                            : episode
+                                                .getColorScheme(context)
+                                                .onSecondaryContainer,
+                                        width: 1),
+                                    color: context.realDark
+                                        ? Colors.transparent
+                                        : episode.isDownloaded!
+                                            ? episode
+                                                .getColorScheme(context)
+                                                .onSecondaryContainer
+                                            : Colors.transparent),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  '${episode.enclosureSize! ~/ 1000000}MB',
+                                  style: TextStyle(
+                                      fontSize: context.width / 35,
+                                      color: context.realDark
+                                          ? episode
+                                              .getColorScheme(context)
+                                              .primary
+                                          : episode.isDownloaded!
+                                              ? episode
+                                                  .getColorScheme(context)
+                                                  .secondaryContainer
+                                              : episode
+                                                  .getColorScheme(context)
+                                                  .onSecondaryContainer),
+                                ),
+                              ),
+                              Container(
+                                width: 2,
+                                height:
+                                    16, // TODO: Hardcoded height might break.
+                                color: context.realDark
+                                    ? episode.isDownloaded!
+                                        ? episode
+                                            .getColorScheme(context)
+                                            .onSecondaryContainer
+                                        : Colors.black
+                                    : episode.isDownloaded!
+                                        ? episode
+                                            .getColorScheme(context)
+                                            .onSecondaryContainer
+                                        : episode
+                                            .getColorScheme(context)
+                                            .secondaryContainer,
+                              )
+                            ]),
                       Padding(
                         padding: EdgeInsets.all(1),
                       ),
@@ -391,6 +513,7 @@ Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
 }
 
 Widget _layoutOneCard(BuildContext context, EpisodeBrief episode, Layout layout,
+    bool useEpisodeImage,
     {String? numberText,
     required bool openPodcast,
     required bool showFavorite,
@@ -422,7 +545,7 @@ Widget _layoutOneCard(BuildContext context, EpisodeBrief episode, Layout layout,
               Expanded(
                 flex: 1,
                 child: Center(
-                  child: _circleImage(context, openPodcast,
+                  child: _circleImage(context, openPodcast, useEpisodeImage,
                       episode: episode,
                       color: episode.getColorScheme(context).primary,
                       boo: boo,
@@ -537,7 +660,8 @@ Widget _title(EpisodeBrief episode, Layout layout) => Container(
     );
 
 /// Circel avatar widget.
-Widget _circleImage(BuildContext context, bool openPodcast,
+Widget _circleImage(
+        BuildContext context, bool openPodcast, bool useEpisodeImage,
         {EpisodeBrief? episode,
         Color? color,
         required bool boo,
@@ -563,7 +687,9 @@ Widget _circleImage(BuildContext context, bool openPodcast,
             ? Center()
             : CircleAvatar(
                 backgroundColor: color!.withOpacity(0.5),
-                backgroundImage: episode!.avatarImage),
+                backgroundImage: useEpisodeImage
+                    ? episode!.episodeImageProvider
+                    : episode!.podcastImageProvider),
       ),
     );
 

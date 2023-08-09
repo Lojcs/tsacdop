@@ -543,7 +543,6 @@ class _PodcastPreviewState extends State<PodcastPreview> {
       EpisodeField.enclosureSize,
       EpisodeField.isDownloaded,
       EpisodeField.episodeImage,
-      EpisodeField.podcastImage,
       EpisodeField.primaryColor,
       EpisodeField.isLiked,
       EpisodeField.isNew,
@@ -581,7 +580,8 @@ class ShowEpisode extends StatelessWidget {
             delegate: SliverChildBuilderDelegate(
               (context, index) {
                 return interactiveEpisodeCard(
-                    context, episodes![index], Layout.medium);
+                    context, episodes![index], Layout.medium,
+                    useEpisodeImage: true);
               },
               childCount: math.min(episodes!.length, 2),
             ),

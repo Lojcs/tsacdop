@@ -943,6 +943,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
                                             _selectAfter = false;
                                             _selectedEpisodes = value;
                                           }),
+                                          useEpisodeImage: true,
                                         );
                                       }
                                       return SliverToBoxAdapter(
