@@ -115,11 +115,11 @@ class EpisodeBrief extends Equatable {
     return getColorScheme(context).secondaryContainer;
   }
 
-  late final ColorScheme _colorSchemeLight = ColorScheme.fromSeed(
+  late final ColorScheme colorSchemeLight = ColorScheme.fromSeed(
     seedColor: primaryColor!.toColor(),
     brightness: Brightness.light,
   );
-  late final ColorScheme _colorSchemeDark = ColorScheme.fromSeed(
+  late final ColorScheme colorSchemeDark = ColorScheme.fromSeed(
     seedColor: primaryColor!.toColor(),
     brightness: Brightness.dark,
   );
@@ -128,8 +128,8 @@ class EpisodeBrief extends Equatable {
   /// Caches its results so can be used freely.
   ColorScheme getColorScheme(BuildContext context) {
     return context.brightness == Brightness.light
-        ? _colorSchemeLight
-        : _colorSchemeDark;
+        ? colorSchemeLight
+        : colorSchemeDark;
   }
 
   /// The list of filled fields in the form of [EpisodeField]s.

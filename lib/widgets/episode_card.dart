@@ -77,18 +77,11 @@ Widget interactiveEpisodeCard(
                     menuBoxDecoration: BoxDecoration(
                         color: Colors.transparent,
                         borderRadius: BorderRadius.circular(20.0)),
-                    childDecoration: BoxDecoration(
-                      color: context.realDark
-                          ? Colors.transparent
-                          : episode.getColorScheme(context).secondaryContainer,
-                      borderRadius: BorderRadius.circular(20.0),
-                      border: Border.all(
-                        color: context.realDark
-                            ? episode.getColorScheme(context).primary
-                            : Colors.transparent,
-                        width: 1.0,
-                      ),
-                    ),
+                    childDecoration: _cardDecoration(context, episode),
+                    childHighlightColor: context.brightness == Brightness.light
+                        ? episode.colorSchemeLight.primary
+                        : episode.colorSchemeLight.onSecondaryContainer,
+                    childOverlay: _progressOverlay(episode, layout),
                     duration: Duration(milliseconds: 100),
                     openWithTap: tapToOpen,
                     animateMenuItems: false,
@@ -100,6 +93,7 @@ Widget interactiveEpisodeCard(
                     menuItems: <FocusedMenuItem>[
                       FocusedMenuItem(
                           backgroundColor: context.priamryContainer,
+                          highlightColor: context.accentColor,
                           title: Text(data.item1 != episode || !data.item4
                               ? s.play
                               : s.playing),
@@ -115,6 +109,7 @@ Widget interactiveEpisodeCard(
                       if (menuList.contains(1))
                         FocusedMenuItem(
                             backgroundColor: context.priamryContainer,
+                            highlightColor: Colors.cyan,
                             title: data.item2.contains(episode.enclosureUrl)
                                 ? Text(s.remove)
                                 : Text(s.later),
@@ -140,6 +135,7 @@ Widget interactiveEpisodeCard(
                       if (menuList.contains(2))
                         FocusedMenuItem(
                             backgroundColor: context.priamryContainer,
+                            highlightColor: Colors.red,
                             title: episode.isLiked!
                                 ? Text(s.unlike)
                                 : Text(s.like),
@@ -165,6 +161,7 @@ Widget interactiveEpisodeCard(
                       if (menuList.contains(3))
                         FocusedMenuItem(
                             backgroundColor: context.priamryContainer,
+                            highlightColor: Colors.blue,
                             title: episode.isPlayed!
                                 ? Text(s.markNotListened,
                                     style: TextStyle(
@@ -204,6 +201,7 @@ Widget interactiveEpisodeCard(
                       if (menuList.contains(4))
                         FocusedMenuItem(
                             backgroundColor: context.priamryContainer,
+                            highlightColor: Colors.green,
                             title: episode.isDownloaded!
                                 ? Text(s.downloaded,
                                     style: TextStyle(
@@ -221,6 +219,7 @@ Widget interactiveEpisodeCard(
                       if (menuList.contains(5))
                         FocusedMenuItem(
                           backgroundColor: context.priamryContainer,
+                          highlightColor: Colors.amber,
                           title: Text(s.playNext),
                           trailing: Icon(
                             LineIcons.lightningBolt,
@@ -242,7 +241,8 @@ Widget interactiveEpisodeCard(
                         openPodcast: openPodcast,
                         showFavorite: showFavorite,
                         showDownload: showDownload,
-                        showNumber: showNumber));
+                        showNumber: showNumber,
+                        decorate: false));
               })));
 }
 
@@ -275,43 +275,12 @@ Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(20.0)),
       clipBehavior: Clip.hardEdge,
       child: Stack(
-        alignment: AlignmentDirectional.bottomStart,
+        alignment: AlignmentDirectional.centerStart,
         children: [
-          Container(
-              // decoration: BoxDecoration(
-              //   color: context.realDark
-              //       ? Colors.black
-              //       : episode.getColorScheme(context).secondaryContainer,
-              //   borderRadius: BorderRadius.circular(20.0),
-              //   border: Border.all(
-              //     color: context.realDark
-              //         ? episode.getColorScheme(context).primary
-              //         : Colors.transparent,
-              //     width: 1.0,
-              //   ),
-              //   // boxShadow: [
-              //   //   BoxShadow(
-              //   //     color: Color.fromRGBO(40, 40, 40, 1),
-              //   //     blurRadius: 0.5,
-              //   //     spreadRadius: 0.5,
-              //   //     offset: Offset.fromDirection(0, 3),
-              //   //   )]
-              // ),
-              ),
-          FutureBuilder<PlayHistory>(
-            future: dbHelper.getPosition(episode),
-            builder: (context, snapshot) {
-              if (snapshot.hasData)
-                return Container(
-                  width: context.width * snapshot.data!.seekValue! / tileCount,
-                  color: context.realDark
-                      ? context.background.withOpacity(0.8)
-                      : context.background.withOpacity(0.65),
-                );
-              else
-                return Center();
-            },
-          ),
+          decorate
+              ? Container(decoration: _cardDecoration(context, episode))
+              : Center(),
+          decorate ? _progressOverlay(episode, layout) : Center(),
           Padding(
             padding: EdgeInsets.all(layout == Layout.small ? 5 : 8)
                 .copyWith(bottom: layout == Layout.small ? 10 : 8),
@@ -340,8 +309,13 @@ Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
                             ),
                       Spacer(),
                       _isNewIndicator(episode),
-                      _downloadIndicator(context, layout, showDownload,
-                          isDownloaded: episode.isDownloaded),
+                      if ((showFavorite || layout != Layout.small) &&
+                          episode.isLiked!)
+                        Icon(
+                          Icons.favorite,
+                          color: Colors.red,
+                          size: context.width / 35,
+                        ),
                       _numberIndicator(context, showNumber,
                           numberText: numberText,
                           color: episode.getColorScheme(context).primary)
@@ -524,13 +498,6 @@ Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
                                           .onSecondaryContainer
                                       : Colors.transparent)
                             ]),
-                      if ((showFavorite || layout != Layout.small) &&
-                          episode.isLiked!)
-                        Icon(
-                          Icons.favorite,
-                          color: Colors.red,
-                          size: context.width / 35,
-                        )
                     ],
                   ),
                 ),
@@ -541,6 +508,54 @@ Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
       ),
     );
   }
+}
+
+Widget _progressOverlay(EpisodeBrief episode, Layout layout) {
+  DBHelper dbHelper = DBHelper();
+  return FutureBuilder<PlayHistory>(
+    future: dbHelper.getPosition(episode),
+    builder: (context, snapshot) {
+      if (snapshot.hasData)
+        return Container(
+          width: context.width *
+              snapshot.data!.seekValue! /
+              (layout == Layout.small
+                  ? 3
+                  : layout == Layout.medium
+                      ? 2
+                      : 1),
+          color: context.realDark
+              ? context.background.withOpacity(0.7)
+              : context.realDark
+                  ? context.background.withOpacity(0.8)
+                  : context.background.withOpacity(0.6),
+        );
+      else
+        return Center();
+    },
+  );
+}
+
+BoxDecoration _cardDecoration(BuildContext context, EpisodeBrief episode) {
+  return BoxDecoration(
+    color: context.realDark
+        ? Colors.black
+        : episode.getColorScheme(context).secondaryContainer,
+    borderRadius: BorderRadius.circular(20.0),
+    border: Border.all(
+      color: context.realDark
+          ? episode.getColorScheme(context).primary
+          : context.background,
+      width: 1.0,
+    ),
+    // boxShadow: [
+    //   BoxShadow(
+    //     color: Color.fromRGBO(40, 40, 40, 1),
+    //     blurRadius: 0.5,
+    //     spreadRadius: 0.5,
+    //     offset: Offset.fromDirection(0, 3),
+    //   )]
+  );
 }
 
 Widget _layoutOneCard(BuildContext context, EpisodeBrief episode, Layout layout,
