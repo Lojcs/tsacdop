@@ -182,7 +182,7 @@ class SettingState extends ChangeNotifier {
               color: Colors.black,
               fontWeight: FontWeight.normal),
           labelSmall: TextStyle(
-              fontSize: 12.0,
+              fontSize: 11.0,
               color: Colors.black,
               fontWeight: FontWeight.normal),
           titleLarge: TextStyle(
@@ -236,6 +236,10 @@ class SettingState extends ChangeNotifier {
               fontSize: 15.0,
               color: Colors.white,
               fontWeight: FontWeight.normal),
+          bodySmall: TextStyle(
+              fontSize: 14.0,
+              color: Colors.white,
+              fontWeight: FontWeight.normal),
           labelLarge: TextStyle(
               fontSize: 16.0,
               color: Colors.white,
@@ -245,7 +249,7 @@ class SettingState extends ChangeNotifier {
               color: Colors.white,
               fontWeight: FontWeight.normal),
           labelSmall: TextStyle(
-              fontSize: 12.0,
+              fontSize: 11.0,
               color: Colors.white,
               fontWeight: FontWeight.normal),
           titleLarge: TextStyle(

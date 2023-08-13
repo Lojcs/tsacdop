@@ -37,7 +37,7 @@ class EpisodeGrid extends StatelessWidget {
   final bool showFavorite;
   final bool showDownload;
   final bool showNumber;
-  final bool useEpisodeImage;
+  final bool preferEpisodeImage;
   final int? episodeCount;
   final Layout? layout;
   final SortOrder? sortOrder;
@@ -56,7 +56,7 @@ class EpisodeGrid extends StatelessWidget {
       this.showDownload = false,
       this.showFavorite = false,
       this.showNumber = false,
-      this.useEpisodeImage = false,
+      this.preferEpisodeImage = false,
       this.episodeCount = 0,
       this.layout = Layout.small,
       this.sortOrder,
@@ -118,7 +118,7 @@ class EpisodeGrid extends StatelessWidget {
                 episodes![index],
                 layout!,
                 showNumber: showNumber,
-                useEpisodeImage: useEpisodeImage,
+                preferEpisodeImage: preferEpisodeImage,
                 numberText: sortOrder == SortOrder.ASC
                     ? (index + 1).toString()
                     : (episodeCount! - index).toString(),

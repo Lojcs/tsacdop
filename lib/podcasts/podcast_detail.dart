@@ -174,6 +174,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
           EpisodeField.enclosureSize,
           EpisodeField.isDownloaded,
           EpisodeField.episodeImage,
+          EpisodeField.podcastImage,
           EpisodeField.primaryColor,
           EpisodeField.isLiked,
           EpisodeField.isNew,
@@ -943,7 +944,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
                                             _selectAfter = false;
                                             _selectedEpisodes = value;
                                           }),
-                                          useEpisodeImage: true,
+                                          preferEpisodeImage: true,
                                         );
                                       }
                                       return SliverToBoxAdapter(

@@ -30,7 +30,7 @@ Widget interactiveEpisodeCard(
   bool showFavorite = true,
   bool showDownload = true,
   bool showNumber = false,
-  bool useEpisodeImage = false,
+  bool preferEpisodeImage = false,
   String? numberText,
   bool hide = false, // TODO: What does this do?
   bool selectMode = false,
@@ -41,14 +41,14 @@ Widget interactiveEpisodeCard(
   assert(!showFavorite || episode.fields.contains(EpisodeField.isLiked));
   assert(episode.fields.contains(EpisodeField.enclosureDuration));
   assert(episode.fields.contains(EpisodeField.enclosureSize));
+  assert(!preferEpisodeImage ||
+      episode.fields.contains(EpisodeField.episodeImage));
   assert(
-      !useEpisodeImage || episode.fields.contains(EpisodeField.episodeImage));
-  assert(useEpisodeImage || episode.fields.contains(EpisodeField.podcastImage));
+      preferEpisodeImage || episode.fields.contains(EpisodeField.podcastImage));
   assert(episode.fields.contains(EpisodeField.primaryColor));
   assert(episode.fields.contains(EpisodeField.isNew));
   assert(episode.fields.contains(EpisodeField.isPlayed));
   assert(!selectMode || onSelect != null);
-  var settings = Provider.of<SettingState>(context, listen: false);
   var audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
   bool selected = false;
   var s = context.s;
@@ -56,10 +56,11 @@ Widget interactiveEpisodeCard(
   return Selector<AudioPlayerNotifier,
           Tuple4<EpisodeBrief?, List<String>, bool, bool>>(
       selector: (_, audio) => Tuple4(
-          audio.episode,
-          audio.queue.episodes.map((e) => e!.enclosureUrl).toList(),
-          audio.episodeState,
-          audio.playerRunning),
+            audio.episode,
+            audio.queue.episodes.map((e) => e!.enclosureUrl).toList(),
+            audio.episodeState,
+            audio.playerRunning,
+          ),
       builder: (_, data, __) => OpenContainerWrapper(
           avatarSize:
               layout == Layout.large ? context.width / 8 : context.width / 16,
@@ -79,15 +80,13 @@ Widget interactiveEpisodeCard(
                         borderRadius: BorderRadius.circular(20.0)),
                     childDecoration: _cardDecoration(context, episode),
                     childHighlightColor: context.brightness == Brightness.light
-                        ? episode.colorSchemeLight.primary
+                        ? episode.colorSchemeDark.primary
                         : episode.colorSchemeLight.onSecondaryContainer,
                     childOverlay: _progressOverlay(episode, layout),
                     duration: Duration(milliseconds: 100),
                     openWithTap: tapToOpen,
                     animateMenuItems: false,
-                    blurBackgroundColor: context.brightness == Brightness.light
-                        ? Colors.white38
-                        : Colors.black38,
+                    blurBackgroundColor: context.background,
                     bottomOffsetHeight: 10,
                     menuOffset: 6,
                     menuItems: <FocusedMenuItem>[
@@ -235,8 +234,8 @@ Widget interactiveEpisodeCard(
                         ),
                     ],
                     onPressed: selectMode ? onSelect! : action,
-                    child: episodeCard(context, episode, layout, tapToOpen,
-                        action, data, useEpisodeImage,
+                    child: episodeCard(
+                        context, episode, layout, data, preferEpisodeImage,
                         numberText: numberText,
                         openPodcast: openPodcast,
                         showFavorite: showFavorite,
@@ -247,7 +246,7 @@ Widget interactiveEpisodeCard(
 }
 
 Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
-    bool tapToOpen, VoidCallback action, data, bool useEpisodeImage,
+    data, bool preferEpisodeImage,
     {String? numberText,
     bool openPodcast = true,
     bool showFavorite = true,
@@ -263,7 +262,7 @@ Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
           ? 2
           : 1;
   if (false) {
-    return _layoutOneCard(context, episode, layout, useEpisodeImage,
+    return _layoutOneCard(context, episode, layout, preferEpisodeImage,
         numberText: numberText!,
         openPodcast: openPodcast,
         showDownload: showDownload,
@@ -282,7 +281,7 @@ Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
               : Center(),
           decorate ? _progressOverlay(episode, layout) : Center(),
           Padding(
-            padding: EdgeInsets.all(layout == Layout.small ? 5 : 8)
+            padding: EdgeInsets.all(layout == Layout.small ? 8 : 8)
                 .copyWith(bottom: layout == Layout.small ? 10 : 8),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
@@ -299,7 +298,8 @@ Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
                       layout != Layout.large
-                          ? _circleImage(context, openPodcast, useEpisodeImage,
+                          ? _circleImage(
+                              context, openPodcast, preferEpisodeImage,
                               episode: episode,
                               color: episode.getColorScheme(context).primary,
                               boo: hide)
@@ -308,7 +308,7 @@ Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
                               episode,
                             ),
                       Spacer(),
-                      _isNewIndicator(episode),
+                      _isNewIndicator(episode, context, layout),
                       if ((showFavorite || layout != Layout.small) &&
                           episode.isLiked!)
                         Icon(
@@ -325,18 +325,19 @@ Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
                 Expanded(
                   flex: layout == Layout.large ? 4 : 7,
                   child: layout != Layout.large
-                      ? _title(episode, layout)
+                      ? _title(episode, context, layout)
                       : Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            _circleImage(context, openPodcast, useEpisodeImage,
+                            _circleImage(
+                                context, openPodcast, preferEpisodeImage,
                                 episode: episode,
                                 color: episode.getColorScheme(context).primary,
                                 boo: hide),
                             SizedBox(
                               width: 5,
                             ),
-                            Expanded(child: _title(episode, layout))
+                            Expanded(child: _title(episode, context, layout))
                           ],
                         ),
                 ),
@@ -353,6 +354,8 @@ Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
                               small: layout == Layout.small),
                         ),
                       Spacer(),
+                      // There's a gap between the next two widgets if you look closely. I couldn't fix it
+                      // https://stackoverflow.com/questions/68230022/how-to-remove-space-between-widgets-in-column-or-row-in-flutter
                       if (episode.enclosureDuration != 0)
                         Stack(
                           alignment: AlignmentDirectional.centerEnd,
@@ -385,21 +388,21 @@ Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
                               alignment: Alignment.center,
                               child: Text(
                                 episode.enclosureDuration!.toTime,
-                                style: TextStyle(
-                                    fontSize: layout == Layout.small
-                                        ? context.width / 40
-                                        : context.width / 35,
-                                    color: context.realDark
-                                        ? episode
-                                            .getColorScheme(context)
-                                            .onSecondaryContainer
-                                        : episode.isPlayed!
+                                style: (layout == Layout.large
+                                        ? context.textTheme.labelMedium
+                                        : context.textTheme.labelSmall)!
+                                    .copyWith(
+                                        color: context.realDark
                                             ? episode
                                                 .getColorScheme(context)
-                                                .secondaryContainer
-                                            : episode
-                                                .getColorScheme(context)
-                                                .onSecondaryContainer),
+                                                .onSecondaryContainer
+                                            : episode.isPlayed!
+                                                ? episode
+                                                    .getColorScheme(context)
+                                                    .secondaryContainer
+                                                : episode
+                                                    .getColorScheme(context)
+                                                    .onSecondaryContainer),
                               ),
                             ),
                             Container(
@@ -469,21 +472,21 @@ Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
                                 alignment: Alignment.center,
                                 child: Text(
                                   '${episode.enclosureSize! ~/ 1000000}MB',
-                                  style: TextStyle(
-                                      fontSize: layout == Layout.small
-                                          ? context.width / 40
-                                          : context.width / 35,
-                                      color: context.realDark
-                                          ? episode
-                                              .getColorScheme(context)
-                                              .onSecondaryContainer
-                                          : episode.isDownloaded!
+                                  style: (layout == Layout.large
+                                          ? context.textTheme.labelMedium
+                                          : context.textTheme.labelSmall)!
+                                      .copyWith(
+                                          color: context.realDark
                                               ? episode
                                                   .getColorScheme(context)
-                                                  .secondaryContainer
-                                              : episode
-                                                  .getColorScheme(context)
-                                                  .onSecondaryContainer),
+                                                  .onSecondaryContainer
+                                              : episode.isPlayed!
+                                                  ? episode
+                                                      .getColorScheme(context)
+                                                      .secondaryContainer
+                                                  : episode
+                                                      .getColorScheme(context)
+                                                      .onSecondaryContainer),
                                 ),
                               ),
                               Container(
@@ -559,7 +562,7 @@ BoxDecoration _cardDecoration(BuildContext context, EpisodeBrief episode) {
 }
 
 Widget _layoutOneCard(BuildContext context, EpisodeBrief episode, Layout layout,
-    bool useEpisodeImage,
+    bool preferEpisodeImage,
     {String? numberText,
     required bool openPodcast,
     required bool showFavorite,
@@ -591,7 +594,7 @@ Widget _layoutOneCard(BuildContext context, EpisodeBrief episode, Layout layout,
               Expanded(
                 flex: 1,
                 child: Center(
-                  child: _circleImage(context, openPodcast, useEpisodeImage,
+                  child: _circleImage(context, openPodcast, preferEpisodeImage,
                       episode: episode,
                       color: episode.getColorScheme(context).primary,
                       boo: boo,
@@ -620,7 +623,7 @@ Widget _layoutOneCard(BuildContext context, EpisodeBrief episode, Layout layout,
                                         .getColorScheme(context)
                                         .primary)),
                           ),
-                          _isNewIndicator(episode),
+                          _isNewIndicator(episode, context, layout),
                           _downloadIndicator(context, layout, showDownload,
                               isDownloaded: episode.isDownloaded),
                           _numberIndicator(context, showNumber,
@@ -633,7 +636,7 @@ Widget _layoutOneCard(BuildContext context, EpisodeBrief episode, Layout layout,
                         flex: 2,
                         child: Align(
                             alignment: Alignment.topLeft,
-                            child: _title(episode, layout))),
+                            child: _title(episode, context, layout))),
                     Expanded(
                       flex: 1,
                       child: Row(
@@ -694,12 +697,16 @@ Widget _layoutOneCard(BuildContext context, EpisodeBrief episode, Layout layout,
 }
 
 /// Episode title widget.
-Widget _title(EpisodeBrief episode, Layout layout) => Container(
+Widget _title(EpisodeBrief episode, BuildContext context, Layout layout) =>
+    Container(
       alignment:
           layout == Layout.large ? Alignment.centerLeft : Alignment.topLeft,
       padding: EdgeInsets.only(top: 2.0),
       child: Text(
         episode.title,
+        style: layout == Layout.large
+            ? context.textTheme.bodyMedium
+            : context.textTheme.bodySmall,
         maxLines: layout == Layout.large ? 1 : 4,
         overflow:
             layout == Layout.large ? TextOverflow.ellipsis : TextOverflow.fade,
@@ -708,7 +715,7 @@ Widget _title(EpisodeBrief episode, Layout layout) => Container(
 
 /// Circel avatar widget.
 Widget _circleImage(
-        BuildContext context, bool openPodcast, bool useEpisodeImage,
+        BuildContext context, bool openPodcast, bool preferEpisodeImage,
         {EpisodeBrief? episode,
         Color? color,
         required bool boo,
@@ -734,9 +741,10 @@ Widget _circleImage(
             ? Center()
             : CircleAvatar(
                 backgroundColor: color!.withOpacity(0.5),
-                backgroundImage: useEpisodeImage
-                    ? episode!.episodeImageProvider
-                    : episode!.podcastImageProvider),
+                backgroundImage:
+                    preferEpisodeImage && episode!.episodeImage != ''
+                        ? episode.episodeImageProvider
+                        : episode!.podcastImageProvider),
       ),
     );
 
@@ -770,13 +778,18 @@ Widget _downloadIndicator(
         : Center();
 
 /// New indicator widget.
-Widget _isNewIndicator(EpisodeBrief episode) => episode.isNew!
-    ? Container(
-        padding: EdgeInsets.symmetric(horizontal: 2),
-        child: Text('New',
-            style: TextStyle(color: Colors.red, fontStyle: FontStyle.italic)),
-      )
-    : Center();
+Widget _isNewIndicator(
+        EpisodeBrief episode, BuildContext context, Layout layout) =>
+    episode.isNew!
+        ? Container(
+            padding: EdgeInsets.symmetric(horizontal: 2),
+            child: Text('New',
+                style: (layout == Layout.large
+                        ? context.textTheme.labelMedium
+                        : context.textTheme.labelSmall)!
+                    .copyWith(color: Colors.red, fontStyle: FontStyle.italic)),
+          )
+        : Center();
 
 /// Count indicator widget.
 Widget _numberIndicator(BuildContext context, bool showNumber,

@@ -580,7 +580,7 @@ class ShowEpisode extends StatelessWidget {
               (context, index) {
                 return interactiveEpisodeCard(
                     context, episodes![index], Layout.medium,
-                    useEpisodeImage: true);
+                    preferEpisodeImage: true);
               },
               childCount: math.min(episodes!.length, 2),
             ),
