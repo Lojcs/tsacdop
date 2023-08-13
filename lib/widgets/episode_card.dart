@@ -2,7 +2,6 @@ import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:focused_menu/focused_menu.dart';
-import 'package:focused_menu/modals.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -78,8 +77,20 @@ Widget interactiveEpisodeCard(
                     menuBoxDecoration: BoxDecoration(
                         color: Colors.transparent,
                         borderRadius: BorderRadius.circular(20.0)),
+                    childDecoration: BoxDecoration(
+                      color: context.realDark
+                          ? Colors.transparent
+                          : episode.getColorScheme(context).secondaryContainer,
+                      borderRadius: BorderRadius.circular(20.0),
+                      border: Border.all(
+                        color: context.realDark
+                            ? episode.getColorScheme(context).primary
+                            : Colors.transparent,
+                        width: 1.0,
+                      ),
+                    ),
                     duration: Duration(milliseconds: 100),
-                    tapMode: tapToOpen ? TapMode.onTap : TapMode.onLongPress,
+                    openWithTap: tapToOpen,
                     animateMenuItems: false,
                     blurBackgroundColor: context.brightness == Brightness.light
                         ? Colors.white38
@@ -92,7 +103,7 @@ Widget interactiveEpisodeCard(
                           title: Text(data.item1 != episode || !data.item4
                               ? s.play
                               : s.playing),
-                          trailingIcon: Icon(
+                          trailing: Icon(
                             LineIcons.playCircle,
                             color: context.accentColor,
                           ),
@@ -107,7 +118,7 @@ Widget interactiveEpisodeCard(
                             title: data.item2.contains(episode.enclosureUrl)
                                 ? Text(s.remove)
                                 : Text(s.later),
-                            trailingIcon: Icon(
+                            trailing: Icon(
                               LineIcons.clock,
                               color: Colors.cyan,
                             ),
@@ -132,7 +143,7 @@ Widget interactiveEpisodeCard(
                             title: episode.isLiked!
                                 ? Text(s.unlike)
                                 : Text(s.like),
-                            trailingIcon: Icon(LineIcons.heart,
+                            trailing: Icon(LineIcons.heart,
                                 color: Colors.red, size: 21),
                             onPressed: () async {
                               if (episode.isLiked!) {
@@ -164,7 +175,7 @@ Widget interactiveEpisodeCard(
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                            trailingIcon: SizedBox(
+                            trailing: SizedBox(
                               width: 23,
                               height: 23,
                               child: CustomPaint(
@@ -199,7 +210,7 @@ Widget interactiveEpisodeCard(
                                         color:
                                             context.textColor.withOpacity(0.5)))
                                 : Text(s.download),
-                            trailingIcon:
+                            trailing:
                                 Icon(LineIcons.download, color: Colors.green),
                             onPressed: () async {
                               if (!episode.isDownloaded!) {
@@ -211,7 +222,7 @@ Widget interactiveEpisodeCard(
                         FocusedMenuItem(
                           backgroundColor: context.priamryContainer,
                           title: Text(s.playNext),
-                          trailingIcon: Icon(
+                          trailing: Icon(
                             LineIcons.lightningBolt,
                             color: Colors.amber,
                           ),
@@ -242,7 +253,8 @@ Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
     bool showFavorite = true,
     bool showDownload = true,
     bool showNumber = false,
-    bool hide = false}) {
+    bool hide = false,
+    bool decorate = true}) {
   var settings = Provider.of<SettingState>(context, listen: false);
   DBHelper dbHelper = DBHelper();
   int tileCount = layout == Layout.small
@@ -266,26 +278,26 @@ Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,
         alignment: AlignmentDirectional.bottomStart,
         children: [
           Container(
-            decoration: BoxDecoration(
-              color: context.realDark
-                  ? Colors.black
-                  : episode.getColorScheme(context).secondaryContainer,
-              borderRadius: BorderRadius.circular(20.0),
-              border: Border.all(
-                color: context.realDark
-                    ? episode.getColorScheme(context).primary
-                    : Colors.transparent,
-                width: 1.0,
+              // decoration: BoxDecoration(
+              //   color: context.realDark
+              //       ? Colors.black
+              //       : episode.getColorScheme(context).secondaryContainer,
+              //   borderRadius: BorderRadius.circular(20.0),
+              //   border: Border.all(
+              //     color: context.realDark
+              //         ? episode.getColorScheme(context).primary
+              //         : Colors.transparent,
+              //     width: 1.0,
+              //   ),
+              //   // boxShadow: [
+              //   //   BoxShadow(
+              //   //     color: Color.fromRGBO(40, 40, 40, 1),
+              //   //     blurRadius: 0.5,
+              //   //     spreadRadius: 0.5,
+              //   //     offset: Offset.fromDirection(0, 3),
+              //   //   )]
+              // ),
               ),
-              // boxShadow: [
-              //   BoxShadow(
-              //     color: Color.fromRGBO(40, 40, 40, 1),
-              //     blurRadius: 0.5,
-              //     spreadRadius: 0.5,
-              //     offset: Offset.fromDirection(0, 3),
-              //   )]
-            ),
-          ),
           FutureBuilder<PlayHistory>(
             future: dbHelper.getPosition(episode),
             builder: (context, snapshot) {
