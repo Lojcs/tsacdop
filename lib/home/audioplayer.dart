@@ -1638,22 +1638,26 @@ class _ControlPanelState extends State<ControlPanel>
                                               FadeRoute(
                                                   page: FutureBuilder(
                                                       // TODO: Check which fields are actually needed.
-                                                      future: data.item1!
-                                                          .copyWithFromDB([
-                                                        EpisodeField
-                                                            .description,
-                                                        EpisodeField
-                                                            .enclosureDuration,
-                                                        EpisodeField
-                                                            .enclosureSize,
-                                                        EpisodeField
-                                                            .episodeImage,
-                                                        EpisodeField
-                                                            .podcastImage,
-                                                        EpisodeField
-                                                            .primaryColor,
-                                                        EpisodeField.versionInfo
-                                                      ]),
+                                                      future:
+                                                          data
+                                                              .item1!
+                                                              .copyWithFromDB(
+                                                                  newFields: [
+                                                            EpisodeField
+                                                                .description,
+                                                            EpisodeField
+                                                                .enclosureDuration,
+                                                            EpisodeField
+                                                                .enclosureSize,
+                                                            EpisodeField
+                                                                .episodeImage,
+                                                            EpisodeField
+                                                                .podcastImage,
+                                                            EpisodeField
+                                                                .primaryColor,
+                                                            EpisodeField
+                                                                .versionInfo
+                                                          ]),
                                                       builder: ((context,
                                                               snapshot) =>
                                                           EpisodeDetail(

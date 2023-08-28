@@ -43,9 +43,9 @@ class Playlist extends Equatable {
   /// Eposides in playlist.
   final List<EpisodeBrief?> episodes;
 
-  bool get isEmpty => episodeList.isEmpty;
+  bool get isEmpty => episodeList.isEmpty && episodes.isEmpty;
 
-  bool get isNotEmpty => episodeList.isNotEmpty;
+  bool get isNotEmpty => episodeList.isNotEmpty && episodes.isNotEmpty;
 
   int get length => episodeList.length;
 

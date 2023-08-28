@@ -186,7 +186,8 @@ class _PodcastDetailState extends State<PodcastDetail> {
         limit: count!,
         filterLiked: filter == Filter.liked ? 1 : 0,
         filterDownloaded: filter == Filter.downloaded ? 1 : 0,
-        filterPlayed: _hideListened! ? 1 : 0);
+        filterPlayed: _hideListened! ? 1 : 0,
+        context: context);
     _dataCount = episodes.length;
     return episodes;
   }

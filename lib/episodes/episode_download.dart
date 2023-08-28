@@ -123,6 +123,7 @@ class _DownloadButtonState extends State<DownloadButton> {
       var _task = Provider.of<DownloadState>(context, listen: false)
           .episodeToTask(widget.episode);
       return Row(
+        // TODO: On emulator this is sometimes unresponsive as _task.status returns undefined even though the task is enqueued. Test real device.
         children: <Widget>[
           _downloadButton(_task, context),
           AnimatedContainer(
@@ -131,7 +132,10 @@ class _DownloadButtonState extends State<DownloadButton> {
                   color: context.accentColor,
                   borderRadius: BorderRadius.all(Radius.circular(15.0))),
               height: 20.0,
-              width: (_task.status == DownloadTaskStatus.running) ? 50.0 : 0,
+              width: (_task.status == DownloadTaskStatus.running ||
+                      _task.status == DownloadTaskStatus.enqueued)
+                  ? 50.0
+                  : 0,
               alignment: Alignment.center,
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -145,7 +149,7 @@ class _DownloadButtonState extends State<DownloadButton> {
 
   Widget _downloadButton(EpisodeTask task, BuildContext context) {
     switch (task.status!.value) {
-      case 0:
+      case 0: // DownloadTaskStatus.undefined
         return _buttonOnMenu(
             Center(
               child: SizedBox(
@@ -161,7 +165,7 @@ class _DownloadButtonState extends State<DownloadButton> {
               ),
             ),
             () => _requestDownload(task.episode));
-      case 2:
+      case 1: // DownloadTaskStatus.enqueued
         return Material(
           color: Colors.transparent,
           child: InkWell(
@@ -190,7 +194,67 @@ class _DownloadButtonState extends State<DownloadButton> {
             ),
           ),
         );
-      case 6:
+      case 2: // DownloadTaskStatus.running
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              if (task.progress! > 0) _pauseDownload(task.episode);
+            },
+            child: Container(
+              height: 50.0,
+              alignment: Alignment.center,
+              padding: EdgeInsets.symmetric(horizontal: 15.0),
+              child: TweenAnimationBuilder(
+                duration: Duration(milliseconds: 1000),
+                tween: Tween(begin: 0.0, end: 1.0),
+                builder: (context, dynamic fraction, child) => SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CustomPaint(
+                    painter: DownloadPainter(
+                        color: context.accentColor,
+                        fraction: fraction,
+                        progressColor: context.accentColor,
+                        progress: task.progress! / 100),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      case 3: // DownloadTaskStatus.complete
+        Provider.of<AudioPlayerNotifier>(context, listen: false)
+            .updateMediaItem(task.episode!);
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              _deleteDownload(task.episode!);
+            },
+            child: Container(
+              height: 50.0,
+              alignment: Alignment.center,
+              padding: EdgeInsets.symmetric(horizontal: 15),
+              child: SizedBox(
+                height: 20,
+                width: 20,
+                child: CustomPaint(
+                  painter: DownloadPainter(
+                    color: context.accentColor,
+                    fraction: 1,
+                    progressColor: context.accentColor,
+                    progress: 1,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      case 4: // DownloadTaskStatus.failed
+        return _buttonOnMenu(Icon(Icons.refresh, color: Colors.red),
+            () => _retryDownload(task.episode!));
+      case 6: // DownloadTaskStatus.paused
         return Material(
           color: Colors.transparent,
           child: InkWell(
@@ -220,38 +284,7 @@ class _DownloadButtonState extends State<DownloadButton> {
             ),
           ),
         );
-      case 3:
-        Provider.of<AudioPlayerNotifier>(context, listen: false)
-            .updateMediaItem(task.episode!);
-        return Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () {
-              _deleteDownload(task.episode!);
-            },
-            child: Container(
-              height: 50.0,
-              alignment: Alignment.center,
-              padding: EdgeInsets.symmetric(horizontal: 15),
-              child: SizedBox(
-                height: 20,
-                width: 20,
-                child: CustomPaint(
-                  painter: DownloadPainter(
-                    color: context.accentColor,
-                    fraction: 1,
-                    progressColor: context.accentColor,
-                    progress: 1,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      case 4:
-        return _buttonOnMenu(Icon(Icons.refresh, color: Colors.red),
-            () => _retryDownload(task.episode!));
-      default:
+      default: // DownloadTaskStatus.canceled
         return Center();
     }
   }

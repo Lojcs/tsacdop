@@ -4,11 +4,13 @@ import 'dart:developer' as developer;
 
 import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:tsacdop/state/episode_state.dart';
 import 'package:tuple/tuple.dart';
 import 'package:webfeed/webfeed.dart';
 
@@ -1430,7 +1432,10 @@ class DBHelper {
       int filterDownloaded = 0,
       int filterAutoDownload = 0,
       List<String>? customFilters,
-      List<String>? customArguements}) async {
+      List<String>? customArguements,
+
+      /// Provide [context] to add the episode to [EpisodeState].
+      BuildContext? context}) async {
     bool doGroup = false;
     bool getVersions = false;
     bool populateVersions = false;
@@ -1747,6 +1752,9 @@ class DBHelper {
             fields);
         if (populateVersions) episode = await populateEpisodeVersions(episode);
         episodes.add(episode);
+        if (context != null) {
+          Provider.of<EpisodeState>(context, listen: false).addEpisode(episode);
+        }
       }
     }
     return episodes;
@@ -1789,7 +1797,7 @@ class DBHelper {
     });
   }
 
-  Future setUniked(String url) async {
+  Future setUnliked(String url) async {
     var dbClient = await database;
     await dbClient.transaction((txn) async {
       await txn.rawUpdate(

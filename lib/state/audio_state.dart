@@ -153,7 +153,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
   double? _currentSpeed = 1;
 
   ///Update episode card when setting changed
-  bool _episodeState = false;
+  // bool _episodeState = false; // Moved to EpisodeState for granularity
 
   /// Player height.
   PlayerHeight? _playerHeight;
@@ -234,7 +234,6 @@ class AudioPlayerNotifier extends ChangeNotifier {
   int get timeLeft => _timeLeft;
   double get switchValue => _switchValue;
   double? get currentSpeed => _currentSpeed;
-  bool get episodeState => _episodeState;
   bool? get autoSleepTimer => _autoSleepTimer;
   int? get fastForwardSeconds => _fastForwardSeconds;
   int? get rewindSeconds => _rewindSeconds;
@@ -249,7 +248,6 @@ class AudioPlayerNotifier extends ChangeNotifier {
   }
 
   set setEpisodeState(bool boo) {
-    _episodeState = !_episodeState;
     notifyListeners();
   }
 
@@ -409,7 +407,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
       episodeNew = episode;
       _playFromSearchList.add(episode);
     } else {
-      episodeNew = await episode!.copyWithFromDB([
+      episodeNew = await episode!.copyWithFromDB(newFields: [
         EpisodeField.mediaId,
         EpisodeField.primaryColor,
         EpisodeField.isNew,
@@ -660,7 +658,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
 
   /// Queue management
   Future<void> addToPlaylist(EpisodeBrief episode) async {
-    var episodeNew = await episode.copyWithFromDB([
+    var episodeNew = await episode.copyWithFromDB(newFields: [
       EpisodeField.mediaId,
       EpisodeField.primaryColor,
       EpisodeField.isNew,
@@ -683,7 +681,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
   }
 
   Future<void> addToPlaylistAt(EpisodeBrief episode, int index) async {
-    var episodeNew = await episode.copyWithFromDB([
+    var episodeNew = await episode.copyWithFromDB(newFields: [
       EpisodeField.mediaId,
       EpisodeField.primaryColor,
       EpisodeField.isNew,
@@ -735,7 +733,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     if (episode.enclosureUrl == episode.mediaId &&
         _episode != episode &&
         _playlist!.contains(episode)) {
-      var episodeNew = await episode.copyWithFromDB([
+      var episodeNew = await episode.copyWithFromDB(newFields: [
         EpisodeField.mediaId,
         EpisodeField.primaryColor,
         EpisodeField.isNew,

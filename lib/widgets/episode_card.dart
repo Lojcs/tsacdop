@@ -7,6 +7,7 @@ import 'package:line_icons/line_icons.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:tsacdop/state/download_state.dart';
+import 'package:tsacdop/state/episode_state.dart';
 import 'package:tsacdop/type/episodebrief.dart';
 import 'package:tsacdop/util/extension_helper.dart';
 import 'package:tuple/tuple.dart';
@@ -50,199 +51,205 @@ Widget interactiveEpisodeCard(
   assert(episode.fields.contains(EpisodeField.isPlayed));
   assert(!selectMode || onSelect != null);
   var audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
+  var episodeState = Provider.of<EpisodeState>(context, listen: false);
   bool selected = false;
   var s = context.s;
   DBHelper dbHelper = DBHelper();
-  return Selector<AudioPlayerNotifier,
+  return Selector2<AudioPlayerNotifier, EpisodeState,
           Tuple4<EpisodeBrief?, List<String>, bool, bool>>(
-      selector: (_, audio) => Tuple4(
+      selector: (_, audio, episodeState) => Tuple4(
             audio.episode,
             audio.queue.episodes.map((e) => e!.enclosureUrl).toList(),
-            audio.episodeState,
+            episodeState.episodeChangeMap[episode.id]!,
             audio.playerRunning,
           ),
-      builder: (_, data, __) => OpenContainerWrapper(
-          avatarSize:
-              layout == Layout.large ? context.width / 8 : context.width / 16,
-          episode: episode,
-          closedBuilder: (context, action, boo) => FutureBuilder<
-                  Tuple2<bool, List<int>>>(
-              future: _initData(episode),
-              initialData: Tuple2(false, []),
-              builder: (context, snapshot) {
-                final tapToOpen = snapshot.data!.item1;
-                final menuList = snapshot.data!.item2;
-                return FocusedMenuHolder(
-                    blurSize: 0.0,
-                    menuItemExtent: 45,
-                    menuBoxDecoration: BoxDecoration(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(20.0)),
-                    childDecoration: _cardDecoration(context, episode),
-                    childHighlightColor: context.brightness == Brightness.light
-                        ? episode.colorSchemeDark.primary
-                        : episode.colorSchemeLight.onSecondaryContainer,
-                    childOverlay: _progressOverlay(episode, layout),
-                    duration: Duration(milliseconds: 100),
-                    openWithTap: tapToOpen,
-                    animateMenuItems: false,
-                    blurBackgroundColor: context.background,
-                    bottomOffsetHeight: 10,
-                    menuOffset: 6,
-                    menuItems: <FocusedMenuItem>[
-                      FocusedMenuItem(
-                          backgroundColor: context.priamryContainer,
-                          highlightColor: context.accentColor,
-                          title: Text(data.item1 != episode || !data.item4
-                              ? s.play
-                              : s.playing),
-                          trailing: Icon(
-                            LineIcons.playCircle,
-                            color: context.accentColor,
-                          ),
-                          onPressed: () {
-                            if (data.item1 != episode || !data.item4) {
-                              audio.episodeLoad(episode);
-                            }
-                          }),
-                      if (menuList.contains(1))
-                        FocusedMenuItem(
-                            backgroundColor: context.priamryContainer,
-                            highlightColor: Colors.cyan,
-                            title: data.item2.contains(episode.enclosureUrl)
-                                ? Text(s.remove)
-                                : Text(s.later),
-                            trailing: Icon(
-                              LineIcons.clock,
-                              color: Colors.cyan,
-                            ),
-                            onPressed: () {
-                              if (!data.item2.contains(episode.enclosureUrl)) {
-                                audio.addToPlaylist(episode);
-                                Fluttertoast.showToast(
-                                  msg: s.toastAddPlaylist,
-                                  gravity: ToastGravity.BOTTOM,
-                                );
-                              } else {
-                                audio.delFromPlaylist(episode);
-                                Fluttertoast.showToast(
-                                  msg: s.toastRemovePlaylist,
-                                  gravity: ToastGravity.BOTTOM,
-                                );
-                              }
-                            }),
-                      if (menuList.contains(2))
-                        FocusedMenuItem(
-                            backgroundColor: context.priamryContainer,
-                            highlightColor: Colors.red,
-                            title: episode.isLiked!
-                                ? Text(s.unlike)
-                                : Text(s.like),
-                            trailing: Icon(LineIcons.heart,
-                                color: Colors.red, size: 21),
-                            onPressed: () async {
-                              if (episode.isLiked!) {
-                                await dbHelper.setUniked(episode.enclosureUrl);
-                                audio.setEpisodeState = true;
-                                Fluttertoast.showToast(
-                                  msg: s.unliked,
-                                  gravity: ToastGravity.BOTTOM,
-                                );
-                              } else {
-                                await dbHelper.setLiked(episode.enclosureUrl);
-                                audio.setEpisodeState = true;
-                                Fluttertoast.showToast(
-                                  msg: s.liked,
-                                  gravity: ToastGravity.BOTTOM,
-                                );
-                              }
-                            }),
-                      if (menuList.contains(3))
-                        FocusedMenuItem(
-                            backgroundColor: context.priamryContainer,
-                            highlightColor: Colors.blue,
-                            title: episode.isPlayed!
-                                ? Text(s.markNotListened,
-                                    style: TextStyle(
-                                        color:
-                                            context.textColor.withOpacity(0.5)))
-                                : Text(
-                                    s.markListened,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+      builder: (_, data, __) => FutureBuilder<EpisodeBrief>(
+          future: episode.copyWithFromDB(update: true),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              episode = snapshot.data!;
+            }
+            return OpenContainerWrapper(
+                avatarSize: layout == Layout.large
+                    ? context.width / 8
+                    : context.width / 16,
+                episode: episode,
+                closedBuilder: (context, action, boo) => FutureBuilder<
+                        Tuple2<bool, List<int>>>(
+                    future: _initData(episode),
+                    initialData: Tuple2(false, []),
+                    builder: (context, snapshot) {
+                      final tapToOpen = snapshot.data!.item1;
+                      final menuList = snapshot.data!.item2;
+                      return FocusedMenuHolder(
+                          blurSize: 0.0,
+                          menuItemExtent: 45,
+                          menuBoxDecoration: BoxDecoration(
+                              color: Colors.transparent,
+                              borderRadius: BorderRadius.circular(20.0)),
+                          childDecoration: _cardDecoration(context, episode),
+                          childHighlightColor: context.brightness ==
+                                  Brightness.light
+                              ? episode.colorSchemeDark.primary
+                              : episode.colorSchemeLight.onSecondaryContainer,
+                          childOverlay: _progressOverlay(episode, layout),
+                          duration: Duration(milliseconds: 100),
+                          openWithTap: tapToOpen,
+                          animateMenuItems: false,
+                          blurBackgroundColor: context.background,
+                          bottomOffsetHeight: 10,
+                          menuOffset: 6,
+                          menuItems: <FocusedMenuItem>[
+                            FocusedMenuItem(
+                                backgroundColor: context.priamryContainer,
+                                highlightColor: context.accentColor,
+                                title: Text(data.item1 != episode || !data.item4
+                                    ? s.play
+                                    : s.playing),
+                                trailing: Icon(
+                                  LineIcons.playCircle,
+                                  color: context.accentColor,
+                                ),
+                                onPressed: () {
+                                  if (data.item1 != episode || !data.item4) {
+                                    audio.episodeLoad(episode);
+                                  }
+                                }),
+                            if (menuList.contains(1))
+                              FocusedMenuItem(
+                                  backgroundColor: context.priamryContainer,
+                                  highlightColor: Colors.cyan,
+                                  title:
+                                      data.item2.contains(episode.enclosureUrl)
+                                          ? Text(s.remove)
+                                          : Text(s.later),
+                                  trailing: Icon(
+                                    LineIcons.clock,
+                                    color: Colors.cyan,
                                   ),
-                            trailing: SizedBox(
-                              width: 23,
-                              height: 23,
-                              child: CustomPaint(
-                                  painter: ListenedAllPainter(Colors.blue,
-                                      stroke: 1.5)),
-                            ),
-                            onPressed: () async {
-                              if (episode.isPlayed!) {
-                                await dbHelper
-                                    .markNotListened(episode.enclosureUrl);
-                                audio.setEpisodeState = true;
-                                Fluttertoast.showToast(
-                                  msg: s.markNotListened,
-                                  gravity: ToastGravity.BOTTOM,
-                                );
-                              } else {
-                                await dbHelper.saveHistory(PlayHistory(
-                                    episode.title, episode.enclosureUrl, 0, 1));
-                                audio.setEpisodeState = true;
-                                Fluttertoast.showToast(
-                                  msg: s.markListened,
-                                  gravity: ToastGravity.BOTTOM,
-                                );
-                              }
-                            }),
-                      if (menuList.contains(4))
-                        FocusedMenuItem(
-                            backgroundColor: context.priamryContainer,
-                            highlightColor: Colors.green,
-                            title: episode.isDownloaded!
-                                ? Text(s.downloaded,
-                                    style: TextStyle(
-                                        color:
-                                            context.textColor.withOpacity(0.5)))
-                                : Text(s.download),
-                            trailing:
-                                Icon(LineIcons.download, color: Colors.green),
-                            onPressed: () async {
-                              if (!episode.isDownloaded!) {
-                                await _requestDownload(context,
-                                    episode: episode);
-                              }
-                            }),
-                      if (menuList.contains(5))
-                        FocusedMenuItem(
-                          backgroundColor: context.priamryContainer,
-                          highlightColor: Colors.amber,
-                          title: Text(s.playNext),
-                          trailing: Icon(
-                            LineIcons.lightningBolt,
-                            color: Colors.amber,
-                          ),
-                          onPressed: () {
-                            audio.moveToTop(episode);
-                            Fluttertoast.showToast(
-                              msg: s.playNextDes,
-                              gravity: ToastGravity.BOTTOM,
-                            );
-                          },
-                        ),
-                    ],
-                    onPressed: selectMode ? onSelect! : action,
-                    child: episodeCard(
-                        context, episode, layout, data, preferEpisodeImage,
-                        numberText: numberText,
-                        openPodcast: openPodcast,
-                        showFavorite: showFavorite,
-                        showDownload: showDownload,
-                        showNumber: showNumber,
-                        decorate: false));
-              })));
+                                  onPressed: () {
+                                    if (!data.item2
+                                        .contains(episode.enclosureUrl)) {
+                                      audio.addToPlaylist(episode);
+                                      Fluttertoast.showToast(
+                                        msg: s.toastAddPlaylist,
+                                        gravity: ToastGravity.BOTTOM,
+                                      );
+                                    } else {
+                                      audio.delFromPlaylist(episode);
+                                      Fluttertoast.showToast(
+                                        msg: s.toastRemovePlaylist,
+                                        gravity: ToastGravity.BOTTOM,
+                                      );
+                                    }
+                                  }),
+                            if (menuList.contains(2))
+                              FocusedMenuItem(
+                                  backgroundColor: context.priamryContainer,
+                                  highlightColor: Colors.red,
+                                  title: episode.isLiked!
+                                      ? Text(s.unlike)
+                                      : Text(s.like),
+                                  trailing: Icon(LineIcons.heart,
+                                      color: Colors.red, size: 21),
+                                  onPressed: () async {
+                                    if (episode.isLiked!) {
+                                      await episodeState.setUnliked(episode);
+                                      Fluttertoast.showToast(
+                                        msg: s.unlike,
+                                        gravity: ToastGravity.BOTTOM,
+                                      );
+                                    } else {
+                                      await episodeState.setLiked(episode);
+                                      Fluttertoast.showToast(
+                                        msg: s.liked,
+                                        gravity: ToastGravity.BOTTOM,
+                                      );
+                                    }
+                                  }),
+                            if (menuList.contains(3))
+                              FocusedMenuItem(
+                                  backgroundColor: context.priamryContainer,
+                                  highlightColor: Colors.blue,
+                                  title: episode.isPlayed!
+                                      ? Text(s.markNotListened,
+                                          style: TextStyle(
+                                              color: context.textColor
+                                                  .withOpacity(0.5)))
+                                      : Text(
+                                          s.markListened,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                  trailing: SizedBox(
+                                    width: 23,
+                                    height: 23,
+                                    child: CustomPaint(
+                                        painter: ListenedAllPainter(Colors.blue,
+                                            stroke: 1.5)),
+                                  ),
+                                  onPressed: () async {
+                                    if (episode.isPlayed!) {
+                                      episodeState.markNotListened(episode);
+                                      Fluttertoast.showToast(
+                                        msg: s.markNotListened,
+                                        gravity: ToastGravity.BOTTOM,
+                                      );
+                                    } else {
+                                      episodeState.markListened(episode);
+                                      Fluttertoast.showToast(
+                                        msg: s.markListened,
+                                        gravity: ToastGravity.BOTTOM,
+                                      );
+                                    }
+                                  }),
+                            if (menuList.contains(4))
+                              FocusedMenuItem(
+                                  backgroundColor: context.priamryContainer,
+                                  highlightColor: Colors.green,
+                                  title: episode.isDownloaded!
+                                      ? Text(s.downloaded,
+                                          style: TextStyle(
+                                              color: context.textColor
+                                                  .withOpacity(0.5)))
+                                      : Text(s.download),
+                                  trailing: Icon(LineIcons.download,
+                                      color: Colors.green),
+                                  onPressed: () async {
+                                    if (!episode.isDownloaded!) {
+                                      await _requestDownload(context,
+                                          episode: episode);
+                                    }
+                                  }),
+                            if (menuList.contains(5))
+                              FocusedMenuItem(
+                                backgroundColor: context.priamryContainer,
+                                highlightColor: Colors.amber,
+                                title: Text(s.playNext),
+                                trailing: Icon(
+                                  LineIcons.lightningBolt,
+                                  color: Colors.amber,
+                                ),
+                                onPressed: () {
+                                  audio.moveToTop(episode);
+                                  Fluttertoast.showToast(
+                                    msg: s.playNextDes,
+                                    gravity: ToastGravity.BOTTOM,
+                                  );
+                                },
+                              ),
+                          ],
+                          onPressed: selectMode ? onSelect! : action,
+                          child: episodeCard(context, episode, layout, data,
+                              preferEpisodeImage,
+                              numberText: numberText,
+                              openPodcast: openPodcast,
+                              showFavorite: showFavorite,
+                              showDownload: showDownload,
+                              showNumber: showNumber,
+                              decorate: false));
+                    }));
+          }));
 }
 
 Widget episodeCard(BuildContext context, EpisodeBrief episode, Layout layout,

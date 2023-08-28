@@ -8,12 +8,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 
 import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../type/episode_task.dart';
 import '../type/episodebrief.dart';
+import 'episode_state.dart';
 
 void downloadCallback(String id, DownloadTaskStatus status, int progress) {
   developer.log('Homepage callback task in $id  status ($status) $progress');
@@ -33,7 +35,8 @@ class AutoDownloader {
   final DBHelper _dbHelper = DBHelper();
   final List<EpisodeTask> _episodeTasks = [];
   final Completer _completer = Completer();
-  AutoDownloader() {
+  late final EpisodeState episodeState;
+  AutoDownloader(BuildContext context) {
     FlutterDownloader.registerCallback(autoDownloadCallback);
   }
 
@@ -124,8 +127,7 @@ class AutoDownloader {
         openFileFromNotification: false,
       );
       _episodeTasks.add(EpisodeTask(episode, taskId));
-      var dbHelper = DBHelper();
-      await dbHelper.saveDownloaded(episode.enclosureUrl, taskId);
+      await episodeState.saveDownloaded(episode, taskId!);
     }
     await _completer.future;
     return;
@@ -135,10 +137,12 @@ class AutoDownloader {
 //For download episode inside app
 class DownloadState extends ChangeNotifier {
   final DBHelper _dbHelper = DBHelper();
+  late final EpisodeState episodeState;
   List<EpisodeTask> _episodeTasks = [];
   List<EpisodeTask> get episodeTasks => _episodeTasks;
 
-  DownloadState() {
+  DownloadState(BuildContext context) {
+    episodeState = Provider.of<EpisodeState>(context, listen: false);
     _autoDelete();
     _bindBackgroundIsolate();
     FlutterDownloader.registerCallback(downloadCallback);
@@ -152,7 +156,6 @@ class DownloadState extends ChangeNotifier {
 
   Future<void> _loadTasks() async {
     _episodeTasks = [];
-    var dbHelper = DBHelper();
     var tasks = await FlutterDownloader.loadTasks();
     if (tasks != null && tasks.isNotEmpty) {
       for (var task in tasks) {
@@ -181,14 +184,14 @@ class DownloadState extends ChangeNotifier {
             if (!exist) {
               await FlutterDownloader.remove(
                   taskId: task.taskId, shouldDeleteContent: true);
-              await dbHelper.delDownloaded(episode.enclosureUrl);
+              await episodeState.delDownloaded(episode);
             } else {
               if (episode.enclosureUrl == episode.mediaId) {
                 var filePath =
                     'file://${path.join(task.savedDir, Uri.encodeComponent(task.filename!))}';
                 var fileStat =
                     await File(path.join(task.savedDir, task.filename)).stat();
-                await dbHelper.saveMediaId(
+                await _dbHelper.saveMediaId(
                     episode.enclosureUrl, filePath, task.taskId, fileStat.size);
               }
               _episodeTasks.add(EpisodeTask(episode, task.taskId,
@@ -323,7 +326,7 @@ class DownloadState extends ChangeNotifier {
         openFileFromNotification: false,
       );
       _episodeTasks.add(EpisodeTask(episode, taskId));
-      await _dbHelper.saveDownloaded(episode.enclosureUrl, taskId);
+      await episodeState.saveDownloaded(episode, taskId!);
       notifyListeners();
     }
   }
@@ -343,7 +346,7 @@ class DownloadState extends ChangeNotifier {
     var index = _episodeTasks.indexOf(task);
     _episodeTasks[index] = task.copyWith(taskId: newTaskId);
     notifyListeners();
-    await _dbHelper.saveDownloaded(episode.enclosureUrl, newTaskId);
+    await episodeState.saveDownloaded(episode, newTaskId!);
   }
 
   Future retryTask(EpisodeBrief episode) async {
@@ -353,7 +356,7 @@ class DownloadState extends ChangeNotifier {
     var index = _episodeTasks.indexOf(task);
     _episodeTasks[index] = task.copyWith(taskId: newTaskId);
     notifyListeners();
-    await _dbHelper.saveDownloaded(episode.enclosureUrl, newTaskId);
+    await episodeState.saveDownloaded(episode, newTaskId!);
   }
 
   Future removeTask(EpisodeBrief episode) async {
@@ -366,7 +369,7 @@ class DownloadState extends ChangeNotifier {
     var task = episodeToTask(episode);
     await FlutterDownloader.remove(
         taskId: task.taskId!, shouldDeleteContent: true);
-    await _dbHelper.delDownloaded(episode.enclosureUrl);
+    await episodeState.delDownloaded(episode);
 
     for (var episodeTask in _episodeTasks) {
       if (episodeTask.taskId == task.taskId) {
