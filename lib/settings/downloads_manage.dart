@@ -49,7 +49,10 @@ class _DownloadsManageState extends State<DownloadsManage> {
         break;
     }
     episodes = await dbHelper.getEpisodes(
-        sortBy: sorter, sortOrder: order, filterDownloaded: -1);
+        sortBy: sorter,
+        sortOrder: order,
+        filterDownloaded: -1,
+        context: context);
     return episodes;
   }
 

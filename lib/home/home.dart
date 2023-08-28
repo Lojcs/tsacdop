@@ -586,7 +586,8 @@ class _RecentUpdateState extends State<_RecentUpdate>
           sortOrder: SortOrder.DESC,
           limit: top,
           filterVersions: 1,
-          filterPlayed: _hideListened! ? 1 : 0);
+          filterPlayed: _hideListened! ? 1 : 0,
+          context: context);
     } else {
       episodes = await _dbHelper.getEpisodes(
           feedIds: group,
@@ -594,7 +595,8 @@ class _RecentUpdateState extends State<_RecentUpdate>
           sortOrder: SortOrder.DESC,
           limit: top,
           filterVersions: 1,
-          filterPlayed: _hideListened! ? 1 : 0);
+          filterPlayed: _hideListened! ? 1 : 0,
+          context: context);
     }
     return episodes;
   }
@@ -994,7 +996,8 @@ class _MyFavoriteState extends State<_MyFavorite>
         sortOrder: order,
         limit: top,
         filterLiked: -1,
-        filterPlayed: _hideListened! ? 1 : 0);
+        filterPlayed: _hideListened! ? 1 : 0,
+        context: context);
     return episodes;
   }
 
@@ -1305,7 +1308,8 @@ class _MyDownloadState extends State<_MyDownload>
         sortBy: sorter,
         sortOrder: order,
         filterPlayed: hideListened ?? false ? 1 : 0,
-        filterDownloaded: -1);
+        filterDownloaded: -1,
+        context: context);
     return episodes;
   }
 

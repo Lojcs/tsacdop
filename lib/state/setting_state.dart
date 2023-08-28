@@ -17,40 +17,6 @@ import '../local_storage/sqflite_localpodcast.dart';
 import '../type/settings_backup.dart';
 import 'download_state.dart';
 
-void callbackDispatcher() {
-  Workmanager().executeTask((task, inputData) async {
-    final dbHelper = DBHelper();
-    final podcastList = await dbHelper.getPodcastLocalAll(updateOnly: true);
-    //lastWork is a indicator for if the app was opened since last backgroundwork
-    //if the app wes opend,then the old marked new episode would be marked not new.
-    final lastWorkStorage = KeyValueStorage(lastWorkKey);
-    final lastWork = await lastWorkStorage.getInt();
-    for (var podcastLocal in podcastList) {
-      await dbHelper.updatePodcastRss(podcastLocal, removeMark: lastWork);
-      developer.log('Refresh ${podcastLocal.title}');
-    }
-    await FlutterDownloader.initialize();
-    final downloader = AutoDownloader();
-
-    final autoDownloadStorage = KeyValueStorage(autoDownloadNetworkKey);
-    final autoDownloadNetwork = await autoDownloadStorage.getInt();
-    final result = await Connectivity().checkConnectivity();
-    if (autoDownloadNetwork == 1 || result == ConnectivityResult.wifi) {
-      final episodes = await dbHelper.getEpisodes(
-          filterNew: -1, filterDownloaded: 1, filterAutoDownload: -1);
-      // For safety
-      if (episodes.length < 100 && episodes.length > 0) {
-        downloader.bindBackgroundIsolate();
-        await downloader.startTask(episodes);
-      }
-    }
-    await lastWorkStorage.saveInt(1);
-    var refreshstorage = KeyValueStorage(refreshdateKey);
-    await refreshstorage.saveInt(DateTime.now().millisecondsSinceEpoch);
-    return Future.value(true);
-  });
-}
-
 final showNotesFontStyles = <TextStyle>[
   TextStyle(
     height: 1.8,
@@ -67,6 +33,7 @@ final showNotesFontStyles = <TextStyle>[
 ];
 
 class SettingState extends ChangeNotifier {
+  BuildContext? context; // late final causes problem when hot reloading
   final _themeStorage = KeyValueStorage(themesKey);
   final _accentStorage = KeyValueStorage(accentsKey);
   final _autoupdateStorage = KeyValueStorage(autoUpdateKey);
@@ -96,6 +63,40 @@ class SettingState extends ChangeNotifier {
   final _openAllPodcastDefaultStorage =
       KeyValueStorage(openAllPodcastDefaultKey);
   final _useWallpaperThemeStorage = KeyValueStorage(useWallpapterThemeKey);
+
+  void callbackDispatcher() {
+    Workmanager().executeTask((task, inputData) async {
+      final dbHelper = DBHelper();
+      final podcastList = await dbHelper.getPodcastLocalAll(updateOnly: true);
+      //lastWork is a indicator for if the app was opened since last backgroundwork
+      //if the app wes opend,then the old marked new episode would be marked not new.
+      final lastWorkStorage = KeyValueStorage(lastWorkKey);
+      final lastWork = await lastWorkStorage.getInt();
+      for (var podcastLocal in podcastList) {
+        await dbHelper.updatePodcastRss(podcastLocal, removeMark: lastWork);
+        developer.log('Refresh ${podcastLocal.title}');
+      }
+      await FlutterDownloader.initialize();
+      final downloader = AutoDownloader(context!);
+
+      final autoDownloadStorage = KeyValueStorage(autoDownloadNetworkKey);
+      final autoDownloadNetwork = await autoDownloadStorage.getInt();
+      final result = await Connectivity().checkConnectivity();
+      if (autoDownloadNetwork == 1 || result == ConnectivityResult.wifi) {
+        final episodes = await dbHelper.getEpisodes(
+            filterNew: -1, filterDownloaded: 1, filterAutoDownload: -1);
+        // For safety
+        if (episodes.length < 100 && episodes.length > 0) {
+          downloader.bindBackgroundIsolate();
+          await downloader.startTask(episodes);
+        }
+      }
+      await lastWorkStorage.saveInt(1);
+      var refreshstorage = KeyValueStorage(refreshdateKey);
+      await refreshstorage.saveInt(DateTime.now().millisecondsSinceEpoch);
+      return Future.value(true);
+    });
+  }
 
   Future initData() async {
     await _getTheme();

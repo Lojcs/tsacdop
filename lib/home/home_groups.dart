@@ -534,20 +534,26 @@ class _PodcastPreviewState extends State<PodcastPreview> {
 
   Future<List<EpisodeBrief>> _getRssItemTop(PodcastLocal podcastLocal) async {
     final dbHelper = DBHelper();
-    final episodes = await dbHelper.getEpisodes(feedIds: [
-      podcastLocal.id
-    ], optionalFields: [
-      EpisodeField.description,
-      EpisodeField.enclosureDuration,
-      EpisodeField.enclosureSize,
-      EpisodeField.isDownloaded,
-      EpisodeField.episodeImage,
-      EpisodeField.primaryColor,
-      EpisodeField.isLiked,
-      EpisodeField.isNew,
-      EpisodeField.isPlayed,
-      EpisodeField.versionInfo
-    ], sortBy: Sorter.pubDate, sortOrder: SortOrder.DESC, limit: 2);
+    final episodes = await dbHelper.getEpisodes(
+        feedIds: [
+          podcastLocal.id
+        ],
+        optionalFields: [
+          EpisodeField.description,
+          EpisodeField.enclosureDuration,
+          EpisodeField.enclosureSize,
+          EpisodeField.isDownloaded,
+          EpisodeField.episodeImage,
+          EpisodeField.primaryColor,
+          EpisodeField.isLiked,
+          EpisodeField.isNew,
+          EpisodeField.isPlayed,
+          EpisodeField.versionInfo
+        ],
+        sortBy: Sorter.pubDate,
+        sortOrder: SortOrder.DESC,
+        limit: 2,
+        context: context);
     return episodes;
   }
 }

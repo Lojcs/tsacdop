@@ -246,8 +246,12 @@ class EpisodeBrief extends Equatable {
 
   /// Returns a copy with the [newFields] filled from the database.
   /// [keepExisting] disables overwriting already existing fields.
-  Future<EpisodeBrief> copyWithFromDB(List<EpisodeField> newFields,
-      {bool keepExisting = false}) async {
+  Future<EpisodeBrief> copyWithFromDB(
+      {List<EpisodeField>? newFields,
+      bool keepExisting = false,
+      bool update = false}) async {
+    assert(newFields != null || update,
+        "If update is false newFields can't be null.");
     Map<EpisodeField, List> _fieldsMap = {
       // I'm so sorry this is so ugly
       EpisodeField.description: [const Symbol("description"), description],
@@ -283,21 +287,24 @@ class EpisodeBrief extends Equatable {
     };
 
     var dbHelper = DBHelper();
+    if (update) {
+      newFields = this.fields;
+    }
     Map<Symbol, dynamic> oldFieldsSymbolMap = {};
     List<EpisodeField> oldFields = this.fields.toList();
     if (keepExisting) {
       for (EpisodeField field in oldFields) {
-        newFields.remove(field);
+        newFields!.remove(field);
       }
     } else {
-      for (EpisodeField field in newFields) {
+      for (EpisodeField field in newFields!) {
         oldFields.remove(field);
       }
     }
     for (EpisodeField field in oldFields) {
       oldFieldsSymbolMap[_fieldsMap[field]![0]] = _fieldsMap[field]![1];
     }
-    bool populateVersions = newFields.remove(EpisodeField.versionsPopulated);
+    bool populateVersions = newFields!.remove(EpisodeField.versionsPopulated);
     EpisodeBrief newEpisode;
     if (newFields.isEmpty) {
       newEpisode = this.copyWith();

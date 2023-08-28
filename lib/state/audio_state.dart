@@ -409,7 +409,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
       episodeNew = episode;
       _playFromSearchList.add(episode);
     } else {
-      episodeNew = await episode!.copyWithFromDB([
+      episodeNew = await episode!.copyWithFromDB(newFields: [
         EpisodeField.mediaId,
         EpisodeField.primaryColor,
         EpisodeField.isNew,
@@ -660,7 +660,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
 
   /// Queue management
   Future<void> addToPlaylist(EpisodeBrief episode) async {
-    var episodeNew = await episode.copyWithFromDB([
+    var episodeNew = await episode.copyWithFromDB(newFields: [
       EpisodeField.mediaId,
       EpisodeField.primaryColor,
       EpisodeField.isNew,
@@ -683,7 +683,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
   }
 
   Future<void> addToPlaylistAt(EpisodeBrief episode, int index) async {
-    var episodeNew = await episode.copyWithFromDB([
+    var episodeNew = await episode.copyWithFromDB(newFields: [
       EpisodeField.mediaId,
       EpisodeField.primaryColor,
       EpisodeField.isNew,
@@ -735,7 +735,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     if (episode.enclosureUrl == episode.mediaId &&
         _episode != episode &&
         _playlist!.contains(episode)) {
-      var episodeNew = await episode.copyWithFromDB([
+      var episodeNew = await episode.copyWithFromDB(newFields: [
         EpisodeField.mediaId,
         EpisodeField.primaryColor,
         EpisodeField.isNew,
