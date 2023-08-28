@@ -9,6 +9,7 @@ import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/audio_state.dart';
 import '../state/download_state.dart';
+import '../state/episode_state.dart';
 import '../type/episodebrief.dart';
 import '../type/play_histroy.dart';
 import '../type/playlist.dart';
@@ -73,9 +74,11 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
     }
   }
 
-  Future<void> _saveLiked() async {
+  Future<void> _setLiked() async {
+    EpisodeState episodeState =
+        Provider.of<EpisodeState>(context, listen: false);
     for (var episode in widget.selectedList!) {
-      await _dbHelper.setLiked(episode.enclosureUrl);
+      await episodeState.setLiked(episode);
     }
     if (mounted) {
       setState(() => _liked = true);
@@ -84,8 +87,10 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
   }
 
   Future<void> _setUnliked() async {
+    EpisodeState episodeState =
+        Provider.of<EpisodeState>(context, listen: false);
     for (var episode in widget.selectedList!) {
-      await _dbHelper.setUniked(episode.enclosureUrl);
+      await episodeState.setUnliked(episode);
     }
     if (mounted) {
       setState(() => _liked = false);
@@ -94,9 +99,10 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
   }
 
   Future<void> _markListened() async {
+    EpisodeState episodeState =
+        Provider.of<EpisodeState>(context, listen: false);
     for (var episode in widget.selectedList!) {
-      final history = PlayHistory(episode.title, episode.enclosureUrl, 0, 1);
-      await _dbHelper.saveHistory(history);
+      await episodeState.markListened(episode);
     }
     if (mounted) {
       setState(() => _marked = true);
@@ -105,8 +111,10 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
   }
 
   Future<void> _markNotListened() async {
+    EpisodeState episodeState =
+        Provider.of<EpisodeState>(context, listen: false);
     for (var episode in widget.selectedList!) {
-      await _dbHelper.markNotListened(episode.enclosureUrl);
+      await episodeState.markNotListened(episode);
     }
     if (mounted) {
       setState(() => _marked = false);
@@ -426,7 +434,7 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                         onTap: () async {
                           if (widget.selectedList!.isNotEmpty) {
                             if (!_liked) {
-                              await _saveLiked();
+                              await _setLiked();
                               Fluttertoast.showToast(
                                 msg: s.liked,
                                 gravity: ToastGravity.BOTTOM,
@@ -434,11 +442,12 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                             } else {
                               await _setUnliked();
                               Fluttertoast.showToast(
-                                msg: s.unliked,
+                                msg: s.unlike,
+
+                                /// TODO: String consistency
                                 gravity: ToastGravity.BOTTOM,
                               );
                             }
-                            audio.setEpisodeState = true;
                           }
                           //  OverlayEntry _overlayEntry;
                           //  _overlayEntry = _createOverlayEntry();

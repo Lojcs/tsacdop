@@ -153,7 +153,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
   double? _currentSpeed = 1;
 
   ///Update episode card when setting changed
-  bool _episodeState = false;
+  // bool _episodeState = false; // Moved to EpisodeState for granularity
 
   /// Player height.
   PlayerHeight? _playerHeight;
@@ -234,7 +234,6 @@ class AudioPlayerNotifier extends ChangeNotifier {
   int get timeLeft => _timeLeft;
   double get switchValue => _switchValue;
   double? get currentSpeed => _currentSpeed;
-  bool get episodeState => _episodeState;
   bool? get autoSleepTimer => _autoSleepTimer;
   int? get fastForwardSeconds => _fastForwardSeconds;
   int? get rewindSeconds => _rewindSeconds;
@@ -249,7 +248,6 @@ class AudioPlayerNotifier extends ChangeNotifier {
   }
 
   set setEpisodeState(bool boo) {
-    _episodeState = !_episodeState;
     notifyListeners();
   }
 

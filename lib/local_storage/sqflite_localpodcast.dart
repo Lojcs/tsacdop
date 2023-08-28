@@ -1797,7 +1797,7 @@ class DBHelper {
     });
   }
 
-  Future setUniked(String url) async {
+  Future setUnliked(String url) async {
     var dbClient = await database;
     await dbClient.transaction((txn) async {
       await txn.rawUpdate(

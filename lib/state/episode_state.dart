@@ -23,7 +23,7 @@ class EpisodeState extends ChangeNotifier {
   }
 
   Future<void> setUnliked(EpisodeBrief episode) async {
-    await _dbHelper.setUniked(episode.enclosureUrl);
+    await _dbHelper.setUnliked(episode.enclosureUrl);
     if (episodeChangeMap.containsKey(episode.id)) {
       episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
       notifyListeners();

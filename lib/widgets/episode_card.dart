@@ -154,17 +154,13 @@ Widget interactiveEpisodeCard(
                                       color: Colors.red, size: 21),
                                   onPressed: () async {
                                     if (episode.isLiked!) {
-                                      await dbHelper
-                                          .setUniked(episode.enclosureUrl);
-                                      audio.setEpisodeState = true;
+                                      await episodeState.setUnliked(episode);
                                       Fluttertoast.showToast(
-                                        msg: s.unliked,
+                                        msg: s.unlike,
                                         gravity: ToastGravity.BOTTOM,
                                       );
                                     } else {
-                                      await dbHelper
-                                          .setLiked(episode.enclosureUrl);
-                                      audio.setEpisodeState = true;
+                                      await episodeState.setLiked(episode);
                                       Fluttertoast.showToast(
                                         msg: s.liked,
                                         gravity: ToastGravity.BOTTOM,
@@ -194,20 +190,13 @@ Widget interactiveEpisodeCard(
                                   ),
                                   onPressed: () async {
                                     if (episode.isPlayed!) {
-                                      await dbHelper.markNotListened(
-                                          episode.enclosureUrl);
-                                      audio.setEpisodeState = true;
+                                      episodeState.markNotListened(episode);
                                       Fluttertoast.showToast(
                                         msg: s.markNotListened,
                                         gravity: ToastGravity.BOTTOM,
                                       );
                                     } else {
-                                      await dbHelper.saveHistory(PlayHistory(
-                                          episode.title,
-                                          episode.enclosureUrl,
-                                          0,
-                                          1));
-                                      audio.setEpisodeState = true;
+                                      episodeState.markListened(episode);
                                       Fluttertoast.showToast(
                                         msg: s.markListened,
                                         gravity: ToastGravity.BOTTOM,
