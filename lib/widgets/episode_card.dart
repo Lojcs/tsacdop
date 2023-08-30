@@ -574,26 +574,29 @@ Widget _progressLowerlay(EpisodeBrief episode, Layout layout,
           builder: (context, snapshot) {
             if (snapshot.hasData)
               return Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(layout == Layout.small
-                      ? 12
-                      : layout == Layout.medium
-                          ? 16
-                          : 20),
-                ),
-                clipBehavior: Clip.hardEdge,
-                height: double.infinity,
-                child: Positioned.fill(
-                  child: LinearProgressIndicator(
-                      color: context.realDark
-                          ? context.background.withOpacity(0.7)
-                          : context.brightness == Brightness.light
-                              ? context.background.withOpacity(0.7)
-                              : context.background.withOpacity(0.6),
-                      backgroundColor: Colors.transparent,
-                      value: snapshot.data!.seekValue!),
-                ),
-              );
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(layout == Layout.small
+                        ? 12
+                        : layout == Layout.medium
+                            ? 16
+                            : 20),
+                  ),
+                  clipBehavior: Clip.hardEdge,
+                  height: double.infinity,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: LinearProgressIndicator(
+                            color: context.realDark
+                                ? context.background.withOpacity(0.7)
+                                : context.brightness == Brightness.light
+                                    ? context.background.withOpacity(0.7)
+                                    : context.background.withOpacity(0.6),
+                            backgroundColor: Colors.transparent,
+                            value: snapshot.data!.seekValue!),
+                      ),
+                    ],
+                  ));
             else
               return Center();
           },
