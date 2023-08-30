@@ -17,6 +17,7 @@ import '../local_storage/sqflite_localpodcast.dart';
 import '../playlists/playlist_home.dart';
 import '../state/audio_state.dart';
 import '../state/download_state.dart';
+import '../state/episode_state.dart';
 import '../state/podcast_group.dart';
 import '../state/refresh_podcast.dart';
 import '../state/setting_state.dart';
@@ -92,34 +93,37 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     final height = (context.width - 20) / 3 + 141;
     final settings = Provider.of<SettingState>(context, listen: false);
     final s = context.s;
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
-        systemNavigationBarIconBrightness: context.brightness,
-        statusBarIconBrightness: context.iconBrightness,
-        systemNavigationBarColor: context.background,
-        statusBarColor: context.background,
-      ),
-      child: WillPopScope(
-        onWillPop: () async {
-          if (_playerKey.currentState != null &&
-              _playerKey.currentState!.initSize! > 100) {
-            _playerKey.currentState!.backToMini();
-            return false;
-          } else if (Platform.isAndroid) {
-            _androidAppRetain.invokeMethod('sendToBackground');
-            return false;
-          } else {
-            return true;
-          }
-        },
-        child: Scaffold(
-          key: _scaffoldKey,
-          backgroundColor: context.background,
-          body: Stack(
-            children: <Widget>[
-              SafeArea(
-                bottom: false,
-                child: NestedScrollView(
+    return Selector<AudioPlayerNotifier, Tuple2<bool, EpisodeBrief?>>(
+      selector: (_, audio) => Tuple2(audio.playerRunning, audio.episode),
+      builder: (_, data, __) => AnnotatedRegion<SystemUiOverlayStyle>(
+        value: SystemUiOverlayStyle(
+            systemNavigationBarIconBrightness: context.brightness,
+            statusBarIconBrightness: context.iconBrightness,
+            systemNavigationBarColor: data.item1
+                ? data.item2!.getColorScheme(context).secondaryContainer
+                : Colors.transparent,
+            statusBarColor: context.background,
+            systemNavigationBarContrastEnforced: false),
+        child: WillPopScope(
+          onWillPop: () async {
+            if (_playerKey.currentState != null &&
+                _playerKey.currentState!.initSize! > 100) {
+              _playerKey.currentState!.backToMini();
+              return false;
+            } else if (Platform.isAndroid) {
+              _androidAppRetain.invokeMethod('sendToBackground');
+              return false;
+            } else {
+              return true;
+            }
+          },
+          child: Scaffold(
+            key: _scaffoldKey,
+            backgroundColor: context.background,
+            body: SafeArea(
+              bottom: data.item1,
+              child: Stack(children: <Widget>[
+                NestedScrollView(
                   innerScrollPositionKeyBuilder: () {
                     return Key('tab${_controller!.index}');
                   },
@@ -212,15 +216,16 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                             isScrollable: true,
                             indicatorSize: TabBarIndicatorSize.tab,
                             controller: _controller,
+                            labelStyle: context.textTheme.titleMedium,
                             tabs: <Widget>[
                               Tab(
-                                child: Text(s.homeTabMenuRecent),
+                                text: s.homeTabMenuRecent,
                               ),
                               Tab(
-                                child: Text(s.homeTabMenuFavotite),
+                                text: s.homeTabMenuFavotite,
                               ),
                               Tab(
-                                child: Text(s.download),
+                                text: s.download,
                               )
                             ],
                           ),
@@ -250,23 +255,15 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                             ),
                           ],
                         ),
-                      ),
-                      Selector<AudioPlayerNotifier, bool>(
-                        selector: (_, audio) => audio.playerRunning,
-                        builder: (_, data, __) {
-                          return Padding(
-                            padding: EdgeInsets.only(bottom: data ? 60.0 : 0),
-                          );
-                        },
-                      ),
+                      )
                     ],
                   ),
                 ),
-              ),
-              Container(
-                child: PlayerWidget(playerKey: _playerKey),
-              ),
-            ],
+                Container(
+                  child: PlayerWidget(playerKey: _playerKey),
+                )
+              ]),
+            ),
           ),
         ),
       ),
@@ -587,16 +584,28 @@ class _RecentUpdateState extends State<_RecentUpdate>
           limit: top,
           filterVersions: 1,
           filterPlayed: _hideListened! ? 1 : 0,
-          context: context);
+          episodeState: Provider.of<EpisodeState>(context, listen: false));
     } else {
       episodes = await _dbHelper.getEpisodes(
           feedIds: group,
+          optionalFields: [
+            EpisodeField.description,
+            EpisodeField.enclosureDuration,
+            EpisodeField.enclosureSize,
+            EpisodeField.isDownloaded,
+            EpisodeField.podcastImage,
+            EpisodeField.primaryColor,
+            EpisodeField.isLiked,
+            EpisodeField.isNew,
+            EpisodeField.isPlayed,
+            EpisodeField.versionInfo
+          ],
           sortBy: Sorter.pubDate,
           sortOrder: SortOrder.DESC,
           limit: top,
           filterVersions: 1,
           filterPlayed: _hideListened! ? 1 : 0,
-          context: context);
+          episodeState: Provider.of<EpisodeState>(context, listen: false));
     }
     return episodes;
   }
@@ -997,7 +1006,7 @@ class _MyFavoriteState extends State<_MyFavorite>
         limit: top,
         filterLiked: -1,
         filterPlayed: _hideListened! ? 1 : 0,
-        context: context);
+        episodeState: Provider.of<EpisodeState>(context, listen: false));
     return episodes;
   }
 
@@ -1293,7 +1302,7 @@ class _MyDownloadState extends State<_MyDownload>
         sortOrder: order,
         filterPlayed: hideListened ?? false ? 1 : 0,
         filterDownloaded: -1,
-        context: context);
+        episodeState: Provider.of<EpisodeState>(context, listen: false));
     return episodes;
   }
 

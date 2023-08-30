@@ -18,6 +18,7 @@ import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/audio_state.dart';
 import '../state/download_state.dart';
+import '../state/episode_state.dart';
 import '../type/episodebrief.dart';
 import '../type/fireside_data.dart';
 import '../type/podcastlocal.dart';
@@ -187,7 +188,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
         filterLiked: filter == Filter.liked ? 1 : 0,
         filterDownloaded: filter == Filter.downloaded ? 1 : 0,
         filterPlayed: _hideListened! ? 1 : 0,
-        context: context);
+        episodeState: Provider.of<EpisodeState>(context, listen: false));
     _dataCount = episodes.length;
     return episodes;
   }
@@ -711,10 +712,10 @@ class _PodcastDetailState extends State<PodcastDetail> {
         },
         child: Scaffold(
           backgroundColor: context.background,
-          body: Stack(
-            children: <Widget>[
-              SafeArea(
-                child: RefreshIndicator(
+          body: SafeArea(
+            child: Stack(
+              children: <Widget>[
+                RefreshIndicator(
                   key: _refreshIndicatorKey,
                   displacement: context.paddingTop + 40,
                   color: context.accentColor,
@@ -929,13 +930,12 @@ class _PodcastDetailState extends State<PodcastDetail> {
                                         return EpisodeGrid(
                                           episodes: snapshot.data,
                                           showFavorite: true,
-                                          showNumber: _filter == Filter.all &&
-                                                  !_hideListened!
-                                              ? true
-                                              : false,
                                           layout: _layout,
                                           sortOrder: _sortOrder,
-                                          episodeCount: _episodeCount,
+                                          episodeCount: _filter == Filter.all &&
+                                                  !_hideListened!
+                                              ? _episodeCount
+                                              : null,
                                           initNum: _scroll ? 0 : 12,
                                           multiSelect: _multiSelect,
                                           selectedList: _selectedEpisodes ?? [],
@@ -1021,12 +1021,12 @@ class _PodcastDetailState extends State<PodcastDetail> {
                     ],
                   ),
                 ),
-              ),
-              Container(
-                  child: PlayerWidget(
-                playerKey: _playerKey,
-              )),
-            ],
+                Container(
+                    child: PlayerWidget(
+                  playerKey: _playerKey,
+                )),
+              ],
+            ),
           ),
         ),
       ),

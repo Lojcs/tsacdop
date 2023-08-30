@@ -52,10 +52,11 @@ class HidePlayerRoute extends ModalRoute<void> {
                               Offset(context.width * (1 - animation.value), 0),
                           child: SizedBox(
                             width: context.width,
-                            height: context.height *
+                            height: context.height -
                                 (playerRunning
-                                    ? (1 - playerHeight / context.height)
-                                    : 1),
+                                    ? playerHeight +
+                                        MediaQuery.of(context).padding.bottom
+                                    : 0),
                             child: Material(
                               clipBehavior: Clip.antiAlias,
                               animationDuration: Duration.zero,

@@ -163,39 +163,39 @@ class SettingState extends ChangeNotifier {
               color: Colors.black,
               fontWeight: FontWeight.normal),
           bodyLarge: TextStyle(
-              fontSize: 17.0,
-              color: Colors.black,
-              fontWeight: FontWeight.normal),
-          bodyMedium: TextStyle(
               fontSize: 15.0,
               color: Colors.black,
               fontWeight: FontWeight.normal),
-          bodySmall: TextStyle(
+          bodyMedium: TextStyle(
               fontSize: 14.0,
+              color: Colors.black,
+              fontWeight: FontWeight.normal),
+          bodySmall: TextStyle(
+              fontSize: 13.0,
               color: Colors.black,
               fontWeight: FontWeight.normal),
           labelLarge: TextStyle(
-              fontSize: 16.0,
+              fontSize: 14.0,
               color: Colors.black,
               fontWeight: FontWeight.normal),
           labelMedium: TextStyle(
-              fontSize: 14.0,
+              fontSize: 12.0,
               color: Colors.black,
               fontWeight: FontWeight.normal),
           labelSmall: TextStyle(
-              fontSize: 11.0,
+              fontSize: 10.0,
               color: Colors.black,
               fontWeight: FontWeight.normal),
           titleLarge: TextStyle(
-              fontSize: 16.0,
+              fontSize: 20.0,
               color: Colors.black,
               fontWeight: FontWeight.normal),
           titleMedium: TextStyle(
-              fontSize: 14.0,
+              fontSize: 16.0,
               color: Colors.black,
               fontWeight: FontWeight.normal),
           titleSmall: TextStyle(
-              fontSize: 12.0,
+              fontSize: 14.0,
               color: Colors.black,
               fontWeight: FontWeight.normal),
         ),
@@ -230,39 +230,39 @@ class SettingState extends ChangeNotifier {
               color: Colors.white,
               fontWeight: FontWeight.normal),
           bodyLarge: TextStyle(
-              fontSize: 17.0,
-              color: Colors.white,
-              fontWeight: FontWeight.normal),
-          bodyMedium: TextStyle(
               fontSize: 15.0,
               color: Colors.white,
               fontWeight: FontWeight.normal),
-          bodySmall: TextStyle(
+          bodyMedium: TextStyle(
               fontSize: 14.0,
+              color: Colors.white,
+              fontWeight: FontWeight.normal),
+          bodySmall: TextStyle(
+              fontSize: 13.0,
               color: Colors.white,
               fontWeight: FontWeight.normal),
           labelLarge: TextStyle(
-              fontSize: 16.0,
+              fontSize: 14.0,
               color: Colors.white,
               fontWeight: FontWeight.normal),
           labelMedium: TextStyle(
-              fontSize: 14.0,
+              fontSize: 12.0,
               color: Colors.white,
               fontWeight: FontWeight.normal),
           labelSmall: TextStyle(
-              fontSize: 11.0,
+              fontSize: 10.0,
               color: Colors.white,
               fontWeight: FontWeight.normal),
           titleLarge: TextStyle(
-              fontSize: 16.0,
+              fontSize: 20.0,
               color: Colors.white,
               fontWeight: FontWeight.normal),
           titleMedium: TextStyle(
-              fontSize: 14.0,
+              fontSize: 16.0,
               color: Colors.white,
               fontWeight: FontWeight.normal),
           titleSmall: TextStyle(
-              fontSize: 12.0,
+              fontSize: 14.0,
               color: Colors.white,
               fontWeight: FontWeight.normal),
         ),

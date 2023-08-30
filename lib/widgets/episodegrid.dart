@@ -36,7 +36,6 @@ class EpisodeGrid extends StatelessWidget {
   final List<EpisodeBrief>? episodes;
   final bool showFavorite;
   final bool showDownload;
-  final bool showNumber;
   final bool preferEpisodeImage;
   final int? episodeCount;
   final Layout? layout;
@@ -55,9 +54,8 @@ class EpisodeGrid extends StatelessWidget {
       this.initNum = 12,
       this.showDownload = false,
       this.showFavorite = false,
-      this.showNumber = false,
       this.preferEpisodeImage = false,
-      this.episodeCount = 0,
+      this.episodeCount,
       this.layout = Layout.small,
       this.sortOrder,
       this.openPodcast = false,
@@ -113,15 +111,17 @@ class EpisodeGrid extends StatelessWidget {
           return FadeTransition(
               opacity: Tween<double>(begin: index < initNum ? 0 : 1, end: 1)
                   .animate(animation),
-              child: interactiveEpisodeCard(
+              child: InteractiveEpisodeCard(
                 context,
                 episodes![index],
                 layout!,
-                showNumber: showNumber,
+                openPodcast: openPodcast,
                 preferEpisodeImage: preferEpisodeImage,
-                numberText: sortOrder == SortOrder.ASC
-                    ? (index + 1).toString()
-                    : (episodeCount! - index).toString(),
+                numberText: episodeCount != null
+                    ? (sortOrder == SortOrder.ASC
+                        ? (index + 1).toString()
+                        : (episodeCount! - index).toString())
+                    : null,
                 selectMode: multiSelect!,
                 onSelect: () {
                   if (!selectedList!.contains(episodes![index])) {
@@ -142,12 +142,19 @@ class EpisodeGrid extends StatelessWidget {
 
 class OpenContainerWrapper extends StatelessWidget {
   const OpenContainerWrapper(
-      {this.closedBuilder, this.episode, this.playerRunning, this.avatarSize});
+      {required this.closedBuilder,
+      required this.episode,
+      this.playerRunning,
+      this.avatarSize,
+      required this.preferEpisodeImage,
+      required this.layout});
 
-  final OpenContainerBuilder? closedBuilder;
-  final EpisodeBrief? episode;
+  final OpenContainerBuilder closedBuilder;
+  final EpisodeBrief episode;
   final bool? playerRunning;
   final double? avatarSize;
+  final bool preferEpisodeImage;
+  final Layout layout;
 
   @override
   Widget build(BuildContext context) {
@@ -156,8 +163,25 @@ class OpenContainerWrapper extends StatelessWidget {
       builder: (_, data, __) => OpenContainer(
         playerRunning: data.item1,
         playerHeight: kMinPlayerHeight[data.item2!.index],
-        flightWidget: CircleAvatar(backgroundImage: episode!.avatarImage),
-        flightWidgetSize: avatarSize,
+        flightWidget: CircleAvatar(
+            backgroundImage: preferEpisodeImage && episode.episodeImage != ''
+                ? episode.episodeImageProvider
+                : episode.podcastImageProvider),
+        flightWidgetBeginSize: avatarSize,
+        flightWidgetEndSize: 30,
+        flightWidgetBeginOffsetX: layout == Layout.small ? 6 : 8,
+        flightWidgetBeginOffsetY: layout == Layout.small
+            ? 6
+            : layout == Layout.medium
+                ? 8
+                : 14,
+        flightWidgetEndOffsetX: 10,
+        flightWidgetEndOffsetY: data.item1
+            ? context.height -
+                kMinPlayerHeight[data.item2!.index]! -
+                64 -
+                MediaQuery.of(context).padding.bottom
+            : context.height - 64 - MediaQuery.of(context).padding.bottom,
         transitionDuration: Duration(milliseconds: 400),
         beginColor: Theme.of(context).primaryColor,
         endColor: Theme.of(context).primaryColor,
@@ -170,7 +194,7 @@ class OpenContainerWrapper extends StatelessWidget {
         openShape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
         closedShape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
         transitionType: ContainerTransitionType.fadeThrough,
         openBuilder: (context, _, boo) {
           return EpisodeDetail(
@@ -179,7 +203,7 @@ class OpenContainerWrapper extends StatelessWidget {
           );
         },
         tappable: true,
-        closedBuilder: closedBuilder!,
+        closedBuilder: closedBuilder,
       ),
     );
   }

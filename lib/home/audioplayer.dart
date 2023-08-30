@@ -1638,11 +1638,9 @@ class _ControlPanelState extends State<ControlPanel>
                                               FadeRoute(
                                                   page: FutureBuilder(
                                                       // TODO: Check which fields are actually needed.
-                                                      future:
-                                                          data
-                                                              .item1!
-                                                              .copyWithFromDB(
-                                                                  newFields: [
+                                                      future: data.item1!
+                                                          .copyWithFromDB(
+                                                              newFields: [
                                                             EpisodeField
                                                                 .description,
                                                             EpisodeField
@@ -1656,16 +1654,23 @@ class _ControlPanelState extends State<ControlPanel>
                                                             EpisodeField
                                                                 .primaryColor,
                                                             EpisodeField
+                                                                .isLiked,
+                                                            EpisodeField.isNew,
+                                                            EpisodeField
+                                                                .isPlayed,
+                                                            EpisodeField
                                                                 .versionInfo
                                                           ]),
                                                       builder: ((context,
                                                               snapshot) =>
-                                                          EpisodeDetail(
-                                                              episodeItem: snapshot
-                                                                      .data
-                                                                  as EpisodeBrief,
-                                                              heroTag:
-                                                                  'playpanel')))));
+                                                          snapshot.hasData
+                                                              ? EpisodeDetail(
+                                                                  episodeItem:
+                                                                      snapshot.data
+                                                                          as EpisodeBrief,
+                                                                  heroTag:
+                                                                      'playpanel')
+                                                              : Center()))));
                                         }
                                       },
                                       child: Row(

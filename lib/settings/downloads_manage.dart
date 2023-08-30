@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/download_state.dart';
+import '../state/episode_state.dart';
 import '../type/episodebrief.dart';
 import '../util/extension_helper.dart';
 import '../widgets/custom_widget.dart';
@@ -52,7 +53,7 @@ class _DownloadsManageState extends State<DownloadsManage> {
         sortBy: sorter,
         sortOrder: order,
         filterDownloaded: -1,
-        context: context);
+        episodeState: Provider.of<EpisodeState>(context, listen: false));
     return episodes;
   }
 

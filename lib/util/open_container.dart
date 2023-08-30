@@ -29,7 +29,12 @@ class OpenContainer extends StatefulWidget {
     required this.closedBuilder,
     required this.openBuilder,
     this.flightWidget,
-    this.flightWidgetSize,
+    this.flightWidgetBeginSize,
+    this.flightWidgetEndSize,
+    this.flightWidgetBeginOffsetX,
+    this.flightWidgetBeginOffsetY,
+    this.flightWidgetEndOffsetX,
+    this.flightWidgetEndOffsetY,
     this.playerRunning,
     this.playerHeight,
     this.tappable = true,
@@ -41,7 +46,12 @@ class OpenContainer extends StatefulWidget {
   final Color endColor;
   final Color closedColor;
   final Widget? flightWidget;
-  final double? flightWidgetSize;
+  final double? flightWidgetBeginSize;
+  final double? flightWidgetEndSize;
+  final double? flightWidgetBeginOffsetX;
+  final double? flightWidgetBeginOffsetY;
+  final double? flightWidgetEndOffsetX;
+  final double? flightWidgetEndOffsetY;
   final bool? playerRunning;
   final double? playerHeight;
 
@@ -91,7 +101,12 @@ class _OpenContainerState extends State<OpenContainer> {
       transitionDuration: widget.transitionDuration,
       transitionType: widget.transitionType,
       flightWidget: widget.flightWidget,
-      flightWidgetSize: widget.flightWidgetSize,
+      flightWidgetBeginSize: widget.flightWidgetBeginSize,
+      flightWidgetEndSize: widget.flightWidgetEndSize,
+      flightWidgetBeginOffsetX: widget.flightWidgetBeginOffsetX,
+      flightWidgetBeginOffsetY: widget.flightWidgetBeginOffsetY,
+      flightWidgetEndOffsetX: widget.flightWidgetEndOffsetX,
+      flightWidgetEndOffsetY: widget.flightWidgetEndOffsetY,
       playerRunning: widget.playerRunning,
       playerHeight: widget.playerHeight,
     ));
@@ -195,7 +210,12 @@ class _OpenContainerRoute extends ModalRoute<void> {
     required this.transitionDuration,
     required this.transitionType,
     this.flightWidget,
-    this.flightWidgetSize,
+    this.flightWidgetBeginSize,
+    this.flightWidgetEndSize,
+    this.flightWidgetBeginOffsetX,
+    this.flightWidgetBeginOffsetY,
+    this.flightWidgetEndOffsetX,
+    this.flightWidgetEndOffsetY,
     this.playerRunning,
     this.playerHeight,
   })  : _elevationTween = Tween<double>(
@@ -216,7 +236,12 @@ class _OpenContainerRoute extends ModalRoute<void> {
         _openOpacityTween = _getOpenOpacityTween(transitionType);
 
   final Widget? flightWidget;
-  final double? flightWidgetSize;
+  final double? flightWidgetBeginSize;
+  final double? flightWidgetEndSize;
+  final double? flightWidgetBeginOffsetX;
+  final double? flightWidgetBeginOffsetY;
+  final double? flightWidgetEndOffsetX;
+  final double? flightWidgetEndOffsetY;
   final bool? playerRunning;
   final double? playerHeight;
   static _FlippableTweenSequence<Color?>? _getColorTween({
@@ -544,18 +569,29 @@ class _OpenContainerRoute extends ModalRoute<void> {
           assert(colorTween != null);
           assert(closedOpacityTween != null);
           assert(openOpacityTween != null);
+          final rect = RectTween(
+                  begin: _rectTween.begin,
+                  end: Rect.fromPoints(
+                      _rectTween.end!.topLeft,
+                      _rectTween.end!.bottomRight.translate(
+                          0,
+                          (_rectTween.end!.height) *
+                              (playerRunning!
+                                  ? -(playerHeight! +
+                                          MediaQuery.of(context)
+                                              .padding
+                                              .bottom) /
+                                      context.height
+                                  : 0))))
+              .evaluate(curvedAnimation)!;
+          _positionTween.begin = Offset(
+              _rectTween.begin!.left + flightWidgetBeginOffsetX!,
+              _rectTween.begin!.top + flightWidgetBeginOffsetY!);
+          _positionTween.end =
+              Offset(flightWidgetEndOffsetX!, flightWidgetEndOffsetY!);
 
-          final rect = _rectTween.evaluate(curvedAnimation)!;
-          _positionTween.begin =
-              Offset(_rectTween.begin!.left + 10, _rectTween.begin!.top + 10);
-          _positionTween.end = Offset(
-              10,
-              playerRunning!
-                  ? MediaQuery.of(context).size.height - 40 - playerHeight!
-                  : MediaQuery.of(context).size.height - 40);
-
-          _avatarScaleTween.begin = flightWidgetSize;
-          _avatarScaleTween.end = 30;
+          _avatarScaleTween.begin = flightWidgetBeginSize;
+          _avatarScaleTween.end = flightWidgetEndSize;
           return SizedBox.expand(
             child: Stack(
               children: <Widget>[
@@ -566,10 +602,7 @@ class _OpenContainerRoute extends ModalRoute<void> {
                       offset: Offset(rect.left, rect.top),
                       child: SizedBox(
                         width: rect.width,
-                        height: rect.height *
-                            (playerRunning!
-                                ? (1 - playerHeight! / context.height)
-                                : 1),
+                        height: rect.height,
                         child: Material(
                           clipBehavior: Clip.antiAlias,
                           animationDuration: Duration.zero,

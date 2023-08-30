@@ -1433,9 +1433,7 @@ class DBHelper {
       int filterAutoDownload = 0,
       List<String>? customFilters,
       List<String>? customArguements,
-
-      /// Provide [context] to add the episode to [EpisodeState].
-      BuildContext? context}) async {
+      EpisodeState? episodeState}) async {
     bool doGroup = false;
     bool getVersions = false;
     bool populateVersions = false;
@@ -1752,8 +1750,8 @@ class DBHelper {
             fields);
         if (populateVersions) episode = await populateEpisodeVersions(episode);
         episodes.add(episode);
-        if (context != null) {
-          Provider.of<EpisodeState>(context, listen: false).addEpisode(episode);
+        if (episodeState != null) {
+          episodeState.addEpisode(episode);
         }
       }
     }

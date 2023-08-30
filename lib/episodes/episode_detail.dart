@@ -91,9 +91,13 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
   Widget build(BuildContext context) {
     final s = context.s;
     final audio = context.watch<AudioPlayerNotifier>();
-    return Selector<EpisodeState, bool>(
-        selector: (_, episodeState) =>
+    return Selector2<EpisodeState, AudioPlayerNotifier,
+            Tuple4<bool, bool, PlayerHeight, EpisodeBrief?>>(
+        selector: (_, episodeState, audio) => Tuple4(
             episodeState.episodeChangeMap[_episodeItem.id]!,
+            audio.playerRunning,
+            audio.playerHeight!,
+            audio.episode),
         builder: (_, data, __) => FutureBuilder<EpisodeBrief>(
             future: _episodeItem.copyWithFromDB(update: true),
             builder: (context, snapshot) {
@@ -103,7 +107,9 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
               return AnnotatedRegion<SystemUiOverlayStyle>(
                 value: SystemUiOverlayStyle(
                     statusBarColor: _episodeItem.cardColor(context),
-                    systemNavigationBarColor: _episodeItem!.cardColor(context),
+                    systemNavigationBarColor: data.item2
+                        ? data.item4!.getColorScheme(context).secondaryContainer
+                        : _episodeItem.cardColor(context),
                     systemNavigationBarContrastEnforced: false,
                     systemNavigationBarIconBrightness: context.iconBrightness,
                     statusBarBrightness: context.brightness,
@@ -402,30 +408,23 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                               ),
                             ),
                           ),
-                          Selector<AudioPlayerNotifier,
-                              Tuple2<bool, PlayerHeight?>>(
-                            selector: (_, audio) =>
-                                Tuple2(audio.playerRunning, audio.playerHeight),
-                            builder: (_, data, __) {
-                              final height =
-                                  kMinPlayerHeight[data.item2!.index];
-                              return Container(
-                                alignment: Alignment.bottomCenter,
-                                padding: EdgeInsets.only(
-                                    bottom: data.item1 ? height : 0),
-                                child: AnimatedContainer(
-                                  duration: Duration(milliseconds: 400),
-                                  height: _showMenu ? 50 : 0,
-                                  child: SingleChildScrollView(
-                                    scrollDirection: Axis.vertical,
-                                    child: MenuBar(
-                                        episodeItem: _episodeItem,
-                                        heroTag: widget.heroTag,
-                                        hide: widget.hide),
-                                  ),
-                                ),
-                              );
-                            },
+                          Container(
+                            alignment: Alignment.bottomCenter,
+                            padding: EdgeInsets.only(
+                                bottom: data.item2
+                                    ? kMinPlayerHeight[data.item3.index]
+                                    : 0),
+                            child: AnimatedContainer(
+                              duration: Duration(milliseconds: 400),
+                              height: _showMenu ? 50 : 0,
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.vertical,
+                                child: MenuBar(
+                                    episodeItem: _episodeItem,
+                                    heroTag: widget.heroTag,
+                                    hide: widget.hide),
+                              ),
+                            ),
                           ),
                           Selector<AudioPlayerNotifier, EpisodeBrief?>(
                             selector: (_, audio) => audio.episode,

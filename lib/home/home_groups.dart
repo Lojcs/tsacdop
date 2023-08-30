@@ -18,6 +18,7 @@ import '../podcasts/podcast_manage.dart';
 import '../podcasts/podcastlist.dart';
 import '../state/audio_state.dart';
 import '../state/download_state.dart';
+import '../state/episode_state.dart';
 import '../state/podcast_group.dart';
 import '../state/refresh_podcast.dart';
 import '../state/setting_state.dart';
@@ -544,6 +545,7 @@ class _PodcastPreviewState extends State<PodcastPreview> {
           EpisodeField.enclosureSize,
           EpisodeField.isDownloaded,
           EpisodeField.episodeImage,
+          EpisodeField.podcastImage,
           EpisodeField.primaryColor,
           EpisodeField.isLiked,
           EpisodeField.isNew,
@@ -553,7 +555,7 @@ class _PodcastPreviewState extends State<PodcastPreview> {
         sortBy: Sorter.pubDate,
         sortOrder: SortOrder.DESC,
         limit: 2,
-        context: context);
+        episodeState: Provider.of<EpisodeState>(context, listen: false));
     return episodes;
   }
 }
@@ -584,7 +586,7 @@ class ShowEpisode extends StatelessWidget {
             ),
             delegate: SliverChildBuilderDelegate(
               (context, index) {
-                return interactiveEpisodeCard(
+                return InteractiveEpisodeCard(
                     context, episodes![index], Layout.medium,
                     preferEpisodeImage: true);
               },
