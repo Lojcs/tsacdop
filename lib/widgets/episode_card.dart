@@ -96,8 +96,29 @@ class InteractiveEpisodeCard extends StatefulWidget {
   _InteractiveEpisodeCardState createState() => _InteractiveEpisodeCardState();
 }
 
-class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard> {
+class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
+    with TickerProviderStateMixin {
   bool selected = false;
+  bool _firstBuild = true;
+  late AnimationController _controller;
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 200))
+      ..addListener(() {
+        if (mounted) {
+          setState(() {});
+        }
+      });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     var audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
@@ -110,6 +131,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard> {
     }
     EpisodeBrief episode = widget.episode;
     DBHelper dbHelper = DBHelper();
+
     return Selector2<AudioPlayerNotifier, EpisodeState,
             Tuple4<EpisodeBrief?, List<String>, bool, bool>>(
         selector: (_, audio, episodeState) => Tuple4(
@@ -169,7 +191,8 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard> {
                             ),
                             childDecoration: _cardDecoration(
                                 context, episode, widget.layout,
-                                selected: selected),
+                                selected: selected,
+                                animator: _firstBuild ? null : _controller),
                             openChildDecoration: _cardDecoration(
                                 context, episode, widget.layout,
                                 selected: true),
@@ -362,11 +385,18 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard> {
                                 ),
                             ],
                             onPressed: widget.selectMode
-                                ? () {
-                                    setState(() {
-                                      selected = !selected;
-                                    });
+                                ? () async {
                                     widget.onSelect!();
+                                    // await Future.delayed(
+                                    //     Duration(milliseconds: 100));
+                                    if (mounted) {
+                                      setState(() {
+                                        selected = !selected;
+                                        if (_firstBuild) _firstBuild = false;
+                                        _controller.reset();
+                                        _controller.forward();
+                                      });
+                                    }
                                   }
                                 : action,
                             child: episodeCard(context, episode, widget.layout,
@@ -394,7 +424,6 @@ Widget episodeCard(
     /// General card layout
     Layout layout,
     {
-
     /// Opens the podcast details if avatar image is tapped
     bool openPodcast = false,
 
@@ -605,7 +634,7 @@ Widget _progressLowerlay(EpisodeBrief episode, Layout layout,
 
 BoxDecoration _cardDecoration(
     BuildContext context, EpisodeBrief episode, Layout layout,
-    {bool selected = false}) {
+    {bool selected = false, AnimationController? animator}) {
   return BoxDecoration(
     color: context.realDark
         ? Colors.black
@@ -619,30 +648,56 @@ BoxDecoration _cardDecoration(
       color: context.realDark
           ? episode.getColorScheme(context).primary
           : selected
-              ? episode.getColorScheme(context).primary
-              : Colors.transparent,
+              ? animator == null
+                  ? episode.getColorScheme(context).primary
+                  : ColorTween(
+                          begin: Colors.transparent,
+                          end: episode.getColorScheme(context).primary)
+                      .animate(animator)
+                      .value!
+              : animator == null
+                  ? Colors.transparent
+                  : ColorTween(
+                          begin: episode.getColorScheme(context).primary,
+                          end: Colors.transparent)
+                      .animate(animator)
+                      .value!,
       width: 1.0,
     ),
     boxShadow: selected
         ? [
             BoxShadow(
               color: episode.getColorScheme(context).primary,
-              blurRadius: 6,
-              spreadRadius: 2,
+              blurRadius: animator == null
+                  ? 8
+                  : Tween<double>(begin: 5, end: 8).animate(animator).value,
+              spreadRadius: animator == null
+                  ? context.realDark
+                      ? 3
+                      : 2
+                  : Tween<double>(begin: -1, end: context.realDark ? 3 : 2)
+                      .animate(animator)
+                      .value,
               offset: Offset.fromDirection(0, 0),
             )
           ]
         : [
             BoxShadow(
               color: episode.getColorScheme(context).primary,
-              blurRadius: 1,
+              blurRadius: animator == null
+                  ? 1
+                  : Tween<double>(begin: 0, end: 1).animate(animator).value,
               spreadRadius: 0,
               offset: Offset.fromDirection(0, 0),
             ),
             BoxShadow(
-              color: episode.getColorScheme(context).primary.withOpacity(0.5),
-              blurRadius: 5,
-              spreadRadius: 0,
+              color: episode.getColorScheme(context).primary,
+              blurRadius: animator == null
+                  ? 5
+                  : Tween<double>(begin: 8, end: 5).animate(animator).value,
+              spreadRadius: animator == null
+                  ? -1
+                  : Tween<double>(begin: 2, end: -1).animate(animator).value,
               offset: Offset.fromDirection(0, 0),
             )
           ],

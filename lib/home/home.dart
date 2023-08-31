@@ -90,7 +90,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final height = (context.width - 20) / 3 + 141;
+    final height = (context.width - 20) / 3 + 145;
     final settings = Provider.of<SettingState>(context, listen: false);
     final s = context.s;
     return Selector<AudioPlayerNotifier, Tuple2<bool, EpisodeBrief?>>(

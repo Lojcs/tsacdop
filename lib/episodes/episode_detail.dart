@@ -415,7 +415,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                     ? kMinPlayerHeight[data.item3.index]
                                     : 0),
                             child: AnimatedContainer(
-                              duration: Duration(milliseconds: 400),
+                              duration: Duration(milliseconds: 300),
                               height: _showMenu ? 50 : 0,
                               child: SingleChildScrollView(
                                 scrollDirection: Axis.vertical,
