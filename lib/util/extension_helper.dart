@@ -86,7 +86,7 @@ extension IntExtension on int {
 extension StringExtension on String {
   Future get launchUrl async {
     if (await canLaunchUrlString(this)) {
-      await launchUrlString(this);
+      await launchUrlString(this, mode: LaunchMode.externalApplication);
     } else {
       developer.log('Could not launch $this');
       Fluttertoast.showToast(

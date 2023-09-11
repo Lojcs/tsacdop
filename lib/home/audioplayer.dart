@@ -30,21 +30,34 @@ import '../widgets/audiopanel.dart';
 import '../widgets/custom_slider.dart';
 import '../widgets/custom_widget.dart';
 
-final List<BoxShadow> _customShadow = [
-  BoxShadow(blurRadius: 26, offset: Offset(-6, -6), color: Colors.white),
-  BoxShadow(
-      blurRadius: 8,
-      offset: Offset(2, 2),
-      color: Colors.grey[600]!.withOpacity(0.4))
-];
+List<BoxShadow> _customShadow(
+        {
 
-final List<BoxShadow> _customShadowNight = [
-  BoxShadow(
-      blurRadius: 6,
-      offset: Offset(-1, -1),
-      color: Colors.grey[100]!.withOpacity(0.3)),
-  BoxShadow(blurRadius: 8, offset: Offset(2, 2), color: Colors.black)
-];
+        /// Which version of shadow to display and animate (0: off, 1: on, -1: temporary on)
+        required int active,
+        // Brightness brightness,
+        AnimationController? animator}) =>
+    [
+      BoxShadow(blurRadius: 26, offset: Offset(-6, -6), color: Colors.white),
+      BoxShadow(
+          blurRadius: 8,
+          offset: Offset(2, 2),
+          color: Colors.grey[600]!.withOpacity(0.4))
+    ];
+
+List<BoxShadow> _customShadowNight(
+        {
+
+        /// Which version of shadow to display and animate (0: off, 1: on, -1: temporary on)
+        required int active,
+        AnimationController? animator}) =>
+    [
+      BoxShadow(
+          blurRadius: 6,
+          offset: Offset(-1, -1),
+          color: Colors.grey[100]!.withOpacity(0.3)),
+      BoxShadow(blurRadius: 8, offset: Offset(2, 2), color: Colors.black)
+    ];
 
 const List kMinsToSelect = [10, 15, 20, 25, 30, 45, 60, 70, 80, 90, 99];
 const List kMinPlayerHeight = <double>[70.0, 75.0, 80.0];
@@ -69,11 +82,11 @@ class PlayerWidget extends StatelessWidget {
               context.height - 20);
           return AudioPanel(
             minHeight: minHeight,
-            maxHeight: maxHeight,
-            expandHeight: context.height - context.paddingTop - 20,
+            midHeight: maxHeight,
+            maxHeight: context.height - context.paddingTop - 20,
             key: playerKey,
             miniPanel: _MiniPanel(),
-            expandedPanel: ControlPanel(
+            maxiPanel: ControlPanel(
               maxHeight: maxHeight,
               isPlayingPage: isPlayingPage,
               onExpand: () {
@@ -97,9 +110,7 @@ class _MiniPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
     final s = context.s;
-    final bgColor = audio.episode == null
-        ? context.primaryColor
-        : audio.episode!.cardColor(context);
+    final bgColor = context.colorScheme.secondaryContainer;
     return Container(
       color: bgColor,
       height: 60,
@@ -687,7 +698,6 @@ class SleepModeState extends State<SleepMode>
         return LayoutBuilder(builder: (context, constraints) {
           var width = constraints.maxWidth;
           return Container(
-            height: 300,
             decoration: BoxDecoration(
                 color: _colorTween.transform(move),
                 borderRadius: BorderRadius.circular(10)),
@@ -1245,6 +1255,9 @@ class _ControlPanelState extends State<ControlPanel>
     with TickerProviderStateMixin {
   double? _setSpeed;
   late AnimationController _controller;
+  late AnimationController _rewindController;
+  late AnimationController _fastForwardController;
+  late AnimationController _playController;
   late Animation<double> _animation;
   TabController? _tabController;
   int _tabIndex = 0;
@@ -1285,14 +1298,40 @@ class _ControlPanelState extends State<ControlPanel>
         AnimationController(vsync: this, duration: Duration(milliseconds: 400));
     _animation = Tween<double>(begin: 0.0, end: 1.0).animate(_controller)
       ..addListener(() {
-        setState(() => _setSpeed = _animation.value);
+        if (mounted) {
+          setState(() => _setSpeed = _animation.value);
+        }
       });
+    _rewindController =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 400))
+          ..addListener(() {
+            if (mounted) {
+              setState(() {});
+            }
+          });
+    _fastForwardController =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 400))
+          ..addListener(() {
+            if (mounted) {
+              setState(() {});
+            }
+          });
+    _playController =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 400))
+          ..addListener(() {
+            if (mounted) {
+              setState(() {});
+            }
+          });
     super.initState();
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _rewindController.dispose();
+    _fastForwardController.dispose();
+    _playController.dispose();
     _tabController!.dispose();
     super.dispose();
   }
@@ -1304,12 +1343,12 @@ class _ControlPanelState extends State<ControlPanel>
       builder: (context, constraints) {
         final height = constraints.maxHeight;
         return Container(
-          color: context.primaryColor,
-          height: 300,
+          color: context.colorScheme.secondaryContainer,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
+              SizedBox(height: 16),
               Consumer<AudioPlayerNotifier>(
                 builder: (_, data, __) {
                   return Column(
@@ -1336,7 +1375,11 @@ class _ControlPanelState extends State<ControlPanel>
                                 RoundSliderOverlayShape(overlayRadius: 4.0),
                           ),
                           child: Slider(
-                              value: data.seekSliderValue,
+                              value: data.seekSliderValue > 0
+                                  ? data.seekSliderValue < 1
+                                      ? data.seekSliderValue
+                                      : 1
+                                  : 0,
                               onChanged: (val) {
                                 audio.sliderSeek(val);
                               }),
@@ -1424,71 +1467,56 @@ class _ControlPanelState extends State<ControlPanel>
                             ),
                           ),
                           Container(
-                            margin: EdgeInsets.symmetric(horizontal: 30),
-                            height: 60,
-                            width: 60,
-                            decoration: BoxDecoration(
-                                color: context.primaryColor,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                    color: context.brightness == Brightness.dark
-                                        ? Colors.black12
-                                        : Colors.white10,
-                                    width: 1),
-                                boxShadow: context.brightness == Brightness.dark
-                                    ? _customShadowNight
-                                    : _customShadow),
-                            child: playing
-                                ? Material(
-                                    color: Colors.transparent,
-                                    child: InkWell(
-                                      borderRadius:
-                                          BorderRadius.all(Radius.circular(30)),
-                                      onTap: playing
-                                          ? () {
-                                              audio.pauseAduio();
-                                            }
-                                          : null,
-                                      child: SizedBox(
-                                        height: 60,
-                                        width: 60,
-                                        child: Icon(
-                                          Icons.pause,
-                                          size: 40,
-                                        ),
-                                      ),
-                                    ),
-                                  )
-                                : Material(
-                                    color: Colors.transparent,
-                                    child: InkWell(
-                                      borderRadius:
-                                          BorderRadius.all(Radius.circular(30)),
-                                      onTap: playing
-                                          ? null
-                                          : () {
-                                              audio.resumeAudio();
-                                            },
-                                      child: SizedBox(
-                                        height: 60,
-                                        width: 60,
-                                        child: Icon(
-                                          Icons.play_arrow,
-                                          size: 40,
-                                          color: context.accentColor,
-                                        ),
-                                      ),
+                              margin: EdgeInsets.symmetric(horizontal: 30),
+                              height: 60,
+                              width: 60,
+                              decoration: BoxDecoration(
+                                  color: context.primaryColor,
+                                  shape: BoxShape.circle,
+                                  // border: Border.all(
+                                  //     color: context.brightness == Brightness.dark
+                                  //         ? Colors.black12
+                                  //         : Colors.white10,
+                                  //     width: 1),
+                                  boxShadow:
+                                      context.brightness == Brightness.dark
+                                          ? _customShadowNight(active: 1)
+                                          : _customShadow(active: 1)),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(30)),
+                                  onTap: playing
+                                      ? () {
+                                          audio.pauseAduio();
+                                        }
+                                      : () {
+                                          audio.resumeAudio();
+                                        },
+                                  child: SizedBox(
+                                    height: 60,
+                                    width: 60,
+                                    child: Icon(
+                                      playing
+                                          ? Icons.pause_rounded
+                                          : Icons.play_arrow_rounded,
+                                      size: 40,
+                                      color: context.accentColor,
                                     ),
                                   ),
-                          ),
-                          FlatButton(
-                            padding: EdgeInsets.only(left: 10.0, right: 10),
+                                ),
+                              )),
+                          TextButton(
+                            // style: ButtonStyle(
+                            //   padding: EdgeInsets.only(left: 10.0, right: 10),
+                            //   backgroundColor: Colors.transparent,
+                            //   shape: RoundedRectangleBorder(
+                            //       borderRadius: BorderRadius.circular(100.0),
+                            //       side: BorderSide(color: Colors.transparent)),
+                            // ),
                             onPressed:
                                 playing ? () => audio.fastForward() : null,
-                            color: Colors.transparent,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(100.0),
-                                side: BorderSide(color: Colors.transparent)),
                             child: Row(
                               children: [
                                 Selector<AudioPlayerNotifier, int?>(
@@ -1812,12 +1840,11 @@ class _ControlPanelState extends State<ControlPanel>
                                     painter: TabIndicator(
                                         index: _tabIndex,
                                         indicatorSize: 10,
-                                        fraction:
-                                            (height + 16 - widget.maxHeight!) /
-                                                (context.height -
-                                                    context.paddingTop -
-                                                    20 -
-                                                    widget.maxHeight!),
+                                        fraction: (height - widget.maxHeight!) /
+                                            (context.height -
+                                                context.paddingTop -
+                                                20 -
+                                                widget.maxHeight!),
                                         accentColor: context.accentColor,
                                         color: context.textColor)),
                               ),

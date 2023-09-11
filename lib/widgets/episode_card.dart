@@ -60,24 +60,24 @@ class InteractiveEpisodeCard extends StatefulWidget {
   /// Sets the primary action to highlight instead of open
   final bool selectMode;
 
-  /// Callback to call when [selectMode] is on and the card is selected.
+  /// Callback to call when [selectMode] is on and the card is selected
   final VoidCallback? onSelect;
-  InteractiveEpisodeCard(
-    this.context,
-    this.episode,
-    this.layout, {
-    this.openPodcast = true,
-    this.showImage = true,
-    this.preferEpisodeImage = false,
-    this.numberText,
-    this.showLiked = true,
-    this.showNew = true,
-    this.showLengthAndSize = true,
-    this.showPlayedAndDownloaded = true,
-    this.showDate = false,
-    this.selectMode = false,
-    this.onSelect,
-  }) {
+
+  /// Wheter the episode is selected
+  final bool selected;
+  InteractiveEpisodeCard(this.context, this.episode, this.layout,
+      {this.openPodcast = true,
+      this.showImage = true,
+      this.preferEpisodeImage = false,
+      this.numberText,
+      this.showLiked = true,
+      this.showNew = true,
+      this.showLengthAndSize = true,
+      this.showPlayedAndDownloaded = true,
+      this.showDate = false,
+      this.selectMode = false,
+      this.onSelect,
+      this.selected = false}) {
     assert((!preferEpisodeImage &&
             episode.fields.contains(EpisodeField.podcastImage)) ||
         episode.fields.contains(EpisodeField.episodeImage) ||
@@ -98,12 +98,15 @@ class InteractiveEpisodeCard extends StatefulWidget {
 
 class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
     with TickerProviderStateMixin {
-  bool selected = false;
   bool _firstBuild = true;
   late AnimationController _controller;
+  bool selected = false;
+  bool liveSelect = false;
+  late EpisodeBrief episode;
   @override
   void initState() {
     super.initState();
+    episode = widget.episode;
     _controller = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 200))
       ..addListener(() {
@@ -124,12 +127,20 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
     var audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
     var episodeState = Provider.of<EpisodeState>(context, listen: false);
     var s = context.s;
-    if (!widget.selectMode) {
+    if (widget.selected != selected && !liveSelect && widget.selectMode) {
+      if (_firstBuild) _firstBuild = false;
+      selected = true;
+      _controller.reset();
+      _controller.forward();
+    }
+    if (!widget.selectMode && selected) {
       setState(() {
         selected = false;
+        _controller.reset();
+        _controller.forward();
       });
     }
-    EpisodeBrief episode = widget.episode;
+    liveSelect = false;
     DBHelper dbHelper = DBHelper();
 
     return Selector2<AudioPlayerNotifier, EpisodeState,
@@ -196,12 +207,24 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                             openChildDecoration: _cardDecoration(
                                 context, episode, widget.layout,
                                 selected: true),
-                            childHighlightColor: context.brightness ==
-                                    Brightness.light
+                            childHighlightColor: context.brightness == Brightness.light
                                 ? episode.colorSchemeDark.primary
-                                : episode.colorSchemeLight.onSecondaryContainer,
-                            childLowerlay: _progressLowerlay(
-                                episode, widget.layout, selected: selected),
+                                : episode.colorSchemeLight
+                                    .onSecondaryContainer, // TODO: Bug in flutter breaks the color. Need to update https://github.com/flutter/flutter/pull/110552
+                            childLowerlay: audio.episode == episode
+                                ? Selector<AudioPlayerNotifier, double>(
+                                    selector: (_, audio) =>
+                                        audio.seekSliderValue,
+                                    builder: (_, seekValue, __) =>
+                                        _progressLowerlay(
+                                            context, seekValue, widget.layout,
+                                            hide: selected),
+                                  )
+                                : FutureBuilder<PlayHistory>(
+                                    future: dbHelper.getPosition(episode),
+                                    builder: (context, snapshot) => _progressLowerlay(
+                                        context, snapshot.hasData ? snapshot.data!.seekValue! : 0, widget.layout,
+                                        hide: selected)),
                             duration: Duration(milliseconds: 100),
                             openWithTap: tapToOpen,
                             animateMenuItems: false,
@@ -389,9 +412,13 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                                     widget.onSelect!();
                                     // await Future.delayed(
                                     //     Duration(milliseconds: 100));
+                                    // selected = !selected;
+                                    // _controller.reset();
+                                    // _controller.forward();
                                     if (mounted) {
                                       setState(() {
                                         selected = !selected;
+                                        liveSelect = true;
                                         if (_firstBuild) _firstBuild = false;
                                         _controller.reset();
                                         _controller.forward();
@@ -424,6 +451,7 @@ Widget episodeCard(
     /// General card layout
     Layout layout,
     {
+
     /// Opens the podcast details if avatar image is tapped
     bool openPodcast = false,
 
@@ -479,7 +507,11 @@ Widget episodeCard(
                       selected: selected))
               : Center(),
           decorate
-              ? _progressLowerlay(episode, layout, selected: selected)
+              ? FutureBuilder<PlayHistory>(
+                  future: dbHelper.getPosition(episode),
+                  builder: (context, snapshot) => _progressLowerlay(context,
+                      snapshot.hasData ? snapshot.data!.seekValue! : 0, layout,
+                      hide: selected))
               : Center(),
           Padding(
             padding: EdgeInsets.all(layout == Layout.small ? 6 : 8)
@@ -593,42 +625,29 @@ Widget episodeCard(
   }
 }
 
-Widget _progressLowerlay(EpisodeBrief episode, Layout layout,
-    {bool selected = false}) {
+Widget _progressLowerlay(BuildContext context, double seekValue, Layout layout,
+    {bool hide = false}) {
   DBHelper dbHelper = DBHelper();
-  return selected
+  return hide
       ? Center()
-      : FutureBuilder<PlayHistory>(
-          future: dbHelper.getPosition(episode),
-          builder: (context, snapshot) {
-            if (snapshot.hasData)
-              return Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(layout == Layout.small
-                        ? 12
-                        : layout == Layout.medium
-                            ? 16
-                            : 20),
-                  ),
-                  clipBehavior: Clip.hardEdge,
-                  height: double.infinity,
-                  child: Stack(
-                    children: [
-                      Positioned.fill(
-                        child: LinearProgressIndicator(
-                            color: context.realDark
-                                ? context.background.withOpacity(0.7)
-                                : context.brightness == Brightness.light
-                                    ? context.background.withOpacity(0.7)
-                                    : context.background.withOpacity(0.6),
-                            backgroundColor: Colors.transparent,
-                            value: snapshot.data!.seekValue!),
-                      ),
-                    ],
-                  ));
-            else
-              return Center();
-          },
+      : Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(layout == Layout.small
+                ? 12
+                : layout == Layout.medium
+                    ? 16
+                    : 20),
+          ),
+          clipBehavior: Clip.hardEdge,
+          height: double.infinity,
+          child: LinearProgressIndicator(
+              color: context.realDark
+                  ? context.background.withOpacity(0.7)
+                  : context.brightness == Brightness.light
+                      ? context.background.withOpacity(0.7)
+                      : context.background.withOpacity(0.6),
+              backgroundColor: Colors.transparent,
+              value: seekValue),
         );
 }
 
@@ -637,7 +656,28 @@ BoxDecoration _cardDecoration(
     {bool selected = false, AnimationController? animator}) {
   return BoxDecoration(
     color: context.realDark
-        ? Colors.black
+        ? selected
+            ? animator == null
+                ? Color.lerp(episode.getColorScheme(context).secondaryContainer,
+                    context.background, 0.4)
+                : ColorTween(
+                        begin: context.background,
+                        end: Color.lerp(
+                            episode.getColorScheme(context).secondaryContainer,
+                            context.background,
+                            0.3))
+                    .animate(animator)
+                    .value!
+            : animator == null
+                ? context.background
+                : ColorTween(
+                        begin: Color.lerp(
+                            episode.getColorScheme(context).secondaryContainer,
+                            context.background,
+                            0.4),
+                        end: context.background)
+                    .animate(animator)
+                    .value!
         : episode.getColorScheme(context).secondaryContainer,
     borderRadius: BorderRadius.circular(layout == Layout.small
         ? 12
@@ -672,12 +712,8 @@ BoxDecoration _cardDecoration(
                   ? 8
                   : Tween<double>(begin: 5, end: 8).animate(animator).value,
               spreadRadius: animator == null
-                  ? context.realDark
-                      ? 3
-                      : 2
-                  : Tween<double>(begin: -1, end: context.realDark ? 3 : 2)
-                      .animate(animator)
-                      .value,
+                  ? 2
+                  : Tween<double>(begin: -1, end: 2).animate(animator).value,
               offset: Offset.fromDirection(0, 0),
             )
           ]
@@ -685,19 +721,13 @@ BoxDecoration _cardDecoration(
             BoxShadow(
               color: episode.getColorScheme(context).primary,
               blurRadius: animator == null
-                  ? 1
-                  : Tween<double>(begin: 0, end: 1).animate(animator).value,
-              spreadRadius: 0,
-              offset: Offset.fromDirection(0, 0),
-            ),
-            BoxShadow(
-              color: episode.getColorScheme(context).primary,
-              blurRadius: animator == null
                   ? 5
                   : Tween<double>(begin: 8, end: 5).animate(animator).value,
               spreadRadius: animator == null
                   ? -1
-                  : Tween<double>(begin: 2, end: -1).animate(animator).value,
+                  : Tween<double>(begin: context.realDark ? 3 : 2, end: -1)
+                      .animate(animator)
+                      .value,
               offset: Offset.fromDirection(0, 0),
             )
           ],

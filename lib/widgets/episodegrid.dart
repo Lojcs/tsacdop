@@ -133,6 +133,7 @@ class EpisodeGrid extends StatelessWidget {
                   }
                   onSelect!(_selectedList);
                 },
+                selected: selectedList!.contains(episodes![index]),
               ));
         },
       ),

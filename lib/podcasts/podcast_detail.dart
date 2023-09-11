@@ -82,7 +82,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
   bool? _hideListened;
 
   ///Selected episode list.
-  List<EpisodeBrief>? _selectedEpisodes;
+  List<EpisodeBrief>? _selectedEpisodes = [];
 
   ///Toggle for multi-select.
   bool? _multiSelect;
@@ -683,7 +683,6 @@ class _PodcastDetailState extends State<PodcastDetail> {
                   onPressed: () {
                     setState(() {
                       _top = -1;
-                      _selectedEpisodes = [];
                       _multiSelect = true;
                     });
                   },
@@ -1008,6 +1007,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
                                           _selectAll = false;
                                           _selectAfter = false;
                                           _selectBefore = false;
+                                          _selectedEpisodes = [];
                                         }
                                       });
                                     },
