@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:tsacdop/state/audio_state.dart';
 
 import '../util/extension_helper.dart';
 
@@ -49,9 +51,14 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
           ..addListener(() {
             if (mounted) setState(() {});
           });
-    _animation =
-        Tween<double>(begin: 0, end: initSize).animate(_slowController);
-    _slowController.forward();
+    if (Provider.of<AudioPlayerNotifier>(context, listen: false)
+        .playerInitialStart) {
+      _animation = Tween<double>(begin: 0, end: 0).animate(_controller);
+      _animatePanel(end: initSize, slow: true);
+    } else {
+      _animation =
+          Tween<double>(begin: initSize, end: initSize).animate(_controller);
+    }
     _slideDirection = SlideDirection.up;
     super.initState();
   }
@@ -140,13 +147,14 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
                     ),
                   ),
                 ),
-                Opacity(
-                  opacity: math.min(
-                      1,
-                      math.max(
-                          0, (widget.minHeight + 50 - _animation.value) / 50)),
-                  child: widget.miniPanel,
-                ),
+                if (widget.minHeight + 50 > _animation.value)
+                  Opacity(
+                    opacity: math.min(
+                        1,
+                        math.max(0,
+                            (widget.minHeight + 50 - _animation.value) / 50)),
+                    child: widget.miniPanel,
+                  ),
               ],
             ),
           ),
@@ -210,7 +218,8 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
     }
     // Move one step based on ongoing swipe, or total movement. Ignore small velocities to resist shaky hands
     else if ((event.primaryVelocity ?? 0) < -300 ||
-        _slideDirection == SlideDirection.up) {
+        ((event.primaryVelocity ?? 0) <= 300 &&
+            _slideDirection == SlideDirection.up)) {
       if (_animation.value > widget.midHeight) {
         _animatePanel(end: widget.maxHeight);
       } else {

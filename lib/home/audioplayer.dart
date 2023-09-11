@@ -1471,7 +1471,7 @@ class _ControlPanelState extends State<ControlPanel>
                               height: 60,
                               width: 60,
                               decoration: BoxDecoration(
-                                  color: context.primaryColor,
+                                  color: context.colorScheme.secondaryContainer,
                                   shape: BoxShape.circle,
                                   // border: Border.all(
                                   //     color: context.brightness == Brightness.dark

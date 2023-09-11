@@ -170,6 +170,8 @@ class AudioPlayerNotifier extends ChangeNotifier {
   // ignore: prefer_final_fields
   bool _playerRunning = false;
 
+  bool _playerInitialStart = true;
+
   late bool _markListened;
 
   // Tmep episode list, playing from search result
@@ -217,6 +219,8 @@ class AudioPlayerNotifier extends ChangeNotifier {
   double get seekSliderValue => _seekSliderValue;
   String? get remoteErrorMessage => _remoteErrorMessage;
   bool get playerRunning => _playerRunning;
+  bool get playerInitialStart => _playerInitialStart;
+
   bool get buffering => _audioState != AudioProcessingState.ready;
   EpisodeBrief? get episode => _episode;
 
@@ -255,6 +259,10 @@ class AudioPlayerNotifier extends ChangeNotifier {
     _playerHeight = mode;
     notifyListeners();
     _savePlayerHeight();
+  }
+
+  set playerInitialStart(bool boo) {
+    _playerInitialStart = boo;
   }
 
   Future<void> _initAudioData() async {

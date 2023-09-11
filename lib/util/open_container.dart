@@ -529,13 +529,14 @@ class _OpenContainerRoute extends ModalRoute<void> {
               ),
             );
           }
-
+          // Main window animations
           final Animation<double> curvedAnimation = CurvedAnimation(
             parent: animation,
             curve: Curves.fastOutSlowIn,
             reverseCurve:
                 _transitionWasInterrupted ? null : Curves.fastOutSlowIn.flipped,
           );
+          // Flying icon animations
           final Animation<double> secondCurvedAnimation = CurvedAnimation(
             parent: animation,
             curve: Curves.easeOutCirc,

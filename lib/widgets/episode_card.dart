@@ -23,6 +23,7 @@ import 'custom_widget.dart';
 import 'episodegrid.dart';
 import 'general_dialog.dart';
 
+/// [EpisodeCard] widget that responds to user interaction.
 class InteractiveEpisodeCard extends StatefulWidget {
   final BuildContext context;
   final EpisodeBrief episode;
@@ -101,6 +102,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   bool _firstBuild = true;
   late AnimationController _controller;
   bool selected = false;
+  // Wheter the card has been selected internally
   bool liveSelect = false;
   late EpisodeBrief episode;
   @override
@@ -127,17 +129,17 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
     var audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
     var episodeState = Provider.of<EpisodeState>(context, listen: false);
     var s = context.s;
+    // Apply external selection
     if (widget.selected != selected && !liveSelect && widget.selectMode) {
-      if (_firstBuild) _firstBuild = false;
+      _firstBuild = false;
       selected = true;
-      _controller.reset();
       _controller.forward();
     }
+    // Unselect on selectMode exit
     if (!widget.selectMode && selected) {
       setState(() {
         selected = false;
-        _controller.reset();
-        _controller.forward();
+        _controller.reverse();
       });
     }
     liveSelect = false;
@@ -224,7 +226,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                                     future: dbHelper.getPosition(episode),
                                     builder: (context, snapshot) => _progressLowerlay(
                                         context, snapshot.hasData ? snapshot.data!.seekValue! : 0, widget.layout,
-                                        hide: selected)),
+                                        hide: selected, animator: _controller)),
                             duration: Duration(milliseconds: 100),
                             openWithTap: tapToOpen,
                             animateMenuItems: false,
@@ -417,16 +419,18 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                                     // _controller.forward();
                                     if (mounted) {
                                       setState(() {
+                                        if (selected)
+                                          _controller.reverse();
+                                        else
+                                          _controller.forward();
                                         selected = !selected;
                                         liveSelect = true;
                                         if (_firstBuild) _firstBuild = false;
-                                        _controller.reset();
-                                        _controller.forward();
                                       });
                                     }
                                   }
                                 : action,
-                            child: episodeCard(context, episode, widget.layout,
+                            child: EpisodeCard(context, episode, widget.layout,
                                 openPodcast: widget.openPodcast,
                                 showImage: widget.showImage && !boo,
                                 preferEpisodeImage: widget.preferEpisodeImage,
@@ -444,294 +448,341 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   }
 }
 
-Widget episodeCard(
-    BuildContext context,
-    EpisodeBrief episode,
+/// Widget to display information about an episode.
+class EpisodeCard extends StatelessWidget {
+  final BuildContext context;
+  final EpisodeBrief episode;
 
-    /// General card layout
-    Layout layout,
-    {
+  /// General card layout
+  final Layout layout;
 
-    /// Opens the podcast details if avatar image is tapped
-    bool openPodcast = false,
+  /// Opens the podcast details if avatar image is tapped
+  final bool openPodcast;
 
-    /// Controls the avatar image
-    bool showImage = true,
+  /// Controls the avatar image
+  final bool showImage;
 
-    /// Prefer episode image over podcast image for avatar (requires [showimage])
-    bool preferEpisodeImage = false,
+  /// Prefer episode image over podcast image for avatar (requires [showimage])
+  final bool preferEpisodeImage;
 
-    /// Episode number to be shown. Null for off
-    String? numberText,
+  /// Episode number to be shown. Null for off
+  final String? numberText;
 
-    /// Controls the favourite indicator
-    bool showLiked = true,
+  /// Controls the favourite indicator
+  final bool showLiked;
 
-    /// Controls the new indicator
-    bool showNew = true,
+  /// Controls the new indicator
+  final bool showNew;
 
-    /// Controls the length and size idnicators
-    bool showLengthAndSize = true,
+  /// Controls the length and size idnicators
+  final bool showLengthAndSize;
 
-    /// Controls the played and downloaded indicators (requires [showLengthAndSize])
-    bool showPlayedAndDownloaded = true,
+  /// Controls the played and downloaded indicators (requires [showLengthAndSize])
+  final bool showPlayedAndDownloaded;
 
-    /// Controls the date indicator
-    bool showDate = false,
+  /// Controls the date indicator
+  final bool showDate;
 
-    /// Controls the select indicator
-    bool selected = false,
+  /// Controls the select indicator
+  final bool selected;
 
-    /// Applies card decorations
-    bool decorate = true}) {
-  DBHelper dbHelper = DBHelper();
-  if (false) {
-    return _layoutOneCard(context, episode, layout, preferEpisodeImage,
-        numberText: numberText ?? "",
-        openPodcast: openPodcast,
-        showDownload: showPlayedAndDownloaded,
-        showFavorite: showLiked,
-        showNumber: numberText != null,
-        boo: showImage);
-  } else {
-    return Container(
-      decoration: BoxDecoration(
-          borderRadius: _cardDecoration(context, episode, layout).borderRadius),
-      clipBehavior: Clip.hardEdge,
-      child: Stack(
-        alignment: AlignmentDirectional.centerStart,
-        children: [
-          decorate
-              ? Container(
-                  decoration: _cardDecoration(context, episode, layout,
-                      selected: selected))
-              : Center(),
-          decorate
-              ? FutureBuilder<PlayHistory>(
-                  future: dbHelper.getPosition(episode),
-                  builder: (context, snapshot) => _progressLowerlay(context,
-                      snapshot.hasData ? snapshot.data!.seekValue! : 0, layout,
-                      hide: selected))
-              : Center(),
-          Padding(
-            padding: EdgeInsets.all(layout == Layout.small ? 6 : 8)
-                .copyWith(bottom: layout == Layout.small ? 8 : 8),
-            child: Column(
-              children: <Widget>[
-                if (layout != Layout.large)
-                  Expanded(
-                    flex: 3,
-                    child: Row(
-                      children: <Widget>[
-                        if (showImage)
-                          _circleImage(
-                            context,
-                            openPodcast,
-                            preferEpisodeImage,
-                            radius: layout == Layout.small
-                                ? context.width / 20
-                                : context.width / 15,
-                            episode: episode,
-                            color: episode.getColorScheme(context).primary,
-                          ),
-                        SizedBox(
-                          width: 5,
-                        ),
-                        if (numberText != null)
-                          _numberIndicator(context, numberText, layout),
-                        Spacer(),
-                        _pubDate(context, episode, layout, showNew),
-                      ],
-                    ),
-                  ),
-                Expanded(
-                  flex: layout == Layout.small ? 10 : 7,
-                  child: layout == Layout.large
-                      ? Row(
-                          children: [
+  /// Applies card decorations
+  final bool decorate;
+  EpisodeCard(this.context, this.episode, this.layout,
+      {this.openPodcast = false,
+      this.showImage = true,
+      this.preferEpisodeImage = false,
+      this.numberText,
+      this.showLiked = true,
+      this.showNew = true,
+      this.showLengthAndSize = true,
+      this.showPlayedAndDownloaded = true,
+      this.showDate = false,
+      this.selected = false,
+      this.decorate = true}) {
+    assert((!preferEpisodeImage &&
+            episode.fields.contains(EpisodeField.podcastImage)) ||
+        episode.fields.contains(EpisodeField.episodeImage) ||
+        episode.fields.contains(EpisodeField.podcastImage));
+    assert(!showLiked || episode.fields.contains(EpisodeField.isLiked));
+    assert(!showNew || episode.fields.contains(EpisodeField.isNew));
+    assert(!showLengthAndSize ||
+        (episode.fields.contains(EpisodeField.enclosureDuration) &&
+            episode.fields.contains(EpisodeField.enclosureSize)));
+    assert(!showPlayedAndDownloaded ||
+        (episode.fields.contains(EpisodeField.isPlayed) &&
+            episode.fields.contains(EpisodeField.isDownloaded)));
+    assert(episode.fields.contains(EpisodeField.primaryColor));
+  }
+  final DBHelper dbHelper = DBHelper();
+
+  @override
+  Widget build(BuildContext context) {
+    if (false) {
+      return _layoutOneCard(context, episode, layout, preferEpisodeImage,
+          numberText: numberText ?? "",
+          openPodcast: openPodcast,
+          showDownload: showPlayedAndDownloaded,
+          showFavorite: showLiked,
+          showNumber: numberText != null,
+          boo: showImage);
+    } else {
+      return Container(
+        decoration: BoxDecoration(
+            borderRadius:
+                _cardDecoration(context, episode, layout).borderRadius),
+        clipBehavior: Clip.hardEdge,
+        child: Stack(
+          alignment: AlignmentDirectional.centerStart,
+          children: [
+            decorate
+                ? Container(
+                    decoration: _cardDecoration(context, episode, layout,
+                        selected: selected))
+                : Center(),
+            decorate
+                ? FutureBuilder<PlayHistory>(
+                    future: dbHelper.getPosition(episode),
+                    builder: (context, snapshot) => _progressLowerlay(
+                        context,
+                        snapshot.hasData ? snapshot.data!.seekValue! : 0,
+                        layout,
+                        hide: selected))
+                : Center(),
+            Padding(
+              padding: EdgeInsets.all(layout == Layout.small ? 6 : 8)
+                  .copyWith(bottom: layout == Layout.small ? 8 : 8),
+              child: Column(
+                children: <Widget>[
+                  if (layout != Layout.large)
+                    Expanded(
+                      flex: 3,
+                      child: Row(
+                        children: <Widget>[
+                          if (showImage)
                             _circleImage(
                               context,
                               openPodcast,
                               preferEpisodeImage,
-                              radius: context.width / 6,
+                              radius: layout == Layout.small
+                                  ? context.width / 20
+                                  : context.width / 15,
                               episode: episode,
                               color: episode.getColorScheme(context).primary,
                             ),
-                            SizedBox(
-                              width: 5,
-                            ),
-                            Expanded(
-                              child: Column(
-                                children: [
-                                  Expanded(
-                                    flex: 2,
-                                    child: Row(
-                                      children: <Widget>[
-                                        if (numberText != null)
-                                          _numberIndicator(
-                                              context, numberText, layout),
-                                        if (numberText != null)
-                                          Text("|",
-                                              style: GoogleFonts.teko(
-                                                  textStyle: context
-                                                      .textTheme.bodyLarge)),
-                                        _podcastTitle(episode, context, layout),
-                                        Spacer(),
-                                        _pubDate(
-                                            context, episode, layout, showNew),
-                                      ],
-                                    ),
-                                  ),
-                                  Expanded(
-                                      flex: 5,
-                                      child: _title(episode, context, layout)),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Row(
-                                      children: <Widget>[
-                                        if (showLiked)
-                                          _isLikedIndicator(
-                                              episode, context, layout),
-                                        Spacer(),
-                                        _lengthAndSize(context, layout, episode)
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          ],
-                        )
-                      : _title(episode, context, layout),
-                ),
-                if (layout != Layout.large)
-                  Expanded(
-                    flex: 2,
-                    child: Row(
-                      children: <Widget>[
-                        if (showLiked)
-                          _isLikedIndicator(episode, context, layout),
-                        Spacer(),
-                        _lengthAndSize(context, layout, episode),
-                      ],
+                          SizedBox(
+                            width: 5,
+                          ),
+                          if (numberText != null)
+                            _numberIndicator(context, numberText!, layout),
+                          Spacer(),
+                          _pubDate(context, episode, layout, showNew),
+                        ],
+                      ),
                     ),
+                  Expanded(
+                    flex: layout == Layout.small ? 10 : 7,
+                    child: layout == Layout.large
+                        ? Row(
+                            children: [
+                              _circleImage(
+                                context,
+                                openPodcast,
+                                preferEpisodeImage,
+                                radius: context.width / 6,
+                                episode: episode,
+                                color: episode.getColorScheme(context).primary,
+                              ),
+                              SizedBox(
+                                width: 5,
+                              ),
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    Expanded(
+                                      flex: 2,
+                                      child: Row(
+                                        children: <Widget>[
+                                          if (numberText != null)
+                                            _numberIndicator(
+                                                context, numberText!, layout),
+                                          if (numberText != null)
+                                            Text("|",
+                                                style: GoogleFonts.teko(
+                                                    textStyle: context
+                                                        .textTheme.bodyLarge)),
+                                          _podcastTitle(
+                                              episode, context, layout),
+                                          Spacer(),
+                                          _pubDate(context, episode, layout,
+                                              showNew),
+                                        ],
+                                      ),
+                                    ),
+                                    Expanded(
+                                        flex: 5,
+                                        child:
+                                            _title(episode, context, layout)),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Row(
+                                        children: <Widget>[
+                                          if (showLiked)
+                                            _isLikedIndicator(
+                                                episode, context, layout),
+                                          Spacer(),
+                                          _lengthAndSize(
+                                              context, layout, episode)
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            ],
+                          )
+                        : _title(episode, context, layout),
                   ),
-              ],
+                  if (layout != Layout.large)
+                    Expanded(
+                      flex: 2,
+                      child: Row(
+                        children: <Widget>[
+                          if (showLiked)
+                            _isLikedIndicator(episode, context, layout),
+                          Spacer(),
+                          _lengthAndSize(context, layout, episode),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+    }
   }
 }
 
 Widget _progressLowerlay(BuildContext context, double seekValue, Layout layout,
-    {bool hide = false}) {
-  DBHelper dbHelper = DBHelper();
-  return hide
-      ? Center()
-      : Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(layout == Layout.small
-                ? 12
-                : layout == Layout.medium
-                    ? 16
-                    : 20),
-          ),
-          clipBehavior: Clip.hardEdge,
-          height: double.infinity,
-          child: LinearProgressIndicator(
-              color: context.realDark
+    {bool hide = false, AnimationController? animator}) {
+  return Opacity(
+    opacity: animator == null
+        ? hide
+            ? 0
+            : 1
+        : 1 - animator.value,
+    child: Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(layout == Layout.small
+            ? 12
+            : layout == Layout.medium
+                ? 16
+                : 20),
+      ),
+      clipBehavior: Clip.hardEdge,
+      height: double.infinity,
+      child: LinearProgressIndicator(
+          color: context.realDark
+              ? context.background.withOpacity(0.7)
+              : context.brightness == Brightness.light
                   ? context.background.withOpacity(0.7)
-                  : context.brightness == Brightness.light
-                      ? context.background.withOpacity(0.7)
-                      : context.background.withOpacity(0.6),
-              backgroundColor: Colors.transparent,
-              value: seekValue),
-        );
+                  : context.background.withOpacity(0.6),
+          backgroundColor: Colors.transparent,
+          value: seekValue),
+    ),
+  );
 }
 
 BoxDecoration _cardDecoration(
     BuildContext context, EpisodeBrief episode, Layout layout,
     {bool selected = false, AnimationController? animator}) {
   return BoxDecoration(
-    color: context.realDark
-        ? selected
+      color: context.realDark
+          ? animator == null
+              ? selected
+                  ? Color.lerp(
+                      episode.getColorScheme(context).secondaryContainer,
+                      context.background,
+                      0.4)
+                  : context.background
+              : selected
+                  ? ColorTween(
+                          begin: context.background,
+                          end: Color.lerp(context.background,
+                              episode.getColorScheme(context).primary, 0.25))
+                      .animate(animator)
+                      .value!
+                  : context.background
+          : animator == null
+              ? selected
+                  ? Color.lerp(
+                      episode.getColorScheme(context).secondaryContainer,
+                      context.background,
+                      0.4)
+                  : episode.getColorScheme(context).secondaryContainer
+              : selected
+                  ? ColorTween(
+                          begin: episode
+                              .getColorScheme(context)
+                              .secondaryContainer,
+                          end: Color.lerp(
+                              episode
+                                  .getColorScheme(context)
+                                  .secondaryContainer,
+                              episode.getColorScheme(context).primary,
+                              context.brightness == Brightness.light
+                                  ? 0.25
+                                  : 0.15))
+                      .animate(animator)
+                      .value!
+                  : episode.getColorScheme(context).secondaryContainer,
+      borderRadius: BorderRadius.circular(layout == Layout.small
+          ? 12
+          : layout == Layout.medium
+              ? 16
+              : 20),
+      border: Border.all(
+        color: context.realDark
             ? animator == null
-                ? Color.lerp(episode.getColorScheme(context).secondaryContainer,
-                    context.background, 0.4)
+                ? selected
+                    ? Color.lerp(episode.getColorScheme(context).primary,
+                        Colors.white, 0.5)!
+                    : episode.getColorScheme(context).primary
                 : ColorTween(
-                        begin: context.background,
-                        end: Color.lerp(
-                            episode.getColorScheme(context).secondaryContainer,
-                            context.background,
-                            0.3))
+                        begin: episode.getColorScheme(context).primary,
+                        end: Color.lerp(episode.getColorScheme(context).primary,
+                            Colors.white, 0.5)!)
                     .animate(animator)
                     .value!
             : animator == null
-                ? context.background
+                ? selected
+                    ? episode.getColorScheme(context).primary
+                    : Colors.transparent
                 : ColorTween(
-                        begin: Color.lerp(
-                            episode.getColorScheme(context).secondaryContainer,
-                            context.background,
-                            0.4),
-                        end: context.background)
+                        begin: Colors.transparent,
+                        end: episode.getColorScheme(context).primary)
                     .animate(animator)
-                    .value!
-        : episode.getColorScheme(context).secondaryContainer,
-    borderRadius: BorderRadius.circular(layout == Layout.small
-        ? 12
-        : layout == Layout.medium
-            ? 16
-            : 20),
-    border: Border.all(
-      color: context.realDark
-          ? episode.getColorScheme(context).primary
-          : selected
-              ? animator == null
-                  ? episode.getColorScheme(context).primary
-                  : ColorTween(
-                          begin: Colors.transparent,
-                          end: episode.getColorScheme(context).primary)
-                      .animate(animator)
-                      .value!
-              : animator == null
-                  ? Colors.transparent
-                  : ColorTween(
-                          begin: episode.getColorScheme(context).primary,
-                          end: Colors.transparent)
-                      .animate(animator)
-                      .value!,
-      width: 1.0,
-    ),
-    boxShadow: selected
-        ? [
-            BoxShadow(
-              color: episode.getColorScheme(context).primary,
-              blurRadius: animator == null
+                    .value!,
+        width: 1.0,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: episode.getColorScheme(context).primary,
+          blurRadius: animator == null
+              ? selected
                   ? 8
-                  : Tween<double>(begin: 5, end: 8).animate(animator).value,
-              spreadRadius: animator == null
+                  : 5
+              : Tween<double>(begin: 5, end: 8).animate(animator).value,
+          spreadRadius: animator == null
+              ? selected
                   ? 2
-                  : Tween<double>(begin: -1, end: 2).animate(animator).value,
-              offset: Offset.fromDirection(0, 0),
-            )
-          ]
-        : [
-            BoxShadow(
-              color: episode.getColorScheme(context).primary,
-              blurRadius: animator == null
-                  ? 5
-                  : Tween<double>(begin: 8, end: 5).animate(animator).value,
-              spreadRadius: animator == null
-                  ? -1
-                  : Tween<double>(begin: context.realDark ? 3 : 2, end: -1)
-                      .animate(animator)
-                      .value,
-              offset: Offset.fromDirection(0, 0),
-            )
-          ],
-  );
+                  : -1
+              : Tween<double>(begin: -1, end: 2).animate(animator).value,
+          offset: Offset.fromDirection(0, 0),
+        )
+      ]);
 }
 
 Widget _layoutOneCard(BuildContext context, EpisodeBrief episode, Layout layout,

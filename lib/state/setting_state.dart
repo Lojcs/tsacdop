@@ -134,6 +134,8 @@ class SettingState extends ChangeNotifier {
   /// Load locale.
   Locale? get locale => _locale;
 
+  EdgeInsets? originalPadding;
+
   /// Set thememode. default auto.
   ThemeMode? _theme;
   ThemeMode? get theme => _theme;

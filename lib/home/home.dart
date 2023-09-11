@@ -94,180 +94,184 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     final settings = Provider.of<SettingState>(context, listen: false);
     final s = context.s;
     return Selector<AudioPlayerNotifier, Tuple2<bool, EpisodeBrief?>>(
-      selector: (_, audio) => Tuple2(audio.playerRunning, audio.episode),
-      builder: (_, data, __) => AnnotatedRegion<SystemUiOverlayStyle>(
-        value: SystemUiOverlayStyle(
-            systemNavigationBarIconBrightness: context.brightness,
-            statusBarIconBrightness: context.iconBrightness,
-            systemNavigationBarColor: data.item1
-                ? data.item2!.getColorScheme(context).secondaryContainer
-                : Colors.transparent,
-            statusBarColor: context.background,
-            systemNavigationBarContrastEnforced: false),
-        child: WillPopScope(
-          onWillPop: () async {
-            if (_playerKey.currentState != null &&
-                _playerKey.currentState!.initSize! > 100) {
-              _playerKey.currentState!.backToMini();
-              return false;
-            } else if (Platform.isAndroid) {
-              _androidAppRetain.invokeMethod('sendToBackground');
-              return false;
-            } else {
-              return true;
-            }
-          },
-          child: Scaffold(
-            key: _scaffoldKey,
-            backgroundColor: context.background,
-            body: SafeArea(
-              bottom: data.item1,
-              child: Stack(children: <Widget>[
-                NestedScrollView(
-                  innerScrollPositionKeyBuilder: () {
-                    return Key('tab${_controller!.index}');
-                  },
-                  pinnedHeaderSliverHeightBuilder: () => 50,
-                  headerSliverBuilder: (context, innerBoxScrolled) {
-                    return <Widget>[
-                      SliverToBoxAdapter(
-                        child: Column(
-                          children: <Widget>[
-                            SizedBox(
-                              height: 50.0,
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: <Widget>[
-                                  featureDiscoveryOverlay(
-                                    context,
-                                    featureId: addFeature,
-                                    tapTarget: Icon(Icons.add_circle_outline),
-                                    title: s.featureDiscoverySearch,
-                                    backgroundColor: Colors.cyan[600],
-                                    buttonColor: Colors.cyan[500],
-                                    description: s.featureDiscoverySearchDes,
-                                    child: IconButton(
-                                      tooltip: s.add,
-                                      splashRadius: 20,
-                                      icon: Icon(Icons.add_circle_outline),
-                                      onPressed: () async {
-                                        await showSearch<int?>(
-                                          context: context,
-                                          delegate: MyHomePageDelegate(
-                                              searchFieldLabel:
-                                                  s.searchPodcast),
-                                        );
-                                      },
-                                    ),
+        selector: (_, audio) => Tuple2(audio.playerRunning, audio.episode),
+        builder: (_, data, __) {
+          context.originalPadding = MediaQuery.of(context).padding;
+          return AnnotatedRegion<SystemUiOverlayStyle>(
+            value: SystemUiOverlayStyle(
+                systemNavigationBarIconBrightness: context.brightness,
+                statusBarIconBrightness: context.iconBrightness,
+                systemNavigationBarColor: data.item1
+                    ? context.colorScheme.secondaryContainer
+                    : Colors.transparent,
+                statusBarColor: context.background,
+                systemNavigationBarContrastEnforced: false),
+            child: WillPopScope(
+              onWillPop: () async {
+                if (_playerKey.currentState != null &&
+                    _playerKey.currentState!.initSize! > 100) {
+                  _playerKey.currentState!.backToMini();
+                  return false;
+                } else if (Platform.isAndroid) {
+                  _androidAppRetain.invokeMethod('sendToBackground');
+                  return false;
+                } else {
+                  return true;
+                }
+              },
+              child: Scaffold(
+                key: _scaffoldKey,
+                backgroundColor: context.background,
+                body: SafeArea(
+                  bottom: data.item1,
+                  child: Stack(children: <Widget>[
+                    NestedScrollView(
+                      innerScrollPositionKeyBuilder: () {
+                        return Key('tab${_controller!.index}');
+                      },
+                      pinnedHeaderSliverHeightBuilder: () => 50,
+                      headerSliverBuilder: (context, innerBoxScrolled) {
+                        return <Widget>[
+                          SliverToBoxAdapter(
+                            child: Column(
+                              children: <Widget>[
+                                SizedBox(
+                                  height: 50.0,
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: <Widget>[
+                                      featureDiscoveryOverlay(
+                                        context,
+                                        featureId: addFeature,
+                                        tapTarget:
+                                            Icon(Icons.add_circle_outline),
+                                        title: s.featureDiscoverySearch,
+                                        backgroundColor: Colors.cyan[600],
+                                        buttonColor: Colors.cyan[500],
+                                        description:
+                                            s.featureDiscoverySearchDes,
+                                        child: IconButton(
+                                          tooltip: s.add,
+                                          splashRadius: 20,
+                                          icon: Icon(Icons.add_circle_outline),
+                                          onPressed: () async {
+                                            await showSearch<int?>(
+                                              context: context,
+                                              delegate: MyHomePageDelegate(
+                                                  searchFieldLabel:
+                                                      s.searchPodcast),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                      GestureDetector(
+                                        onTap: () {
+                                          if (context.brightness ==
+                                              Brightness.light) {
+                                            settings.setTheme = ThemeMode.dark;
+                                            settings.setRealDark = false;
+                                          } else if (settings.realDark!) {
+                                            settings.setTheme = ThemeMode.light;
+                                          } else {
+                                            settings.setRealDark = true;
+                                          }
+                                        },
+                                        child: Text(
+                                          'Tsacdop',
+                                          style: GoogleFonts.quicksand(
+                                              color: context.accentColor,
+                                              textStyle: context
+                                                  .textTheme.headlineLarge),
+                                        ),
+                                      ),
+                                      featureDiscoveryOverlay(
+                                        context,
+                                        featureId: menuFeature,
+                                        tapTarget: Icon(Icons.more_vert),
+                                        backgroundColor: Colors.cyan[500],
+                                        buttonColor: Colors.cyan[600],
+                                        title: s.featureDiscoveryOMPL,
+                                        description: s.featureDiscoveryOMPLDes,
+                                        child: Padding(
+                                          padding:
+                                              const EdgeInsets.only(right: 5.0),
+                                          child: PopupMenu(),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  GestureDetector(
-                                    onTap: () {
-                                      if (context.brightness ==
-                                          Brightness.light) {
-                                        settings.setTheme = ThemeMode.dark;
-                                        settings.setRealDark = false;
-                                      } else if (settings.realDark!) {
-                                        settings.setTheme = ThemeMode.light;
-                                      } else {
-                                        settings.setRealDark = true;
-                                      }
-                                    },
-                                    child: Text(
-                                      'Tsacdop',
-                                      style: GoogleFonts.quicksand(
-                                          color: context.accentColor,
-                                          textStyle:
-                                              context.textTheme.headlineLarge),
-                                    ),
+                                ),
+                                Import(),
+                              ],
+                            ),
+                          ),
+                          SliverToBoxAdapter(
+                            child: SizedBox(
+                              height: height,
+                              width: context.width,
+                              child: ScrollPodcasts(),
+                            ),
+                          ),
+                          SliverPersistentHeader(
+                            delegate: _SliverAppBarDelegate(
+                              TabBar(
+                                indicator: _getIndicator(context),
+                                isScrollable: true,
+                                indicatorSize: TabBarIndicatorSize.tab,
+                                controller: _controller,
+                                labelStyle: context.textTheme.titleMedium,
+                                tabs: <Widget>[
+                                  Tab(
+                                    text: s.homeTabMenuRecent,
                                   ),
-                                  featureDiscoveryOverlay(
-                                    context,
-                                    featureId: menuFeature,
-                                    tapTarget: Icon(Icons.more_vert),
-                                    backgroundColor: Colors.cyan[500],
-                                    buttonColor: Colors.cyan[600],
-                                    title: s.featureDiscoveryOMPL,
-                                    description: s.featureDiscoveryOMPLDes,
-                                    child: Padding(
-                                      padding:
-                                          const EdgeInsets.only(right: 5.0),
-                                      child: PopupMenu(),
-                                    ),
+                                  Tab(
+                                    text: s.homeTabMenuFavotite,
                                   ),
+                                  Tab(
+                                    text: s.download,
+                                  )
                                 ],
                               ),
                             ),
-                            Import(),
-                          ],
-                        ),
-                      ),
-                      SliverToBoxAdapter(
-                        child: SizedBox(
-                          height: height,
-                          width: context.width,
-                          child: ScrollPodcasts(),
-                        ),
-                      ),
-                      SliverPersistentHeader(
-                        delegate: _SliverAppBarDelegate(
-                          TabBar(
-                            indicator: _getIndicator(context),
-                            isScrollable: true,
-                            indicatorSize: TabBarIndicatorSize.tab,
-                            controller: _controller,
-                            labelStyle: context.textTheme.titleMedium,
-                            tabs: <Widget>[
-                              Tab(
-                                text: s.homeTabMenuRecent,
-                              ),
-                              Tab(
-                                text: s.homeTabMenuFavotite,
-                              ),
-                              Tab(
-                                text: s.download,
-                              )
-                            ],
+                            pinned: true,
                           ),
-                        ),
-                        pinned: true,
+                        ];
+                      },
+                      body: Column(
+                        children: [
+                          Expanded(
+                            child: TabBarView(
+                              // TODO: Add pull to refresh?
+                              controller: _controller,
+                              children: <Widget>[
+                                NestedScrollViewInnerScrollPositionKeyWidget(
+                                  Key('tab0'),
+                                  _RecentUpdate(),
+                                ),
+                                NestedScrollViewInnerScrollPositionKeyWidget(
+                                  Key('tab1'),
+                                  _MyFavorite(),
+                                ),
+                                NestedScrollViewInnerScrollPositionKeyWidget(
+                                  Key('tab2'),
+                                  _MyDownload(),
+                                ),
+                              ],
+                            ),
+                          )
+                        ],
                       ),
-                    ];
-                  },
-                  body: Column(
-                    children: [
-                      Expanded(
-                        child: TabBarView(
-                          // TODO: Add pull to refresh?
-                          controller: _controller,
-                          children: <Widget>[
-                            NestedScrollViewInnerScrollPositionKeyWidget(
-                              Key('tab0'),
-                              _RecentUpdate(),
-                            ),
-                            NestedScrollViewInnerScrollPositionKeyWidget(
-                              Key('tab1'),
-                              _MyFavorite(),
-                            ),
-                            NestedScrollViewInnerScrollPositionKeyWidget(
-                              Key('tab2'),
-                              _MyDownload(),
-                            ),
-                          ],
-                        ),
-                      )
-                    ],
-                  ),
+                    ),
+                    Container(
+                      child: PlayerWidget(playerKey: _playerKey),
+                    )
+                  ]),
                 ),
-                Container(
-                  child: PlayerWidget(playerKey: _playerKey),
-                )
-              ]),
+              ),
             ),
-          ),
-        ),
-      ),
-    );
+          );
+        });
   }
 }
 

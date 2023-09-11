@@ -180,9 +180,9 @@ class OpenContainerWrapper extends StatelessWidget {
         flightWidgetEndOffsetY: data.item1
             ? context.height -
                 kMinPlayerHeight[data.item2!.index]! -
-                64 -
-                MediaQuery.of(context).padding.bottom
-            : context.height - 64 - MediaQuery.of(context).padding.bottom,
+                40 -
+                context.originalPadding.bottom
+            : context.height - 40 - context.originalPadding.bottom,
         transitionDuration: Duration(milliseconds: 400),
         beginColor: Theme.of(context).primaryColor,
         endColor: Theme.of(context).primaryColor,

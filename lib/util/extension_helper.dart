@@ -43,6 +43,12 @@ extension ContextExtension on BuildContext {
   bool get realDark =>
       Provider.of<SettingState>(this, listen: false).realDark! &&
       this.brightness == Brightness.dark;
+  EdgeInsets get originalPadding =>
+      Provider.of<SettingState>(this, listen: false).originalPadding ??
+      EdgeInsets.all(0);
+  set originalPadding(EdgeInsets padding) {
+    Provider.of<SettingState>(this, listen: false).originalPadding = padding;
+  }
 }
 
 extension IntExtension on int {
