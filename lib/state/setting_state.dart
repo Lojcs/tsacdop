@@ -160,10 +160,6 @@ class SettingState extends ChangeNotifier {
             iconTheme: IconThemeData(color: Colors.black),
             systemOverlayStyle: SystemUiOverlayStyle.dark),
         textTheme: TextTheme(
-          headlineSmall: TextStyle(
-              fontSize: 20.0,
-              color: Colors.black,
-              fontWeight: FontWeight.normal),
           bodyLarge: TextStyle(
               fontSize: 15.0,
               color: Colors.black,
@@ -198,6 +194,18 @@ class SettingState extends ChangeNotifier {
               fontWeight: FontWeight.normal),
           titleSmall: TextStyle(
               fontSize: 14.0,
+              color: Colors.black,
+              fontWeight: FontWeight.normal),
+          headlineLarge: TextStyle(
+              fontSize: 28.0,
+              color: Colors.black,
+              fontWeight: FontWeight.normal),
+          headlineMedium: TextStyle(
+              fontSize: 24.0,
+              color: Colors.black,
+              fontWeight: FontWeight.normal),
+          headlineSmall: TextStyle(
+              fontSize: 20.0,
               color: Colors.black,
               fontWeight: FontWeight.normal),
         ),
@@ -227,10 +235,6 @@ class SettingState extends ChangeNotifier {
         ),
         brightness: Brightness.dark,
         textTheme: TextTheme(
-          headlineSmall: TextStyle(
-              fontSize: 20.0,
-              color: Colors.white,
-              fontWeight: FontWeight.normal),
           bodyLarge: TextStyle(
               fontSize: 15.0,
               color: Colors.white,
@@ -265,6 +269,18 @@ class SettingState extends ChangeNotifier {
               fontWeight: FontWeight.normal),
           titleSmall: TextStyle(
               fontSize: 14.0,
+              color: Colors.white,
+              fontWeight: FontWeight.normal),
+          headlineLarge: TextStyle(
+              fontSize: 28.0,
+              color: Colors.white,
+              fontWeight: FontWeight.normal),
+          headlineMedium: TextStyle(
+              fontSize: 24.0,
+              color: Colors.white,
+              fontWeight: FontWeight.normal),
+          headlineSmall: TextStyle(
+              fontSize: 20.0,
               color: Colors.white,
               fontWeight: FontWeight.normal),
         ),

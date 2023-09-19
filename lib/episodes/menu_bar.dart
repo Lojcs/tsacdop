@@ -11,6 +11,8 @@ import 'package:tsacdop/type/episodebrief.dart';
 import 'package:tsacdop/util/extension_helper.dart';
 import 'package:tsacdop/widgets/custom_widget.dart';
 
+import '../util/helpers.dart';
+
 class MenuBar extends StatefulWidget {
   final EpisodeBrief? episodeItem;
   final String? heroTag;
@@ -75,7 +77,8 @@ class MenuBarState extends State<MenuBar> {
                           onTap: () async {
                             episodeState.setLiked(widget.episodeItem!);
                             OverlayEntry _overlayEntry;
-                            _overlayEntry = _createOverlayEntry();
+                            _overlayEntry =
+                                createOverlayEntry(context, leftOffset: 50);
                             Overlay.of(context)!.insert(_overlayEntry);
                             await Future.delayed(Duration(seconds: 2));
                             _overlayEntry.remove();
@@ -193,20 +196,4 @@ class MenuBarState extends State<MenuBar> {
           ),
         ),
       );
-
-  OverlayEntry _createOverlayEntry() {
-    RenderBox renderBox = context.findRenderObject() as RenderBox;
-    var offset = renderBox.localToGlobal(Offset.zero);
-    return OverlayEntry(
-      builder: (constext) => Positioned(
-        left: offset.dx + 50,
-        top: offset.dy - 60,
-        child: Container(
-            width: 70,
-            height: 100,
-            //color: Colors.grey[200],
-            child: HeartOpen(width: 50, height: 80)),
-      ),
-    );
-  }
 }

@@ -101,9 +101,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             value: SystemUiOverlayStyle(
                 systemNavigationBarIconBrightness: context.brightness,
                 statusBarIconBrightness: context.iconBrightness,
-                systemNavigationBarColor: data.item1
-                    ? context.colorScheme.secondaryContainer
-                    : Colors.transparent,
+                systemNavigationBarColor:
+                    data.item1 ? context.accentBackground : context.background,
                 statusBarColor: context.background,
                 systemNavigationBarContrastEnforced: false),
             child: WillPopScope(
@@ -289,7 +288,7 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     final s = context.s;
     return Container(
-      color: context.background,
+      color: Colors.transparent,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -867,7 +866,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
                                   Container(
                                     height: 40,
                                     decoration: BoxDecoration(
-                                        color: context.colorScheme.background),
+                                        color: context.background),
                                     child: Row(
                                       children: <Widget>[
                                         _switchGroupButton(),

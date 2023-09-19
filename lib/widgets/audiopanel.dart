@@ -42,17 +42,19 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
   void initState() {
     initSize = widget.minHeight;
     _controller =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 300))
+        AnimationController(vsync: this, duration: Duration(milliseconds: 175))
           ..addListener(() {
             if (mounted) setState(() {});
           });
     _slowController =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 500))
+        AnimationController(vsync: this, duration: Duration(milliseconds: 350))
           ..addListener(() {
             if (mounted) setState(() {});
           });
     if (Provider.of<AudioPlayerNotifier>(context, listen: false)
         .playerInitialStart) {
+      Provider.of<AudioPlayerNotifier>(context, listen: false)
+          .playerInitialStart = false;
       _animation = Tween<double>(begin: 0, end: 0).animate(_controller);
       _animatePanel(end: initSize, slow: true);
     } else {
@@ -149,10 +151,8 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
                 ),
                 if (widget.minHeight + 50 > _animation.value)
                   Opacity(
-                    opacity: math.min(
-                        1,
-                        math.max(0,
-                            (widget.minHeight + 50 - _animation.value) / 50)),
+                    opacity: ((widget.minHeight + 50 - _animation.value) / 50)
+                        .clamp(0, 1),
                     child: widget.miniPanel,
                   ),
               ],
@@ -178,7 +178,7 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
     _animation = Tween<double>(begin: _animation.value, end: end).animate(
         CurvedAnimation(
             parent: controller,
-            curve: bounce ? Curves.easeOutBack : Curves.easeOutExpo));
+            curve: bounce ? Curves.easeOutBack : Curves.easeOutQuad));
     initSize = end;
     controller.forward();
   }

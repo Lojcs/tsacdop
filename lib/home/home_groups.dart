@@ -191,7 +191,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                       ),
                       Container(
                           height: 70,
-                          color: context.background,
+                          color: Colors.transparent,
                           child: Row(
                             children: <Widget>[
                               _circleContainer(context),
@@ -204,7 +204,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                 ),
                 Container(
                   height: (width - 20) / 3 + 40,
-                  color: context.background,
+                  color: Colors.transparent,
                   margin: EdgeInsets.symmetric(horizontal: 15),
                   child: Center(
                       child: _groupIndex == 0
@@ -342,7 +342,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                       height: 70,
                       width: width,
                       alignment: Alignment.centerLeft,
-                      color: context.background,
+                      color: Colors.transparent,
                       child: TabBar(
                         labelPadding: EdgeInsets.fromLTRB(6.0, 5.0, 6.0, 10.0),
                         indicator: CircleTabIndicator(
@@ -375,7 +375,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
               Container(
                 height: (width - 20) / 3 + 45,
                 decoration: BoxDecoration(
-                  color: context.background,
+                  color: Colors.transparent,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: TabBarView(

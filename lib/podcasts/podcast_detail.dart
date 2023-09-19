@@ -47,7 +47,9 @@ class _PodcastDetailState extends State<PodcastDetail> {
       GlobalKey<RefreshIndicatorState>();
 
   final GlobalKey<AudioPanelState> _playerKey = GlobalKey<AudioPanelState>();
+  final GlobalKey _infoKey = GlobalKey();
   final _dbHelper = DBHelper();
+  late final Color _podcastAccent;
 
   /// Episodes total count.
   int? _episodeCount;
@@ -93,6 +95,12 @@ class _PodcastDetailState extends State<PodcastDetail> {
   ///Show podcast info.
   bool? _showInfo;
 
+  double _infoHeightValue = 0;
+  double get _infoHeight => _infoHeightValue;
+  set _infoHeight(double height) {
+    _infoHeightValue = math.max(_infoHeightValue, height);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -105,6 +113,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
     _selectAfter = false;
     _selectBefore = false;
     _showInfo = false;
+    _podcastAccent = widget.podcastLocal!.primaryColor!.toColor();
   }
 
   @override
@@ -193,16 +202,6 @@ class _PodcastDetailState extends State<PodcastDetail> {
     return episodes;
   }
 
-  Future<Tuple2<String?, List<PodcastHost>?>> _getHosts(
-      PodcastLocal podcastLocal) async {
-    if (!podcastLocal.provider!.contains('fireside')) return Tuple2('', []);
-    var data = FiresideData(podcastLocal.id, podcastLocal.link);
-    await data.getData();
-    var backgroundImage = data.background;
-    var hosts = data.hosts;
-    return Tuple2(backgroundImage, hosts);
-  }
-
   Future<int?> _getLayout() async {
     var storage = KeyValueStorage(podcastLayoutKey);
     var index = await storage.getInt(defaultValue: 1);
@@ -230,161 +229,6 @@ class _PodcastDetailState extends State<PodcastDetail> {
     await _dbHelper.removePodcastNewMark(widget.podcastLocal!.id);
   }
 
-  Widget _podcastInfo(BuildContext context) {
-    return Container(
-      height: 170,
-      padding: EdgeInsets.only(top: 50, left: 80, right: 130),
-      alignment: Alignment.topLeft,
-      child: Text(
-        widget.podcastLocal!.title!,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        style: context.textTheme.headline5!.copyWith(color: Colors.white),
-      ),
-    );
-  }
-
-  Widget _podcastLink(
-      {required String title,
-      Widget? child,
-      VoidCallback? onTap,
-      required Color backgroundColor}) {
-    return Container(
-      padding: EdgeInsets.fromLTRB(5, 10, 5, 0),
-      width: 60.0,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          InkWell(
-            borderRadius: BorderRadius.circular(20),
-            onTap: onTap,
-            child: CircleAvatar(
-              radius: 20,
-              child: child,
-              backgroundColor: backgroundColor.withOpacity(0.5),
-            ),
-          ),
-          SizedBox(height: 4),
-          Text(
-            title,
-            style: context.textTheme.subtitle2,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.fade,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _hostsList(BuildContext context, PodcastLocal podcastLocal) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        FutureBuilder<Tuple2<String?, List<PodcastHost>?>>(
-            future: _getHosts(podcastLocal),
-            builder: (context, snapshot) {
-              return Container(
-                width: double.infinity,
-                alignment: Alignment.centerLeft,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _podcastLink(
-                            title: 'Link',
-                            child: Icon(Icons.link, size: 30),
-                            backgroundColor: Colors.green[600]!,
-                            onTap: () => widget.podcastLocal!.link!.launchUrl),
-                        _podcastLink(
-                            title: 'Rss',
-                            child: Icon(LineIcons.rssSquare, size: 30),
-                            backgroundColor: Colors.blue[600]!,
-                            onTap: () => widget.podcastLocal!.rssUrl.launchUrl),
-                        if (widget.podcastLocal!.funding.isNotEmpty)
-                          for (var funding in widget.podcastLocal!.funding)
-                            _podcastLink(
-                                title: 'Donate',
-                                child: Icon(
-                                    funding.contains(
-                                      'paypal',
-                                    )
-                                        ? LineIcons.paypal
-                                        : LineIcons.donate,
-                                    size: 30),
-                                backgroundColor: Colors.red[600]!,
-                                onTap: () => funding.launchUrl),
-                        if (snapshot.hasData)
-                          ...snapshot.data!.item2!
-                              .map<Widget>((host) {
-                                final image = host.image == kDefaultAvatar
-                                    ? kDefaultAvatar
-                                    : host.image;
-                                return Container(
-                                  padding: EdgeInsets.fromLTRB(5, 10, 5, 0),
-                                  width: 60.0,
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: <Widget>[
-                                      CachedNetworkImage(
-                                        imageUrl: image!,
-                                        progressIndicatorBuilder:
-                                            (context, url, downloadProgress) =>
-                                                CircleAvatar(
-                                          backgroundColor: Colors.cyan[600]!
-                                              .withOpacity(0.5),
-                                          child: SizedBox(
-                                            width: 30,
-                                            height: 2,
-                                            child: LinearProgressIndicator(
-                                                value:
-                                                    downloadProgress.progress),
-                                          ),
-                                        ),
-                                        errorWidget: (context, url, error) =>
-                                            CircleAvatar(
-                                          backgroundColor: Colors.grey[400],
-                                          backgroundImage:
-                                              AssetImage('assets/fireside.jpg'),
-                                        ),
-                                        imageBuilder: (context, hostImage) =>
-                                            CircleAvatar(
-                                                backgroundColor:
-                                                    Colors.grey[400],
-                                                backgroundImage: hostImage),
-                                      ),
-                                      SizedBox(height: 4),
-                                      Text(
-                                        host.name!,
-                                        style: context.textTheme.subtitle2,
-                                        textAlign: TextAlign.center,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.fade,
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              })
-                              .toList()
-                              .cast<Widget>()
-                      ]),
-                ),
-              );
-            }),
-        Container(
-          padding: EdgeInsets.fromLTRB(15, 10, 15, 10),
-          alignment: Alignment.topLeft,
-          color: context.background,
-          child: AboutPodcast(podcastLocal: widget.podcastLocal),
-        ),
-      ],
-    );
-  }
-
   Widget _customPopupMenu({
     Widget? child,
     String? tooltip,
@@ -410,291 +254,300 @@ class _PodcastDetailState extends State<PodcastDetail> {
   Widget _actionBar(BuildContext context) {
     final s = context.s;
     return SizedBox(
-        height: 30,
-        child: Row(
-          children: <Widget>[
-            SizedBox(width: 15),
-            _customPopupMenu(
-                tooltip: s.filter,
-                child: Container(
-                  height: 30,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(100),
-                      border: Border.all(color: context.primaryColorDark)),
-                  padding: EdgeInsets.symmetric(horizontal: 10),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      Text(s.filter),
-                      SizedBox(width: 5),
-                      Icon(
-                        LineIcons.filter,
-                        color:
-                            _filter != Filter.all ? context.accentColor : null,
-                        size: 18,
-                      )
-                    ],
-                  ),
-                ),
-                itemBuilder: [
-                  PopupMenuItem(
-                    value: 0,
-                    child: Row(
-                      children: [
-                        Text(s.all),
-                        Spacer(),
-                        if (_filter == Filter.all) DotIndicator(),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 1,
-                    child: Row(
-                      children: [
-                        Text(s.homeTabMenuFavotite),
-                        Spacer(),
-                        if (_filter == Filter.liked) DotIndicator()
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 2,
-                    child: Row(
-                      children: [
-                        Text(s.downloaded),
-                        Spacer(),
-                        if (_filter == Filter.downloaded) DotIndicator()
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 3,
+        height: 40,
+        child: Padding(
+            padding: EdgeInsets.only(top: 10),
+            child: Row(
+              children: <Widget>[
+                SizedBox(width: 15),
+                _customPopupMenu(
+                    tooltip: s.filter,
                     child: Container(
-                      padding:
-                          EdgeInsets.only(top: 5, bottom: 5, left: 2, right: 2),
+                      height: 30,
                       decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(5),
-                          border: Border.all(
-                              width: 2,
-                              color: context.textColor.withOpacity(0.2))),
-                      child: _query == ''
-                          ? Row(
-                              children: [
-                                Text(
-                                  s.search,
-                                  style: TextStyle(
-                                    color: context.textColor.withOpacity(0.4),
-                                  ),
-                                ),
-                                Spacer()
-                              ],
-                            )
-                          : Row(
-                              children: [
-                                Expanded(
-                                  child: Text(_query,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                          color: context.accentColor)),
-                                ),
-                              ],
-                            ),
-                    ),
-                  ),
-                ],
-                onSelected: (value) {
-                  switch (value) {
-                    case 0:
-                      if (_filter != Filter.all) {
-                        setState(() {
-                          _filter = Filter.all;
-                          _query = '';
-                        });
-                      }
-                      break;
-                    case 1:
-                      if (_filter != Filter.liked) {
-                        setState(() {
-                          _query = '';
-                          _filter = Filter.liked;
-                        });
-                      }
-                      break;
-                    case 2:
-                      if (_filter != Filter.downloaded) {
-                        setState(() {
-                          _query = '';
-                          _filter = Filter.downloaded;
-                        });
-                      }
-                      break;
-                    case 3:
-                      showGeneralDialog(
-                          context: context,
-                          barrierDismissible: true,
-                          barrierLabel: MaterialLocalizations.of(context)
-                              .modalBarrierDismissLabel,
-                          barrierColor: Colors.black54,
-                          transitionDuration: const Duration(milliseconds: 200),
-                          pageBuilder:
-                              (context, animaiton, secondaryAnimation) =>
-                                  SearchEpisode(
-                                    onSearch: (query) {
-                                      setState(() {
-                                        if (query != null && query != '') {
-                                          _query = query;
-                                          _filter = Filter.search;
-                                        }
-                                      });
-                                    },
-                                  ));
-                      break;
-                    default:
-                  }
-                }),
-            Spacer(),
-            FutureBuilder<int?>(
-                future: _getNewCount(),
-                initialData: 0,
-                builder: (context, snapshot) {
-                  return snapshot.data != 0
-                      ? Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 4),
-                          child: Material(
-                            color: Colors.transparent,
-                            clipBehavior: Clip.hardEdge,
-                            borderRadius: BorderRadius.circular(100),
-                            child: SizedBox(
-                              width: 30,
-                              child: IconButton(
-                                  padding: EdgeInsets.only(bottom: 5),
-                                  tooltip: s.removeNewMark,
-                                  icon: Container(
-                                      height: 18,
-                                      width: 18,
-                                      child: CustomPaint(
-                                          painter: RemoveNewFlagPainter(
-                                              context
-                                                  .textTheme.bodyText1!.color,
-                                              Colors.red))),
-                                  onPressed: () async {
-                                    await _removePodcastNewMark();
-                                    if (mounted) {
-                                      setState(() {});
-                                    }
-                                  }),
-                            ),
-                          ),
-                        )
-                      : Center();
-                }),
-            if (!widget.hide)
-              Material(
-                  color: Colors.transparent,
-                  clipBehavior: Clip.hardEdge,
-                  borderRadius: BorderRadius.circular(100),
-                  child: TweenAnimationBuilder(
-                    duration: Duration(milliseconds: 500),
-                    curve: Curves.easeInOutQuart,
-                    tween: Tween<double>(begin: 0.0, end: 1.0),
-                    builder: (context, dynamic angle, child) =>
-                        Transform.rotate(
-                      angle: math.pi * 2 * angle,
-                      child: SizedBox(
-                        width: 30,
-                        child: IconButton(
-                          padding: EdgeInsets.zero,
-                          tooltip: s.homeSubMenuSortBy,
-                          icon: Icon(
-                            _sortOrder == SortOrder.ASC
-                                ? LineIcons.hourglassStart
-                                : LineIcons.hourglassEnd,
-                            color: _sortOrder == SortOrder.ASC
-                                ? context.accentColor
-                                : null,
-                          ),
-                          iconSize: 18,
-                          onPressed: () {
-                            setState(() => {
-                                  if (_sortOrder == SortOrder.ASC)
-                                    _sortOrder = SortOrder.DESC
-                                  else
-                                    _sortOrder = SortOrder.ASC
-                                });
-                          },
-                        ),
+                          borderRadius: BorderRadius.circular(100),
+                          border: Border.all(color: context.primaryColorDark)),
+                      padding: EdgeInsets.symmetric(horizontal: 10),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Text(s.filter),
+                          SizedBox(width: 5),
+                          Icon(
+                            LineIcons.filter,
+                            color:
+                                _filter != Filter.all ? _podcastAccent : null,
+                            size: 18,
+                          )
+                        ],
                       ),
                     ),
-                  )),
-            FutureBuilder<bool>(
-                future: _getHideListened(),
-                builder: (context, snapshot) {
-                  if (_hideListened == null) {
-                    _hideListened = snapshot.data;
-                  }
-                  return Material(
+                    itemBuilder: [
+                      PopupMenuItem(
+                        value: 0,
+                        child: Row(
+                          children: [
+                            Text(s.all),
+                            Spacer(),
+                            if (_filter == Filter.all)
+                              DotIndicator(color: _podcastAccent),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 1,
+                        child: Row(
+                          children: [
+                            Text(s.homeTabMenuFavotite),
+                            Spacer(),
+                            if (_filter == Filter.liked)
+                              DotIndicator(color: _podcastAccent)
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 2,
+                        child: Row(
+                          children: [
+                            Text(s.downloaded),
+                            Spacer(),
+                            if (_filter == Filter.downloaded)
+                              DotIndicator(color: _podcastAccent)
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 3,
+                        child: Container(
+                          padding: EdgeInsets.only(
+                              top: 5, bottom: 5, left: 2, right: 2),
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(5),
+                              border: Border.all(
+                                  width: 2,
+                                  color: context.textColor.withOpacity(0.2))),
+                          child: _query == ''
+                              ? Row(
+                                  children: [
+                                    Text(
+                                      s.search,
+                                      style: TextStyle(
+                                        color:
+                                            context.textColor.withOpacity(0.4),
+                                      ),
+                                    ),
+                                    Spacer()
+                                  ],
+                                )
+                              : Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(_query,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style:
+                                              TextStyle(color: _podcastAccent)),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ),
+                    ],
+                    onSelected: (value) {
+                      switch (value) {
+                        case 0:
+                          if (_filter != Filter.all) {
+                            setState(() {
+                              _filter = Filter.all;
+                              _query = '';
+                            });
+                          }
+                          break;
+                        case 1:
+                          if (_filter != Filter.liked) {
+                            setState(() {
+                              _query = '';
+                              _filter = Filter.liked;
+                            });
+                          }
+                          break;
+                        case 2:
+                          if (_filter != Filter.downloaded) {
+                            setState(() {
+                              _query = '';
+                              _filter = Filter.downloaded;
+                            });
+                          }
+                          break;
+                        case 3:
+                          showGeneralDialog(
+                              context: context,
+                              barrierDismissible: true,
+                              barrierLabel: MaterialLocalizations.of(context)
+                                  .modalBarrierDismissLabel,
+                              barrierColor: Colors.black54,
+                              transitionDuration:
+                                  const Duration(milliseconds: 200),
+                              pageBuilder:
+                                  (context, animaiton, secondaryAnimation) =>
+                                      SearchEpisode(
+                                        onSearch: (query) {
+                                          setState(() {
+                                            if (query != null && query != '') {
+                                              _query = query;
+                                              _filter = Filter.search;
+                                            }
+                                          });
+                                        },
+                                        accentColor: _podcastAccent,
+                                      ));
+                          break;
+                        default:
+                      }
+                    }),
+                Spacer(),
+                FutureBuilder<int?>(
+                    future: _getNewCount(),
+                    initialData: 0,
+                    builder: (context, snapshot) {
+                      return snapshot.data != 0
+                          ? Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 4),
+                              child: Material(
+                                color: Colors.transparent,
+                                clipBehavior: Clip.hardEdge,
+                                borderRadius: BorderRadius.circular(100),
+                                child: SizedBox(
+                                  width: 30,
+                                  child: IconButton(
+                                      padding: EdgeInsets.only(bottom: 5),
+                                      tooltip: s.removeNewMark,
+                                      icon: Container(
+                                          height: 18,
+                                          width: 18,
+                                          child: CustomPaint(
+                                              painter: RemoveNewFlagPainter(
+                                                  context.textTheme.bodyText1!
+                                                      .color,
+                                                  Colors.red))),
+                                      onPressed: () async {
+                                        await _removePodcastNewMark();
+                                        if (mounted) {
+                                          setState(() {});
+                                        }
+                                      }),
+                                ),
+                              ),
+                            )
+                          : Center();
+                    }),
+                if (!widget.hide)
+                  Material(
                       color: Colors.transparent,
                       clipBehavior: Clip.hardEdge,
                       borderRadius: BorderRadius.circular(100),
-                      child: IconButton(
-                        icon: SizedBox(
-                          width: 30,
-                          height: 30,
-                          child: HideListened(
-                            hideListened: _hideListened ?? false,
+                      child: TweenAnimationBuilder(
+                        duration: Duration(milliseconds: 500),
+                        curve: Curves.easeInOutQuart,
+                        tween: Tween<double>(begin: 0.0, end: 1.0),
+                        builder: (context, dynamic angle, child) =>
+                            Transform.rotate(
+                          angle: math.pi * 2 * angle,
+                          child: SizedBox(
+                            width: 30,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              tooltip: s.homeSubMenuSortBy,
+                              icon: Icon(
+                                _sortOrder == SortOrder.ASC
+                                    ? LineIcons.hourglassStart
+                                    : LineIcons.hourglassEnd,
+                                color: _sortOrder == SortOrder.ASC
+                                    ? _podcastAccent
+                                    : null,
+                              ),
+                              iconSize: 18,
+                              onPressed: () {
+                                setState(() => {
+                                      if (_sortOrder == SortOrder.ASC)
+                                        _sortOrder = SortOrder.DESC
+                                      else
+                                        _sortOrder = SortOrder.ASC
+                                    });
+                              },
+                            ),
                           ),
                         ),
-                        onPressed: () {
-                          setState(() => _hideListened = !_hideListened!);
-                        },
-                      ));
-                }),
-            FutureBuilder<int?>(
-                future: _getLayout(),
-                builder: (context, snapshot) {
-                  if (_layout == null && snapshot.data != null) {
-                    _layout = Layout.values[snapshot.data!];
-                  }
-                  return Material(
+                      )),
+                FutureBuilder<bool>(
+                    future: _getHideListened(),
+                    builder: (context, snapshot) {
+                      if (_hideListened == null) {
+                        _hideListened = snapshot.data;
+                      }
+                      return Material(
+                          color: Colors.transparent,
+                          clipBehavior: Clip.hardEdge,
+                          borderRadius: BorderRadius.circular(100),
+                          child: IconButton(
+                            icon: SizedBox(
+                              width: 30,
+                              height: 30,
+                              child: HideListened(
+                                hideListened: _hideListened ?? false,
+                              ),
+                            ),
+                            onPressed: () {
+                              setState(() => _hideListened = !_hideListened!);
+                            },
+                          ));
+                    }),
+                FutureBuilder<int?>(
+                    future: _getLayout(),
+                    builder: (context, snapshot) {
+                      if (_layout == null && snapshot.data != null) {
+                        _layout = Layout.values[snapshot.data!];
+                      }
+                      return Material(
+                        color: Colors.transparent,
+                        clipBehavior: Clip.hardEdge,
+                        borderRadius: BorderRadius.circular(100),
+                        child: LayoutButton(
+                          layout: _layout ?? Layout.medium,
+                          onPressed: (layout) => setState(() {
+                            _layout = layout;
+                          }),
+                        ),
+                      );
+                    }),
+                Material(
                     color: Colors.transparent,
                     clipBehavior: Clip.hardEdge,
                     borderRadius: BorderRadius.circular(100),
-                    child: LayoutButton(
-                      layout: _layout ?? Layout.medium,
-                      onPressed: (layout) => setState(() {
-                        _layout = layout;
-                      }),
-                    ),
-                  );
-                }),
-            Material(
-                color: Colors.transparent,
-                clipBehavior: Clip.hardEdge,
-                borderRadius: BorderRadius.circular(100),
-                child: IconButton(
-                  icon: SizedBox(
-                    width: 20,
-                    height: 10,
-                    child: CustomPaint(
-                        painter:
-                            MultiSelectPainter(color: context.accentColor)),
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _top = -1;
-                      _multiSelect = true;
-                    });
-                  },
-                )),
-            SizedBox(width: 10)
-          ],
-        ));
+                    child: IconButton(
+                      icon: SizedBox(
+                        width: 20,
+                        height: 10,
+                        child: CustomPaint(
+                            painter: MultiSelectPainter(color: _podcastAccent)),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _top = -1;
+                          _multiSelect = true;
+                        });
+                      },
+                    )),
+                SizedBox(width: 10)
+              ],
+            )));
   }
 
   @override
   Widget build(BuildContext context) {
-    final color = widget.podcastLocal!.primaryColor!.colorizedark();
+    final color = context.realDark
+        ? context.background
+        : widget.podcastLocal!.primaryColor!.colorizedark();
     final s = context.s;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
@@ -717,7 +570,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
                 RefreshIndicator(
                   key: _refreshIndicatorKey,
                   displacement: context.paddingTop + 40,
-                  color: context.accentColor,
+                  color: _podcastAccent,
                   onRefresh: () async {
                     await _updateRssItem(context, widget.podcastLocal!);
                   },
@@ -776,8 +629,10 @@ class _PodcastDetailState extends State<PodcastDetail> {
                                 iconTheme: IconThemeData(
                                   color: Colors.white,
                                 ),
-                                expandedHeight:
-                                    math.max(130 + context.paddingTop, 180),
+                                expandedHeight: math.max(
+                                    math.max(130 + context.paddingTop, 180) +
+                                        (_showInfo! ? _infoHeight : 0),
+                                    220),
                                 backgroundColor: color,
                                 floating: true,
                                 pinned: true,
@@ -785,121 +640,204 @@ class _PodcastDetailState extends State<PodcastDetail> {
                                 flexibleSpace: LayoutBuilder(
                                     builder: (context, constraints) {
                                   _topHeight = constraints.biggest.height;
+                                  double expandRatio = (1 -
+                                          ((context.paddingTop +
+                                                  (_showInfo!
+                                                      ? _infoHeight
+                                                      : 0) -
+                                                  _topHeight +
+                                                  180) /
+                                              124))
+                                      .clamp(0, 1);
+                                  double fullExpandRatio = (1 -
+                                          ((context.paddingTop -
+                                                  _topHeight +
+                                                  180) /
+                                              124))
+                                      .clamp(0, 1);
+                                  final titleLineTest = TextPainter(
+                                      textScaleFactor: 1.06,
+                                      text: TextSpan(
+                                          text: widget.podcastLocal!.title!,
+                                          style:
+                                              context.textTheme.headlineSmall!),
+                                      textDirection: TextDirection.ltr);
+                                  titleLineTest.layout(
+                                      maxWidth: context.width - 164);
+                                  int titleLineCount =
+                                      titleLineTest.computeLineMetrics().length;
                                   return FlexibleSpaceBar(
-                                    background: Stack(
-                                      children: <Widget>[
-                                        Padding(
-                                          padding: EdgeInsets.only(
-                                              top: 120 + context.paddingTop),
-                                          child: InkWell(
-                                            onTap: () => setState(
-                                                () => _showInfo = !_showInfo!),
-                                            child: Container(
-                                              padding: EdgeInsets.only(
-                                                  left: 80, right: 130),
-                                              color: Colors.white10,
-                                              alignment: Alignment.centerLeft,
-                                              child: Row(
-                                                children: [
-                                                  Expanded(
-                                                    child: Column(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .start,
-                                                      mainAxisSize:
-                                                          MainAxisSize.min,
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: <Widget>[
-                                                        Text(
-                                                            widget.podcastLocal!
-                                                                    .author ??
-                                                                '',
-                                                            maxLines: 1,
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
-                                                            style: TextStyle(
-                                                                color: Colors
-                                                                    .white)),
-                                                        if (widget
-                                                            .podcastLocal!
-                                                            .provider!
-                                                            .isNotEmpty)
+                                      titlePadding: EdgeInsets.only(
+                                          left: 55 - expandRatio * 20,
+                                          right: 55 +
+                                              (_showInfo!
+                                                  ? fullExpandRatio == 0
+                                                      ? 0
+                                                      : 70
+                                                  : expandRatio < 0.3
+                                                      ? 0
+                                                      : 70),
+                                          bottom: (_showInfo! ? 0 : 0) +
+                                              _topHeight -
+                                              (40 +
+                                                  (titleLineCount == 1
+                                                      ? expandRatio * 54
+                                                      : titleLineCount == 2
+                                                          ? expandRatio * 39 +
+                                                              (expandRatio < 0.3
+                                                                  ? 0
+                                                                  : 30)
+                                                          : expandRatio * 24 +
+                                                              (expandRatio < 0.3
+                                                                  ? 0
+                                                                  : expandRatio <
+                                                                          0.4
+                                                                      ? 25
+                                                                      : 50)))),
+                                      expandedTitleScale:
+                                          titleLineCount >= 3 ? 1 : 1.2,
+                                      background: Stack(
+                                        children: <Widget>[
+                                          Padding(
+                                            padding: EdgeInsets.only(top: 120),
+                                            child: InkWell(
+                                              onTap: () => setState(() {
+                                                _showInfo = !_showInfo!;
+
+                                                if (_infoHeight == 0) {
+                                                  _infoHeight = (_infoKey
+                                                              .currentContext!
+                                                              .findRenderObject()
+                                                          as RenderBox)
+                                                      .size
+                                                      .height;
+                                                }
+                                              }),
+                                              child: Container(
+                                                height: 60,
+                                                padding: EdgeInsets.only(
+                                                    left: 80, right: 130),
+                                                color: Colors.white10,
+                                                alignment: Alignment.centerLeft,
+                                                child: Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: Column(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .start,
+                                                        mainAxisSize:
+                                                            MainAxisSize.min,
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: <Widget>[
                                                           Text(
-                                                            s.hostedOn(widget
-                                                                .podcastLocal!
-                                                                .provider!),
-                                                            maxLines: 1,
-                                                            style: TextStyle(
-                                                                color: Colors
-                                                                    .white),
-                                                          ),
-                                                      ],
+                                                              widget.podcastLocal!
+                                                                      .author ??
+                                                                  '',
+                                                              maxLines: 1,
+                                                              overflow:
+                                                                  TextOverflow
+                                                                      .ellipsis,
+                                                              style: TextStyle(
+                                                                  color: Colors
+                                                                      .white)),
+                                                          if (widget
+                                                              .podcastLocal!
+                                                              .provider!
+                                                              .isNotEmpty)
+                                                            Text(
+                                                              s.hostedOn(widget
+                                                                  .podcastLocal!
+                                                                  .provider!),
+                                                              maxLines: 1,
+                                                              style: TextStyle(
+                                                                  color: Colors
+                                                                      .white),
+                                                            ),
+                                                        ],
+                                                      ),
                                                     ),
-                                                  ),
-                                                  UpDownIndicator(
-                                                      status: _showInfo,
-                                                      color: Colors.white),
-                                                ],
+                                                    UpDownIndicator(
+                                                        status: _showInfo,
+                                                        color: Colors.white),
+                                                  ],
+                                                ),
                                               ),
                                             ),
                                           ),
-                                        ),
-                                        Container(
-                                          alignment: Alignment.bottomRight,
-                                          padding: EdgeInsets.only(
-                                              right: 20, bottom: 10),
-                                          child: Container(
-                                            height: 100,
-                                            width: 100,
-                                            decoration: BoxDecoration(
-                                              border: Border.all(
-                                                  color: Colors.white,
-                                                  width: 2),
-                                            ),
-                                            child: Image.file(
-                                              File(
-                                                  "${widget.podcastLocal!.imagePath}"),
-                                              errorBuilder: (context, _, __) {
-                                                return ColoredBox(
-                                                    color: color,
-                                                    child: Icon(Icons.error));
-                                              },
+                                          Container(
+                                            alignment: Alignment.topRight,
+                                            padding: EdgeInsets.only(
+                                                right: 20, top: 70),
+                                            child: Container(
+                                              height: 100,
+                                              width: 100,
+                                              decoration: BoxDecoration(
+                                                border: Border.all(
+                                                    color: Colors.white,
+                                                    width: 2),
+                                              ),
+                                              child: Image.file(
+                                                File(
+                                                    "${widget.podcastLocal!.imagePath}"),
+                                                errorBuilder: (context, _, __) {
+                                                  return ColoredBox(
+                                                      color: color,
+                                                      child: Icon(Icons.error));
+                                                },
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                        Align(
-                                          alignment: Alignment.center,
-                                          child: _podcastInfo(context),
-                                        ),
-                                      ],
-                                    ),
-                                    title: _topHeight < 70 + context.paddingTop
-                                        ? SizedBox(
-                                            width: context.width * 4 / 5,
-                                            child: Text(
-                                                widget.podcastLocal!.title!,
-                                                maxLines: 1,
-                                                overflow: TextOverflow.clip,
-                                                style: TextStyle(
-                                                    color: Colors.white)),
+                                          Align(
+                                            alignment: Alignment.bottomCenter,
+                                            child: _showInfo!
+                                                ? Container(
+                                                    color: context.background,
+                                                    height: _infoHeight,
+                                                    child: HostsList(context,
+                                                        widget.podcastLocal!),
+                                                  )
+                                                : Center(),
                                           )
-                                        : Center(),
-                                  );
+                                        ],
+                                      ),
+                                      title: Opacity(
+                                        opacity: 1,
+                                        child: Tooltip(
+                                          message: widget.podcastLocal!.title!,
+                                          child: Text(
+                                              widget.podcastLocal!.title!,
+                                              maxLines: titleLineCount < 3
+                                                  ? expandRatio < 0.3
+                                                      ? 1
+                                                      : 2
+                                                  : expandRatio < 0.3
+                                                      ? 1
+                                                      : expandRatio < 0.4
+                                                          ? 2
+                                                          : 3,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: titleLineCount < 3
+                                                  ? context
+                                                      .textTheme.headlineSmall!
+                                                      .copyWith(
+                                                          color: Colors.white)
+                                                  : context
+                                                      .textTheme.titleLarge!
+                                                      .copyWith(
+                                                          color: Colors.white)),
+                                        ),
+                                      ));
                                 }),
                               ),
-                              SliverToBoxAdapter(
-                                child: _showInfo!
-                                    ? _hostsList(context, widget.podcastLocal!)
-                                    : SizedBox(height: 10),
-                              ),
-                              SliverToBoxAdapter(
+                              SliverAppBar(
                                   // TODO: This should be pinned.
-                                  child: _multiSelect!
-                                      ? Center()
-                                      : _actionBar(context)),
+                                  pinned: true,
+                                  leading: Center(),
+                                  toolbarHeight: 50,
+                                  flexibleSpace: _actionBar(context)),
                               if (!widget.hide)
                                 FutureBuilder<List<EpisodeBrief>>(
                                     future: _getRssItem(widget.podcastLocal!,
@@ -960,6 +898,21 @@ class _PodcastDetailState extends State<PodcastDetail> {
                                         : Center();
                                   },
                                   childCount: 1,
+                                ),
+                              ),
+                              // Hidden widget to get the height of [HostsList]
+                              SliverToBoxAdapter(
+                                child: Column(
+                                  children: [
+                                    _infoHeight == 0
+                                        ? Opacity(
+                                            opacity: 0,
+                                            key: _infoKey,
+                                            child: HostsList(
+                                                context, widget.podcastLocal!),
+                                          )
+                                        : Center(),
+                                  ],
                                 ),
                               ),
                             ],
@@ -1034,9 +987,172 @@ class _PodcastDetailState extends State<PodcastDetail> {
   }
 }
 
+class HostsList extends StatelessWidget {
+  final BuildContext context;
+  final PodcastLocal podcastLocal;
+  HostsList(this.context, this.podcastLocal, {Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        FutureBuilder<Tuple2<String?, List<PodcastHost>?>>(
+            future: _getHosts(podcastLocal),
+            builder: (context, snapshot) {
+              return Container(
+                width: double.infinity,
+                alignment: Alignment.centerLeft,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _podcastLink(context,
+                            title: 'Link',
+                            child: Icon(Icons.link, size: 30),
+                            backgroundColor: Colors.green[600]!,
+                            onTap: () => podcastLocal.link!.launchUrl),
+                        _podcastLink(context,
+                            title: 'Rss',
+                            child: Icon(LineIcons.rssSquare, size: 30),
+                            backgroundColor: Colors.blue[600]!,
+                            onTap: () => podcastLocal.rssUrl.launchUrl),
+                        if (podcastLocal.funding.isNotEmpty)
+                          for (var funding in podcastLocal.funding)
+                            _podcastLink(context,
+                                title: 'Donate',
+                                child: Icon(
+                                    funding.contains(
+                                      'paypal',
+                                    )
+                                        ? LineIcons.paypal
+                                        : LineIcons.donate,
+                                    size: 30),
+                                backgroundColor: Colors.red[600]!,
+                                onTap: () => funding.launchUrl),
+                        if (snapshot.hasData)
+                          ...snapshot.data!.item2!
+                              .map<Widget>((host) {
+                                final image = host.image == kDefaultAvatar
+                                    ? kDefaultAvatar
+                                    : host.image;
+                                return Container(
+                                  padding: EdgeInsets.fromLTRB(5, 10, 5, 0),
+                                  width: 60.0,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: <Widget>[
+                                      CachedNetworkImage(
+                                        imageUrl: image!,
+                                        progressIndicatorBuilder:
+                                            (context, url, downloadProgress) =>
+                                                CircleAvatar(
+                                          backgroundColor: Colors.cyan[600]!
+                                              .withOpacity(0.5),
+                                          child: SizedBox(
+                                            width: 30,
+                                            height: 2,
+                                            child: LinearProgressIndicator(
+                                                value:
+                                                    downloadProgress.progress),
+                                          ),
+                                        ),
+                                        errorWidget: (context, url, error) =>
+                                            CircleAvatar(
+                                          backgroundColor: Colors.grey[400],
+                                          backgroundImage:
+                                              AssetImage('assets/fireside.jpg'),
+                                        ),
+                                        imageBuilder: (context, hostImage) =>
+                                            CircleAvatar(
+                                                backgroundColor:
+                                                    Colors.grey[400],
+                                                backgroundImage: hostImage),
+                                      ),
+                                      SizedBox(height: 4),
+                                      Text(
+                                        host.name!,
+                                        style: context.textTheme.subtitle2,
+                                        textAlign: TextAlign.center,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.fade,
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              })
+                              .toList()
+                              .cast<Widget>()
+                      ]),
+                ),
+              );
+            }),
+        Container(
+          padding: EdgeInsets.fromLTRB(15, 10, 15, 10),
+          alignment: Alignment.topLeft,
+          color: Colors.transparent,
+          child: AboutPodcast(
+            podcastLocal: podcastLocal,
+            accentColor: podcastLocal.primaryColor!.toColor(),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+Future<Tuple2<String?, List<PodcastHost>?>> _getHosts(
+    PodcastLocal podcastLocal) async {
+  if (!podcastLocal.provider!.contains('fireside')) return Tuple2('', []);
+  var data = FiresideData(podcastLocal.id, podcastLocal.link);
+  await data.getData();
+  var backgroundImage = data.background;
+  var hosts = data.hosts;
+  return Tuple2(backgroundImage, hosts);
+}
+
+Widget _podcastLink(BuildContext context,
+    {required String title,
+    Widget? child,
+    VoidCallback? onTap,
+    required Color backgroundColor}) {
+  return Container(
+    padding: EdgeInsets.fromLTRB(5, 10, 5, 0),
+    width: 60.0,
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: onTap,
+          child: CircleAvatar(
+            radius: 20,
+            child: child,
+            backgroundColor: backgroundColor.withOpacity(0.5),
+          ),
+        ),
+        SizedBox(height: 4),
+        Text(
+          title,
+          style: context.textTheme.subtitle2,
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.fade,
+        ),
+      ],
+    ),
+  );
+}
+
 class AboutPodcast extends StatefulWidget {
   final PodcastLocal? podcastLocal;
-  AboutPodcast({this.podcastLocal, Key? key}) : super(key: key);
+  final Color? accentColor;
+  AboutPodcast({this.podcastLocal, this.accentColor, Key? key})
+      : super(key: key);
 
   @override
   _AboutPodcastState createState() => _AboutPodcastState();
@@ -1062,7 +1178,7 @@ class _AboutPodcastState extends State<AboutPodcast> {
           link.url!.launchUrl;
         },
         linkStyle: TextStyle(
-            color: context.accentColor,
+            color: widget.accentColor ?? context.accentColor,
             decoration: TextDecoration.underline,
             textBaseline: TextBaseline.ideographic),
       );
@@ -1071,20 +1187,26 @@ class _AboutPodcastState extends State<AboutPodcast> {
 
   void getDescription(String? id) async {
     final dbHelper = DBHelper();
-    final description = await dbHelper.getFeedDescription(id);
-    if (description == null || description.isEmpty) {
-      _description = '';
+    if (widget.podcastLocal!.description == null ||
+        widget.podcastLocal!.description == "") {
+      final description = await dbHelper.getFeedDescription(id);
+      if (description == null || description.isEmpty) {
+        _description = '';
+      } else {
+        final doc = parse(description);
+        _description = parse(doc.body!.text).documentElement!.text;
+      }
     } else {
-      final doc = parse(description);
-      _description = parse(doc.body!.text).documentElement!.text;
+      _description = widget.podcastLocal!.description;
     }
     if (mounted) setState(() => _load = true);
   }
 }
 
 class SearchEpisode extends StatefulWidget {
-  SearchEpisode({this.onSearch, Key? key}) : super(key: key);
+  SearchEpisode({this.onSearch, this.accentColor, Key? key}) : super(key: key);
   final ValueChanged<String?>? onSearch;
+  final Color? accentColor;
   @override
   _SearchEpisodeState createState() => _SearchEpisodeState();
 }
@@ -1139,8 +1261,9 @@ class _SearchEpisodeState extends State<SearchEpisode> {
                 Navigator.of(context).pop();
               }
             },
-            child:
-                Text(s.confirm, style: TextStyle(color: context.accentColor)),
+            child: Text(s.confirm,
+                style: TextStyle(
+                    color: widget.accentColor ?? context.accentColor)),
           )
         ],
         title: SizedBox(width: context.width - 160, child: Text(s.search)),
@@ -1154,8 +1277,9 @@ class _SearchEpisodeState extends State<SearchEpisode> {
                 hintStyle: TextStyle(fontSize: 18),
                 filled: true,
                 focusedBorder: UnderlineInputBorder(
-                  borderSide:
-                      BorderSide(color: context.accentColor, width: 2.0),
+                  borderSide: BorderSide(
+                      color: widget.accentColor ?? context.accentColor,
+                      width: 2.0),
                 ),
                 enabledBorder: UnderlineInputBorder(
                   borderSide:

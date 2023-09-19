@@ -108,7 +108,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                 value: SystemUiOverlayStyle(
                     statusBarColor: _episodeItem.cardColor(context),
                     systemNavigationBarColor: data.item2
-                        ? data.item4!.getColorScheme(context).secondaryContainer
+                        ? context.accentBackground
                         : _episodeItem.cardColor(context),
                     systemNavigationBarContrastEnforced: false,
                     systemNavigationBarIconBrightness: context.iconBrightness,

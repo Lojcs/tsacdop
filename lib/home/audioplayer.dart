@@ -110,7 +110,7 @@ class _MiniPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
     final s = context.s;
-    final bgColor = context.colorScheme.secondaryContainer;
+    final bgColor = context.accentBackground;
     return Container(
       color: bgColor,
       height: 60,
@@ -1343,7 +1343,7 @@ class _ControlPanelState extends State<ControlPanel>
       builder: (context, constraints) {
         final height = constraints.maxHeight;
         return Container(
-          color: context.colorScheme.secondaryContainer,
+          color: context.accentBackground,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -1471,7 +1471,7 @@ class _ControlPanelState extends State<ControlPanel>
                               height: 60,
                               width: 60,
                               decoration: BoxDecoration(
-                                  color: context.colorScheme.secondaryContainer,
+                                  color: context.accentBackground,
                                   shape: BoxShape.circle,
                                   // border: Border.all(
                                   //     color: context.brightness == Brightness.dark
@@ -1481,7 +1481,7 @@ class _ControlPanelState extends State<ControlPanel>
                                   boxShadow:
                                       context.brightness == Brightness.dark
                                           ? _customShadowNight(active: 1)
-                                          : _customShadow(active: 1)),
+                                          : _customShadowNight(active: 1)),
                               child: Material(
                                 color: Colors.transparent,
                                 child: InkWell(

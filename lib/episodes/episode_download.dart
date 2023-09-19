@@ -14,6 +14,7 @@ import '../state/download_state.dart';
 import '../type/episode_task.dart';
 import '../type/episodebrief.dart';
 import '../util/extension_helper.dart';
+import '../util/helpers.dart';
 import '../widgets/custom_widget.dart';
 import '../widgets/general_dialog.dart';
 
@@ -25,23 +26,6 @@ class DownloadButton extends StatefulWidget {
 }
 
 class _DownloadButtonState extends State<DownloadButton> {
-  Future<void> _requestDownload(EpisodeBrief? episode) async {
-    final downloadUsingData = await KeyValueStorage(downloadUsingDataKey)
-        .getBool(defaultValue: true, reverse: true);
-    final permissionReady = await _checkPermmison();
-    final result = await Connectivity().checkConnectivity();
-    final usingData = result == ConnectivityResult.mobile;
-    var dataConfirm = true;
-    if (permissionReady) {
-      if (downloadUsingData && usingData) {
-        dataConfirm = await _useDataConfirm();
-      }
-      if (dataConfirm) {
-        Provider.of<DownloadState>(context, listen: false).startTask(episode!);
-      }
-    }
-  }
-
   void _deleteDownload(EpisodeBrief episode) async {
     Provider.of<DownloadState>(context, listen: false).delTask(episode);
     Fluttertoast.showToast(
@@ -60,50 +44,6 @@ class _DownloadButtonState extends State<DownloadButton> {
 
   Future<void> _retryDownload(EpisodeBrief episode) async {
     Provider.of<DownloadState>(context, listen: false).retryTask(episode);
-  }
-
-  Future<bool> _checkPermmison() async {
-    var permission = await Permission.storage.status;
-    if (permission != PermissionStatus.granted) {
-      var permissions = await [Permission.storage].request();
-      if (permissions[Permission.storage] == PermissionStatus.granted) {
-        return true;
-      } else {
-        return false;
-      }
-    } else {
-      return true;
-    }
-  }
-
-  Future<bool> _useDataConfirm() async {
-    var ifUseData = false;
-    final s = context.s;
-    await generalDialog(
-      context,
-      title: Text(s.cellularConfirm),
-      content: Text(s.cellularConfirmDes),
-      actions: <Widget>[
-        TextButton(
-          onPressed: Navigator.of(context).pop,
-          child: Text(
-            s.cancel,
-            style: TextStyle(color: Colors.grey[600]),
-          ),
-        ),
-        TextButton(
-          onPressed: () {
-            ifUseData = true;
-            Navigator.of(context).pop();
-          },
-          child: Text(
-            s.confirm,
-            style: TextStyle(color: Colors.red),
-          ),
-        )
-      ],
-    );
-    return ifUseData;
   }
 
   Widget _buttonOnMenu(Widget widget, Function() onTap) => Material(
@@ -164,7 +104,7 @@ class _DownloadButtonState extends State<DownloadButton> {
                 ),
               ),
             ),
-            () => _requestDownload(task.episode));
+            () => requestDownload([task.episode!], context));
       case 1: // DownloadTaskStatus.enqueued
         return Material(
           color: Colors.transparent,

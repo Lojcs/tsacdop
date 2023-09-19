@@ -322,12 +322,12 @@ class DBHelper {
       if (updateOnly) {
         list = await dbClient.rawQuery(
             """SELECT id, title, imageUrl, rssUrl, primaryColor, author, imagePath , provider, 
-          link ,update_count, episode_count, funding FROM PodcastLocal WHERE id = ? AND 
+          link ,update_count, episode_count, funding, description FROM PodcastLocal WHERE id = ? AND 
           never_update = 0""", [s]);
       } else {
         list = await dbClient.rawQuery(
             """SELECT id, title, imageUrl, rssUrl, primaryColor, author, imagePath , provider, 
-          link ,update_count, episode_count, funding FROM PodcastLocal WHERE id = ?""",
+          link ,update_count, episode_count, funding, description FROM PodcastLocal WHERE id = ?""",
             [s]);
       }
       if (list.length > 0) {
@@ -342,6 +342,7 @@ class DBHelper {
             list.first['provider'],
             list.first['link'],
             List<String>.from(jsonDecode(list.first['funding'])),
+            description: list.first['description'],
             updateCount: list.first['update_count'],
             episodeCount: list.first['episode_count']));
       }
@@ -357,12 +358,12 @@ class DBHelper {
     if (updateOnly) {
       list = await dbClient.rawQuery(
           """SELECT id, title, imageUrl, rssUrl, primaryColor, author, imagePath,
-         provider, link, funding FROM PodcastLocal WHERE never_update = 0 ORDER BY 
+         provider, link, funding, description FROM PodcastLocal WHERE never_update = 0 ORDER BY 
          add_date DESC""");
     } else {
       list = await dbClient.rawQuery(
           """SELECT id, title, imageUrl, rssUrl, primaryColor, author, imagePath,
-         provider, link, funding FROM PodcastLocal ORDER BY add_date DESC""");
+         provider, link, funding, description FROM PodcastLocal ORDER BY add_date DESC""");
     }
 
     var podcastLocal = <PodcastLocal>[];
@@ -380,6 +381,7 @@ class DBHelper {
           i['provider'],
           i['link'],
           List<String>.from(jsonDecode(list.first['funding'])),
+          description: i['description'],
         ));
       }
     }
@@ -390,7 +392,7 @@ class DBHelper {
     var dbClient = await database;
     List<Map> list = await dbClient.rawQuery(
         """SELECT P.id, P.title, P.imageUrl, P.rssUrl, P.primaryColor, P.author, P.imagePath,
-         P.provider, P.link ,P.update_count, P.episode_count, P.funding FROM PodcastLocal P INNER JOIN 
+         P.provider, P.link ,P.update_count, P.episode_count, P.funding, description FROM PodcastLocal P INNER JOIN 
          Episodes E ON P.id = E.feed_id WHERE E.enclosure_url = ?""", [url]);
     if (list.isNotEmpty) {
       return PodcastLocal(
@@ -404,6 +406,7 @@ class DBHelper {
           list.first['provider'],
           list.first['link'],
           List<String>.from(jsonDecode(list.first['funding'])),
+          description: list.first['description'],
           updateCount: list.first['update_count'],
           episodeCount: list.first['episode_count']);
     }

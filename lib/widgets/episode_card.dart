@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:tsacdop/episodes/episode_download.dart';
 import 'package:tsacdop/state/download_state.dart';
 import 'package:tsacdop/state/episode_state.dart';
 import 'package:tsacdop/type/episodebrief.dart';
@@ -18,6 +19,7 @@ import '../podcasts/podcast_detail.dart';
 import '../state/audio_state.dart';
 import '../state/setting_state.dart';
 import '../type/play_histroy.dart';
+import '../util/helpers.dart';
 import '../util/pageroute.dart';
 import 'custom_widget.dart';
 import 'episodegrid.dart';
@@ -188,19 +190,16 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                                     : 100 / menuLength,
                             enableMenuScroll: false,
                             menuBoxDecoration: BoxDecoration(
-                              color: context.realDark
-                                  ? context.background
-                                  : context.colorScheme.secondaryContainer,
+                              color: context.accentBackground,
                               border: Border.all(
                                 color: context.accentColor,
                                 width: 1.0,
                               ),
-                              borderRadius: BorderRadius.circular(
-                                  widget.layout == Layout.small
-                                      ? 12
-                                      : widget.layout == Layout.medium
-                                          ? 16
-                                          : 20),
+                              borderRadius: widget.layout == Layout.small
+                                  ? context.radiusSmall
+                                  : widget.layout == Layout.medium
+                                      ? context.radiusMedium
+                                      : context.radiusLarge,
                             ),
                             childDecoration: _cardDecoration(
                                 context, episode, widget.layout,
@@ -235,9 +234,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                             menuOffset: 10,
                             menuItems: <FocusedMenuItem>[
                               FocusedMenuItem(
-                                  backgroundColor: context.realDark
-                                      ? Colors.black
-                                      : context.colorScheme.secondaryContainer,
+                                  backgroundColor: Colors.transparent,
                                   highlightColor: context.brightness ==
                                           Brightness.light
                                       ? null
@@ -258,10 +255,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                                   }),
                               if (menuList.contains(1))
                                 FocusedMenuItem(
-                                    backgroundColor: context.realDark
-                                        ? Colors.black
-                                        : context
-                                            .colorScheme.secondaryContainer,
+                                    backgroundColor: Colors.transparent,
                                     highlightColor: context.brightness ==
                                             Brightness.light
                                         ? null
@@ -292,10 +286,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                                     }),
                               if (menuList.contains(2))
                                 FocusedMenuItem(
-                                    backgroundColor: context.realDark
-                                        ? Colors.black
-                                        : context
-                                            .colorScheme.secondaryContainer,
+                                    backgroundColor: Colors.transparent,
                                     highlightColor: context.brightness ==
                                             Brightness.light
                                         ? null
@@ -322,10 +313,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                                     }),
                               if (menuList.contains(3))
                                 FocusedMenuItem(
-                                    backgroundColor: context.realDark
-                                        ? Colors.black
-                                        : context
-                                            .colorScheme.secondaryContainer,
+                                    backgroundColor: Colors.transparent,
                                     highlightColor: context.brightness ==
                                             Brightness.light
                                         ? null
@@ -364,10 +352,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                                     }),
                               if (menuList.contains(4))
                                 FocusedMenuItem(
-                                    backgroundColor: context.realDark
-                                        ? Colors.black
-                                        : context
-                                            .colorScheme.secondaryContainer,
+                                    backgroundColor: Colors.transparent,
                                     highlightColor: context.brightness ==
                                             Brightness.light
                                         ? null
@@ -382,15 +367,13 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                                         color: Colors.green),
                                     onPressed: () async {
                                       if (!episode.isDownloaded!) {
-                                        await _requestDownload(context,
-                                            episode: episode);
+                                        await requestDownload(
+                                            [episode], context);
                                       }
                                     }),
                               if (menuList.contains(5))
                                 FocusedMenuItem(
-                                  backgroundColor: context.realDark
-                                      ? Colors.black
-                                      : context.colorScheme.secondaryContainer,
+                                  backgroundColor: Colors.transparent,
                                   highlightColor: context.brightness ==
                                           Brightness.light
                                       ? null
@@ -702,10 +685,8 @@ BoxDecoration _cardDecoration(
       color: context.realDark
           ? animator == null
               ? selected
-                  ? Color.lerp(
-                      episode.getColorScheme(context).secondaryContainer,
-                      context.background,
-                      0.4)
+                  ? Color.lerp(context.background,
+                      episode.getColorScheme(context).primary, 0.25)
                   : context.background
               : selected
                   ? ColorTween(
@@ -719,8 +700,8 @@ BoxDecoration _cardDecoration(
               ? selected
                   ? Color.lerp(
                       episode.getColorScheme(context).secondaryContainer,
-                      context.background,
-                      0.4)
+                      episode.getColorScheme(context).primary,
+                      0.15)
                   : episode.getColorScheme(context).secondaryContainer
               : selected
                   ? ColorTween(
@@ -732,9 +713,7 @@ BoxDecoration _cardDecoration(
                                   .getColorScheme(context)
                                   .secondaryContainer,
                               episode.getColorScheme(context).primary,
-                              context.brightness == Brightness.light
-                                  ? 0.25
-                                  : 0.15))
+                              0.15))
                       .animate(animator)
                       .value!
                   : episode.getColorScheme(context).secondaryContainer,
@@ -1240,74 +1219,6 @@ Widget _pubDate(BuildContext context, EpisodeBrief episode, Layout layout,
                   ? Colors.red
                   : episode.getColorScheme(context).onSecondaryContainer),
     );
-
-Future<void> _requestDownload(BuildContext context,
-    {EpisodeBrief? episode}) async {
-  final permissionReady = await _checkPermmison();
-  final downloadUsingData =
-      Provider.of<SettingState>(context, listen: false).downloadUsingData!;
-  final result = await Connectivity().checkConnectivity();
-  final usingData = result == ConnectivityResult.mobile;
-  var dataConfirm = true;
-  if (permissionReady) {
-    if (downloadUsingData && usingData) {
-      dataConfirm = await _useDataConfirm(context);
-    }
-    if (dataConfirm) {
-      Provider.of<DownloadState>(context, listen: false).startTask(episode!);
-      Fluttertoast.showToast(
-        msg: context.s.downloadStart,
-        gravity: ToastGravity.BOTTOM,
-      );
-    }
-  }
-}
-
-Future<bool> _checkPermmison() async {
-  var permission = await Permission.storage.status;
-  if (permission != PermissionStatus.granted) {
-    var permissions = await [Permission.storage].request();
-    if (permissions[Permission.storage] == PermissionStatus.granted) {
-      return true;
-    } else {
-      return false;
-    }
-  } else {
-    return true;
-  }
-}
-
-Future<bool> _useDataConfirm(BuildContext context) async {
-  var ifUseData = false;
-  final s = context.s;
-  await generalDialog(
-    context,
-    title: Text(s.cellularConfirm),
-    content: Text(s.cellularConfirmDes),
-    actions: <Widget>[
-      TextButton(
-        onPressed: () {
-          Navigator.of(context).pop();
-        },
-        child: Text(
-          s.cancel,
-          style: TextStyle(color: Colors.grey[600]),
-        ),
-      ),
-      TextButton(
-        onPressed: () {
-          ifUseData = true;
-          Navigator.of(context).pop();
-        },
-        child: Text(
-          s.confirm,
-          style: TextStyle(color: Colors.red),
-        ),
-      )
-    ],
-  );
-  return ifUseData;
-}
 
 Future<Tuple2<bool, List<int>>> _initData(EpisodeBrief episode) async {
   final menuList = await _getEpisodeMenu();

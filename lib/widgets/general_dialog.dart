@@ -15,14 +15,12 @@ Future generalDialog(BuildContext context,
           AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle(
           statusBarIconBrightness: Brightness.light,
-          systemNavigationBarColor: context.brightness == Brightness.light
-              ? Color.fromRGBO(113, 113, 113, 1)
-              : Color.fromRGBO(15, 15, 15, 1),
+          statusBarColor: Colors.transparent,
         ),
         child: AlertDialog(
+            backgroundColor: context.accentBackground,
             elevation: 2,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0)),
+            shape: RoundedRectangleBorder(borderRadius: context.radiusMedium),
             titlePadding: EdgeInsets.all(20),
             title: SizedBox(width: context.width - 120, child: title),
             content: content,

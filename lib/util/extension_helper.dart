@@ -26,6 +26,8 @@ extension ContextExtension on BuildContext {
   Color get primaryColorDark => Theme.of(this).primaryColorDark;
   Color get textColor => textTheme.bodyLarge!.color!;
   Color get dialogBackgroundColor => Theme.of(this).dialogBackgroundColor;
+  Color get accentBackgroundWeak => accentColor.toWeakBackround(this);
+  Color get accentBackground => accentColor.toStrongBackround(this);
   Brightness get brightness => Theme.of(this).brightness;
   Brightness get iconBrightness =>
       brightness == Brightness.dark ? Brightness.light : Brightness.dark;
@@ -42,13 +44,17 @@ extension ContextExtension on BuildContext {
   S get s => S.of(this);
   bool get realDark =>
       Provider.of<SettingState>(this, listen: false).realDark! &&
-      this.brightness == Brightness.dark;
+      brightness == Brightness.dark;
   EdgeInsets get originalPadding =>
       Provider.of<SettingState>(this, listen: false).originalPadding ??
       EdgeInsets.all(0);
   set originalPadding(EdgeInsets padding) {
     Provider.of<SettingState>(this, listen: false).originalPadding = padding;
   }
+
+  BorderRadius get radiusSmall => BorderRadius.circular(12);
+  BorderRadius get radiusMedium => BorderRadius.circular(16);
+  BorderRadius get radiusLarge => BorderRadius.circular(20);
 }
 
 extension IntExtension on int {
@@ -131,5 +137,26 @@ extension StringExtension on String {
   Color toColor() {
     var color = json.decode(this);
     return Color.fromRGBO(color[0], color[1], color[2], 1);
+  }
+}
+
+extension ColorExtension on Color {
+  Color toWeakBackround(BuildContext context) {
+    return Color.lerp(context.background, this, context.realDark ? 0 : 0.1)!;
+  }
+
+  Color toStrongBackround(BuildContext context) {
+    return Color.lerp(
+        context.colorScheme.secondaryContainer,
+        this,
+        context.realDark
+            ? 0
+            : context.brightness == Brightness.light
+                ? 0.20
+                : 0.20)!;
+  }
+
+  Color toHighlightBackround(BuildContext context) {
+    return Color.lerp(context.background, this, 0.40)!;
   }
 }

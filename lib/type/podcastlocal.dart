@@ -17,7 +17,7 @@ class PodcastLocal extends Equatable {
   final String? provider;
   final String? link;
 
-  final String? description;
+  final String description;
 
   final int? updateCount;
   final int? episodeCount;

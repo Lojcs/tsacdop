@@ -59,6 +59,7 @@ class ThemeSetting extends StatelessWidget {
                             : Color.fromRGBO(15, 15, 15, 1),
                   ),
                   child: AlertDialog(
+                    backgroundColor: context.accentBackground,
                     titlePadding: EdgeInsets.only(
                       top: 20,
                       left: 40,
@@ -79,6 +80,7 @@ class ThemeSetting extends StatelessWidget {
                             child: Material(
                               color: Colors.transparent,
                               child: RadioListTile(
+                                  activeColor: context.accentColor,
                                   title: Text(s.systemDefault),
                                   value: ThemeMode.system,
                                   groupValue: settings.theme,
@@ -93,6 +95,7 @@ class ThemeSetting extends StatelessWidget {
                             child: Material(
                               color: Colors.transparent,
                               child: RadioListTile(
+                                  activeColor: context.accentColor,
                                   title: Text(s.darkMode),
                                   value: ThemeMode.dark,
                                   groupValue: settings.theme,
@@ -107,6 +110,7 @@ class ThemeSetting extends StatelessWidget {
                             child: Material(
                               color: Colors.transparent,
                               child: RadioListTile(
+                                  activeColor: context.accentColor,
                                   title: Text(s.lightMode),
                                   value: ThemeMode.light,
                                   groupValue: settings.theme,
@@ -141,6 +145,7 @@ class ThemeSetting extends StatelessWidget {
                 trailing: Transform.scale(
                   scale: 0.9,
                   child: Switch(
+                      activeColor: context.accentColor,
                       value: data!,
                       onChanged: (boo) async {
                         settings.setRealDark = boo;
@@ -162,6 +167,7 @@ class ThemeSetting extends StatelessWidget {
                 trailing: Transform.scale(
                   scale: 0.9,
                   child: Switch(
+                      activeColor: context.accentColor,
                       value: data!,
                       onChanged: (boo) async {
                         settings.setWallpaperTheme = boo;
@@ -222,7 +228,7 @@ class ThemeSetting extends StatelessWidget {
                                   : Colors.transparent),
                           alignment: Alignment.center,
                           child: Text(
-                            'Show notes',
+                            'Show\nnotes',
                             textAlign: TextAlign.center,
                             style: textStyle,
                           ),
