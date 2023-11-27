@@ -28,6 +28,7 @@ class MultiSelectMenuBar extends StatefulWidget {
       this.onSelectAfter,
       this.onSelectBefore,
       this.hideFavorite = false,
+      this.color,
       Key? key})
       : assert(onClose != null),
         super(key: key);
@@ -38,6 +39,7 @@ class MultiSelectMenuBar extends StatefulWidget {
   final ValueChanged<bool>? onSelectBefore;
   final ValueChanged<bool>? onSelectAfter;
   final bool hideFavorite;
+  final Color? color;
 
   @override
   _MultiSelectMenuBarState createState() => _MultiSelectMenuBarState();
@@ -190,7 +192,8 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                                   const Duration(milliseconds: 200),
                               pageBuilder:
                                   (context, animaiton, secondaryAnimation) =>
-                                      _NewPlaylist(widget.selectedList));
+                                      _NewPlaylist(widget.selectedList,
+                                          color: widget.color));
                         },
                       )
                     else
@@ -200,7 +203,9 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                             Container(
                               height: 30,
                               width: 30,
-                              color: context.primaryColorDark,
+                              color:
+                                  widget.color?.toHighlightBackround(context) ??
+                                      context.primaryColorDark,
                               child: p.episodeList.isEmpty
                                   ? Center()
                                   : FutureBuilder<EpisodeBrief?>(
@@ -253,7 +258,9 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
             : _showPlaylists
                 ? 130
                 : 90 * value,
-        decoration: BoxDecoration(color: context.accentBackground),
+        decoration: BoxDecoration(
+            color: widget.color?.toStrongBackround(context) ??
+                context.accentBackground),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -269,8 +276,9 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                             padding: EdgeInsets.symmetric(horizontal: 20.0),
                             child: Text(
                                 '${widget.selectedList!.length} selected',
-                                style: context.textTheme.headline6!
-                                    .copyWith(color: context.accentColor))),
+                                style: context.textTheme.headline6!.copyWith(
+                                    color:
+                                        widget.color ?? context.accentColor))),
                       ),
                     ),
                     Spacer(),
@@ -281,7 +289,9 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                           padding: const EdgeInsets.symmetric(horizontal: 5),
                           child: OutlinedButton(
                               style: OutlinedButton.styleFrom(
-                                  side: BorderSide(color: context.accentColor),
+                                  side: BorderSide(
+                                      color:
+                                          widget.color ?? context.accentColor),
                                   primary: context.textColor,
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.all(
@@ -299,7 +309,9 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                           padding: const EdgeInsets.symmetric(horizontal: 5),
                           child: OutlinedButton(
                               style: OutlinedButton.styleFrom(
-                                  side: BorderSide(color: context.accentColor),
+                                  side: BorderSide(
+                                      color:
+                                          widget.color ?? context.accentColor),
                                   primary: context.textColor,
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.all(
@@ -316,9 +328,10 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                         padding: const EdgeInsets.symmetric(horizontal: 5),
                         child: OutlinedButton(
                             style: OutlinedButton.styleFrom(
-                                side: BorderSide(color: context.accentColor),
+                                side: BorderSide(
+                                    color: widget.color ?? context.accentColor),
                                 backgroundColor: widget.selectAll!
-                                    ? context.accentColor
+                                    ? widget.color ?? context.accentColor
                                     : null,
                                 primary: widget.selectAll!
                                     ? Colors.white
@@ -377,7 +390,7 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                               width: 20,
                               child: CustomPaint(
                                 painter: DownloadPainter(
-                                    color: context.accentColor,
+                                    color: widget.color ?? context.accentColor,
                                     fraction: 1,
                                     progressColor: context.accentColor,
                                     progress: 1),
@@ -392,7 +405,8 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                                 painter: DownloadPainter(
                                   color: Colors.grey[700],
                                   fraction: 0,
-                                  progressColor: context.accentColor,
+                                  progressColor:
+                                      widget.color ?? context.accentColor,
                                 ),
                               ),
                             ),
@@ -417,7 +431,7 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                   _buttonOnMenu(
                       child: _inPlaylist
                           ? Icon(Icons.playlist_add_check,
-                              color: context.accentColor)
+                              color: widget.color ?? context.accentColor)
                           : Icon(
                               Icons.playlist_add,
                               color: Colors.grey[700],
@@ -493,8 +507,9 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                             padding: EdgeInsets.symmetric(horizontal: 10.0),
                             child: Text(
                                 '${widget.selectedList!.length} selected',
-                                style: context.textTheme.headline6!
-                                    .copyWith(color: context.accentColor))),
+                                style: context.textTheme.headline6!.copyWith(
+                                    color:
+                                        widget.color ?? context.accentColor))),
                       ),
                     ),
                   _buttonOnMenu(
@@ -512,7 +527,8 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
 
 class _NewPlaylist extends StatefulWidget {
   final List<EpisodeBrief>? episodes;
-  _NewPlaylist(this.episodes, {Key? key}) : super(key: key);
+  final Color? color;
+  _NewPlaylist(this.episodes, {this.color, Key? key}) : super(key: key);
 
   @override
   __NewPlaylistState createState() => __NewPlaylistState();
@@ -536,20 +552,20 @@ class __NewPlaylistState extends State<_NewPlaylist> {
       child: AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         elevation: 1,
+        backgroundColor: widget.color?.toWeakBackround(context) ??
+            context.accentBackgroundWeak,
         contentPadding: EdgeInsets.symmetric(horizontal: 20),
         titlePadding: EdgeInsets.all(20),
         actionsPadding: EdgeInsets.zero,
         actions: <Widget>[
-          FlatButton(
-            splashColor: context.accentColor.withAlpha(70),
+          TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: Text(
               s.cancel,
               style: TextStyle(color: Colors.grey[600]),
             ),
           ),
-          FlatButton(
-            splashColor: context.accentColor.withAlpha(70),
+          TextButton(
             onPressed: () async {
               if (context
                   .read<AudioPlayerNotifier>()
@@ -564,8 +580,8 @@ class __NewPlaylistState extends State<_NewPlaylist> {
                 Navigator.of(context).pop();
               }
             },
-            child:
-                Text(s.confirm, style: TextStyle(color: context.accentColor)),
+            child: Text(s.confirm,
+                style: TextStyle(color: widget.color ?? context.accentColor)),
           )
         ],
         title:
@@ -580,12 +596,12 @@ class __NewPlaylistState extends State<_NewPlaylist> {
                 hintStyle: TextStyle(fontSize: 18),
                 filled: true,
                 focusedBorder: UnderlineInputBorder(
-                  borderSide:
-                      BorderSide(color: context.accentColor, width: 2.0),
+                  borderSide: BorderSide(
+                      color: widget.color ?? context.accentColor, width: 2.0),
                 ),
                 enabledBorder: UnderlineInputBorder(
-                  borderSide:
-                      BorderSide(color: context.accentColor, width: 2.0),
+                  borderSide: BorderSide(
+                      color: widget.color ?? context.accentColor, width: 2.0),
                 ),
               ),
               cursorRadius: Radius.circular(2),

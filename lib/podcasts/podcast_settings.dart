@@ -41,7 +41,7 @@ class _PodcastSettingState extends State<PodcastSetting> {
   late bool _markConfirm;
   late bool _removeConfirm;
   late bool _showStartTimePicker;
-  bool? _showEndTimePicker;
+  late bool _showEndTimePicker;
 
   @override
   void initState() {
@@ -59,6 +59,9 @@ class _PodcastSettingState extends State<PodcastSetting> {
     final s = context.s;
     final groupList = context.watch<GroupList>();
     final textStyle = context.textTheme.bodyText2!;
+    final colorScheme = ColorScheme.fromSeed(
+        seedColor: widget.podcastLocal!.primaryColor!.toColor(),
+        brightness: context.brightness);
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -79,7 +82,7 @@ class _PodcastSettingState extends State<PodcastSetting> {
                         painter: DownloadPainter(
                           color: context.textColor,
                           fraction: 0,
-                          progressColor: context.accentColor,
+                          progressColor: colorScheme.primary,
                         ),
                       ),
                     ),
@@ -90,7 +93,9 @@ class _PodcastSettingState extends State<PodcastSetting> {
                 trailing: Transform.scale(
                   scale: 0.8,
                   child: Switch(
-                      value: snapshot.data!, onChanged: _setAutoDownload),
+                      value: snapshot.data!,
+                      activeColor: colorScheme.primary,
+                      onChanged: _setAutoDownload),
                 ),
               );
             }),
@@ -110,8 +115,10 @@ class _PodcastSettingState extends State<PodcastSetting> {
                 ),
                 trailing: Transform.scale(
                   scale: 0.8,
-                  child:
-                      Switch(value: snapshot.data!, onChanged: _setNeverUpdate),
+                  child: Switch(
+                      value: snapshot.data!,
+                      activeColor: colorScheme.primary,
+                      onChanged: _setNeverUpdate),
                 ),
               );
             }),
@@ -124,74 +131,85 @@ class _PodcastSettingState extends State<PodcastSetting> {
                 onTap: () => _setHideNewMark(!snapshot.data!),
                 title: Row(
                   children: [
-                    Icon(LineIcons.eraser, size: 20),
+                    Icon(LineIcons.eraser, size: 18),
                     SizedBox(width: 20),
                     Text('Always hide new mark', style: textStyle),
                   ],
                 ),
                 trailing: Transform.scale(
                   scale: 0.8,
-                  child:
-                      Switch(value: snapshot.data!, onChanged: _setHideNewMark),
+                  child: Switch(
+                      value: snapshot.data!,
+                      activeColor: colorScheme.primary,
+                      onChanged: _setHideNewMark),
                 ),
               );
             }),
         FutureBuilder<VersionPolicy>(
-            future: _getVersionPolicy(widget.podcastLocal!.id),
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                return Column(children: <Widget>[
-                  ListTile(
-                      title: Row(
-                        children: [
-                          Icon(Icons.onetwothree_outlined, size: 18),
-                          SizedBox(width: 20),
-                          Text(s.settingsEpisodeVersioning, style: textStyle),
-                        ],
-                      ),
-                      dense: true),
-                  Container(
-                      child: MyDropdownButton(
-                          hint: FutureBuilder<String>(
-                            future: _getVersionPolicyText(snapshot.data!),
+          future: _getVersionPolicy(widget.podcastLocal!.id),
+          builder: (context, snapshot) {
+            return Column(
+              children: <Widget>[
+                ListTile(
+                    title: Row(
+                      children: [
+                        Icon(Icons.onetwothree_outlined, size: 18),
+                        SizedBox(width: 20),
+                        Text(s.settingsEpisodeVersioning, style: textStyle),
+                      ],
+                    ),
+                    dense: true),
+                Container(
+                  child: MyDropdownButton(
+                    hint: FutureBuilder<String>(
+                      future: _getVersionPolicyText(VersionPolicy.Default),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          return Text(
+                            snapshot.data!,
+                            style: textStyle,
+                          );
+                        } else {
+                          return Center();
+                        }
+                      },
+                    ),
+                    underline: Center(),
+                    dropdownColor:
+                        colorScheme.primary.toStrongBackround(context),
+                    displayItemCount: 4,
+                    value: snapshot.data,
+                    onChanged: (VersionPolicy policy) async {
+                      _setVersionPolicy(widget.podcastLocal!.id, policy);
+                    },
+                    items: <VersionPolicy>[
+                      VersionPolicy.Default,
+                      VersionPolicy.New,
+                      VersionPolicy.Old,
+                      VersionPolicy.NewIfNoDownloaded
+                    ].map<DropdownMenuItem<VersionPolicy>>((e) {
+                      return DropdownMenuItem<VersionPolicy>(
+                          value: e,
+                          child: FutureBuilder<String>(
+                            future: _getVersionPolicyText(e),
                             builder: (context, snapshot) {
                               if (snapshot.hasData) {
-                                return Text(snapshot.data!);
+                                return Text(
+                                  snapshot.data!,
+                                  style: textStyle,
+                                );
                               } else {
                                 return Center();
                               }
                             },
-                          ),
-                          underline: Center(),
-                          displayItemCount: 4,
-                          value: snapshot.data,
-                          onChanged: (VersionPolicy policy) async {
-                            _setVersionPolicy(widget.podcastLocal!.id, policy);
-                          },
-                          items: <VersionPolicy>[
-                            VersionPolicy.Default,
-                            VersionPolicy.New,
-                            VersionPolicy.Old,
-                            VersionPolicy.NewIfNoDownloaded
-                          ].map<DropdownMenuItem<VersionPolicy>>((e) {
-                            return DropdownMenuItem<VersionPolicy>(
-                                value: e,
-                                child: FutureBuilder<String>(
-                                  future: _getVersionPolicyText(e),
-                                  builder: (context, snapshot) {
-                                    if (snapshot.hasData) {
-                                      return Text(snapshot.data!);
-                                    } else {
-                                      return Center();
-                                    }
-                                  },
-                                ));
-                          }).toList())),
-                ]);
-              } else {
-                return Center();
-              }
-            }),
+                          ));
+                    }).toList(),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
         FutureBuilder<int?>(
           future: _getSkipSecondStart(widget.podcastLocal!.id),
           initialData: 0,
@@ -221,6 +239,7 @@ class _PodcastSettingState extends State<PodcastSetting> {
         ),
         if (_showStartTimePicker)
           _TimePicker(
+              color: colorScheme.primary,
               onCancel: () {
                 _secondsStart = 0;
                 setState(() => _showStartTimePicker = false);
@@ -230,26 +249,69 @@ class _PodcastSettingState extends State<PodcastSetting> {
                 if (mounted) setState(() => _showStartTimePicker = false);
               },
               onChange: (value) => _secondsStart = value.inSeconds),
-        ListTile(
+        FutureBuilder<int?>(
+          future: _getSkipSecondEnd(widget.podcastLocal!.id),
+          initialData: 0,
+          builder: (context, snapshot) => ListTile(
             onTap: () {
-              if (_coverStatus != RefreshCoverStatus.start) {
-                _refreshArtWork();
-              }
+              _secondsStart = 0;
+              setState(() {
+                _removeConfirm = false;
+                _markConfirm = false;
+                _showStartTimePicker = false;
+                _showEndTimePicker = !_showEndTimePicker;
+              });
             },
             dense: true,
             title: Row(
               children: [
-                Icon(Icons.refresh, size: 18),
+                Icon(Icons.fast_rewind_outlined, size: 18),
                 SizedBox(width: 20),
-                Text(s.refreshArtwork, style: textStyle),
+                Text(s.skipSecondsAtEnd, style: textStyle),
               ],
             ),
             trailing: Padding(
-                padding: const EdgeInsets.only(right: 15.0),
-                child: SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: _getRefreshStatusIcon(_coverStatus)))),
+              padding: const EdgeInsets.only(right: 10.0),
+              child: Text(snapshot.data!.toTime),
+            ),
+          ),
+        ),
+        if (_showEndTimePicker)
+          _TimePicker(
+              color: colorScheme.primary,
+              onCancel: () {
+                _secondsStart = 0;
+                setState(() => _showEndTimePicker = false);
+              },
+              onConfirm: () async {
+                await _saveSkipSecondsStart(_secondsStart);
+                if (mounted) setState(() => _showEndTimePicker = false);
+              },
+              onChange: (value) => _secondsStart = value.inSeconds),
+        ListTile(
+          onTap: () {
+            if (_coverStatus != RefreshCoverStatus.start) {
+              _refreshArtWork();
+            }
+          },
+          dense: true,
+          title: Row(
+            children: [
+              Icon(Icons.refresh, size: 18),
+              SizedBox(width: 20),
+              Text(s.refreshArtwork, style: textStyle),
+            ],
+          ),
+          trailing: Padding(
+            padding: const EdgeInsets.only(right: 15.0),
+            child: SizedBox(
+              height: 20,
+              width: 20,
+              child: _getRefreshStatusIcon(_coverStatus,
+                  color: colorScheme.primary),
+            ),
+          ),
+        ),
         Divider(height: 1),
         ListTile(
           onTap: () {
@@ -267,13 +329,15 @@ class _PodcastSettingState extends State<PodcastSetting> {
                 height: 18,
                 width: 18,
                 child: CustomPaint(
-                  painter: ListenedAllPainter(context.accentColor, stroke: 2),
+                  painter: ListenedAllPainter(colorScheme.onSecondaryContainer,
+                      stroke: 2),
                 ),
               ),
               SizedBox(width: 20),
               Text(s.menuMarkAllListened,
                   style: textStyle.copyWith(
-                      color: context.accentColor, fontWeight: FontWeight.bold)),
+                      color: colorScheme.onSecondaryContainer,
+                      fontWeight: FontWeight.bold)),
             ],
           ),
           trailing: Padding(
@@ -284,7 +348,10 @@ class _PodcastSettingState extends State<PodcastSetting> {
               child: _markStatus == MarkStatus.none
                   ? Center()
                   : _markStatus == MarkStatus.start
-                      ? CircularProgressIndicator(strokeWidth: 2)
+                      ? CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: colorScheme.primary,
+                        )
                       : Icon(Icons.done),
             ),
           ),
@@ -292,7 +359,7 @@ class _PodcastSettingState extends State<PodcastSetting> {
         if (_markConfirm)
           Container(
             width: double.infinity,
-            color: context.primaryColorDark,
+            color: colorScheme.primary.toStrongBackround(context),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
@@ -314,7 +381,7 @@ class _PodcastSettingState extends State<PodcastSetting> {
                       });
                     },
                     child: Text(s.confirm,
-                        style: TextStyle(color: context.error))),
+                        style: TextStyle(color: colorScheme.primary))),
               ],
             ),
           ),
@@ -502,12 +569,12 @@ class _PodcastSettingState extends State<PodcastSetting> {
     }
   }
 
-  Widget _getRefreshStatusIcon(RefreshCoverStatus status) {
+  Widget _getRefreshStatusIcon(RefreshCoverStatus status, {Color? color}) {
     switch (status) {
       case RefreshCoverStatus.none:
         return Center();
       case RefreshCoverStatus.start:
-        return CircularProgressIndicator(strokeWidth: 2);
+        return CircularProgressIndicator(strokeWidth: 2, color: color);
       case RefreshCoverStatus.complete:
         return Icon(Icons.done);
       case RefreshCoverStatus.error:
@@ -535,21 +602,24 @@ class _PodcastSettingState extends State<PodcastSetting> {
 }
 
 class _TimePicker extends StatelessWidget {
-  const _TimePicker({this.onConfirm, this.onCancel, this.onChange, Key? key})
+  const _TimePicker(
+      {this.onConfirm, this.onCancel, this.onChange, this.color, Key? key})
       : super(key: key);
   final VoidCallback? onConfirm;
   final VoidCallback? onCancel;
   final ValueChanged<Duration>? onChange;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
     final s = context.s;
     return Container(
-      color: context.primaryColorDark,
+      color: color?.toStrongBackround(context) ?? context.primaryColorDark,
       child: Column(
         children: [
           SizedBox(height: 10),
           DurationPicker(
+            color: color,
             onChange: onChange,
           ),
           Row(
@@ -568,7 +638,7 @@ class _TimePicker extends StatelessWidget {
                 onPressed: onConfirm,
                 child: Text(
                   s.confirm,
-                  style: TextStyle(color: context.accentColor),
+                  style: TextStyle(color: color ?? context.accentColor),
                 ),
               )
             ],

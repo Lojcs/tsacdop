@@ -25,8 +25,13 @@ class EpisodeDetail extends StatefulWidget {
   final EpisodeBrief? episodeItem;
   final String heroTag;
   final bool hide;
+  final VoidCallback? onClosed;
   EpisodeDetail(
-      {this.episodeItem, this.heroTag = '', this.hide = false, Key? key})
+      {this.episodeItem,
+      this.heroTag = '',
+      this.hide = false,
+      this.onClosed,
+      Key? key})
       : super(key: key);
 
   @override
@@ -82,6 +87,17 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
   }
 
   @override
+  void deactivate() {
+    context.statusBarColor = null;
+    context.navBarColor =
+        Provider.of<AudioPlayerNotifier>(context, listen: false).playerRunning
+            ? context.accentBackground
+            : null;
+    if (widget.onClosed != null) widget.onClosed!();
+    super.deactivate();
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
@@ -104,16 +120,12 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
               if (snapshot.hasData) {
                 _episodeItem = snapshot.data!;
               }
+              context.statusBarColor = _episodeItem.cardColor(context);
+              context.navBarColor = data.item2
+                  ? context.accentBackground
+                  : _episodeItem.cardColor(context);
               return AnnotatedRegion<SystemUiOverlayStyle>(
-                value: SystemUiOverlayStyle(
-                    statusBarColor: _episodeItem.cardColor(context),
-                    systemNavigationBarColor: data.item2
-                        ? context.accentBackground
-                        : _episodeItem.cardColor(context),
-                    systemNavigationBarContrastEnforced: false,
-                    systemNavigationBarIconBrightness: context.iconBrightness,
-                    statusBarBrightness: context.brightness,
-                    statusBarIconBrightness: context.iconBrightness),
+                value: context.overlay,
                 child: WillPopScope(
                   onWillPop: () async {
                     if (_playerKey.currentState != null &&

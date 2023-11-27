@@ -83,7 +83,7 @@ Future<void> requestDownload(List<EpisodeBrief> episodes, BuildContext context,
         ],
       );
     }
-    if (useData) {
+    if (useData || !usingData) {
       for (var episode in episodes) {
         Provider.of<DownloadState>(context, listen: false).startTask(episode);
       }

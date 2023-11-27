@@ -14,33 +14,34 @@ enum ContainerTransitionType {
 }
 
 class OpenContainer extends StatefulWidget {
-  const OpenContainer({
-    Key? key,
-    this.closedColor = Colors.white,
-    this.openColor = Colors.white,
-    this.beginColor = Colors.white,
-    this.endColor = Colors.white,
-    this.closedElevation = 1.0,
-    this.openElevation = 4.0,
-    this.closedShape = const RoundedRectangleBorder(
-      borderRadius: BorderRadius.all(Radius.circular(4.0)),
-    ),
-    this.openShape = const RoundedRectangleBorder(),
-    required this.closedBuilder,
-    required this.openBuilder,
-    this.flightWidget,
-    this.flightWidgetBeginSize,
-    this.flightWidgetEndSize,
-    this.flightWidgetBeginOffsetX,
-    this.flightWidgetBeginOffsetY,
-    this.flightWidgetEndOffsetX,
-    this.flightWidgetEndOffsetY,
-    this.playerRunning,
-    this.playerHeight,
-    this.tappable = true,
-    this.transitionDuration = const Duration(milliseconds: 300),
-    this.transitionType = ContainerTransitionType.fade,
-  }) : super(key: key);
+  const OpenContainer(
+      {Key? key,
+      this.closedColor = Colors.white,
+      this.openColor = Colors.white,
+      this.beginColor = Colors.white,
+      this.endColor = Colors.white,
+      this.closedElevation = 1.0,
+      this.openElevation = 4.0,
+      this.closedShape = const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(4.0)),
+      ),
+      this.openShape = const RoundedRectangleBorder(),
+      required this.closedBuilder,
+      required this.openBuilder,
+      this.flightWidget,
+      this.flightWidgetBeginSize,
+      this.flightWidgetEndSize,
+      this.flightWidgetBeginOffsetX,
+      this.flightWidgetBeginOffsetY,
+      this.flightWidgetEndOffsetX,
+      this.flightWidgetEndOffsetY,
+      this.playerRunning,
+      this.playerHeight,
+      this.tappable = true,
+      this.transitionDuration = const Duration(milliseconds: 300),
+      this.transitionType = ContainerTransitionType.fade,
+      this.onDispose})
+      : super(key: key);
 
   final Color beginColor;
   final Color endColor;
@@ -75,6 +76,8 @@ class OpenContainer extends StatefulWidget {
 
   final ContainerTransitionType transitionType;
 
+  final VoidCallback? onDispose;
+
   @override
   _OpenContainerState createState() => _OpenContainerState();
 }
@@ -86,30 +89,30 @@ class _OpenContainerState extends State<OpenContainer> {
 
   void openContainer() {
     Navigator.of(context).push(_OpenContainerRoute(
-      beginColor: widget.beginColor,
-      endColor: widget.endColor,
-      closedColor: widget.closedColor,
-      openColor: widget.openColor,
-      closedElevation: widget.closedElevation,
-      openElevation: widget.openElevation,
-      closedShape: widget.closedShape,
-      openShape: widget.openShape,
-      closedBuilder: widget.closedBuilder,
-      openBuilder: widget.openBuilder,
-      hideableKey: _hideableKey,
-      closedBuilderKey: _closedBuilderKey,
-      transitionDuration: widget.transitionDuration,
-      transitionType: widget.transitionType,
-      flightWidget: widget.flightWidget,
-      flightWidgetBeginSize: widget.flightWidgetBeginSize,
-      flightWidgetEndSize: widget.flightWidgetEndSize,
-      flightWidgetBeginOffsetX: widget.flightWidgetBeginOffsetX,
-      flightWidgetBeginOffsetY: widget.flightWidgetBeginOffsetY,
-      flightWidgetEndOffsetX: widget.flightWidgetEndOffsetX,
-      flightWidgetEndOffsetY: widget.flightWidgetEndOffsetY,
-      playerRunning: widget.playerRunning,
-      playerHeight: widget.playerHeight,
-    ));
+        beginColor: widget.beginColor,
+        endColor: widget.endColor,
+        closedColor: widget.closedColor,
+        openColor: widget.openColor,
+        closedElevation: widget.closedElevation,
+        openElevation: widget.openElevation,
+        closedShape: widget.closedShape,
+        openShape: widget.openShape,
+        closedBuilder: widget.closedBuilder,
+        openBuilder: widget.openBuilder,
+        hideableKey: _hideableKey,
+        closedBuilderKey: _closedBuilderKey,
+        transitionDuration: widget.transitionDuration,
+        transitionType: widget.transitionType,
+        flightWidget: widget.flightWidget,
+        flightWidgetBeginSize: widget.flightWidgetBeginSize,
+        flightWidgetEndSize: widget.flightWidgetEndSize,
+        flightWidgetBeginOffsetX: widget.flightWidgetBeginOffsetX,
+        flightWidgetBeginOffsetY: widget.flightWidgetBeginOffsetY,
+        flightWidgetEndOffsetX: widget.flightWidgetEndOffsetX,
+        flightWidgetEndOffsetY: widget.flightWidgetEndOffsetY,
+        playerRunning: widget.playerRunning,
+        playerHeight: widget.playerHeight,
+        onDispose: widget.onDispose));
   }
 
   @override
@@ -218,6 +221,7 @@ class _OpenContainerRoute extends ModalRoute<void> {
     this.flightWidgetEndOffsetY,
     this.playerRunning,
     this.playerHeight,
+    this.onDispose,
   })  : _elevationTween = Tween<double>(
           begin: closedElevation,
           end: openElevation,
@@ -388,6 +392,7 @@ class _OpenContainerRoute extends ModalRoute<void> {
   AnimationStatus? _lastAnimationStatus;
   AnimationStatus? _currentAnimationStatus;
 
+  final VoidCallback? onDispose;
   @override
   TickerFuture didPush() {
     _takeMeasurements(navigatorContext: hideableKey.currentContext!);
@@ -422,6 +427,12 @@ class _OpenContainerRoute extends ModalRoute<void> {
       delayForSourceRoute: true,
     );
     return super.didPop(result);
+  }
+
+  @override
+  void dispose() {
+    if (onDispose != null) onDispose!();
+    super.dispose();
   }
 
   void _takeMeasurements({

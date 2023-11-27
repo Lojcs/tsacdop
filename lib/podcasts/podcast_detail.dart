@@ -49,7 +49,10 @@ class _PodcastDetailState extends State<PodcastDetail> {
   final GlobalKey<AudioPanelState> _playerKey = GlobalKey<AudioPanelState>();
   final GlobalKey _infoKey = GlobalKey();
   final _dbHelper = DBHelper();
-  late final Color _podcastAccent;
+  late final Color _podcastAccent = ColorScheme.fromSeed(
+          seedColor: widget.podcastLocal!.primaryColor!.toColor(),
+          brightness: context.brightness)
+      .primary;
 
   /// Episodes total count.
   int? _episodeCount;
@@ -113,7 +116,12 @@ class _PodcastDetailState extends State<PodcastDetail> {
     _selectAfter = false;
     _selectBefore = false;
     _showInfo = false;
-    _podcastAccent = widget.podcastLocal!.primaryColor!.toColor();
+  }
+
+  @override
+  void deactivate() {
+    context.statusBarColor = null;
+    super.deactivate();
   }
 
   @override
@@ -241,6 +249,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
         borderRadius: BorderRadius.circular(100),
         clipBehavior: Clip.hardEdge,
         child: PopupMenuButton<int>(
+          color: _podcastAccent.toStrongBackround(context),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           elevation: 1,
@@ -400,6 +409,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
                                           });
                                         },
                                         accentColor: _podcastAccent,
+                                        query: _query,
                                       ));
                           break;
                         default:
@@ -441,44 +451,53 @@ class _PodcastDetailState extends State<PodcastDetail> {
                             )
                           : Center();
                     }),
-                if (!widget.hide)
-                  Material(
-                      color: Colors.transparent,
-                      clipBehavior: Clip.hardEdge,
-                      borderRadius: BorderRadius.circular(100),
-                      child: TweenAnimationBuilder(
-                        duration: Duration(milliseconds: 500),
-                        curve: Curves.easeInOutQuart,
-                        tween: Tween<double>(begin: 0.0, end: 1.0),
-                        builder: (context, dynamic angle, child) =>
-                            Transform.rotate(
-                          angle: math.pi * 2 * angle,
-                          child: SizedBox(
-                            width: 30,
-                            child: IconButton(
-                              padding: EdgeInsets.zero,
-                              tooltip: s.homeSubMenuSortBy,
-                              icon: Icon(
-                                _sortOrder == SortOrder.ASC
-                                    ? LineIcons.hourglassStart
-                                    : LineIcons.hourglassEnd,
-                                color: _sortOrder == SortOrder.ASC
-                                    ? _podcastAccent
-                                    : null,
+                !widget.hide
+                    ? Material(
+                        color: Colors.transparent,
+                        clipBehavior: Clip.hardEdge,
+                        borderRadius: BorderRadius.circular(100),
+                        child: TweenAnimationBuilder(
+                          duration: Duration(milliseconds: 500),
+                          curve: Curves.easeInOutQuart,
+                          tween: Tween<double>(begin: 0.0, end: 1.0),
+                          builder: (context, dynamic angle, child) =>
+                              Transform.rotate(
+                            angle: math.pi * 2 * angle,
+                            child: SizedBox(
+                              width: 30,
+                              child: IconButton(
+                                padding: EdgeInsets.zero,
+                                tooltip: s.homeSubMenuSortBy,
+                                icon: Icon(
+                                  _sortOrder == SortOrder.ASC
+                                      ? LineIcons.hourglassStart
+                                      : LineIcons.hourglassEnd,
+                                  color: _sortOrder == SortOrder.ASC
+                                      ? _podcastAccent
+                                      : null,
+                                ),
+                                iconSize: 18,
+                                onPressed: () {
+                                  setState(() => {
+                                        if (_sortOrder == SortOrder.ASC)
+                                          _sortOrder = SortOrder.DESC
+                                        else
+                                          _sortOrder = SortOrder.ASC
+                                      });
+                                },
                               ),
-                              iconSize: 18,
-                              onPressed: () {
-                                setState(() => {
-                                      if (_sortOrder == SortOrder.ASC)
-                                        _sortOrder = SortOrder.DESC
-                                      else
-                                        _sortOrder = SortOrder.ASC
-                                    });
-                              },
                             ),
                           ),
                         ),
-                      )),
+                      )
+                    : Icon(
+                        _sortOrder == SortOrder.ASC
+                            ? LineIcons.hourglassStart
+                            : LineIcons.hourglassEnd,
+                        color:
+                            _sortOrder == SortOrder.ASC ? _podcastAccent : null,
+                        size: 18,
+                      ),
                 FutureBuilder<bool>(
                     future: _getHideListened(),
                     builder: (context, snapshot) {
@@ -549,9 +568,10 @@ class _PodcastDetailState extends State<PodcastDetail> {
         ? context.background
         : widget.podcastLocal!.primaryColor!.colorizedark();
     final s = context.s;
+    context.statusBarColor = color;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
-          statusBarColor: color, statusBarIconBrightness: Brightness.light),
+      value:
+          context.overlay.copyWith(statusBarIconBrightness: Brightness.light),
       child: WillPopScope(
         onWillPop: () {
           if (_playerKey.currentState != null &&
@@ -616,6 +636,8 @@ class _PodcastDetailState extends State<PodcastDetail> {
                                     onPressed: () => generalSheet(
                                       context,
                                       title: widget.podcastLocal!.title,
+                                      color: widget.podcastLocal!.primaryColor!
+                                          .toColor(),
                                       child: PodcastSetting(
                                           podcastLocal: widget.podcastLocal),
                                     ).then((value) {
@@ -629,10 +651,9 @@ class _PodcastDetailState extends State<PodcastDetail> {
                                 iconTheme: IconThemeData(
                                   color: Colors.white,
                                 ),
-                                expandedHeight: math.max(
+                                expandedHeight:
                                     math.max(130 + context.paddingTop, 180) +
                                         (_showInfo! ? _infoHeight : 0),
-                                    220),
                                 backgroundColor: color,
                                 floating: true,
                                 pinned: true,
@@ -656,46 +677,45 @@ class _PodcastDetailState extends State<PodcastDetail> {
                                               124))
                                       .clamp(0, 1);
                                   final titleLineTest = TextPainter(
-                                      textScaleFactor: 1.06,
+                                      textScaleFactor: 1,
                                       text: TextSpan(
                                           text: widget.podcastLocal!.title!,
                                           style:
                                               context.textTheme.headlineSmall!),
                                       textDirection: TextDirection.ltr);
                                   titleLineTest.layout(
-                                      maxWidth: context.width - 164);
+                                      maxWidth: context.width - 185);
+                                  double titleScale = ((context.width - 185) /
+                                          titleLineTest.size.width)
+                                      .clamp(1, 1.2);
+                                  double titleLineHeight = titleLineTest
+                                          .size.height /
+                                      titleLineTest.computeLineMetrics().length;
                                   int titleLineCount =
                                       titleLineTest.computeLineMetrics().length;
                                   return FlexibleSpaceBar(
                                       titlePadding: EdgeInsets.only(
-                                          left: 55 - expandRatio * 20,
+                                          left: 55,
                                           right: 55 +
-                                              (_showInfo!
-                                                  ? fullExpandRatio == 0
-                                                      ? 0
-                                                      : 70
-                                                  : expandRatio < 0.3
-                                                      ? 0
-                                                      : 70),
-                                          bottom: (_showInfo! ? 0 : 0) +
-                                              _topHeight -
+                                              (fullExpandRatio == 0 ? 0 : 75),
+                                          bottom: _topHeight -
                                               (40 +
                                                   (titleLineCount == 1
                                                       ? expandRatio * 54
                                                       : titleLineCount == 2
                                                           ? expandRatio * 39 +
-                                                              (expandRatio < 0.3
+                                                              (expandRatio < 0.2
                                                                   ? 0
-                                                                  : 30)
+                                                                  : titleLineHeight)
                                                           : expandRatio * 24 +
-                                                              (expandRatio < 0.3
+                                                              (expandRatio < 0.2
                                                                   ? 0
                                                                   : expandRatio <
                                                                           0.4
-                                                                      ? 25
-                                                                      : 50)))),
-                                      expandedTitleScale:
-                                          titleLineCount >= 3 ? 1 : 1.2,
+                                                                      ? titleLineHeight
+                                                                      : titleLineHeight *
+                                                                          2)))),
+                                      expandedTitleScale: titleScale,
                                       background: Stack(
                                         children: <Widget>[
                                           Padding(
@@ -810,33 +830,28 @@ class _PodcastDetailState extends State<PodcastDetail> {
                                           child: Text(
                                               widget.podcastLocal!.title!,
                                               maxLines: titleLineCount < 3
-                                                  ? expandRatio < 0.3
+                                                  ? expandRatio < 0.2
                                                       ? 1
                                                       : 2
-                                                  : expandRatio < 0.3
+                                                  : expandRatio < 0.2
                                                       ? 1
                                                       : expandRatio < 0.4
                                                           ? 2
                                                           : 3,
                                               overflow: TextOverflow.ellipsis,
-                                              style: titleLineCount < 3
-                                                  ? context
-                                                      .textTheme.headlineSmall!
-                                                      .copyWith(
-                                                          color: Colors.white)
-                                                  : context
-                                                      .textTheme.titleLarge!
-                                                      .copyWith(
-                                                          color: Colors.white)),
+                                              style: context
+                                                  .textTheme.headlineSmall!
+                                                  .copyWith(
+                                                      color: Colors.white)),
                                         ),
                                       ));
                                 }),
                               ),
                               SliverAppBar(
-                                  // TODO: This should be pinned.
                                   pinned: true,
                                   leading: Center(),
-                                  toolbarHeight: 50,
+                                  toolbarHeight: 40,
+                                  backgroundColor: context.background,
                                   flexibleSpace: _actionBar(context)),
                               if (!widget.hide)
                                 FutureBuilder<List<EpisodeBrief>>(
@@ -882,7 +897,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
                                             _selectAfter = false;
                                             _selectedEpisodes = value;
                                           }),
-                                          preferEpisodeImage: true,
+                                          preferEpisodeImage: false,
                                         );
                                       }
                                       return SliverToBoxAdapter(
@@ -931,6 +946,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
                                   MultiSelectMenuBar(
                                     selectedList: _selectedEpisodes,
                                     selectAll: _selectAll,
+                                    color: _podcastAccent,
                                     onSelectAll: (value) {
                                       setState(() {
                                         _selectAll = value;
@@ -1204,43 +1220,27 @@ class _AboutPodcastState extends State<AboutPodcast> {
 }
 
 class SearchEpisode extends StatefulWidget {
-  SearchEpisode({this.onSearch, this.accentColor, Key? key}) : super(key: key);
+  SearchEpisode({this.onSearch, this.accentColor, this.query, Key? key})
+      : super(key: key);
   final ValueChanged<String?>? onSearch;
   final Color? accentColor;
+  final String? query;
   @override
   _SearchEpisodeState createState() => _SearchEpisodeState();
 }
 
 class _SearchEpisodeState extends State<SearchEpisode> {
-  TextEditingController? _controller;
   String? _query;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _controller!.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     final s = context.s;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor:
-            Theme.of(context).brightness == Brightness.light
-                ? Color.fromRGBO(113, 113, 113, 1)
-                : Color.fromRGBO(5, 5, 5, 1),
-      ),
+      value: context.overlayWithBarrier,
       child: AlertDialog(
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(10))),
+        backgroundColor: widget.accentColor?.toWeakBackround(context),
         elevation: 1,
         contentPadding: const EdgeInsets.symmetric(horizontal: 20),
         titlePadding: const EdgeInsets.all(20),
@@ -1261,16 +1261,15 @@ class _SearchEpisodeState extends State<SearchEpisode> {
                 Navigator.of(context).pop();
               }
             },
-            child: Text(s.confirm,
-                style: TextStyle(
-                    color: widget.accentColor ?? context.accentColor)),
+            child: Text(s.confirm, style: TextStyle(color: widget.accentColor)),
           )
         ],
         title: SizedBox(width: context.width - 160, child: Text(s.search)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            TextField(
+            TextFormField(
+              initialValue: widget.query,
               decoration: InputDecoration(
                 contentPadding: EdgeInsets.symmetric(horizontal: 10),
                 hintText: s.searchEpisode,
@@ -1289,7 +1288,6 @@ class _SearchEpisodeState extends State<SearchEpisode> {
               cursorRadius: Radius.circular(2),
               autofocus: true,
               maxLines: 1,
-              controller: _controller,
               onChanged: (value) {
                 setState(() => _query = value);
               },

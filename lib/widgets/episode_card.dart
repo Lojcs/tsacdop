@@ -1,5 +1,6 @@
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:focused_menu/focused_menu.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -103,6 +104,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
     with TickerProviderStateMixin {
   bool _firstBuild = true;
   late AnimationController _controller;
+  late AnimationController _shadowController;
   bool selected = false;
   // Wheter the card has been selected internally
   bool liveSelect = false;
@@ -118,11 +120,19 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
           setState(() {});
         }
       });
+    _shadowController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 200))
+      ..addListener(() {
+        if (mounted) {
+          setState(() {});
+        }
+      });
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _shadowController.dispose();
     super.dispose();
   }
 
@@ -134,8 +144,12 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
     // Apply external selection
     if (widget.selected != selected && !liveSelect && widget.selectMode) {
       _firstBuild = false;
-      selected = true;
-      _controller.forward();
+      selected = widget.selected;
+      if (widget.selected) {
+        _controller.forward();
+      } else {
+        _controller.reverse();
+      }
     }
     // Unselect on selectMode exit
     if (!widget.selectMode && selected) {
@@ -170,6 +184,9 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                           : context.width / 6,
                   episode: episode,
                   preferEpisodeImage: widget.preferEpisodeImage,
+                  onClosed: (() {
+                    _shadowController.reverse();
+                  }),
                   closedBuilder: (context, action, boo) => FutureBuilder<
                           Tuple2<bool, List<int>>>(
                       future: _initData(episode),
@@ -204,10 +221,12 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                             childDecoration: _cardDecoration(
                                 context, episode, widget.layout,
                                 selected: selected,
-                                animator: _firstBuild ? null : _controller),
+                                controller: _firstBuild ? null : _controller,
+                                shadowController: _shadowController),
                             openChildDecoration: _cardDecoration(
                                 context, episode, widget.layout,
-                                selected: true),
+                                selected: true,
+                                shadowController: _shadowController),
                             childHighlightColor: context.brightness == Brightness.light
                                 ? episode.colorSchemeDark.primary
                                 : episode.colorSchemeLight
@@ -412,7 +431,12 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                                       });
                                     }
                                   }
-                                : action,
+                                : () async {
+                                    _shadowController.forward();
+                                    // await Future.delayed(
+                                    //     Duration(milliseconds: 150));
+                                    action();
+                                  },
                             child: EpisodeCard(context, episode, widget.layout,
                                 openPodcast: widget.openPodcast,
                                 showImage: widget.showImage && !boo,
@@ -680,10 +704,12 @@ Widget _progressLowerlay(BuildContext context, double seekValue, Layout layout,
 
 BoxDecoration _cardDecoration(
     BuildContext context, EpisodeBrief episode, Layout layout,
-    {bool selected = false, AnimationController? animator}) {
+    {bool selected = false,
+    AnimationController? controller,
+    AnimationController? shadowController}) {
   return BoxDecoration(
       color: context.realDark
-          ? animator == null
+          ? controller == null
               ? selected
                   ? Color.lerp(context.background,
                       episode.getColorScheme(context).primary, 0.25)
@@ -693,10 +719,10 @@ BoxDecoration _cardDecoration(
                           begin: context.background,
                           end: Color.lerp(context.background,
                               episode.getColorScheme(context).primary, 0.25))
-                      .animate(animator)
+                      .animate(controller)
                       .value!
                   : context.background
-          : animator == null
+          : controller == null
               ? selected
                   ? Color.lerp(
                       episode.getColorScheme(context).secondaryContainer,
@@ -714,7 +740,7 @@ BoxDecoration _cardDecoration(
                                   .secondaryContainer,
                               episode.getColorScheme(context).primary,
                               0.15))
-                      .animate(animator)
+                      .animate(controller)
                       .value!
                   : episode.getColorScheme(context).secondaryContainer,
       borderRadius: BorderRadius.circular(layout == Layout.small
@@ -724,7 +750,7 @@ BoxDecoration _cardDecoration(
               : 20),
       border: Border.all(
         color: context.realDark
-            ? animator == null
+            ? controller == null
                 ? selected
                     ? Color.lerp(episode.getColorScheme(context).primary,
                         Colors.white, 0.5)!
@@ -733,32 +759,38 @@ BoxDecoration _cardDecoration(
                         begin: episode.getColorScheme(context).primary,
                         end: Color.lerp(episode.getColorScheme(context).primary,
                             Colors.white, 0.5)!)
-                    .animate(animator)
+                    .animate(controller)
                     .value!
-            : animator == null
+            : controller == null
                 ? selected
                     ? episode.getColorScheme(context).primary
                     : Colors.transparent
                 : ColorTween(
                         begin: Colors.transparent,
                         end: episode.getColorScheme(context).primary)
-                    .animate(animator)
+                    .animate(controller)
                     .value!,
         width: 1.0,
       ),
       boxShadow: [
         BoxShadow(
-          color: episode.getColorScheme(context).primary,
-          blurRadius: animator == null
+          color: shadowController == null
+              ? episode.getColorScheme(context).primary
+              : ColorTween(
+                      begin: episode.getColorScheme(context).primary,
+                      end: Colors.transparent)
+                  .animate(shadowController)
+                  .value!,
+          blurRadius: controller == null
               ? selected
                   ? 8
                   : 5
-              : Tween<double>(begin: 5, end: 8).animate(animator).value,
-          spreadRadius: animator == null
+              : Tween<double>(begin: 5, end: 8).animate(controller).value,
+          spreadRadius: controller == null
               ? selected
                   ? 2
                   : -1
-              : Tween<double>(begin: -1, end: 2).animate(animator).value,
+              : Tween<double>(begin: -1, end: 2).animate(controller).value,
           offset: Offset.fromDirection(0, 0),
         )
       ]);

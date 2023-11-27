@@ -99,12 +99,11 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
           context.originalPadding = MediaQuery.of(context).padding;
           return AnnotatedRegion<SystemUiOverlayStyle>(
             value: SystemUiOverlayStyle(
-                systemNavigationBarIconBrightness: context.brightness,
+                systemNavigationBarIconBrightness: context.iconBrightness,
                 statusBarIconBrightness: context.iconBrightness,
                 systemNavigationBarColor:
                     data.item1 ? context.accentBackground : context.background,
-                statusBarColor: context.background,
-                systemNavigationBarContrastEnforced: false),
+                statusBarColor: context.background),
             child: WillPopScope(
               onWillPop: () async {
                 if (_playerKey.currentState != null &&
