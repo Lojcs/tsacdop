@@ -114,3 +114,18 @@ OverlayEntry createOverlayEntry(BuildContext context,
     ),
   );
 }
+
+Widget buttonOnMenu(BuildContext context,
+        {Widget? child, VoidCallback? onTap, bool rounded = true}) =>
+    Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: rounded ? context.radiusLarge : null,
+        onTap: onTap,
+        child: SizedBox(
+          height: 40,
+          child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12.0), child: child),
+        ),
+      ),
+    );

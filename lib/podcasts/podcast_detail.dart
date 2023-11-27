@@ -90,7 +90,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
   List<EpisodeBrief>? _selectedEpisodes = [];
 
   ///Toggle for multi-select.
-  bool? _multiSelect;
+  bool _multiSelect = true;
   bool? _selectAll;
   late bool _selectBefore;
   late bool _selectAfter;
@@ -263,9 +263,9 @@ class _PodcastDetailState extends State<PodcastDetail> {
   Widget _actionBar(BuildContext context) {
     final s = context.s;
     return SizedBox(
-        height: 40,
+        height: 50,
         child: Padding(
-            padding: EdgeInsets.only(top: 10),
+            padding: EdgeInsets.symmetric(vertical: 10),
             child: Row(
               children: <Widget>[
                 SizedBox(width: 15),
@@ -578,6 +578,11 @@ class _PodcastDetailState extends State<PodcastDetail> {
               _playerKey.currentState!.initSize! > 100) {
             _playerKey.currentState!.backToMini();
             return Future.value(false);
+          } else if (_multiSelect) {
+            setState(() {
+              _multiSelect = false;
+            });
+            return Future.value(false);
           } else {
             return Future.value(true);
           }
@@ -850,8 +855,9 @@ class _PodcastDetailState extends State<PodcastDetail> {
                               SliverAppBar(
                                   pinned: true,
                                   leading: Center(),
-                                  toolbarHeight: 40,
+                                  toolbarHeight: 50,
                                   backgroundColor: context.background,
+                                  scrolledUnderElevation: 0,
                                   flexibleSpace: _actionBar(context)),
                               if (!widget.hide)
                                 FutureBuilder<List<EpisodeBrief>>(
@@ -942,7 +948,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
                             var height = kMinPlayerHeight[data.item2!.index];
                             return Column(
                               children: [
-                                if (_multiSelect!)
+                                if (_multiSelect)
                                   MultiSelectMenuBar(
                                     selectedList: _selectedEpisodes,
                                     selectAll: _selectAll,

@@ -83,8 +83,8 @@ class EpisodeGrid extends StatelessWidget {
     final scrollController = ScrollController();
     final s = context.s;
     return SliverPadding(
-      padding: const EdgeInsets.only(
-          top: 10.0, bottom: 5.0, left: 10.0, right: 10.0),
+      padding:
+          const EdgeInsets.only(top: 5.0, bottom: 5.0, left: 10.0, right: 10.0),
       sliver: LiveSliverGrid.options(
         controller: scrollController,
         options: options,
