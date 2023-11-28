@@ -69,7 +69,7 @@ extension ContextExtension on BuildContext {
   set statusBarColor(Color? color) {
     // TODO: Fix: If an EpisodeDetail is opened while a PodcastDetail is in its closing animation and hasn't called deactivate yet, the color of the PodcastDetail gets stuck in the stack, leading to incorrect colors for eg. mobile data confirmation dialog in home screen.
     SettingState setting = Provider.of<SettingState>(this, listen: false);
-    print("$color, ${setting.statusBarColor}");
+    // print("$color, ${setting.statusBarColor}");
     if (color == null) {
       if (setting.statusBarColor.isNotEmpty) {
         setting.statusBarColor.removeLast();

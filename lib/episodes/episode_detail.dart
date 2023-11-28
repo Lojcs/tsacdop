@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer' as developer;
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -201,41 +202,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                         children: [
                                           if (_episodeItem.versionInfo ==
                                               VersionInfo.NONE)
-                                            Row(
-                                              children: [
-                                                buttonOnMenu(
-                                                  context,
-                                                  child: Icon(
-                                                    Icons.adjust,
-                                                    color: context.accentColor,
-                                                  ),
-                                                ),
-                                                DropdownButton(
-                                                  hint: Text(
-                                                      s.published(formateDate(
-                                                          _episodeItem
-                                                              .pubDate)),
-                                                      style: TextStyle(
-                                                          color: context
-                                                              .accentColor)),
-                                                  underline: Center(),
-                                                  isDense: true,
-                                                  icon: Center(),
-                                                  items: [
-                                                    DropdownMenuItem(
-                                                        child: Text(
-                                                            s.published(
-                                                                formateDate(
-                                                                    _episodeItem
-                                                                        .pubDate)),
-                                                            style: TextStyle(
-                                                                color: context
-                                                                    .accentColor)))
-                                                  ],
-                                                  onChanged: null,
-                                                ),
-                                              ],
-                                            )
+                                            _versionDateSelector([_episodeItem])
                                           else
                                             FutureBuilder<EpisodeBrief>(
                                               // TODO: Make ui responsive.
@@ -249,114 +216,11 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                                   versions.sort((a, b) => b!
                                                       .pubDate
                                                       .compareTo(a!.pubDate));
-                                                  return Row(
-                                                    children: [
-                                                      buttonOnMenu(
-                                                        context,
-                                                        child: (_episodeItem
-                                                                    .versionInfo !=
-                                                                VersionInfo.IS)
-                                                            ? Icon(
-                                                                Icons.adjust,
-                                                                color: context
-                                                                    .accentColor,
-                                                              )
-                                                            : Icon(
-                                                                Icons
-                                                                    .circle_outlined,
-                                                              ),
-                                                        onTap: () {
-                                                          if (_episodeItem
-                                                                  .versionInfo ==
-                                                              VersionInfo.IS) {
-                                                            _setEpisodeDisplayVersion(
-                                                                _episodeItem);
-                                                          }
-                                                        },
-                                                      ),
-                                                      MyDropdownButton(
-                                                        hint: Text(
-                                                            s.published(
-                                                                formateDate(
-                                                                    _episodeItem
-                                                                        .pubDate)),
-                                                            style: TextStyle(
-                                                                color: context
-                                                                    .accentColor)),
-                                                        underline: Center(),
-                                                        dropdownColor: context
-                                                            .accentBackground,
-                                                        isDense: true,
-                                                        value: _episodeItem,
-                                                        items: versions
-                                                            .map((e) =>
-                                                                DropdownMenuItem(
-                                                                    value: e,
-                                                                    child: Row(
-                                                                      children: [
-                                                                        Text(
-                                                                            s.published(formateDate(e!
-                                                                                .pubDate)),
-                                                                            style:
-                                                                                TextStyle(color: context.accentColor)),
-                                                                        SizedBox(
-                                                                          width:
-                                                                              10,
-                                                                        ),
-                                                                        // if (e.versionInfo !=
-                                                                        //     VersionInfo.IS)
-                                                                        //   DotIndicator(),
-                                                                      ],
-                                                                    )))
-                                                            .toList(),
-                                                        onChanged: (EpisodeBrief
-                                                            episode) {
-                                                          if (mounted) {
-                                                            setState(() {
-                                                              _episodeItem =
-                                                                  episode;
-                                                            });
-                                                          }
-                                                        },
-                                                      ),
-                                                    ],
-                                                  );
+                                                  return _versionDateSelector(
+                                                      versions);
                                                 } else {
-                                                  return Row(
-                                                    children: [
-                                                      buttonOnMenu(
-                                                        context,
-                                                        child: Icon(
-                                                          Icons.circle_outlined,
-                                                        ),
-                                                        onTap: () {},
-                                                      ),
-                                                      DropdownButton(
-                                                        hint: Text(
-                                                            s.published(
-                                                                formateDate(
-                                                                    _episodeItem
-                                                                        .pubDate)),
-                                                            style: TextStyle(
-                                                                color: context
-                                                                    .accentColor)),
-                                                        underline: Center(),
-                                                        isDense: true,
-                                                        icon: Center(),
-                                                        items: [
-                                                          DropdownMenuItem(
-                                                              child: Text(
-                                                                  s.published(formateDate(
-                                                                      _episodeItem
-                                                                          .pubDate)),
-                                                                  style: TextStyle(
-                                                                      color: context
-                                                                          .accentColor)))
-                                                        ],
-                                                        onChanged: null,
-                                                      ),
-                                                    ],
-                                                  );
+                                                  return _versionDateSelector(
+                                                      [_episodeItem]);
                                                 }
                                               },
                                             ),
@@ -573,4 +437,88 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
       });
     }
   }
+
+  Widget _versionDateSelector(List<EpisodeBrief?> versions) => Row(
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 4),
+            child: buttonOnMenu(
+              context,
+              child: (_episodeItem.versionInfo != VersionInfo.IS)
+                  ? Icon(
+                      Icons.radio_button_on,
+                      size: 24,
+                      color: context.accentColor,
+                    )
+                  : Icon(
+                      Icons.radio_button_off,
+                      size: 24,
+                    ),
+              onTap: () {
+                if (_episodeItem.versionInfo == VersionInfo.IS) {
+                  _setEpisodeDisplayVersion(_episodeItem);
+                }
+              },
+            ),
+          ),
+          MyDropdownButton(
+            hint: Text(
+                context.s.published(formateDate(_episodeItem.pubDate) +
+                    " " +
+                    ((_episodeItem.pubDate ~/ 1000) % 1440).toTime),
+                style: TextStyle(color: context.accentColor)),
+            underline: Center(),
+            dropdownColor: context.accentBackground,
+            isDense: true,
+            value: _episodeItem,
+            selectedItemBuilder: (context) => versions
+                .map(
+                  (e) => Text(
+                    context.s.published(
+                      formateDate(e!.pubDate) +
+                          " " +
+                          ((_episodeItem.pubDate ~/ 1000) % 1440).toTime,
+                    ),
+                    style: TextStyle(
+                      color: context.accentColor,
+                    ),
+                  ),
+                )
+                .toList(),
+            items: versions
+                .map((e) => DropdownMenuItem(
+                    value: e,
+                    child: Row(
+                      children: [
+                        Text(
+                          context.s.published(formateDate(e!.pubDate)) +
+                              " " +
+                              ((_episodeItem.pubDate ~/ 1000) % 1440).toTime,
+                          style: TextStyle(
+                            fontWeight: e.versionInfo != VersionInfo.IS
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
+                        // SizedBox(
+                        //   width: 10,
+                        // ),
+                        // if (e.versionInfo !=
+                        //     VersionInfo.IS)
+                        //   DotIndicator(),
+                      ],
+                    )))
+                .toList(),
+            onChanged: versions.length == 1
+                ? null
+                : (EpisodeBrief? episode) {
+                    if (mounted && episode != null) {
+                      setState(() {
+                        _episodeItem = episode;
+                      });
+                    }
+                  },
+          ),
+        ],
+      );
 }

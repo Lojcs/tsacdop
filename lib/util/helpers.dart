@@ -123,9 +123,9 @@ Widget buttonOnMenu(BuildContext context,
         borderRadius: rounded ? context.radiusLarge : null,
         onTap: onTap,
         child: SizedBox(
-          height: 40,
+          height: 28,
           child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12.0), child: child),
+              padding: EdgeInsets.symmetric(horizontal: 2.0), child: child),
         ),
       ),
     );

@@ -1118,7 +1118,10 @@ class HostsList extends StatelessWidget {
           color: Colors.transparent,
           child: AboutPodcast(
             podcastLocal: podcastLocal,
-            accentColor: podcastLocal.primaryColor!.toColor(),
+            accentColor: ColorScheme.fromSeed(
+                    seedColor: podcastLocal.primaryColor!.toColor(),
+                    brightness: context.brightness)
+                .primary,
           ),
         ),
       ],
