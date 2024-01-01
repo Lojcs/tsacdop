@@ -1121,7 +1121,7 @@ class DBHelper {
   /// Sets the episode as the display version among its other versions.
   /// If reset is true, reverts the display version among its versions to default.
   /// FHAS indicates an episode is the display version but not the default.
-  Future<void> setEpisodeDisplayVersion(EpisodeBrief episode,
+  Future<void> setDisplayVersion(EpisodeBrief episode,
       {bool reset = false}) async {
     var dbClient = await database;
     dbClient.transaction((txn) async {

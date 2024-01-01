@@ -4,6 +4,7 @@ import 'package:tsacdop/type/episodebrief.dart';
 
 import '../type/play_histroy.dart';
 
+/// Global class to manage [EpisodeBrief] field updates.
 class EpisodeState extends ChangeNotifier {
   DBHelper _dbHelper = DBHelper();
   Map<int, bool> episodeChangeMap = {};
@@ -57,6 +58,14 @@ class EpisodeState extends ChangeNotifier {
 
   Future<void> delDownloaded(EpisodeBrief episode) async {
     await _dbHelper.delDownloaded(episode.enclosureUrl);
+    if (episodeChangeMap.containsKey(episode.id)) {
+      episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
+      notifyListeners();
+    }
+  }
+
+  Future<void> setDisplayVersion(EpisodeBrief episode) async {
+    await _dbHelper.setDisplayVersion(episode);
     if (episodeChangeMap.containsKey(episode.id)) {
       episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
       notifyListeners();
