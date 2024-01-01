@@ -93,23 +93,19 @@ class _PopupMenuSettingState extends State<PopupMenuSetting> {
   Widget build(BuildContext context) {
     final s = context.s;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
-        statusBarIconBrightness: Theme.of(context).accentColorBrightness,
-        systemNavigationBarColor: context.primaryColor,
-        systemNavigationBarIconBrightness:
-            Theme.of(context).accentColorBrightness,
-      ),
+      value: context.overlay,
       child: Scaffold(
           appBar: AppBar(
             elevation: 0,
+            scrolledUnderElevation: 0,
             leading: CustomBackButton(),
-            backgroundColor: context.primaryColor,
+            backgroundColor: context.background,
           ),
           body: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Container(
-                  color: context.primaryColor,
+                  color: context.background,
                   height: 200,
                   // color: Colors.red,
                   child: FlareActor(

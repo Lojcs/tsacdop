@@ -12,10 +12,14 @@ class Libries extends StatelessWidget {
       value: context.overlay,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(context.s.settingsLibraries),
+          title: Text(
+            context.s.settingsLibraries,
+            style: context.textTheme.titleLarge,
+          ),
           leading: CustomBackButton(),
-          elevation: 0,
-          backgroundColor: Theme.of(context).primaryColor,
+          elevation: 1,
+          scrolledUnderElevation: 0,
+          backgroundColor: context.background,
         ),
         body: SafeArea(
           child: Scrollbar(

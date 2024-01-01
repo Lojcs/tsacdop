@@ -70,17 +70,17 @@ class _SettingsState extends State<Settings> {
   Widget build(BuildContext context) {
     final s = context.s;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
-        statusBarIconBrightness: context.brightness,
-        systemNavigationBarColor: context.background,
-        systemNavigationBarIconBrightness: context.iconBrightness,
-      ),
+      value: context.overlay,
       child: Scaffold(
         backgroundColor: context.background,
         appBar: AppBar(
-          title: Text(s.settings),
+          title: Text(
+            s.settings,
+            style: context.textTheme.titleLarge,
+          ),
           leading: CustomBackButton(),
           elevation: _showTitle ? 1 : 0,
+          scrolledUnderElevation: 0,
           backgroundColor: context.background,
         ),
         body: SingleChildScrollView(

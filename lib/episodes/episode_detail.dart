@@ -139,6 +139,10 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
   @override
   Widget build(BuildContext context) {
     _lateInit();
+    final Color color =
+        context.realDark ? context.background : _episodeItem.cardColor(context);
+    context.statusBarColor = color;
+    context.navBarColor = color;
     final s = context.s;
     final audio = context.watch<AudioPlayerNotifier>();
     return Selector2<EpisodeState, AudioPlayerNotifier,
@@ -157,10 +161,6 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
               if (snapshot.hasData) {
                 _episodeItem = snapshot.data!;
               }
-              context.statusBarColor = _episodeItem.cardColor(context);
-              context.navBarColor = data.item2
-                  ? context.accentBackground
-                  : _episodeItem.cardColor(context);
               return AnnotatedRegion<SystemUiOverlayStyle>(
                 value: context.overlay,
                 child: WillPopScope(
@@ -198,14 +198,14 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                         return FlexibleSpaceBar(
                                           collapseMode: CollapseMode.pin,
                                           titlePadding: EdgeInsets.only(
-                                            left: 30 +
-                                                25 *
+                                            left: 40 +
+                                                15 *
                                                     (1 -
                                                         ((expandRatio - 0.8) *
                                                                 5)
                                                             .clamp(0, 1)),
-                                            right: 30 +
-                                                25 *
+                                            right: 40 +
+                                                15 *
                                                     (1 -
                                                         ((expandRatio - 0.8) *
                                                                 5)
@@ -220,7 +220,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                                             _imageTopOffset -
                                                                 _titleBarMinHeight)),
                                           ),
-                                          expandedTitleScale: 1,
+                                          expandedTitleScale: 1.1,
                                           background: Container(
                                             // alignment:
                                             //     Alignment.bottomCenter,
@@ -245,8 +245,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                                           .clamp(0, 0.6) +
                                                       0.4),
                                               decoration: BoxDecoration(
-                                                color: _episodeItem
-                                                    .cardColor(context),
+                                                color: color,
                                                 // border: Border.all(
                                                 //     color: Colors.white,
                                                 //     width: 2),
@@ -276,10 +275,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                                       overflow:
                                                           TextOverflow.ellipsis,
                                                       style: context.textTheme
-                                                          .headlineSmall!
-                                                          .copyWith(
-                                                              color: Colors
-                                                                  .white)),
+                                                          .headlineSmall!),
                                                 ),
                                               )
                                             ],
@@ -287,30 +283,13 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                         );
                                       },
                                     ),
-                                    backgroundColor:
-                                        _episodeItem.cardColor(context),
+                                    backgroundColor: color,
                                     collapsedHeight: _titleBarMinHeight,
                                     toolbarHeight: _titleBarMinHeight,
                                     expandedHeight:
                                         _titleBarMinHeight + _titleBarMaxHeight,
-                                    // floating: true,
                                     pinned: true,
-                                    // snap : true,
                                     scrolledUnderElevation: 0,
-                                    // title: _showTitle
-                                    //     ? Text(
-                                    //         _episodeItem.title,
-                                    //         maxLines: 1,
-                                    //         overflow: TextOverflow.ellipsis,
-                                    //       )
-                                    //     : Text(
-                                    //         _episodeItem.podcastTitle,
-                                    //         maxLines: 1,
-                                    //         style: TextStyle(
-                                    //             fontSize: 15,
-                                    //             color: context.textColor
-                                    //                 .withOpacity(0.7)),
-                                    //       ),
                                     leading: CustomBackButton(),
                                     elevation: 0,
                                   ),
@@ -344,9 +323,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                             // padding: EdgeInsets.only(
                                             //     left: 20, right: 20),
                                             color: Color.alphaBlend(
-                                                Colors.white10,
-                                                _episodeItem
-                                                    .cardColor(context)),
+                                                Colors.white10, color),
                                             alignment: Alignment.centerLeft,
                                             child: Row(
                                               children: [
@@ -601,7 +578,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                           textAlign: TextAlign.left,
                                           style: Theme.of(context)
                                               .textTheme
-                                              .headlineSmall,
+                                              .headlineMedium,
                                         ),
                                       ),
                                     ),

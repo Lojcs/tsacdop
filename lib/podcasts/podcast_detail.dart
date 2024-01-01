@@ -566,9 +566,12 @@ class _PodcastDetailState extends State<PodcastDetail> {
   Widget build(BuildContext context) {
     final color = context.realDark
         ? context.background
-        : widget.podcastLocal!.primaryColor!.colorizedark();
+        : widget.podcastLocal!.primaryColor!
+            .toColor()
+            .toHighlightBackround(context, brightness: Brightness.dark);
     final s = context.s;
     context.statusBarColor = color;
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value:
           context.overlay.copyWith(statusBarIconBrightness: Brightness.light),

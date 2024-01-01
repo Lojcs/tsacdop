@@ -17,9 +17,13 @@ class ThemeSetting extends StatelessWidget {
       child: Scaffold(
         backgroundColor: context.background,
         appBar: AppBar(
-          title: Text(s.settingsAppearance),
+          title: Text(
+            s.settingsAppearance,
+            style: context.textTheme.titleLarge,
+          ),
           leading: CustomBackButton(),
           elevation: 0,
+          scrolledUnderElevation: 0,
           backgroundColor: context.background,
         ),
         body: Column(

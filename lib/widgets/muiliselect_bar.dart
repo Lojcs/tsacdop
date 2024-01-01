@@ -356,7 +356,10 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                             ? Icon(Icons.favorite, color: Colors.red)
                             : Icon(
                                 Icons.favorite_border,
-                                color: Colors.grey[700],
+                                color: Colors.grey[
+                                    context.brightness == Brightness.light
+                                        ? 700
+                                        : 500],
                               ),
                         onTap: () async {
                           if (widget.selectedList!.isNotEmpty) {
@@ -403,7 +406,10 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                               width: 20,
                               child: CustomPaint(
                                 painter: DownloadPainter(
-                                  color: Colors.grey[700],
+                                  color: Colors.grey[
+                                      context.brightness == Brightness.light
+                                          ? 700
+                                          : 500],
                                   fraction: 0,
                                   progressColor:
                                       widget.color ?? context.accentColor,
@@ -434,7 +440,10 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                               color: widget.color ?? context.accentColor)
                           : Icon(
                               Icons.playlist_add,
-                              color: Colors.grey[700],
+                              color: Colors.grey[
+                                  context.brightness == Brightness.light
+                                      ? 700
+                                      : 500],
                             ),
                       onTap: () async {
                         if (widget.selectedList!.isNotEmpty) {
@@ -465,7 +474,12 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                         child: CustomPaint(
                           size: Size(25, 25),
                           painter: ListenedAllPainter(
-                              _marked ? context.accentColor : Colors.grey[700],
+                              _marked
+                                  ? context.accentColor
+                                  : Colors.grey[
+                                      context.brightness == Brightness.light
+                                          ? 700
+                                          : 500],
                               stroke: 2.0),
                         ),
                       ),
@@ -489,7 +503,8 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                   _buttonOnMenu(
                       child: Icon(
                         Icons.add_box_outlined,
-                        color: Colors.grey[700],
+                        color: Colors.grey[
+                            context.brightness == Brightness.light ? 700 : 500],
                       ),
                       onTap: () {
                         if (widget.selectedList!.isNotEmpty) {

@@ -48,10 +48,14 @@ class _PlaySettingState extends State<PlaySetting> {
       child: Scaffold(
         backgroundColor: context.background,
         appBar: AppBar(
-          title: Text(s.play),
+          title: Text(
+            s.play,
+            style: context.textTheme.titleLarge,
+          ),
           leading: CustomBackButton(),
           elevation: 0,
-          backgroundColor: context.primaryColor,
+          scrolledUnderElevation: 0,
+          backgroundColor: context.background,
         ),
         body: SingleChildScrollView(
           scrollDirection: Axis.vertical,

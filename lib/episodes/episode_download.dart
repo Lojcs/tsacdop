@@ -97,7 +97,8 @@ class _DownloadButtonState extends State<DownloadButton> {
                 width: 20,
                 child: CustomPaint(
                   painter: DownloadPainter(
-                    color: Colors.grey[700],
+                    color: Colors.grey[
+                        context.brightness == Brightness.light ? 700 : 500],
                     fraction: 0,
                     progressColor: context.accentColor,
                   ),

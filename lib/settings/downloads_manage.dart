@@ -140,17 +140,13 @@ class _DownloadsManageState extends State<DownloadsManage> {
   Widget build(BuildContext context) {
     final s = context.s;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
-        statusBarIconBrightness: Theme.of(context).accentColorBrightness,
-        systemNavigationBarColor: Theme.of(context).primaryColor,
-        systemNavigationBarIconBrightness:
-            Theme.of(context).accentColorBrightness,
-      ),
+      value: context.overlay,
       child: Scaffold(
         appBar: AppBar(
           leading: CustomBackButton(),
           elevation: 0,
-          backgroundColor: context.primaryColor,
+          scrolledUnderElevation: 0,
+          backgroundColor: context.background,
         ),
         body: SafeArea(
           child: Stack(

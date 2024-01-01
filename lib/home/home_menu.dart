@@ -40,7 +40,7 @@ class _PopupMenuState extends State<PopupMenu> {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           elevation: 1,
           tooltip: s.menu,
-          color: context.priamryContainer,
+          color: context.accentBackground,
           itemBuilder: (context) => [
             PopupMenuItem(
               value: 1,

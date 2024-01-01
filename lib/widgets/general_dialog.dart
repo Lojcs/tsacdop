@@ -41,8 +41,11 @@ Future generalSheet(BuildContext context,
       context: context,
       builder: (context) {
         final statusHeight = MediaQuery.of(context).padding.top;
-        return SafeArea(
-          child: Container(
+        return AnnotatedRegion(
+          value: context
+              .overlayWithBarrier, // TODO: This doesn't work in storage settings.
+          child: SafeArea(
+            child: Container(
               constraints:
                   BoxConstraints(maxHeight: context.height - statusHeight - 80),
               child: Stack(
@@ -93,7 +96,9 @@ Future generalSheet(BuildContext context,
                     ],
                   ),
                 ],
-              )),
+              ),
+            ),
+          ),
         );
       },
     );

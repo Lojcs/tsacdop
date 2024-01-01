@@ -30,10 +30,14 @@ class _LayoutSettingState extends State<LayoutSetting> {
       child: Scaffold(
           backgroundColor: context.background,
           appBar: AppBar(
-            title: Text(s.settingsLayout),
+            title: Text(
+              s.settingsLayout,
+              style: context.textTheme.titleLarge,
+            ),
             leading: CustomBackButton(),
             elevation: 0,
-            backgroundColor: context.primaryColor,
+            scrolledUnderElevation: 0,
+            backgroundColor: context.background,
           ),
           body: SingleChildScrollView(
             child: Column(

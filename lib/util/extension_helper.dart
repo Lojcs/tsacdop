@@ -212,8 +212,16 @@ extension ColorExtension on Color {
             0.2)!;
   }
 
-  Color toHighlightBackround(BuildContext context) {
-    return Color.lerp(context.background, this, 0.40)!;
+  Color toHighlightBackround(BuildContext context, {Brightness? brightness}) {
+    return context.realDark
+        ? context.background
+        : Color.lerp(
+            ColorScheme.fromSeed(
+              seedColor: this,
+              brightness: brightness ?? context.brightness,
+            ).primaryContainer,
+            this,
+            0.5)!;
   }
 }
 

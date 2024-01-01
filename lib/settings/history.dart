@@ -50,9 +50,10 @@ class _PlayedHistoryState extends State<PlayedHistory>
             headerSliverBuilder: (context, innerBoxScrolled) {
               return <Widget>[
                 SliverAppBar(
-                  backgroundColor: Theme.of(context).primaryColor,
+                  backgroundColor: context.background,
                   leading: CustomBackButton(),
                   elevation: 0,
+                  scrolledUnderElevation: 0,
                   expandedHeight: 260,
                   floating: false,
                   pinned: true,
@@ -60,11 +61,15 @@ class _PlayedHistoryState extends State<PlayedHistory>
                     builder: (context, constraints) {
                       top = constraints.biggest.height;
                       return FlexibleSpaceBar(
-                        title: top < 70 + MediaQuery.of(context).padding.top
-                            ? Text(
-                                s.settingsHistory,
-                              )
-                            : Center(),
+                        titlePadding: EdgeInsets.only(left: 72, top: 15),
+                        title: Container(
+                          alignment: Alignment.topLeft,
+                          child: Text(
+                            s.settingsHistory,
+                            style: context.textTheme.titleLarge,
+                          ),
+                        ),
+                        expandedTitleScale: 1,
                         background: Padding(
                           padding: EdgeInsets.only(
                               top: 50, left: 20, right: 20, bottom: 20),
@@ -96,7 +101,7 @@ class _PlayedHistoryState extends State<PlayedHistory>
                           )
                         ],
                       ),
-                      context.primaryColor),
+                      context.background),
                   pinned: true,
                 ),
               ];

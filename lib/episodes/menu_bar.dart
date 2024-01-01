@@ -32,7 +32,9 @@ class MenuBarState extends State<MenuBar> {
     return Container(
       height: 50.0,
       decoration: BoxDecoration(
-        color: widget.episodeItem!.cardColor(context),
+        color: context.realDark
+            ? context.background
+            : widget.episodeItem!.cardColor(context),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
@@ -72,7 +74,10 @@ class MenuBarState extends State<MenuBar> {
                       : _buttonOnMenu(
                           child: Icon(
                             Icons.favorite_border,
-                            color: Colors.grey[700],
+                            color: Colors.grey[
+                                context.brightness == Brightness.light
+                                    ? 700
+                                    : 500],
                           ),
                           onTap: () async {
                             episodeState.setLiked(widget.episodeItem!);
@@ -101,7 +106,10 @@ class MenuBarState extends State<MenuBar> {
                               })
                           : _buttonOnMenu(
                               child: Icon(Icons.playlist_add,
-                                  color: Colors.grey[700]),
+                                  color: Colors.grey[
+                                      context.brightness == Brightness.light
+                                          ? 700
+                                          : 500]),
                               onTap: () {
                                 audio.addToPlaylist(widget.episodeItem!);
                                 Fluttertoast.showToast(
@@ -119,7 +127,10 @@ class MenuBarState extends State<MenuBar> {
                         painter: ListenedAllPainter(
                             widget.episodeItem!.isPlayed!
                                 ? context.accentColor
-                                : Colors.grey[700],
+                                : Colors.grey[
+                                    context.brightness == Brightness.light
+                                        ? 700
+                                        : 500],
                             stroke: 2.0),
                       ),
                     ),

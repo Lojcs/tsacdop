@@ -355,7 +355,7 @@ class __PlaylistButtonState extends State<_PlaylistButton> {
             borderRadius: BorderRadius.all(Radius.circular(10))),
         elevation: 1,
         icon: Icon(Icons.playlist_play),
-        color: context.priamryContainer,
+        color: context.accentBackground,
         tooltip: s.menu,
         itemBuilder: (context) => [
           MyPopupMenuItem(
