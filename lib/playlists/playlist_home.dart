@@ -91,6 +91,7 @@ class _PlaylistHomeState extends State<PlaylistHome> {
           }
         },
         child: Scaffold(
+            backgroundColor: context.background,
             appBar: AppBar(
               leading: CustomBackButton(),
               centerTitle: true,

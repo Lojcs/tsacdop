@@ -314,6 +314,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
             EpisodeField.skipSecondsStart,
             EpisodeField.skipSecondsEnd,
             EpisodeField.episodeImage,
+            EpisodeField.podcastImage,
             EpisodeField.chapterLink
           ]));
           if (episodes.isEmpty)
@@ -552,6 +553,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
           EpisodeField.skipSecondsStart,
           EpisodeField.skipSecondsEnd,
           EpisodeField.episodeImage,
+          EpisodeField.podcastImage,
           EpisodeField.chapterLink
         ], customFilters: [
           "E.media_id = ?"
@@ -753,16 +755,13 @@ class AudioPlayerNotifier extends ChangeNotifier {
   }
 
   Future<int> delFromPlaylist(EpisodeBrief episode) async {
-    var episodeNew;
+    EpisodeBrief? episodeNew;
     var episodes = await _dbHelper.getEpisodes(episodeUrls: [
       episode.enclosureUrl
     ], optionalFields: [
       EpisodeField.mediaId,
-      EpisodeField.isNew,
-      EpisodeField.skipSecondsStart,
-      EpisodeField.skipSecondsEnd,
       EpisodeField.episodeImage,
-      EpisodeField.chapterLink
+      EpisodeField.podcastImage,
     ]);
     if (episodes.isEmpty)
       episodeNew = null;

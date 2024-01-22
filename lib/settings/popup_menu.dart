@@ -95,6 +95,7 @@ class _PopupMenuSettingState extends State<PopupMenuSetting> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: context.overlay,
       child: Scaffold(
+          backgroundColor: context.background,
           appBar: AppBar(
             elevation: 0,
             scrolledUnderElevation: 0,
@@ -133,9 +134,8 @@ class _PopupMenuSettingState extends State<PopupMenuSetting> {
                             child: Text(s.settingsPopupMenu,
                                 style: Theme.of(context)
                                     .textTheme
-                                    .bodyText1!
-                                    .copyWith(
-                                        color: Theme.of(context).accentColor)),
+                                    .titleMedium!
+                                    .copyWith(color: context.accentColor)),
                           ),
                           FutureBuilder<bool>(
                             future: _getTapToOpenPopupMenu(),

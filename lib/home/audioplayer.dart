@@ -64,7 +64,8 @@ const List kMinPlayerHeight = <double>[70.0, 75.0, 80.0];
 const List kMaxPlayerHeight = <double>[300.0, 325.0, 350.0];
 
 class PlayerWidget extends StatelessWidget {
-  PlayerWidget({this.playerKey, this.isPlayingPage = false});
+  PlayerWidget(this.context, {this.playerKey, this.isPlayingPage = false});
+  final BuildContext context;
   final GlobalKey<AudioPanelState>? playerKey;
   final bool isPlayingPage;
 
@@ -83,7 +84,9 @@ class PlayerWidget extends StatelessWidget {
           return AudioPanel(
             minHeight: minHeight,
             midHeight: maxHeight,
-            maxHeight: context.height - context.paddingTop - 20,
+            maxHeight: context.height -
+                context.originalPadding.top -
+                context.originalPadding.bottom,
             key: playerKey,
             miniPanel: _MiniPanel(),
             maxiPanel: ControlPanel(
@@ -457,7 +460,7 @@ class _PlaylistWidgetState extends State<PlaylistWidget> {
   Widget build(BuildContext context) {
     var audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
     return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(0),
       child: Container(
         alignment: Alignment.topLeft,
         width: double.infinity,
@@ -1602,239 +1605,253 @@ class _ControlPanelState extends State<ControlPanel>
                         },
                       ),
                     ),
-                    if (height <= widget.maxHeight!) LastPosition()
+                    if (height <= widget.maxHeight! + 20)
+                      Opacity(
+                        opacity: ((widget.maxHeight! + 20 - height) / 20)
+                            .clamp(0, 1),
+                        child: LastPosition(),
+                      ),
                   ],
                 ),
               ),
               if (height > widget.maxHeight!)
-                SizedBox(
+                Container(
                   height: height - widget.maxHeight!,
                   child: SingleChildScrollView(
-                      physics: NeverScrollableScrollPhysics(),
-                      child: SizedBox(
-                          height: context.height - context.paddingTop - 340,
-                          child: ScrollConfiguration(
-                            behavior: NoGrowBehavior(),
-                            child: TabBarView(
-                                controller: _tabController,
-                                children: [
-                                  Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 20.0),
-                                      child: PlaylistWidget()),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 20.0),
-                                    child: SleepMode(),
-                                  ),
-                                  Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 20.0),
-                                      child: ChaptersWidget()),
-                                ]),
-                          ))),
+                    physics: NeverScrollableScrollPhysics(),
+                    child: Container(
+                      height: context.height -
+                          context.originalPadding.top -
+                          context.originalPadding.bottom -
+                          widget.maxHeight!,
+                      child: ScrollConfiguration(
+                        behavior: NoGrowBehavior(),
+                        child: TabBarView(
+                          controller: _tabController,
+                          children: [
+                            PlaylistWidget(),
+                            SleepMode(),
+                            ChaptersWidget(),
+                          ]
+                              .map(
+                                (e) => Container(
+                                  margin: const EdgeInsets.symmetric(
+                                      horizontal: 20.0),
+                                  decoration: BoxDecoration(
+                                      borderRadius: context.radiusLarge),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: e,
+                                ),
+                              )
+                              .toList(),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               Expanded(
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    if (height <= widget.maxHeight!)
-                      Selector<AudioPlayerNotifier,
-                          Tuple4<EpisodeBrief?, bool, bool, double?>>(
-                        selector: (_, audio) => Tuple4(
-                            audio.episode,
-                            audio.stopOnComplete,
-                            audio.startSleepTimer,
-                            audio.currentSpeed),
-                        builder: (_, data, __) {
-                          final currentSpeed = data.item4 ?? 1.0;
-                          return Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 20.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: <Widget>[
-                                if (_setSpeed == 0)
-                                  Expanded(
-                                    child: InkWell(
-                                      onTap: () async {
-                                        widget.onClose!();
-                                        if (!widget.isPlayingPage) {
-                                          Navigator.push(
-                                              context,
-                                              FadeRoute(
-                                                  page: FutureBuilder(
-                                                      // TODO: Check which fields are actually needed.
-                                                      future: data.item1!
-                                                          .copyWithFromDB(
-                                                              newFields: [
-                                                            EpisodeField
-                                                                .description,
-                                                            EpisodeField
-                                                                .enclosureDuration,
-                                                            EpisodeField
-                                                                .enclosureSize,
-                                                            EpisodeField
-                                                                .episodeImage,
-                                                            EpisodeField
-                                                                .podcastImage,
-                                                            EpisodeField
-                                                                .primaryColor,
-                                                            EpisodeField
-                                                                .isLiked,
-                                                            EpisodeField.isNew,
-                                                            EpisodeField
-                                                                .isPlayed,
-                                                            EpisodeField
-                                                                .versionInfo
-                                                          ]),
-                                                      builder: ((context,
-                                                              snapshot) =>
-                                                          snapshot.hasData
-                                                              ? EpisodeDetail(
-                                                                  episodeItem:
-                                                                      snapshot.data
-                                                                          as EpisodeBrief,
-                                                                  heroTag:
-                                                                      'playpanel')
-                                                              : Center()))));
-                                        }
-                                      },
-                                      child: Row(
-                                        children: [
-                                          SizedBox(
-                                            height: 30.0,
-                                            width: 30.0,
-                                            child: CircleAvatar(
-                                              backgroundImage:
-                                                  data.item1!.avatarImage,
-                                            ),
-                                          ),
-                                          SizedBox(width: 5),
-                                          SizedBox(
-                                            width: 100,
-                                            child: Text(
-                                              data.item1!.podcastTitle!,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.fade,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                if (_setSpeed! > 0)
-                                  Expanded(
-                                    child: SingleChildScrollView(
-                                      padding: EdgeInsets.all(10.0),
-                                      scrollDirection: Axis.horizontal,
-                                      child: FutureBuilder<List<double>>(
-                                        future: _getSpeedList(),
-                                        initialData: [],
-                                        builder: (context, snapshot) => Row(
-                                          children: snapshot.data!
-                                              .map<Widget>((e) => InkWell(
-                                                    onTap: () {
-                                                      if (_setSpeed == 1) {
-                                                        audio.setSpeed(e);
-                                                      }
-                                                    },
-                                                    child: Container(
-                                                      height: 30,
-                                                      width: 30,
-                                                      margin:
-                                                          EdgeInsets.symmetric(
-                                                              horizontal: 5),
-                                                      decoration: e ==
-                                                                  currentSpeed &&
-                                                              _setSpeed! > 0
-                                                          ? BoxDecoration(
-                                                              color: context
-                                                                  .accentColor,
-                                                              shape: BoxShape
-                                                                  .circle,
-                                                              boxShadow: context
-                                                                          .brightness ==
-                                                                      Brightness
-                                                                          .light
-                                                                  ? customShadow(
-                                                                      1.0)
-                                                                  : customShadowNight(
-                                                                      1.0),
-                                                            )
-                                                          : BoxDecoration(
-                                                              color: context
+                    if (height <= widget.maxHeight! + 25)
+                      Opacity(
+                        opacity: ((widget.maxHeight! + 25 - height) / 25)
+                            .clamp(0, 1),
+                        child: Selector<AudioPlayerNotifier,
+                            Tuple4<EpisodeBrief?, bool, bool, double?>>(
+                          selector: (_, audio) => Tuple4(
+                              audio.episode,
+                              audio.stopOnComplete,
+                              audio.startSleepTimer,
+                              audio.currentSpeed),
+                          builder: (_, data, __) {
+                            final currentSpeed = data.item4 ?? 1.0;
+                            return Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: <Widget>[
+                                  if (_setSpeed == 0)
+                                    Expanded(
+                                      child: InkWell(
+                                        onTap: () async {
+                                          widget.onClose!();
+                                          if (!widget.isPlayingPage) {
+                                            Navigator.push(
+                                                context,
+                                                FadeRoute(
+                                                    page: FutureBuilder(
+                                                        // TODO: Check which fields are actually needed.
+                                                        future: data.item1!
+                                                            .copyWithFromDB(
+                                                                newFields: [
+                                                              EpisodeField
+                                                                  .description,
+                                                              EpisodeField
+                                                                  .enclosureDuration,
+                                                              EpisodeField
+                                                                  .enclosureSize,
+                                                              EpisodeField
+                                                                  .episodeImage,
+                                                              EpisodeField
+                                                                  .podcastImage,
+                                                              EpisodeField
                                                                   .primaryColor,
-                                                              shape: BoxShape
-                                                                  .circle,
-                                                              boxShadow: context
-                                                                          .brightness ==
-                                                                      Brightness
-                                                                          .light
-                                                                  ? customShadow(1 -
-                                                                      _setSpeed!)
-                                                                  : customShadowNight(1 -
-                                                                      _setSpeed!)),
-                                                      alignment:
-                                                          Alignment.center,
-                                                      child: _setSpeed! > 0
-                                                          ? Text(e.toString(),
-                                                              style: TextStyle(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                  color: e ==
-                                                                          currentSpeed
-                                                                      ? Colors
-                                                                          .white
-                                                                      : null))
-                                                          : Center(),
-                                                    ),
-                                                  ))
-                                              .toList(),
+                                                              EpisodeField
+                                                                  .isLiked,
+                                                              EpisodeField
+                                                                  .isNew,
+                                                              EpisodeField
+                                                                  .isPlayed,
+                                                              EpisodeField
+                                                                  .versionInfo
+                                                            ]),
+                                                        builder: ((context,
+                                                                snapshot) =>
+                                                            snapshot.hasData
+                                                                ? EpisodeDetail(
+                                                                    episodeItem:
+                                                                        snapshot.data
+                                                                            as EpisodeBrief,
+                                                                    heroTag:
+                                                                        'playpanel')
+                                                                : Center()))));
+                                          }
+                                        },
+                                        child: Row(
+                                          children: [
+                                            SizedBox(
+                                              height: 30.0,
+                                              width: 30.0,
+                                              child: CircleAvatar(
+                                                backgroundImage: data.item1!
+                                                    .podcastImageProvider,
+                                              ),
+                                            ),
+                                            SizedBox(width: 5),
+                                            Container(
+                                              // width: context.width / 2 - 55,
+                                              // color: Colors.blue,
+                                              child: Text(
+                                                data.item1!.podcastTitle,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ),
+                                  if (_setSpeed! > 0)
+                                    Expanded(
+                                      child: SingleChildScrollView(
+                                        padding: EdgeInsets.all(10.0),
+                                        scrollDirection: Axis.horizontal,
+                                        child: FutureBuilder<List<double>>(
+                                          future: _getSpeedList(),
+                                          initialData: [],
+                                          builder: (context, snapshot) => Row(
+                                            children: snapshot.data!
+                                                .map<Widget>((e) => InkWell(
+                                                      onTap: () {
+                                                        if (_setSpeed == 1) {
+                                                          audio.setSpeed(e);
+                                                        }
+                                                      },
+                                                      child: Container(
+                                                        height: 30,
+                                                        width: 30,
+                                                        margin: EdgeInsets
+                                                            .symmetric(
+                                                                horizontal: 5),
+                                                        decoration: e ==
+                                                                    currentSpeed &&
+                                                                _setSpeed! > 0
+                                                            ? BoxDecoration(
+                                                                color: context
+                                                                    .accentColor,
+                                                                shape: BoxShape
+                                                                    .circle,
+                                                                boxShadow: context
+                                                                            .brightness ==
+                                                                        Brightness
+                                                                            .light
+                                                                    ? customShadow(
+                                                                        1.0)
+                                                                    : customShadowNight(
+                                                                        1.0),
+                                                              )
+                                                            : BoxDecoration(
+                                                                color: context
+                                                                    .primaryColor,
+                                                                shape: BoxShape
+                                                                    .circle,
+                                                                boxShadow: context
+                                                                            .brightness ==
+                                                                        Brightness
+                                                                            .light
+                                                                    ? customShadow(1 -
+                                                                        _setSpeed!)
+                                                                    : customShadowNight(1 -
+                                                                        _setSpeed!)),
+                                                        alignment:
+                                                            Alignment.center,
+                                                        child: _setSpeed! > 0
+                                                            ? Text(e.toString(),
+                                                                style: TextStyle(
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                    color: e ==
+                                                                            currentSpeed
+                                                                        ? Colors
+                                                                            .white
+                                                                        : null))
+                                                            : Center(),
+                                                      ),
+                                                    ))
+                                                .toList(),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  IconButton(
+                                    padding: EdgeInsets.zero,
+                                    onPressed: () {
+                                      if (_setSpeed == 0) {
+                                        _controller.forward();
+                                      } else {
+                                        _controller.reverse();
+                                      }
+                                    },
+                                    icon: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: <Widget>[
+                                        Transform.rotate(
+                                            angle: math.pi * _setSpeed!,
+                                            child: Text('X')),
+                                        Text(currentSpeed.toStringAsFixed(1)),
+                                      ],
+                                    ),
                                   ),
-                                IconButton(
-                                  padding: EdgeInsets.zero,
-                                  onPressed: () {
-                                    if (_setSpeed == 0) {
-                                      _controller.forward();
-                                    } else {
-                                      _controller.reverse();
-                                    }
-                                  },
-                                  icon: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceEvenly,
-                                    children: <Widget>[
-                                      Transform.rotate(
-                                          angle: math.pi * _setSpeed!,
-                                          child: Text('X')),
-                                      Text(currentSpeed.toStringAsFixed(1)),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
+                                ],
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     if (_setSpeed == 0)
                       Positioned(
-                        bottom: widget.maxHeight == kMaxPlayerHeight[2]
-                            ? 35.0
-                            : widget.maxHeight == kMaxPlayerHeight[1]
-                                ? 25.0
-                                : 15.0,
+                        bottom: 0,
                         child: InkWell(
-                            child: SizedBox(
-                              height: 50,
+                            child: Container(
+                              height: 30,
                               width: 115,
                               child: Align(
-                                alignment: Alignment.bottomCenter,
+                                alignment: Alignment.center,
                                 child: CustomPaint(
                                     size: Size(120, 5),
                                     painter: TabIndicator(
@@ -1842,8 +1859,8 @@ class _ControlPanelState extends State<ControlPanel>
                                         indicatorSize: 10,
                                         fraction: (height - widget.maxHeight!) /
                                             (context.height -
-                                                context.paddingTop -
-                                                20 -
+                                                context.originalPadding.top -
+                                                context.originalPadding.bottom -
                                                 widget.maxHeight!),
                                         accentColor: context.accentColor,
                                         color: context.textColor)),
@@ -1851,17 +1868,21 @@ class _ControlPanelState extends State<ControlPanel>
                             ),
                             onTap: widget.onExpand),
                       ),
-                    if (_setSpeed == 0 && height > widget.maxHeight!)
-                      Transform.translate(
-                        offset: Offset(0, 5) *
-                            (height - widget.maxHeight!) /
-                            (context.height -
-                                context.paddingTop -
-                                20 -
-                                widget.maxHeight!),
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: context.width / 2 - 80),
+                    if (_setSpeed == 0 && height > widget.maxHeight! - 20)
+                      Opacity(
+                        opacity: ((50 -
+                                    (context.height -
+                                        height -
+                                        context.originalPadding.top -
+                                        context.originalPadding.bottom)) /
+                                50)
+                            .clamp(0, 1),
+                        child: Container(
+                          alignment: Alignment.bottomCenter,
+                          padding: EdgeInsets.only(
+                              bottom: 20,
+                              left: context.width / 2 - 80,
+                              right: context.width / 2 - 80),
                           child: TabBar(
                             controller: _tabController,
                             indicatorSize: TabBarIndicatorSize.label,

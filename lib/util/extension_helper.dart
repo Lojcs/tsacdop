@@ -7,6 +7,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:tsacdop/class/settingstate.dart';
+import 'package:tsacdop/state/audio_state.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import '../generated/l10n.dart';
 
@@ -83,9 +84,11 @@ extension ContextExtension on BuildContext {
 
   /// Returns the last item from the statusBarColor stack. Useful for keeping track of the current
   Color get navBarColor =>
-      Provider.of<SettingState>(this, listen: false).navBarColor.isEmpty
-          ? background
-          : Provider.of<SettingState>(this, listen: false).navBarColor.last;
+      Provider.of<AudioPlayerNotifier>(this, listen: false).playerRunning
+          ? this.accentBackground
+          : Provider.of<SettingState>(this, listen: false).navBarColor.isEmpty
+              ? background
+              : Provider.of<SettingState>(this, listen: false).navBarColor.last;
 
   /// Adds the color to the statusBarColor stack if it's not already the last item. Pass null when exiting the page to pop the last item.
   set navBarColor(Color? color) {
