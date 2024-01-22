@@ -444,8 +444,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                     width: 10,
                     decoration: BoxDecoration(
                         color: Colors.red,
-                        border:
-                            Border.all(color: context.primaryColor, width: 2),
+                        border: Border.all(color: context.background, width: 2),
                         shape: BoxShape.circle),
                   ),
                 )

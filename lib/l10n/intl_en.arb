@@ -548,6 +548,8 @@
   "@settingsDiscovery": {
     "description": "Reset feature discovery state. User tap it and restart app, will see features tutorial again."
   },
+  "settingsDiscoveryDes": "Are you sure you want to reenable \"Discover Features\"?",
+  "@settingsDiscoveryDes": {},
   "settingsDownloadPosition": "Download position",
   "@settingsDownloadPosition": {
     "description": "Choose folder for downloads."

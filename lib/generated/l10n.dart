@@ -2202,6 +2202,16 @@ class S {
     );
   }
 
+  /// `Are you sure you want to reenable "Discover Features"?`
+  String get settingsDiscoveryDes {
+    return Intl.message(
+      'Are you sure you want to reenable "Discover Features"?',
+      name: 'settingsDiscoveryDes',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Download position`
   String get settingsDownloadPosition {
     return Intl.message(

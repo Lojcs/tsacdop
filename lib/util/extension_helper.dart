@@ -28,6 +28,7 @@ extension ContextExtension on BuildContext {
   Color get dialogBackgroundColor => Theme.of(this).dialogBackgroundColor;
   Color get accentBackgroundWeak => accentColor.toWeakBackround(this);
   Color get accentBackground => accentColor.toStrongBackround(this);
+  Color get accentBackgroundHighlight => accentColor.toHighlightBackround(this);
   Brightness get brightness => Theme.of(this).brightness;
   Brightness get iconBrightness =>
       brightness == Brightness.dark ? Brightness.light : Brightness.dark;
@@ -99,9 +100,11 @@ extension ContextExtension on BuildContext {
     }
   }
 
+  BorderRadius get radiusTiny => BorderRadius.circular(5);
   BorderRadius get radiusSmall => BorderRadius.circular(12);
   BorderRadius get radiusMedium => BorderRadius.circular(16);
   BorderRadius get radiusLarge => BorderRadius.circular(20);
+  BorderRadius get radiusHuge => BorderRadius.circular(100);
 }
 
 extension IntExtension on int {

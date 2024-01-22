@@ -246,12 +246,11 @@ class _PodcastDetailState extends State<PodcastDetail> {
       Material(
         key: UniqueKey(),
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(100),
+        borderRadius: context.radiusHuge,
         clipBehavior: Clip.hardEdge,
         child: PopupMenuButton<int>(
           color: _podcastAccent.toStrongBackround(context),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(borderRadius: context.radiusSmall),
           elevation: 1,
           tooltip: tooltip,
           child: child,
@@ -274,7 +273,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
                     child: Container(
                       height: 30,
                       decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(100),
+                          borderRadius: context.radiusHuge,
                           border: Border.all(color: context.primaryColorDark)),
                       padding: EdgeInsets.symmetric(horizontal: 10),
                       child: Row(
@@ -331,7 +330,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
                           padding: EdgeInsets.only(
                               top: 5, bottom: 5, left: 2, right: 2),
                           decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(5),
+                              borderRadius: context.radiusTiny,
                               border: Border.all(
                                   width: 2,
                                   color: context.textColor.withOpacity(0.2))),
@@ -1251,7 +1250,8 @@ class _SearchEpisodeState extends State<SearchEpisode> {
       value: context.overlayWithBarrier,
       child: AlertDialog(
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10))),
+          borderRadius: context.radiusMedium,
+        ),
         backgroundColor: widget.accentColor?.toWeakBackround(context),
         elevation: 1,
         contentPadding: const EdgeInsets.symmetric(horizontal: 20),
