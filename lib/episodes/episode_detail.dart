@@ -122,10 +122,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
   @override
   void deactivate() {
     context.statusBarColor = null;
-    context.navBarColor =
-        Provider.of<AudioPlayerNotifier>(context, listen: false).playerRunning
-            ? context.accentBackground
-            : null;
+    context.navBarColor = null;
     if (widget.onClosed != null) widget.onClosed!();
     super.deactivate();
   }
@@ -162,7 +159,10 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                 _episodeItem = snapshot.data!;
               }
               return AnnotatedRegion<SystemUiOverlayStyle>(
-                value: context.overlay,
+                value: data.item2
+                    ? context.overlay.copyWith(
+                        systemNavigationBarColor: context.accentBackground)
+                    : context.overlay,
                 child: WillPopScope(
                   onWillPop: () async {
                     if (_playerKey.currentState != null &&

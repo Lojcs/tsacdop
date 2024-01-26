@@ -64,8 +64,7 @@ const List kMinPlayerHeight = <double>[70.0, 75.0, 80.0];
 const List kMaxPlayerHeight = <double>[300.0, 325.0, 350.0];
 
 class PlayerWidget extends StatelessWidget {
-  PlayerWidget(this.context, {this.playerKey, this.isPlayingPage = false});
-  final BuildContext context;
+  PlayerWidget({this.playerKey, this.isPlayingPage = false});
   final GlobalKey<AudioPanelState>? playerKey;
   final bool isPlayingPage;
 

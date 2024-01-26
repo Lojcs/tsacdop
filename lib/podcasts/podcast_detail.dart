@@ -571,443 +571,499 @@ class _PodcastDetailState extends State<PodcastDetail> {
     final s = context.s;
     context.statusBarColor = color;
 
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value:
-          context.overlay.copyWith(statusBarIconBrightness: Brightness.light),
-      child: WillPopScope(
-        onWillPop: () {
-          if (_playerKey.currentState != null &&
-              _playerKey.currentState!.initSize! > 100) {
-            _playerKey.currentState!.backToMini();
-            return Future.value(false);
-          } else if (_multiSelect) {
-            setState(() {
-              _multiSelect = false;
-            });
-            return Future.value(false);
-          } else {
-            return Future.value(true);
-          }
-        },
-        child: Scaffold(
-          backgroundColor: context.background,
-          body: SafeArea(
-            child: Stack(
-              children: <Widget>[
-                RefreshIndicator(
-                  key: _refreshIndicatorKey,
-                  displacement: context.paddingTop + 40,
-                  color: _podcastAccent,
-                  onRefresh: () async {
-                    await _updateRssItem(context, widget.podcastLocal!);
-                  },
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Expanded(
-                        child: ScrollConfiguration(
-                          behavior: NoGrowBehavior(),
-                          child: CustomScrollView(
-                            controller: _controller
-                              ..addListener(() async {
-                                if (_controller.offset ==
-                                        _controller.position.maxScrollExtent &&
-                                    _dataCount == _top) {
-                                  if (mounted) {
-                                    setState(() => _loadMore = true);
-                                  }
-                                  await Future.delayed(Duration(seconds: 3));
-                                  if (mounted && _loadMore) {
-                                    setState(() {
-                                      _top = _top + 36;
-                                      _loadMore = false;
-                                    });
-                                  }
-                                }
-                                if (_controller.offset > 0 &&
-                                    mounted &&
-                                    !_scroll) {
-                                  setState(() => _scroll = true);
-                                }
-                              }),
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            slivers: <Widget>[
-                              SliverAppBar(
-                                actions: <Widget>[
-                                  IconButton(
-                                    icon: Icon(Icons.more_vert),
-                                    splashRadius: 20,
-                                    tooltip: s.menu,
-                                    onPressed: () => generalSheet(
-                                      context,
-                                      title: widget.podcastLocal!.title,
-                                      color: widget.podcastLocal!.primaryColor!
-                                          .toColor(),
-                                      child: PodcastSetting(
-                                          podcastLocal: widget.podcastLocal),
-                                    ).then((value) {
-                                      _checkPodcast();
-                                      if (mounted) setState(() {});
-                                    }),
-                                  ),
-                                ],
-                                elevation: 0,
-                                scrolledUnderElevation: 0,
-                                iconTheme: IconThemeData(
-                                  color: Colors.white,
-                                ),
-                                expandedHeight:
-                                    math.max(130 + context.paddingTop, 180) +
-                                        (_showInfo! ? _infoHeight : 0),
-                                backgroundColor: color,
-                                floating: true,
-                                pinned: true,
-                                leading: CustomBackButton(),
-                                flexibleSpace: LayoutBuilder(
-                                    builder: (context, constraints) {
-                                  _topHeight = constraints.biggest.height;
-                                  double expandRatio = (1 -
-                                          ((context.paddingTop +
-                                                  (_showInfo!
-                                                      ? _infoHeight
-                                                      : 0) -
-                                                  _topHeight +
-                                                  180) /
-                                              124))
-                                      .clamp(0, 1);
-                                  double fullExpandRatio = (1 -
-                                          ((context.paddingTop -
-                                                  _topHeight +
-                                                  180) /
-                                              124))
-                                      .clamp(0, 1);
-                                  final titleLineTest = TextPainter(
-                                      textScaleFactor: 1,
-                                      text: TextSpan(
-                                          text: widget.podcastLocal!.title!,
-                                          style:
-                                              context.textTheme.headlineSmall!),
-                                      textDirection: TextDirection.ltr);
-                                  titleLineTest.layout(
-                                      maxWidth: context.width - 185);
-                                  double titleScale = ((context.width - 185) /
-                                          titleLineTest.size.width)
-                                      .clamp(1, 1.2);
-                                  double titleLineHeight = titleLineTest
-                                          .size.height /
-                                      titleLineTest.computeLineMetrics().length;
-                                  int titleLineCount =
-                                      titleLineTest.computeLineMetrics().length;
-                                  return FlexibleSpaceBar(
-                                      titlePadding: EdgeInsets.only(
-                                          left: 55,
-                                          right: 55 +
-                                              (fullExpandRatio == 0 ? 0 : 75),
-                                          bottom: _topHeight -
-                                              (40 +
-                                                  (titleLineCount == 1
-                                                      ? expandRatio * 54
-                                                      : titleLineCount == 2
-                                                          ? expandRatio * 39 +
-                                                              (expandRatio < 0.2
-                                                                  ? 0
-                                                                  : titleLineHeight)
-                                                          : expandRatio * 24 +
-                                                              (expandRatio < 0.2
-                                                                  ? 0
-                                                                  : expandRatio <
-                                                                          0.4
-                                                                      ? titleLineHeight
-                                                                      : titleLineHeight *
-                                                                          2)))),
-                                      expandedTitleScale: titleScale,
-                                      background: Stack(
-                                        children: <Widget>[
-                                          Padding(
-                                            padding: EdgeInsets.only(top: 120),
-                                            child: InkWell(
-                                              onTap: () => setState(() {
-                                                _showInfo = !_showInfo!;
+    return Selector<AudioPlayerNotifier, bool>(
+        selector: (_, audio) => audio.playerRunning,
+        builder: (_, data, __) => AnnotatedRegion<SystemUiOverlayStyle>(
+              value: (data
+                      ? context.overlay.copyWith(
+                          systemNavigationBarColor: context.accentBackground)
+                      : context.overlay)
+                  .copyWith(statusBarIconBrightness: Brightness.light),
+              child: WillPopScope(
+                onWillPop: () {
+                  if (_playerKey.currentState != null &&
+                      _playerKey.currentState!.initSize! > 100) {
+                    _playerKey.currentState!.backToMini();
+                    return Future.value(false);
+                  } else if (_multiSelect) {
+                    setState(() {
+                      _multiSelect = false;
+                    });
+                    return Future.value(false);
+                  } else {
+                    return Future.value(true);
+                  }
+                },
+                child: Scaffold(
+                  backgroundColor: context.background,
+                  body: SafeArea(
+                    child: Stack(
+                      children: <Widget>[
+                        RefreshIndicator(
+                          key: _refreshIndicatorKey,
+                          displacement: context.paddingTop + 40,
+                          color: _podcastAccent,
+                          onRefresh: () async {
+                            await _updateRssItem(context, widget.podcastLocal!);
+                          },
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Expanded(
+                                child: ScrollConfiguration(
+                                  behavior: NoGrowBehavior(),
+                                  child: CustomScrollView(
+                                    controller: _controller
+                                      ..addListener(() async {
+                                        if (_controller.offset ==
+                                                _controller
+                                                    .position.maxScrollExtent &&
+                                            _dataCount == _top) {
+                                          if (mounted) {
+                                            setState(() => _loadMore = true);
+                                          }
+                                          await Future.delayed(
+                                              Duration(seconds: 3));
+                                          if (mounted && _loadMore) {
+                                            setState(() {
+                                              _top = _top + 36;
+                                              _loadMore = false;
+                                            });
+                                          }
+                                        }
+                                        if (_controller.offset > 0 &&
+                                            mounted &&
+                                            !_scroll) {
+                                          setState(() => _scroll = true);
+                                        }
+                                      }),
+                                    physics:
+                                        const AlwaysScrollableScrollPhysics(),
+                                    slivers: <Widget>[
+                                      SliverAppBar(
+                                        actions: <Widget>[
+                                          IconButton(
+                                            icon: Icon(Icons.more_vert),
+                                            splashRadius: 20,
+                                            tooltip: s.menu,
+                                            onPressed: () => generalSheet(
+                                              context,
+                                              title: widget.podcastLocal!.title,
+                                              color: widget
+                                                  .podcastLocal!.primaryColor!
+                                                  .toColor(),
+                                              child: PodcastSetting(
+                                                  podcastLocal:
+                                                      widget.podcastLocal),
+                                            ).then((value) {
+                                              _checkPodcast();
+                                              if (mounted) setState(() {});
+                                            }),
+                                          ),
+                                        ],
+                                        elevation: 0,
+                                        scrolledUnderElevation: 0,
+                                        iconTheme: IconThemeData(
+                                          color: Colors.white,
+                                        ),
+                                        expandedHeight: math.max(
+                                                130 + context.paddingTop, 180) +
+                                            (_showInfo! ? _infoHeight : 0),
+                                        backgroundColor: color,
+                                        floating: true,
+                                        pinned: true,
+                                        leading: CustomBackButton(),
+                                        flexibleSpace: LayoutBuilder(
+                                            builder: (context, constraints) {
+                                          _topHeight =
+                                              constraints.biggest.height;
+                                          double expandRatio = (1 -
+                                                  ((context.paddingTop +
+                                                          (_showInfo!
+                                                              ? _infoHeight
+                                                              : 0) -
+                                                          _topHeight +
+                                                          180) /
+                                                      124))
+                                              .clamp(0, 1);
+                                          double fullExpandRatio = (1 -
+                                                  ((context.paddingTop -
+                                                          _topHeight +
+                                                          180) /
+                                                      124))
+                                              .clamp(0, 1);
+                                          final titleLineTest = TextPainter(
+                                              textScaleFactor: 1,
+                                              text: TextSpan(
+                                                  text: widget
+                                                      .podcastLocal!.title!,
+                                                  style: context.textTheme
+                                                      .headlineSmall!),
+                                              textDirection: TextDirection.ltr);
+                                          titleLineTest.layout(
+                                              maxWidth: context.width - 185);
+                                          double titleScale =
+                                              ((context.width - 185) /
+                                                      titleLineTest.size.width)
+                                                  .clamp(1, 1.2);
+                                          double titleLineHeight =
+                                              titleLineTest.size.height /
+                                                  titleLineTest
+                                                      .computeLineMetrics()
+                                                      .length;
+                                          int titleLineCount = titleLineTest
+                                              .computeLineMetrics()
+                                              .length;
+                                          return FlexibleSpaceBar(
+                                              titlePadding: EdgeInsets.only(
+                                                  left: 55,
+                                                  right: 55 +
+                                                      (fullExpandRatio == 0
+                                                          ? 0
+                                                          : 75),
+                                                  bottom: _topHeight -
+                                                      (40 +
+                                                          (titleLineCount == 1
+                                                              ? expandRatio * 54
+                                                              : titleLineCount ==
+                                                                      2
+                                                                  ? expandRatio *
+                                                                          39 +
+                                                                      (expandRatio <
+                                                                              0.2
+                                                                          ? 0
+                                                                          : titleLineHeight)
+                                                                  : expandRatio *
+                                                                          24 +
+                                                                      (expandRatio <
+                                                                              0.2
+                                                                          ? 0
+                                                                          : expandRatio < 0.4
+                                                                              ? titleLineHeight
+                                                                              : titleLineHeight * 2)))),
+                                              expandedTitleScale: titleScale,
+                                              background: Stack(
+                                                children: <Widget>[
+                                                  Padding(
+                                                    padding: EdgeInsets.only(
+                                                        top: 120),
+                                                    child: InkWell(
+                                                      onTap: () => setState(() {
+                                                        _showInfo = !_showInfo!;
 
-                                                if (_infoHeight == 0) {
-                                                  _infoHeight = (_infoKey
-                                                              .currentContext!
-                                                              .findRenderObject()
-                                                          as RenderBox)
-                                                      .size
-                                                      .height;
-                                                }
-                                              }),
-                                              child: Container(
-                                                height: 60,
-                                                padding: EdgeInsets.only(
-                                                    left: 80, right: 130),
-                                                color: Colors.white10,
-                                                alignment: Alignment.centerLeft,
-                                                child: Row(
-                                                  children: [
-                                                    Expanded(
-                                                      child: Column(
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .start,
-                                                        mainAxisSize:
-                                                            MainAxisSize.min,
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
-                                                        children: <Widget>[
-                                                          Text(
-                                                              widget.podcastLocal!
-                                                                      .author ??
-                                                                  '',
-                                                              maxLines: 1,
-                                                              overflow:
-                                                                  TextOverflow
-                                                                      .ellipsis,
-                                                              style: TextStyle(
-                                                                  color: Colors
-                                                                      .white)),
-                                                          if (widget
-                                                              .podcastLocal!
-                                                              .provider!
-                                                              .isNotEmpty)
-                                                            Text(
-                                                              s.hostedOn(widget
-                                                                  .podcastLocal!
-                                                                  .provider!),
-                                                              maxLines: 1,
-                                                              style: TextStyle(
-                                                                  color: Colors
-                                                                      .white),
+                                                        if (_infoHeight == 0) {
+                                                          _infoHeight = (_infoKey
+                                                                      .currentContext!
+                                                                      .findRenderObject()
+                                                                  as RenderBox)
+                                                              .size
+                                                              .height;
+                                                        }
+                                                      }),
+                                                      child: Container(
+                                                        height: 60,
+                                                        padding:
+                                                            EdgeInsets.only(
+                                                                left: 80,
+                                                                right: 130),
+                                                        color: Colors.white10,
+                                                        alignment: Alignment
+                                                            .centerLeft,
+                                                        child: Row(
+                                                          children: [
+                                                            Expanded(
+                                                              child: Column(
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .start,
+                                                                mainAxisSize:
+                                                                    MainAxisSize
+                                                                        .min,
+                                                                crossAxisAlignment:
+                                                                    CrossAxisAlignment
+                                                                        .start,
+                                                                children: <
+                                                                    Widget>[
+                                                                  Text(
+                                                                      widget.podcastLocal!.author ??
+                                                                          '',
+                                                                      maxLines:
+                                                                          1,
+                                                                      overflow:
+                                                                          TextOverflow
+                                                                              .ellipsis,
+                                                                      style: TextStyle(
+                                                                          color:
+                                                                              Colors.white)),
+                                                                  if (widget
+                                                                      .podcastLocal!
+                                                                      .provider!
+                                                                      .isNotEmpty)
+                                                                    Text(
+                                                                      s.hostedOn(widget
+                                                                          .podcastLocal!
+                                                                          .provider!),
+                                                                      maxLines:
+                                                                          1,
+                                                                      style: TextStyle(
+                                                                          color:
+                                                                              Colors.white),
+                                                                    ),
+                                                                ],
+                                                              ),
                                                             ),
-                                                        ],
+                                                            UpDownIndicator(
+                                                                status:
+                                                                    _showInfo,
+                                                                color: Colors
+                                                                    .white),
+                                                          ],
+                                                        ),
                                                       ),
                                                     ),
-                                                    UpDownIndicator(
-                                                        status: _showInfo,
-                                                        color: Colors.white),
-                                                  ],
+                                                  ),
+                                                  Container(
+                                                    alignment:
+                                                        Alignment.topRight,
+                                                    padding: EdgeInsets.only(
+                                                        right: 20, top: 70),
+                                                    child: Container(
+                                                      height: 100,
+                                                      width: 100,
+                                                      decoration: BoxDecoration(
+                                                        border: Border.all(
+                                                            color: Colors.white,
+                                                            width: 2),
+                                                      ),
+                                                      child: Image.file(
+                                                        File(
+                                                            "${widget.podcastLocal!.imagePath}"),
+                                                        errorBuilder:
+                                                            (context, _, __) {
+                                                          return ColoredBox(
+                                                              color: color,
+                                                              child: Icon(
+                                                                  Icons.error));
+                                                        },
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Align(
+                                                    alignment:
+                                                        Alignment.bottomCenter,
+                                                    child: _showInfo!
+                                                        ? Container(
+                                                            color: context
+                                                                .background,
+                                                            height: _infoHeight,
+                                                            child: HostsList(
+                                                                context,
+                                                                widget
+                                                                    .podcastLocal!),
+                                                          )
+                                                        : Center(),
+                                                  )
+                                                ],
+                                              ),
+                                              title: Opacity(
+                                                opacity: 1,
+                                                child: Tooltip(
+                                                  message: widget
+                                                      .podcastLocal!.title!,
+                                                  child: Text(
+                                                      widget
+                                                          .podcastLocal!.title!,
+                                                      maxLines: titleLineCount <
+                                                              3
+                                                          ? expandRatio < 0.2
+                                                              ? 1
+                                                              : 2
+                                                          : expandRatio < 0.2
+                                                              ? 1
+                                                              : expandRatio <
+                                                                      0.4
+                                                                  ? 2
+                                                                  : 3,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      style: context.textTheme
+                                                          .headlineSmall!
+                                                          .copyWith(
+                                                              color: Colors
+                                                                  .white)),
                                                 ),
-                                              ),
-                                            ),
-                                          ),
-                                          Container(
-                                            alignment: Alignment.topRight,
-                                            padding: EdgeInsets.only(
-                                                right: 20, top: 70),
-                                            child: Container(
-                                              height: 100,
-                                              width: 100,
-                                              decoration: BoxDecoration(
-                                                border: Border.all(
-                                                    color: Colors.white,
-                                                    width: 2),
-                                              ),
-                                              child: Image.file(
-                                                File(
-                                                    "${widget.podcastLocal!.imagePath}"),
-                                                errorBuilder: (context, _, __) {
-                                                  return ColoredBox(
-                                                      color: color,
-                                                      child: Icon(Icons.error));
-                                                },
-                                              ),
-                                            ),
-                                          ),
-                                          Align(
-                                            alignment: Alignment.bottomCenter,
-                                            child: _showInfo!
+                                              ));
+                                        }),
+                                      ),
+                                      SliverAppBar(
+                                          pinned: true,
+                                          leading: Center(),
+                                          toolbarHeight: 50,
+                                          backgroundColor: context.background,
+                                          scrolledUnderElevation: 0,
+                                          flexibleSpace: _actionBar(context)),
+                                      if (!widget.hide)
+                                        FutureBuilder<List<EpisodeBrief>>(
+                                            future: _getRssItem(
+                                                widget.podcastLocal!,
+                                                count: _top,
+                                                sortOrder: _sortOrder,
+                                                filter: _filter,
+                                                query: _query),
+                                            builder: (context, snapshot) {
+                                              if (snapshot.hasData) {
+                                                if (_selectAll!) {
+                                                  _selectedEpisodes =
+                                                      snapshot.data;
+                                                }
+                                                if (_selectBefore) {
+                                                  final index = snapshot.data!
+                                                      .indexOf(
+                                                          _selectedEpisodes!
+                                                              .first);
+                                                  if (index != 0) {
+                                                    _selectedEpisodes = snapshot
+                                                        .data!
+                                                        .sublist(0, index + 1);
+                                                  }
+                                                }
+                                                if (_selectAfter) {
+                                                  final index = snapshot.data!
+                                                      .indexOf(
+                                                          _selectedEpisodes!
+                                                              .first);
+                                                  _selectedEpisodes = snapshot
+                                                      .data!
+                                                      .sublist(index);
+                                                }
+                                                return EpisodeGrid(
+                                                  episodes: snapshot.data,
+                                                  showFavorite: true,
+                                                  layout: _layout,
+                                                  sortOrder: _sortOrder,
+                                                  episodeCount:
+                                                      _filter == Filter.all &&
+                                                              !_hideListened!
+                                                          ? _episodeCount
+                                                          : null,
+                                                  initNum: _scroll ? 0 : 12,
+                                                  multiSelect: _multiSelect,
+                                                  selectedList:
+                                                      _selectedEpisodes ?? [],
+                                                  onSelect: (value) =>
+                                                      setState(() {
+                                                    _selectAll = false;
+                                                    _selectBefore = false;
+                                                    _selectAfter = false;
+                                                    _selectedEpisodes = value;
+                                                  }),
+                                                  preferEpisodeImage: false,
+                                                );
+                                              }
+                                              return SliverToBoxAdapter(
+                                                  child: Center());
+                                            }),
+                                      SliverList(
+                                        delegate: SliverChildBuilderDelegate(
+                                          (context, index) {
+                                            return _loadMore
                                                 ? Container(
-                                                    color: context.background,
-                                                    height: _infoHeight,
+                                                    height: 2,
+                                                    child:
+                                                        LinearProgressIndicator())
+                                                : Center();
+                                          },
+                                          childCount: 1,
+                                        ),
+                                      ),
+                                      // Hidden widget to get the height of [HostsList]
+                                      SliverToBoxAdapter(
+                                        child: Column(
+                                          children: [
+                                            _infoHeight == 0
+                                                ? Opacity(
+                                                    opacity: 0,
+                                                    key: _infoKey,
                                                     child: HostsList(context,
                                                         widget.podcastLocal!),
                                                   )
                                                 : Center(),
-                                          )
-                                        ],
-                                      ),
-                                      title: Opacity(
-                                        opacity: 1,
-                                        child: Tooltip(
-                                          message: widget.podcastLocal!.title!,
-                                          child: Text(
-                                              widget.podcastLocal!.title!,
-                                              maxLines: titleLineCount < 3
-                                                  ? expandRatio < 0.2
-                                                      ? 1
-                                                      : 2
-                                                  : expandRatio < 0.2
-                                                      ? 1
-                                                      : expandRatio < 0.4
-                                                          ? 2
-                                                          : 3,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: context
-                                                  .textTheme.headlineSmall!
-                                                  .copyWith(
-                                                      color: Colors.white)),
+                                          ],
                                         ),
-                                      ));
-                                }),
-                              ),
-                              SliverAppBar(
-                                  pinned: true,
-                                  leading: Center(),
-                                  toolbarHeight: 50,
-                                  backgroundColor: context.background,
-                                  scrolledUnderElevation: 0,
-                                  flexibleSpace: _actionBar(context)),
-                              if (!widget.hide)
-                                FutureBuilder<List<EpisodeBrief>>(
-                                    future: _getRssItem(widget.podcastLocal!,
-                                        count: _top,
-                                        sortOrder: _sortOrder,
-                                        filter: _filter,
-                                        query: _query),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.hasData) {
-                                        if (_selectAll!) {
-                                          _selectedEpisodes = snapshot.data;
-                                        }
-                                        if (_selectBefore) {
-                                          final index = snapshot.data!.indexOf(
-                                              _selectedEpisodes!.first);
-                                          if (index != 0) {
-                                            _selectedEpisodes = snapshot.data!
-                                                .sublist(0, index + 1);
-                                          }
-                                        }
-                                        if (_selectAfter) {
-                                          final index = snapshot.data!.indexOf(
-                                              _selectedEpisodes!.first);
-                                          _selectedEpisodes =
-                                              snapshot.data!.sublist(index);
-                                        }
-                                        return EpisodeGrid(
-                                          episodes: snapshot.data,
-                                          showFavorite: true,
-                                          layout: _layout,
-                                          sortOrder: _sortOrder,
-                                          episodeCount: _filter == Filter.all &&
-                                                  !_hideListened!
-                                              ? _episodeCount
-                                              : null,
-                                          initNum: _scroll ? 0 : 12,
-                                          multiSelect: _multiSelect,
-                                          selectedList: _selectedEpisodes ?? [],
-                                          onSelect: (value) => setState(() {
-                                            _selectAll = false;
-                                            _selectBefore = false;
-                                            _selectAfter = false;
-                                            _selectedEpisodes = value;
-                                          }),
-                                          preferEpisodeImage: false,
-                                        );
-                                      }
-                                      return SliverToBoxAdapter(
-                                          child: Center());
-                                    }),
-                              SliverList(
-                                delegate: SliverChildBuilderDelegate(
-                                  (context, index) {
-                                    return _loadMore
-                                        ? Container(
-                                            height: 2,
-                                            child: LinearProgressIndicator())
-                                        : Center();
-                                  },
-                                  childCount: 1,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                              // Hidden widget to get the height of [HostsList]
-                              SliverToBoxAdapter(
-                                child: Column(
-                                  children: [
-                                    _infoHeight == 0
-                                        ? Opacity(
-                                            opacity: 0,
-                                            key: _infoKey,
-                                            child: HostsList(
-                                                context, widget.podcastLocal!),
-                                          )
-                                        : Center(),
-                                  ],
-                                ),
-                              ),
+                              Selector<AudioPlayerNotifier,
+                                      Tuple2<bool, PlayerHeight?>>(
+                                  selector: (_, audio) => Tuple2(
+                                      audio.playerRunning, audio.playerHeight),
+                                  builder: (_, data, __) {
+                                    var height =
+                                        kMinPlayerHeight[data.item2!.index];
+                                    return Column(
+                                      children: [
+                                        if (_multiSelect)
+                                          MultiSelectMenuBar(
+                                            selectedList: _selectedEpisodes,
+                                            selectAll: _selectAll,
+                                            color: _podcastAccent,
+                                            onSelectAll: (value) {
+                                              setState(() {
+                                                _selectAll = value;
+                                                _selectAfter = false;
+                                                _selectBefore = false;
+                                                if (!value) {
+                                                  _selectedEpisodes = [];
+                                                }
+                                              });
+                                            },
+                                            onSelectAfter: (value) {
+                                              setState(() {
+                                                _selectBefore = false;
+                                                _selectAfter = true;
+                                              });
+                                            },
+                                            onSelectBefore: (value) {
+                                              setState(() {
+                                                _selectAfter = false;
+                                                _selectBefore = true;
+                                              });
+                                            },
+                                            onClose: (value) {
+                                              setState(() {
+                                                if (value) {
+                                                  _multiSelect = false;
+                                                  _selectAll = false;
+                                                  _selectAfter = false;
+                                                  _selectBefore = false;
+                                                  _selectedEpisodes = [];
+                                                }
+                                              });
+                                            },
+                                          ),
+                                        SizedBox(
+                                          height: data.item1 ? height : 0,
+                                        ),
+                                      ],
+                                    );
+                                  }),
                             ],
                           ),
                         ),
-                      ),
-                      Selector<AudioPlayerNotifier,
-                              Tuple2<bool, PlayerHeight?>>(
-                          selector: (_, audio) =>
-                              Tuple2(audio.playerRunning, audio.playerHeight),
-                          builder: (_, data, __) {
-                            var height = kMinPlayerHeight[data.item2!.index];
-                            return Column(
-                              children: [
-                                if (_multiSelect)
-                                  MultiSelectMenuBar(
-                                    selectedList: _selectedEpisodes,
-                                    selectAll: _selectAll,
-                                    color: _podcastAccent,
-                                    onSelectAll: (value) {
-                                      setState(() {
-                                        _selectAll = value;
-                                        _selectAfter = false;
-                                        _selectBefore = false;
-                                        if (!value) {
-                                          _selectedEpisodes = [];
-                                        }
-                                      });
-                                    },
-                                    onSelectAfter: (value) {
-                                      setState(() {
-                                        _selectBefore = false;
-                                        _selectAfter = true;
-                                      });
-                                    },
-                                    onSelectBefore: (value) {
-                                      setState(() {
-                                        _selectAfter = false;
-                                        _selectBefore = true;
-                                      });
-                                    },
-                                    onClose: (value) {
-                                      setState(() {
-                                        if (value) {
-                                          _multiSelect = false;
-                                          _selectAll = false;
-                                          _selectAfter = false;
-                                          _selectBefore = false;
-                                          _selectedEpisodes = [];
-                                        }
-                                      });
-                                    },
-                                  ),
-                                SizedBox(
-                                  height: data.item1 ? height : 0,
-                                ),
-                              ],
-                            );
-                          }),
-                    ],
+                        Container(
+                            child: PlayerWidget(
+                          playerKey: _playerKey,
+                        )),
+                      ],
+                    ),
                   ),
                 ),
-                Container(
-                    child: PlayerWidget(
-                  playerKey: _playerKey,
-                )),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+              ),
+            ));
   }
 }
 
