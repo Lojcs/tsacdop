@@ -31,32 +31,24 @@ import '../widgets/custom_slider.dart';
 import '../widgets/custom_widget.dart';
 
 List<BoxShadow> _customShadow(
-        {
-
-        /// Which version of shadow to display and animate (0: off, 1: on, -1: temporary on)
-        required int active,
-        // Brightness brightness,
-        AnimationController? animator}) =>
+  BuildContext context, {
+  required bool active,
+}) =>
     [
-      BoxShadow(blurRadius: 26, offset: Offset(-6, -6), color: Colors.white),
+      BoxShadow(
+          blurRadius: 10,
+          spreadRadius: -2,
+          offset: Offset(-2, -2),
+          color: context.brightness == Brightness.light
+              ? Colors.black
+              : Colors.white),
       BoxShadow(
           blurRadius: 8,
           offset: Offset(2, 2),
-          color: Colors.grey[600]!.withOpacity(0.4))
-    ];
-
-List<BoxShadow> _customShadowNight(
-        {
-
-        /// Which version of shadow to display and animate (0: off, 1: on, -1: temporary on)
-        required int active,
-        AnimationController? animator}) =>
-    [
-      BoxShadow(
-          blurRadius: 6,
-          offset: Offset(-1, -1),
-          color: Colors.grey[100]!.withOpacity(0.3)),
-      BoxShadow(blurRadius: 8, offset: Offset(2, 2), color: Colors.black)
+          color: (context.brightness == Brightness.light
+                  ? Colors.black
+                  : Colors.white)
+              .withOpacity(0.4))
     ];
 
 const List kMinsToSelect = [10, 15, 20, 25, 30, 45, 60, 70, 80, 90, 99];
@@ -395,13 +387,16 @@ class LastPosition extends StatelessWidget {
                               )
                             : snapshot.data!.seconds! < 10
                                 ? Center()
-                                : OutlinedButton(
-                                    style: OutlinedButton.styleFrom(
+                                : TextButton(
+                                    style: TextButton.styleFrom(
                                       shape: RoundedRectangleBorder(
                                           borderRadius:
                                               BorderRadius.circular(100.0),
                                           side: BorderSide(
-                                              color: context.accentColor)),
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface
+                                                  .withOpacity(0.12))),
                                     ),
                                     // highlightedBorderColor: Colors.green[700],
                                     onPressed: () => audio.seekTo(
@@ -419,7 +414,11 @@ class LastPosition extends StatelessWidget {
                                           ),
                                         ),
                                         SizedBox(width: 5),
-                                        Text(snapshot.data!.seconds!.toTime),
+                                        Text(
+                                          snapshot.data!.seconds!.toTime,
+                                          style: TextStyle(
+                                              color: context.textColor),
+                                        ),
                                       ],
                                     ),
                                   )
@@ -1364,7 +1363,8 @@ class _ControlPanelState extends State<ControlPanel>
                             //activeTrackColor: height <= widget.maxHeight
                             activeTrackColor: context.accentColor.withAlpha(70),
                             //   : Colors.transparent,
-                            inactiveTrackColor: context.primaryColorDark,
+                            inactiveTrackColor:
+                                context.colorScheme.secondaryContainer,
                             trackHeight: 8.0,
                             trackShape: MyRectangularTrackShape(),
                             thumbColor: context.accentColor,
@@ -1432,6 +1432,9 @@ class _ControlPanelState extends State<ControlPanel>
                 child: Selector<AudioPlayerNotifier, bool>(
                   selector: (_, audio) => audio.playing,
                   builder: (_, playing, __) {
+                    Color? greyColor = context.brightness == Brightness.light
+                        ? Colors.grey[700]
+                        : Colors.grey[350];
                     return Material(
                       color: Colors.transparent,
                       child: Row(
@@ -1449,7 +1452,7 @@ class _ControlPanelState extends State<ControlPanel>
                             child: Row(
                               children: [
                                 Icon(Icons.fast_rewind,
-                                    size: 32, color: Colors.grey[500]),
+                                    size: 32, color: greyColor),
                                 SizedBox(width: 5),
                                 Selector<AudioPlayerNotifier, int?>(
                                     selector: (_, audio) => audio.rewindSeconds,
@@ -1461,7 +1464,7 @@ class _ControlPanelState extends State<ControlPanel>
                                                 textBaseline:
                                                     TextBaseline.ideographic,
                                                 textStyle: TextStyle(
-                                                    color: Colors.grey[500],
+                                                    color: greyColor,
                                                     fontSize: 25),
                                               )),
                                         )),
@@ -1481,9 +1484,7 @@ class _ControlPanelState extends State<ControlPanel>
                                   //         : Colors.white10,
                                   //     width: 1),
                                   boxShadow:
-                                      context.brightness == Brightness.dark
-                                          ? _customShadowNight(active: 1)
-                                          : _customShadowNight(active: 1)),
+                                      _customShadow(context, active: playing)),
                               child: Material(
                                 color: Colors.transparent,
                                 child: InkWell(
@@ -1530,13 +1531,13 @@ class _ControlPanelState extends State<ControlPanel>
                                           child: Text('$seconds s',
                                               style: GoogleFonts.teko(
                                                 textStyle: TextStyle(
-                                                    color: Colors.grey[500],
+                                                    color: greyColor,
                                                     fontSize: 25),
                                               )),
                                         )),
                                 SizedBox(width: 10),
                                 Icon(Icons.fast_forward,
-                                    size: 32.0, color: Colors.grey[500]),
+                                    size: 32.0, color: greyColor),
                               ],
                             ),
                           )
@@ -1731,8 +1732,7 @@ class _ControlPanelState extends State<ControlPanel>
                                             ),
                                             SizedBox(width: 5),
                                             Container(
-                                              // width: context.width / 2 - 55,
-                                              // color: Colors.blue,
+                                              width: context.width - 130,
                                               child: Text(
                                                 data.item1!.podcastTitle,
                                                 maxLines: 1,
