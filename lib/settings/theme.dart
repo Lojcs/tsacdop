@@ -17,9 +17,13 @@ class ThemeSetting extends StatelessWidget {
       child: Scaffold(
         backgroundColor: context.background,
         appBar: AppBar(
-          title: Text(s.settingsAppearance),
+          title: Text(
+            s.settingsAppearance,
+            style: context.textTheme.titleLarge,
+          ),
           leading: CustomBackButton(),
           elevation: 0,
+          scrolledUnderElevation: 0,
           backgroundColor: context.background,
         ),
         body: Column(
@@ -59,6 +63,7 @@ class ThemeSetting extends StatelessWidget {
                             : Color.fromRGBO(15, 15, 15, 1),
                   ),
                   child: AlertDialog(
+                    backgroundColor: context.accentBackground,
                     titlePadding: EdgeInsets.only(
                       top: 20,
                       left: 40,
@@ -79,6 +84,7 @@ class ThemeSetting extends StatelessWidget {
                             child: Material(
                               color: Colors.transparent,
                               child: RadioListTile(
+                                  activeColor: context.accentColor,
                                   title: Text(s.systemDefault),
                                   value: ThemeMode.system,
                                   groupValue: settings.theme,
@@ -93,6 +99,7 @@ class ThemeSetting extends StatelessWidget {
                             child: Material(
                               color: Colors.transparent,
                               child: RadioListTile(
+                                  activeColor: context.accentColor,
                                   title: Text(s.darkMode),
                                   value: ThemeMode.dark,
                                   groupValue: settings.theme,
@@ -107,6 +114,7 @@ class ThemeSetting extends StatelessWidget {
                             child: Material(
                               color: Colors.transparent,
                               child: RadioListTile(
+                                  activeColor: context.accentColor,
                                   title: Text(s.lightMode),
                                   value: ThemeMode.light,
                                   groupValue: settings.theme,
@@ -141,6 +149,7 @@ class ThemeSetting extends StatelessWidget {
                 trailing: Transform.scale(
                   scale: 0.9,
                   child: Switch(
+                      activeColor: context.accentColor,
                       value: data!,
                       onChanged: (boo) async {
                         settings.setRealDark = boo;
@@ -162,6 +171,7 @@ class ThemeSetting extends StatelessWidget {
                 trailing: Transform.scale(
                   scale: 0.9,
                   child: Switch(
+                      activeColor: context.accentColor,
                       value: data!,
                       onChanged: (boo) async {
                         settings.setWallpaperTheme = boo;
@@ -170,24 +180,7 @@ class ThemeSetting extends StatelessWidget {
               ),
             ),
             ListTile(
-              onTap: () => generalDialog(
-                context,
-                title: Text.rich(
-                  TextSpan(
-                    text: s.chooseA,
-                    children: [
-                      TextSpan(
-                          text: ' ${s.color}',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: context.accentColor))
-                    ],
-                  ),
-                ),
-                content: _ColorPicker(
-                  onColorChanged: (value) => settings.setAccentColor = value,
-                ),
-              ),
+              onTap: () => _colorPickerDialog(context),
               contentPadding: EdgeInsets.only(left: 70.0, right: 35),
               title: Text(s.settingsAccentColor),
               subtitle: Text(s.settingsAccentColorDes),
@@ -195,7 +188,7 @@ class ThemeSetting extends StatelessWidget {
                 height: 25,
                 width: 25,
                 decoration: BoxDecoration(
-                    shape: BoxShape.circle, color: context.accentColor),
+                    shape: BoxShape.circle, color: settings.accentSetColor),
               ),
             ),
             Divider(height: 1),
@@ -239,7 +232,7 @@ class ThemeSetting extends StatelessWidget {
                                   : Colors.transparent),
                           alignment: Alignment.center,
                           child: Text(
-                            'Show notes',
+                            'Show\nnotes',
                             textAlign: TextAlign.center,
                             style: textStyle,
                           ),
@@ -401,21 +394,25 @@ class __ColorPickerState extends State<_ColorPicker>
     );
   }
 
-  Widget _colorCircle(Color color) => Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.all(Radius.circular(10)),
-          onTap: () => widget.onColorChanged!(color),
-          child: Container(
-            decoration: BoxDecoration(
-                border: color == context.accentColor
-                    ? Border.all(color: Colors.grey[400]!, width: 4)
-                    : null,
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                color: color),
-          ),
+  Widget _colorCircle(Color color) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.all(Radius.circular(10)),
+        onTap: () => widget.onColorChanged!(color),
+        child: Container(
+          decoration: BoxDecoration(
+              border: color ==
+                      Provider.of<SettingState>(context, listen: false)
+                          .accentSetColor
+                  ? Border.all(color: Colors.grey[400]!, width: 4)
+                  : null,
+              borderRadius: BorderRadius.all(Radius.circular(10)),
+              color: color),
         ),
-      );
+      ),
+    );
+  }
 
   List<Widget> _accentList(MaterialAccentColor color) => [
         _colorCircle(color.shade100),
@@ -423,4 +420,53 @@ class __ColorPickerState extends State<_ColorPicker>
         _colorCircle(color.shade400),
         _colorCircle(color.shade700)
       ];
+}
+
+// General dialog doesn't work as it has no state
+Future _colorPickerDialog(BuildContext context) async {
+  // TODO: Tidy this up
+  final settings = Provider.of<SettingState>(context, listen: false);
+  await showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 200),
+      pageBuilder: (context, animaiton, secondaryAnimation) => StatefulBuilder(
+          builder: (context, setState) => AnnotatedRegion<SystemUiOverlayStyle>(
+                value: SystemUiOverlayStyle(
+                  statusBarIconBrightness: Brightness.light,
+                  systemNavigationBarColor:
+                      context.brightness == Brightness.light
+                          ? Color.fromRGBO(113, 113, 113, 1)
+                          : Color.fromRGBO(15, 15, 15, 1),
+                ),
+                child: AlertDialog(
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0)),
+                    titlePadding: EdgeInsets.all(20),
+                    title: SizedBox(
+                        width: context.width - 120,
+                        child: Text.rich(
+                          TextSpan(
+                            text: context.s.chooseA,
+                            children: [
+                              TextSpan(
+                                  text: ' ${context.s.color}',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: settings.accentSetColor))
+                            ],
+                          ),
+                        )),
+                    content: _ColorPicker(
+                      onColorChanged: (value) {
+                        setState(() {
+                          settings.setAccentColor = value;
+                        });
+                      },
+                    ),
+                    contentPadding: EdgeInsets.fromLTRB(20, 0, 20, 0)),
+              )));
 }

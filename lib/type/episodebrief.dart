@@ -19,7 +19,7 @@ class EpisodeBrief extends Equatable {
   final String? description;
   final int? enclosureDuration;
   final int? enclosureSize;
-  final bool? downloaded;
+  final bool? isDownloaded;
   final int? downloadDate;
   final String? mediaId;
   final String? episodeImage;
@@ -40,7 +40,7 @@ class EpisodeBrief extends Equatable {
       {this.description,
       this.enclosureDuration,
       this.enclosureSize,
-      this.downloaded,
+      this.isDownloaded,
       this.downloadDate,
       this.mediaId,
       this.episodeImage,
@@ -51,7 +51,7 @@ class EpisodeBrief extends Equatable {
       this.isNew,
       this.isPlayed,
       this.versionInfo,
-      this.versions,
+      this.versions, // Could auto polpulate maybe
       this.skipSecondsStart = 0,
       this.skipSecondsEnd = 0,
       this.chapterLink});
@@ -72,6 +72,7 @@ class EpisodeBrief extends Equatable {
   }
 
   ImageProvider get avatarImage {
+    // TODO: Get rid of this
     if (podcastImage != null) {
       if (File(podcastImage!).existsSync()) {
         return FileImage(File(podcastImage!));
@@ -86,45 +87,101 @@ class EpisodeBrief extends Equatable {
     return AssetImage('assets/avatar_backup.png');
   }
 
+  ImageProvider get episodeImageProvider {
+    if (episodeImage != null) {
+      if (File(episodeImage!).existsSync()) {
+        return FileImage(File(episodeImage!));
+      } else if (episodeImage != '') {
+        return CachedNetworkImageProvider(episodeImage!);
+      }
+    }
+    return AssetImage('assets/avatar_backup.png');
+  }
+
+  ImageProvider get podcastImageProvider {
+    if (podcastImage != null) {
+      if (File(podcastImage!).existsSync()) {
+        return FileImage(File(podcastImage!));
+      }
+    }
+    return AssetImage('assets/avatar_backup.png');
+  }
+
   Color backgroudColor(BuildContext context) {
-    if (primaryColor == '' || primaryColor == null) return context.accentColor;
-    return context.brightness == Brightness.light
-        ? primaryColor!.colorizedark()
-        : primaryColor!.colorizeLight();
+    return getColorScheme(context).onSecondaryContainer;
   }
 
   Color cardColor(BuildContext context) {
-    final schema = ColorScheme.fromSeed(
-      seedColor: primaryColor!.colorizedark(),
-      brightness: context.brightness,
-    );
-    return schema.primaryContainer;
+    return getColorScheme(context).secondaryContainer;
   }
 
-  List<EpisodeField> get fields {
-    Map<EpisodeField, dynamic> _fieldsMap = {
-      EpisodeField.description: description,
-      EpisodeField.enclosureDuration: enclosureDuration,
-      EpisodeField.enclosureSize: enclosureSize,
-      EpisodeField.downloaded: downloaded,
-      EpisodeField.downloadDate: downloadDate,
-      EpisodeField.mediaId: mediaId,
-      EpisodeField.episodeImage: episodeImage,
-      EpisodeField.podcastImage: podcastImage,
-      EpisodeField.primaryColor: primaryColor,
-      EpisodeField.isExplicit: isExplicit,
-      EpisodeField.isLiked: isLiked,
-      EpisodeField.isNew: isNew,
-      EpisodeField.isPlayed: isPlayed,
-      EpisodeField.versionInfo: versionInfo,
-      EpisodeField.versions: versions,
-      EpisodeField.skipSecondsStart: skipSecondsStart,
-      EpisodeField.skipSecondsEnd: skipSecondsEnd,
-      EpisodeField.chapterLink: chapterLink
-    };
+  late final ColorScheme colorSchemeLight = ColorScheme.fromSeed(
+    seedColor: primaryColor!.toColor(),
+    brightness: Brightness.light,
+  );
+  late final ColorScheme colorSchemeDark = ColorScheme.fromSeed(
+    seedColor: primaryColor!.toColor(),
+    brightness: Brightness.dark,
+  );
+
+  /// Gets the episode color sceme for the provided [context].brightness.
+  /// Caches its results so can be used freely.
+  ColorScheme getColorScheme(BuildContext context) {
+    return context.brightness == Brightness.light
+        ? colorSchemeLight
+        : colorSchemeDark;
+  }
+
+  /// The list of filled fields in the form of [EpisodeField]s.
+  late final List<EpisodeField> fields = _getfields();
+
+  dynamic _getFieldValue(EpisodeField episodeField) {
+    switch (episodeField) {
+      case EpisodeField.description:
+        return description;
+      case EpisodeField.enclosureDuration:
+        return enclosureDuration;
+      case EpisodeField.enclosureSize:
+        return enclosureSize;
+      case EpisodeField.isDownloaded:
+        return isDownloaded;
+      case EpisodeField.downloadDate:
+        return downloadDate;
+      case EpisodeField.mediaId:
+        return mediaId;
+      case EpisodeField.episodeImage:
+        return episodeImage;
+      case EpisodeField.podcastImage:
+        return podcastImage;
+      case EpisodeField.primaryColor:
+        return primaryColor;
+      case EpisodeField.isExplicit:
+        return isExplicit;
+      case EpisodeField.isLiked:
+        return isLiked;
+      case EpisodeField.isNew:
+        return isNew;
+      case EpisodeField.isPlayed:
+        return isPlayed;
+      case EpisodeField.versionInfo:
+        return versionInfo;
+      case EpisodeField.versions:
+        return versions;
+      case EpisodeField.versionsPopulated:
+        return null;
+      case EpisodeField.skipSecondsStart:
+        return skipSecondsStart;
+      case EpisodeField.skipSecondsEnd:
+        return skipSecondsEnd;
+      case EpisodeField.chapterLink:
+        return chapterLink;
+    }
+  }
+
+  List<EpisodeField> _getfields() {
     List<EpisodeField> fieldList = [];
     for (EpisodeField field in EpisodeField.values) {
-      if (_fieldsMap[field] != null) fieldList.add(field);
+      if (_getFieldValue(field) != null) fieldList.add(field);
     }
     if (versions != null) {
       if (versions!.length == 0) {
@@ -146,7 +203,7 @@ class EpisodeBrief extends Equatable {
           String? description,
           int? enclosureDuration,
           int? enclosureSize,
-          bool? downloaded,
+          bool? isDownloaded,
           int? downloadDate,
           String? mediaId,
           String? episodeImage,
@@ -171,7 +228,7 @@ class EpisodeBrief extends Equatable {
           description: description ?? this.description,
           enclosureDuration: enclosureDuration ?? this.enclosureDuration,
           enclosureSize: enclosureSize ?? this.enclosureSize,
-          downloaded: downloaded ?? this.downloaded,
+          isDownloaded: isDownloaded ?? this.isDownloaded,
           downloadDate: downloadDate ?? this.downloadDate,
           mediaId: mediaId ?? this.mediaId,
           episodeImage: episodeImage ?? this.episodeImage,
@@ -187,8 +244,19 @@ class EpisodeBrief extends Equatable {
           skipSecondsEnd: skipSecondsEnd ?? this.skipSecondsEnd,
           chapterLink: chapterLink ?? this.chapterLink);
 
-  Future<EpisodeBrief> copyWithFromDB(List<EpisodeField> newFields) async {
+  /// Returns a copy with the [newFields] filled from the database.
+  /// [keepExisting] disables overwriting already existing fields.
+  /// [update] refetches all already existing fields from database.
+  Future<EpisodeBrief> copyWithFromDB(
+      {List<EpisodeField>? newFields,
+      bool keepExisting = false,
+      bool update = false}) async {
+    assert(newFields != null || update,
+        "If update is false newFields can't be null.");
+    assert(!keepExisting || !update,
+        "Can't both update and keep existing fields.");
     Map<EpisodeField, List> _fieldsMap = {
+      // I'm so sorry this is so ugly
       EpisodeField.description: [const Symbol("description"), description],
       EpisodeField.enclosureDuration: [
         const Symbol("enclosureDuration"),
@@ -198,7 +266,7 @@ class EpisodeBrief extends Equatable {
         const Symbol("enclosureSize"),
         enclosureSize
       ],
-      EpisodeField.downloaded: [const Symbol("downloaded"), downloaded],
+      EpisodeField.isDownloaded: [const Symbol("isDownloaded"), isDownloaded],
       EpisodeField.downloadDate: [const Symbol("downloadDate"), downloadDate],
       EpisodeField.mediaId: [const Symbol("mediaId"), mediaId],
       EpisodeField.episodeImage: [const Symbol("episodeImage"), episodeImage],
@@ -220,20 +288,38 @@ class EpisodeBrief extends Equatable {
       ],
       EpisodeField.chapterLink: [const Symbol("chapterLink"), chapterLink]
     };
+
     var dbHelper = DBHelper();
-    Map<Symbol, dynamic> oldFields = {};
-    List<EpisodeField> fields = this.fields;
-    for (EpisodeField field in newFields) {
-      fields.remove(field);
+    if (newFields == null) {
+      newFields = [];
     }
-    for (EpisodeField field in fields) {
-      oldFields[_fieldsMap[field]![0]] = _fieldsMap[field]![1];
+    if (update) {
+      newFields.addAll(this.fields);
     }
-    bool populateVersions = newFields.remove(EpisodeField.versionsPopulated);
-    EpisodeBrief newEpisode = (await dbHelper
-            .getEpisodes(episodeIds: [id], optionalFields: newFields))
-        .first;
-    newEpisode = Function.apply(newEpisode.copyWith, [], oldFields);
+    Map<Symbol, dynamic> oldFieldsSymbolMap = {};
+    List<EpisodeField> oldFields = this.fields.toList();
+    if (keepExisting) {
+      for (EpisodeField field in oldFields) {
+        newFields.remove(field);
+      }
+    } else {
+      for (EpisodeField field in newFields) {
+        oldFields.remove(field);
+      }
+    }
+    for (EpisodeField field in oldFields) {
+      oldFieldsSymbolMap[_fieldsMap[field]![0]] = _fieldsMap[field]![1];
+    }
+    bool populateVersions = newFields!.remove(EpisodeField.versionsPopulated);
+    EpisodeBrief newEpisode;
+    if (newFields.isEmpty) {
+      newEpisode = this.copyWith();
+    } else {
+      newEpisode = (await dbHelper
+              .getEpisodes(episodeIds: [id], optionalFields: newFields))
+          .first;
+      newEpisode = Function.apply(newEpisode.copyWith, [], oldFieldsSymbolMap);
+    }
     if (populateVersions) {
       newEpisode = await dbHelper.populateEpisodeVersions(newEpisode);
     }

@@ -167,7 +167,10 @@ class _DialPainter extends CustomPainter {
 
 class _Dial extends StatefulWidget {
   const _Dial(
-      {required this.duration, required this.onChanged, this.snapToMins = 1.0})
+      {required this.duration,
+      required this.onChanged,
+      this.snapToMins = 1.0,
+      this.color})
       : assert(duration != null);
 
   final Duration duration;
@@ -175,6 +178,7 @@ class _Dial extends StatefulWidget {
 
   /// The resolution of mins of the dial, i.e. if snapToMins = 5.0, only durations of 5min intervals will be selectable.
   final double? snapToMins;
+  final Color? color;
   @override
   _DialState createState() => _DialState();
 }
@@ -445,7 +449,7 @@ class _DialState extends State<_Dial> with SingleTickerProviderStateMixin {
             selectedValue: selectedDialValue,
             labels: _buildSeconds(theme.textTheme),
             backgroundColor: backgroundColor,
-            accentColor: themeData.accentColor,
+            accentColor: widget.color ?? themeData.accentColor,
             theta: _theta.value,
             textDirection: Directionality.of(context),
           ),
@@ -624,12 +628,15 @@ class DurationPicker extends StatelessWidget {
   final double? width;
   final double? height;
 
+  final Color? color;
+
   DurationPicker(
       {this.duration = const Duration(minutes: 0),
       required this.onChange,
       this.snapToMins,
       this.width,
       this.height,
+      this.color,
       Key? key})
       : super(key: key);
 
@@ -640,6 +647,7 @@ class DurationPicker extends StatelessWidget {
       height: height ?? _kDurationPickerHeightPortrait / 1.5,
       child: _Dial(
         duration: duration,
+        color: color,
         onChanged: onChange,
         snapToMins: snapToMins,
       ),

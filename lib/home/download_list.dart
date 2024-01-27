@@ -81,7 +81,7 @@ class _DownloadListState extends State<DownloadList> {
     return Consumer<DownloadState>(builder: (_, downloader, __) {
       final tasks = downloader.episodeTasks
           .where((task) => task.status!.value != 3)
-          .toList();
+          .toList(); // TODO: This seems to be slow and unreliable.
       return tasks.length > 0
           ? SliverPadding(
               padding: EdgeInsets.symmetric(vertical: 5.0),
@@ -93,20 +93,27 @@ class _DownloadListState extends State<DownloadList> {
                         context,
                         ScaleRoute(
                             page: FutureBuilder(
-                                // TODO: Check which fields are actually needed.
-                                future: tasks[index].episode!.copyWithFromDB([
+                                future: tasks[index]
+                                    .episode!
+                                    .copyWithFromDB(newFields: [
                                   EpisodeField.description,
                                   EpisodeField.enclosureDuration,
                                   EpisodeField.enclosureSize,
-                                  EpisodeField.episodeImage,
+                                  EpisodeField.isDownloaded,
                                   EpisodeField.podcastImage,
                                   EpisodeField.primaryColor,
+                                  EpisodeField.isLiked,
+                                  EpisodeField.isNew,
+                                  EpisodeField.isPlayed,
                                   EpisodeField.versionInfo
                                 ]),
-                                builder: ((context, snapshot) => EpisodeDetail(
-                                      episodeItem:
-                                          snapshot.data as EpisodeBrief,
-                                    )))),
+                                builder: ((context, snapshot) =>
+                                    snapshot.hasData
+                                        ? EpisodeDetail(
+                                            episodeItem:
+                                                snapshot.data as EpisodeBrief,
+                                          )
+                                        : Center()))),
                       ),
                       title: SizedBox(
                         height: 40,

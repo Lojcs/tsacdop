@@ -671,7 +671,7 @@ Future<void> subIsolateEntryPoint(SendPort sendPort) async {
             : <String>[];
         var podcastLocal = PodcastLocal(p.title, imageUrl, realUrl,
             primaryColor, author, uuid, imagePath, provider, link, funding,
-            description: p.description);
+            description: p.description!);
 
         await dbHelper.savePodcastLocal(podcastLocal);
 

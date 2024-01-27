@@ -1131,11 +1131,13 @@ class _SearchResultDetailState extends State<SearchResultDetail>
                                       style: context.textTheme.headline5),
                                 ),
                                 Text(
-                                  widget.onlinePodcast.interval!
-                                              .toInterval(context) !=
-                                          ''
-                                      ? '${widget.onlinePodcast.interval!.toInterval(context)} | '
-                                          '${widget.onlinePodcast.latestPubDate!.toDate(context)}'
+                                  widget.onlinePodcast.interval != null
+                                      ? widget.onlinePodcast.interval!
+                                                  .toInterval(context) !=
+                                              ''
+                                          ? '${widget.onlinePodcast.interval!.toInterval(context)} | '
+                                              '${widget.onlinePodcast.latestPubDate!.toDate(context)}'
+                                          : '${widget.onlinePodcast.latestPubDate!.toDate(context)}'
                                       : '${widget.onlinePodcast.latestPubDate!.toDate(context)}',
                                   maxLines: 1,
                                   overflow: TextOverflow.fade,

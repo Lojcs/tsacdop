@@ -62,7 +62,7 @@ class _PodcastListState extends State<PodcastList> {
             ],
           ),
           body: Container(
-            color: context.primaryColor,
+            color: context.background,
             child: FutureBuilder<List<PodcastLocal>>(
               future: _getPodcastLocal(),
               builder: (context, snapshot) {
@@ -122,7 +122,7 @@ class _PodcastListState extends State<PodcastList> {
                                         child: Text(
                                           snapshot.data![index].title!,
                                           textAlign: TextAlign.center,
-                                          style: context.textTheme.bodyText1,
+                                          style: context.textTheme.bodyMedium!,
                                           maxLines: 2,
                                         ),
                                       ),

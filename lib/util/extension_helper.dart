@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:tsacdop/class/settingstate.dart';
+import 'package:tsacdop/state/audio_state.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import '../generated/l10n.dart';
 
@@ -24,6 +27,9 @@ extension ContextExtension on BuildContext {
   Color get primaryColorDark => Theme.of(this).primaryColorDark;
   Color get textColor => textTheme.bodyLarge!.color!;
   Color get dialogBackgroundColor => Theme.of(this).dialogBackgroundColor;
+  Color get accentBackgroundWeak => accentColor.toWeakBackround(this);
+  Color get accentBackground => accentColor.toStrongBackround(this);
+  Color get accentBackgroundHighlight => accentColor.toHighlightBackround(this);
   Brightness get brightness => Theme.of(this).brightness;
   Brightness get iconBrightness =>
       brightness == Brightness.dark ? Brightness.light : Brightness.dark;
@@ -32,12 +38,74 @@ extension ContextExtension on BuildContext {
   double get paddingTop => MediaQuery.of(this).padding.top;
   TextTheme get textTheme => Theme.of(this).textTheme;
   SystemUiOverlayStyle get overlay => SystemUiOverlayStyle(
-        statusBarColor: background,
+        statusBarColor: statusBarColor,
         statusBarIconBrightness: iconBrightness,
-        systemNavigationBarColor: background,
+        systemNavigationBarColor: navBarColor,
         systemNavigationBarIconBrightness: iconBrightness,
       );
+  SystemUiOverlayStyle get overlayWithBarrier => SystemUiOverlayStyle(
+        statusBarColor: Color.alphaBlend(Colors.black54, (statusBarColor)),
+        statusBarIconBrightness: Brightness.light,
+        systemNavigationBarColor:
+            Color.alphaBlend(Colors.black54, (navBarColor)),
+        systemNavigationBarIconBrightness: Brightness.light,
+      );
   S get s => S.of(this);
+  bool get realDark =>
+      Provider.of<SettingState>(this, listen: false).realDark! &&
+      brightness == Brightness.dark;
+  EdgeInsets get originalPadding =>
+      Provider.of<SettingState>(this, listen: false).originalPadding ??
+      EdgeInsets.all(0);
+  set originalPadding(EdgeInsets padding) {
+    Provider.of<SettingState>(this, listen: false).originalPadding = padding;
+  }
+
+  /// Returns the last item from the statusBarColor stack. Useful for keeping track of the current
+  Color get statusBarColor =>
+      Provider.of<SettingState>(this, listen: false).statusBarColor.isEmpty
+          ? background
+          : Provider.of<SettingState>(this, listen: false).statusBarColor.last;
+
+  /// Adds the color to the statusBarColor stack if it's not already the last item. Pass null when exiting the page to pop the last item.
+  set statusBarColor(Color? color) {
+    // TODO: Fix: If an EpisodeDetail is opened while a PodcastDetail is in its closing animation and hasn't called deactivate yet, the color of the PodcastDetail gets stuck in the stack, leading to incorrect colors for eg. mobile data confirmation dialog in home screen.
+    SettingState setting = Provider.of<SettingState>(this, listen: false);
+    // print("$color, ${setting.statusBarColor}");
+    if (color == null) {
+      if (setting.statusBarColor.isNotEmpty) {
+        setting.statusBarColor.removeLast();
+      }
+    } else if (setting.statusBarColor.isEmpty ||
+        setting.statusBarColor.last != color) {
+      Provider.of<SettingState>(this, listen: false).statusBarColor.add(color);
+    }
+  }
+
+  /// Returns the last item from the statusBarColor stack. Useful for keeping track of the current
+  Color get navBarColor =>
+      Provider.of<SettingState>(this, listen: false).navBarColor.isEmpty
+          ? background
+          : Provider.of<SettingState>(this, listen: false).navBarColor.last;
+
+  /// Adds the color to the statusBarColor stack if it's not already the last item. Pass null when exiting the page to pop the last item.
+  set navBarColor(Color? color) {
+    SettingState setting = Provider.of<SettingState>(this, listen: false);
+    if (color == null) {
+      if (setting.navBarColor.isNotEmpty) {
+        setting.navBarColor.removeLast();
+      }
+    } else if (setting.navBarColor.isEmpty ||
+        setting.navBarColor.last != color) {
+      Provider.of<SettingState>(this, listen: false).navBarColor.add(color);
+    }
+  }
+
+  BorderRadius get radiusTiny => BorderRadius.circular(5);
+  BorderRadius get radiusSmall => BorderRadius.circular(12);
+  BorderRadius get radiusMedium => BorderRadius.circular(16);
+  BorderRadius get radiusLarge => BorderRadius.circular(20);
+  BorderRadius get radiusHuge => BorderRadius.circular(100);
 }
 
 extension IntExtension on int {
@@ -81,7 +149,7 @@ extension IntExtension on int {
 extension StringExtension on String {
   Future get launchUrl async {
     if (await canLaunchUrlString(this)) {
-      await launchUrlString(this);
+      await launchUrlString(this, mode: LaunchMode.externalApplication);
     } else {
       developer.log('Could not launch $this');
       Fluttertoast.showToast(
@@ -116,4 +184,57 @@ extension StringExtension on String {
     }
     return c;
   }
+
+  Color toColor() {
+    var color = json.decode(this);
+    return Color.fromRGBO(color[0], color[1], color[2], 1);
+  }
 }
+
+extension ColorExtension on Color {
+  Color toWeakBackround(BuildContext context) {
+    return context.realDark
+        ? context.background
+        : Color.lerp(
+            context.background,
+            ColorScheme.fromSeed(
+              seedColor: this,
+              brightness: context.brightness,
+            ).secondaryContainer,
+            0.5)!;
+  }
+
+  Color toStrongBackround(BuildContext context) {
+    return context.realDark
+        ? context.background
+        : Color.lerp(
+            ColorScheme.fromSeed(
+              seedColor: this,
+              brightness: context.brightness,
+            ).secondaryContainer,
+            this,
+            0.2)!;
+  }
+
+  Color toHighlightBackround(BuildContext context, {Brightness? brightness}) {
+    return context.realDark
+        ? context.background
+        : Color.lerp(
+            ColorScheme.fromSeed(
+              seedColor: this,
+              brightness: brightness ?? context.brightness,
+            ).primaryContainer,
+            this,
+            0.5)!;
+  }
+}
+
+// extension ColorSchemeExtension on ColorScheme {
+//   Color get weakBackround {
+//     return Color.lerp(context.background, this.secondaryContainer, 0.5)!;
+//   }
+
+//   Color get strongBackround {
+//     return Color.lerp(this.secondaryContainer, this.primary, 0.00)!;
+//   }
+// }

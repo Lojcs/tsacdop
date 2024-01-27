@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer' as developer;
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -14,6 +15,7 @@ import 'package:tuple/tuple.dart';
 import '../home/audioplayer.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/audio_state.dart';
+import '../state/episode_state.dart';
 import '../type/episodebrief.dart';
 import '../type/play_histroy.dart';
 import '../util/extension_helper.dart';
@@ -21,11 +23,16 @@ import '../widgets/audiopanel.dart';
 import '../widgets/custom_widget.dart';
 
 class EpisodeDetail extends StatefulWidget {
-  final EpisodeBrief? episodeItem;
+  final EpisodeBrief episodeItem;
   final String heroTag;
   final bool hide;
+  final VoidCallback? onClosed;
   EpisodeDetail(
-      {this.episodeItem, this.heroTag = '', this.hide = false, Key? key})
+      {required this.episodeItem,
+      this.heroTag = '',
+      this.hide = false,
+      this.onClosed,
+      Key? key})
       : super(key: key);
 
   @override
@@ -42,14 +49,19 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
   late bool _showTitle;
   late bool _showMenu;
   late EpisodeBrief _episodeItem;
-  late bool updated;
   String? path;
+
+  bool lateInitCoplete = false;
+  late final EpisodeState _episodeState;
+  late final double _titleBarMinHeight;
+  late final double _titleBarMaxHeight;
+  late final double _imageTopOffset;
+  late final ScrollController _controller;
 
   Future<PlayHistory> _getPosition(EpisodeBrief episode) async {
     return await _dbHelper.getPosition(episode);
   }
 
-  late ScrollController _controller;
   _scrollListener() {
     if (_controller.position.userScrollDirection == ScrollDirection.reverse) {
       if (_showMenu && mounted) {
@@ -68,6 +80,35 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
     if (_controller.offset > context.textTheme.headline5!.fontSize!) {
       if (!_showTitle) setState(() => _showTitle = true);
     } else if (_showTitle) setState(() => _showTitle = false);
+    print(_controller.offset <
+        _titleBarMaxHeight - _imageTopOffset + _titleBarMinHeight);
+    if (_controller.position.userScrollDirection ==
+            ScrollDirection.reverse && // TODO: Polish
+        _controller.offset <
+            _titleBarMaxHeight + _titleBarMinHeight - _imageTopOffset &&
+        _controller.offset > _titleBarMinHeight - 30) {
+      _controller.animateTo(_titleBarMaxHeight,
+          duration: Duration(milliseconds: 250), curve: Curves.easeOutCubic);
+    }
+    if (_controller.position.userScrollDirection == ScrollDirection.forward &&
+        _controller.offset <
+            _titleBarMaxHeight + _titleBarMinHeight - _imageTopOffset &&
+        _controller.offset > _titleBarMinHeight - 30) {
+      _controller.animateTo(0,
+          duration: Duration(milliseconds: 250), curve: Curves.easeOutCubic);
+    }
+  }
+
+  _lateInit() {
+    if (!lateInitCoplete) {
+      _episodeState = Provider.of<EpisodeState>(context, listen: false);
+      lateInitCoplete = true;
+      _titleBarMaxHeight = context.width - 30;
+      _titleBarMinHeight = 56;
+      _imageTopOffset = 120;
+      _controller = ScrollController(initialScrollOffset: _titleBarMaxHeight);
+      _controller.addListener(_scrollListener);
+    }
   }
 
   @override
@@ -75,9 +116,15 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
     super.initState();
     _showMenu = true;
     _showTitle = false;
-    _controller = ScrollController();
-    _controller.addListener(_scrollListener);
-    _episodeItem = widget.episodeItem!;
+    _episodeItem = widget.episodeItem;
+  }
+
+  @override
+  void deactivate() {
+    context.statusBarColor = null;
+    context.navBarColor = null;
+    if (widget.onClosed != null) widget.onClosed!();
+    super.deactivate();
   }
 
   @override
@@ -88,324 +135,518 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
 
   @override
   Widget build(BuildContext context) {
+    _lateInit();
+    final Color color =
+        context.realDark ? context.background : _episodeItem.cardColor(context);
+    context.statusBarColor = color;
+    context.navBarColor = color;
     final s = context.s;
     final audio = context.watch<AudioPlayerNotifier>();
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
-          statusBarColor: _episodeItem.cardColor(context),
-          systemNavigationBarColor: _episodeItem!.cardColor(context),
-          systemNavigationBarContrastEnforced: false,
-          systemNavigationBarIconBrightness: context.iconBrightness,
-          statusBarBrightness: context.brightness,
-          statusBarIconBrightness: context.iconBrightness),
-      child: WillPopScope(
-        onWillPop: () async {
-          if (_playerKey.currentState != null &&
-              _playerKey.currentState!.initSize! > 100) {
-            _playerKey.currentState!.backToMini();
-            return false;
-          } else {
-            return true;
-          }
-        },
-        child: Scaffold(
-          backgroundColor: context.background,
-          body: SafeArea(
-            child: Stack(
-              children: <Widget>[
-                StretchingOverscrollIndicator(
-                  axisDirection: AxisDirection.down,
-                  child: NestedScrollView(
-                    scrollDirection: Axis.vertical,
-                    controller: _controller,
-                    headerSliverBuilder: (context, innerBoxScrolled) {
-                      return <Widget>[
-                        SliverAppBar(
-                          backgroundColor: _episodeItem.cardColor(context),
-                          floating: true,
-                          pinned: true,
-                          scrolledUnderElevation: 0,
-                          title: _showTitle
-                              ? Text(
-                                  _episodeItem.title,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                )
-                              : Text(
-                                  _episodeItem.podcastTitle,
-                                  maxLines: 1,
-                                  style: TextStyle(
-                                      fontSize: 15,
-                                      color:
-                                          context.textColor.withOpacity(0.7)),
-                                ),
-                          leading: CustomBackButton(),
-                          elevation: 0,
-                        ),
-                      ];
-                    },
-                    body: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 10),
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                _episodeItem.title,
-                                textAlign: TextAlign.left,
-                                style:
-                                    Theme.of(context).textTheme.headlineSmall,
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-                            child: Row(
-                              children: [
-                                if (_episodeItem.versionInfo ==
-                                    VersionInfo.NONE)
-                                  DropdownButton(
-                                    hint: Text(
-                                        s.published(
-                                            formateDate(_episodeItem.pubDate)),
-                                        style: TextStyle(
-                                            color: context.accentColor)),
-                                    underline: Center(),
-                                    isDense: true,
-                                    icon: Center(),
-                                    items: [
-                                      DropdownMenuItem(
-                                          child: Text(
-                                              s.published(formateDate(
-                                                  _episodeItem.pubDate)),
-                                              style: TextStyle(
-                                                  color: context.accentColor)))
-                                    ],
-                                    onChanged: null,
-                                  )
-                                else
-                                  FutureBuilder<EpisodeBrief>(
-                                    // TODO: Make ui responsive.
-                                    future: _getEpisodeVersions(),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.hasData) {
-                                        List<EpisodeBrief?> versions = snapshot
-                                            .data!.versions!.values
-                                            .toList();
-                                        versions.sort((a, b) =>
-                                            b!.pubDate.compareTo(a!.pubDate));
-                                        return MyDropdownButton(
-                                            hint: Text(
-                                                s.published(formateDate(
-                                                    _episodeItem.pubDate)),
-                                                style: TextStyle(
-                                                    color:
-                                                        context.accentColor)),
-                                            underline: Center(),
-                                            isDense: true,
-                                            value: versions.singleWhere((e) =>
-                                                e!.versionInfo !=
-                                                VersionInfo.IS),
-                                            items: versions
-                                                .map((e) => DropdownMenuItem(
-                                                    value: e,
+    return Selector2<EpisodeState, AudioPlayerNotifier,
+            Tuple4<bool, bool, PlayerHeight, EpisodeBrief?>>(
+        selector: (_, episodeState, audio) => Tuple4(
+            episodeState.episodeChangeMap[_episodeItem.id]!,
+            audio.playerRunning,
+            audio.playerHeight!,
+            audio.episode),
+        builder: (_, data, __) => FutureBuilder<EpisodeBrief>(
+            future: _episodeItem.copyWithFromDB(newFields: [
+              EpisodeField.episodeImage,
+              EpisodeField.podcastImage
+            ], update: true),
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                _episodeItem = snapshot.data!;
+              }
+              return AnnotatedRegion<SystemUiOverlayStyle>(
+                value: data.item2
+                    ? context.overlay.copyWith(
+                        systemNavigationBarColor: context.accentBackground)
+                    : context.overlay,
+                child: WillPopScope(
+                  onWillPop: () async {
+                    if (_playerKey.currentState != null &&
+                        _playerKey.currentState!.initSize! > 100) {
+                      _playerKey.currentState!.backToMini();
+                      return false;
+                    } else {
+                      return true;
+                    }
+                  },
+                  child: Scaffold(
+                    backgroundColor: context.background,
+                    body: SafeArea(
+                      child: Stack(
+                        children: <Widget>[
+                          StretchingOverscrollIndicator(
+                            axisDirection: AxisDirection.down,
+                            child: NestedScrollView(
+                              scrollDirection: Axis.vertical,
+                              controller: _controller,
+                              headerSliverBuilder: (context, innerBoxScrolled) {
+                                return <Widget>[
+                                  SliverAppBar(
+                                    flexibleSpace: LayoutBuilder(
+                                      builder: (context, constraints) {
+                                        double topHeight =
+                                            constraints.biggest.height;
+                                        double expandRatio =
+                                            ((topHeight - _titleBarMinHeight) /
+                                                    (-30 + context.width))
+                                                .clamp(0, 1);
+                                        // print(_episodeItem.episodeImage);
+                                        return FlexibleSpaceBar(
+                                          collapseMode: CollapseMode.pin,
+                                          titlePadding: EdgeInsets.only(
+                                            left: 50 +
+                                                0 *
+                                                    (1 -
+                                                        ((expandRatio - 0.8) *
+                                                                5)
+                                                            .clamp(0, 1)),
+                                            right: 50 +
+                                                0 *
+                                                    (1 -
+                                                        ((expandRatio - 0.8) *
+                                                                5)
+                                                            .clamp(0, 1)),
+                                            top: 15,
+                                            bottom: topHeight -
+                                                (40 +
+                                                    (topHeight -
+                                                            _titleBarMinHeight)
+                                                        .clamp(
+                                                            0,
+                                                            _imageTopOffset -
+                                                                _titleBarMinHeight)),
+                                          ),
+                                          expandedTitleScale: 1.1,
+                                          background: Container(
+                                            // alignment:
+                                            //     Alignment.bottomCenter,
+                                            padding: EdgeInsets.only(
+                                              left: 60,
+                                              right: 60,
+                                              top: _imageTopOffset +
+                                                  context.width -
+                                                  30 -
+                                                  expandRatio *
+                                                      (context.width - 30),
+                                              bottom: 0,
+                                            ),
+                                            child: Container(
+                                              clipBehavior: Clip.hardEdge,
+                                              height: (context.width - 120) *
+                                                  ((expandRatio - 0.4)
+                                                          .clamp(0, 0.6) +
+                                                      0.4),
+                                              width: (context.width - 120) *
+                                                  ((expandRatio - 0.4)
+                                                          .clamp(0, 0.6) +
+                                                      0.4),
+                                              decoration: BoxDecoration(
+                                                color: color,
+                                                // border: Border.all(
+                                                //     color: Colors.white,
+                                                //     width: 2),
+                                              ),
+                                              child: Image(
+                                                  alignment:
+                                                      Alignment.topCenter,
+                                                  fit: BoxFit.fitWidth,
+                                                  image: _episodeItem
+                                                              .episodeImage !=
+                                                          ''
+                                                      ? _episodeItem
+                                                          .episodeImageProvider
+                                                      : _episodeItem
+                                                          .podcastImageProvider),
+                                            ),
+                                          ),
+                                          title: Stack(
+                                            children: [
+                                              Opacity(
+                                                opacity: 1,
+                                                child: Tooltip(
+                                                  message: _episodeItem.title,
+                                                  child: Text(
+                                                      _episodeItem.title,
+                                                      maxLines: 3,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      style: context.textTheme
+                                                          .headlineSmall!),
+                                                ),
+                                              )
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    backgroundColor: color,
+                                    collapsedHeight: _titleBarMinHeight,
+                                    toolbarHeight: _titleBarMinHeight,
+                                    expandedHeight:
+                                        _titleBarMinHeight + _titleBarMaxHeight,
+                                    pinned: true,
+                                    scrolledUnderElevation: 0,
+                                    leading: CustomBackButton(),
+                                    elevation: 0,
+                                  ),
+                                  // Infobar
+                                  SliverAppBar(
+                                    pinned: true,
+                                    leading: Center(),
+                                    toolbarHeight: 150,
+                                    backgroundColor: context.background,
+                                    scrolledUnderElevation: 0,
+                                    flexibleSpace: LayoutBuilder(
+                                      builder: (context, constraints) {
+                                        double topHeight =
+                                            constraints.biggest.height;
+                                        double expandRatio =
+                                            ((topHeight - _titleBarMinHeight) /
+                                                    (120 + context.width))
+                                                .clamp(0, 1);
+                                        // print(expandRatio);
+                                        return Padding(
+                                          padding: EdgeInsets.only(
+                                            top: 0,
+                                            bottom: (topHeight -
+                                                    (40 +
+                                                        context.width +
+                                                        70 * expandRatio))
+                                                .clamp(0, 1),
+                                          ),
+                                          child: Container(
+                                            height: 150,
+                                            // padding: EdgeInsets.only(
+                                            //     left: 20, right: 20),
+                                            color: Color.alphaBlend(
+                                                Colors.white10, color),
+                                            alignment: Alignment.centerLeft,
+                                            child: Expanded(
+                                              child: Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.start,
+                                                // mainAxisSize:
+                                                //     MainAxisSize
+                                                //         .max,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: <Widget>[
+                                                  Padding(
+                                                    padding: const EdgeInsets
+                                                            .fromLTRB(
+                                                        20, 15, 20, 10),
+                                                    child: Tooltip(
+                                                      message: _episodeItem
+                                                          .podcastTitle,
+                                                      child: Text(
+                                                        _episodeItem
+                                                            .podcastTitle,
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                        style: context.textTheme
+                                                            .titleLarge,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding: const EdgeInsets
+                                                        .fromLTRB(20, 5, 20, 5),
                                                     child: Row(
                                                       children: [
-                                                        Text(
-                                                            s.published(
-                                                                formateDate(e!
-                                                                    .pubDate)),
-                                                            style: TextStyle(
-                                                                color: context
-                                                                    .accentColor))
+                                                        if (_episodeItem
+                                                                .versionInfo ==
+                                                            VersionInfo.NONE)
+                                                          _versionDateSelector(
+                                                              [_episodeItem])
+                                                        else
+                                                          FutureBuilder<
+                                                              EpisodeBrief>(
+                                                            // TODO: Make ui responsive.
+                                                            future:
+                                                                _getEpisodeVersions(),
+                                                            builder: (context,
+                                                                snapshot) {
+                                                              if (snapshot
+                                                                  .hasData) {
+                                                                List<EpisodeBrief?>
+                                                                    versions =
+                                                                    snapshot
+                                                                        .data!
+                                                                        .versions!
+                                                                        .values
+                                                                        .toList();
+                                                                versions.sort(
+                                                                    (a, b) => b!
+                                                                        .pubDate
+                                                                        .compareTo(
+                                                                            a!.pubDate));
+                                                                return _versionDateSelector(
+                                                                    versions);
+                                                              } else {
+                                                                return _versionDateSelector([
+                                                                  _episodeItem
+                                                                ]);
+                                                              }
+                                                            },
+                                                          ),
+                                                        SizedBox(width: 10),
+                                                        if (_episodeItem
+                                                                .isExplicit ==
+                                                            true)
+                                                          Text('E',
+                                                              style: TextStyle(
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: context
+                                                                      .error))
                                                       ],
-                                                    )))
-                                                .toList(),
-                                            onChanged: (EpisodeBrief? episode) {
-                                              _setEpisodeDisplayVersion(
-                                                  episode!);
-                                            });
-                                      } else {
-                                        return Center();
-                                      }
-                                    },
-                                  ),
-                                SizedBox(width: 10),
-                                if (_episodeItem.isExplicit == true)
-                                  Text('E',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: context.error))
-                              ],
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 5),
-                            child: Row(
-                              children: <Widget>[
-                                if (_episodeItem.enclosureDuration != 0)
-                                  Container(
-                                      decoration: BoxDecoration(
-                                          color: context.secondary,
-                                          borderRadius: BorderRadius.all(
-                                              Radius.circular(16.0))),
-                                      height: 30.0,
-                                      margin: EdgeInsets.only(right: 12.0),
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 10.0),
-                                      alignment: Alignment.center,
-                                      child: Text(
-                                        s.minsCount(
-                                          _episodeItem.enclosureDuration! ~/ 60,
-                                        ),
-                                        style: TextStyle(
-                                            color: context.background),
-                                      )),
-                                if (_episodeItem!.enclosureSize != null &&
-                                    _episodeItem!.enclosureSize != 0)
-                                  Container(
-                                    decoration: BoxDecoration(
-                                        color: context.tertiary,
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(16.0))),
-                                    height: 30.0,
-                                    margin: EdgeInsets.only(right: 12.0),
-                                    padding:
-                                        EdgeInsets.symmetric(horizontal: 10.0),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      '${_episodeItem!.enclosureSize! ~/ 1000000}MB',
-                                      style:
-                                          TextStyle(color: context.background),
-                                    ),
-                                  ),
-                                FutureBuilder<PlayHistory>(
-                                    future: _getPosition(_episodeItem!),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.hasError) {
-                                        developer.log(snapshot.error as String);
-                                      }
-                                      if (snapshot.hasData &&
-                                          snapshot.data!.seekValue! < 0.9 &&
-                                          snapshot.data!.seconds! > 10) {
-                                        return ButtonTheme(
-                                          height: 28,
-                                          padding: EdgeInsets.symmetric(
-                                              horizontal: 0),
-                                          child: OutlinedButton(
-                                            style: OutlinedButton.styleFrom(
-                                              shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          100.0),
-                                                  side: BorderSide(
-                                                      color:
-                                                          context.accentColor)),
-                                            ),
-                                            onPressed: () => audio.episodeLoad(
-                                                _episodeItem,
-                                                startPosition:
-                                                    (snapshot.data!.seconds! *
-                                                            1000)
-                                                        .toInt()),
-                                            child: Row(
-                                              children: [
-                                                SizedBox(
-                                                  width: 20,
-                                                  height: 20,
-                                                  child: CustomPaint(
-                                                    painter: ListenedPainter(
-                                                        context.textColor,
-                                                        stroke: 2.0),
+                                                    ),
                                                   ),
-                                                ),
-                                                SizedBox(width: 5),
-                                                Text(
-                                                  snapshot
-                                                      .data!.seconds!.toTime,
-                                                ),
-                                              ],
+                                                  Padding(
+                                                    padding:
+                                                        EdgeInsets.symmetric(
+                                                            horizontal: 20,
+                                                            vertical: 5),
+                                                    child: Row(
+                                                      children: <Widget>[
+                                                        if (_episodeItem
+                                                                .enclosureDuration !=
+                                                            0)
+                                                          Container(
+                                                              decoration: BoxDecoration(
+                                                                  color: context
+                                                                      .secondary,
+                                                                  borderRadius:
+                                                                      context
+                                                                          .radiusHuge),
+                                                              height: 40.0,
+                                                              margin: EdgeInsets
+                                                                  .only(
+                                                                      right:
+                                                                          12.0),
+                                                              padding: EdgeInsets
+                                                                  .symmetric(
+                                                                      horizontal:
+                                                                          10.0),
+                                                              alignment:
+                                                                  Alignment
+                                                                      .center,
+                                                              child: Text(
+                                                                s.minsCount(
+                                                                  _episodeItem
+                                                                          .enclosureDuration! ~/
+                                                                      60,
+                                                                ),
+                                                                style: TextStyle(
+                                                                    color: context
+                                                                        .background),
+                                                              )),
+                                                        if (_episodeItem!
+                                                                    .enclosureSize !=
+                                                                null &&
+                                                            _episodeItem!
+                                                                    .enclosureSize !=
+                                                                0)
+                                                          Container(
+                                                            decoration: BoxDecoration(
+                                                                color: context
+                                                                    .tertiary,
+                                                                borderRadius:
+                                                                    context
+                                                                        .radiusHuge),
+                                                            height: 40.0,
+                                                            margin:
+                                                                EdgeInsets.only(
+                                                                    right:
+                                                                        12.0),
+                                                            padding: EdgeInsets
+                                                                .symmetric(
+                                                                    horizontal:
+                                                                        10.0),
+                                                            alignment: Alignment
+                                                                .center,
+                                                            child: Text(
+                                                              '${_episodeItem!.enclosureSize! ~/ 1000000}MB',
+                                                              style: TextStyle(
+                                                                  color: context
+                                                                      .background),
+                                                            ),
+                                                          ),
+                                                        FutureBuilder<
+                                                                PlayHistory>(
+                                                            future: _getPosition(
+                                                                _episodeItem),
+                                                            builder: (context,
+                                                                snapshot) {
+                                                              if (snapshot
+                                                                  .hasError) {
+                                                                developer.log(
+                                                                    snapshot.error
+                                                                        as String);
+                                                              }
+                                                              if (snapshot
+                                                                      .hasData &&
+                                                                  snapshot.data!
+                                                                          .seekValue! <
+                                                                      0.9 &&
+                                                                  snapshot.data!
+                                                                          .seconds! >
+                                                                      10) {
+                                                                return Container(
+                                                                  height: 40,
+                                                                  padding: EdgeInsets
+                                                                      .symmetric(
+                                                                          horizontal:
+                                                                              0),
+                                                                  child:
+                                                                      OutlinedButton(
+                                                                    style: OutlinedButton
+                                                                        .styleFrom(
+                                                                      shape: RoundedRectangleBorder(
+                                                                          borderRadius: context
+                                                                              .radiusHuge,
+                                                                          side:
+                                                                              BorderSide(color: context.accentColor)),
+                                                                    ),
+                                                                    onPressed: () => audio.episodeLoad(
+                                                                        _episodeItem,
+                                                                        startPosition:
+                                                                            (snapshot.data!.seconds! * 1000).toInt()),
+                                                                    child: Row(
+                                                                      children: [
+                                                                        SizedBox(
+                                                                          width:
+                                                                              20,
+                                                                          height:
+                                                                              20,
+                                                                          child:
+                                                                              CustomPaint(
+                                                                            painter:
+                                                                                ListenedPainter(context.textColor, stroke: 2.0),
+                                                                          ),
+                                                                        ),
+                                                                        SizedBox(
+                                                                            width:
+                                                                                5),
+                                                                        Text(
+                                                                          snapshot
+                                                                              .data!
+                                                                              .seconds!
+                                                                              .toTime,
+                                                                        ),
+                                                                      ],
+                                                                    ),
+                                                                  ),
+                                                                );
+                                                              } else {
+                                                                return Center();
+                                                              }
+                                                            }),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
                                           ),
                                         );
-                                      } else {
-                                        return Center();
-                                      }
-                                    }),
-                              ],
+                                      },
+                                    ),
+                                  ),
+                                ];
+                              },
+                              body: SingleChildScrollView(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                          bottom: 10,
+                                          top: 20,
+                                          left: 20,
+                                          right: 20),
+                                      child: Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: Text(
+                                          _episodeItem.title,
+                                          textAlign: TextAlign.left,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .headlineMedium,
+                                        ),
+                                      ),
+                                    ),
+                                    ShowNote(episode: _episodeItem),
+                                    Selector<AudioPlayerNotifier,
+                                            Tuple2<bool, PlayerHeight?>>(
+                                        selector: (_, audio) => Tuple2(
+                                            audio.playerRunning,
+                                            audio.playerHeight),
+                                        builder: (_, data, __) {
+                                          final height = kMinPlayerHeight[
+                                              data.item2!.index];
+                                          return SizedBox(
+                                            height: data.item1 ? height : 0,
+                                          );
+                                        }),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
-                          ShowNote(episode: _episodeItem),
-                          Selector<AudioPlayerNotifier,
-                                  Tuple2<bool, PlayerHeight?>>(
-                              selector: (_, audio) => Tuple2(
-                                  audio.playerRunning, audio.playerHeight),
-                              builder: (_, data, __) {
-                                final height =
-                                    kMinPlayerHeight[data.item2!.index];
-                                return SizedBox(
-                                  height: data.item1 ? height : 0,
-                                );
-                              }),
+                          Container(
+                            alignment: Alignment.bottomCenter,
+                            padding: EdgeInsets.only(
+                                bottom: data.item2
+                                    ? kMinPlayerHeight[data.item3.index]
+                                    : 0),
+                            child: AnimatedContainer(
+                              duration: Duration(milliseconds: 300),
+                              height: _showMenu ? 50 : 0,
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.vertical,
+                                child: MenuBar(
+                                    episodeItem: _episodeItem,
+                                    heroTag: widget.heroTag,
+                                    hide: widget.hide),
+                              ),
+                            ),
+                          ),
+                          Selector<AudioPlayerNotifier, EpisodeBrief?>(
+                            selector: (_, audio) => audio.episode,
+                            builder: (_, data, __) => Container(
+                              child: PlayerWidget(
+                                  playerKey: _playerKey,
+                                  isPlayingPage: data == _episodeItem),
+                            ),
+                          ),
                         ],
                       ),
                     ),
                   ),
                 ),
-                Selector<AudioPlayerNotifier, Tuple2<bool, PlayerHeight?>>(
-                  selector: (_, audio) =>
-                      Tuple2(audio.playerRunning, audio.playerHeight),
-                  builder: (_, data, __) {
-                    final height = kMinPlayerHeight[data.item2!.index];
-                    return Container(
-                      alignment: Alignment.bottomCenter,
-                      padding: EdgeInsets.only(bottom: data.item1 ? height : 0),
-                      child: AnimatedContainer(
-                        duration: Duration(milliseconds: 400),
-                        height: _showMenu ? 50 : 0,
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.vertical,
-                          child: MenuBar(
-                              episodeItem: _episodeItem,
-                              heroTag: widget.heroTag,
-                              hide: widget.hide),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                Selector<AudioPlayerNotifier, EpisodeBrief?>(
-                  selector: (_, audio) => audio.episode,
-                  builder: (_, data, __) => Container(
-                    child: PlayerWidget(
-                        playerKey: _playerKey,
-                        isPlayingPage: data == _episodeItem),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+              );
+            }));
   }
 
   Future<EpisodeBrief> _getEpisodeVersions() async {
     if (_episodeItem.versions == null ||
         _episodeItem.versions!.containsValue(null)) {
-      EpisodeBrief episode =
-          await _dbHelper.populateEpisodeVersions(_episodeItem);
+      EpisodeBrief episode = await _dbHelper.populateEpisodeVersions(
+          _episodeItem); // Not using copyWithFromDB since we need the original.
       _episodeItem = episode;
     }
     return _episodeItem;
   }
 
   Future<void> _setEpisodeDisplayVersion(EpisodeBrief episode) async {
-    await _dbHelper.setEpisodeDisplayVersion(episode);
+    await _episodeState.setDisplayVersion(episode);
     Map<int, EpisodeBrief?>? versions = episode.versions!;
     for (int version in versions.keys) {
       if (versions[version]!.versionInfo == VersionInfo.FHAS ||
@@ -417,10 +658,83 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
     episode =
         episode.copyWith(versionInfo: VersionInfo.FHAS, versions: versions);
     episode.versions![episode.id] = episode;
-    if (mounted) {
-      setState(() {
-        _episodeItem = episode;
-      });
-    }
   }
+
+  Widget _versionDateSelector(List<EpisodeBrief?> versions) => Row(
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 4),
+            child: buttonOnMenu(
+              context,
+              child: (_episodeItem.versionInfo != VersionInfo.IS)
+                  ? Icon(
+                      Icons.radio_button_on,
+                      size: 24,
+                      color: context.accentColor,
+                    )
+                  : Icon(
+                      Icons.radio_button_off,
+                      size: 24,
+                    ),
+              onTap: () {
+                if (_episodeItem.versionInfo == VersionInfo.IS) {
+                  _setEpisodeDisplayVersion(_episodeItem);
+                }
+              },
+            ),
+          ),
+          MyDropdownButton(
+            hint: Text(
+                context.s.published(formateDate(_episodeItem.pubDate) +
+                    " " +
+                    ((_episodeItem.pubDate ~/ 1000) % 1440).toTime),
+                style: TextStyle(color: context.accentColor)),
+            underline: Center(),
+            dropdownColor: context.accentBackground,
+            isDense: true,
+            value: _episodeItem,
+            selectedItemBuilder: (context) => versions
+                .map(
+                  (e) => Text(
+                    context.s.published(
+                      formateDate(e!.pubDate) +
+                          " " +
+                          ((_episodeItem.pubDate ~/ 1000) % 1440).toTime,
+                    ),
+                    style: TextStyle(
+                      color: context.accentColor,
+                    ),
+                  ),
+                )
+                .toList(),
+            items: versions
+                .map((e) => DropdownMenuItem(
+                    value: e,
+                    child: Row(
+                      children: [
+                        Text(
+                          context.s.published(formateDate(e!.pubDate)) +
+                              " " +
+                              ((_episodeItem.pubDate ~/ 1000) % 1440).toTime,
+                          style: TextStyle(
+                            fontWeight: e.versionInfo != VersionInfo.IS
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
+                      ],
+                    )))
+                .toList(),
+            onChanged: versions.length == 1
+                ? null
+                : (EpisodeBrief? episode) {
+                    if (mounted && episode != null) {
+                      setState(() {
+                        _episodeItem = episode;
+                      });
+                    }
+                  },
+          ),
+        ],
+      );
 }

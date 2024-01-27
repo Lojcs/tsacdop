@@ -40,7 +40,7 @@ class _PodcastGroupListState extends State<PodcastGroupList> {
             color: context.primaryColor,
           )
         : Container(
-            color: context.primaryColor,
+            color: context.accentBackgroundWeak,
             child: ReorderableListView(
               onReorder: (oldIndex, newIndex) {
                 setState(() {
@@ -51,8 +51,8 @@ class _PodcastGroupListState extends State<PodcastGroupList> {
               children: _group!.podcasts.map<Widget>(
                 (podcastLocal) {
                   return Container(
-                    decoration:
-                        BoxDecoration(color: Theme.of(context).primaryColor),
+                    margin: EdgeInsets.only(top: 0.5, bottom: 0.5),
+                    decoration: BoxDecoration(color: context.background),
                     key: ObjectKey(podcastLocal.title),
                     child: _PodcastCard(
                       podcastLocal: podcastLocal,
@@ -205,6 +205,8 @@ class __PodcastCardState extends State<_PodcastCard>
                                   return Container(
                                     padding: EdgeInsets.only(left: 5.0),
                                     child: FilterChip(
+                                      backgroundColor: context.accentBackground,
+                                      selectedColor: context.accentColor,
                                       key: ValueKey<String>(group!.id),
                                       label: Text(group.name!),
                                       selected: _selectedGroups.contains(group),
@@ -405,7 +407,6 @@ class __PodcastCardState extends State<_PodcastCard>
                         ),
                 ),
               ),
-        Divider(height: 1)
       ],
     );
   }

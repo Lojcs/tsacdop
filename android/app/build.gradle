@@ -46,7 +46,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.stonegate.tsacdop"
+        applicationId "com.stonegate.tsacdop.debug"
         minSdkVersion 21
         targetSdkVersion 29
         versionCode flutterVersionCode.toInteger()

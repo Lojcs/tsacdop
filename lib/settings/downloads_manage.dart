@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/download_state.dart';
+import '../state/episode_state.dart';
 import '../type/episodebrief.dart';
 import '../util/extension_helper.dart';
 import '../widgets/custom_widget.dart';
@@ -49,7 +50,10 @@ class _DownloadsManageState extends State<DownloadsManage> {
         break;
     }
     episodes = await dbHelper.getEpisodes(
-        sortBy: sorter, sortOrder: order, filterDownloaded: -1);
+        sortBy: sorter,
+        sortOrder: order,
+        filterDownloaded: -1,
+        episodeState: Provider.of<EpisodeState>(context, listen: false));
     return episodes;
   }
 
@@ -136,17 +140,13 @@ class _DownloadsManageState extends State<DownloadsManage> {
   Widget build(BuildContext context) {
     final s = context.s;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
-        statusBarIconBrightness: Theme.of(context).accentColorBrightness,
-        systemNavigationBarColor: Theme.of(context).primaryColor,
-        systemNavigationBarIconBrightness:
-            Theme.of(context).accentColorBrightness,
-      ),
+      value: context.overlay,
       child: Scaffold(
         appBar: AppBar(
           leading: CustomBackButton(),
           elevation: 0,
-          backgroundColor: context.primaryColor,
+          scrolledUnderElevation: 0,
+          backgroundColor: context.background,
         ),
         body: SafeArea(
           child: Stack(

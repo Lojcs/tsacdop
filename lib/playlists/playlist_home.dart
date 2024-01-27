@@ -91,6 +91,7 @@ class _PlaylistHomeState extends State<PlaylistHome> {
           }
         },
         child: Scaffold(
+            backgroundColor: context.background,
             appBar: AppBar(
               leading: CustomBackButton(),
               centerTitle: true,
@@ -672,6 +673,7 @@ class __PlaylistsState extends State<_Playlists> {
       url
     ], optionalFields: [
       EpisodeField.mediaId,
+      EpisodeField.primaryColor,
       EpisodeField.isNew,
       EpisodeField.skipSecondsStart,
       EpisodeField.skipSecondsEnd,

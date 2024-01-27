@@ -4,11 +4,13 @@ import 'dart:developer' as developer;
 
 import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:tsacdop/state/episode_state.dart';
 import 'package:tuple/tuple.dart';
 import 'package:webfeed/webfeed.dart';
 
@@ -53,7 +55,7 @@ enum EpisodeField {
   description,
   enclosureDuration,
   enclosureSize,
-  downloaded,
+  isDownloaded,
   downloadDate,
   mediaId,
   episodeImage,
@@ -110,7 +112,8 @@ String versionInfoToString(VersionInfo versionInfo) {
 
 enum VersionPolicy { Default, New, Old, NewIfNoDownloaded }
 
-VersionPolicy versionPolicyFromString([String string = "DEF"]) {
+// Maybe make this a method of String?
+VersionPolicy versionPolicyFromString(String string) {
   switch (string) {
     case "NEW":
       return VersionPolicy.New;
@@ -170,7 +173,7 @@ class DBHelper {
         .execute("""CREATE TABLE Episodes(id INTEGER PRIMARY KEY,title TEXT, 
         enclosure_url TEXT UNIQUE, enclosure_length INTEGER, pubDate TEXT, 
         description TEXT, feed_id TEXT, feed_link TEXT, milliseconds INTEGER,
-        version_info INTEGER, duration INTEGER DEFAULT 0, explicit INTEGER DEFAULT 0,
+        version_info TEXT DEFAULT 'NONE', duration INTEGER DEFAULT 0, explicit INTEGER DEFAULT 0,
         liked INTEGER DEFAULT 0, liked_date INTEGER DEFAULT 0, downloaded TEXT DEFAULT 'ND', 
         download_date INTEGER DEFAULT 0, media_id TEXT, is_new INTEGER DEFAULT 0, 
         chapter_link TEXT DEFAULT '', hosts TEXT DEFAULT '', episode_image TEXT DEFAULT '',
@@ -290,7 +293,8 @@ class DBHelper {
   }
 
   Future<void> _v8Update(Database db) async {
-    await db.execute("ALTER TABLE Episodes ADD version_info INTEGER");
+    await db
+        .execute("ALTER TABLE Episodes ADD version_info TEXT DEFAULT 'NONE'");
     await db.execute("ALTER TABLE Episodes ADD versions TEXT DEFAULT ''");
     await db.execute(
         "ALTER TABLE PodcastLocal ADD version_policy TEXT DEFAULT 'DEF'");
@@ -318,12 +322,12 @@ class DBHelper {
       if (updateOnly) {
         list = await dbClient.rawQuery(
             """SELECT id, title, imageUrl, rssUrl, primaryColor, author, imagePath , provider, 
-          link ,update_count, episode_count, funding FROM PodcastLocal WHERE id = ? AND 
+          link ,update_count, episode_count, funding, description FROM PodcastLocal WHERE id = ? AND 
           never_update = 0""", [s]);
       } else {
         list = await dbClient.rawQuery(
             """SELECT id, title, imageUrl, rssUrl, primaryColor, author, imagePath , provider, 
-          link ,update_count, episode_count, funding FROM PodcastLocal WHERE id = ?""",
+          link ,update_count, episode_count, funding, description FROM PodcastLocal WHERE id = ?""",
             [s]);
       }
       if (list.length > 0) {
@@ -338,6 +342,7 @@ class DBHelper {
             list.first['provider'],
             list.first['link'],
             List<String>.from(jsonDecode(list.first['funding'])),
+            description: list.first['description'],
             updateCount: list.first['update_count'],
             episodeCount: list.first['episode_count']));
       }
@@ -353,12 +358,12 @@ class DBHelper {
     if (updateOnly) {
       list = await dbClient.rawQuery(
           """SELECT id, title, imageUrl, rssUrl, primaryColor, author, imagePath,
-         provider, link, funding FROM PodcastLocal WHERE never_update = 0 ORDER BY 
+         provider, link, funding, description FROM PodcastLocal WHERE never_update = 0 ORDER BY 
          add_date DESC""");
     } else {
       list = await dbClient.rawQuery(
           """SELECT id, title, imageUrl, rssUrl, primaryColor, author, imagePath,
-         provider, link, funding FROM PodcastLocal ORDER BY add_date DESC""");
+         provider, link, funding, description FROM PodcastLocal ORDER BY add_date DESC""");
     }
 
     var podcastLocal = <PodcastLocal>[];
@@ -376,6 +381,7 @@ class DBHelper {
           i['provider'],
           i['link'],
           List<String>.from(jsonDecode(list.first['funding'])),
+          description: i['description'],
         ));
       }
     }
@@ -386,7 +392,7 @@ class DBHelper {
     var dbClient = await database;
     List<Map> list = await dbClient.rawQuery(
         """SELECT P.id, P.title, P.imageUrl, P.rssUrl, P.primaryColor, P.author, P.imagePath,
-         P.provider, P.link ,P.update_count, P.episode_count, P.funding FROM PodcastLocal P INNER JOIN 
+         P.provider, P.link ,P.update_count, P.episode_count, P.funding, description FROM PodcastLocal P INNER JOIN 
          Episodes E ON P.id = E.feed_id WHERE E.enclosure_url = ?""", [url]);
     if (list.isNotEmpty) {
       return PodcastLocal(
@@ -400,6 +406,7 @@ class DBHelper {
           list.first['provider'],
           list.first['link'],
           List<String>.from(jsonDecode(list.first['funding'])),
+          description: list.first['description'],
           updateCount: list.first['update_count'],
           episodeCount: list.first['episode_count']);
     }
@@ -1114,7 +1121,7 @@ class DBHelper {
   /// Sets the episode as the display version among its other versions.
   /// If reset is true, reverts the display version among its versions to default.
   /// FHAS indicates an episode is the display version but not the default.
-  Future<void> setEpisodeDisplayVersion(EpisodeBrief episode,
+  Future<void> setDisplayVersion(EpisodeBrief episode,
       {bool reset = false}) async {
     var dbClient = await database;
     dbClient.transaction((txn) async {
@@ -1227,7 +1234,8 @@ class DBHelper {
       final duration = feed.items![i].itunes!.duration?.inSeconds ?? 0;
       final explicit = _getExplicit(feed.items![i].itunes!.explicit);
       final chapter = feed.items![i].podcastChapters?.url ?? '';
-      final image = feed.items![i].itunes!.image?.href ?? '';
+      final image =
+          feed.items![i].itunes!.image?.href ?? ''; // TODO: Maybe cache these?
       if (url != null) {
         await dbClient.transaction((txn) async {
           int episodeId = await txn.rawInsert(
@@ -1426,7 +1434,9 @@ class DBHelper {
       int filterPlayed = 0,
       int filterDownloaded = 0,
       int filterAutoDownload = 0,
-      List<String>? customFilters}) async {
+      List<String>? customFilters,
+      List<String>? customArguements,
+      EpisodeState? episodeState}) async {
     bool doGroup = false;
     bool getVersions = false;
     bool populateVersions = false;
@@ -1448,7 +1458,7 @@ class DBHelper {
           case EpisodeField.enclosureSize:
             query.add(", E.enclosure_length");
             break;
-          case EpisodeField.downloaded:
+          case EpisodeField.isDownloaded:
             query.add(", E.downloaded");
             break;
           case EpisodeField.downloadDate:
@@ -1554,13 +1564,17 @@ class DBHelper {
     if (likeEpisodeTitles != null && likeEpisodeTitles.isNotEmpty) {
       filters.add(
           " (${(" OR E.title LIKE ?" * likeEpisodeTitles.length).substring(4)})");
-      arguements.addAll(likeEpisodeTitles);
+      arguements.addAll(likeEpisodeTitles.map(
+        (e) => "%" + e + "%",
+      ));
     }
     if (excludedLikeEpisodeTitles != null &&
         excludedLikeEpisodeTitles.isNotEmpty) {
       filters.add(
           " (${(" OR E.title LIKE ?" * excludedLikeEpisodeTitles.length).substring(4)})");
-      arguements.addAll(excludedLikeEpisodeTitles);
+      arguements.addAll(excludedLikeEpisodeTitles.map(
+        (e) => "%" + e + "%",
+      ));
     }
     if (filterVersions == 2) {
       filters.add(" E.version_info = 'NONE'");
@@ -1613,6 +1627,9 @@ class DBHelper {
       for (var filter in customFilters) {
         filters.add(" $filter");
       }
+      if (customArguements != null && customFilters.isNotEmpty) {
+        arguements.addAll(customArguements);
+      }
     }
     if (filters.isNotEmpty) {
       query.add(" WHERE");
@@ -1658,8 +1675,8 @@ class DBHelper {
               case EpisodeField.enclosureSize:
                 fields[const Symbol("enclosureSize")] = i['enclosure_length'];
                 break;
-              case EpisodeField.downloaded:
-                fields[const Symbol("downloaded")] = i['downloaded'] != 'ND';
+              case EpisodeField.isDownloaded:
+                fields[const Symbol("isDownloaded")] = i['downloaded'] != 'ND';
                 break;
               case EpisodeField.downloadDate:
                 fields[const Symbol("downloadDate")] = i['download_date'];
@@ -1736,6 +1753,9 @@ class DBHelper {
             fields);
         if (populateVersions) episode = await populateEpisodeVersions(episode);
         episodes.add(episode);
+        if (episodeState != null) {
+          episodeState.addEpisode(episode);
+        }
       }
     }
     return episodes;
@@ -1778,7 +1798,7 @@ class DBHelper {
     });
   }
 
-  Future setUniked(String url) async {
+  Future setUnliked(String url) async {
     var dbClient = await database;
     await dbClient.transaction((txn) async {
       await txn.rawUpdate(

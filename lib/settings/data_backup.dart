@@ -39,18 +39,18 @@ class _DataBackupState extends State<DataBackup> {
   Widget build(BuildContext context) {
     final s = context.s;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
-        statusBarIconBrightness: context.iconBrightness,
-        systemNavigationBarColor: Theme.of(context).primaryColor,
-        systemNavigationBarIconBrightness: context.brightness,
-      ),
+      value: context.overlay,
       child: Scaffold(
         backgroundColor: context.background,
         appBar: AppBar(
           elevation: 0,
-          title: Text(s.settingsBackup),
+          scrolledUnderElevation: 0,
+          title: Text(
+            s.settingsBackup,
+            style: context.textTheme.titleLarge,
+          ),
           leading: CustomBackButton(),
-          backgroundColor: context.primaryColor,
+          backgroundColor: context.background,
         ),
         body: Column(
           mainAxisAlignment: MainAxisAlignment.start,

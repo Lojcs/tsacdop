@@ -408,6 +408,8 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Recent tab"),
         "settingsDiscovery": MessageLookupByLibrary.simpleMessage(
             "Reenable \"Discover Features\""),
+        "settingsDiscoveryDes": MessageLookupByLibrary.simpleMessage(
+            "Are you sure you want to reenable \"Discover Features\"?"),
         "settingsDownloadPosition":
             MessageLookupByLibrary.simpleMessage("Download position"),
         "settingsEnableSyncing":
