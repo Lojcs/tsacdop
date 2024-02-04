@@ -87,25 +87,19 @@ class EpisodeBrief extends Equatable {
     return AssetImage('assets/avatar_backup.png');
   }
 
-  ImageProvider get episodeImageProvider {
-    if (episodeImage != null) {
-      if (File(episodeImage!).existsSync()) {
-        return FileImage(File(episodeImage!));
-      } else if (episodeImage != '') {
-        return CachedNetworkImageProvider(episodeImage!);
-      }
-    }
-    return AssetImage('assets/avatar_backup.png');
-  }
+  late ImageProvider episodeImageProvider = ((episodeImage != null)
+      ? (File(episodeImage!).existsSync())
+          ? FileImage(File(episodeImage!))
+          : (episodeImage != '')
+              ? CachedNetworkImageProvider(episodeImage!)
+              : AssetImage('assets/avatar_backup.png')
+      : AssetImage('assets/avatar_backup.png')) as ImageProvider;
 
-  ImageProvider get podcastImageProvider {
-    if (podcastImage != null) {
-      if (File(podcastImage!).existsSync()) {
-        return FileImage(File(podcastImage!));
-      }
-    }
-    return AssetImage('assets/avatar_backup.png');
-  }
+  late ImageProvider podcastImageProvider = ((podcastImage != null)
+      ? (File(podcastImage!).existsSync())
+          ? FileImage(File(podcastImage!))
+          : AssetImage('assets/avatar_backup.png')
+      : AssetImage('assets/avatar_backup.png')) as ImageProvider;
 
   Color backgroudColor(BuildContext context) {
     return getColorScheme(context).onSecondaryContainer;

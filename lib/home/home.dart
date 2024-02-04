@@ -418,7 +418,7 @@ class __PlaylistButtonState extends State<_PlaylistButton> {
                                   padding: EdgeInsets.symmetric(vertical: 2),
                                 ),
                                 SizedBox(
-                                  height: 70,
+                                  height: 77,
                                   width: 140,
                                   child: Column(
                                     children: <Widget>[
@@ -431,7 +431,7 @@ class __PlaylistButtonState extends State<_PlaylistButton> {
                                         data.item2!.title!,
                                         maxLines: 2,
                                         textAlign: TextAlign.center,
-                                        overflow: TextOverflow.fade,
+                                        overflow: TextOverflow.ellipsis,
                                         style:
                                             TextStyle(color: context.textColor),
                                         // style: TextStyle(color: Colors.white),

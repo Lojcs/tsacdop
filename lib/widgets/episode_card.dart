@@ -92,6 +92,7 @@ class InteractiveEpisodeCard extends StatefulWidget {
         (episode.fields.contains(EpisodeField.enclosureDuration) &&
             episode.fields.contains(EpisodeField.enclosureSize)));
     assert(!showPlayedAndDownloaded ||
+        !showLengthAndSize ||
         (episode.fields.contains(EpisodeField.isPlayed) &&
             episode.fields.contains(EpisodeField.isDownloaded)));
     assert(episode.fields.contains(EpisodeField.primaryColor));
@@ -162,11 +163,11 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
     DBHelper dbHelper = DBHelper();
 
     return Selector2<AudioPlayerNotifier, EpisodeState,
-            Tuple4<EpisodeBrief?, List<String>, bool, bool>>(
+            Tuple4<EpisodeBrief?, List<String>, bool?, bool>>(
         selector: (_, audio, episodeState) => Tuple4(
               audio.episode,
               audio.queue.episodes.map((e) => e!.enclosureUrl).toList(),
-              episodeState.episodeChangeMap[episode.id]!,
+              episodeState.episodeChangeMap[episode.id],
               audio.playerRunning,
             ),
         builder: (_, data, __) => FutureBuilder<EpisodeBrief>(
@@ -517,6 +518,7 @@ class EpisodeCard extends StatelessWidget {
         (episode.fields.contains(EpisodeField.enclosureDuration) &&
             episode.fields.contains(EpisodeField.enclosureSize)));
     assert(!showPlayedAndDownloaded ||
+        !showLengthAndSize ||
         (episode.fields.contains(EpisodeField.isPlayed) &&
             episode.fields.contains(EpisodeField.isDownloaded)));
     assert(episode.fields.contains(EpisodeField.primaryColor));
@@ -638,8 +640,11 @@ class EpisodeCard extends StatelessWidget {
                                             _isLikedIndicator(
                                                 episode, context, layout),
                                           Spacer(),
-                                          _lengthAndSize(
-                                              context, layout, episode)
+                                          if (showLengthAndSize)
+                                            _lengthAndSize(
+                                                context, layout, episode,
+                                                showPlayedAndDownloaded:
+                                                    showPlayedAndDownloaded)
                                         ],
                                       ),
                                     ),
@@ -658,7 +663,10 @@ class EpisodeCard extends StatelessWidget {
                           if (showLiked)
                             _isLikedIndicator(episode, context, layout),
                           Spacer(),
-                          _lengthAndSize(context, layout, episode),
+                          if (showLengthAndSize)
+                            _lengthAndSize(context, layout, episode,
+                                showPlayedAndDownloaded:
+                                    showPlayedAndDownloaded),
                         ],
                       ),
                     ),
@@ -1017,8 +1025,8 @@ Widget _circleImage(
 // https://stackoverflow.com/questions/68230022/how-to-remove-space-between-widgets-in-column-or-row-in-flutter
 // ListView's initial animation is too distracting to use.
 // Custom paint perhaps?
-Widget _lengthAndSize(
-        BuildContext context, Layout layout, EpisodeBrief episode) =>
+Widget _lengthAndSize(BuildContext context, Layout layout, EpisodeBrief episode,
+        {bool showPlayedAndDownloaded = false}) =>
     Row(
       children: [
         if (episode.enclosureDuration != 0)
@@ -1039,15 +1047,13 @@ Widget _lengthAndSize(
                                 .getColorScheme(context)
                                 .onSecondaryContainer,
                         width: 1),
-                    color: context.realDark
-                        ? episode.isPlayed!
+                    color: showPlayedAndDownloaded && episode.isPlayed!
+                        ? context.realDark
                             ? episode.getColorScheme(context).secondaryContainer
-                            : Colors.transparent
-                        : episode.isPlayed!
-                            ? episode
+                            : episode
                                 .getColorScheme(context)
                                 .onSecondaryContainer
-                            : Colors.transparent),
+                        : Colors.transparent),
                 alignment: Alignment.center,
                 child: Text(
                   episode.enclosureDuration!.toTime,
@@ -1059,7 +1065,7 @@ Widget _lengthAndSize(
                               ? episode
                                   .getColorScheme(context)
                                   .onSecondaryContainer
-                              : episode.isPlayed!
+                              : showPlayedAndDownloaded && episode.isPlayed!
                                   ? episode
                                       .getColorScheme(context)
                                       .secondaryContainer
@@ -1075,8 +1081,8 @@ Widget _lengthAndSize(
                           : context.textTheme.bodySmall)!
                       .fontSize,
                   color: context.realDark &&
-                          !episode.isDownloaded! &&
-                          !episode.isPlayed! &&
+                          (!showPlayedAndDownloaded ||
+                              !episode.isDownloaded! && !episode.isPlayed!) &&
                           episode.enclosureSize != 0
                       ? episode.getColorScheme(context).onSecondaryContainer
                       : Colors.transparent)
@@ -1120,13 +1126,11 @@ Widget _lengthAndSize(
                               .getColorScheme(context)
                               .onSecondaryContainer,
                       width: 1),
-                  color: context.realDark
-                      ? episode.isDownloaded!
+                  color: showPlayedAndDownloaded && episode.isDownloaded!
+                      ? context.realDark
                           ? episode.getColorScheme(context).secondaryContainer
-                          : Colors.transparent
-                      : episode.isDownloaded!
-                          ? episode.getColorScheme(context).onSecondaryContainer
-                          : Colors.transparent),
+                          : episode.getColorScheme(context).onSecondaryContainer
+                      : Colors.transparent),
               alignment: Alignment.center,
               child: Text(
                 '${episode.enclosureSize! ~/ 1000000}MB',
@@ -1138,7 +1142,7 @@ Widget _lengthAndSize(
                             ? episode
                                 .getColorScheme(context)
                                 .onSecondaryContainer
-                            : episode.isDownloaded!
+                            : showPlayedAndDownloaded && episode.isDownloaded!
                                 ? episode
                                     .getColorScheme(context)
                                     .secondaryContainer
@@ -1154,8 +1158,8 @@ Widget _lengthAndSize(
                         : context.textTheme.bodySmall)!
                     .fontSize,
                 color: context.realDark &&
-                        !episode.isDownloaded! &&
-                        !episode.isPlayed! &&
+                        (!showPlayedAndDownloaded ||
+                            !episode.isDownloaded! && !episode.isPlayed!) &&
                         episode.enclosureDuration != 0
                     ? episode.getColorScheme(context).onSecondaryContainer
                     : Colors.transparent)

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
+import 'package:tsacdop/widgets/episode_card.dart';
+import 'package:tsacdop/widgets/episodegrid.dart';
 
 import '../state/audio_state.dart';
 import '../type/episodebrief.dart';
@@ -33,86 +35,83 @@ class _DismissibleContainerState extends State<DismissibleContainer> {
       duration: Duration(milliseconds: 300),
       curve: Curves.easeInSine,
       alignment: Alignment.center,
-      height: _delete ? 0 : 91.0,
+      // height: _delete ? 0 : 91.0,
       child: _delete
           ? Container(
               color: Colors.transparent,
             )
           : Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                  child: Dismissible(
-                    key: ValueKey('${widget.episode!.enclosureUrl}dis'),
-                    background: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 20.0),
-                      height: 30,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          Container(
-                            decoration: BoxDecoration(
-                                shape: BoxShape.circle, color: Colors.red),
-                            padding: EdgeInsets.all(5),
-                            alignment: Alignment.center,
-                            child: Icon(
-                              LineIcons.alternateTrash,
-                              color: Colors.white,
-                              size: 15,
-                            ),
+                Dismissible(
+                  key: ValueKey('${widget.episode!.enclosureUrl}dis'),
+                  background: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 20.0),
+                    height: 30,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Container(
+                          decoration: BoxDecoration(
+                              shape: BoxShape.circle, color: Colors.red),
+                          padding: EdgeInsets.all(5),
+                          alignment: Alignment.center,
+                          child: Icon(
+                            LineIcons.alternateTrash,
+                            color: Colors.white,
+                            size: 15,
                           ),
-                          Container(
-                            decoration: BoxDecoration(
-                                shape: BoxShape.circle, color: Colors.red),
-                            padding: EdgeInsets.all(5),
-                            alignment: Alignment.center,
-                            child: Icon(
-                              LineIcons.alternateTrash,
-                              color: Colors.white,
-                              size: 15,
-                            ),
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                              shape: BoxShape.circle, color: Colors.red),
+                          padding: EdgeInsets.all(5),
+                          alignment: Alignment.center,
+                          child: Icon(
+                            LineIcons.alternateTrash,
+                            color: Colors.white,
+                            size: 15,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    onDismissed: (direction) async {
-                      setState(() {
-                        _delete = true;
-                      });
-                      var index = await context
+                  ),
+                  onDismissed: (direction) async {
+                    setState(() {
+                      _delete = true;
+                    });
+                    var index = await context
+                        .read<AudioPlayerNotifier>()
+                        .delFromPlaylist(widget.episode!);
+                    widget.onRemove!(true);
+                    final episodeRemove = widget.episode;
+                    Scaffold.of(context).removeCurrentSnackBar();
+                    Scaffold.of(context).showSnackBar(SnackBar(
+                      behavior: SnackBarBehavior.floating,
+                      backgroundColor: Colors.grey[800],
+                      content: Text(s.toastRemovePlaylist,
+                          style: TextStyle(color: Colors.white)),
+                      action: SnackBarAction(
+                          textColor: context.accentColor,
+                          label: s.undo,
+                          onPressed: () async {
+                            await context
+                                .read<AudioPlayerNotifier>()
+                                .addToPlaylistAt(episodeRemove!, index);
+                            widget.onRemove!(false);
+                          }),
+                    ));
+                  },
+                  child: EpisodeTile(
+                    widget.episode!,
+                    isPlaying: false,
+                    canReorder: true,
+                    showDivider: false,
+                    onTap: () async {
+                      await context
                           .read<AudioPlayerNotifier>()
-                          .delFromPlaylist(widget.episode!);
+                          .episodeLoad(widget.episode);
                       widget.onRemove!(true);
-                      final episodeRemove = widget.episode;
-                      Scaffold.of(context).removeCurrentSnackBar();
-                      Scaffold.of(context).showSnackBar(SnackBar(
-                        behavior: SnackBarBehavior.floating,
-                        backgroundColor: Colors.grey[800],
-                        content: Text(s.toastRemovePlaylist,
-                            style: TextStyle(color: Colors.white)),
-                        action: SnackBarAction(
-                            textColor: context.accentColor,
-                            label: s.undo,
-                            onPressed: () async {
-                              await context
-                                  .read<AudioPlayerNotifier>()
-                                  .addToPlaylistAt(episodeRemove!, index);
-                              widget.onRemove!(false);
-                            }),
-                      ));
                     },
-                    child: EpisodeCard(
-                      widget.episode!,
-                      isPlaying: false,
-                      canReorder: true,
-                      showDivider: false,
-                      onTap: () async {
-                        await context
-                            .read<AudioPlayerNotifier>()
-                            .episodeLoad(widget.episode);
-                        widget.onRemove!(true);
-                      },
-                    ),
                   ),
                 ),
                 Divider(height: 1)
@@ -122,7 +121,7 @@ class _DismissibleContainerState extends State<DismissibleContainer> {
   }
 }
 
-class EpisodeCard extends StatelessWidget {
+class EpisodeTile extends StatelessWidget {
   final EpisodeBrief episode;
   final Color? tileColor;
   final VoidCallback? onTap;
@@ -130,7 +129,7 @@ class EpisodeCard extends StatelessWidget {
   final bool canReorder;
   final bool showDivider;
   final bool havePadding;
-  const EpisodeCard(this.episode,
+  const EpisodeTile(this.episode,
       {this.tileColor,
       this.onTap,
       this.isPlaying,
@@ -143,17 +142,30 @@ class EpisodeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // return Container(
+    //   height: context.width / 4,
+    //   padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+    //   child: EpisodeCard(
+    //     context,
+    //     episode,
+    //     Layout.large,
+    //     selected: isPlaying!,
+    //     showLiked: false,
+    //     showPlayedAndDownloaded: false,
+    //   ),
+    // );
     final s = context.s;
     final c = episode.backgroudColor(context);
     return SizedBox(
-      height: 90.0,
+      height: 100.0,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: <Widget>[
           Expanded(
             child: ListTile(
-              tileColor: tileColor,
-              contentPadding: EdgeInsets.symmetric(vertical: 8),
+              tileColor:
+                  tileColor, // This doesn't respect layout boundaries for some reason.
+              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               onTap: onTap,
               title: Container(
                 child: Text(
@@ -172,7 +184,7 @@ class EpisodeCard extends StatelessWidget {
                   SizedBox(width: canReorder && !havePadding ? 0 : 24),
                   CircleAvatar(
                       backgroundColor: c.withOpacity(0.5),
-                      backgroundImage: episode.avatarImage),
+                      backgroundImage: episode.podcastImageProvider),
                 ],
               ),
               subtitle: Container(
@@ -180,7 +192,7 @@ class EpisodeCard extends StatelessWidget {
                 height: 35,
                 child: Row(
                   children: <Widget>[
-                    if (episode.isExplicit == 1)
+                    if (episode.isExplicit == true)
                       Container(
                           decoration: BoxDecoration(
                               color: Colors.red[800], shape: BoxShape.circle),

@@ -98,14 +98,20 @@ class _PlaylistHomeState extends State<PlaylistHome> {
               title: Selector<AudioPlayerNotifier, EpisodeBrief?>(
                 selector: (_, audio) => audio.episode,
                 builder: (_, data, __) {
-                  return Text(data?.title ?? '', maxLines: 1);
+                  return Text(
+                    data?.title ?? '',
+                    maxLines: 1,
+                    style: context.textTheme.headlineSmall,
+                  );
                 },
               ),
               backgroundColor: context.background,
+              scrolledUnderElevation: 0,
             ),
             body: Column(
               children: [
-                SizedBox(
+                Container(
+                  color: context.background,
                   height: 100,
                   child: Selector<AudioPlayerNotifier,
                       Tuple4<Playlist?, bool, bool, EpisodeBrief?>>(
@@ -272,7 +278,8 @@ class _PlaylistHomeState extends State<PlaylistHome> {
                     },
                   ),
                 ),
-                SizedBox(
+                Container(
+                  color: context.background,
                   height: 50,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -309,8 +316,11 @@ class _PlaylistHomeState extends State<PlaylistHome> {
                 ),
                 Divider(height: 1),
                 Expanded(
-                    child: AnimatedSwitcher(
-                        duration: Duration(milliseconds: 300), child: _body))
+                  child: Container(
+                    // color: Colors.blue,
+                    child: _body,
+                  ),
+                ),
               ],
             )),
       ),
@@ -343,7 +353,7 @@ class __QueueState extends State<_Queue> {
                     onReorder: (oldIndex, newIndex) {
                       context
                           .read<AudioPlayerNotifier>()
-                          .reorderPlaylist(oldIndex, newIndex);
+                          .reorderQueue(oldIndex, newIndex);
                       setState(() {});
                     },
                     scrollDirection: Axis.vertical,
@@ -357,12 +367,12 @@ class __QueueState extends State<_Queue> {
                                 key: ValueKey(episode.enclosureUrl),
                               );
                             } else {
-                              return EpisodeCard(episode,
+                              return EpisodeTile(episode,
                                   key: ValueKey('playing'),
                                   isPlaying: true,
                                   canReorder: true,
                                   havePadding: true,
-                                  tileColor: context.primaryColorDark);
+                                  tileColor: context.accentBackground);
                             }
                           }).toList()
                         : episodes!
@@ -380,7 +390,7 @@ class __QueueState extends State<_Queue> {
                           data.item3 != null && data.item3 == episode;
                       return episode == null
                           ? Center()
-                          : EpisodeCard(
+                          : EpisodeTile(
                               episode,
                               isPlaying: isPlaying && running,
                               tileColor:
@@ -410,7 +420,7 @@ class _History extends StatefulWidget {
 class __HistoryState extends State<_History> {
   var dbHelper = DBHelper();
   bool _loadMore = false;
-  late Future _getData;
+  late Future<List<PlayHistory>> _getData;
   int? _top;
 
   @override
@@ -486,6 +496,9 @@ class __HistoryState extends State<_History> {
                 ).createShader(bounds);
               },
               child: Container(
+                margin: EdgeInsets.symmetric(
+                    vertical:
+                        0.5), // Prevents visual glitch where the white shows through on the top or bottom
                 height: 25,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
@@ -551,7 +564,7 @@ class __HistoryState extends State<_History> {
   Widget build(BuildContext context) {
     final audio = context.watch<AudioPlayerNotifier>();
     return FutureBuilder<List<PlayHistory>>(
-        future: _getData.then((value) => value as List<PlayHistory>),
+        future: _getData,
         builder: (context, snapshot) {
           return snapshot.hasData
               ? NotificationListener<ScrollNotification>(
@@ -581,7 +594,6 @@ class __HistoryState extends State<_History> {
                           final date = snapshot
                               .data![index].playdate!.millisecondsSinceEpoch;
                           final episode = snapshot.data![index].episode;
-                          final c = episode?.backgroudColor(context);
                           return episode == null
                               ? Center()
                               : SizedBox(
@@ -601,10 +613,11 @@ class __HistoryState extends State<_History> {
                                                     ? (seconds! * 1000).toInt()
                                                     : 0),
                                             leading: CircleAvatar(
-                                                backgroundColor:
-                                                    c?.withOpacity(0.5),
-                                                backgroundImage:
-                                                    episode.avatarImage),
+                                                backgroundColor: context
+                                                    .colorScheme
+                                                    .secondaryContainer,
+                                                backgroundImage: episode
+                                                    .podcastImageProvider),
                                             title: Padding(
                                               padding: EdgeInsets.symmetric(
                                                   vertical: 5.0),

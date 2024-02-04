@@ -43,7 +43,7 @@ class EpisodeGrid extends StatelessWidget {
   final bool? multiSelect;
   final ValueChanged<List<EpisodeBrief>?>? onSelect;
   final bool openPodcast;
-  List<EpisodeBrief>? selectedList;
+  List<EpisodeBrief> selectedList;
 
   /// Count of animation items.
   final int initNum;
@@ -61,7 +61,7 @@ class EpisodeGrid extends StatelessWidget {
       this.openPodcast = false,
       this.multiSelect = false,
       this.onSelect,
-      this.selectedList})
+      this.selectedList = const <EpisodeBrief>[]})
       : super(key: key);
 
   final _dbHelper = DBHelper();

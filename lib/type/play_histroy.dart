@@ -34,6 +34,7 @@ class PlayHistory {
       EpisodeField.skipSecondsStart,
       EpisodeField.skipSecondsEnd,
       EpisodeField.episodeImage,
+      EpisodeField.podcastImage,
       EpisodeField.chapterLink
     ]);
     if (episodes.isEmpty)

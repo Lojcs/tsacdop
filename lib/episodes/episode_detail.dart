@@ -80,8 +80,6 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
     if (_controller.offset > context.textTheme.headline5!.fontSize!) {
       if (!_showTitle) setState(() => _showTitle = true);
     } else if (_showTitle) setState(() => _showTitle = false);
-    print(_controller.offset <
-        _titleBarMaxHeight - _imageTopOffset + _titleBarMinHeight);
     if (_controller.position.userScrollDirection ==
             ScrollDirection.reverse && // TODO: Polish
         _controller.offset <
@@ -143,9 +141,9 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
     final s = context.s;
     final audio = context.watch<AudioPlayerNotifier>();
     return Selector2<EpisodeState, AudioPlayerNotifier,
-            Tuple4<bool, bool, PlayerHeight, EpisodeBrief?>>(
+            Tuple4<bool?, bool, PlayerHeight, EpisodeBrief?>>(
         selector: (_, episodeState, audio) => Tuple4(
-            episodeState.episodeChangeMap[_episodeItem.id]!,
+            episodeState.episodeChangeMap[_episodeItem.id],
             audio.playerRunning,
             audio.playerHeight!,
             audio.episode),

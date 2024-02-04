@@ -40,7 +40,7 @@ class Playlist extends Equatable {
   /// Episode url list for playlist.
   final List<String> episodeList;
 
-  /// Eposides in playlist.
+  /// Eposides in playlist. TODO: Make non nullable
   final List<EpisodeBrief?> episodes;
 
   bool get isEmpty => episodeList.isEmpty && episodes.isEmpty;
@@ -79,37 +79,56 @@ class Playlist extends Equatable {
   final DBHelper _dbHelper = DBHelper();
 //  final KeyValueStorage _playlistStorage = KeyValueStorage(playlistKey);
 
+  /// Clears and (re)initialises the playlist with the urls in [episodeList].
   Future<void> getPlaylist() async {
+    // // Don't reload if already loaded
+    // if (!reload && episodes.length == episodeList.length) return;
     episodes.clear();
-    var error = [];
     if (episodeList.isNotEmpty) {
-      for (var url in episodeList) {
-        var episode;
-        var episodes = await _dbHelper.getEpisodes(episodeUrls: [
-          url
-        ], optionalFields: [
-          EpisodeField.mediaId,
-          EpisodeField.primaryColor,
-          EpisodeField.isNew,
-          EpisodeField.skipSecondsStart,
-          EpisodeField.skipSecondsEnd,
-          EpisodeField.episodeImage,
-          EpisodeField.chapterLink
-        ]);
-        if (episodes.isEmpty)
-          episode = null;
-        else
-          episode = episodes[0];
-        if (episode != null) {
-          episodes.add(episode);
-        } else {
-          error.add(url);
+      // Single database call should be faster
+      episodes.addAll(await _dbHelper
+          .getEpisodes(episodeUrls: episodeList, optionalFields: [
+        EpisodeField.enclosureDuration,
+        EpisodeField.enclosureSize,
+        EpisodeField.mediaId,
+        EpisodeField.primaryColor,
+        EpisodeField.isNew,
+        EpisodeField.skipSecondsStart,
+        EpisodeField.skipSecondsEnd,
+        EpisodeField.episodeImage,
+        EpisodeField.podcastImage,
+        EpisodeField.chapterLink
+      ]));
+    }
+    // Remove episode urls from episodeList if they are not in the database
+    if (episodes.length < episodeList.length) {
+      List<bool> episodesFound = List<bool>.filled(episodeList.length, false);
+      for (EpisodeBrief? episode in episodes) {
+        int index = episodeList.indexOf(episode!.enclosureUrl);
+        episodesFound[index] = true;
+      }
+      for (int i = episodesFound.length - 1; i >= 0; i--) {
+        if (!episodesFound[i]) {
+          episodeList.removeAt(i);
         }
       }
     }
-    if (error.isNotEmpty) {
-      for (var u in error) {
-        episodeList.remove(u);
+    // Sort episodes in episodeList order
+    if (episodes.length == episodeList.length) {
+      List<bool> sorted = List<bool>.filled(episodes.length, false);
+      for (int i = 0; i < episodes.length; i++) {
+        if (!sorted[i]) {
+          int index = episodeList.indexOf(episodes[i]!.enclosureUrl);
+          EpisodeBrief? temp;
+          while (index != i) {
+            temp = episodes[index];
+            episodes[index] = episodes[i];
+            episodes[i] = temp;
+            sorted[index] = true;
+            index = episodeList.indexOf(episodes[i]!.enclosureUrl);
+          }
+          sorted[index] = true;
+        }
       }
     }
   }
@@ -128,8 +147,8 @@ class Playlist extends Equatable {
   }
 
   void addToPlayListAt(EpisodeBrief episodeBrief, int index,
-      {bool existed = true}) {
-    if (existed) {
+      {bool removeExisting = true}) {
+    if (removeExisting) {
       episodes.removeWhere((episode) => episode == episodeBrief);
       episodeList.removeWhere((url) => url == episodeBrief.enclosureUrl);
     }

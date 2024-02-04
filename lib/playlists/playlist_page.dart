@@ -32,7 +32,10 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
   Widget build(BuildContext context) {
     final s = context.s;
     return Scaffold(
+      backgroundColor: context.background,
       appBar: AppBar(
+        backgroundColor: context.background,
+        scrolledUnderElevation: 0,
         leading: IconButton(
           splashRadius: 20,
           icon: Icon(Icons.close),
@@ -41,11 +44,14 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
             Navigator.maybePop(context);
           },
         ),
-        title: Text(_selectedEpisodes.isEmpty
-            ? widget.playlist.isQueue
-                ? s.queue
-                : widget.playlist.name!
-            : s.selected(_selectedEpisodes.length)),
+        title: Text(
+          _selectedEpisodes.isEmpty
+              ? widget.playlist.isQueue
+                  ? s.queue
+                  : widget.playlist.name!
+              : s.selected(_selectedEpisodes.length),
+          style: context.textTheme.headlineSmall,
+        ),
         actions: [
           if (_selectedEpisodes.isNotEmpty)
             IconButton(
@@ -97,7 +103,7 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
                 if (widget.playlist.isQueue) {
                   context
                       .read<AudioPlayerNotifier>()
-                      .reorderPlaylist(oldIndex, newIndex);
+                      .reorderQueue(oldIndex, newIndex);
                   setState(() {});
                 } else {
                   context.read<AudioPlayerNotifier>().reorderEpisodesInPlaylist(
