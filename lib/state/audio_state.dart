@@ -1964,7 +1964,7 @@ class CustomAudioHandler extends BaseAudioHandler
   static AudioSource _itemToSource(MediaItem item) {
     return ClippingAudioSource(
         start: Duration(seconds: item.extras!['skipSecondsStart']),
-        end: Duration(seconds: item.extras!['skipSecondsEnd']),
+        // end: Duration(seconds: item.extras!['skipSecondsEnd']),
         child: AudioSource.uri(Uri.parse(item.id)));
   }
 }
