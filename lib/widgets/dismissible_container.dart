@@ -11,8 +11,10 @@ import 'custom_widget.dart';
 
 class DismissibleContainer extends StatefulWidget {
   final EpisodeBrief episode;
+  final int index;
   final ValueChanged<bool>? onRemove;
-  DismissibleContainer({required this.episode, this.onRemove, Key? key})
+  DismissibleContainer(
+      {required this.episode, required this.index, this.onRemove, Key? key})
       : super(key: key);
 
   @override
@@ -42,8 +44,9 @@ class _DismissibleContainerState extends State<DismissibleContainer> {
             )
           : Column(
               children: [
+                Text(widget.index.toString()),
                 Dismissible(
-                  key: ValueKey('${widget.episode!.enclosureUrl}dis'),
+                  key: ValueKey('${widget.episode.enclosureUrl}dis'),
                   background: Container(
                     padding: EdgeInsets.symmetric(horizontal: 20.0),
                     height: 30,
@@ -79,9 +82,9 @@ class _DismissibleContainerState extends State<DismissibleContainer> {
                     setState(() {
                       _delete = true;
                     });
-                    var index = await context
+                    await context
                         .read<AudioPlayerNotifier>()
-                        .delFromPlaylist(widget.episode!);
+                        .removeFromPlaylistAtPlus(widget.index);
                     widget.onRemove!(true);
                     final episodeRemove = widget.episode;
                     Scaffold.of(context).removeCurrentSnackBar();
@@ -96,20 +99,20 @@ class _DismissibleContainerState extends State<DismissibleContainer> {
                           onPressed: () async {
                             await context
                                 .read<AudioPlayerNotifier>()
-                                .addToPlaylistAt(episodeRemove!, index);
+                                .addToPlaylistAt(episodeRemove, widget.index);
                             widget.onRemove!(false);
                           }),
                     ));
                   },
                   child: EpisodeTile(
-                    widget.episode!,
+                    widget.episode,
                     isPlaying: false,
                     canReorder: true,
                     showDivider: false,
                     onTap: () async {
                       await context
                           .read<AudioPlayerNotifier>()
-                          .episodeLoad(widget.episode);
+                          .loadEpisodeFromCurrentPlaylist(widget.index);
                       widget.onRemove!(true);
                     },
                   ),

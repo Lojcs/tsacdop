@@ -337,73 +337,45 @@ class _Queue extends StatefulWidget {
 class __QueueState extends State<_Queue> {
   @override
   Widget build(BuildContext context) {
-    return Selector<AudioPlayerNotifier,
-        Tuple3<Playlist?, bool, EpisodeBrief?>>(
+    return Selector<AudioPlayerNotifier, Tuple3<Playlist?, bool, int?>>(
       selector: (_, audio) =>
-          Tuple3(audio.playlist, audio.playerRunning, audio.episode),
+          Tuple3(audio.playlist, audio.playerRunning, audio.episodeIndex),
       builder: (_, data, __) {
-        var episodes = data.item1?.episodes;
-        var queue = data.item1;
-        var running = data.item2;
-        return queue == null
-            ? Center()
-            : queue.isQueue
-                ? ReorderableListView(
-                    onReorder: (oldIndex, newIndex) {
-                      context
-                          .read<AudioPlayerNotifier>()
-                          .reorderQueue(oldIndex, newIndex);
-                      setState(() {});
-                    },
-                    scrollDirection: Axis.vertical,
-                    children: data.item2
-                        ? episodes!.map<Widget>((episode) {
-                            if (episode!.enclosureUrl !=
-                                episodes.first!.enclosureUrl) {
-                              return DismissibleContainer(
-                                episode: episode,
-                                onRemove: (value) => setState(() {}),
-                                key: ValueKey(episode.enclosureUrl),
-                              );
-                            } else {
-                              return EpisodeTile(episode,
-                                  key: ValueKey('playing'),
-                                  isPlaying: true,
-                                  canReorder: true,
-                                  havePadding: true,
-                                  tileColor: context.accentBackground);
-                            }
-                          }).toList()
-                        : episodes!
-                            .map<Widget>((episode) => DismissibleContainer(
-                                  episode: episode!,
-                                  onRemove: (value) => setState(() {}),
-                                  key: ValueKey(episode.enclosureUrl),
-                                ))
-                            .toList())
-                : ListView.builder(
-                    itemCount: queue.length,
-                    itemBuilder: (context, index) {
-                      final episode = queue.episodes[index];
-                      final isPlaying =
-                          data.item3 != null && data.item3 == episode;
-                      return episode == null
-                          ? Center()
-                          : EpisodeTile(
-                              episode,
-                              isPlaying: isPlaying && running,
-                              tileColor:
-                                  isPlaying ? context.primaryColorDark : null,
-                              onTap: () async {
-                                if (!isPlaying) {
-                                  await context
-                                      .read<AudioPlayerNotifier>()
-                                      .loadEpisodeFromCurrentPlaylist(index);
-                                }
-                              },
-                            );
-                    },
-                  );
+        Playlist? playlist = data.item1;
+        bool running = data.item2;
+        int? episodeIndex = data.item3;
+        if (playlist == null || episodeIndex == null) {
+          return Center();
+        } else {
+          List<EpisodeBrief> episodes = playlist.episodes;
+          return ReorderableListView.builder(
+            itemCount: playlist.length,
+            onReorder: (oldIndex, newIndex) {
+              context
+                  .read<AudioPlayerNotifier>()
+                  .reorderQueue(oldIndex, newIndex);
+              setState(() {});
+            },
+            scrollDirection: Axis.vertical,
+            itemBuilder: (context, index) {
+              if (running && index == episodeIndex) {
+                return EpisodeTile(episodes[index],
+                    key: ValueKey(episodes[index].enclosureUrl),
+                    isPlaying: true,
+                    canReorder: true,
+                    havePadding: true,
+                    tileColor: context.accentBackground);
+              } else {
+                return DismissibleContainer(
+                  episode: episodes[index],
+                  index: index,
+                  onRemove: (value) => setState(() {}),
+                  key: ValueKey(episodes[index].enclosureUrl),
+                );
+              }
+            },
+          );
+        }
       },
     );
   }

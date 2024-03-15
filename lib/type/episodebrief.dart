@@ -299,14 +299,14 @@ class EpisodeBrief extends Equatable {
         oldFields.remove(field);
       }
     }
-    for (EpisodeField field in oldFields) {
-      oldFieldsSymbolMap[_fieldsMap[field]![0]] = _fieldsMap[field]![1];
-    }
     bool populateVersions = newFields.remove(EpisodeField.versionsPopulated);
     EpisodeBrief newEpisode;
     if (newFields.isEmpty) {
       newEpisode = this.copyWith();
     } else {
+      for (EpisodeField field in oldFields) {
+        oldFieldsSymbolMap[_fieldsMap[field]![0]] = _fieldsMap[field]![1];
+      }
       newEpisode = (await dbHelper
               .getEpisodes(episodeIds: [id], optionalFields: newFields))
           .first;
