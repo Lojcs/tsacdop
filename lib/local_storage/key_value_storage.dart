@@ -66,7 +66,7 @@ const String versionPolicyKey = 'versionPolicyKey';
 
 class KeyValueStorage {
   final String key;
-  KeyValueStorage(this.key);
+  const KeyValueStorage(this.key);
   Future<List<GroupEntity>?> getGroups() async {
     final prefs = await SharedPreferences.getInstance();
     if (prefs.getString(key) == null) {
@@ -90,7 +90,7 @@ class KeyValueStorage {
         }));
   }
 
-  Future<List<PlaylistEntity>?> getPlaylists() async {
+  Future<List<PlaylistEntity>> getPlaylists() async {
     var prefs = await SharedPreferences.getInstance();
     if (prefs.getString(key) == null) {
       var episodeList = prefs.getStringList(playlistKey);

@@ -10,9 +10,9 @@ import '../util/extension_helper.dart';
 import 'custom_widget.dart';
 
 class DismissibleContainer extends StatefulWidget {
-  final EpisodeBrief? episode;
+  final EpisodeBrief episode;
   final ValueChanged<bool>? onRemove;
-  DismissibleContainer({this.episode, this.onRemove, Key? key})
+  DismissibleContainer({required this.episode, this.onRemove, Key? key})
       : super(key: key);
 
   @override

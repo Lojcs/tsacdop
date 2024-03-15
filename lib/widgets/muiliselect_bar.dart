@@ -94,7 +94,7 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
     EpisodeState episodeState =
         Provider.of<EpisodeState>(context, listen: false);
     for (var episode in widget.selectedList!) {
-      await episodeState.setUnliked(episode);
+      await episodeState.unsetLiked(episode);
     }
     if (mounted) {
       setState(() => _liked = false);
@@ -106,7 +106,7 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
     EpisodeState episodeState =
         Provider.of<EpisodeState>(context, listen: false);
     for (var episode in widget.selectedList!) {
-      await episodeState.markListened(episode);
+      await episodeState.setListened(episode);
     }
     if (mounted) {
       setState(() => _marked = true);
@@ -118,7 +118,7 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
     EpisodeState episodeState =
         Provider.of<EpisodeState>(context, listen: false);
     for (var episode in widget.selectedList!) {
-      await episodeState.markNotListened(episode);
+      await episodeState.unsetListened(episode);
     }
     if (mounted) {
       setState(() => _marked = false);
@@ -584,7 +584,7 @@ class __NewPlaylistState extends State<_NewPlaylist> {
             onPressed: () async {
               if (context
                   .read<AudioPlayerNotifier>()
-                  .playlistExisted(_playlistName)) {
+                  .playlistExists(_playlistName)) {
                 setState(() => _error = 1);
               } else {
                 final episodesList =

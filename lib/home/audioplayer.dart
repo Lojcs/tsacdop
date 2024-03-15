@@ -151,9 +151,7 @@ class _MiniPanel extends StatelessWidget {
                       Tuple3<bool, double, String?>>(
                     selector: (_, audio) => Tuple3(
                         audio.buffering,
-                        (audio.backgroundAudioDuration -
-                                audio.backgroundAudioPosition!) /
-                            1000,
+                        (audio.audioDuration - audio.audioPosition!) / 1000,
                         audio.remoteErrorMessage),
                     builder: (_, data, __) {
                       return Padding(
@@ -255,7 +253,7 @@ class _MiniPanel extends StatelessWidget {
                                       ),
                                     ),
                           IconButton(
-                              onPressed: () => audio.playNext(),
+                              onPressed: () => audio.skipToNext(),
                               iconSize: 20.0,
                               icon: Icon(Icons.skip_next),
                               color: context.textColor)
@@ -484,11 +482,11 @@ class _PlaylistWidgetState extends State<PlaylistWidget> {
                         onTap: () async {
                           if (!isPlaying) {
                             if (data.item1!.name == 'Queue') {
-                              audio.episodeLoad(episodes[index]);
+                              audio.episodeLoad(episodes[index]!);
                             } else {
                               await context
                                   .read<AudioPlayerNotifier>()
-                                  .loadEpisodeFromPlaylist(episodes[index]);
+                                  .loadEpisodeFromCurrentPlaylist(index);
                             }
                           }
                         },
@@ -559,7 +557,7 @@ class _PlaylistWidgetState extends State<PlaylistWidget> {
                           child: InkWell(
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                             onTap: () {
-                              audio.playNext();
+                              audio.skipToNext();
                               // miniPlaylistKey.currentState.removeItem(
                               //     0, (context, animation) => Container());
                               // miniPlaylistKey.currentState.insertItem(0);
@@ -650,7 +648,7 @@ class SleepModeState extends State<SleepMode>
       if (status == AnimationStatus.completed) {
         Provider.of<AudioPlayerNotifier>(context, listen: false)
           ..sleepTimer(_minSelected)
-          ..setSwitchValue = 1;
+          ..switchValue = 1;
       }
     });
   }
@@ -1393,7 +1391,7 @@ class _ControlPanelState extends State<ControlPanel>
                         child: Row(
                           children: <Widget>[
                             Text(
-                              (data.backgroundAudioPosition! ~/ 1000).toTime,
+                              (data.audioPosition! ~/ 1000).toTime,
                               style: TextStyle(fontSize: 10),
                             ),
                             Expanded(
@@ -1417,7 +1415,7 @@ class _ControlPanelState extends State<ControlPanel>
                               ),
                             ),
                             Text(
-                              (data.backgroundAudioDuration ~/ 1000).toTime,
+                              (data.audioDuration ~/ 1000).toTime,
                               style: TextStyle(fontSize: 10),
                             ),
                           ],
@@ -1662,7 +1660,7 @@ class _ControlPanelState extends State<ControlPanel>
                           selector: (_, audio) => Tuple4(
                               audio.episode,
                               audio.stopOnComplete,
-                              audio.startSleepTimer,
+                              audio.sleepTimerActive,
                               audio.currentSpeed),
                           builder: (_, data, __) {
                             final currentSpeed = data.item4 ?? 1.0;

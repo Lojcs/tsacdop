@@ -1,3 +1,4 @@
+import 'package:audio_service/audio_service.dart';
 import 'package:equatable/equatable.dart';
 import 'package:uuid/uuid.dart';
 
@@ -28,6 +29,8 @@ class PlaylistEntity {
   }
 }
 
+enum EpisodeCollision { KeepExisting, Replace, Ignore }
+
 class Playlist extends Equatable {
   /// Playlist name. the default playlist is named "Playlist".
   final String? name;
@@ -41,17 +44,25 @@ class Playlist extends Equatable {
   final List<String> episodeList;
 
   /// Eposides in playlist. TODO: Make non nullable
-  final List<EpisodeBrief?> episodes;
+  final List<EpisodeBrief> _episodes;
 
-  bool get isEmpty => episodeList.isEmpty && episodes.isEmpty;
+  List<EpisodeBrief> get episodes {
+    if (_episodes.isEmpty) getPlaylist();
+    return _episodes;
+  }
 
-  bool get isNotEmpty => episodeList.isNotEmpty && episodes.isNotEmpty;
+  List<MediaItem> get mediaItems =>
+      [for (var episode in _episodes) episode.mediaItem];
+
+  bool get isEmpty => episodeList.isEmpty && _episodes.isEmpty;
+
+  bool get isNotEmpty => episodeList.isNotEmpty && _episodes.isNotEmpty;
 
   int get length => episodeList.length;
 
   bool get isQueue => name == 'Queue';
 
-  bool contains(EpisodeBrief episode) => episodes.contains(episode);
+  bool contains(EpisodeBrief episode) => _episodes.contains(episode);
 
   Playlist(this.name,
       {String? id,
@@ -61,7 +72,7 @@ class Playlist extends Equatable {
       : id = id ?? Uuid().v4(),
         assert(name != ''),
         episodeList = episodeList ?? [],
-        episodes = episodes ?? [];
+        _episodes = episodes ?? [];
 
   PlaylistEntity toEntity() {
     return PlaylistEntity(name, id, isLocal, episodeList.toSet().toList());
@@ -83,15 +94,16 @@ class Playlist extends Equatable {
   Future<void> getPlaylist() async {
     // // Don't reload if already loaded
     // if (!reload && episodes.length == episodeList.length) return;
-    episodes.clear();
+    _episodes.clear();
     if (episodeList.isNotEmpty) {
       // Single database call should be faster
-      episodes.addAll(await _dbHelper
+      _episodes.addAll(await _dbHelper
           .getEpisodes(episodeUrls: episodeList, optionalFields: [
         EpisodeField.enclosureDuration,
         EpisodeField.enclosureSize,
         EpisodeField.mediaId,
         EpisodeField.primaryColor,
+        EpisodeField.isExplicit,
         EpisodeField.isNew,
         EpisodeField.skipSecondsStart,
         EpisodeField.skipSecondsEnd,
@@ -101,9 +113,9 @@ class Playlist extends Equatable {
       ]));
     }
     // Remove episode urls from episodeList if they are not in the database
-    if (episodes.length < episodeList.length) {
+    if (_episodes.length < episodeList.length) {
       List<bool> episodesFound = List<bool>.filled(episodeList.length, false);
-      for (EpisodeBrief? episode in episodes) {
+      for (EpisodeBrief? episode in _episodes) {
         int index = episodeList.indexOf(episode!.enclosureUrl);
         episodesFound[index] = true;
       }
@@ -114,18 +126,18 @@ class Playlist extends Equatable {
       }
     }
     // Sort episodes in episodeList order
-    if (episodes.length == episodeList.length) {
-      List<bool> sorted = List<bool>.filled(episodes.length, false);
-      for (int i = 0; i < episodes.length; i++) {
+    if (_episodes.length == episodeList.length) {
+      List<bool> sorted = List<bool>.filled(_episodes.length, false);
+      for (int i = 0; i < _episodes.length; i++) {
         if (!sorted[i]) {
-          int index = episodeList.indexOf(episodes[i]!.enclosureUrl);
+          int index = episodeList.indexOf(_episodes[i]!.enclosureUrl);
           EpisodeBrief? temp;
           while (index != i) {
-            temp = episodes[index];
-            episodes[index] = episodes[i];
-            episodes[i] = temp;
+            temp = _episodes[index];
+            _episodes[index] = _episodes[i];
+            _episodes[i] = temp;
             sorted[index] = true;
-            index = episodeList.indexOf(episodes[i]!.enclosureUrl);
+            index = episodeList.indexOf(_episodes[i]!.enclosureUrl);
           }
           sorted[index] = true;
         }
@@ -139,31 +151,79 @@ class Playlist extends Equatable {
 //    await _playlistStorage.saveStringList(urls.toSet().toList());
 //  }
 
+  /// Adds episodes to the playlist at [index].
+  /// Don't directly use on playlists that might be live. Use [AudioState.addToPlaylistPlus] instead.
+  void addEpisodes(List<EpisodeBrief> newEpisodes, int index,
+      {EpisodeCollision ifExists = EpisodeCollision.Ignore}) {
+    switch (ifExists) {
+      case EpisodeCollision.KeepExisting:
+        newEpisodes.removeWhere((episode) => _episodes.contains(episode));
+        break;
+      case EpisodeCollision.Replace:
+        _episodes.removeWhere((episode) => newEpisodes.contains(episode));
+        episodeList.removeWhere(
+            (url) => newEpisodes.any((episode) => episode.enclosureUrl == url));
+        break;
+      case EpisodeCollision.Ignore:
+        break;
+    }
+    if (index == episodeList.length) {
+      _episodes.addAll(newEpisodes);
+      episodeList
+          .addAll([for (var episode in newEpisodes) episode.enclosureUrl]);
+    } else {
+      _episodes.insertAll(index, newEpisodes);
+      episodeList.insertAll(
+          index, [for (var episode in newEpisodes) episode.enclosureUrl]);
+    }
+  }
+
+  void removeEpisodes(List<EpisodeBrief> delEpisodes, {bool delLocal = true}) {
+    List<String> delUrls = [
+      for (var episode in delEpisodes) episode.enclosureUrl
+    ];
+    _episodes.removeWhere((episode) => delEpisodes.contains(episode));
+    episodeList.removeWhere((url) => delUrls.contains(url));
+    if (isLocal! && delLocal) {
+      _dbHelper.deleteLocalEpisodes(delUrls);
+    }
+  }
+
+  void removeEpisodesAt(int index, {int number = 1}) {
+    int end = index + number;
+    List<String> delEpisodes = episodeList.getRange(index, end).toList();
+    _dbHelper.deleteLocalEpisodes(delEpisodes);
+    episodeList.removeRange(index, end);
+    _episodes.removeRange(index, end);
+  }
+
+  // TODO: Move to [addEpisdoes]
   void addToPlayList(EpisodeBrief episodeBrief) {
-    if (!episodes.contains(episodeBrief)) {
-      episodes.add(episodeBrief);
+    if (!_episodes.contains(episodeBrief)) {
+      _episodes.add(episodeBrief);
       episodeList.add(episodeBrief.enclosureUrl);
     }
   }
 
+  // TODO: Move to [addEpisdoes]
   void addToPlayListAt(EpisodeBrief episodeBrief, int index,
       {bool removeExisting = true}) {
     if (removeExisting) {
-      episodes.removeWhere((episode) => episode == episodeBrief);
+      _episodes.removeWhere((episode) => episode == episodeBrief);
       episodeList.removeWhere((url) => url == episodeBrief.enclosureUrl);
     }
-    episodes.insert(index, episodeBrief);
+    _episodes.insert(index, episodeBrief);
     episodeList.insert(index, episodeBrief.enclosureUrl);
   }
 
-  void updateEpisode(EpisodeBrief? episode) {
-    var index = episodes.indexOf(episode);
-    if (index != -1) episodes[index] = episode;
+  void updateEpisode(EpisodeBrief episode) {
+    var index = _episodes.indexOf(episode);
+    if (index != -1) _episodes[index] = episode;
   }
 
-  int delFromPlaylist(EpisodeBrief? episodeBrief) {
-    var index = episodes.indexOf(episodeBrief);
-    episodes.removeWhere(
+  int delFromPlaylist(EpisodeBrief episodeBrief) {
+    var index = _episodes.indexOf(episodeBrief);
+    _episodes.removeWhere(
         (episode) => episode!.enclosureUrl == episodeBrief!.enclosureUrl);
     episodeList.removeWhere((url) => url == episodeBrief!.enclosureUrl);
     if (isLocal!) {
@@ -176,15 +236,15 @@ class Playlist extends Equatable {
     if (newIndex > oldIndex) {
       newIndex -= 1;
     }
-    final episode = episodes.removeAt(oldIndex)!;
-    episodes.insert(newIndex, episode);
+    final episode = _episodes.removeAt(oldIndex)!;
+    _episodes.insert(newIndex, episode);
     episodeList.removeAt(oldIndex);
     episodeList.insert(newIndex, episode.enclosureUrl);
   }
 
   void clear() {
     episodeList.clear();
-    episodes.clear();
+    _episodes.clear();
   }
 
   @override

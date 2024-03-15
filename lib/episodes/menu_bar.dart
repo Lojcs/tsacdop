@@ -14,10 +14,10 @@ import 'package:tsacdop/widgets/custom_widget.dart';
 import '../util/helpers.dart';
 
 class MenuBar extends StatefulWidget {
-  final EpisodeBrief? episodeItem;
+  final EpisodeBrief episodeItem;
   final String? heroTag;
   final bool? hide;
-  MenuBar({this.episodeItem, this.heroTag, this.hide, Key? key})
+  MenuBar({required this.episodeItem, this.heroTag, this.hide, Key? key})
       : super(key: key);
   @override
   MenuBarState createState() => MenuBarState();
@@ -70,7 +70,7 @@ class MenuBarState extends State<MenuBar> {
                             color: Colors.red,
                           ),
                           onTap: () =>
-                              episodeState.setUnliked(widget.episodeItem!))
+                              episodeState.unsetLiked(widget.episodeItem!))
                       : _buttonOnMenu(
                           child: Icon(
                             Icons.favorite_border,
@@ -136,8 +136,8 @@ class MenuBarState extends State<MenuBar> {
                     ),
                     onTap: () {
                       widget.episodeItem!.isPlayed!
-                          ? episodeState.markNotListened(widget.episodeItem!)
-                          : episodeState.markListened(widget.episodeItem!);
+                          ? episodeState.unsetListened(widget.episodeItem!)
+                          : episodeState.setListened(widget.episodeItem!);
                       Fluttertoast.showToast(
                         msg: widget.episodeItem!.isPlayed!
                             ? s.markNotListened

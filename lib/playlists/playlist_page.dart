@@ -261,7 +261,7 @@ class __PlaylistItemState extends State<_PlaylistItem>
                 height: 35,
                 child: Row(
                   children: <Widget>[
-                    if (episode.isExplicit == 1)
+                    if (episode.isExplicit!)
                       Container(
                           decoration: BoxDecoration(
                               color: Colors.red[800], shape: BoxShape.circle),

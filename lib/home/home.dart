@@ -93,8 +93,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     final height = (context.width - 20) / 3 + 145;
     final settings = Provider.of<SettingState>(context, listen: false);
     final s = context.s;
-    return Selector<AudioPlayerNotifier, Tuple2<bool, EpisodeBrief?>>(
-        selector: (_, audio) => Tuple2(audio.playerRunning, audio.episode),
+    return Selector<AudioPlayerNotifier, bool>(
+        selector: (_, audio) => audio.playerRunning,
         builder: (_, data, __) {
           context.originalPadding = MediaQuery.of(context).padding;
           return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -102,7 +102,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                 systemNavigationBarIconBrightness: context.iconBrightness,
                 statusBarIconBrightness: context.iconBrightness,
                 systemNavigationBarColor:
-                    data.item1 ? context.accentBackground : context.background,
+                    data ? context.accentBackground : context.background,
                 statusBarColor: context.background),
             child: WillPopScope(
               onWillPop: () async {
@@ -121,7 +121,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                 key: _scaffoldKey,
                 backgroundColor: context.background,
                 body: SafeArea(
-                  bottom: data.item1,
+                  bottom: data,
                   child: Stack(children: <Widget>[
                     NestedScrollView(
                       innerScrollPositionKeyBuilder: () {
@@ -328,7 +328,7 @@ class __PlaylistButtonState extends State<_PlaylistButton> {
   late bool _loadPlay;
 
   Future<void> _getPlaylist() async {
-    await context.read<AudioPlayerNotifier>().initPlaylist();
+    await context.read<AudioPlayerNotifier>().initPlaylists();
     if (mounted) {
       setState(() {
         _loadPlay = true;
@@ -369,8 +369,8 @@ class __PlaylistButtonState extends State<_PlaylistButton> {
               ),
               child: Selector<AudioPlayerNotifier,
                   Tuple3<bool, EpisodeBrief?, int>>(
-                selector: (_, audio) => Tuple3(
-                    audio.playerRunning, audio.episode, audio.lastPosition),
+                selector: (_, audio) => Tuple3(audio.playerRunning,
+                    audio.episode, audio.audioStartPosition),
                 builder: (_, data, __) => !_loadPlay
                     ? SizedBox(
                         height: 8.0,

@@ -1067,9 +1067,9 @@ class _SearchResultDetailState extends State<SearchResultDetail>
                                       EdgeInsets.symmetric(horizontal: 2))),
                           child: Text(context.s.play.toUpperCase()),
                           onPressed: () {
-                            context.read<AudioPlayerNotifier>().episodeLoad(
-                                content[index].toEpisode,
-                                fromSearch: true);
+                            context
+                                .read<AudioPlayerNotifier>()
+                                .searchEpisodeLoad(content[index].toEpisode);
                           },
                         );
                       }),

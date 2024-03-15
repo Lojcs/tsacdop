@@ -1837,15 +1837,18 @@ class DBHelper {
     return count;
   }
 
-  Future<int?> saveMediaId(
-      String url, String path, String? id, int size) async {
+  Future<int?> saveMediaId(EpisodeBrief episode, String path, String? id,
+      int size, EpisodeState episodeState) async {
+    if (episode.enclosureUrl != path) {
+      episodeState.setDownloaded(episode, id!);
+    }
     var dbClient = await database;
     var milliseconds = DateTime.now().millisecondsSinceEpoch;
     int? count;
     await dbClient.transaction((txn) async {
       count = await txn.rawUpdate(
-          "UPDATE Episodes SET enclosure_length = ?, media_id = ?, download_date = ?, downloaded = ? WHERE enclosure_url = ?",
-          [size, path, milliseconds, id, url]);
+          "UPDATE Episodes SET enclosure_length = ?, media_id = ? WHERE enclosure_url = ?",
+          [size, path, episode.enclosureUrl]);
     });
     return count;
   }

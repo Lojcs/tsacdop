@@ -45,7 +45,7 @@ class _PlaylistHomeState extends State<PlaylistHome> {
 
   @override
   void initState() {
-    Future.microtask(() => context.read<AudioPlayerNotifier>().initPlaylist());
+    Future.microtask(() => context.read<AudioPlayerNotifier>().initPlaylists());
     super.initState();
     //context.read<AudioPlayerNotifier>().initPlaylist();
     _selected = 'PlayNext';
@@ -177,7 +177,7 @@ class _PlaylistHomeState extends State<PlaylistHome> {
                                         if (running &&
                                             !(data.item1!.length == 1 &&
                                                 !data.item1!.isQueue)) {
-                                          audio.playNext();
+                                          audio.skipToNext();
                                         }
                                       }),
                                 ],
@@ -188,9 +188,9 @@ class _PlaylistHomeState extends State<PlaylistHome> {
                                     Tuple4<bool, int?, String?, int>>(
                                   selector: (_, audio) => Tuple4(
                                       audio.buffering,
-                                      audio.backgroundAudioPosition,
+                                      audio.audioPosition,
                                       audio.remoteErrorMessage,
-                                      audio.backgroundAudioDuration),
+                                      audio.audioDuration),
                                   builder: (_, info, __) {
                                     return info.item3 != null
                                         ? Text(info.item3!,
@@ -208,7 +208,8 @@ class _PlaylistHomeState extends State<PlaylistHome> {
                                 ),
                               if (!data.item2)
                                 Selector<AudioPlayerNotifier, int>(
-                                  selector: (_, audio) => audio.lastPosition,
+                                  selector: (_, audio) =>
+                                      audio.audioStartPosition,
                                   builder: (_, position, __) {
                                     return Text(
                                         '${(position ~/ 1000).toTime} / ${(data.item4?.enclosureDuration ?? 0).toTime}');
@@ -233,17 +234,15 @@ class _PlaylistHomeState extends State<PlaylistHome> {
                                               audio.episode!
                                                       .enclosureDuration !=
                                                   0) {
-                                            return (audio.lastPosition ~/
+                                            return (audio.audioPosition ~/
                                                 (audio.episode!
                                                         .enclosureDuration! *
                                                     10));
                                           } else if (audio.playerRunning &&
-                                              audio.backgroundAudioDuration !=
-                                                  0) {
-                                            return ((audio
-                                                        .backgroundAudioPosition! *
+                                              audio.audioDuration != 0) {
+                                            return ((audio.audioPosition! *
                                                     100) ~/
-                                                audio.backgroundAudioDuration);
+                                                audio.audioDuration);
                                           } else {
                                             return 0;
                                           }
@@ -343,7 +342,7 @@ class __QueueState extends State<_Queue> {
       selector: (_, audio) =>
           Tuple3(audio.playlist, audio.playerRunning, audio.episode),
       builder: (_, data, __) {
-        var episodes = data.item1?.episodes.toSet().toList();
+        var episodes = data.item1?.episodes;
         var queue = data.item1;
         var running = data.item2;
         return queue == null
@@ -377,9 +376,9 @@ class __QueueState extends State<_Queue> {
                           }).toList()
                         : episodes!
                             .map<Widget>((episode) => DismissibleContainer(
-                                  episode: episode,
+                                  episode: episode!,
                                   onRemove: (value) => setState(() {}),
-                                  key: ValueKey(episode!.enclosureUrl),
+                                  key: ValueKey(episode.enclosureUrl),
                                 ))
                             .toList())
                 : ListView.builder(
@@ -399,7 +398,7 @@ class __QueueState extends State<_Queue> {
                                 if (!isPlaying) {
                                   await context
                                       .read<AudioPlayerNotifier>()
-                                      .loadEpisodeFromPlaylist(episode);
+                                      .loadEpisodeFromCurrentPlaylist(index);
                                 }
                               },
                             );
@@ -467,7 +466,7 @@ class __HistoryState extends State<_History> {
   }
 
   Widget _timeTag(BuildContext context,
-      {EpisodeBrief? episode,
+      {required EpisodeBrief episode,
       required int seconds,
       required double seekValue}) {
     final audio = context.watch<AudioPlayerNotifier>();
@@ -1057,7 +1056,7 @@ class __NewPlaylistState extends State<_NewPlaylist> {
                 setState(() => _error = 0);
               } else if (context
                   .read<AudioPlayerNotifier>()
-                  .playlistExisted(_playlistName)) {
+                  .playlistExists(_playlistName)) {
                 setState(() => _error = 1);
               } else {
                 var playlist;

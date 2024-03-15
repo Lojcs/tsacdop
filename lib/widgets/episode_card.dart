@@ -318,7 +318,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                                         color: Colors.red, size: 21),
                                     onPressed: () async {
                                       if (episode.isLiked!) {
-                                        await episodeState.setUnliked(episode);
+                                        await episodeState.unsetLiked(episode);
                                         Fluttertoast.showToast(
                                           msg: s.unlike,
                                           gravity: ToastGravity.BOTTOM,
@@ -357,13 +357,13 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                                     ),
                                     onPressed: () async {
                                       if (episode.isPlayed!) {
-                                        episodeState.markNotListened(episode);
+                                        episodeState.unsetListened(episode);
                                         Fluttertoast.showToast(
                                           msg: s.markNotListened,
                                           gravity: ToastGravity.BOTTOM,
                                         );
                                       } else {
-                                        episodeState.markListened(episode);
+                                        episodeState.setListened(episode);
                                         Fluttertoast.showToast(
                                           msg: s.markListened,
                                           gravity: ToastGravity.BOTTOM,

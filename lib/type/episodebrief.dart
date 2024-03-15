@@ -9,7 +9,7 @@ import 'package:tsacdop/local_storage/sqflite_localpodcast.dart';
 import '../util/extension_helper.dart';
 
 class EpisodeBrief extends Equatable {
-  final int id;
+  final int id; // TODO: This breaks if episodes are deleted
   final String title;
   final String enclosureUrl;
   final String podcastId;
@@ -56,20 +56,18 @@ class EpisodeBrief extends Equatable {
       this.skipSecondsEnd = 0,
       this.chapterLink});
 
-  MediaItem toMediaItem() {
-    return MediaItem(
-        id: mediaId!,
-        title: title,
-        artist: podcastTitle,
-        album: podcastTitle,
-        duration: Duration.zero,
-        artUri: Uri.parse(
-            podcastImage == '' ? episodeImage! : 'file://$podcastImage'),
-        extras: {
-          'skipSecondsStart': skipSecondsStart,
-          'skipSecondsEnd': skipSecondsEnd
-        });
-  }
+  late MediaItem mediaItem = MediaItem(
+      id: mediaId!,
+      title: title,
+      artist: podcastTitle,
+      album: podcastTitle,
+      duration: Duration.zero,
+      artUri: Uri.parse(
+          podcastImage == '' ? episodeImage! : 'file://$podcastImage'),
+      extras: {
+        'skipSecondsStart': skipSecondsStart,
+        'skipSecondsEnd': skipSecondsEnd
+      });
 
   ImageProvider get avatarImage {
     // TODO: Get rid of this
@@ -87,7 +85,7 @@ class EpisodeBrief extends Equatable {
     return AssetImage('assets/avatar_backup.png');
   }
 
-  late ImageProvider episodeImageProvider = ((episodeImage != null)
+  late final ImageProvider episodeImageProvider = ((episodeImage != null)
       ? (File(episodeImage!).existsSync())
           ? FileImage(File(episodeImage!))
           : (episodeImage != '')
@@ -95,7 +93,7 @@ class EpisodeBrief extends Equatable {
               : AssetImage('assets/avatar_backup.png')
       : AssetImage('assets/avatar_backup.png')) as ImageProvider;
 
-  late ImageProvider podcastImageProvider = ((podcastImage != null)
+  late final ImageProvider podcastImageProvider = ((podcastImage != null)
       ? (File(podcastImage!).existsSync())
           ? FileImage(File(podcastImage!))
           : AssetImage('assets/avatar_backup.png')
@@ -304,7 +302,7 @@ class EpisodeBrief extends Equatable {
     for (EpisodeField field in oldFields) {
       oldFieldsSymbolMap[_fieldsMap[field]![0]] = _fieldsMap[field]![1];
     }
-    bool populateVersions = newFields!.remove(EpisodeField.versionsPopulated);
+    bool populateVersions = newFields.remove(EpisodeField.versionsPopulated);
     EpisodeBrief newEpisode;
     if (newFields.isEmpty) {
       newEpisode = this.copyWith();
@@ -321,5 +319,5 @@ class EpisodeBrief extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id];
+  List<Object?> get props => [id, enclosureUrl];
 }

@@ -34,7 +34,10 @@ Future main() async {
           create: (_) => themeSetting,
         ),
         ChangeNotifierProvider(create: (_) => EpisodeState()),
-        ChangeNotifierProvider(create: (_) => AudioPlayerNotifier()),
+        ChangeNotifierProvider(
+          lazy: false,
+          create: (context) => AudioPlayerNotifier(context),
+        ),
         ChangeNotifierProvider(create: (_) => GroupList()),
         ChangeNotifierProvider(create: (_) => RefreshWorker()),
         ChangeNotifierProvider(create: (_) => SearchState()),
