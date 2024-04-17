@@ -351,9 +351,10 @@ class __QueueState extends State<_Queue> {
           return ReorderableListView.builder(
             itemCount: playlist.length,
             onReorder: (oldIndex, newIndex) {
+              if (newIndex > oldIndex) newIndex -= 1;
               context
                   .read<AudioPlayerNotifier>()
-                  .reorderQueue(oldIndex, newIndex);
+                  .reorderPlaylist(oldIndex, newIndex);
               setState(() {});
             },
             scrollDirection: Axis.vertical,
@@ -520,7 +521,7 @@ class __HistoryState extends State<_History> {
               : IconButton(
                   icon: Icon(Icons.playlist_add, color: Colors.grey[700]),
                   onPressed: () async {
-                    audio.addToPlaylist(episode!);
+                    await audio.addToPlaylistPlus([episode!]);
                     Fluttertoast.showToast(
                       msg: s.toastAddPlaylist,
                       gravity: ToastGravity.BOTTOM,

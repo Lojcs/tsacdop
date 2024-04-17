@@ -227,10 +227,9 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                           ],
                         ),
                         onTap: () {
-                          context
-                              .read<AudioPlayerNotifier>()
-                              .addEpisodesToPlaylist(p,
-                                  episodes: widget.selectedList!);
+                          context.read<AudioPlayerNotifier>().addToPlaylistPlus(
+                              widget.selectedList!,
+                              playlist: p);
                           setState(() {
                             _showPlaylists = false;
                           });
@@ -449,7 +448,7 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                         if (widget.selectedList!.isNotEmpty) {
                           if (!_inPlaylist) {
                             for (var episode in widget.selectedList!) {
-                              audio.addToPlaylist(episode);
+                              await audio.addToPlaylistPlus([episode]);
                               Fluttertoast.showToast(
                                 msg: s.toastAddPlaylist,
                                 gravity: ToastGravity.BOTTOM,
@@ -458,7 +457,7 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                             setState(() => _inPlaylist = true);
                           } else {
                             for (var episode in widget.selectedList!) {
-                              audio.delFromPlaylist(episode);
+                              await audio.delFromPlaylist(episode);
                               Fluttertoast.showToast(
                                 msg: s.toastRemovePlaylist,
                                 gravity: ToastGravity.BOTTOM,

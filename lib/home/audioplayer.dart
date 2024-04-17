@@ -481,13 +481,7 @@ class _PlaylistWidgetState extends State<PlaylistWidget> {
                       return InkWell(
                         onTap: () async {
                           if (!isPlaying) {
-                            if (data.item1!.name == 'Queue') {
-                              audio.episodeLoad(episodes[index]!);
-                            } else {
-                              await context
-                                  .read<AudioPlayerNotifier>()
-                                  .loadEpisodeFromCurrentPlaylist(index);
-                            }
+                            audio.loadEpisodeFromCurrentPlaylist(index);
                           }
                         },
                         child: Container(

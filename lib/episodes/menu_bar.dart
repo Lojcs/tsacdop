@@ -110,8 +110,9 @@ class MenuBarState extends State<MenuBar> {
                                       context.brightness == Brightness.light
                                           ? 700
                                           : 500]),
-                              onTap: () {
-                                audio.addToPlaylist(widget.episodeItem!);
+                              onTap: () async {
+                                await audio
+                                    .addToPlaylistPlus([widget.episodeItem]);
                                 Fluttertoast.showToast(
                                   msg: s.toastAddPlaylist,
                                   gravity: ToastGravity.BOTTOM,

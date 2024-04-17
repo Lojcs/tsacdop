@@ -389,7 +389,7 @@ class DownloadState extends ChangeNotifier {
     final deletePlayed = await deletePlayedStorage.getBool(defaultValue: false);
     if (autoDelete == 0) {
       await autoDeleteStorage.saveInt(30);
-    } else if (autoDelete > 0) {
+    } else if (autoDelete > 0 && deletePlayed) {
       var deadline = DateTime.now()
           .subtract(Duration(days: autoDelete))
           .millisecondsSinceEpoch;

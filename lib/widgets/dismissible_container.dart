@@ -99,7 +99,8 @@ class _DismissibleContainerState extends State<DismissibleContainer> {
                           onPressed: () async {
                             await context
                                 .read<AudioPlayerNotifier>()
-                                .addToPlaylistAt(episodeRemove, widget.index);
+                                .addToPlaylistPlus([episodeRemove],
+                                    index: widget.index);
                             widget.onRemove!(false);
                           }),
                     ));

@@ -232,7 +232,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                                 ? episode.colorSchemeDark.primary
                                 : episode.colorSchemeLight
                                     .onSecondaryContainer, // TODO: Bug in flutter breaks the color. Need to update https://github.com/flutter/flutter/pull/110552
-                            childLowerlay: audio.episode == episode
+                            childLowerlay: data.item1 == episode
                                 ? Selector<AudioPlayerNotifier, double>(
                                     selector: (_, audio) =>
                                         audio.seekSliderValue,
@@ -268,9 +268,9 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                                     LineIcons.playCircle,
                                     color: context.accentColor,
                                   ),
-                                  onPressed: () {
+                                  onPressed: () async {
                                     if (data.item1 != episode || !data.item4) {
-                                      audio.episodeLoad(episode);
+                                      await audio.episodeLoad(episode);
                                     }
                                   }),
                               if (menuList.contains(1))
@@ -288,16 +288,17 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                                       LineIcons.clock,
                                       color: Colors.cyan,
                                     ),
-                                    onPressed: () {
+                                    onPressed: () async {
                                       if (!data.item2
                                           .contains(episode.enclosureUrl)) {
-                                        audio.addToPlaylist(episode);
+                                        await audio
+                                            .addToPlaylistPlus([episode]);
                                         Fluttertoast.showToast(
                                           msg: s.toastAddPlaylist,
                                           gravity: ToastGravity.BOTTOM,
                                         );
                                       } else {
-                                        audio.delFromPlaylist(episode);
+                                        await audio.delFromPlaylist(episode);
                                         Fluttertoast.showToast(
                                           msg: s.toastRemovePlaylist,
                                           gravity: ToastGravity.BOTTOM,
@@ -404,7 +405,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                                     color: Colors.amber,
                                   ),
                                   onPressed: () {
-                                    audio.moveToTop(episode);
+                                    audio.addToTop(episode);
                                     Fluttertoast.showToast(
                                       msg: s.playNextDes,
                                       gravity: ToastGravity.BOTTOM,

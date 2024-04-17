@@ -233,10 +233,7 @@ class Playlist extends Equatable {
   }
 
   void reorderPlaylist(int oldIndex, int newIndex) {
-    if (newIndex > oldIndex) {
-      newIndex -= 1;
-    }
-    final episode = _episodes.removeAt(oldIndex)!;
+    final episode = _episodes.removeAt(oldIndex);
     _episodes.insert(newIndex, episode);
     episodeList.removeAt(oldIndex);
     episodeList.insert(newIndex, episode.enclosureUrl);

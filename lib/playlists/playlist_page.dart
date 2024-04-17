@@ -58,9 +58,9 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
                 splashRadius: 20,
                 icon: Icon(Icons.delete_outline_rounded),
                 onPressed: () {
-                  context.read<AudioPlayerNotifier>().removeEpisodeFromPlaylist(
-                      widget.playlist,
-                      episodes: _selectedEpisodes);
+                  context.read<AudioPlayerNotifier>().removeFromPlaylistPlus(
+                      _selectedEpisodes,
+                      playlist: widget.playlist);
                   setState(_selectedEpisodes.clear);
                 }),
           if (_selectedEpisodes.isNotEmpty)
@@ -100,18 +100,11 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
           final episodes = playlist?.episodes ?? [];
           return ReorderableListView(
               onReorder: (oldIndex, newIndex) {
-                if (widget.playlist.isQueue) {
-                  context
-                      .read<AudioPlayerNotifier>()
-                      .reorderQueue(oldIndex, newIndex);
-                  setState(() {});
-                } else {
-                  context.read<AudioPlayerNotifier>().reorderEpisodesInPlaylist(
-                      widget.playlist,
-                      oldIndex: oldIndex,
-                      newIndex: newIndex);
-                  setState(() {});
-                }
+                if (newIndex > oldIndex) newIndex -= 1;
+                context.read<AudioPlayerNotifier>().reorderPlaylist(
+                    oldIndex, newIndex,
+                    playlist: widget.playlist);
+                setState(() {});
               },
               scrollDirection: Axis.vertical,
               children: episodes.map<Widget>((episode) {
