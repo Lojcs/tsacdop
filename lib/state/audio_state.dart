@@ -609,7 +609,6 @@ class AudioPlayerNotifier extends ChangeNotifier {
     _audioDuration = _episode!.enclosureDuration!;
     _playerRunning = true;
     notifyListeners();
-    if (!_audioHandler.playerReady) _audioHandler.initPlayer();
 
     /// Set if playlist is queue.
     await _audioHandler
@@ -677,7 +676,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
       }
       _audioState = event.processingState;
       _playing = event.playing;
-      // _audioPosition = event.updatePosition.inMilliseconds;
+      _audioPosition = event.updatePosition.inMilliseconds;
       _audioBufferedPosition = event.bufferedPosition.inMilliseconds;
       _currentSpeed = event.speed;
       if (_audioState == AudioProcessingState.completed) {
@@ -715,28 +714,28 @@ class AudioPlayerNotifier extends ChangeNotifier {
         await saveHistory(savePosition: true);
       }
       // Communicate queue next episode
-      if (event['removePlayed'] == _episode!.mediaId &&
-          !_playlistEditLock &&
-          false) {
-        // await saveHistory(); // TODO: This might not save the new episode's position at all
-        await _episodeState
-            .setListened(_episode!); // And this just sets it to 1
-        if (_playlist!.isQueue) {
-          _queue.removeEpisodesAt(0);
-        }
-        if (_stopOnComplete) {
-          _audioHandler.stop();
-        }
-        notifyListeners();
-      }
-      if (event['position'] != null) {
-        _audioPosition = event['position'].inMilliseconds;
-        // Save position every 5 seconds
-        if (_audioPosition - _savedPosition > 5000) {
-          saveCurrentPosition();
-        }
-        notifyListeners();
-      }
+      // if (event['removePlayed'] == _episode!.mediaId &&
+      //     !_playlistEditLock &&
+      //     false) {
+      //   // await saveHistory(); // TODO: This might not save the new episode's position at all
+      //   await _episodeState
+      //       .setListened(_episode!); // And this just sets it to 1
+      //   if (_playlist!.isQueue) {
+      //     _queue.removeEpisodesAt(0);
+      //   }
+      //   if (_stopOnComplete) {
+      //     _audioHandler.stop();
+      //   }
+      //   notifyListeners();
+      // }
+      // if (event['position'] != null) {
+      //   _audioPosition = event['position'].inMilliseconds;
+      //   // Save position every 5 seconds
+      //   if (_audioPosition - _savedPosition > 5000) {
+      //     saveCurrentPosition();
+      //   }
+      //   notifyListeners();
+      // }
     });
   }
 
@@ -1369,7 +1368,7 @@ class CustomAudioHandler extends BaseAudioHandler
 
   CustomAudioHandler(this._cacheMax) {
     _handleInterruption();
-    // initPlayer(cacheMax);
+    initPlayer();
   }
 
   /// Initialises player and its listeners
@@ -1416,14 +1415,15 @@ class CustomAudioHandler extends BaseAudioHandler
         _autoSkip = true;
       },
     );
-    // Positions in positionStream are smoothed from playbackEventStream, so this is transmitted seperately
-    _positionSubscription = _player.positionStream.listen((event) {
-      customEvent.add({'position': event});
-    });
+    // Positions in positionStream are smoothed from playbackEventStream so this is theoratically better,
+    // but enabling it causes the app to lag and locks the database during playback
+    // _positionSubscription = _player.positionStream.listen((event) {
+    //   customEvent.add({'position': event});
+    // });
 
-    _sequenceSubscription = _player.sequenceStream.listen((event) {
-      log(event.toString());
-    });
+    // _sequenceSubscription = _player.sequenceStream.listen((event) {
+    //   log(event.toString());
+    // });
     // Transmitted only on new audio load
     _durationSubscription = _player.durationStream.listen((event) {
       mediaItem.add(mediaItem.value!.copyWith(duration: event));
