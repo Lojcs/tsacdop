@@ -57,7 +57,8 @@ dependencies:
     git:
       url: https://github.com/tsacdop/flutter_downloader.git
   focused_menu:
-      path: ../focused_menu
+    git:
+      url: https://github.com/lojcs/focused_menu.git
   webfeed:
     git:
       url: https://github.com/tsacdop/webfeed.git
