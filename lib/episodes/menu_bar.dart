@@ -97,9 +97,10 @@ class MenuBarState extends State<MenuBar> {
                           ? _buttonOnMenu(
                               child: Icon(Icons.playlist_add_check,
                                   color: context.accentColor),
-                              onTap: () {
-                                audio.delFromPlaylist(widget.episodeItem!);
-                                Fluttertoast.showToast(
+                              onTap: () async {
+                                await audio.removeFromPlaylistPlus(
+                                    [widget.episodeItem]);
+                                await Fluttertoast.showToast(
                                   msg: s.toastRemovePlaylist,
                                   gravity: ToastGravity.BOTTOM,
                                 );
@@ -113,7 +114,7 @@ class MenuBarState extends State<MenuBar> {
                               onTap: () async {
                                 await audio
                                     .addToPlaylistPlus([widget.episodeItem]);
-                                Fluttertoast.showToast(
+                                await Fluttertoast.showToast(
                                   msg: s.toastAddPlaylist,
                                   gravity: ToastGravity.BOTTOM,
                                 );

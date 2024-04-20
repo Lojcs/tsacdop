@@ -245,7 +245,7 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
   @override
   Widget build(BuildContext context) {
     final s = context.s;
-    var audio = context.watch<AudioPlayerNotifier>();
+    var audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
     return TweenAnimationBuilder(
       tween: Tween<double>(begin: 0, end: 1),
       duration: Duration(milliseconds: 500),
@@ -449,7 +449,7 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                           if (!_inPlaylist) {
                             for (var episode in widget.selectedList!) {
                               await audio.addToPlaylistPlus([episode]);
-                              Fluttertoast.showToast(
+                              await Fluttertoast.showToast(
                                 msg: s.toastAddPlaylist,
                                 gravity: ToastGravity.BOTTOM,
                               );
@@ -457,8 +457,10 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                             setState(() => _inPlaylist = true);
                           } else {
                             for (var episode in widget.selectedList!) {
-                              await audio.delFromPlaylist(episode);
-                              Fluttertoast.showToast(
+                              await audio.removeFromPlaylistPlus([
+                                episode
+                              ]); // TODO: This could use indexes. (removeFromPlaylistAtPlus)
+                              await Fluttertoast.showToast(
                                 msg: s.toastRemovePlaylist,
                                 gravity: ToastGravity.BOTTOM,
                               );

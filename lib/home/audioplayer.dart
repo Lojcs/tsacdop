@@ -1342,7 +1342,14 @@ class _ControlPanelState extends State<ControlPanel>
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               SizedBox(height: 16),
-              Consumer<AudioPlayerNotifier>(
+              Selector<AudioPlayerNotifier,
+                  Tuple5<double, int, int, AudioProcessingState, String?>>(
+                selector: (context, audio) => Tuple5(
+                    audio.seekSliderValue,
+                    audio.audioPosition,
+                    audio.audioDuration,
+                    audio.audioState,
+                    audio.remoteErrorMessage),
                 builder: (_, data, __) {
                   return Column(
                     mainAxisAlignment: MainAxisAlignment.start,
@@ -1369,9 +1376,9 @@ class _ControlPanelState extends State<ControlPanel>
                                 RoundSliderOverlayShape(overlayRadius: 4.0),
                           ),
                           child: Slider(
-                              value: data.seekSliderValue > 0
-                                  ? data.seekSliderValue < 1
-                                      ? data.seekSliderValue
+                              value: data.item1 > 0
+                                  ? data.item1 < 1
+                                      ? data.item1
                                       : 1
                                   : 0,
                               onChanged: (val) {
@@ -1385,21 +1392,21 @@ class _ControlPanelState extends State<ControlPanel>
                         child: Row(
                           children: <Widget>[
                             Text(
-                              (data.audioPosition! ~/ 1000).toTime,
+                              (data.item2! ~/ 1000).toTime,
                               style: TextStyle(fontSize: 10),
                             ),
                             Expanded(
                               child: Container(
                                 alignment: Alignment.center,
-                                child: data.remoteErrorMessage != null
-                                    ? Text(data.remoteErrorMessage!,
+                                child: data.item5 != null
+                                    ? Text(data.item5!,
                                         style: const TextStyle(
                                             color: Color(0xFFFF0000)))
                                     : Text(
-                                        data.audioState ==
+                                        data.item4 ==
                                                     AudioProcessingState
                                                         .buffering ||
-                                                data.audioState ==
+                                                data.item4 ==
                                                     AudioProcessingState.loading
                                             ? context.s.buffering
                                             : '',
@@ -1409,7 +1416,7 @@ class _ControlPanelState extends State<ControlPanel>
                               ),
                             ),
                             Text(
-                              (data.audioDuration ~/ 1000).toTime,
+                              (data.item3 ~/ 1000).toTime,
                               style: TextStyle(fontSize: 10),
                             ),
                           ],

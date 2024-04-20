@@ -41,7 +41,7 @@ class _PlaySettingState extends State<PlaySetting> {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingState>();
-    final audio = context.watch<AudioPlayerNotifier>();
+    final audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
     final s = context.s;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: context.overlay,

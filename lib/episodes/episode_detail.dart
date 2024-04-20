@@ -139,322 +139,280 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
     context.statusBarColor = color;
     context.navBarColor = color;
     final s = context.s;
-    final audio = context.watch<AudioPlayerNotifier>();
-    return Selector2<EpisodeState, AudioPlayerNotifier,
-            Tuple4<bool?, bool, PlayerHeight, EpisodeBrief?>>(
-        selector: (_, episodeState, audio) => Tuple4(
-            episodeState.episodeChangeMap[_episodeItem.id],
-            audio.playerRunning,
-            audio.playerHeight!,
-            audio.episode),
-        builder: (_, data, __) => FutureBuilder<EpisodeBrief>(
-            future: _episodeItem.copyWithFromDB(newFields: [
-              EpisodeField.episodeImage,
-              EpisodeField.podcastImage
-            ], update: true),
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                _episodeItem = snapshot.data!;
-              }
-              return AnnotatedRegion<SystemUiOverlayStyle>(
-                value: data.item2
-                    ? context.overlay.copyWith(
-                        systemNavigationBarColor: context.accentBackground)
-                    : context.overlay,
-                child: WillPopScope(
-                  onWillPop: () async {
-                    if (_playerKey.currentState != null &&
-                        _playerKey.currentState!.initSize! > 100) {
-                      _playerKey.currentState!.backToMini();
-                      return false;
-                    } else {
-                      return true;
-                    }
-                  },
-                  child: Scaffold(
-                    backgroundColor: context.background,
-                    body: SafeArea(
-                      child: Stack(
-                        children: <Widget>[
-                          StretchingOverscrollIndicator(
-                            axisDirection: AxisDirection.down,
-                            child: NestedScrollView(
-                              scrollDirection: Axis.vertical,
-                              controller: _controller,
-                              headerSliverBuilder: (context, innerBoxScrolled) {
-                                return <Widget>[
-                                  SliverAppBar(
-                                    flexibleSpace: LayoutBuilder(
-                                      builder: (context, constraints) {
-                                        double topHeight =
-                                            constraints.biggest.height;
-                                        double expandRatio =
-                                            ((topHeight - _titleBarMinHeight) /
-                                                    (-30 + context.width))
-                                                .clamp(0, 1);
-                                        // print(_episodeItem.episodeImage);
-                                        return FlexibleSpaceBar(
-                                          collapseMode: CollapseMode.pin,
-                                          titlePadding: EdgeInsets.only(
-                                            left: 50 +
-                                                0 *
-                                                    (1 -
-                                                        ((expandRatio - 0.8) *
-                                                                5)
-                                                            .clamp(0, 1)),
-                                            right: 50 +
-                                                0 *
-                                                    (1 -
-                                                        ((expandRatio - 0.8) *
-                                                                5)
-                                                            .clamp(0, 1)),
-                                            top: 15,
-                                            bottom: topHeight -
-                                                (40 +
-                                                    (topHeight -
-                                                            _titleBarMinHeight)
-                                                        .clamp(
-                                                            0,
-                                                            _imageTopOffset -
-                                                                _titleBarMinHeight)),
-                                          ),
-                                          expandedTitleScale: 1.1,
-                                          background: Container(
-                                            // alignment:
-                                            //     Alignment.bottomCenter,
-                                            padding: EdgeInsets.only(
-                                              left: 60,
-                                              right: 60,
-                                              top: _imageTopOffset +
-                                                  context.width -
-                                                  30 -
-                                                  expandRatio *
-                                                      (context.width - 30),
-                                              bottom: 0,
-                                            ),
-                                            child: Container(
-                                              clipBehavior: Clip.hardEdge,
-                                              height: (context.width - 120) *
-                                                  ((expandRatio - 0.4)
-                                                          .clamp(0, 0.6) +
-                                                      0.4),
-                                              width: (context.width - 120) *
-                                                  ((expandRatio - 0.4)
-                                                          .clamp(0, 0.6) +
-                                                      0.4),
-                                              decoration: BoxDecoration(
-                                                color: color,
-                                                // border: Border.all(
-                                                //     color: Colors.white,
-                                                //     width: 2),
-                                              ),
-                                              child: Image(
-                                                  alignment:
-                                                      Alignment.topCenter,
-                                                  fit: BoxFit.fitWidth,
-                                                  image: _episodeItem
-                                                              .episodeImage !=
-                                                          ''
-                                                      ? _episodeItem
-                                                          .episodeImageProvider
-                                                      : _episodeItem
-                                                          .podcastImageProvider),
-                                            ),
-                                          ),
-                                          title: Stack(
-                                            children: [
-                                              Opacity(
-                                                opacity: 1,
-                                                child: Tooltip(
-                                                  message: _episodeItem.title,
-                                                  child: Text(
-                                                      _episodeItem.title,
-                                                      maxLines: 3,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                      style: context.textTheme
-                                                          .headlineSmall!),
-                                                ),
-                                              )
-                                            ],
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                    backgroundColor: color,
-                                    collapsedHeight: _titleBarMinHeight,
-                                    toolbarHeight: _titleBarMinHeight,
-                                    expandedHeight:
-                                        _titleBarMinHeight + _titleBarMaxHeight,
-                                    pinned: true,
-                                    scrolledUnderElevation: 0,
-                                    leading: CustomBackButton(),
-                                    elevation: 0,
-                                  ),
-                                  // Infobar
-                                  SliverAppBar(
-                                    pinned: true,
-                                    leading: Center(),
-                                    toolbarHeight: 150,
-                                    backgroundColor: context.background,
-                                    scrolledUnderElevation: 0,
-                                    flexibleSpace: LayoutBuilder(
-                                      builder: (context, constraints) {
-                                        double topHeight =
-                                            constraints.biggest.height;
-                                        double expandRatio =
-                                            ((topHeight - _titleBarMinHeight) /
-                                                    (120 + context.width))
-                                                .clamp(0, 1);
-                                        // print(expandRatio);
-                                        return Padding(
+    final audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
+    return Selector<EpisodeState, bool?>(
+      selector: (_, episodeState) =>
+          episodeState.episodeChangeMap[_episodeItem.id],
+      builder: (_, __, ___) => FutureBuilder<EpisodeBrief>(
+        future: _episodeItem.copyWithFromDB(
+            newFields: [EpisodeField.episodeImage, EpisodeField.podcastImage],
+            update: true),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            _episodeItem = snapshot.data!;
+          }
+          return Selector<AudioPlayerNotifier, bool>(
+            selector: (_, audio) => audio.playerRunning,
+            builder: (_, playerRunning, __) =>
+                AnnotatedRegion<SystemUiOverlayStyle>(
+              value: playerRunning
+                  ? context.overlay.copyWith(
+                      systemNavigationBarColor: context.accentBackground)
+                  : context.overlay,
+              child: WillPopScope(
+                onWillPop: () async {
+                  if (_playerKey.currentState != null &&
+                      _playerKey.currentState!.initSize! > 100) {
+                    _playerKey.currentState!.backToMini();
+                    return false;
+                  } else {
+                    return true;
+                  }
+                },
+                child: Scaffold(
+                  backgroundColor: context.background,
+                  body: SafeArea(
+                    child: Stack(
+                      children: <Widget>[
+                        StretchingOverscrollIndicator(
+                          axisDirection: AxisDirection.down,
+                          child: NestedScrollView(
+                            scrollDirection: Axis.vertical,
+                            controller: _controller,
+                            headerSliverBuilder: (context, innerBoxScrolled) {
+                              return <Widget>[
+                                SliverAppBar(
+                                  flexibleSpace: LayoutBuilder(
+                                    builder: (context, constraints) {
+                                      double topHeight =
+                                          constraints.biggest.height;
+                                      double expandRatio =
+                                          ((topHeight - _titleBarMinHeight) /
+                                                  (-30 + context.width))
+                                              .clamp(0, 1);
+                                      // print(_episodeItem.episodeImage);
+                                      return FlexibleSpaceBar(
+                                        collapseMode: CollapseMode.pin,
+                                        titlePadding: EdgeInsets.only(
+                                          left: 50 +
+                                              0 *
+                                                  (1 -
+                                                      ((expandRatio - 0.8) * 5)
+                                                          .clamp(0, 1)),
+                                          right: 50 +
+                                              0 *
+                                                  (1 -
+                                                      ((expandRatio - 0.8) * 5)
+                                                          .clamp(0, 1)),
+                                          top: 15,
+                                          bottom: topHeight -
+                                              (40 +
+                                                  (topHeight -
+                                                          _titleBarMinHeight)
+                                                      .clamp(
+                                                          0,
+                                                          _imageTopOffset -
+                                                              _titleBarMinHeight)),
+                                        ),
+                                        expandedTitleScale: 1.1,
+                                        background: Container(
+                                          // alignment:
+                                          //     Alignment.bottomCenter,
                                           padding: EdgeInsets.only(
-                                            top: 0,
-                                            bottom: (topHeight -
-                                                    (40 +
-                                                        context.width +
-                                                        70 * expandRatio))
-                                                .clamp(0, 1),
+                                            left: 60,
+                                            right: 60,
+                                            top: _imageTopOffset +
+                                                context.width -
+                                                30 -
+                                                expandRatio *
+                                                    (context.width - 30),
+                                            bottom: 0,
                                           ),
                                           child: Container(
-                                            height: 150,
-                                            // padding: EdgeInsets.only(
-                                            //     left: 20, right: 20),
-                                            color: Color.alphaBlend(
-                                                Colors.white10, color),
-                                            alignment: Alignment.centerLeft,
-                                            child: Expanded(
-                                              child: Column(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                // mainAxisSize:
-                                                //     MainAxisSize
-                                                //         .max,
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: <Widget>[
-                                                  Padding(
-                                                    padding: const EdgeInsets
-                                                            .fromLTRB(
-                                                        20, 15, 20, 10),
-                                                    child: Tooltip(
-                                                      message: _episodeItem
-                                                          .podcastTitle,
-                                                      child: Text(
-                                                        _episodeItem
-                                                            .podcastTitle,
-                                                        maxLines: 1,
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                        style: context.textTheme
-                                                            .titleLarge,
-                                                      ),
+                                            clipBehavior: Clip.hardEdge,
+                                            height: (context.width - 120) *
+                                                ((expandRatio - 0.4)
+                                                        .clamp(0, 0.6) +
+                                                    0.4),
+                                            width: (context.width - 120) *
+                                                ((expandRatio - 0.4)
+                                                        .clamp(0, 0.6) +
+                                                    0.4),
+                                            decoration: BoxDecoration(
+                                              color: color,
+                                              // border: Border.all(
+                                              //     color: Colors.white,
+                                              //     width: 2),
+                                            ),
+                                            child: Image(
+                                                alignment: Alignment.topCenter,
+                                                fit: BoxFit.fitWidth,
+                                                image: _episodeItem
+                                                            .episodeImage !=
+                                                        ''
+                                                    ? _episodeItem
+                                                        .episodeImageProvider
+                                                    : _episodeItem
+                                                        .podcastImageProvider),
+                                          ),
+                                        ),
+                                        title: Stack(
+                                          children: [
+                                            Opacity(
+                                              opacity: 1,
+                                              child: Tooltip(
+                                                message: _episodeItem.title,
+                                                child: Text(_episodeItem.title,
+                                                    maxLines: 3,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: context.textTheme
+                                                        .headlineSmall!),
+                                              ),
+                                            )
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                  backgroundColor: color,
+                                  collapsedHeight: _titleBarMinHeight,
+                                  toolbarHeight: _titleBarMinHeight,
+                                  expandedHeight:
+                                      _titleBarMinHeight + _titleBarMaxHeight,
+                                  pinned: true,
+                                  scrolledUnderElevation: 0,
+                                  leading: CustomBackButton(),
+                                  elevation: 0,
+                                ),
+                                // Infobar
+                                SliverAppBar(
+                                  pinned: true,
+                                  leading: Center(),
+                                  toolbarHeight: 150,
+                                  backgroundColor: context.background,
+                                  scrolledUnderElevation: 0,
+                                  flexibleSpace: LayoutBuilder(
+                                    builder: (context, constraints) {
+                                      double topHeight =
+                                          constraints.biggest.height;
+                                      double expandRatio =
+                                          ((topHeight - _titleBarMinHeight) /
+                                                  (120 + context.width))
+                                              .clamp(0, 1);
+                                      // print(expandRatio);
+                                      return Padding(
+                                        padding: EdgeInsets.only(
+                                          top: 0,
+                                          bottom: (topHeight -
+                                                  (40 +
+                                                      context.width +
+                                                      70 * expandRatio))
+                                              .clamp(0, 1),
+                                        ),
+                                        child: Container(
+                                          height: 150,
+                                          // padding: EdgeInsets.only(
+                                          //     left: 20, right: 20),
+                                          color: Color.alphaBlend(
+                                              Colors.white10, color),
+                                          alignment: Alignment.centerLeft,
+                                          child: Expanded(
+                                            child: Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.start,
+                                              // mainAxisSize:
+                                              //     MainAxisSize
+                                              //         .max,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: <Widget>[
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.fromLTRB(
+                                                          20, 15, 20, 10),
+                                                  child: Tooltip(
+                                                    message: _episodeItem
+                                                        .podcastTitle,
+                                                    child: Text(
+                                                      _episodeItem.podcastTitle,
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      style: context
+                                                          .textTheme.titleLarge,
                                                     ),
                                                   ),
-                                                  Padding(
-                                                    padding: const EdgeInsets
-                                                        .fromLTRB(20, 5, 20, 5),
-                                                    child: Row(
-                                                      children: [
-                                                        if (_episodeItem
-                                                                .versionInfo ==
-                                                            VersionInfo.NONE)
-                                                          _versionDateSelector(
-                                                              [_episodeItem])
-                                                        else
-                                                          FutureBuilder<
-                                                              EpisodeBrief>(
-                                                            // TODO: Make ui responsive.
-                                                            future:
-                                                                _getEpisodeVersions(),
-                                                            builder: (context,
-                                                                snapshot) {
-                                                              if (snapshot
-                                                                  .hasData) {
-                                                                List<EpisodeBrief?>
-                                                                    versions =
-                                                                    snapshot
-                                                                        .data!
-                                                                        .versions!
-                                                                        .values
-                                                                        .toList();
-                                                                versions.sort(
-                                                                    (a, b) => b!
-                                                                        .pubDate
-                                                                        .compareTo(
-                                                                            a!.pubDate));
-                                                                return _versionDateSelector(
-                                                                    versions);
-                                                              } else {
-                                                                return _versionDateSelector([
-                                                                  _episodeItem
-                                                                ]);
-                                                              }
-                                                            },
-                                                          ),
-                                                        SizedBox(width: 10),
-                                                        if (_episodeItem
-                                                                .isExplicit ==
-                                                            true)
-                                                          Text('E',
-                                                              style: TextStyle(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                  color: context
-                                                                      .error))
-                                                      ],
-                                                    ),
+                                                ),
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.fromLTRB(
+                                                          20, 5, 20, 5),
+                                                  child: Row(
+                                                    children: [
+                                                      if (_episodeItem
+                                                              .versionInfo ==
+                                                          VersionInfo.NONE)
+                                                        _versionDateSelector(
+                                                            [_episodeItem])
+                                                      else
+                                                        FutureBuilder<
+                                                            EpisodeBrief>(
+                                                          // TODO: Make ui responsive.
+                                                          future:
+                                                              _getEpisodeVersions(),
+                                                          builder: (context,
+                                                              snapshot) {
+                                                            if (snapshot
+                                                                .hasData) {
+                                                              List<EpisodeBrief?>
+                                                                  versions =
+                                                                  snapshot
+                                                                      .data!
+                                                                      .versions!
+                                                                      .values
+                                                                      .toList();
+                                                              versions.sort(
+                                                                  (a, b) => b!
+                                                                      .pubDate
+                                                                      .compareTo(
+                                                                          a!.pubDate));
+                                                              return _versionDateSelector(
+                                                                  versions);
+                                                            } else {
+                                                              return _versionDateSelector([
+                                                                _episodeItem
+                                                              ]);
+                                                            }
+                                                          },
+                                                        ),
+                                                      SizedBox(width: 10),
+                                                      if (_episodeItem
+                                                              .isExplicit ==
+                                                          true)
+                                                        Text('E',
+                                                            style: TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                color: context
+                                                                    .error))
+                                                    ],
                                                   ),
-                                                  Padding(
-                                                    padding:
-                                                        EdgeInsets.symmetric(
-                                                            horizontal: 20,
-                                                            vertical: 5),
-                                                    child: Row(
-                                                      children: <Widget>[
-                                                        if (_episodeItem
-                                                                .enclosureDuration !=
-                                                            0)
-                                                          Container(
-                                                              decoration: BoxDecoration(
-                                                                  color: context
-                                                                      .secondary,
-                                                                  borderRadius:
-                                                                      context
-                                                                          .radiusHuge),
-                                                              height: 40.0,
-                                                              margin: EdgeInsets
-                                                                  .only(
-                                                                      right:
-                                                                          12.0),
-                                                              padding: EdgeInsets
-                                                                  .symmetric(
-                                                                      horizontal:
-                                                                          10.0),
-                                                              alignment:
-                                                                  Alignment
-                                                                      .center,
-                                                              child: Text(
-                                                                s.minsCount(
-                                                                  _episodeItem
-                                                                          .enclosureDuration! ~/
-                                                                      60,
-                                                                ),
-                                                                style: TextStyle(
-                                                                    color: context
-                                                                        .background),
-                                                              )),
-                                                        if (_episodeItem!
-                                                                    .enclosureSize !=
-                                                                null &&
-                                                            _episodeItem!
-                                                                    .enclosureSize !=
-                                                                0)
-                                                          Container(
+                                                ),
+                                                Padding(
+                                                  padding: EdgeInsets.symmetric(
+                                                      horizontal: 20,
+                                                      vertical: 5),
+                                                  child: Row(
+                                                    children: <Widget>[
+                                                      if (_episodeItem
+                                                              .enclosureDuration !=
+                                                          0)
+                                                        Container(
                                                             decoration: BoxDecoration(
                                                                 color: context
-                                                                    .tertiary,
+                                                                    .secondary,
                                                                 borderRadius:
                                                                     context
                                                                         .radiusHuge),
@@ -470,167 +428,213 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                                             alignment: Alignment
                                                                 .center,
                                                             child: Text(
-                                                              '${_episodeItem!.enclosureSize! ~/ 1000000}MB',
+                                                              s.minsCount(
+                                                                _episodeItem
+                                                                        .enclosureDuration! ~/
+                                                                    60,
+                                                              ),
                                                               style: TextStyle(
                                                                   color: context
                                                                       .background),
-                                                            ),
+                                                            )),
+                                                      if (_episodeItem!
+                                                                  .enclosureSize !=
+                                                              null &&
+                                                          _episodeItem!
+                                                                  .enclosureSize !=
+                                                              0)
+                                                        Container(
+                                                          decoration: BoxDecoration(
+                                                              color: context
+                                                                  .tertiary,
+                                                              borderRadius: context
+                                                                  .radiusHuge),
+                                                          height: 40.0,
+                                                          margin:
+                                                              EdgeInsets.only(
+                                                                  right: 12.0),
+                                                          padding: EdgeInsets
+                                                              .symmetric(
+                                                                  horizontal:
+                                                                      10.0),
+                                                          alignment:
+                                                              Alignment.center,
+                                                          child: Text(
+                                                            '${_episodeItem!.enclosureSize! ~/ 1000000}MB',
+                                                            style: TextStyle(
+                                                                color: context
+                                                                    .background),
                                                           ),
-                                                        FutureBuilder<
-                                                                PlayHistory>(
-                                                            future: _getPosition(
-                                                                _episodeItem),
-                                                            builder: (context,
-                                                                snapshot) {
-                                                              if (snapshot
-                                                                  .hasError) {
-                                                                developer.log(
-                                                                    snapshot.error
-                                                                        as String);
-                                                              }
-                                                              if (snapshot
-                                                                      .hasData &&
-                                                                  snapshot.data!
-                                                                          .seekValue! <
-                                                                      0.9 &&
-                                                                  snapshot.data!
-                                                                          .seconds! >
-                                                                      10) {
-                                                                return Container(
-                                                                  height: 40,
-                                                                  padding: EdgeInsets
-                                                                      .symmetric(
-                                                                          horizontal:
-                                                                              0),
-                                                                  child:
-                                                                      OutlinedButton(
-                                                                    style: OutlinedButton
-                                                                        .styleFrom(
-                                                                      shape: RoundedRectangleBorder(
-                                                                          borderRadius: context
-                                                                              .radiusHuge,
-                                                                          side:
-                                                                              BorderSide(color: context.accentColor)),
-                                                                    ),
-                                                                    onPressed: () => audio.episodeLoad(
-                                                                        _episodeItem,
-                                                                        startPosition:
-                                                                            (snapshot.data!.seconds! * 1000).toInt()),
-                                                                    child: Row(
-                                                                      children: [
-                                                                        SizedBox(
-                                                                          width:
-                                                                              20,
-                                                                          height:
-                                                                              20,
-                                                                          child:
-                                                                              CustomPaint(
-                                                                            painter:
-                                                                                ListenedPainter(context.textColor, stroke: 2.0),
-                                                                          ),
-                                                                        ),
-                                                                        SizedBox(
-                                                                            width:
-                                                                                5),
-                                                                        Text(
-                                                                          snapshot
-                                                                              .data!
-                                                                              .seconds!
-                                                                              .toTime,
-                                                                        ),
-                                                                      ],
-                                                                    ),
+                                                        ),
+                                                      FutureBuilder<
+                                                              PlayHistory>(
+                                                          future: _getPosition(
+                                                              _episodeItem),
+                                                          builder: (context,
+                                                              snapshot) {
+                                                            if (snapshot
+                                                                .hasError) {
+                                                              developer.log(
+                                                                  snapshot.error
+                                                                      as String);
+                                                            }
+                                                            if (snapshot
+                                                                    .hasData &&
+                                                                snapshot.data!
+                                                                        .seekValue! <
+                                                                    0.9 &&
+                                                                snapshot.data!
+                                                                        .seconds! >
+                                                                    10) {
+                                                              return Container(
+                                                                height: 40,
+                                                                padding: EdgeInsets
+                                                                    .symmetric(
+                                                                        horizontal:
+                                                                            0),
+                                                                child:
+                                                                    OutlinedButton(
+                                                                  style: OutlinedButton
+                                                                      .styleFrom(
+                                                                    shape: RoundedRectangleBorder(
+                                                                        borderRadius:
+                                                                            context
+                                                                                .radiusHuge,
+                                                                        side: BorderSide(
+                                                                            color:
+                                                                                context.accentColor)),
                                                                   ),
-                                                                );
-                                                              } else {
-                                                                return Center();
-                                                              }
-                                                            }),
-                                                      ],
-                                                    ),
+                                                                  onPressed: () => audio.episodeLoad(
+                                                                      _episodeItem,
+                                                                      startPosition:
+                                                                          (snapshot.data!.seconds! * 1000)
+                                                                              .toInt()),
+                                                                  child: Row(
+                                                                    children: [
+                                                                      SizedBox(
+                                                                        width:
+                                                                            20,
+                                                                        height:
+                                                                            20,
+                                                                        child:
+                                                                            CustomPaint(
+                                                                          painter: ListenedPainter(
+                                                                              context.textColor,
+                                                                              stroke: 2.0),
+                                                                        ),
+                                                                      ),
+                                                                      SizedBox(
+                                                                          width:
+                                                                              5),
+                                                                      Text(
+                                                                        snapshot
+                                                                            .data!
+                                                                            .seconds!
+                                                                            .toTime,
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                ),
+                                                              );
+                                                            } else {
+                                                              return Center();
+                                                            }
+                                                          }),
+                                                    ],
                                                   ),
-                                                ],
-                                              ),
+                                                ),
+                                              ],
                                             ),
                                           ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ];
-                              },
-                              body: SingleChildScrollView(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                          bottom: 10,
-                                          top: 20,
-                                          left: 20,
-                                          right: 20),
-                                      child: Align(
-                                        alignment: Alignment.centerLeft,
-                                        child: Text(
-                                          _episodeItem.title,
-                                          textAlign: TextAlign.left,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .headlineMedium,
                                         ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ];
+                            },
+                            body: SingleChildScrollView(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                        bottom: 10,
+                                        top: 20,
+                                        left: 20,
+                                        right: 20),
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        _episodeItem.title,
+                                        textAlign: TextAlign.left,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .headlineMedium,
                                       ),
                                     ),
-                                    ShowNote(episode: _episodeItem),
-                                    Selector<AudioPlayerNotifier,
-                                            Tuple2<bool, PlayerHeight?>>(
-                                        selector: (_, audio) => Tuple2(
-                                            audio.playerRunning,
-                                            audio.playerHeight),
-                                        builder: (_, data, __) {
-                                          final height = kMinPlayerHeight[
-                                              data.item2!.index];
-                                          return SizedBox(
-                                            height: data.item1 ? height : 0,
-                                          );
-                                        }),
-                                  ],
+                                  ),
+                                  ShowNote(episode: _episodeItem),
+                                  Selector<AudioPlayerNotifier,
+                                          Tuple2<bool, PlayerHeight>>(
+                                      selector: (_, audio) => Tuple2(
+                                          audio.playerRunning,
+                                          audio.playerHeight!),
+                                      builder: (_, data, __) {
+                                        final height =
+                                            kMinPlayerHeight[data.item2.index];
+                                        return SizedBox(
+                                          height: data.item1 ? height : 0,
+                                        );
+                                      }),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        Selector<AudioPlayerNotifier,
+                            Tuple2<bool, PlayerHeight>>(
+                          selector: (_, audio) =>
+                              Tuple2(audio.playerRunning, audio.playerHeight!),
+                          builder: (_, data, __) {
+                            return Container(
+                              alignment: Alignment.bottomCenter,
+                              padding: EdgeInsets.only(
+                                  bottom: data.item1
+                                      ? kMinPlayerHeight[data.item2.index]
+                                      : 0),
+                              child: AnimatedContainer(
+                                duration: Duration(milliseconds: 300),
+                                height: _showMenu ? 50 : 0,
+                                child: SingleChildScrollView(
+                                  scrollDirection: Axis.vertical,
+                                  child: MenuBar(
+                                      episodeItem: _episodeItem,
+                                      heroTag: widget.heroTag,
+                                      hide: widget.hide),
                                 ),
                               ),
-                            ),
+                            );
+                          },
+                        ),
+                        Selector<AudioPlayerNotifier, EpisodeBrief?>(
+                          selector: (_, audio) => audio.episode,
+                          builder: (_, data, __) => Container(
+                            child: PlayerWidget(
+                                playerKey: _playerKey,
+                                isPlayingPage: data == _episodeItem),
                           ),
-                          Container(
-                            alignment: Alignment.bottomCenter,
-                            padding: EdgeInsets.only(
-                                bottom: data.item2
-                                    ? kMinPlayerHeight[data.item3.index]
-                                    : 0),
-                            child: AnimatedContainer(
-                              duration: Duration(milliseconds: 300),
-                              height: _showMenu ? 50 : 0,
-                              child: SingleChildScrollView(
-                                scrollDirection: Axis.vertical,
-                                child: MenuBar(
-                                    episodeItem: _episodeItem,
-                                    heroTag: widget.heroTag,
-                                    hide: widget.hide),
-                              ),
-                            ),
-                          ),
-                          Selector<AudioPlayerNotifier, EpisodeBrief?>(
-                            selector: (_, audio) => audio.episode,
-                            builder: (_, data, __) => Container(
-                              child: PlayerWidget(
-                                  playerKey: _playerKey,
-                                  isPlayingPage: data == _episodeItem),
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              );
-            }));
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 
   Future<EpisodeBrief> _getEpisodeVersions() async {

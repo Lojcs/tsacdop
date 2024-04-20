@@ -19,7 +19,7 @@ class PlaylistDetail extends StatefulWidget {
 }
 
 class _PlaylistDetailState extends State<PlaylistDetail> {
-  final List<EpisodeBrief> _selectedEpisodes = [];
+  final List<int> _selectedEpisodes = [];
   bool? _resetSelected;
 
   @override
@@ -58,9 +58,10 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
                 splashRadius: 20,
                 icon: Icon(Icons.delete_outline_rounded),
                 onPressed: () {
-                  context.read<AudioPlayerNotifier>().removeFromPlaylistPlus(
-                      _selectedEpisodes,
-                      playlist: widget.playlist);
+                  context
+                      .read<AudioPlayerNotifier>()
+                      .removeIndexesFromPlaylistPlus(_selectedEpisodes,
+                          playlist: widget.playlist);
                   setState(_selectedEpisodes.clear);
                 }),
           if (_selectedEpisodes.isNotEmpty)
@@ -107,13 +108,13 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
                 setState(() {});
               },
               scrollDirection: Axis.vertical,
-              children: episodes.map<Widget>((episode) {
+              children: episodes.mapIndexed<Widget>((index, episode) {
                 return _PlaylistItem(episode,
                     key: ValueKey(episode!.enclosureUrl), onSelect: (episode) {
-                  _selectedEpisodes.add(episode);
+                  _selectedEpisodes.add(index);
                   setState(() {});
                 }, onRemove: (episode) {
-                  _selectedEpisodes.remove(episode);
+                  _selectedEpisodes.remove(index);
                   setState(() {});
                 }, reset: _resetSelected);
               }).toList());

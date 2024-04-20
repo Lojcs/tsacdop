@@ -442,7 +442,7 @@ class __HistoryState extends State<_History> {
       {required EpisodeBrief episode,
       required int seconds,
       required double seekValue}) {
-    final audio = context.watch<AudioPlayerNotifier>();
+    final audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
     final textWidth = _getMaskStop(seekValue, seconds).width;
     final stop = seekValue - 20 / textWidth + 40 * seekValue / textWidth;
     return Padding(
@@ -501,7 +501,7 @@ class __HistoryState extends State<_History> {
   }
 
   Widget _playlistButton(BuildContext context, {EpisodeBrief? episode}) {
-    final audio = context.watch<AudioPlayerNotifier>();
+    final audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
     final s = context.s;
     return SizedBox(
       child: Selector<AudioPlayerNotifier, List<EpisodeBrief?>>(
@@ -512,8 +512,8 @@ class __HistoryState extends State<_History> {
                   icon: Icon(Icons.playlist_add_check,
                       color: context.accentColor),
                   onPressed: () async {
-                    audio.delFromPlaylist(episode!);
-                    Fluttertoast.showToast(
+                    await audio.removeFromPlaylistPlus([episode!]);
+                    await Fluttertoast.showToast(
                       msg: s.toastRemovePlaylist,
                       gravity: ToastGravity.BOTTOM,
                     );
@@ -522,7 +522,7 @@ class __HistoryState extends State<_History> {
                   icon: Icon(Icons.playlist_add, color: Colors.grey[700]),
                   onPressed: () async {
                     await audio.addToPlaylistPlus([episode!]);
-                    Fluttertoast.showToast(
+                    await Fluttertoast.showToast(
                       msg: s.toastAddPlaylist,
                       gravity: ToastGravity.BOTTOM,
                     );
@@ -534,7 +534,7 @@ class __HistoryState extends State<_History> {
 
   @override
   Widget build(BuildContext context) {
-    final audio = context.watch<AudioPlayerNotifier>();
+    final audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
     return FutureBuilder<List<PlayHistory>>(
         future: _getData,
         builder: (context, snapshot) {
