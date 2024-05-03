@@ -96,7 +96,6 @@ class _DismissibleContainerState extends State<DismissibleContainer> {
                           textColor: context.accentColor,
                           label: s.undo,
                           onPressed: () async {
-                            print("activated");
                             await audio.addToPlaylistPlus([episodeRemove],
                                 index: widget.index);
                             widget.onRemove!(false);
