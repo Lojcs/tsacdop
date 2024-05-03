@@ -52,9 +52,11 @@ class EpisodeState extends ChangeNotifier {
     }
   }
 
-  Future<void> setListened(EpisodeBrief episode) async {
+  Future<void> setListened(EpisodeBrief episode,
+      {double seekValue = 1, int seconds = 0}) async {
     if (episode.isPlayed != null && !episode.isPlayed!) {
-      final history = PlayHistory(episode.title, episode.enclosureUrl, 0, 1);
+      final history =
+          PlayHistory(episode.title, episode.enclosureUrl, seconds, seekValue);
       await _dbHelper.saveHistory(history);
       if (episodeChangeMap.containsKey(episode.id)) {
         episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;

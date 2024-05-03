@@ -32,6 +32,7 @@ class _DismissibleContainerState extends State<DismissibleContainer> {
 
   @override
   Widget build(BuildContext context) {
+    AudioPlayerNotifier audio = context.read<AudioPlayerNotifier>();
     final s = context.s;
     return AnimatedContainer(
       duration: Duration(milliseconds: 300),
@@ -82,13 +83,11 @@ class _DismissibleContainerState extends State<DismissibleContainer> {
                     setState(() {
                       _delete = true;
                     });
-                    await context
-                        .read<AudioPlayerNotifier>()
-                        .removeFromPlaylistAtPlus(widget.index);
+                    await audio.removeFromPlaylistAtPlus(widget.index);
                     widget.onRemove!(true);
                     final episodeRemove = widget.episode;
-                    Scaffold.of(context).removeCurrentSnackBar();
-                    Scaffold.of(context).showSnackBar(SnackBar(
+                    ScaffoldMessenger.of(context).removeCurrentSnackBar();
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       behavior: SnackBarBehavior.floating,
                       backgroundColor: Colors.grey[800],
                       content: Text(s.toastRemovePlaylist,
@@ -97,10 +96,9 @@ class _DismissibleContainerState extends State<DismissibleContainer> {
                           textColor: context.accentColor,
                           label: s.undo,
                           onPressed: () async {
-                            await context
-                                .read<AudioPlayerNotifier>()
-                                .addToPlaylistPlus([episodeRemove],
-                                    index: widget.index);
+                            print("activated");
+                            await audio.addToPlaylistPlus([episodeRemove],
+                                index: widget.index);
                             widget.onRemove!(false);
                           }),
                     ));

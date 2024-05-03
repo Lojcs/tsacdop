@@ -226,10 +226,11 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                             Text(p.name!),
                           ],
                         ),
-                        onTap: () {
-                          context.read<AudioPlayerNotifier>().addToPlaylistPlus(
-                              widget.selectedList!,
-                              playlist: p);
+                        onTap: () async {
+                          await context
+                              .read<AudioPlayerNotifier>()
+                              .addToPlaylistPlus(widget.selectedList!,
+                                  playlist: p);
                           setState(() {
                             _showPlaylists = false;
                           });
