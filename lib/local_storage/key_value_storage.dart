@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tuple/tuple.dart';
 
 import '../state/podcast_group.dart';
 import '../type/playlist.dart';
@@ -116,18 +117,31 @@ class KeyValueStorage {
   }
 
   Future<bool> savePlayerState(
-      String playlist, String episode, int position) async {
+      String playlist, int episodeIndex, int position) async {
     var prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(key, [playlist, episode, position.toString()]);
+    return prefs.setStringList(
+        key, [playlist, episodeIndex.toString(), position.toString()]);
   }
 
-  Future<List<String>> getPlayerState() async {
+  Future<Tuple3<String, int, int>> getPlayerState() async {
     var prefs = await SharedPreferences.getInstance();
-    if (prefs.getStringList(key) == null) {
+    List<String>? saved = prefs.getStringList(key);
+    if (saved == null) {
       final position = prefs.getInt(audioPositionKey) ?? 0;
-      await savePlayerState('', '', position);
+      await savePlayerState('', 0, position);
+      saved = ['', '0', position.toString()];
     }
-    return prefs.getStringList(key)!;
+    int episodeIndex = 0;
+    int position = 0;
+    try {
+      episodeIndex = int.parse(saved[1]);
+    } catch (e) {
+      if (!(e is FormatException)) {
+        throw e;
+      }
+    }
+    position = int.parse(saved[2]);
+    return Tuple3<String, int, int>(saved[0], episodeIndex, position);
   }
 
   Future<bool> saveInt(int setting) async {

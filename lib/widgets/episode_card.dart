@@ -672,7 +672,7 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, EpisodeBrief episode,
         ),
         onPressed: () async {
           if (!playing || !playerRunning) {
-            await audio.episodeLoad(episode);
+            await audio.loadEpisodeToQueue(episode);
           }
         }),
     if (menuList.contains(1))

@@ -165,8 +165,6 @@ class _DownloadButtonState extends State<DownloadButton> {
           ),
         );
       case 3: // DownloadTaskStatus.complete
-        Provider.of<AudioPlayerNotifier>(context, listen: false)
-            .updateMediaItem(task.episode!);
         return Material(
           color: Colors.transparent,
           child: InkWell(

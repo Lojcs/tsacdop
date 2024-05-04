@@ -451,7 +451,8 @@ class __HistoryState extends State<_History> {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            audio.episodeLoad(episode, startPosition: (seconds * 1000).toInt());
+            audio.loadEpisodeToQueue(episode,
+                startPosition: (seconds * 1000).toInt());
           },
           borderRadius: BorderRadius.circular(20),
           child: Stack(alignment: Alignment.center, children: [
@@ -579,11 +580,13 @@ class __HistoryState extends State<_History> {
                                           child: ListTile(
                                             contentPadding: EdgeInsets.fromLTRB(
                                                 24, 8, 20, 8),
-                                            onTap: () => audio.episodeLoad(
-                                                episode,
-                                                startPosition: seekValue! < 0.9
-                                                    ? (seconds! * 1000).toInt()
-                                                    : 0),
+                                            onTap: () => audio
+                                                .loadEpisodeToQueue(episode,
+                                                    startPosition:
+                                                        seekValue! < 0.9
+                                                            ? (seconds! * 1000)
+                                                                .toInt()
+                                                            : 0),
                                             leading: CircleAvatar(
                                                 backgroundColor: context
                                                     .colorScheme
@@ -768,9 +771,6 @@ class __PlaylistsState extends State<_Playlists> {
                     final episodeList = data[index].episodeList;
                     return ListTile(
                       onTap: () async {
-                        await context
-                            .read<AudioPlayerNotifier>()
-                            .updatePlaylist(data[index], updateEpisodes: true);
                         Navigator.push(
                           context,
                           MaterialPageRoute(

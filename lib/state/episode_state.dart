@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:tsacdop/local_storage/sqflite_localpodcast.dart';
+import 'package:tsacdop/state/audio_state.dart';
 import 'package:tsacdop/type/episodebrief.dart';
 
 import '../type/play_histroy.dart';
 
 /// Global class to manage [EpisodeBrief] field updates.
 class EpisodeState extends ChangeNotifier {
-  DBHelper _dbHelper = DBHelper();
+  final DBHelper _dbHelper = DBHelper();
+  late final AudioPlayerNotifier _audio =
+      Provider.of<AudioPlayerNotifier>(_context, listen: false);
+  final BuildContext _context;
   Map<int, bool> episodeChangeMap = {};
   // using Id here to reduce memory footprint.
+
+  EpisodeState(this._context);
 
   /// Call this when you want to listen to an episode's field changes.
   void addEpisode(EpisodeBrief episode) {
@@ -78,6 +85,7 @@ class EpisodeState extends ChangeNotifier {
   Future<void> setDownloaded(EpisodeBrief episode, String taskId) async {
     if (episode.isDownloaded != null && !episode.isDownloaded!) {
       await _dbHelper.saveDownloaded(episode.enclosureUrl, taskId);
+      await _audio.updateEpisodeMediaID(episode);
       if (episodeChangeMap.containsKey(episode.id)) {
         episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
         notifyListeners();

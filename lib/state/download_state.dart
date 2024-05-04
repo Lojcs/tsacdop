@@ -9,6 +9,7 @@ import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:tsacdop/state/audio_state.dart';
 import 'package:tuple/tuple.dart';
 
 import '../local_storage/key_value_storage.dart';
@@ -85,21 +86,15 @@ class AutoDownloader {
   }
 
   Future _saveMediaId(EpisodeTask episodeTask) async {
-    final completeTask = await (FlutterDownloader.loadTasksWithRawQuery(
-            query: "SELECT * FROM task WHERE task_id = '${episodeTask.taskId}'")
-        as FutureOr<List<DownloadTask>>);
-    var filePath =
-        'file://${path.join(completeTask.first.savedDir, Uri.encodeComponent(completeTask.first.filename!))}';
-    var fileStat = await File(
+    final completeTask = await FlutterDownloader.loadTasksWithRawQuery(
+        query: "SELECT * FROM task WHERE task_id = '${episodeTask.taskId}'");
+    final filePath =
+        'file://${path.join(completeTask!.first.savedDir, Uri.encodeComponent(completeTask.first.filename!))}';
+    final fileStat = await File(
             path.join(completeTask.first.savedDir, completeTask.first.filename))
         .stat();
-    await _dbHelper.saveMediaId(
-      episodeTask.episode!,
-      filePath,
-      episodeTask.taskId,
-      fileStat.size,
-      _episodeState,
-    );
+    await _dbHelper.saveMediaId(episodeTask.episode!, filePath,
+        episodeTask.taskId, fileStat.size, _episodeState);
     _episodeTasks.removeWhere((element) =>
         element.episode!.enclosureUrl == episodeTask.episode!.enclosureUrl);
     if (_episodeTasks.length == 0) _unbindBackgroundIsolate();
@@ -262,8 +257,8 @@ class DownloadState extends ChangeNotifier {
     final fileStat = await File(
             path.join(completeTask.first.savedDir, completeTask.first.filename))
         .stat();
-    _dbHelper.saveMediaId(episodeTask.episode!, filePath, episodeTask.taskId,
-        fileStat.size, _episodeState);
+    await _dbHelper.saveMediaId(episodeTask.episode!, filePath,
+        episodeTask.taskId, fileStat.size, _episodeState);
     EpisodeBrief episode =
         await episodeTask.episode!.copyWithFromDB(newFields: [
       EpisodeField.isDownloaded,

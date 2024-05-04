@@ -33,7 +33,10 @@ Future main() async {
         ChangeNotifierProvider(
           create: (_) => themeSetting,
         ),
-        ChangeNotifierProvider(create: (_) => EpisodeState()),
+        ChangeNotifierProvider(
+          lazy: false,
+          create: (context) => EpisodeState(context),
+        ),
         ChangeNotifierProvider(
           lazy: false,
           create: (context) => AudioPlayerNotifier(context),

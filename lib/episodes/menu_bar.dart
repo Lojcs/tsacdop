@@ -166,7 +166,7 @@ class MenuBarState extends State<MenuBar> {
                       color: Colors.transparent,
                       child: InkWell(
                         onTap: () async {
-                          await audio.episodeLoad(widget.episodeItem);
+                          await audio.loadEpisodeToQueue(widget.episodeItem);
                         },
                         child: Container(
                           alignment: Alignment.center,

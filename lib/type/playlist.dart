@@ -47,7 +47,7 @@ class Playlist extends Equatable {
   final List<EpisodeBrief> _episodes;
 
   List<EpisodeBrief> get episodes {
-    if (_episodes.isEmpty) getPlaylist();
+    if (_episodes.isEmpty && episodeList.isNotEmpty) getPlaylist();
     return _episodes;
   }
 
@@ -216,9 +216,15 @@ class Playlist extends Equatable {
     episodeList.insert(index, episodeBrief.enclosureUrl);
   }
 
-  void updateEpisode(EpisodeBrief episode) {
-    var index = _episodes.indexOf(episode);
-    if (index != -1) _episodes[index] = episode;
+  List<int> updateEpisode(EpisodeBrief episode) {
+    List<int> indexes = [];
+    for (int i = 0; i < episodes.length; i++) {
+      if (episodes[i] == episode) {
+        indexes.add(i);
+        _episodes[i] = episode;
+      }
+    }
+    return indexes;
   }
 
   int delFromPlaylist(EpisodeBrief episodeBrief) {

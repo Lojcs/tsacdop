@@ -504,7 +504,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                                                             color:
                                                                                 context.accentColor)),
                                                                   ),
-                                                                  onPressed: () => audio.episodeLoad(
+                                                                  onPressed: () => audio.loadEpisodeToQueue(
                                                                       _episodeItem,
                                                                       startPosition:
                                                                           (snapshot.data!.seconds! * 1000)

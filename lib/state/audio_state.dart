@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:tuple/tuple.dart';
 
 import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
@@ -168,15 +169,20 @@ class AudioPlayerNotifier extends ChangeNotifier {
   /// Current state variables
 
   /// Currently playing episode.
-  EpisodeBrief? get _episode => _playlist != null && _playlist!.isNotEmpty
-      ? _playlist!.episodes[_episodeIndex ?? 0]
-      : null;
+  EpisodeBrief? get _episode =>
+      _playlist.isNotEmpty ? _playlist.episodes[_episodeIndex] : null;
 
   /// Index of currently playing episode
-  int? _episodeIndex;
+  late int _episodeIndex;
+
+  /// Episode index to start playback from
+  late int _startEpisodeIndex;
 
   /// Currently playing playlist.
-  Playlist? _playlist;
+  late Playlist _playlist;
+
+  /// Playlist to start playback from
+  late Playlist _startPlaylist;
 
   /// Playlists include queue and playlists created by user.
   List<Playlist> _playlists = [];
@@ -202,8 +208,8 @@ class AudioPlayerNotifier extends ChangeNotifier {
   /// Current episode position (ms).
   int _audioPosition = 0;
 
-  /// Current episode's start position (ms).
-  int _audioStartPosition = 0;
+  /// Position to start playback from (ms).
+  int _startAudioPosition = 0;
 
   /// Current episode buffered position (ms).
   int _audioBufferedPosition = 0;
@@ -297,7 +303,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
   int get audioPosition => _audioPosition;
 
   /// Current episode's start position (ms).
-  int get audioStartPosition => _audioStartPosition;
+  int get audioStartPosition => _startAudioPosition;
 
   /// Current episode buffered position (ms).
   int get audioBufferedPosition => _audioBufferedPosition;
@@ -307,8 +313,10 @@ class AudioPlayerNotifier extends ChangeNotifier {
   String? get remoteErrorMessage => _remoteErrorMessage;
 
   int? get episodeIndex => _episodeIndex;
+  int? get startEpisodeIndex => _startEpisodeIndex;
   EpisodeBrief? get episode => _episode;
   Playlist? get playlist => _playlist;
+  Playlist? get startPlaylist => _startPlaylist;
   List<Playlist> get playlists => _playlists;
   Playlist get queue => _queue;
   AudioProcessingState get audioState => _audioState;
@@ -340,6 +348,9 @@ class AudioPlayerNotifier extends ChangeNotifier {
     await _loadAudioData();
     await initPlaylists();
     await loadSavedPosition();
+    _playlist = _startPlaylist;
+    _episodeIndex = _startEpisodeIndex;
+    _audioPosition = _startAudioPosition;
     int cacheMax =
         await cacheStorage.getInt(defaultValue: (1024 * 1024 * 200).toInt());
     _audioHandler = await AudioService.init(
@@ -397,7 +408,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     if (!_playingTemp && _playerRunning) {
       _savedPosition = _audioPosition;
       await _playerStateStorage.savePlayerState(
-          _playlist!.id, _episode!.enclosureUrl, _audioPosition);
+          _playlist.id, _episodeIndex, _audioPosition);
     }
   }
 
@@ -421,47 +432,39 @@ class AudioPlayerNotifier extends ChangeNotifier {
     }
   }
 
-  /// Loads saved playlist and episode
+  /// Loads saved [_startPlaylist], [_startEpisodeIndex] and [_startAudioPosition]
   Future<void> loadSavedPosition({bool saveCurrent = false}) async {
     // Get playerstate saved in storage.
-    List<String> lastState = await _playerStateStorage.getPlayerState();
+    Tuple3<String, int, int> lastState =
+        await _playerStateStorage.getPlayerState();
     if (saveCurrent) await saveHistory(savePosition: true);
-    // Set current playlist
-    _playlist = _playlists.firstWhere((p) => p.id == lastState[0],
+    // Set playlist
+    _startPlaylist = _playlists.firstWhere((p) => p.id == lastState.item1,
         orElse: () => _playlists.first);
-    await _playlist!.getPlaylist();
-    // Set current episode
-    if (lastState[1] != '') {
-      if (_playlist!.isQueue) {
-        if (_playlist!.isNotEmpty &&
-            _playlist!.episodes.first!.enclosureUrl == lastState[1]) {
-          _episodeIndex = 0;
-        } else {
-          _episodeIndex = _playlist!.isNotEmpty ? 0 : null;
-        }
+    await _startPlaylist.getPlaylist();
+    // Set episode index
+    if (_startPlaylist.isEmpty) {
+      _startEpisodeIndex = -1;
+    } else if (lastState.item2 >= 0 &&
+        lastState.item2 < _startPlaylist.length) {
+      if (_startPlaylist.isQueue) {
+        _startEpisodeIndex = 0;
       } else {
-        _episodeIndex = _playlist!.episodes.indexWhere(
-          (e) => e.enclosureUrl == lastState[1],
-        );
-        if (_episodeIndex == -1) {
-          _episodeIndex = _playlist!.isNotEmpty
-              ? 0
-              : null; // TODO: Do better failure communication!
-        }
+        _startEpisodeIndex = lastState.item2;
       }
     } else {
-      _episodeIndex = _playlist!.isNotEmpty ? 0 : null;
+      _startEpisodeIndex = 0;
     }
     // Load episode position
-    if (_episodeIndex != null) {
-      PlayHistory position = await _dbHelper.getPosition(_episode!);
-      _audioStartPosition = int.parse(lastState[2]);
-      if (_audioStartPosition == 0) {
+    if (_startEpisodeIndex != -1) {
+      _startAudioPosition = lastState.item3;
+      if (_startAudioPosition == 0) {
+        PlayHistory position = await _dbHelper.getPosition(_episode!);
         if (position.seconds! > 0) {
           if (position.seconds! * 1000 < _episode!.enclosureDuration!) {
-            _audioStartPosition = position.seconds! * 1000;
+            _startAudioPosition = position.seconds! * 1000;
           } else {
-            _audioStartPosition = 0;
+            _startAudioPosition = 0;
           }
         }
       }
@@ -469,54 +472,54 @@ class AudioPlayerNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Loads the saved position of the provided or current episode to [_audioStartPosition]
+  /// Loads the saved position of the provided or current episode to [_startAudioPosition]
   Future<void> loadEpisodeHistoryPosition({EpisodeBrief? episodeBrief}) async {
     if (episodeBrief == null) episodeBrief = _episode;
     PlayHistory position = await _dbHelper.getPosition(episodeBrief!);
     if (position.seconds! > 0) {
       if (position.seconds! * 1000 < episodeBrief.enclosureDuration!) {
-        _audioStartPosition = position.seconds! * 1000;
+        _startAudioPosition = position.seconds! * 1000;
       } else {
-        _audioStartPosition = 0;
+        _startAudioPosition = 0;
       }
     } else {
-      _audioStartPosition = 0;
+      _startAudioPosition = 0;
     }
 
     notifyListeners();
   }
 
-  /// Starts or changes playback according to [_playlist], [_episodeIndex] and [_audioStartPosition] variables.
+  /// Starts or changes playback according to [_startPlaylist], [_startEpisodeIndex] and [_startAudioPosition] variables.
   /// Doesn't reorder queue or save history, do those before calling this.
-  Future<void> playFromPosition({bool samePlaylist = false}) async {
-    if (_episodeIndex != null &&
-        _episodeIndex! < _playlist!.length &&
-        (!_playlist!.isQueue || _episodeIndex == 0)) {
-      if (_playlist!.episodes.isEmpty) {
-        await _playlist!.getPlaylist();
+  Future<void> playFromStart({bool samePlaylist = false}) async {
+    if (_startEpisodeIndex != -1 &&
+        _startEpisodeIndex < _startPlaylist.length &&
+        (!_startPlaylist.isQueue || _startEpisodeIndex == 0)) {
+      if (_startPlaylist.episodes.isEmpty) {
+        await _startPlaylist.getPlaylist();
       }
       if (_playerRunning) {
         if (samePlaylist) {
           await _audioHandler.combinedSeek(
-              Duration(milliseconds: _audioStartPosition),
-              index: _episodeIndex);
+              Duration(milliseconds: _startAudioPosition),
+              index: _startEpisodeIndex);
         } else {
           if (_autoPlay) {
-            await _audioHandler.replaceQueue(_playlist!.mediaItems);
+            await _audioHandler.replaceQueue(_startPlaylist.mediaItems);
             await _audioHandler.combinedSeek(
-                Duration(milliseconds: _audioStartPosition),
-                index: _episodeIndex);
+                Duration(milliseconds: _startAudioPosition),
+                index: _startEpisodeIndex);
           } else {
             await _audioHandler.replaceQueue([_episode!.mediaItem]);
             await _audioHandler
-                .seek(Duration(milliseconds: _audioStartPosition));
+                .seek(Duration(milliseconds: _startAudioPosition));
           }
         }
-        _audioPosition = _audioStartPosition;
+        _audioPosition = _startAudioPosition;
         _audioDuration = _episode!.enclosureDuration!;
       } else {
-        await _startAudioService(_playlist!,
-            position: _audioStartPosition, index: _episodeIndex!);
+        await _startAudioService(_startPlaylist,
+            index: _startEpisodeIndex, position: _startAudioPosition);
       }
     } else {
       log('Invalid position to play');
@@ -525,12 +528,11 @@ class AudioPlayerNotifier extends ChangeNotifier {
 
   /// Starts playback from last played playlist and episode
   Future<void> playFromLastPosition() async {
-    Playlist? currentPlaylist = _playlist;
     await loadSavedPosition(saveCurrent: true);
-    if (_episodeIndex != null) {
-      await playFromPosition(samePlaylist: currentPlaylist == _playlist);
+    if (_startEpisodeIndex != -1) {
+      await playFromStart(samePlaylist: _startPlaylist == _playlist);
     } else {
-      log('Playlist is empty, loading queue');
+      log('Invalid data, loading queue');
       await playlistLoad(_queue);
     }
   }
@@ -539,10 +541,10 @@ class AudioPlayerNotifier extends ChangeNotifier {
   Future<void> playlistLoad(Playlist playlist) async {
     if (playlist.isNotEmpty) {
       await saveHistory();
-      _playlist = playlist;
-      _episodeIndex = 0;
-      _audioStartPosition = 0;
-      await playFromPosition();
+      _startPlaylist = playlist;
+      _startEpisodeIndex = 0;
+      _startAudioPosition = 0;
+      await playFromStart();
     }
   }
 
@@ -560,7 +562,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
   }
 
   /// Adds episode to beginning of the queue and starts playing.
-  Future<void> episodeLoad(EpisodeBrief episode,
+  Future<void> loadEpisodeToQueue(EpisodeBrief episode,
       {int startPosition = 0}) async {
     episode = await episode.copyWithFromDB(newFields: [
       EpisodeField.enclosureDuration,
@@ -577,23 +579,20 @@ class AudioPlayerNotifier extends ChangeNotifier {
     ], keepExisting: true);
     await saveHistory();
 
-    await addToPlaylistPlus([episode], playlist: _queue, index: 0);
-    if (!(playerRunning && _playlist!.isQueue)) {
-      _playlist = _queue;
-      _episodeIndex = 0;
+    await addToPlaylistPlus([episode],
+        playlist: _queue,
+        index: 0); // This handles playback if queue is playing
+    if (!(playerRunning && _playlist.isQueue)) {
+      // Otherwise switch to queue
+      _startPlaylist = _queue;
+      _startEpisodeIndex = 0;
       // Set _audioStartPosition
       if (startPosition > 0) {
-        _audioStartPosition = startPosition;
+        _startAudioPosition = startPosition;
       } else {
         await loadEpisodeHistoryPosition(episodeBrief: episode);
-        PlayHistory position = await _dbHelper.getPosition(episode);
-        if (position.seconds! * 1000 < episode.enclosureDuration!) {
-          _audioStartPosition = position.seconds!;
-        } else {
-          _audioStartPosition = 0;
-        }
       }
-      await playFromPosition(samePlaylist: false);
+      await playFromStart(samePlaylist: false);
     }
 
     notifyListeners();
@@ -603,9 +602,9 @@ class AudioPlayerNotifier extends ChangeNotifier {
   /// Skips to the episode at specified index
   Future<void> loadEpisodeFromCurrentPlaylist(int episodeIndex) async {
     await saveHistory();
-    if (!_playlist!.isQueue) {
-      _episodeIndex = episodeIndex;
-      await playFromPosition(samePlaylist: true);
+    if (!_playlist.isQueue) {
+      _startEpisodeIndex = episodeIndex;
+      await playFromStart(samePlaylist: true);
     } else {
       await reorderPlaylist(episodeIndex, 0, playlist: _playlist);
     }
@@ -620,7 +619,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     _sleepTimerMode = SleepTimerMode.undefined;
     _switchValue = 0;
     _audioState = AudioProcessingState.loading;
-    _audioPosition = _audioStartPosition;
+    _audioPosition = _startAudioPosition;
     _audioDuration = _episode!.enclosureDuration!;
     _playerRunning = true;
     notifyListeners();
@@ -644,14 +643,14 @@ class AudioPlayerNotifier extends ChangeNotifier {
 
     //Check autoplay setting, if true only add one episode, else add playlist.
     if (_autoPlay) {
-      await _audioHandler.replaceQueue(_playlist!.mediaItems);
+      await _audioHandler.replaceQueue(_playlist.mediaItems);
       // await _audioHandler.skipToQueueItem(_episodeIndex!);
     } else {
       await _audioHandler.replaceQueue([_episode!.mediaItem]);
     }
     await _audioHandler.combinedSeek(
-        Duration(milliseconds: _audioStartPosition),
-        index: _episodeIndex);
+        Duration(milliseconds: _startAudioPosition),
+        index: _startEpisodeIndex);
     await _audioHandler.play();
 
     //Check auto sleep timer setting
@@ -673,8 +672,13 @@ class AudioPlayerNotifier extends ChangeNotifier {
           int newIndex = item.extras!["index"];
           if (item.id != _episode!.mediaId) {
             // Save last episode's history.
-            await saveHistory(); // TODO: I think this makes most other calls unnecessary or worse
-            if (_playlist!.isQueue &&
+            await saveHistory();
+            // TODO: History saving isn't consistent
+            // When _episodeIndex is changed by playlist modification functions
+            // to reflect playing episode change before player stops buffering
+            // history is saved twice (and possibly incorrectly).
+            // This also doesn't handle when the entire playlist changes.
+            if (_playlist.isQueue &&
                 newIndex - 1 == _episodeIndex &&
                 !_playlistEditLock) {
               // Remove played episode from playlist when playlist is queue
@@ -684,7 +688,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
           _episodeIndex = newIndex;
           // This saves the new episode to playerstate.
           await _playerStateStorage.savePlayerState(
-              _playlist!.id, _episode!.enclosureUrl, _audioPosition);
+              _playlist.id, _episodeIndex, _audioPosition);
         }
         notifyListeners();
         await removeFirstFuture;
@@ -771,7 +775,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     await _audioHandler.removeQueueItemsAt(0);
     await _audioHandler.addQueueItemsAt([episodeBrief.mediaItem], 0);
     await _audioHandler
-        .combinedSeek(Duration(milliseconds: _audioStartPosition), index: 0);
+        .combinedSeek(Duration(milliseconds: _startAudioPosition), index: 0);
     await _audioHandler.play();
   }
 
@@ -805,6 +809,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     EpisodeCollision ifExists =
         playlist.isQueue ? EpisodeCollision.Replace : EpisodeCollision.Ignore;
 
+    while (_playlistEditLock) Future.delayed(Duration(milliseconds: 10));
     _playlistEditLock = true;
     if (playlist == _playlist && _playerRunning) {
       if (_autoPlay) {
@@ -813,7 +818,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
             [for (var episode in episodes) episode.mediaItem], index,
             ifExists: ifExists);
       }
-      if (_episodeIndex! < index) {
+      if (_episodeIndex < index) {
         // Current episode is not affected
       } else {
         if (playlist.isQueue) {
@@ -822,13 +827,13 @@ class AudioPlayerNotifier extends ChangeNotifier {
             await saveHistory();
             await loadEpisodeHistoryPosition(episodeBrief: episodes[0]);
             seekFuture = _audioHandler.combinedSeek(
-                Duration(milliseconds: _audioStartPosition),
+                Duration(milliseconds: _startAudioPosition),
                 index: 0);
           } else {
             await _replaceFirstQueueItem(episodes[0]);
           }
         } else {
-          _episodeIndex = _episodeIndex! + episodes.length;
+          _episodeIndex = _episodeIndex + episodes.length;
         }
       }
     }
@@ -861,27 +866,10 @@ class AudioPlayerNotifier extends ChangeNotifier {
     await addToPlaylistPlus(newEpisodes);
   }
 
-// TODO: Switch to downloaded when currently playing episode finishes downloading. Github version seems to be doing that already
-  /// Updates the media item if episode is downloaded while playing
-  Future<void> updateMediaItem(EpisodeBrief episode) async {
-    if (episode.enclosureUrl == episode.mediaId &&
-        _episode != episode &&
-        _playlist!.contains(episode)) {
-      if (episode.isDownloaded!) print("Please use the isDownloaded field");
-      var episodeNew = await episode.copyWithFromDB(newFields: [
-        EpisodeField.mediaId,
-        EpisodeField.primaryColor,
-        EpisodeField.isNew,
-        EpisodeField.skipSecondsStart,
-        EpisodeField.skipSecondsEnd,
-        EpisodeField.episodeImage,
-        EpisodeField.chapterLink
-      ], keepExisting: true);
-      _playlist!.updateEpisode(episodeNew);
-      if (_playerRunning) {
-        await _audioHandler.updateMediaItem(episodeNew.mediaItem);
-      }
-    }
+  /// Adds episode to be played next in queue
+  Future<void> addToTop(EpisodeBrief episode) async {
+    int index = (_playerRunning && _playlist.isQueue) ? 1 : 0;
+    await addToPlaylistPlus([episode], index: index);
   }
 
   /// Removes [episodes] from [playlist]. [playlist] defaults to [_queue]
@@ -960,7 +948,6 @@ class AudioPlayerNotifier extends ChangeNotifier {
   }
 
   /// Removes [number] episodes from [playlist] at [index]. [playlist] defaults to [_queue]
-  // TODO: Use this instead of non-index based remove to speed up
   Future<void> removeFromPlaylistAtPlus(int index,
       {int number = 1, Playlist? playlist}) async {
     Future seekFuture = Future(() {});
@@ -969,15 +956,16 @@ class AudioPlayerNotifier extends ChangeNotifier {
     final int end = index + number;
     if (end > playlist.length || number < 0) return;
 
+    while (_playlistEditLock) Future.delayed(Duration(milliseconds: 10));
     _playlistEditLock = true;
     if (playlist == _playlist && _playerRunning) {
-      if (_episodeIndex! < index) {
+      if (_episodeIndex < index) {
         // Current episode is not affected
         if (_autoPlay) {
           // Remove episodes from the player
           await _audioHandler.removeQueueItemsAt(index, number: number);
         }
-      } else if (_episodeIndex! <= end) {
+      } else if (_episodeIndex <= end) {
         // Current episode is deleted and player starts playing the next undeleted episode
         if (_autoPlay) {
           await loadEpisodeHistoryPosition(
@@ -986,15 +974,15 @@ class AudioPlayerNotifier extends ChangeNotifier {
           // Remove episodes from the player
           await _audioHandler.removeQueueItemsAt(index, number: number);
           seekFuture = _audioHandler.combinedSeek(
-              Duration(milliseconds: _audioStartPosition),
+              Duration(milliseconds: _startAudioPosition),
               index: index);
         } else {
           await _replaceFirstQueueItem(playlist.episodes[end]);
         }
         _episodeIndex = index;
-      } else if (_episodeIndex! > end) {
+      } else if (_episodeIndex > end) {
         // Current episode's index is shifted and continues playing
-        _episodeIndex = _episodeIndex! - number;
+        _episodeIndex = _episodeIndex - number;
         if (_autoPlay) {
           // Remove episodes from the player
           await _audioHandler.removeQueueItemsAt(index, number: number);
@@ -1014,6 +1002,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
       {Playlist? playlist}) async {
     Future seekFuture = Future(() {});
     if (playlist == null) playlist = _queue;
+    while (_playlistEditLock) Future.delayed(Duration(milliseconds: 10));
     _playlistEditLock = true;
     if (playlist == _playlist && _playerRunning) {
       if (_autoPlay) {
@@ -1033,7 +1022,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
             await loadEpisodeHistoryPosition(
                 episodeBrief: playlist.episodes[1]);
             seekFuture = _audioHandler.combinedSeek(
-                Duration(milliseconds: _audioStartPosition),
+                Duration(milliseconds: _startAudioPosition),
                 index: 0);
           } else {
             await _replaceFirstQueueItem(playlist.episodes[1]);
@@ -1041,10 +1030,10 @@ class AudioPlayerNotifier extends ChangeNotifier {
         } else {
           _episodeIndex = newIndex;
         }
-      } else if (oldIndex > _episodeIndex! && newIndex > _episodeIndex! ||
-          oldIndex < _episodeIndex! && newIndex < _episodeIndex!) {
+      } else if (oldIndex > _episodeIndex && newIndex > _episodeIndex ||
+          oldIndex < _episodeIndex && newIndex < _episodeIndex) {
         // Moved episode doesn't affect current episode's index
-      } else if (oldIndex > _episodeIndex! && newIndex <= _episodeIndex!) {
+      } else if (oldIndex > _episodeIndex && newIndex <= _episodeIndex) {
         // Current episode's index is increased.
         if (playlist.isQueue) {
           // Playing episode changes
@@ -1054,20 +1043,20 @@ class AudioPlayerNotifier extends ChangeNotifier {
             await loadEpisodeHistoryPosition(
                 episodeBrief: playlist.episodes[oldIndex]);
             seekFuture = _audioHandler.combinedSeek(
-                Duration(milliseconds: _audioStartPosition),
+                Duration(milliseconds: _startAudioPosition),
                 index: 0);
           } else {
             await _replaceFirstQueueItem(playlist.episodes[oldIndex]);
           }
         } else {
-          _episodeIndex = _episodeIndex! + 1;
+          _episodeIndex = _episodeIndex + 1;
         }
-      } else if (oldIndex < _episodeIndex! && newIndex >= _episodeIndex!) {
+      } else if (oldIndex < _episodeIndex && newIndex >= _episodeIndex) {
         // Current episode's index is decreased
         if (playlist.isQueue) {
           // Impossible
         } else {
-          _episodeIndex = _episodeIndex! - 1;
+          _episodeIndex = _episodeIndex - 1;
         }
       }
     }
@@ -1078,10 +1067,49 @@ class AudioPlayerNotifier extends ChangeNotifier {
     _playlistEditLock = false;
   }
 
-  /// Adds episode to be played next in queue
-  Future<void> addToTop(EpisodeBrief episode) async {
-    int index = (_playerRunning && _playlist!.isQueue) ? 1 : 0;
-    await addToPlaylistPlus([episode], index: index);
+  /// Updates the media ID of an episode from the database.
+  /// Replaces the playing episode if its media ID changed.
+  Future<void> updateEpisodeMediaID(EpisodeBrief episode) async {
+    EpisodeBrief? oldEpisode;
+    EpisodeBrief? updatedEpisode;
+    if (_playlist.episodes.contains(episode)) {
+      oldEpisode =
+          _playlist.episodes.firstWhere((episode) => episode == episode);
+      updatedEpisode =
+          await oldEpisode.copyWithFromDB(newFields: [EpisodeField.mediaId]);
+      if (oldEpisode.mediaId != updatedEpisode.mediaId) {
+        while (_playlistEditLock) Future.delayed(Duration(milliseconds: 10));
+        _playlistEditLock = true;
+
+        final List<int> indexes = _playlist.updateEpisode(updatedEpisode);
+        if (indexes.remove(_episodeIndex)) {
+          // Currently playing episode is replaced
+          _audioHandler
+              .addQueueItemsAt([updatedEpisode.mediaItem], _episodeIndex + 1);
+          _audioHandler.removeQueueItemsAt(_episodeIndex);
+        }
+        // Another episode is replaced.
+        if (_autoPlay) {
+          for (int i in indexes) {
+            _audioHandler.addQueueItemsAt([updatedEpisode.mediaItem], i + 1);
+            _audioHandler.removeQueueItemsAt(i);
+          }
+        }
+        _playlistEditLock = false;
+      }
+    }
+    final containingPlaylists = _playlists.where(
+        (playlist) => playlist != _playlist && playlist.contains(episode));
+    for (final playlist in containingPlaylists) {
+      if (updatedEpisode == null) {
+        updatedEpisode = await playlist.episodes
+            .firstWhere((episode) => episode == episode)
+            .copyWithFromDB(newFields: [EpisodeField.mediaId]);
+      }
+      if (oldEpisode!.mediaId != updatedEpisode.mediaId) {
+        playlist.updateEpisode(updatedEpisode);
+      }
+    }
   }
 
   /// Custom playlist management.
@@ -1108,38 +1136,12 @@ class AudioPlayerNotifier extends ChangeNotifier {
     removeFromPlaylistAtPlus(0, number: playlist.length, playlist: playlist);
   }
 
-  /// Replaces the playlist in [_playlists] with the provided version.
-  /// This shouldn't be needed in general use.
-  Future<void> updatePlaylist(Playlist playlist,
-      {bool updateEpisodes = true}) async {
-    deletePlaylist(playlist);
-    if (updateEpisodes) await playlist.getPlaylist();
-    addPlaylist(playlist);
-    // _playlists = [for (var p in _playlists) p.id == playlist.id ? playlist : p];
-    // if (_playlist!.id == playlist.id) {
-    //   if (playlist.isQueue) {
-    //     _playlist = playlist;
-    //   } else if (!_playerRunning) {
-    //     // TODO: Why not while the player is running?
-    //     _playlist = playlist;
-    //   }
-    //   notifyListeners();
-    // }
-    // await _savePlaylists();
-  }
-
   bool playlistExists(String? name) {
     for (var p in _playlists) {
       if (p.name == name) return true; // TODO: Compare by id
     }
     return false;
   }
-
-  // void _updateAllPlaylists() {
-  //   _playlists = [..._playlists];
-  //   notifyListeners();
-  //   _savePlaylists();
-  // }
 
   Future<void> _savePlaylists() async {
     await _playlistsStorage
@@ -1163,18 +1165,18 @@ class AudioPlayerNotifier extends ChangeNotifier {
   /// Plays next episode in playlist, ends playback if there isn't one.
   Future<void> skipToNext() async {
     _remoteErrorMessage = null;
-    if (_playlist!.length - _episodeIndex! > 1) {
+    if (_playlist.length - _episodeIndex > 1) {
       if (_autoPlay) {
         await _audioHandler.skipToNext();
       } else {
-        if (_playlist!.isQueue) {
+        if (_playlist.isQueue) {
           _queue.removeEpisodesAt(0);
           loadEpisodeHistoryPosition();
-          playFromPosition();
+          playFromStart();
         } else {
-          _episodeIndex = _episodeIndex! + 1;
+          _episodeIndex = _episodeIndex + 1;
           loadEpisodeHistoryPosition();
-          playFromPosition();
+          playFromStart();
         }
       }
     } else {
@@ -1185,7 +1187,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
 
   Future<void> skipToIndex(int index) async {
     saveHistory();
-    if (_playlist!.isQueue) {
+    if (_playlist.isQueue) {
       reorderPlaylist(index, 0);
     } else {
       _audioHandler.skipToQueueItem(index);
@@ -1194,7 +1196,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
 
   /// Fast forwards audio by [s] seconds
   Future<void> forwardAudio(int s) async {
-    var pos = _audioPosition! + s * 1000;
+    var pos = _audioPosition + s * 1000;
     await _audioHandler.seek(Duration(milliseconds: pos));
   }
 
@@ -1417,9 +1419,9 @@ class CustomAudioHandler extends BaseAudioHandler
     // Stream for currentIndex (same as playbackEvent.currentIndex)
     _currentIndexSubscription = _player.currentIndexStream.listen(
       (index) {
-        if (queue.value.isNotEmpty && index! < queue.value!.length) {
-          queue.value![index].extras!["index"] = index;
-          mediaItem.add(queue.value![index]);
+        if (queue.value.isNotEmpty && index! < queue.value.length) {
+          queue.value[index].extras!["index"] = index;
+          mediaItem.add(queue.value[index]);
         }
       },
     );
