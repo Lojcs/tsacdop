@@ -9,13 +9,14 @@ import '../type/play_histroy.dart';
 /// Global class to manage [EpisodeBrief] field updates.
 class EpisodeState extends ChangeNotifier {
   final DBHelper _dbHelper = DBHelper();
-  late final AudioPlayerNotifier _audio =
-      Provider.of<AudioPlayerNotifier>(_context, listen: false);
-  final BuildContext _context;
+  BuildContext? _context;
+  late AudioPlayerNotifier _audio =
+      Provider.of<AudioPlayerNotifier>(_context!, listen: false);
+  set context(BuildContext context) => _context = context;
+
   Map<int, bool> episodeChangeMap = {};
   // using Id here to reduce memory footprint.
-
-  EpisodeState(this._context);
+  EpisodeState();
 
   /// Call this when you want to listen to an episode's field changes.
   void addEpisode(EpisodeBrief episode) {
@@ -84,7 +85,7 @@ class EpisodeState extends ChangeNotifier {
 
   Future<void> setDownloaded(EpisodeBrief episode, String taskId) async {
     if (episode.isDownloaded != null && !episode.isDownloaded!) {
-      await _dbHelper.saveDownloaded(episode.enclosureUrl, taskId);
+      await _dbHelper.setDownloaded(episode.enclosureUrl, taskId);
       await _audio.updateEpisodeMediaID(episode);
       if (episodeChangeMap.containsKey(episode.id)) {
         episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
@@ -95,7 +96,8 @@ class EpisodeState extends ChangeNotifier {
 
   Future<void> unsetDownloaded(EpisodeBrief episode) async {
     if (episode.isDownloaded != null && episode.isDownloaded!) {
-      await _dbHelper.delDownloaded(episode.enclosureUrl);
+      await _dbHelper.unsetDownloaded(episode.enclosureUrl);
+      await _audio.updateEpisodeMediaID(episode);
       if (episodeChangeMap.containsKey(episode.id)) {
         episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
         notifyListeners();

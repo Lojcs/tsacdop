@@ -151,7 +151,7 @@ class _MiniPanel extends StatelessWidget {
                       Tuple3<bool, double, String?>>(
                     selector: (_, audio) => Tuple3(
                         audio.buffering,
-                        (audio.audioDuration - audio.audioPosition!) / 1000,
+                        (audio.audioDuration - audio.audioPosition) / 1000,
                         audio.remoteErrorMessage),
                     builder: (_, data, __) {
                       return Padding(
@@ -314,7 +314,7 @@ class LastPosition extends StatelessWidget {
                       ),
                       style: TextButton.styleFrom(
                         primary:
-                            data! ? context.accentColor : Colors.transparent,
+                            data ? context.accentColor : Colors.transparent,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(100.0),
                             side: BorderSide(
@@ -498,13 +498,13 @@ class _PlaylistWidgetState extends State<PlaylistWidget> {
                                 child: CircleAvatar(
                                     radius: 15,
                                     backgroundImage:
-                                        episodes[index]!.avatarImage),
+                                        episodes[index].avatarImage),
                               ),
                               Expanded(
                                 child: Align(
                                   alignment: Alignment.centerLeft,
                                   child: Text(
-                                    episodes[index]!.title!,
+                                    episodes[index].title,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -1376,11 +1376,7 @@ class _ControlPanelState extends State<ControlPanel>
                                 RoundSliderOverlayShape(overlayRadius: 4.0),
                           ),
                           child: Slider(
-                              value: data.item1 > 0
-                                  ? data.item1 < 1
-                                      ? data.item1
-                                      : 1
-                                  : 0,
+                              value: data.item1,
                               onChanged: (val) {
                                 audio.sliderSeek(val);
                               }),
@@ -1392,7 +1388,7 @@ class _ControlPanelState extends State<ControlPanel>
                         child: Row(
                           children: <Widget>[
                             Text(
-                              (data.item2! ~/ 1000).toTime,
+                              (data.item2 ~/ 1000).toTime,
                               style: TextStyle(fontSize: 10),
                             ),
                             Expanded(
@@ -1557,7 +1553,7 @@ class _ControlPanelState extends State<ControlPanel>
                         selector: (_, audio) => audio.episode!.title,
                         builder: (_, title, __) {
                           return Container(
-                            padding: EdgeInsets.only(left: 60, right: 60),
+                            padding: EdgeInsets.only(left: 50, right: 50),
                             child: LayoutBuilder(
                               builder: (context, size) {
                                 final span = TextSpan(
@@ -1569,20 +1565,22 @@ class _ControlPanelState extends State<ControlPanel>
                                     text: span,
                                     maxLines: 1,
                                     textDirection: TextDirection.ltr);
-                                tp.layout(maxWidth: size.maxWidth);
+                                tp.layout(
+                                    maxWidth: size.maxWidth -
+                                        2); //Without -2 edge values don't behave right
                                 if (tp.didExceedMaxLines) {
                                   return Marquee(
                                     text: title!,
                                     style: TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 18),
+                                        fontSize: 20),
                                     scrollAxis: Axis.horizontal,
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     blankSpace: 30.0,
                                     velocity: 50.0,
                                     pauseAfterRound: Duration.zero,
-                                    startPadding: 30.0,
+                                    startPadding: 0,
                                     accelerationDuration:
                                         Duration(milliseconds: 100),
                                     accelerationCurve: Curves.linear,

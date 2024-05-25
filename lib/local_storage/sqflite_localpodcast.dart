@@ -1825,7 +1825,29 @@ class DBHelper {
     return list.isNotEmpty;
   }
 
-  Future<int?> saveDownloaded(String url, String? id) async {
+  /// Saves [mediaId] and optionally [size] of an [episode]. Sets or unsets downloaded status based on [mediaId].
+  Future<int?> saveMediaId(
+      EpisodeBrief episode, String mediaId, EpisodeState episodeState,
+      {String? taskId, int? size}) async {
+    var dbClient = await database;
+    int? count;
+    count = await dbClient.rawUpdate(
+        "UPDATE Episodes SET media_id = ? WHERE enclosure_url = ?",
+        [mediaId, episode.enclosureUrl]);
+    if (size != null) {
+      await dbClient.rawUpdate(
+          "UPDATE Episodes SET enclosure_length = ? WHERE enclosure_url = ?",
+          [size, episode.enclosureUrl]);
+    }
+    if (episode.enclosureUrl != mediaId) {
+      await episodeState.setDownloaded(episode, taskId!);
+    } else {
+      await episodeState.unsetDownloaded(episode);
+    }
+    return count;
+  }
+
+  Future<int?> setDownloaded(String url, String? id) async {
     var dbClient = await database;
     var milliseconds = DateTime.now().millisecondsSinceEpoch;
     int? count;
@@ -1837,31 +1859,14 @@ class DBHelper {
     return count;
   }
 
-  Future<int?> saveMediaId(EpisodeBrief episode, String path, String? id,
-      int size, EpisodeState episodeState) async {
-    if (episode.enclosureUrl != path) {
-      episodeState.setDownloaded(episode, id!);
-    }
-    var dbClient = await database;
-    var milliseconds = DateTime.now().millisecondsSinceEpoch;
-    int? count;
-    await dbClient.transaction((txn) async {
-      count = await txn.rawUpdate(
-          "UPDATE Episodes SET enclosure_length = ?, media_id = ? WHERE enclosure_url = ?",
-          [size, path, episode.enclosureUrl]);
-    });
-    return count;
-  }
-
-  Future<int?> delDownloaded(String url) async {
+  Future<int?> unsetDownloaded(String url) async {
     var dbClient = await database;
     int? count;
     await dbClient.transaction((txn) async {
       count = await txn.rawUpdate(
-          "UPDATE Episodes SET downloaded = 'ND', media_id = ? WHERE enclosure_url = ?",
-          [url, url]);
+          "UPDATE Episodes SET downloaded = 'ND' WHERE enclosure_url = ?",
+          [url]);
     });
-    developer.log('Deleted $url');
     return count;
   }
 

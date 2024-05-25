@@ -33,10 +33,7 @@ Future main() async {
         ChangeNotifierProvider(
           create: (_) => themeSetting,
         ),
-        ChangeNotifierProvider(
-          lazy: false,
-          create: (context) => EpisodeState(context),
-        ),
+        ChangeNotifierProvider(create: (_) => EpisodeState()),
         ChangeNotifierProvider(
           lazy: false,
           create: (context) => AudioPlayerNotifier(context),
@@ -65,6 +62,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Provider.of<SettingState>(context, listen: false).context = context;
+    Provider.of<EpisodeState>(context, listen: false).context = context;
     return Selector<SettingState,
         Tuple4<ThemeMode?, ThemeData, ThemeData, bool?>>(
       selector: (_, setting) => Tuple4(setting.theme, setting.lightTheme,

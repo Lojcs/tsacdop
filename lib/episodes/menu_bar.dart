@@ -167,6 +167,9 @@ class MenuBarState extends State<MenuBar> {
                       child: InkWell(
                         onTap: () async {
                           await audio.loadEpisodeToQueue(widget.episodeItem);
+                          if (!audio.playing) {
+                            await audio.resumeAudio();
+                          }
                         },
                         child: Container(
                           alignment: Alignment.center,
