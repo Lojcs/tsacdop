@@ -209,7 +209,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                       return FlexibleSpaceBar(
                                         collapseMode: CollapseMode.pin,
                                         titlePadding: EdgeInsets.only(
-                                          left: 50 +
+                                          left: 55 +
                                               0 *
                                                   (1 -
                                                       ((expandRatio - 0.8) * 5)
@@ -219,7 +219,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                                   (1 -
                                                       ((expandRatio - 0.8) * 5)
                                                           .clamp(0, 1)),
-                                          top: 15,
+                                          top: 13,
                                           bottom: topHeight -
                                               (40 +
                                                   (topHeight -
