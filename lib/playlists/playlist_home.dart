@@ -710,24 +710,34 @@ class __PlaylistsState extends State<_Playlists> {
                               height: 80,
                               width: 80,
                               color: context.primaryColorDark,
-                              child: GridView.builder(
-                                  gridDelegate:
-                                      SliverGridDelegateWithFixedCrossAxisCount(
-                                    childAspectRatio: 1,
-                                    crossAxisCount: 2,
-                                    mainAxisSpacing: 0.0,
-                                    crossAxisSpacing: 0.0,
-                                  ),
-                                  itemCount: math.min(queue.episodes.length, 4),
-                                  itemBuilder: (_, index) {
-                                    if (index < queue.episodeList.length) {
-                                      return Image(
-                                        image: queue.episodes[index]
-                                            .episodeOrPodcastImageProvider,
-                                      );
-                                    }
-                                    return Center();
-                                  }),
+                              child: FutureBuilder(
+                                future: Future.sync(() async {
+                                  if (queue.episodes.isEmpty) {
+                                    await queue.getPlaylist();
+                                  }
+                                }),
+                                builder: (context, _) {
+                                  return GridView.builder(
+                                    gridDelegate:
+                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                      childAspectRatio: 1,
+                                      crossAxisCount: 2,
+                                      mainAxisSpacing: 0.0,
+                                      crossAxisSpacing: 0.0,
+                                    ),
+                                    itemCount: math.min(queue.length, 4),
+                                    itemBuilder: (_, index) {
+                                      if (index < queue.episodeList.length) {
+                                        return Image(
+                                          image: queue.episodes[index]
+                                              .episodeOrPodcastImageProvider,
+                                        );
+                                      }
+                                      return Center();
+                                    },
+                                  );
+                                },
+                              ),
                             ),
                             SizedBox(width: 15),
                             Column(
@@ -947,9 +957,20 @@ class __NewPlaylistState extends State<_NewPlaylist> {
       developer.log(e.toString(), name: 'Failed to load dir.');
     }
     final localFolder = await _dbHelper.getPodcastLocal([localFolderId]);
-    if (localFolder.isEmpty) {
-      final localPodcast = PodcastLocal('Local Folder', '', '', '',
-          'Local Folder', localFolderId, '', '', '', []);
+    if (localFolder.isEmpty || false) {
+      String defaultColor = "[28, 204, 196]"; // Color of avatar_backup
+      final localPodcast = PodcastLocal(
+        'Local Folder',
+        '',
+        '',
+        defaultColor,
+        'Local Folder',
+        localFolderId,
+        "assets/avatar_backup.png",
+        '',
+        '',
+        [],
+      );
       await _dbHelper.savePodcastLocal(localPodcast);
     }
     if (dirPath != null) {
@@ -1032,61 +1053,65 @@ class __NewPlaylistState extends State<_NewPlaylist> {
           FlatButton(
             splashColor: context.accentColor.withAlpha(70),
             onPressed: () async {
-              if (_playlistName == '') {
-                setState(() => _error = 0);
-              } else if (context
-                  .read<AudioPlayerNotifier>()
-                  .playlistExists(_playlistName)) {
-                setState(() => _error = 1);
-              } else {
-                Playlist playlist;
-                switch (_option) {
-                  case NewPlaylistOption.blank:
-                    playlist = Playlist(
-                      _playlistName,
-                    );
-                    break;
-                  case NewPlaylistOption.latest10:
-                    final recent = await _recent();
-                    playlist = Playlist(
-                      _playlistName,
-                      episodeList: [for (var e in recent) e.enclosureUrl],
-                    );
-                    await playlist.getPlaylist();
-                    break;
-                  case NewPlaylistOption.randon10:
-                    final random = await _random();
-                    playlist = Playlist(
-                      _playlistName,
-                      episodeList: [for (var e in random) e.enclosureUrl],
-                    );
-                    await playlist.getPlaylist();
-                    break;
-                  case NewPlaylistOption.folder:
-                    _focusNode!.unfocus();
-                    setState(() {
-                      _loadFolder = true;
-                    });
-                    final episodes = await _loadLocalFolder();
-                    playlist = Playlist(
-                      _playlistName,
-                      isLocal: true,
-                      episodeList: [for (var e in episodes) e.enclosureUrl],
-                    );
-                    await playlist.getPlaylist();
-                    if (mounted) {
+              if (!_loadFolder) {
+                if (_playlistName == '') {
+                  setState(() => _error = 0);
+                } else if (context
+                    .read<AudioPlayerNotifier>()
+                    .playlistExists(_playlistName)) {
+                  setState(() => _error = 1);
+                } else {
+                  Playlist playlist;
+                  switch (_option) {
+                    case NewPlaylistOption.blank:
+                      playlist = Playlist(
+                        _playlistName,
+                      );
+                      break;
+                    case NewPlaylistOption.latest10:
+                      final recent = await _recent();
+                      playlist = Playlist(
+                        _playlistName,
+                        episodeList: [for (var e in recent) e.enclosureUrl],
+                      );
+                      await playlist.getPlaylist();
+                      break;
+                    case NewPlaylistOption.randon10:
+                      final random = await _random();
+                      playlist = Playlist(
+                        _playlistName,
+                        episodeList: [for (var e in random) e.enclosureUrl],
+                      );
+                      await playlist.getPlaylist();
+                      break;
+                    case NewPlaylistOption.folder:
+                      _focusNode!.unfocus();
                       setState(() {
-                        _loadFolder = false;
+                        _loadFolder = true;
                       });
-                    }
-                    break;
+                      final episodes = await _loadLocalFolder();
+                      playlist = Playlist(
+                        _playlistName,
+                        isLocal: true,
+                        episodeList: [for (var e in episodes) e.enclosureUrl],
+                      );
+                      await playlist.getPlaylist();
+                      if (mounted) {
+                        setState(() {
+                          _loadFolder = false;
+                        });
+                      }
+                      break;
+                  }
+                  context.read<AudioPlayerNotifier>().addPlaylist(playlist);
+                  Navigator.of(context).pop();
                 }
-                context.read<AudioPlayerNotifier>().addPlaylist(playlist);
-                Navigator.of(context).pop();
               }
             },
-            child:
-                Text(s.confirm, style: TextStyle(color: context.accentColor)),
+            child: Text(s.confirm,
+                style: TextStyle(
+                    color:
+                        _loadFolder ? Colors.grey[600] : context.accentColor)),
           )
         ],
         title: SizedBox(

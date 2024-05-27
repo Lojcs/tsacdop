@@ -163,6 +163,7 @@ class DownloadState extends ChangeNotifier {
         List<EpisodeBrief> episodes = await _dbHelper.getEpisodes(episodeUrls: [
           task.url
         ], optionalFields: [
+          EpisodeField.isDownloaded,
           EpisodeField.mediaId,
           EpisodeField.isNew,
           EpisodeField.skipSecondsStart,
@@ -320,7 +321,9 @@ class DownloadState extends ChangeNotifier {
         showNotification: showNotification,
         openFileFromNotification: false,
       );
-      _episodeTasks.add(EpisodeTask(episode, taskId));
+      _episodeTasks.add(EpisodeTask(
+          await episode.copyWithFromDB(newFields: [EpisodeField.isDownloaded]),
+          taskId));
       notifyListeners();
     }
   }

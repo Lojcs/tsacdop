@@ -540,7 +540,7 @@ class DBHelper {
     var dbClient = await database;
     await dbClient.transaction((txn) async {
       await txn.rawInsert(
-          """INSERT OR IGNORE INTO PodcastLocal (id, title, imageUrl, rssUrl, 
+          """INSERT OR REPLACE INTO PodcastLocal (id, title, imageUrl, rssUrl, 
           primaryColor, author, description, add_date, imagePath, provider, link, funding) 
           VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
           [

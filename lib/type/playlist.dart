@@ -43,26 +43,21 @@ class Playlist extends Equatable {
   /// Episode url list for playlist.
   final List<String> episodeList;
 
-  /// Eposides in playlist. TODO: Make non nullable
-  final List<EpisodeBrief> _episodes;
-
-  List<EpisodeBrief> get episodes {
-    if (_episodes.isEmpty && episodeList.isNotEmpty) getPlaylist();
-    return _episodes;
-  }
+  /// Eposides in playlist.
+  final List<EpisodeBrief> episodes;
 
   List<MediaItem> get mediaItems =>
-      [for (var episode in _episodes) episode.mediaItem];
+      [for (var episode in episodes) episode.mediaItem];
 
-  bool get isEmpty => episodeList.isEmpty && _episodes.isEmpty;
+  bool get isEmpty => episodeList.isEmpty;
 
-  bool get isNotEmpty => episodeList.isNotEmpty && _episodes.isNotEmpty;
+  bool get isNotEmpty => episodeList.isNotEmpty;
 
   int get length => episodeList.length;
 
   bool get isQueue => name == 'Queue';
 
-  bool contains(EpisodeBrief episode) => _episodes.contains(episode);
+  bool contains(EpisodeBrief episode) => episodes.contains(episode);
 
   Playlist(this.name,
       {String? id,
@@ -72,7 +67,7 @@ class Playlist extends Equatable {
       : id = id ?? Uuid().v4(),
         assert(name != ''),
         episodeList = episodeList ?? [],
-        _episodes = episodes ?? [];
+        episodes = episodes ?? [];
 
   PlaylistEntity toEntity() {
     return PlaylistEntity(name, id, isLocal, episodeList.toSet().toList());
@@ -94,10 +89,10 @@ class Playlist extends Equatable {
   Future<void> getPlaylist() async {
     // // Don't reload if already loaded
     // if (!reload && episodes.length == episodeList.length) return;
-    _episodes.clear();
+    episodes.clear();
     if (episodeList.isNotEmpty) {
       // Single database call should be faster
-      _episodes.addAll(await _dbHelper
+      episodes.addAll(await _dbHelper
           .getEpisodes(episodeUrls: episodeList, optionalFields: [
         EpisodeField.enclosureDuration,
         EpisodeField.enclosureSize,
@@ -113,9 +108,9 @@ class Playlist extends Equatable {
       ]));
     }
     // Remove episode urls from episodeList if they are not in the database
-    if (_episodes.length < episodeList.length) {
+    if (episodes.length < episodeList.length) {
       List<bool> episodesFound = List<bool>.filled(episodeList.length, false);
-      for (EpisodeBrief? episode in _episodes) {
+      for (EpisodeBrief? episode in episodes) {
         int index = episodeList.indexOf(episode!.enclosureUrl);
         episodesFound[index] = true;
       }
@@ -126,18 +121,18 @@ class Playlist extends Equatable {
       }
     }
     // Sort episodes in episodeList order
-    if (_episodes.length == episodeList.length) {
-      List<bool> sorted = List<bool>.filled(_episodes.length, false);
-      for (int i = 0; i < _episodes.length; i++) {
+    if (episodes.length == episodeList.length) {
+      List<bool> sorted = List<bool>.filled(episodes.length, false);
+      for (int i = 0; i < episodes.length; i++) {
         if (!sorted[i]) {
-          int index = episodeList.indexOf(_episodes[i]!.enclosureUrl);
+          int index = episodeList.indexOf(episodes[i]!.enclosureUrl);
           EpisodeBrief? temp;
           while (index != i) {
-            temp = _episodes[index];
-            _episodes[index] = _episodes[i];
-            _episodes[i] = temp;
+            temp = episodes[index];
+            episodes[index] = episodes[i];
+            episodes[i] = temp;
             sorted[index] = true;
-            index = episodeList.indexOf(_episodes[i]!.enclosureUrl);
+            index = episodeList.indexOf(episodes[i]!.enclosureUrl);
           }
           sorted[index] = true;
         }
@@ -157,10 +152,10 @@ class Playlist extends Equatable {
       {EpisodeCollision ifExists = EpisodeCollision.Ignore}) {
     switch (ifExists) {
       case EpisodeCollision.KeepExisting:
-        newEpisodes.removeWhere((episode) => _episodes.contains(episode));
+        newEpisodes.removeWhere((episode) => episodes.contains(episode));
         break;
       case EpisodeCollision.Replace:
-        _episodes.removeWhere((episode) => newEpisodes.contains(episode));
+        episodes.removeWhere((episode) => newEpisodes.contains(episode));
         episodeList.removeWhere(
             (url) => newEpisodes.any((episode) => episode.enclosureUrl == url));
         break;
@@ -168,11 +163,11 @@ class Playlist extends Equatable {
         break;
     }
     if (index == episodeList.length) {
-      _episodes.addAll(newEpisodes);
+      episodes.addAll(newEpisodes);
       episodeList
           .addAll([for (var episode in newEpisodes) episode.enclosureUrl]);
     } else {
-      _episodes.insertAll(index, newEpisodes);
+      episodes.insertAll(index, newEpisodes);
       episodeList.insertAll(
           index, [for (var episode in newEpisodes) episode.enclosureUrl]);
     }
@@ -182,7 +177,7 @@ class Playlist extends Equatable {
     List<String> delUrls = [
       for (var episode in delEpisodes) episode.enclosureUrl
     ];
-    _episodes.removeWhere((episode) => delEpisodes.contains(episode));
+    episodes.removeWhere((episode) => delEpisodes.contains(episode));
     episodeList.removeWhere((url) => delUrls.contains(url));
     if (isLocal! && delLocal) {
       _dbHelper.deleteLocalEpisodes(delUrls);
@@ -194,7 +189,7 @@ class Playlist extends Equatable {
     List<String> delEpisodes = episodeList.getRange(index, end).toList();
     _dbHelper.deleteLocalEpisodes(delEpisodes);
     episodeList.removeRange(index, end);
-    _episodes.removeRange(index, end);
+    episodes.removeRange(index, end);
   }
 
   List<int> updateEpisode(EpisodeBrief episode) {
@@ -202,15 +197,15 @@ class Playlist extends Equatable {
     for (int i = 0; i < episodes.length; i++) {
       if (episodes[i] == episode) {
         indexes.add(i);
-        _episodes[i] = episode;
+        episodes[i] = episode;
       }
     }
     return indexes;
   }
 
   int delFromPlaylist(EpisodeBrief episodeBrief) {
-    var index = _episodes.indexOf(episodeBrief);
-    _episodes.removeWhere(
+    var index = episodes.indexOf(episodeBrief);
+    episodes.removeWhere(
         (episode) => episode!.enclosureUrl == episodeBrief!.enclosureUrl);
     episodeList.removeWhere((url) => url == episodeBrief!.enclosureUrl);
     if (isLocal!) {
@@ -220,15 +215,15 @@ class Playlist extends Equatable {
   }
 
   void reorderPlaylist(int oldIndex, int newIndex) {
-    final episode = _episodes.removeAt(oldIndex);
-    _episodes.insert(newIndex, episode);
+    final episode = episodes.removeAt(oldIndex);
+    episodes.insert(newIndex, episode);
     episodeList.removeAt(oldIndex);
     episodeList.insert(newIndex, episode.enclosureUrl);
   }
 
   void clear() {
     episodeList.clear();
-    _episodes.clear();
+    episodes.clear();
   }
 
   @override

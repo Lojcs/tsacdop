@@ -95,29 +95,43 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
       body: Selector<AudioPlayerNotifier, List<Playlist>>(
         selector: (_, audio) => audio.playlists,
         builder: (_, data, __) {
-          final playlist = data.firstWhereOrNull(
+          final playlist = data.firstWhere(
             (e) => e == widget.playlist,
           );
-          final episodes = playlist?.episodes ?? [];
-          return ReorderableListView(
-              onReorder: (oldIndex, newIndex) {
-                if (newIndex > oldIndex) newIndex -= 1;
-                context.read<AudioPlayerNotifier>().reorderPlaylist(
-                    oldIndex, newIndex,
-                    playlist: widget.playlist);
-                setState(() {});
-              },
-              scrollDirection: Axis.vertical,
-              children: episodes.mapIndexed<Widget>((index, episode) {
-                return _PlaylistItem(episode,
-                    key: ValueKey(episode!.enclosureUrl), onSelect: (episode) {
-                  _selectedEpisodes.add(index);
+
+          return FutureBuilder(
+            future: Future.sync(() async {
+              if (playlist.episodes.isEmpty) {
+                await playlist.getPlaylist();
+              }
+            }),
+            builder: (context, _) {
+              final episodes = playlist.episodes;
+              return ReorderableListView(
+                onReorder: (oldIndex, newIndex) {
+                  if (newIndex > oldIndex) newIndex -= 1;
+                  context.read<AudioPlayerNotifier>().reorderPlaylist(
+                      oldIndex, newIndex,
+                      playlist: widget.playlist);
                   setState(() {});
-                }, onRemove: (episode) {
-                  _selectedEpisodes.remove(index);
-                  setState(() {});
-                }, reset: _resetSelected);
-              }).toList());
+                },
+                scrollDirection: Axis.vertical,
+                children: episodes.mapIndexed<Widget>(
+                  (index, episode) {
+                    return _PlaylistItem(episode,
+                        key: ValueKey(episode.enclosureUrl),
+                        onSelect: (episode) {
+                      _selectedEpisodes.add(index);
+                      setState(() {});
+                    }, onRemove: (episode) {
+                      _selectedEpisodes.remove(index);
+                      setState(() {});
+                    }, reset: _resetSelected);
+                  },
+                ).toList(),
+              );
+            },
+          );
         },
       ),
     );

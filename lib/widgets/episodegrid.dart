@@ -164,8 +164,8 @@ class OpenContainerWrapper extends StatelessWidget {
         playerRunning: data.item1,
         playerHeight: kMinPlayerHeight[data.item2!.index],
         flightWidget: CircleAvatar(
-            backgroundImage: preferEpisodeImage && episode.episodeImage != ''
-                ? episode.episodeImageProvider
+            backgroundImage: preferEpisodeImage
+                ? episode.episodeOrPodcastImageProvider
                 : episode.podcastImageProvider),
         flightWidgetBeginSize: avatarSize,
         flightWidgetEndSize: 30,

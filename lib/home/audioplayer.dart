@@ -110,16 +110,16 @@ class _MiniPanel extends StatelessWidget {
       height: 60,
       child:
           Column(mainAxisAlignment: MainAxisAlignment.start, children: <Widget>[
-        Selector<AudioPlayerNotifier, Tuple2<EpisodeBrief?, double>>(
-          selector: (_, audio) => Tuple2(audio.episode, audio.seekSliderValue),
+        Selector<AudioPlayerNotifier, double>(
+          selector: (_, audio) => audio.seekSliderValue,
           builder: (_, data, __) {
-            final c = data.item1!.backgroudColor(context);
             return SizedBox(
               height: 2,
               child: LinearProgressIndicator(
-                value: data.item2,
+                value: data,
                 backgroundColor: bgColor,
-                valueColor: AlwaysStoppedAnimation<Color>(c),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                    context.colorScheme.onSecondaryContainer),
               ),
             );
           },
