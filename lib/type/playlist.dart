@@ -197,25 +197,6 @@ class Playlist extends Equatable {
     _episodes.removeRange(index, end);
   }
 
-  // TODO: Move to [addEpisdoes]
-  void addToPlayList(EpisodeBrief episodeBrief) {
-    if (!_episodes.contains(episodeBrief)) {
-      _episodes.add(episodeBrief);
-      episodeList.add(episodeBrief.enclosureUrl);
-    }
-  }
-
-  // TODO: Move to [addEpisdoes]
-  void addToPlayListAt(EpisodeBrief episodeBrief, int index,
-      {bool removeExisting = true}) {
-    if (removeExisting) {
-      _episodes.removeWhere((episode) => episode == episodeBrief);
-      episodeList.removeWhere((url) => url == episodeBrief.enclosureUrl);
-    }
-    _episodes.insert(index, episodeBrief);
-    episodeList.insert(index, episodeBrief.enclosureUrl);
-  }
-
   List<int> updateEpisode(EpisodeBrief episode) {
     List<int> indexes = [];
     for (int i = 0; i < episodes.length; i++) {

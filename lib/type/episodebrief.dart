@@ -23,7 +23,7 @@ class EpisodeBrief extends Equatable {
   final int? downloadDate;
   final String? mediaId;
   final String? episodeImage;
-  final String? podcastImage; // Unused?
+  final String? podcastImage;
   final String? primaryColor;
   final bool? isExplicit;
   final bool? isLiked;
@@ -56,7 +56,7 @@ class EpisodeBrief extends Equatable {
       this.skipSecondsEnd = 0,
       this.chapterLink});
 
-  late MediaItem mediaItem = MediaItem(
+  late final MediaItem mediaItem = MediaItem(
       id: mediaId!,
       title: title,
       artist: podcastTitle,
@@ -90,14 +90,19 @@ class EpisodeBrief extends Equatable {
           ? FileImage(File(episodeImage!))
           : (episodeImage != '')
               ? CachedNetworkImageProvider(episodeImage!)
-              : AssetImage('assets/avatar_backup.png')
-      : AssetImage('assets/avatar_backup.png')) as ImageProvider;
+              : const AssetImage('assets/avatar_backup.png')
+      : const AssetImage('assets/avatar_backup.png')) as ImageProvider;
 
   late final ImageProvider podcastImageProvider = ((podcastImage != null)
       ? (File(podcastImage!).existsSync())
           ? FileImage(File(podcastImage!))
-          : AssetImage('assets/avatar_backup.png')
-      : AssetImage('assets/avatar_backup.png')) as ImageProvider;
+          : const AssetImage('assets/avatar_backup.png')
+      : const AssetImage('assets/avatar_backup.png')) as ImageProvider;
+
+  late final ImageProvider episodeOrPodcastImageProvider =
+      episodeImageProvider != const AssetImage('assets/avatar_backup.png')
+          ? episodeImageProvider
+          : podcastImageProvider;
 
   Color backgroudColor(BuildContext context) {
     return getColorScheme(context).onSecondaryContainer;

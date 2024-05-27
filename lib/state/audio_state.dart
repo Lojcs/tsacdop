@@ -172,6 +172,10 @@ class AudioPlayerNotifier extends ChangeNotifier {
   EpisodeBrief? get _episode =>
       _playlist.isNotEmpty ? _playlist.episodes[_episodeIndex] : null;
 
+  EpisodeBrief? get _startEpisode => _startPlaylist.isNotEmpty
+      ? _startPlaylist.episodes[_startEpisodeIndex]
+      : null;
+
   /// Index of currently playing episode
   late int _episodeIndex;
 
@@ -459,11 +463,9 @@ class AudioPlayerNotifier extends ChangeNotifier {
     if (_startPlaylist.isNotEmpty) {
       _startAudioPosition = lastState.item3;
       if (_startAudioPosition == 0) {
-        PlayHistory position = await _dbHelper
-            .getPosition(_startPlaylist.episodes[_startEpisodeIndex]);
+        PlayHistory position = await _dbHelper.getPosition(_startEpisode!);
         if (position.seconds! > 0) {
-          if (position.seconds! * 1000 <
-              _startPlaylist.episodes[_startEpisodeIndex].enclosureDuration!) {
+          if (position.seconds! * 1000 < _startEpisode!.enclosureDuration!) {
             _startAudioPosition = position.seconds! * 1000;
           } else {
             _startAudioPosition = 0;
@@ -496,7 +498,8 @@ class AudioPlayerNotifier extends ChangeNotifier {
   Future<void> playFromStart({bool samePlaylist = false}) async {
     if (_startEpisodeIndex != -1 &&
         _startEpisodeIndex < _startPlaylist.length &&
-        (!_startPlaylist.isQueue || _startEpisodeIndex == 0)) {
+        (!_startPlaylist.isQueue || _startEpisodeIndex == 0) &&
+        _startPlaylist.isNotEmpty) {
       if (_startPlaylist.episodes.isEmpty) {
         await _startPlaylist.getPlaylist();
       }
@@ -508,17 +511,19 @@ class AudioPlayerNotifier extends ChangeNotifier {
         } else {
           if (_autoPlay) {
             await _audioHandler.replaceQueue(_startPlaylist.mediaItems);
+            _playlist = _startPlaylist;
             await _audioHandler.combinedSeek(
                 Duration(milliseconds: _startAudioPosition),
                 index: _startEpisodeIndex);
           } else {
             await _audioHandler.replaceQueue([_episode!.mediaItem]);
+            _playlist = _startPlaylist;
             await _audioHandler
                 .seek(Duration(milliseconds: _startAudioPosition));
           }
         }
         _audioPosition = _startAudioPosition;
-        _audioDuration = _episode!.enclosureDuration!;
+        _audioDuration = _startEpisode!.enclosureDuration!;
       } else {
         await _startAudioService(_startPlaylist,
             index: _startEpisodeIndex, position: _startAudioPosition);

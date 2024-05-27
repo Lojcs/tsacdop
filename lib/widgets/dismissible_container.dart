@@ -45,7 +45,6 @@ class _DismissibleContainerState extends State<DismissibleContainer> {
             )
           : Column(
               children: [
-                Text(widget.index.toString()),
                 Dismissible(
                   key: ValueKey('${widget.episode.enclosureUrl}dis'),
                   background: Container(

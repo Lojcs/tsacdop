@@ -478,50 +478,53 @@ class _PlaylistWidgetState extends State<PlaylistWidget> {
                     itemBuilder: (context, index) {
                       final isPlaying = episodes[index] != null &&
                           episodes[index] == data.item2;
-                      return InkWell(
-                        onTap: () async {
-                          if (!isPlaying) {
-                            audio.loadEpisodeFromCurrentPlaylist(index);
-                          }
-                        },
-                        child: Container(
-                          color: isPlaying
-                              ? context.accentColor
-                              : Colors.transparent,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              Padding(
-                                padding: EdgeInsets.all(10.0),
-                                child: CircleAvatar(
-                                    radius: 15,
-                                    backgroundImage:
-                                        episodes[index].avatarImage),
-                              ),
-                              Expanded(
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    episodes[index].title,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                      return Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () async {
+                            if (!isPlaying) {
+                              audio.loadEpisodeFromCurrentPlaylist(index);
+                            }
+                          },
+                          child: Container(
+                            color: isPlaying
+                                ? context.accentColor
+                                : Colors.transparent,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                Padding(
+                                  padding: EdgeInsets.all(10.0),
+                                  child: CircleAvatar(
+                                      radius: 15,
+                                      backgroundImage:
+                                          episodes[index].avatarImage),
+                                ),
+                                Expanded(
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      episodes[index].title,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              if (isPlaying)
-                                Container(
-                                    height: 20,
-                                    width: 20,
-                                    margin:
-                                        EdgeInsets.symmetric(horizontal: 10),
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: WaveLoader(
-                                        color: context.primaryColor)),
-                            ],
+                                if (isPlaying)
+                                  Container(
+                                      height: 20,
+                                      width: 20,
+                                      margin:
+                                          EdgeInsets.symmetric(horizontal: 10),
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: WaveLoader(
+                                          color: context.primaryColor)),
+                              ],
+                            ),
                           ),
                         ),
                       );

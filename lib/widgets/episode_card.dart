@@ -988,8 +988,8 @@ Widget _circleImage(
           CircleAvatar(
               radius: radius,
               backgroundColor: color.withOpacity(0.5),
-              backgroundImage: preferEpisodeImage && episode.episodeImage != ''
-                  ? episode.episodeImageProvider
+              backgroundImage: preferEpisodeImage
+                  ? episode.episodeOrPodcastImageProvider
                   : episode.podcastImageProvider),
           if (openPodcast)
             Material(

@@ -263,12 +263,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                                 alignment: Alignment.topCenter,
                                                 fit: BoxFit.fitWidth,
                                                 image: _episodeItem
-                                                            .episodeImage !=
-                                                        ''
-                                                    ? _episodeItem
-                                                        .episodeImageProvider
-                                                    : _episodeItem
-                                                        .podcastImageProvider),
+                                                    .episodeOrPodcastImageProvider),
                                           ),
                                         ),
                                         title: Stack(

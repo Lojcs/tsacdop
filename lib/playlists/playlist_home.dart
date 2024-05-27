@@ -227,7 +227,8 @@ class _PlaylistHomeState extends State<PlaylistHome> {
                                           width: 80,
                                           height: 80,
                                           child: Image(
-                                              image: data.item4!.avatarImage)),
+                                              image: data.item4!
+                                                  .episodeOrPodcastImageProvider)),
                                       Selector<AudioPlayerNotifier, int>(
                                         selector: (_, audio) {
                                           if (!audio.playerRunning &&
@@ -666,6 +667,7 @@ class __PlaylistsState extends State<_Playlists> {
       EpisodeField.skipSecondsStart,
       EpisodeField.skipSecondsEnd,
       EpisodeField.episodeImage,
+      EpisodeField.podcastImage,
       EpisodeField.chapterLink
     ]);
     if (episodes.isEmpty)
@@ -677,16 +679,19 @@ class __PlaylistsState extends State<_Playlists> {
   @override
   Widget build(BuildContext context) {
     final s = context.s;
-    return Selector<AudioPlayerNotifier, List<Playlist>>(
-        selector: (_, audio) => audio.playlists,
+    return Selector<AudioPlayerNotifier, Tuple2<List<Playlist>, int>>(
+        selector: (_, audio) => Tuple2(
+            audio.playlists,
+            audio.playlists
+                .length), // Getting the length seperately so the selector notices data changed
         builder: (_, data, __) {
           return ScrollConfiguration(
             behavior: NoGrowBehavior(),
             child: ListView.builder(
-                itemCount: data.length + 1,
+                itemCount: data.item2 + 1,
                 itemBuilder: (context, index) {
                   if (index == 0) {
-                    final queue = data.first;
+                    final queue = data.item1.first;
                     return InkWell(
                       onTap: () {
                         Navigator.push(
@@ -694,7 +699,7 @@ class __PlaylistsState extends State<_Playlists> {
                           MaterialPageRoute(
                               fullscreenDialog: true,
                               builder: (context) =>
-                                  PlaylistDetail(data[index])),
+                                  PlaylistDetail(data.item1[index])),
                         ).then((value) => setState(() {}));
                       },
                       child: Padding(
@@ -717,8 +722,8 @@ class __PlaylistsState extends State<_Playlists> {
                                   itemBuilder: (_, index) {
                                     if (index < queue.episodeList.length) {
                                       return Image(
-                                        image:
-                                            queue.episodes[index]!.avatarImage,
+                                        image: queue.episodes[index]
+                                            .episodeOrPodcastImageProvider,
                                       );
                                     }
                                     return Center();
@@ -767,8 +772,8 @@ class __PlaylistsState extends State<_Playlists> {
                       ),
                     );
                   }
-                  if (index < data.length) {
-                    final episodeList = data[index].episodeList;
+                  if (index < data.item2) {
+                    final episodeList = data.item1[index].episodeList;
                     return ListTile(
                       onTap: () async {
                         Navigator.push(
@@ -776,7 +781,7 @@ class __PlaylistsState extends State<_Playlists> {
                           MaterialPageRoute(
                               fullscreenDialog: true,
                               builder: (context) =>
-                                  PlaylistDetail(data[index])),
+                                  PlaylistDetail(data.item1[index])),
                         );
                       },
                       leading: Container(
@@ -793,14 +798,15 @@ class __PlaylistsState extends State<_Playlists> {
                                         height: 50,
                                         width: 50,
                                         child: Image(
-                                            image: snapshot.data!.avatarImage));
+                                            image: snapshot.data!
+                                                .episodeOrPodcastImageProvider));
                                   }
                                   return Center();
                                 }),
                       ),
-                      title: Text(data[index].name!),
+                      title: Text(data.item1[index].name!),
                       subtitle: Text(
-                          '${data[index].length} ${s.episode(data[index].length).toLowerCase()}'),
+                          '${data.item1[index].length} ${s.episode(data.item1[index].length).toLowerCase()}'),
                       trailing: TextButton(
                         style: TextButton.styleFrom(
                             primary: context.accentColor,
@@ -823,7 +829,7 @@ class __PlaylistsState extends State<_Playlists> {
                         onPressed: () {
                           context
                               .read<AudioPlayerNotifier>()
-                              .playlistLoad(data[index]);
+                              .playlistLoad(data.item1[index]);
                         },
                       ),
                     );
@@ -867,7 +873,7 @@ class _NewPlaylist extends StatefulWidget {
 class __NewPlaylistState extends State<_NewPlaylist> {
   final _dbHelper = DBHelper();
   String _playlistName = '';
-  NewPlaylistOption? _option;
+  late NewPlaylistOption _option;
   late bool _loadFolder;
   FocusNode? _focusNode;
   int? _error;
@@ -1010,6 +1016,7 @@ class __NewPlaylistState extends State<_NewPlaylist> {
       child: AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         elevation: 1,
+        backgroundColor: context.accentBackgroundWeak,
         contentPadding: EdgeInsets.symmetric(horizontal: 20),
         titlePadding: EdgeInsets.all(20),
         actionsPadding: EdgeInsets.zero,
@@ -1032,7 +1039,7 @@ class __NewPlaylistState extends State<_NewPlaylist> {
                   .playlistExists(_playlistName)) {
                 setState(() => _error = 1);
               } else {
-                var playlist;
+                Playlist playlist;
                 switch (_option) {
                   case NewPlaylistOption.blank:
                     playlist = Playlist(
@@ -1061,26 +1068,20 @@ class __NewPlaylistState extends State<_NewPlaylist> {
                       _loadFolder = true;
                     });
                     final episodes = await _loadLocalFolder();
-                    if (episodes.isNotEmpty) {
-                      playlist = Playlist(
-                        _playlistName,
-                        isLocal: true,
-                        episodeList: [for (var e in episodes) e.enclosureUrl],
-                      );
-                      await playlist.getPlaylist();
-                    }
+                    playlist = Playlist(
+                      _playlistName,
+                      isLocal: true,
+                      episodeList: [for (var e in episodes) e.enclosureUrl],
+                    );
+                    await playlist.getPlaylist();
                     if (mounted) {
                       setState(() {
                         _loadFolder = false;
                       });
                     }
                     break;
-                  default:
-                    break;
                 }
-                if (playlist != null) {
-                  context.read<AudioPlayerNotifier>().addPlaylist(playlist);
-                }
+                context.read<AudioPlayerNotifier>().addPlaylist(playlist);
                 Navigator.of(context).pop();
               }
             },
