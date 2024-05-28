@@ -213,7 +213,15 @@ class AudioPlayerNotifier extends ChangeNotifier {
   int _audioPosition = 0;
 
   /// Position to start playback from (ms).
-  int _startAudioPosition = 0;
+  int _startAudioPositionv = 0;
+
+  int get _startAudioPosition => 0;
+  set _startAudioPosition(int p) {}
+  // This is here because sometimes the reported duration of an episode is
+  // significantly longer than its actual stream duration so the < 0.95 check while
+  // loading the _startAudioPosition doesn't work
+  // and that causes the episode to end immediately.
+  // TODO: A better solution, like saving the actual duration of non downloaded episodes to the database on first play
 
   /// Current episode buffered position (ms).
   int _audioBufferedPosition = 0;
@@ -275,6 +283,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
   AudioServiceConfig get _config => AudioServiceConfig(
         androidNotificationChannelName: 'Tsacdop',
         androidNotificationIcon: 'drawable/ic_notification',
+        androidNotificationOngoing: true,
         // androidEnableQueue: true,
         androidStopForegroundOnPause: true,
         preloadArtwork: false,
@@ -319,8 +328,8 @@ class AudioPlayerNotifier extends ChangeNotifier {
   int? get episodeIndex => _episodeIndex;
   int? get startEpisodeIndex => _startEpisodeIndex;
   EpisodeBrief? get episode => _episode;
-  Playlist? get playlist => _playlist;
-  Playlist? get startPlaylist => _startPlaylist;
+  Playlist get playlist => _playlist;
+  Playlist get startPlaylist => _startPlaylist;
   List<Playlist> get playlists => _playlists;
   Playlist get queue => _queue;
   AudioProcessingState get audioState => _audioState;
@@ -418,7 +427,6 @@ class AudioPlayerNotifier extends ChangeNotifier {
 
   /// Saves current history and position
   Future<void> saveHistory({bool savePosition = false}) async {
-    print("History Saved");
     if (!_playingTemp && _playerRunning) {
       if (savePosition) {
         await saveCurrentPosition();
@@ -466,7 +474,8 @@ class AudioPlayerNotifier extends ChangeNotifier {
       if (_startAudioPosition == 0) {
         PlayHistory position = await _dbHelper.getPosition(_startEpisode!);
         if (position.seconds! > 0) {
-          if (position.seconds! * 1000 < _startEpisode!.enclosureDuration!) {
+          if (position.seconds! * 1000 / _startEpisode!.enclosureDuration! <
+              0.80) {
             _startAudioPosition = position.seconds! * 1000;
           } else {
             _startAudioPosition = 0;
@@ -482,7 +491,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     if (episodeBrief == null) episodeBrief = _startEpisode;
     PlayHistory position = await _dbHelper.getPosition(episodeBrief!);
     if (position.seconds! > 0) {
-      if (position.seconds! < episodeBrief.enclosureDuration!) {
+      if (position.seconds! / episodeBrief.enclosureDuration! < 0.5) {
         _startAudioPosition = position.seconds! * 1000;
       } else {
         _startAudioPosition = 0;
@@ -531,8 +540,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
           }
         }
       } else {
-        await _startAudioService(_startPlaylist,
-            index: _startEpisodeIndex, position: _startAudioPosition);
+        await _startAudioService();
       }
     } else {
       log('Invalid position to play');
@@ -609,6 +617,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
       }
       await playFromStart(samePlaylist: false);
     }
+    await _audioHandler.combinedSeek(Duration(milliseconds: startPosition));
 
     notifyListeners();
     await _episodeState.unsetNew(episode);
@@ -627,8 +636,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
   }
 
   /// Starts the audio service and player
-  Future<void> _startAudioService(Playlist playlist,
-      {int index = 0, int position = 0}) async {
+  Future<void> _startAudioService() async {
     assert(!_playerRunning);
     // Set initial variables
     _stopOnComplete = false;
@@ -658,11 +666,14 @@ class AudioPlayerNotifier extends ChangeNotifier {
     }
 
     //Check autoplay setting, if true only add one episode, else add playlist.
+    _playlist = _startPlaylist;
+    _episodeIndex = _startEpisodeIndex;
+    _audioPosition = _startAudioPosition;
     if (_autoPlay) {
-      await _audioHandler.replaceQueue(_playlist.mediaItems);
+      await _audioHandler.replaceQueue(_startPlaylist.mediaItems);
       // await _audioHandler.skipToQueueItem(_episodeIndex!);
     } else {
-      await _audioHandler.replaceQueue([_episode!.mediaItem]);
+      await _audioHandler.replaceQueue([_startEpisode!.mediaItem]);
     }
     await _audioHandler.combinedSeek(
         Duration(milliseconds: _startAudioPosition),
@@ -801,7 +812,13 @@ class AudioPlayerNotifier extends ChangeNotifier {
   Future<void> addToPlaylistPlus(List<EpisodeBrief> episodes,
       {Playlist? playlist, int index = -1}) async {
     Future seekFuture = Future(() {});
-    if (episodes.length == 0) return;
+    if (episodes.length == 0) return seekFuture;
+    if (playlist == null) playlist = _queue;
+    if (index < 0)
+      index += playlist.length + 1;
+    else if (index > playlist.length) index = playlist.length;
+    if (playlist.isNotEmpty && playlist.episodes.isEmpty)
+      playlist.getPlaylist();
     for (int i = 0; i < episodes.length; i++) {
       // TODO: Add batch copyWithFromDB option for speed
       episodes[i] = await episodes[i].copyWithFromDB(newFields: [
@@ -818,10 +835,6 @@ class AudioPlayerNotifier extends ChangeNotifier {
       ], keepExisting: true);
       await _episodeState.unsetNew(episodes[i]);
     }
-    if (playlist == null) playlist = _queue;
-    if (index < 0)
-      index += playlist.length + 1;
-    else if (index > playlist.length) index = playlist.length;
     EpisodeCollision ifExists =
         playlist.isQueue ? EpisodeCollision.Replace : EpisodeCollision.Ignore;
 
@@ -892,6 +905,8 @@ class AudioPlayerNotifier extends ChangeNotifier {
       {Playlist? playlist}) async {
     if (episodes.length == 0) return [];
     if (playlist == null) playlist = _queue;
+    if (playlist.isEmpty) return [];
+    if (playlist.episodes.isEmpty) await playlist.getPlaylist();
     List<int> indexes = [];
     if (playlist == _playlist && _playerRunning) {
       // Find episode indexes
@@ -934,6 +949,8 @@ class AudioPlayerNotifier extends ChangeNotifier {
       {Playlist? playlist}) async {
     if (indexes.length == 0) return [];
     if (playlist == null) playlist = _queue;
+    if (playlist.isEmpty) return [];
+    if (playlist.episodes.isEmpty) await playlist.getPlaylist();
     if (playlist == _playlist && _playerRunning) {
       indexes.sort();
       // Remove items in batches starting from the end
@@ -967,9 +984,11 @@ class AudioPlayerNotifier extends ChangeNotifier {
       {int number = 1, Playlist? playlist}) async {
     Future seekFuture = Future(() {});
     if (playlist == null) playlist = _queue;
+    if (playlist.isEmpty) return seekFuture;
     if (index < 0) index += playlist.length + 1;
     final int end = index + number;
-    if (end > playlist.length || number < 0) return;
+    if (end > playlist.length || number < 0) return seekFuture;
+    if (playlist.episodes.isEmpty) await playlist.getPlaylist();
 
     _playlistBeingEdited++;
     if (playlist == _playlist && _playerRunning) {
@@ -1016,6 +1035,13 @@ class AudioPlayerNotifier extends ChangeNotifier {
       {Playlist? playlist}) async {
     Future seekFuture = Future(() {});
     if (playlist == null) playlist = _queue;
+    if (playlist.isEmpty) return seekFuture;
+    if (oldIndex < 0) oldIndex += playlist.length;
+    if (newIndex < 0) newIndex += playlist.length;
+    if (oldIndex >= playlist.length || newIndex >= playlist.length)
+      return seekFuture;
+    if (playlist.episodes.isEmpty) await playlist.getPlaylist();
+
     _playlistBeingEdited++;
     if (playlist == _playlist && _playerRunning) {
       if (_autoPlay) {
@@ -1072,7 +1098,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
         }
       }
     }
-    playlist.reorderPlaylist(oldIndex, newIndex);
+    playlist.reorderPlaylist(oldIndex, newIndex); // This propogates correctly
     await _savePlaylists();
     notifyListeners();
     await seekFuture;
@@ -1399,6 +1425,18 @@ class CustomAudioHandler extends BaseAudioHandler
     _player.setAudioSource(_playlist, preload: false);
     // _player.cacheMax = cacheMax;
     // Transmit events received from player
+    playbackState.add(PlaybackState(
+      androidCompactActionIndices: [0, 1, 2],
+      systemActions: {
+        MediaAction.seek,
+        MediaAction.seekForward,
+        MediaAction.seekBackward,
+        MediaAction.fastForward,
+        MediaAction.rewind,
+        MediaAction.skipToNext,
+        MediaAction.skipToPrevious
+      },
+    ));
     _playbackEventSubscription = _player.playbackEventStream.listen(
       (event) async {
         if (_layoutIndex == null) {
@@ -1409,12 +1447,6 @@ class CustomAudioHandler extends BaseAudioHandler
           playbackState.value.copyWith(
             controls: _getControls(
                 _layoutIndex), // If you press the notification play/pause button rapidly it can get stuck in pause even though this is set correctly. Maybe there needs to be a rate limit for that
-            androidCompactActionIndices: [0, 1, 2],
-            systemActions: {
-              MediaAction.seek,
-              MediaAction.seekForward,
-              MediaAction.seekBackward,
-            },
             processingState: {
               ProcessingState.idle: AudioProcessingState.idle,
               ProcessingState.loading: AudioProcessingState.loading,
@@ -1571,7 +1603,6 @@ class CustomAudioHandler extends BaseAudioHandler
   /// Adds [items] to the queue at [index]. Handles live adding.
   Future<void> addQueueItemsAt(List<MediaItem> items, int index,
       {EpisodeCollision ifExists = EpisodeCollision.Ignore}) async {
-    queue.add(queue.value..insertAll(index, items));
     List<AudioSource> sources = [for (var item in items) _itemToSource(item)];
     if (_playerReady) {
       switch (ifExists) {
@@ -1596,6 +1627,7 @@ class CustomAudioHandler extends BaseAudioHandler
         case EpisodeCollision.Ignore:
           break;
       }
+      queue.add(queue.value..insertAll(index, items));
       await _playlist.insertAll(index, sources);
     }
   }

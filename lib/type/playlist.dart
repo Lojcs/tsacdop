@@ -125,14 +125,14 @@ class Playlist extends Equatable {
       List<bool> sorted = List<bool>.filled(episodes.length, false);
       for (int i = 0; i < episodes.length; i++) {
         if (!sorted[i]) {
-          int index = episodeList.indexOf(episodes[i]!.enclosureUrl);
+          int index = episodeList.indexOf(episodes[i].enclosureUrl);
           EpisodeBrief? temp;
           while (index != i) {
             temp = episodes[index];
             episodes[index] = episodes[i];
             episodes[i] = temp;
             sorted[index] = true;
-            index = episodeList.indexOf(episodes[i]!.enclosureUrl);
+            index = episodeList.indexOf(episodes[i].enclosureUrl);
           }
           sorted[index] = true;
         }
@@ -206,10 +206,10 @@ class Playlist extends Equatable {
   int delFromPlaylist(EpisodeBrief episodeBrief) {
     var index = episodes.indexOf(episodeBrief);
     episodes.removeWhere(
-        (episode) => episode!.enclosureUrl == episodeBrief!.enclosureUrl);
-    episodeList.removeWhere((url) => url == episodeBrief!.enclosureUrl);
+        (episode) => episode.enclosureUrl == episodeBrief.enclosureUrl);
+    episodeList.removeWhere((url) => url == episodeBrief.enclosureUrl);
     if (isLocal!) {
-      _dbHelper.deleteLocalEpisodes([episodeBrief!.enclosureUrl]);
+      _dbHelper.deleteLocalEpisodes([episodeBrief.enclosureUrl]);
     }
     return index;
   }

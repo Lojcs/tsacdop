@@ -338,24 +338,28 @@ class _Queue extends StatefulWidget {
 class __QueueState extends State<_Queue> {
   @override
   Widget build(BuildContext context) {
-    return Selector<AudioPlayerNotifier, Tuple3<Playlist?, bool, int?>>(
-      selector: (_, audio) =>
-          Tuple3(audio.playlist, audio.playerRunning, audio.episodeIndex),
+    return Selector<AudioPlayerNotifier, Tuple2<bool, int?>>(
+      selector: (_, audio) => Tuple2(audio.playerRunning, audio.episodeIndex),
       builder: (_, data, __) {
-        Playlist? playlist = data.item1;
-        bool running = data.item2;
-        int? episodeIndex = data.item3;
-        if (playlist == null || episodeIndex == null) {
+        Playlist? playlist = context
+            .read<AudioPlayerNotifier>()
+            .playlist; // No need for selector for this
+        bool running = data.item1;
+        int? episodeIndex = data.item2;
+        if (episodeIndex == null) {
           return Center();
         } else {
-          List<EpisodeBrief> episodes = playlist.episodes;
+          List<EpisodeBrief> episodes = playlist.episodes.toList();
           return ReorderableListView.builder(
             itemCount: playlist.length,
-            onReorder: (oldIndex, newIndex) {
+            onReorder: (oldIndex, newIndex) async {
               if (newIndex > oldIndex) newIndex -= 1;
-              context
+              final episode = episodes.removeAt(oldIndex);
+              episodes.insert(newIndex,
+                  episode); // Without this the animation isn't smooth as the below call takes time to complete (I think)
+              await context
                   .read<AudioPlayerNotifier>()
-                  .reorderPlaylist(oldIndex, newIndex);
+                  .reorderPlaylist(oldIndex, newIndex, playlist: playlist);
               setState(() {});
             },
             scrollDirection: Axis.vertical,
@@ -593,7 +597,7 @@ class __HistoryState extends State<_History> {
                                                     .colorScheme
                                                     .secondaryContainer,
                                                 backgroundImage: episode
-                                                    .podcastImageProvider),
+                                                    .episodeOrPodcastImageProvider),
                                             title: Padding(
                                               padding: EdgeInsets.symmetric(
                                                   vertical: 5.0),
@@ -710,32 +714,40 @@ class __PlaylistsState extends State<_Playlists> {
                               height: 80,
                               width: 80,
                               color: context.primaryColorDark,
-                              child: FutureBuilder(
+                              child: FutureBuilder<Playlist>(
                                 future: Future.sync(() async {
                                   if (queue.episodes.isEmpty) {
                                     await queue.getPlaylist();
                                   }
+                                  return queue;
                                 }),
-                                builder: (context, _) {
-                                  return GridView.builder(
-                                    gridDelegate:
-                                        SliverGridDelegateWithFixedCrossAxisCount(
-                                      childAspectRatio: 1,
-                                      crossAxisCount: 2,
-                                      mainAxisSpacing: 0.0,
-                                      crossAxisSpacing: 0.0,
-                                    ),
-                                    itemCount: math.min(queue.length, 4),
-                                    itemBuilder: (_, index) {
-                                      if (index < queue.episodeList.length) {
-                                        return Image(
-                                          image: queue.episodes[index]
-                                              .episodeOrPodcastImageProvider,
-                                        );
-                                      }
-                                      return Center();
-                                    },
-                                  );
+                                builder: (context, snapshot) {
+                                  if (snapshot.hasData) {
+                                    final queueSnapshot = snapshot.data!;
+                                    return GridView.builder(
+                                      gridDelegate:
+                                          SliverGridDelegateWithFixedCrossAxisCount(
+                                        childAspectRatio: 1,
+                                        crossAxisCount: 2,
+                                        mainAxisSpacing: 0.0,
+                                        crossAxisSpacing: 0.0,
+                                      ),
+                                      itemCount:
+                                          math.min(queueSnapshot.length, 4),
+                                      itemBuilder: (_, index) {
+                                        if (index <
+                                            queueSnapshot.episodeList.length) {
+                                          return Image(
+                                            image: queueSnapshot.episodes[index]
+                                                .episodeOrPodcastImageProvider,
+                                          );
+                                        }
+                                        return Center();
+                                      },
+                                    );
+                                  } else {
+                                    return Center();
+                                  }
                                 },
                               ),
                             ),
@@ -957,8 +969,17 @@ class __NewPlaylistState extends State<_NewPlaylist> {
       developer.log(e.toString(), name: 'Failed to load dir.');
     }
     final localFolder = await _dbHelper.getPodcastLocal([localFolderId]);
-    if (localFolder.isEmpty || false) {
+    if (localFolder.isEmpty || true) {
       String defaultColor = "[28, 204, 196]"; // Color of avatar_backup
+      final dir = await getApplicationDocumentsDirectory();
+      if (!File("${dir.path}/avatar_backup.png").existsSync()) {
+        final byteData = await rootBundle.load('assets/avatar_backup.png');
+
+        final file = File('${dir.path}/assets/avatar_backup.png');
+        file.createSync(recursive: true);
+        file.writeAsBytesSync(byteData.buffer
+            .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+      }
       final localPodcast = PodcastLocal(
         'Local Folder',
         '',
@@ -966,7 +987,7 @@ class __NewPlaylistState extends State<_NewPlaylist> {
         defaultColor,
         'Local Folder',
         localFolderId,
-        "assets/avatar_backup.png",
+        "${dir.path}/assets/avatar_backup.png",
         '',
         '',
         [],
@@ -999,15 +1020,18 @@ class __NewPlaylistState extends State<_NewPlaylist> {
       final image = img.decodeImage(metadata.albumArt!)!;
       final thumbnail = img.copyResize(image, width: 300);
       var uuid = Uuid().v4();
-      File("${dir.path}/$uuid.png").writeAsBytesSync(img.encodePng(thumbnail));
-      imagePath = "${dir.path}/$uuid.png";
+      imagePath =
+          "${dir.path}/fromLocalFolder/$uuid.png"; // TODO: I couldn't get this to show up on the notification :(
+      final file = File(imagePath);
+      file.createSync(recursive: true);
+      file.writeAsBytesSync(img.encodePng(thumbnail));
       primaryColor = await _getColor(File(imagePath));
     }
     final fileName = path.split('/').last;
     return EpisodeBrief(0, fileName, 'file://$path', localFolderId,
         metadata.albumName ?? '', pubDate, // metadata.year ?
         description: context.s.localEpisodeDescription(path),
-        enclosureDuration: metadata.trackDuration,
+        enclosureDuration: metadata.trackDuration! ~/ 1000,
         enclosureSize: fileLength,
         mediaId: 'file://$path',
         podcastImage: '',

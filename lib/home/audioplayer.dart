@@ -197,8 +197,8 @@ class _MiniPanel extends StatelessWidget {
                                           child: CircleAvatar(
                                             backgroundColor: data.item3!
                                                 .backgroudColor(context),
-                                            backgroundImage:
-                                                data.item3!.avatarImage,
+                                            backgroundImage: data.item3!
+                                                .episodeOrPodcastImageProvider,
                                           ),
                                         ),
                                       ),
@@ -233,8 +233,8 @@ class _MiniPanel extends StatelessWidget {
                                               child: CircleAvatar(
                                                 backgroundColor: data.item3!
                                                     .backgroudColor(context),
-                                                backgroundImage:
-                                                    data.item3!.avatarImage,
+                                                backgroundImage: data.item3!
+                                                    .episodeOrPodcastImageProvider,
                                               ),
                                             ),
                                           ),
@@ -499,8 +499,8 @@ class _PlaylistWidgetState extends State<PlaylistWidget> {
                                   padding: EdgeInsets.all(10.0),
                                   child: CircleAvatar(
                                       radius: 15,
-                                      backgroundImage:
-                                          episodes[index].avatarImage),
+                                      backgroundImage: episodes[index]
+                                          .episodeOrPodcastImageProvider),
                                 ),
                                 Expanded(
                                   child: Align(
@@ -1085,11 +1085,13 @@ class _ChaptersWidgetState extends State<ChaptersWidget> {
                                     : CircularProgressIndicator(),
                               ),
                             );
-                          })
+                          },
+                        )
                       : ListView(
                           padding: EdgeInsets.zero,
                           children: <Widget>[
-                            if (episode!.episodeImage != '')
+                            if (episode!.episodeImage != '' &&
+                                episode.enclosureUrl.substring(0, 4) != "file")
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(10.0),
                                 child: CachedNetworkImage(
@@ -1727,7 +1729,7 @@ class _ControlPanelState extends State<ControlPanel>
                                               width: 30.0,
                                               child: CircleAvatar(
                                                 backgroundImage: data.item1!
-                                                    .podcastImageProvider,
+                                                    .episodeOrPodcastImageProvider,
                                               ),
                                             ),
                                             SizedBox(width: 5),

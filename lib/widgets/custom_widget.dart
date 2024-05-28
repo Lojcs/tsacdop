@@ -711,7 +711,8 @@ class _ImageRotateState extends State<ImageRotate>
           height: 30,
           child: CircleAvatar(
               backgroundColor: widget.episodeItem!.backgroudColor(context),
-              backgroundImage: widget.episodeItem!.avatarImage),
+              backgroundImage:
+                  widget.episodeItem!.episodeOrPodcastImageProvider),
         ),
       ),
     );

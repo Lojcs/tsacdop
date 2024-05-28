@@ -31,87 +31,71 @@ class EpisodeState extends ChangeNotifier {
   }
 
   Future<void> setLiked(EpisodeBrief episode) async {
-    if (episode.isLiked != null && !episode.isLiked!) {
-      await _dbHelper.setLiked(episode.enclosureUrl);
-      if (episodeChangeMap.containsKey(episode.id)) {
-        episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
-        notifyListeners();
-      }
+    await _dbHelper.setLiked(episode.enclosureUrl);
+    if (episodeChangeMap.containsKey(episode.id)) {
+      episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
+      notifyListeners();
     }
   }
 
   Future<void> unsetLiked(EpisodeBrief episode) async {
-    if (episode.isLiked != null && episode.isLiked!) {
-      await _dbHelper.setUnliked(episode.enclosureUrl);
-      if (episodeChangeMap.containsKey(episode.id)) {
-        episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
-        notifyListeners();
-      }
+    await _dbHelper.setUnliked(episode.enclosureUrl);
+    if (episodeChangeMap.containsKey(episode.id)) {
+      episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
+      notifyListeners();
     }
   }
 
   Future<void> unsetNew(EpisodeBrief episode) async {
-    if (episode.isNew != null && episode.isNew!) {
-      await _dbHelper.removeEpisodeNewMark(episode.enclosureUrl);
-      if (episodeChangeMap.containsKey(episode.id)) {
-        episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
-        notifyListeners();
-      }
+    await _dbHelper.removeEpisodeNewMark(episode.enclosureUrl);
+    if (episodeChangeMap.containsKey(episode.id)) {
+      episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
+      notifyListeners();
     }
   }
 
   Future<void> setListened(EpisodeBrief episode,
       {double seekValue = 1, int seconds = 0}) async {
-    if (episode.isPlayed != null && !episode.isPlayed!) {
-      final history =
-          PlayHistory(episode.title, episode.enclosureUrl, seconds, seekValue);
-      await _dbHelper.saveHistory(history);
-      if (episodeChangeMap.containsKey(episode.id)) {
-        episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
-        notifyListeners();
-      }
+    final history =
+        PlayHistory(episode.title, episode.enclosureUrl, seconds, seekValue);
+    await _dbHelper.saveHistory(history);
+    if (episodeChangeMap.containsKey(episode.id)) {
+      episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
+      notifyListeners();
     }
   }
 
   Future<void> unsetListened(EpisodeBrief episode) async {
-    if (episode.isPlayed != null && episode.isPlayed!) {
-      await _dbHelper.markNotListened(episode.enclosureUrl);
-      if (episodeChangeMap.containsKey(episode.id)) {
-        episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
-        notifyListeners();
-      }
+    await _dbHelper.markNotListened(episode.enclosureUrl);
+    if (episodeChangeMap.containsKey(episode.id)) {
+      episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
+      notifyListeners();
     }
   }
 
   Future<void> setDownloaded(EpisodeBrief episode, String taskId) async {
-    if (episode.isDownloaded != null && !episode.isDownloaded!) {
-      await _dbHelper.setDownloaded(episode.enclosureUrl, taskId);
-      await _audio.updateEpisodeMediaID(episode);
-      if (episodeChangeMap.containsKey(episode.id)) {
-        episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
-        notifyListeners();
-      }
+    await _dbHelper.setDownloaded(episode.enclosureUrl, taskId);
+    await _audio.updateEpisodeMediaID(episode);
+    if (episodeChangeMap.containsKey(episode.id)) {
+      episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
+      notifyListeners();
     }
   }
 
   Future<void> unsetDownloaded(EpisodeBrief episode) async {
-    if (episode.isDownloaded != null && episode.isDownloaded!) {
-      await _dbHelper.unsetDownloaded(episode.enclosureUrl);
-      await _audio.updateEpisodeMediaID(episode);
-      if (episodeChangeMap.containsKey(episode.id)) {
-        episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
-        notifyListeners();
-      }
+    await _dbHelper.unsetDownloaded(episode.enclosureUrl);
+    await _audio.updateEpisodeMediaID(episode);
+    if (episodeChangeMap.containsKey(episode.id)) {
+      episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
+      notifyListeners();
     }
   }
 
   Future<void> setDisplayVersion(EpisodeBrief episode) async {
-    if (episode.versionInfo == VersionInfo.IS) {
-      await _dbHelper.setDisplayVersion(episode);
-      if (episodeChangeMap.containsKey(episode.id)) {
-        episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
-        notifyListeners();
-      }
+    await _dbHelper.setDisplayVersion(episode);
+    if (episodeChangeMap.containsKey(episode.id)) {
+      episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
+      notifyListeners();
     }
   }
 }

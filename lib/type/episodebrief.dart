@@ -61,9 +61,11 @@ class EpisodeBrief extends Equatable {
       title: title,
       artist: podcastTitle,
       album: podcastTitle,
-      duration: Duration.zero,
+      duration: enclosureDuration != null
+          ? Duration(seconds: enclosureDuration!)
+          : Duration.zero,
       artUri: Uri.parse(
-          podcastImage == '' ? episodeImage! : 'file://$podcastImage'),
+          episodeImage != '' ? episodeImage! : 'file://$podcastImage'),
       extras: {
         'skipSecondsStart': skipSecondsStart,
         'skipSecondsEnd': skipSecondsEnd
@@ -99,7 +101,8 @@ class EpisodeBrief extends Equatable {
           : const AssetImage('assets/avatar_backup.png')
       : const AssetImage('assets/avatar_backup.png')) as ImageProvider;
 
-  late final ImageProvider episodeOrPodcastImageProvider =
+  late final ImageProvider
+      episodeOrPodcastImageProvider = // TODO: Control internet usage
       episodeImageProvider != const AssetImage('assets/avatar_backup.png')
           ? episodeImageProvider
           : podcastImageProvider;
