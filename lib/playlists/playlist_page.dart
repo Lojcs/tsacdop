@@ -19,8 +19,8 @@ class PlaylistDetail extends StatefulWidget {
 }
 
 class _PlaylistDetailState extends State<PlaylistDetail> {
-  final List<EpisodeBrief> _selectedEpisodes = [];
-  bool? _resetSelected;
+  final List<int> _selectedEpisodes = [];
+  late bool _resetSelected;
 
   @override
   void initState() {
@@ -32,7 +32,10 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
   Widget build(BuildContext context) {
     final s = context.s;
     return Scaffold(
+      backgroundColor: context.background,
       appBar: AppBar(
+        backgroundColor: context.background,
+        scrolledUnderElevation: 0,
         leading: IconButton(
           splashRadius: 20,
           icon: Icon(Icons.close),
@@ -41,20 +44,24 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
             Navigator.maybePop(context);
           },
         ),
-        title: Text(_selectedEpisodes.isEmpty
-            ? widget.playlist.isQueue
-                ? s.queue
-                : widget.playlist.name!
-            : s.selected(_selectedEpisodes.length)),
+        title: Text(
+          _selectedEpisodes.isEmpty
+              ? widget.playlist.isQueue
+                  ? s.queue
+                  : widget.playlist.name!
+              : s.selected(_selectedEpisodes.length),
+          style: context.textTheme.headlineSmall,
+        ),
         actions: [
           if (_selectedEpisodes.isNotEmpty)
             IconButton(
                 splashRadius: 20,
                 icon: Icon(Icons.delete_outline_rounded),
                 onPressed: () {
-                  context.read<AudioPlayerNotifier>().removeEpisodeFromPlaylist(
-                      widget.playlist,
-                      episodes: _selectedEpisodes);
+                  context
+                      .read<AudioPlayerNotifier>()
+                      .removeIndexesFromPlaylistPlus(_selectedEpisodes,
+                          playlist: widget.playlist);
                   setState(_selectedEpisodes.clear);
                 }),
           if (_selectedEpisodes.isNotEmpty)
@@ -85,41 +92,63 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
           ),
         ],
       ),
-      body: Selector<AudioPlayerNotifier, List<Playlist>>(
-        selector: (_, audio) => audio.playlists,
-        builder: (_, data, __) {
-          final playlist = data.firstWhereOrNull(
-            (e) => e == widget.playlist,
-          );
-          final episodes = playlist?.episodes ?? [];
-          return ReorderableListView(
-              onReorder: (oldIndex, newIndex) {
-                if (widget.playlist.isQueue) {
-                  context
-                      .read<AudioPlayerNotifier>()
-                      .reorderPlaylist(oldIndex, newIndex);
-                  setState(() {});
-                } else {
-                  context.read<AudioPlayerNotifier>().reorderEpisodesInPlaylist(
-                      widget.playlist,
-                      oldIndex: oldIndex,
-                      newIndex: newIndex);
-                  setState(() {});
-                }
-              },
-              scrollDirection: Axis.vertical,
-              children: episodes.map<Widget>((episode) {
-                return _PlaylistItem(episode,
-                    key: ValueKey(episode!.enclosureUrl), onSelect: (episode) {
-                  _selectedEpisodes.add(episode);
-                  setState(() {});
-                }, onRemove: (episode) {
-                  _selectedEpisodes.remove(episode);
-                  setState(() {});
-                }, reset: _resetSelected);
-              }).toList());
+      body: FutureBuilder(
+        future: widget.playlist.isNotEmpty && widget.playlist.episodes.isEmpty
+            ? widget.playlist.getPlaylist().then((value) => true)
+            : Future.value(true),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return _PlaylistBody(widget.playlist, _selectedEpisodes.add,
+                _selectedEpisodes.remove, _resetSelected);
+          } else {
+            return Center();
+          }
         },
       ),
+    );
+  }
+}
+
+class _PlaylistBody extends StatefulWidget {
+  final Playlist playlist;
+  final void Function(int index) onSelect;
+  final void Function(int index) onRemove;
+  final bool resetSelected;
+  _PlaylistBody(this.playlist, this.onSelect, this.onRemove, this.resetSelected,
+      {Key? key})
+      : super(key: key);
+  @override
+  _PlaylistBodyState createState() => _PlaylistBodyState();
+}
+
+class _PlaylistBodyState extends State<_PlaylistBody> {
+  late List<EpisodeBrief> episodes = widget.playlist.episodes.toList();
+  @override
+  Widget build(BuildContext context) {
+    return ReorderableListView(
+      onReorder: (oldIndex, newIndex) async {
+        if (newIndex > oldIndex) newIndex -= 1;
+        final episode = episodes.removeAt(oldIndex);
+        episodes.insert(newIndex,
+            episode); // Without this the animation isn't smooth as the below call takes time to complete
+        setState(() {});
+        await context
+            .read<AudioPlayerNotifier>()
+            .reorderPlaylist(oldIndex, newIndex, playlist: widget.playlist);
+      },
+      scrollDirection: Axis.vertical,
+      children: episodes.mapIndexed<Widget>(
+        (index, episode) {
+          return _PlaylistItem(episode, key: ValueKey(episode.enclosureUrl),
+              onSelect: (episode) {
+            widget.onSelect(index);
+            setState(() {});
+          }, onRemove: (episode) {
+            widget.onRemove(index);
+            setState(() {});
+          }, reset: widget.resetSelected);
+        },
+      ).toList(),
     );
   }
 }
@@ -237,7 +266,8 @@ class __PlaylistItemState extends State<_PlaylistItem>
                     child: _fraction! < 0.5
                         ? CircleAvatar(
                             backgroundColor: c.withOpacity(0.5),
-                            backgroundImage: episode.avatarImage)
+                            backgroundImage:
+                                episode.episodeOrPodcastImageProvider)
                         : CircleAvatar(
                             backgroundColor: context.accentColor.withAlpha(70),
                             child: Transform(
@@ -255,7 +285,7 @@ class __PlaylistItemState extends State<_PlaylistItem>
                 height: 35,
                 child: Row(
                   children: <Widget>[
-                    if (episode.explicit == 1)
+                    if (episode.isExplicit!)
                       Container(
                           decoration: BoxDecoration(
                               color: Colors.red[800], shape: BoxShape.circle),
@@ -265,17 +295,17 @@ class __PlaylistItemState extends State<_PlaylistItem>
                           alignment: Alignment.center,
                           child:
                               Text('E', style: TextStyle(color: Colors.white))),
-                    if (episode.duration != 0)
+                    if (episode.enclosureDuration != 0)
                       _episodeTag(
-                          episode.duration == 0
+                          episode.enclosureDuration == 0
                               ? ''
-                              : s.minsCount(episode.duration! ~/ 60),
+                              : s.minsCount(episode.enclosureDuration! ~/ 60),
                           Colors.cyan[300]),
-                    if (episode.enclosureLength != null)
+                    if (episode.enclosureSize != null)
                       _episodeTag(
-                          episode.enclosureLength == 0
+                          episode.enclosureSize == 0
                               ? ''
-                              : '${episode.enclosureLength! ~/ 1000000}MB',
+                              : '${episode.enclosureSize! ~/ 1000000}MB',
                           Colors.lightBlue[300]),
                   ],
                 ),
@@ -391,9 +421,11 @@ class __PlaylistSettingState extends State<_PlaylistSetting> {
                 FlatButton(
                     splashColor: Colors.red.withAlpha(70),
                     onPressed: () async {
-                      context
-                          .read<AudioPlayerNotifier>()
-                          .deletePlaylist(widget.playlist);
+                      final audio = context.read<AudioPlayerNotifier>();
+                      audio.deletePlaylist(widget.playlist);
+                      if (audio.playlist == widget.playlist) {
+                        audio.playlistLoad(audio.queue);
+                      }
                       Navigator.of(context).pop();
                     },
                     child:

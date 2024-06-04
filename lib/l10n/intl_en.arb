@@ -32,6 +32,8 @@
   "@buffering": {},
   "cancel": "CANCEL",
   "@cancel": {},
+  "capitalDefault": "Default",
+  "@capitalDefault": {},
   "cellularConfirm": "Cellular data warning",
   "@cellularConfirm": {},
   "cellularConfirmDes": "Are you sure you want to use cellular data to download?",
@@ -96,6 +98,12 @@
   "@endOfEpisode": {},
   "episode": "{count, plural, zero{} one{Episode} other{Episodes}}",
   "@episode": {},
+  "episodeVersioningNewIfNotDownloaded": "Downloaded if exists, else newest",
+  "@episodeVersioningNewIfNotDownloaded": {},
+  "episodeVersioningNew": "Newest",
+  "@episodeVersioningNew": {},
+  "episodeVersioningOld": "Oldest",
+  "@episodeVersioningOld": {},
   "fastForward": "Fast forward",
   "@fastForward": {},
   "fastRewind": "Fast rewind",
@@ -243,6 +251,11 @@
   "@listen": {},
   "listened": "Listened",
   "@listened": {},
+  "localEpisodeDescription": "Local episode at {filePath}",
+  "@localEpisodeDescription": {
+    "placeholders": {
+      "filePath": {}
+    }},
   "loadMore": "Load more",
   "@loadMore": {},
   "loggedInAs": "Logged in as {userName}",
@@ -535,6 +548,8 @@
   "@settingsDiscovery": {
     "description": "Reset feature discovery state. User tap it and restart app, will see features tutorial again."
   },
+  "settingsDiscoveryDes": "Are you sure you want to reenable \"Discover Features\"?",
+  "@settingsDiscoveryDes": {},
   "settingsDownloadPosition": "Download position",
   "@settingsDownloadPosition": {
     "description": "Choose folder for downloads."
@@ -543,6 +558,12 @@
   "@settingsEnableSyncing": {},
   "settingsEnableSyncingDes": "Refresh all podcasts in the background to get latest episodes",
   "@settingsEnableSyncingDes": {},
+  "settingsEpisodeManagement": "Episode Management",
+  "@settingsEpisodeManagement": {},
+  "settingsEpisodeVersioning": "Default Episode Version",
+  "@settingsEpisodeVersioning": {},
+  "settingsEpisodeVersioningDes": "Which version of an episode is displayed/downloaded by default. Can be overridden in podcast settings.",
+  "@settingsEpisodeVersioningDes": {},
   "settingsExportDes": "Export and import app settings",
   "@settingsExportDes": {},
   "settingsFastForwardSec": "Fast forward seconds",

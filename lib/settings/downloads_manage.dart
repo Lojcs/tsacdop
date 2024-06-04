@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/download_state.dart';
+import '../state/episode_state.dart';
 import '../type/episodebrief.dart';
 import '../util/extension_helper.dart';
 import '../widgets/custom_widget.dart';
@@ -32,7 +33,27 @@ class _DownloadsManageState extends State<DownloadsManage> {
   Future<List<EpisodeBrief>> _getDownloadedEpisode(int? mode) async {
     var episodes = <EpisodeBrief>[];
     var dbHelper = DBHelper();
-    episodes = await dbHelper.getDownloadedEpisode(mode);
+    Sorter sorter;
+    SortOrder order;
+    switch (mode) {
+      case 0:
+        sorter = Sorter.downloadDate;
+        order = SortOrder.DESC;
+        break;
+      case 1:
+        sorter = Sorter.downloadDate;
+        order = SortOrder.ASC;
+        break;
+      default: // case 2
+        sorter = Sorter.enclosureLength;
+        order = SortOrder.DESC;
+        break;
+    }
+    episodes = await dbHelper.getEpisodes(
+        sortBy: sorter,
+        sortOrder: order,
+        filterDownloaded: -1,
+        episodeState: Provider.of<EpisodeState>(context, listen: false));
     return episodes;
   }
 
@@ -99,7 +120,7 @@ class _DownloadsManageState extends State<DownloadsManage> {
       return sum;
     } else {
       for (var episode in _selectedList) {
-        sum += episode.enclosureLength!;
+        sum += episode.enclosureSize!;
       }
       return sum;
     }
@@ -119,17 +140,13 @@ class _DownloadsManageState extends State<DownloadsManage> {
   Widget build(BuildContext context) {
     final s = context.s;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
-        statusBarIconBrightness: Theme.of(context).accentColorBrightness,
-        systemNavigationBarColor: Theme.of(context).primaryColor,
-        systemNavigationBarIconBrightness:
-            Theme.of(context).accentColorBrightness,
-      ),
+      value: context.overlay,
       child: Scaffold(
         appBar: AppBar(
           leading: CustomBackButton(),
           elevation: 0,
-          backgroundColor: context.primaryColor,
+          scrolledUnderElevation: 0,
+          backgroundColor: context.background,
         ),
         body: SafeArea(
           child: Stack(
@@ -344,10 +361,10 @@ class _DownloadsManageState extends State<DownloadsManage> {
                                                                 .pubDate)),
                                                     SizedBox(width: 20),
                                                     if (_episodes[index]
-                                                            .enclosureLength !=
+                                                            .enclosureSize !=
                                                         0)
                                                       Text(
-                                                          '${_episodes[index].enclosureLength! ~/ 1000000} Mb'),
+                                                          '${_episodes[index].enclosureSize! ~/ 1000000} Mb'),
                                                   ],
                                                 ),
                                                 trailing: Checkbox(

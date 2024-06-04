@@ -902,7 +902,7 @@ class MyDropdownButton<T> extends StatefulWidget {
   /// [disabledHint] is also null but [hint] is non-null, [hint] will instead
   /// be displayed.
   /// {@endtemplate}
-  final ValueChanged<T> onChanged;
+  final ValueChanged<T>? onChanged;
 
   /// Called when the dropdown button is tapped.
   ///
@@ -1245,11 +1245,11 @@ class _MyDropdownButtonState<T> extends State<MyDropdownButton<T>>
     Navigator.push(context, _dropdownRoute!).then<void>((newValue) {
       _removeDropdownRoute();
       if (!mounted || newValue == null) return;
-      widget.onChanged(newValue.result);
+      widget.onChanged?.call(newValue.result);
     });
 
     if (widget.onTap != null) {
-      widget.onTap!();
+      widget.onTap?.call();
     }
   }
 
@@ -1338,11 +1338,11 @@ class _MyDropdownButtonState<T> extends State<MyDropdownButton<T>>
     if (_enabled) {
       items = widget.selectedItemBuilder == null
           ? List<Widget>.from(widget.items)
-          : widget.selectedItemBuilder!(context);
+          : List<Widget>.of(widget.selectedItemBuilder!(context));
     } else {
       items = widget.selectedItemBuilder == null
           ? <Widget>[]
-          : widget.selectedItemBuilder!(context);
+          : List<Widget>.of(widget.selectedItemBuilder!(context));
     }
 
     int? hintIndex;

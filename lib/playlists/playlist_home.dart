@@ -45,7 +45,7 @@ class _PlaylistHomeState extends State<PlaylistHome> {
 
   @override
   void initState() {
-    Future.microtask(() => context.read<AudioPlayerNotifier>().initPlaylist());
+    Future.microtask(() => context.read<AudioPlayerNotifier>().initPlaylists());
     super.initState();
     //context.read<AudioPlayerNotifier>().initPlaylist();
     _selected = 'PlayNext';
@@ -91,20 +91,27 @@ class _PlaylistHomeState extends State<PlaylistHome> {
           }
         },
         child: Scaffold(
+            backgroundColor: context.background,
             appBar: AppBar(
               leading: CustomBackButton(),
               centerTitle: true,
               title: Selector<AudioPlayerNotifier, EpisodeBrief?>(
                 selector: (_, audio) => audio.episode,
                 builder: (_, data, __) {
-                  return Text(data?.title ?? '', maxLines: 1);
+                  return Text(
+                    data?.title ?? '',
+                    maxLines: 1,
+                    style: context.textTheme.headlineSmall,
+                  );
                 },
               ),
               backgroundColor: context.background,
+              scrolledUnderElevation: 0,
             ),
             body: Column(
               children: [
-                SizedBox(
+                Container(
+                  color: context.background,
                   height: 100,
                   child: Selector<AudioPlayerNotifier,
                       Tuple4<Playlist?, bool, bool, EpisodeBrief?>>(
@@ -170,7 +177,7 @@ class _PlaylistHomeState extends State<PlaylistHome> {
                                         if (running &&
                                             !(data.item1!.length == 1 &&
                                                 !data.item1!.isQueue)) {
-                                          audio.playNext();
+                                          audio.skipToNext();
                                         }
                                       }),
                                 ],
@@ -181,9 +188,9 @@ class _PlaylistHomeState extends State<PlaylistHome> {
                                     Tuple4<bool, int?, String?, int>>(
                                   selector: (_, audio) => Tuple4(
                                       audio.buffering,
-                                      audio.backgroundAudioPosition,
+                                      audio.audioPosition,
                                       audio.remoteErrorMessage,
-                                      audio.backgroundAudioDuration),
+                                      audio.audioDuration),
                                   builder: (_, info, __) {
                                     return info.item3 != null
                                         ? Text(info.item3!,
@@ -201,10 +208,11 @@ class _PlaylistHomeState extends State<PlaylistHome> {
                                 ),
                               if (!data.item2)
                                 Selector<AudioPlayerNotifier, int>(
-                                  selector: (_, audio) => audio.lastPosition,
+                                  selector: (_, audio) =>
+                                      audio.audioStartPosition,
                                   builder: (_, position, __) {
                                     return Text(
-                                        '${(position ~/ 1000).toTime} / ${(data.item4?.duration ?? 0).toTime}');
+                                        '${(position ~/ 1000).toTime} / ${(data.item4?.enclosureDuration ?? 0).toTime}');
                                   },
                                 ),
                             ],
@@ -219,21 +227,23 @@ class _PlaylistHomeState extends State<PlaylistHome> {
                                           width: 80,
                                           height: 80,
                                           child: Image(
-                                              image: data.item4!.avatarImage)),
+                                              image: data.item4!
+                                                  .episodeOrPodcastImageProvider)),
                                       Selector<AudioPlayerNotifier, int>(
                                         selector: (_, audio) {
                                           if (!audio.playerRunning &&
-                                              audio.episode!.duration != 0) {
-                                            return (audio.lastPosition ~/
-                                                (audio.episode!.duration! *
+                                              audio.episode!
+                                                      .enclosureDuration !=
+                                                  0) {
+                                            return (audio.audioPosition ~/
+                                                (audio.episode!
+                                                        .enclosureDuration! *
                                                     10));
                                           } else if (audio.playerRunning &&
-                                              audio.backgroundAudioDuration !=
-                                                  0) {
-                                            return ((audio
-                                                        .backgroundAudioPosition! *
+                                              audio.audioDuration != 0) {
+                                            return ((audio.audioPosition! *
                                                     100) ~/
-                                                audio.backgroundAudioDuration);
+                                                audio.audioDuration);
                                           } else {
                                             return 0;
                                           }
@@ -268,7 +278,8 @@ class _PlaylistHomeState extends State<PlaylistHome> {
                     },
                   ),
                 ),
-                SizedBox(
+                Container(
+                  color: context.background,
                   height: 50,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -305,8 +316,11 @@ class _PlaylistHomeState extends State<PlaylistHome> {
                 ),
                 Divider(height: 1),
                 Expanded(
-                    child: AnimatedSwitcher(
-                        duration: Duration(milliseconds: 300), child: _body))
+                  child: Container(
+                    // color: Colors.blue,
+                    child: _body,
+                  ),
+                ),
               ],
             )),
       ),
@@ -324,73 +338,50 @@ class _Queue extends StatefulWidget {
 class __QueueState extends State<_Queue> {
   @override
   Widget build(BuildContext context) {
-    return Selector<AudioPlayerNotifier,
-        Tuple3<Playlist?, bool, EpisodeBrief?>>(
-      selector: (_, audio) =>
-          Tuple3(audio.playlist, audio.playerRunning, audio.episode),
+    return Selector<AudioPlayerNotifier, Tuple2<bool, int?>>(
+      selector: (_, audio) => Tuple2(audio.playerRunning, audio.episodeIndex),
       builder: (_, data, __) {
-        var episodes = data.item1?.episodes.toSet().toList();
-        var queue = data.item1;
-        var running = data.item2;
-        return queue == null
-            ? Center()
-            : queue.isQueue
-                ? ReorderableListView(
-                    onReorder: (oldIndex, newIndex) {
-                      context
-                          .read<AudioPlayerNotifier>()
-                          .reorderPlaylist(oldIndex, newIndex);
-                      setState(() {});
-                    },
-                    scrollDirection: Axis.vertical,
-                    children: data.item2
-                        ? episodes!.map<Widget>((episode) {
-                            if (episode!.enclosureUrl !=
-                                episodes.first!.enclosureUrl) {
-                              return DismissibleContainer(
-                                episode: episode,
-                                onRemove: (value) => setState(() {}),
-                                key: ValueKey(episode.enclosureUrl),
-                              );
-                            } else {
-                              return EpisodeCard(episode,
-                                  key: ValueKey('playing'),
-                                  isPlaying: true,
-                                  canReorder: true,
-                                  havePadding: true,
-                                  tileColor: context.primaryColorDark);
-                            }
-                          }).toList()
-                        : episodes!
-                            .map<Widget>((episode) => DismissibleContainer(
-                                  episode: episode,
-                                  onRemove: (value) => setState(() {}),
-                                  key: ValueKey(episode!.enclosureUrl),
-                                ))
-                            .toList())
-                : ListView.builder(
-                    itemCount: queue.length,
-                    itemBuilder: (context, index) {
-                      final episode = queue.episodes[index];
-                      final isPlaying =
-                          data.item3 != null && data.item3 == episode;
-                      return episode == null
-                          ? Center()
-                          : EpisodeCard(
-                              episode,
-                              isPlaying: isPlaying && running,
-                              tileColor:
-                                  isPlaying ? context.primaryColorDark : null,
-                              onTap: () async {
-                                if (!isPlaying) {
-                                  await context
-                                      .read<AudioPlayerNotifier>()
-                                      .loadEpisodeFromPlaylist(episode);
-                                }
-                              },
-                            );
-                    },
-                  );
+        Playlist? playlist = context
+            .read<AudioPlayerNotifier>()
+            .playlist; // No need for selector for this
+        bool running = data.item1;
+        int? episodeIndex = data.item2;
+        if (episodeIndex == null) {
+          return Center();
+        } else {
+          List<EpisodeBrief> episodes = playlist.episodes.toList();
+          return ReorderableListView.builder(
+            itemCount: playlist.length,
+            onReorder: (oldIndex, newIndex) async {
+              if (newIndex > oldIndex) newIndex -= 1;
+              final episode = episodes.removeAt(oldIndex);
+              episodes.insert(newIndex,
+                  episode); // Without this the animation isn't smooth as the below call takes time to complete (I think)
+              await context
+                  .read<AudioPlayerNotifier>()
+                  .reorderPlaylist(oldIndex, newIndex, playlist: playlist);
+              setState(() {});
+            },
+            scrollDirection: Axis.vertical,
+            itemBuilder: (context, index) {
+              if (running && index == episodeIndex) {
+                return EpisodeTile(episodes[index],
+                    key: ValueKey(episodes[index].enclosureUrl),
+                    isPlaying: true,
+                    canReorder: true,
+                    havePadding: true,
+                    tileColor: context.accentBackground);
+              } else {
+                return DismissibleContainer(
+                  episode: episodes[index],
+                  index: index,
+                  onRemove: (value) => setState(() {}),
+                  key: ValueKey(episodes[index].enclosureUrl),
+                );
+              }
+            },
+          );
+        }
       },
     );
   }
@@ -406,7 +397,7 @@ class _History extends StatefulWidget {
 class __HistoryState extends State<_History> {
   var dbHelper = DBHelper();
   bool _loadMore = false;
-  late Future _getData;
+  late Future<List<PlayHistory>> _getData;
   int? _top;
 
   @override
@@ -453,10 +444,10 @@ class __HistoryState extends State<_History> {
   }
 
   Widget _timeTag(BuildContext context,
-      {EpisodeBrief? episode,
+      {required EpisodeBrief episode,
       required int seconds,
       required double seekValue}) {
-    final audio = context.watch<AudioPlayerNotifier>();
+    final audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
     final textWidth = _getMaskStop(seekValue, seconds).width;
     final stop = seekValue - 20 / textWidth + 40 * seekValue / textWidth;
     return Padding(
@@ -465,7 +456,8 @@ class __HistoryState extends State<_History> {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            audio.episodeLoad(episode, startPosition: (seconds * 1000).toInt());
+            audio.loadEpisodeToQueue(episode,
+                startPosition: (seconds * 1000).toInt());
           },
           borderRadius: BorderRadius.circular(20),
           child: Stack(alignment: Alignment.center, children: [
@@ -482,6 +474,9 @@ class __HistoryState extends State<_History> {
                 ).createShader(bounds);
               },
               child: Container(
+                margin: EdgeInsets.symmetric(
+                    vertical:
+                        0.5), // Prevents visual glitch where the white shows through on the top or bottom
                 height: 25,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
@@ -512,7 +507,7 @@ class __HistoryState extends State<_History> {
   }
 
   Widget _playlistButton(BuildContext context, {EpisodeBrief? episode}) {
-    final audio = context.watch<AudioPlayerNotifier>();
+    final audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
     final s = context.s;
     return SizedBox(
       child: Selector<AudioPlayerNotifier, List<EpisodeBrief?>>(
@@ -523,8 +518,8 @@ class __HistoryState extends State<_History> {
                   icon: Icon(Icons.playlist_add_check,
                       color: context.accentColor),
                   onPressed: () async {
-                    audio.delFromPlaylist(episode!);
-                    Fluttertoast.showToast(
+                    await audio.removeFromPlaylistPlus([episode!]);
+                    await Fluttertoast.showToast(
                       msg: s.toastRemovePlaylist,
                       gravity: ToastGravity.BOTTOM,
                     );
@@ -532,8 +527,8 @@ class __HistoryState extends State<_History> {
               : IconButton(
                   icon: Icon(Icons.playlist_add, color: Colors.grey[700]),
                   onPressed: () async {
-                    audio.addToPlaylist(episode!);
-                    Fluttertoast.showToast(
+                    await audio.addToPlaylistPlus([episode!]);
+                    await Fluttertoast.showToast(
                       msg: s.toastAddPlaylist,
                       gravity: ToastGravity.BOTTOM,
                     );
@@ -545,9 +540,9 @@ class __HistoryState extends State<_History> {
 
   @override
   Widget build(BuildContext context) {
-    final audio = context.watch<AudioPlayerNotifier>();
+    final audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
     return FutureBuilder<List<PlayHistory>>(
-        future: _getData.then((value) => value as List<PlayHistory>),
+        future: _getData,
         builder: (context, snapshot) {
           return snapshot.hasData
               ? NotificationListener<ScrollNotification>(
@@ -577,7 +572,6 @@ class __HistoryState extends State<_History> {
                           final date = snapshot
                               .data![index].playdate!.millisecondsSinceEpoch;
                           final episode = snapshot.data![index].episode;
-                          final c = episode?.backgroudColor(context);
                           return episode == null
                               ? Center()
                               : SizedBox(
@@ -591,16 +585,19 @@ class __HistoryState extends State<_History> {
                                           child: ListTile(
                                             contentPadding: EdgeInsets.fromLTRB(
                                                 24, 8, 20, 8),
-                                            onTap: () => audio.episodeLoad(
-                                                episode,
-                                                startPosition: seekValue! < 0.9
-                                                    ? (seconds! * 1000).toInt()
-                                                    : 0),
+                                            onTap: () => audio
+                                                .loadEpisodeToQueue(episode,
+                                                    startPosition:
+                                                        seekValue! < 0.9
+                                                            ? (seconds! * 1000)
+                                                                .toInt()
+                                                            : 0),
                                             leading: CircleAvatar(
-                                                backgroundColor:
-                                                    c?.withOpacity(0.5),
-                                                backgroundImage:
-                                                    episode.avatarImage),
+                                                backgroundColor: context
+                                                    .colorScheme
+                                                    .secondaryContainer,
+                                                backgroundImage: episode
+                                                    .episodeOrPodcastImageProvider),
                                             title: Padding(
                                               padding: EdgeInsets.symmetric(
                                                   vertical: 5.0),
@@ -665,22 +662,40 @@ class _Playlists extends StatefulWidget {
 class __PlaylistsState extends State<_Playlists> {
   Future<EpisodeBrief?> _getEpisode(String url) async {
     var dbHelper = DBHelper();
-    return await dbHelper.getRssItemWithUrl(url);
+    List episodes = await dbHelper.getEpisodes(episodeUrls: [
+      url
+    ], optionalFields: [
+      EpisodeField.mediaId,
+      EpisodeField.primaryColor,
+      EpisodeField.isNew,
+      EpisodeField.skipSecondsStart,
+      EpisodeField.skipSecondsEnd,
+      EpisodeField.episodeImage,
+      EpisodeField.podcastImage,
+      EpisodeField.chapterLink
+    ]);
+    if (episodes.isEmpty)
+      return null;
+    else
+      return episodes[0];
   }
 
   @override
   Widget build(BuildContext context) {
     final s = context.s;
-    return Selector<AudioPlayerNotifier, List<Playlist>>(
-        selector: (_, audio) => audio.playlists,
+    return Selector<AudioPlayerNotifier, Tuple2<List<Playlist>, int>>(
+        selector: (_, audio) => Tuple2(
+            audio.playlists,
+            audio.playlists
+                .length), // Getting the length seperately so the selector notices data changed
         builder: (_, data, __) {
           return ScrollConfiguration(
             behavior: NoGrowBehavior(),
             child: ListView.builder(
-                itemCount: data.length + 1,
+                itemCount: data.item2 + 1,
                 itemBuilder: (context, index) {
                   if (index == 0) {
-                    final queue = data.first;
+                    final queue = data.item1.first;
                     return InkWell(
                       onTap: () {
                         Navigator.push(
@@ -688,7 +703,7 @@ class __PlaylistsState extends State<_Playlists> {
                           MaterialPageRoute(
                               fullscreenDialog: true,
                               builder: (context) =>
-                                  PlaylistDetail(data[index])),
+                                  PlaylistDetail(data.item1[index])),
                         ).then((value) => setState(() {}));
                       },
                       child: Padding(
@@ -699,24 +714,42 @@ class __PlaylistsState extends State<_Playlists> {
                               height: 80,
                               width: 80,
                               color: context.primaryColorDark,
-                              child: GridView.builder(
-                                  gridDelegate:
-                                      SliverGridDelegateWithFixedCrossAxisCount(
-                                    childAspectRatio: 1,
-                                    crossAxisCount: 2,
-                                    mainAxisSpacing: 0.0,
-                                    crossAxisSpacing: 0.0,
-                                  ),
-                                  itemCount: math.min(queue.episodes.length, 4),
-                                  itemBuilder: (_, index) {
-                                    if (index < queue.episodeList.length) {
-                                      return Image(
-                                        image:
-                                            queue.episodes[index]!.avatarImage,
-                                      );
-                                    }
+                              child: FutureBuilder<Playlist>(
+                                future: Future.sync(() async {
+                                  if (queue.episodes.isEmpty) {
+                                    await queue.getPlaylist();
+                                  }
+                                  return queue;
+                                }),
+                                builder: (context, snapshot) {
+                                  if (snapshot.hasData) {
+                                    final queueSnapshot = snapshot.data!;
+                                    return GridView.builder(
+                                      gridDelegate:
+                                          SliverGridDelegateWithFixedCrossAxisCount(
+                                        childAspectRatio: 1,
+                                        crossAxisCount: 2,
+                                        mainAxisSpacing: 0.0,
+                                        crossAxisSpacing: 0.0,
+                                      ),
+                                      itemCount:
+                                          math.min(queueSnapshot.length, 4),
+                                      itemBuilder: (_, index) {
+                                        if (index <
+                                            queueSnapshot.episodeList.length) {
+                                          return Image(
+                                            image: queueSnapshot.episodes[index]
+                                                .episodeOrPodcastImageProvider,
+                                          );
+                                        }
+                                        return Center();
+                                      },
+                                    );
+                                  } else {
                                     return Center();
-                                  }),
+                                  }
+                                },
+                              ),
                             ),
                             SizedBox(width: 15),
                             Column(
@@ -761,19 +794,16 @@ class __PlaylistsState extends State<_Playlists> {
                       ),
                     );
                   }
-                  if (index < data.length) {
-                    final episodeList = data[index].episodeList;
+                  if (index < data.item2) {
+                    final episodeList = data.item1[index].episodeList;
                     return ListTile(
                       onTap: () async {
-                        await context
-                            .read<AudioPlayerNotifier>()
-                            .updatePlaylist(data[index], updateEpisodes: true);
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                               fullscreenDialog: true,
                               builder: (context) =>
-                                  PlaylistDetail(data[index])),
+                                  PlaylistDetail(data.item1[index])),
                         );
                       },
                       leading: Container(
@@ -790,14 +820,15 @@ class __PlaylistsState extends State<_Playlists> {
                                         height: 50,
                                         width: 50,
                                         child: Image(
-                                            image: snapshot.data!.avatarImage));
+                                            image: snapshot.data!
+                                                .episodeOrPodcastImageProvider));
                                   }
                                   return Center();
                                 }),
                       ),
-                      title: Text(data[index].name!),
+                      title: Text(data.item1[index].name!),
                       subtitle: Text(
-                          '${data[index].length} ${s.episode(data[index].length).toLowerCase()}'),
+                          '${data.item1[index].length} ${s.episode(data.item1[index].length).toLowerCase()}'),
                       trailing: TextButton(
                         style: TextButton.styleFrom(
                             primary: context.accentColor,
@@ -820,7 +851,7 @@ class __PlaylistsState extends State<_Playlists> {
                         onPressed: () {
                           context
                               .read<AudioPlayerNotifier>()
-                              .playlistLoad(data[index]);
+                              .playlistLoad(data.item1[index]);
                         },
                       ),
                     );
@@ -864,7 +895,7 @@ class _NewPlaylist extends StatefulWidget {
 class __NewPlaylistState extends State<_NewPlaylist> {
   final _dbHelper = DBHelper();
   String _playlistName = '';
-  NewPlaylistOption? _option;
+  late NewPlaylistOption _option;
   late bool _loadFolder;
   FocusNode? _focusNode;
   int? _error;
@@ -878,11 +909,16 @@ class __NewPlaylistState extends State<_NewPlaylist> {
   }
 
   Future<List<EpisodeBrief>> _random() async {
-    return await _dbHelper.getRandomRssItem(10);
+    return await _dbHelper.getEpisodes(
+        excludedFeedIds: [localFolderId], sortBy: Sorter.random, limit: 10);
   }
 
   Future<List<EpisodeBrief>> _recent() async {
-    return await _dbHelper.getRecentRssItem(10);
+    return await _dbHelper.getEpisodes(
+        excludedFeedIds: [localFolderId],
+        sortBy: Sorter.pubDate,
+        sortOrder: SortOrder.DESC,
+        limit: 10);
   }
 
   Widget _createOption(NewPlaylistOption option) {
@@ -933,9 +969,29 @@ class __NewPlaylistState extends State<_NewPlaylist> {
       developer.log(e.toString(), name: 'Failed to load dir.');
     }
     final localFolder = await _dbHelper.getPodcastLocal([localFolderId]);
-    if (localFolder.isEmpty) {
-      final localPodcast = PodcastLocal('Local Folder', '', '', '',
-          'Local Folder', localFolderId, '', '', '', []);
+    if (localFolder.isEmpty || true) {
+      String defaultColor = "[28, 204, 196]"; // Color of avatar_backup
+      final dir = await getApplicationDocumentsDirectory();
+      if (!File("${dir.path}/avatar_backup.png").existsSync()) {
+        final byteData = await rootBundle.load('assets/avatar_backup.png');
+
+        final file = File('${dir.path}/assets/avatar_backup.png');
+        file.createSync(recursive: true);
+        file.writeAsBytesSync(byteData.buffer
+            .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+      }
+      final localPodcast = PodcastLocal(
+        'Local Folder',
+        '',
+        '',
+        defaultColor,
+        'Local Folder',
+        localFolderId,
+        "${dir.path}/assets/avatar_backup.png",
+        '',
+        '',
+        [],
+      );
       await _dbHelper.savePodcastLocal(localPodcast);
     }
     if (dirPath != null) {
@@ -964,23 +1020,23 @@ class __NewPlaylistState extends State<_NewPlaylist> {
       final image = img.decodeImage(metadata.albumArt!)!;
       final thumbnail = img.copyResize(image, width: 300);
       var uuid = Uuid().v4();
-      File("${dir.path}/$uuid.png").writeAsBytesSync(img.encodePng(thumbnail));
-      imagePath = "${dir.path}/$uuid.png";
+      imagePath =
+          "${dir.path}/fromLocalFolder/$uuid.png"; // TODO: I couldn't get this to show up on the notification :(
+      final file = File(imagePath);
+      file.createSync(recursive: true);
+      file.writeAsBytesSync(img.encodePng(thumbnail));
       primaryColor = await _getColor(File(imagePath));
     }
     final fileName = path.split('/').last;
-    return EpisodeBrief(
-        fileName,
-        'file://$path',
-        fileLength,
-        pubDate,
-        metadata.albumName ?? '',
-        primaryColor ?? '',
-        metadata.trackDuration,
-        0,
-        '',
-        0,
-        episodeImage: imagePath ?? '');
+    return EpisodeBrief(0, fileName, 'file://$path', localFolderId,
+        metadata.albumName ?? '', pubDate, // metadata.year ?
+        description: context.s.localEpisodeDescription(path),
+        enclosureDuration: metadata.trackDuration! ~/ 1000,
+        enclosureSize: fileLength,
+        mediaId: 'file://$path',
+        podcastImage: '',
+        episodeImage: imagePath ?? '',
+        primaryColor: primaryColor);
   }
 
   Future<String> _getColor(File file) async {
@@ -1005,6 +1061,7 @@ class __NewPlaylistState extends State<_NewPlaylist> {
       child: AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         elevation: 1,
+        backgroundColor: context.accentBackgroundWeak,
         contentPadding: EdgeInsets.symmetric(horizontal: 20),
         titlePadding: EdgeInsets.all(20),
         actionsPadding: EdgeInsets.zero,
@@ -1020,67 +1077,65 @@ class __NewPlaylistState extends State<_NewPlaylist> {
           FlatButton(
             splashColor: context.accentColor.withAlpha(70),
             onPressed: () async {
-              if (_playlistName == '') {
-                setState(() => _error = 0);
-              } else if (context
-                  .read<AudioPlayerNotifier>()
-                  .playlistExisted(_playlistName)) {
-                setState(() => _error = 1);
-              } else {
-                var playlist;
-                switch (_option) {
-                  case NewPlaylistOption.blank:
-                    playlist = Playlist(
-                      _playlistName,
-                    );
-                    break;
-                  case NewPlaylistOption.latest10:
-                    final recent = await _recent();
-                    playlist = Playlist(
-                      _playlistName,
-                      episodeList: [for (var e in recent) e.enclosureUrl],
-                    );
-                    await playlist.getPlaylist();
-                    break;
-                  case NewPlaylistOption.randon10:
-                    final random = await _random();
-                    playlist = Playlist(
-                      _playlistName,
-                      episodeList: [for (var e in random) e.enclosureUrl],
-                    );
-                    await playlist.getPlaylist();
-                    break;
-                  case NewPlaylistOption.folder:
-                    _focusNode!.unfocus();
-                    setState(() {
-                      _loadFolder = true;
-                    });
-                    final episodes = await _loadLocalFolder();
-                    if (episodes.isNotEmpty) {
+              if (!_loadFolder) {
+                if (_playlistName == '') {
+                  setState(() => _error = 0);
+                } else if (context
+                    .read<AudioPlayerNotifier>()
+                    .playlistExists(_playlistName)) {
+                  setState(() => _error = 1);
+                } else {
+                  Playlist playlist;
+                  switch (_option) {
+                    case NewPlaylistOption.blank:
+                      playlist = Playlist(
+                        _playlistName,
+                      );
+                      break;
+                    case NewPlaylistOption.latest10:
+                      final recent = await _recent();
+                      playlist = Playlist(
+                        _playlistName,
+                        episodeList: [for (var e in recent) e.enclosureUrl],
+                      );
+                      await playlist.getPlaylist();
+                      break;
+                    case NewPlaylistOption.randon10:
+                      final random = await _random();
+                      playlist = Playlist(
+                        _playlistName,
+                        episodeList: [for (var e in random) e.enclosureUrl],
+                      );
+                      await playlist.getPlaylist();
+                      break;
+                    case NewPlaylistOption.folder:
+                      _focusNode!.unfocus();
+                      setState(() {
+                        _loadFolder = true;
+                      });
+                      final episodes = await _loadLocalFolder();
                       playlist = Playlist(
                         _playlistName,
                         isLocal: true,
                         episodeList: [for (var e in episodes) e.enclosureUrl],
                       );
                       await playlist.getPlaylist();
-                    }
-                    if (mounted) {
-                      setState(() {
-                        _loadFolder = false;
-                      });
-                    }
-                    break;
-                  default:
-                    break;
-                }
-                if (playlist != null) {
+                      if (mounted) {
+                        setState(() {
+                          _loadFolder = false;
+                        });
+                      }
+                      break;
+                  }
                   context.read<AudioPlayerNotifier>().addPlaylist(playlist);
+                  Navigator.of(context).pop();
                 }
-                Navigator.of(context).pop();
               }
             },
-            child:
-                Text(s.confirm, style: TextStyle(color: context.accentColor)),
+            child: Text(s.confirm,
+                style: TextStyle(
+                    color:
+                        _loadFolder ? Colors.grey[600] : context.accentColor)),
           )
         ],
         title: SizedBox(

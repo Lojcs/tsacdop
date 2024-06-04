@@ -50,6 +50,8 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m10(service) => "Integrate with ${service}";
 
+  static String m32(filePath) => "Local episode at ${filePath}";
+
   static String m11(userName) => "Logged in as ${userName}";
 
   static String m12(count) =>
@@ -114,6 +116,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "boostVolume": MessageLookupByLibrary.simpleMessage("Boost volume"),
         "buffering": MessageLookupByLibrary.simpleMessage("Buffering"),
         "cancel": MessageLookupByLibrary.simpleMessage("CANCEL"),
+        "capitalDefault": MessageLookupByLibrary.simpleMessage("Default"),
         "cellularConfirm":
             MessageLookupByLibrary.simpleMessage("Cellular data warning"),
         "cellularConfirmDes": MessageLookupByLibrary.simpleMessage(
@@ -149,6 +152,11 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Edit group name"),
         "endOfEpisode": MessageLookupByLibrary.simpleMessage("End of Episode"),
         "episode": m4,
+        "episodeVersioningNew": MessageLookupByLibrary.simpleMessage("Newest"),
+        "episodeVersioningNewIfNotDownloaded":
+            MessageLookupByLibrary.simpleMessage(
+                "Downloaded if exists, else newest"),
+        "episodeVersioningOld": MessageLookupByLibrary.simpleMessage("Oldest"),
         "fastForward": MessageLookupByLibrary.simpleMessage("Fast forward"),
         "fastRewind": MessageLookupByLibrary.simpleMessage("Fast rewind"),
         "featureDiscoveryEditGroup":
@@ -242,6 +250,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "listen": MessageLookupByLibrary.simpleMessage("Listen"),
         "listened": MessageLookupByLibrary.simpleMessage("Listened"),
         "loadMore": MessageLookupByLibrary.simpleMessage("Load more"),
+        "localEpisodeDescription": m32,
         "loggedInAs": m11,
         "login": MessageLookupByLibrary.simpleMessage("Login"),
         "loginFailed": MessageLookupByLibrary.simpleMessage("Login failed"),
@@ -399,12 +408,20 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Recent tab"),
         "settingsDiscovery": MessageLookupByLibrary.simpleMessage(
             "Reenable \"Discover Features\""),
+        "settingsDiscoveryDes": MessageLookupByLibrary.simpleMessage(
+            "Are you sure you want to reenable \"Discover Features\"?"),
         "settingsDownloadPosition":
             MessageLookupByLibrary.simpleMessage("Download position"),
         "settingsEnableSyncing":
             MessageLookupByLibrary.simpleMessage("Enable synchronisation"),
         "settingsEnableSyncingDes": MessageLookupByLibrary.simpleMessage(
             "Refresh all podcasts in the background to get latest episodes"),
+        "settingsEpisodeManagement":
+            MessageLookupByLibrary.simpleMessage("Episode Management"),
+        "settingsEpisodeVersioning":
+            MessageLookupByLibrary.simpleMessage("Default Episode Version"),
+        "settingsEpisodeVersioningDes": MessageLookupByLibrary.simpleMessage(
+            "Which version of an episode is displayed/downloaded by default. Can be overridden in podcast settings."),
         "settingsExportDes": MessageLookupByLibrary.simpleMessage(
             "Export and import app settings"),
         "settingsFastForwardSec":

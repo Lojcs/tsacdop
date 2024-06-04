@@ -12,7 +12,7 @@ class MyRectangularTrackShape extends RectangularSliderTrackShape {
     final trackLeft = offset.dx;
     final trackTop = offset.dy + (parentBox.size.height - trackHeight) / 2;
     final trackWidth = parentBox.size.width;
-    return Rect.fromLTWH(trackLeft - 5, trackTop, trackWidth, trackHeight);
+    return Rect.fromLTWH(trackLeft, trackTop, trackWidth, trackHeight);
   }
 }
 

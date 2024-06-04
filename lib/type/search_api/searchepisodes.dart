@@ -44,12 +44,7 @@ class OnlineEpisode {
   Map<String, dynamic> toJson() => _$OnlineEpisodeToJson(this);
 
   EpisodeBrief get toEpisode {
-    return EpisodeBrief(
-        title, audio!, 0, pubDate, title, '', length ?? 0, 0, '', 0,
-        mediaId: audio,
-        skipSecondsEnd: 0,
-        skipSecondsStart: 0,
-        chapterLink: '',
-        episodeImage: thumbnail);
+    return EpisodeBrief(0, title!, audio!, "ONLINE", title!, pubDate!,
+        enclosureDuration: length, mediaId: audio, episodeImage: thumbnail);
   }
 }

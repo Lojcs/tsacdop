@@ -35,17 +35,10 @@ class Import extends StatelessWidget {
     final result = await Connectivity().checkConnectivity();
     final autoDownloadStorage = KeyValueStorage(autoDownloadNetworkKey);
     final autoDownloadNetwork = await autoDownloadStorage.getInt();
-    if (autoDownloadNetwork == 1) {
-      final episodes = await dbHelper.getNewEpisodes('all');
+    if (autoDownloadNetwork == 1 || result == ConnectivityResult.wifi) {
+      final episodes = await dbHelper.getEpisodes(
+          filterNew: -1, filterDownloaded: 1, filterAutoDownload: -1);
       // For safety
-      if (episodes.length < 100 && episodes.length > 0) {
-        for (var episode in episodes) {
-          await downloader.startTask(episode, showNotification: true);
-        }
-      }
-    } else if (result == ConnectivityResult.wifi) {
-      var episodes = await dbHelper.getNewEpisodes('all');
-      //For safety
       if (episodes.length < 100 && episodes.length > 0) {
         for (var episode in episodes) {
           await downloader.startTask(episode, showNotification: true);

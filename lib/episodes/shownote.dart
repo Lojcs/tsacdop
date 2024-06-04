@@ -14,7 +14,7 @@ class ShowNote extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final audio = context.watch<AudioPlayerNotifier>();
+    final audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
     final s = context.s;
     return FutureBuilder<String?>(
       future: _getSDescription(episode!.enclosureUrl),

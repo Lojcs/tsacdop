@@ -41,17 +41,21 @@ class _PlaySettingState extends State<PlaySetting> {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingState>();
-    final audio = context.watch<AudioPlayerNotifier>();
+    final audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
     final s = context.s;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: context.overlay,
       child: Scaffold(
         backgroundColor: context.background,
         appBar: AppBar(
-          title: Text(s.play),
+          title: Text(
+            s.play,
+            style: context.textTheme.titleLarge,
+          ),
           leading: CustomBackButton(),
           elevation: 0,
-          backgroundColor: context.primaryColor,
+          scrolledUnderElevation: 0,
+          backgroundColor: context.background,
         ),
         body: SingleChildScrollView(
           scrollDirection: Axis.vertical,

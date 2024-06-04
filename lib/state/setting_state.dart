@@ -2,6 +2,7 @@ import 'dart:developer' as developer;
 import 'dart:io';
 
 import 'package:connectivity/connectivity.dart';
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
@@ -15,46 +16,6 @@ import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../type/settings_backup.dart';
 import 'download_state.dart';
-
-void callbackDispatcher() {
-  Workmanager().executeTask((task, inputData) async {
-    final dbHelper = DBHelper();
-    final podcastList = await dbHelper.getPodcastLocalAll(updateOnly: true);
-    //lastWork is a indicator for if the app was opened since last backgroundwork
-    //if the app wes opend,then the old marked new episode would be marked not new.
-    final lastWorkStorage = KeyValueStorage(lastWorkKey);
-    final lastWork = await lastWorkStorage.getInt();
-    for (var podcastLocal in podcastList) {
-      await dbHelper.updatePodcastRss(podcastLocal, removeMark: lastWork);
-      developer.log('Refresh ${podcastLocal.title}');
-    }
-    await FlutterDownloader.initialize();
-    final downloader = AutoDownloader();
-
-    final autoDownloadStorage = KeyValueStorage(autoDownloadNetworkKey);
-    final autoDownloadNetwork = await autoDownloadStorage.getInt();
-    final result = await Connectivity().checkConnectivity();
-    if (autoDownloadNetwork == 1) {
-      var episodes = await dbHelper.getNewEpisodes('all');
-      // For safety
-      if (episodes.length < 100 && episodes.length > 0) {
-        downloader.bindBackgroundIsolate();
-        await downloader.startTask(episodes);
-      }
-    } else if (result == ConnectivityResult.wifi) {
-      var episodes = await dbHelper.getNewEpisodes('all');
-      //For safety
-      if (episodes.length < 100 && episodes.length > 0) {
-        downloader.bindBackgroundIsolate();
-        await downloader.startTask(episodes);
-      }
-    }
-    await lastWorkStorage.saveInt(1);
-    var refreshstorage = KeyValueStorage(refreshdateKey);
-    await refreshstorage.saveInt(DateTime.now().millisecondsSinceEpoch);
-    return Future.value(true);
-  });
-}
 
 final showNotesFontStyles = <TextStyle>[
   TextStyle(
@@ -72,10 +33,12 @@ final showNotesFontStyles = <TextStyle>[
 ];
 
 class SettingState extends ChangeNotifier {
+  BuildContext? context; // late final causes problem when hot reloading
   final _themeStorage = KeyValueStorage(themesKey);
   final _accentStorage = KeyValueStorage(accentsKey);
   final _autoupdateStorage = KeyValueStorage(autoUpdateKey);
   final _intervalStorage = KeyValueStorage(updateIntervalKey);
+  final _versionPolicyStorage = KeyValueStorage(versionPolicyKey);
   final _downloadUsingDataStorage = KeyValueStorage(downloadUsingDataKey);
   final _introStorage = KeyValueStorage(introKey);
   final _realDarkStorage = KeyValueStorage(realDarkKey);
@@ -101,6 +64,40 @@ class SettingState extends ChangeNotifier {
       KeyValueStorage(openAllPodcastDefaultKey);
   final _useWallpaperThemeStorage = KeyValueStorage(useWallpapterThemeKey);
 
+  void callbackDispatcher() {
+    Workmanager().executeTask((task, inputData) async {
+      final dbHelper = DBHelper();
+      final podcastList = await dbHelper.getPodcastLocalAll(updateOnly: true);
+      //lastWork is a indicator for if the app was opened since last backgroundwork
+      //if the app wes opend,then the old marked new episode would be marked not new.
+      final lastWorkStorage = KeyValueStorage(lastWorkKey);
+      final lastWork = await lastWorkStorage.getInt();
+      for (var podcastLocal in podcastList) {
+        await dbHelper.updatePodcastRss(podcastLocal, removeMark: lastWork);
+        developer.log('Refresh ${podcastLocal.title}');
+      }
+      await FlutterDownloader.initialize();
+      final downloader = AutoDownloader(context!);
+
+      final autoDownloadStorage = KeyValueStorage(autoDownloadNetworkKey);
+      final autoDownloadNetwork = await autoDownloadStorage.getInt();
+      final result = await Connectivity().checkConnectivity();
+      if (autoDownloadNetwork == 1 || result == ConnectivityResult.wifi) {
+        final episodes = await dbHelper.getEpisodes(
+            filterNew: -1, filterDownloaded: 1, filterAutoDownload: -1);
+        // For safety
+        if (episodes.length < 100 && episodes.length > 0) {
+          downloader.bindBackgroundIsolate();
+          await downloader.startTask(episodes);
+        }
+      }
+      await lastWorkStorage.saveInt(1);
+      var refreshstorage = KeyValueStorage(refreshdateKey);
+      await refreshstorage.saveInt(DateTime.now().millisecondsSinceEpoch);
+      return Future.value(true);
+    });
+  }
+
   Future initData() async {
     await _getTheme();
     await _getAccentSetColor();
@@ -115,6 +112,7 @@ class SettingState extends ChangeNotifier {
     super.addListener(listener);
     _getLocale();
     _getAutoUpdate();
+    _getVersionPolicy();
     _getDownloadUsingData();
     _getSleepTimerData();
     _getPlayerSeconds();
@@ -136,12 +134,20 @@ class SettingState extends ChangeNotifier {
   /// Load locale.
   Locale? get locale => _locale;
 
+  EdgeInsets? originalPadding;
+  List<Color> statusBarColor = [];
+  List<Color> navBarColor = [];
+
   /// Set thememode. default auto.
   ThemeMode? _theme;
   ThemeMode? get theme => _theme;
 
-  ThemeData get lightTheme => ThemeData.light().copyWith(
-        colorScheme: _colors(Brightness.light, _accentSetColor!),
+  ThemeData get lightTheme => ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: _accentSetColor!,
+          primary: _accentSetColor!,
+          brightness: Brightness.light,
+        ),
         brightness: Brightness.light,
         primaryColor: Colors.grey[100],
         primaryColorLight: Colors.white,
@@ -156,44 +162,52 @@ class SettingState extends ChangeNotifier {
             iconTheme: IconThemeData(color: Colors.black),
             systemOverlayStyle: SystemUiOverlayStyle.dark),
         textTheme: TextTheme(
-          headlineSmall: TextStyle(
-              fontSize: 20.0,
-              color: Colors.black,
-              fontWeight: FontWeight.normal),
           bodyLarge: TextStyle(
-              fontSize: 17.0,
-              color: Colors.black,
-              fontWeight: FontWeight.normal),
-          bodyMedium: TextStyle(
               fontSize: 15.0,
               color: Colors.black,
               fontWeight: FontWeight.normal),
-          bodySmall: TextStyle(
+          bodyMedium: TextStyle(
               fontSize: 14.0,
+              color: Colors.black,
+              fontWeight: FontWeight.normal),
+          bodySmall: TextStyle(
+              fontSize: 13.0,
               color: Colors.black,
               fontWeight: FontWeight.normal),
           labelLarge: TextStyle(
-              fontSize: 16.0,
+              fontSize: 14.0,
               color: Colors.black,
               fontWeight: FontWeight.normal),
           labelMedium: TextStyle(
-              fontSize: 14.0,
+              fontSize: 12.0,
               color: Colors.black,
               fontWeight: FontWeight.normal),
           labelSmall: TextStyle(
-              fontSize: 12.0,
+              fontSize: 10.0,
               color: Colors.black,
               fontWeight: FontWeight.normal),
           titleLarge: TextStyle(
-              fontSize: 16.0,
+              fontSize: 20.0,
               color: Colors.black,
               fontWeight: FontWeight.normal),
           titleMedium: TextStyle(
-              fontSize: 14.0,
+              fontSize: 16.0,
               color: Colors.black,
               fontWeight: FontWeight.normal),
           titleSmall: TextStyle(
-              fontSize: 12.0,
+              fontSize: 14.0,
+              color: Colors.black,
+              fontWeight: FontWeight.normal),
+          headlineLarge: TextStyle(
+              fontSize: 28.0,
+              color: Colors.black,
+              fontWeight: FontWeight.normal),
+          headlineMedium: TextStyle(
+              fontSize: 24.0,
+              color: Colors.black,
+              fontWeight: FontWeight.normal),
+          headlineSmall: TextStyle(
+              fontSize: 20.0,
               color: Colors.black,
               fontWeight: FontWeight.normal),
         ),
@@ -214,49 +228,64 @@ class SettingState extends ChangeNotifier {
         useMaterial3: true,
       );
 
-  ThemeData get darkTheme => ThemeData.dark().copyWith(
-        colorScheme: _colors(Brightness.dark, _accentSetColor!),
+  ThemeData get darkTheme => ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.purple!,
+          primary: Colors.purple!,
+          brightness: Brightness.dark,
+          background: _realDark! ? Colors.black : null,
+        ),
         brightness: Brightness.dark,
-        primaryColorDark: Colors.grey[800],
         textTheme: TextTheme(
+          bodyLarge: TextStyle(
+              fontSize: 15.0,
+              color: Colors.white,
+              fontWeight: FontWeight.normal),
+          bodyMedium: TextStyle(
+              fontSize: 14.0,
+              color: Colors.white,
+              fontWeight: FontWeight.normal),
+          bodySmall: TextStyle(
+              fontSize: 13.0,
+              color: Colors.white,
+              fontWeight: FontWeight.normal),
+          labelLarge: TextStyle(
+              fontSize: 14.0,
+              color: Colors.white,
+              fontWeight: FontWeight.normal),
+          labelMedium: TextStyle(
+              fontSize: 12.0,
+              color: Colors.white,
+              fontWeight: FontWeight.normal),
+          labelSmall: TextStyle(
+              fontSize: 10.0,
+              color: Colors.white,
+              fontWeight: FontWeight.normal),
+          titleLarge: TextStyle(
+              fontSize: 20.0,
+              color: Colors.white,
+              fontWeight: FontWeight.normal),
+          titleMedium: TextStyle(
+              fontSize: 16.0,
+              color: Colors.white,
+              fontWeight: FontWeight.normal),
+          titleSmall: TextStyle(
+              fontSize: 14.0,
+              color: Colors.white,
+              fontWeight: FontWeight.normal),
+          headlineLarge: TextStyle(
+              fontSize: 28.0,
+              color: Colors.white,
+              fontWeight: FontWeight.normal),
+          headlineMedium: TextStyle(
+              fontSize: 24.0,
+              color: Colors.white,
+              fontWeight: FontWeight.normal),
           headlineSmall: TextStyle(
               fontSize: 20.0,
               color: Colors.white,
               fontWeight: FontWeight.normal),
-          bodyLarge: TextStyle(
-              fontSize: 17.0,
-              color: Colors.white,
-              fontWeight: FontWeight.normal),
-          bodyMedium: TextStyle(
-              fontSize: 15.0,
-              color: Colors.white,
-              fontWeight: FontWeight.normal),
-          labelLarge: TextStyle(
-              fontSize: 16.0,
-              color: Colors.white,
-              fontWeight: FontWeight.normal),
-          labelMedium: TextStyle(
-              fontSize: 14.0,
-              color: Colors.white,
-              fontWeight: FontWeight.normal),
-          labelSmall: TextStyle(
-              fontSize: 12.0,
-              color: Colors.white,
-              fontWeight: FontWeight.normal),
-          titleLarge: TextStyle(
-              fontSize: 16.0,
-              color: Colors.white,
-              fontWeight: FontWeight.normal),
-          titleMedium: TextStyle(
-              fontSize: 14.0,
-              color: Colors.white,
-              fontWeight: FontWeight.normal),
-          titleSmall: TextStyle(
-              fontSize: 12.0,
-              color: Colors.white,
-              fontWeight: FontWeight.normal),
         ),
-        primaryColor: _realDark! ? Colors.black : Color(0XFF1B1B1B),
         popupMenuTheme: PopupMenuThemeData()
             .copyWith(color: _realDark! ? Colors.grey[900] : null),
         appBarTheme: AppBarTheme(
@@ -265,7 +294,7 @@ class SettingState extends ChangeNotifier {
             scrolledUnderElevation: 0,
             systemOverlayStyle: SystemUiOverlayStyle.light),
         buttonTheme: ButtonThemeData(height: 32),
-        dialogBackgroundColor: _realDark! ? Colors.grey[900] : null,
+        dialogBackgroundColor: _realDark! ? Colors.grey : null,
         useMaterial3: true,
       );
 
@@ -273,13 +302,6 @@ class SettingState extends ChangeNotifier {
     _theme = mode;
     _saveTheme();
     notifyListeners();
-  }
-
-  ColorScheme _colors(Brightness brightness, Color targetColor) {
-    return ColorScheme.fromSeed(
-      seedColor: targetColor,
-      brightness: brightness,
-    );
   }
 
   void setWorkManager(int? hour) {
@@ -326,6 +348,15 @@ class SettingState extends ChangeNotifier {
   set autoUpdate(bool? boo) {
     _autoUpdate = boo;
     _saveAutoUpdate();
+    notifyListeners();
+  }
+
+  /// Global versionPolicy, default 'DON' (VersionPolicy.NewIfNoDownloaded).
+  VersionPolicy? _versionPolicy;
+  VersionPolicy? get versionPolicy => _versionPolicy;
+  set versionPolicy(VersionPolicy? str) {
+    _versionPolicy = str;
+    _saveVersionPolicy();
     notifyListeners();
   }
 
@@ -478,6 +509,11 @@ class SettingState extends ChangeNotifier {
     _updateInterval = _initUpdateTag;
   }
 
+  Future _getVersionPolicy() async {
+    _versionPolicy = versionPolicyFromString(
+        (await _versionPolicyStorage.getString(defaultValue: 'DON')));
+  }
+
   Future _getDownloadUsingData() async {
     _downloadUsingData = await _downloadUsingDataStorage.getBool(
         defaultValue: true, reverse: true);
@@ -587,6 +623,11 @@ class SettingState extends ChangeNotifier {
     await _autoupdateStorage.saveBool(_autoUpdate, reverse: true);
   }
 
+  Future<void> _saveVersionPolicy() async {
+    await _versionPolicyStorage
+        .saveString(versionPolicyToString(_versionPolicy!));
+  }
+
   Future<void> _saveAutoPlay() async {
     await _autoPlayStorage.saveBool(_autoPlay, reverse: true);
   }
@@ -638,6 +679,8 @@ class SettingState extends ChangeNotifier {
     var autoUpdate =
         await _autoupdateStorage.getBool(defaultValue: true, reverse: true);
     var updateInterval = await _intervalStorage.getInt();
+    var versionPolicy =
+        await _versionPolicyStorage.getString(defaultValue: 'DON');
     var downloadUsingData = await _downloadUsingDataStorage.getBool(
         defaultValue: true, reverse: true);
     var cacheMax = await _cacheStorage.getInt(defaultValue: 500 * 1024 * 1024);
@@ -691,6 +734,7 @@ class SettingState extends ChangeNotifier {
         autoPlay: autoPlay,
         autoUpdate: autoUpdate,
         updateInterval: updateInterval,
+        versionPolicy: versionPolicy,
         downloadUsingData: downloadUsingData,
         cacheMax: cacheMax,
         podcastLayout: podcastLayout,
@@ -729,6 +773,7 @@ class SettingState extends ChangeNotifier {
     await _autoPlayStorage.saveBool(backup.autoPlay, reverse: true);
     await _autoupdateStorage.saveBool(backup.autoUpdate, reverse: true);
     await _intervalStorage.saveInt(backup.updateInterval!);
+    await _versionPolicyStorage.saveString(backup.versionPolicy!);
     await _downloadUsingDataStorage.saveBool(backup.downloadUsingData,
         reverse: true);
     await _cacheStorage.saveInt(backup.cacheMax!);
@@ -779,6 +824,7 @@ class SettingState extends ChangeNotifier {
     }
     await initData();
     await _getAutoUpdate();
+    await _getVersionPolicy();
     await _getDownloadUsingData();
     await _getSleepTimerData();
     await _getShowNotesFonts();

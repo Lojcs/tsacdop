@@ -17,6 +17,7 @@ import '../local_storage/sqflite_localpodcast.dart';
 import '../playlists/playlist_home.dart';
 import '../state/audio_state.dart';
 import '../state/download_state.dart';
+import '../state/episode_state.dart';
 import '../state/podcast_group.dart';
 import '../state/refresh_podcast.dart';
 import '../state/setting_state.dart';
@@ -51,7 +52,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         insets: EdgeInsets.only(
           left: 10.0,
           right: 10.0,
-          top: 10.0,
         ));
   }
 
@@ -90,181 +90,186 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final height = (context.width - 20) / 3 + 140;
+    final height = (context.width - 20) / 3 + 145;
     final settings = Provider.of<SettingState>(context, listen: false);
     final s = context.s;
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
-        systemNavigationBarIconBrightness: context.brightness,
-        statusBarIconBrightness: context.iconBrightness,
-        systemNavigationBarColor: context.background,
-        statusBarColor: context.background,
-      ),
-      child: WillPopScope(
-        onWillPop: () async {
-          if (_playerKey.currentState != null &&
-              _playerKey.currentState!.initSize! > 100) {
-            _playerKey.currentState!.backToMini();
-            return false;
-          } else if (Platform.isAndroid) {
-            _androidAppRetain.invokeMethod('sendToBackground');
-            return false;
-          } else {
-            return true;
-          }
-        },
-        child: Scaffold(
-          key: _scaffoldKey,
-          backgroundColor: context.background,
-          body: Stack(
-            children: <Widget>[
-              SafeArea(
-                bottom: false,
-                child: NestedScrollView(
-                  innerScrollPositionKeyBuilder: () {
-                    return Key('tab${_controller!.index}');
-                  },
-                  pinnedHeaderSliverHeightBuilder: () => 50,
-                  headerSliverBuilder: (context, innerBoxScrolled) {
-                    return <Widget>[
-                      SliverToBoxAdapter(
-                        child: Column(
-                          children: <Widget>[
-                            SizedBox(
-                              height: 50.0,
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: <Widget>[
-                                  featureDiscoveryOverlay(
-                                    context,
-                                    featureId: addFeature,
-                                    tapTarget: Icon(Icons.add_circle_outline),
-                                    title: s.featureDiscoverySearch,
-                                    backgroundColor: Colors.cyan[600],
-                                    buttonColor: Colors.cyan[500],
-                                    description: s.featureDiscoverySearchDes,
-                                    child: IconButton(
-                                      tooltip: s.add,
-                                      splashRadius: 20,
-                                      icon: Icon(Icons.add_circle_outline),
-                                      onPressed: () async {
-                                        await showSearch<int?>(
-                                          context: context,
-                                          delegate: MyHomePageDelegate(
-                                              searchFieldLabel:
-                                                  s.searchPodcast),
-                                        );
-                                      },
-                                    ),
+    return Selector<AudioPlayerNotifier, bool>(
+        selector: (_, audio) => audio.playerRunning,
+        builder: (_, data, __) {
+          context.originalPadding = MediaQuery.of(context).padding;
+          return AnnotatedRegion<SystemUiOverlayStyle>(
+            value: SystemUiOverlayStyle(
+                systemNavigationBarIconBrightness: context.iconBrightness,
+                statusBarIconBrightness: context.iconBrightness,
+                systemNavigationBarColor:
+                    data ? context.accentBackground : context.background,
+                statusBarColor: context.background),
+            child: WillPopScope(
+              onWillPop: () async {
+                if (_playerKey.currentState != null &&
+                    _playerKey.currentState!.initSize! > 100) {
+                  _playerKey.currentState!.backToMini();
+                  return false;
+                } else if (Platform.isAndroid) {
+                  _androidAppRetain.invokeMethod('sendToBackground');
+                  return false;
+                } else {
+                  return true;
+                }
+              },
+              child: Scaffold(
+                key: _scaffoldKey,
+                backgroundColor: context.background,
+                body: SafeArea(
+                  bottom: data,
+                  child: Stack(children: <Widget>[
+                    NestedScrollView(
+                      innerScrollPositionKeyBuilder: () {
+                        return Key('tab${_controller!.index}');
+                      },
+                      pinnedHeaderSliverHeightBuilder: () => 50,
+                      headerSliverBuilder: (context, innerBoxScrolled) {
+                        return <Widget>[
+                          SliverToBoxAdapter(
+                            child: Column(
+                              children: <Widget>[
+                                SizedBox(
+                                  height: 50.0,
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: <Widget>[
+                                      featureDiscoveryOverlay(
+                                        context,
+                                        featureId: addFeature,
+                                        tapTarget:
+                                            Icon(Icons.add_circle_outline),
+                                        title: s.featureDiscoverySearch,
+                                        backgroundColor: Colors.cyan[600],
+                                        buttonColor: Colors.cyan[500],
+                                        description:
+                                            s.featureDiscoverySearchDes,
+                                        child: IconButton(
+                                          tooltip: s.add,
+                                          splashRadius: 20,
+                                          icon: Icon(Icons.add_circle_outline),
+                                          onPressed: () async {
+                                            await showSearch<int?>(
+                                              context: context,
+                                              delegate: MyHomePageDelegate(
+                                                  searchFieldLabel:
+                                                      s.searchPodcast),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                      GestureDetector(
+                                        onTap: () {
+                                          if (context.brightness ==
+                                              Brightness.light) {
+                                            settings.setTheme = ThemeMode.dark;
+                                            settings.setRealDark = false;
+                                          } else if (settings.realDark!) {
+                                            settings.setTheme = ThemeMode.light;
+                                          } else {
+                                            settings.setRealDark = true;
+                                          }
+                                        },
+                                        child: Text(
+                                          'Tsacdop',
+                                          style: GoogleFonts.quicksand(
+                                              color: context.accentColor,
+                                              textStyle: context
+                                                  .textTheme.headlineLarge),
+                                        ),
+                                      ),
+                                      featureDiscoveryOverlay(
+                                        context,
+                                        featureId: menuFeature,
+                                        tapTarget: Icon(Icons.more_vert),
+                                        backgroundColor: Colors.cyan[500],
+                                        buttonColor: Colors.cyan[600],
+                                        title: s.featureDiscoveryOMPL,
+                                        description: s.featureDiscoveryOMPLDes,
+                                        child: Padding(
+                                          padding:
+                                              const EdgeInsets.only(right: 5.0),
+                                          child: PopupMenu(),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  GestureDetector(
-                                    onTap: () => {
-                                      Theme.of(context).brightness ==
-                                              Brightness.light
-                                          ? settings.setTheme = ThemeMode.dark
-                                          : settings.setTheme = ThemeMode.light
-                                    },
-                                    child: Text(
-                                      'Tsacdop',
-                                      style: GoogleFonts.quicksand(
-                                          color: context.accentColor,
-                                          textStyle: TextStyle(fontSize: 25)),
-                                    ),
+                                ),
+                                Import(),
+                              ],
+                            ),
+                          ),
+                          SliverToBoxAdapter(
+                            child: SizedBox(
+                              height: height,
+                              width: context.width,
+                              child: ScrollPodcasts(),
+                            ),
+                          ),
+                          SliverPersistentHeader(
+                            delegate: _SliverAppBarDelegate(
+                              TabBar(
+                                indicator: _getIndicator(context),
+                                isScrollable: true,
+                                indicatorSize: TabBarIndicatorSize.tab,
+                                controller: _controller,
+                                labelStyle: context.textTheme.titleMedium,
+                                tabs: <Widget>[
+                                  Tab(
+                                    text: s.homeTabMenuRecent,
                                   ),
-                                  featureDiscoveryOverlay(
-                                    context,
-                                    featureId: menuFeature,
-                                    tapTarget: Icon(Icons.more_vert),
-                                    backgroundColor: Colors.cyan[500],
-                                    buttonColor: Colors.cyan[600],
-                                    title: s.featureDiscoveryOMPL,
-                                    description: s.featureDiscoveryOMPLDes,
-                                    child: Padding(
-                                      padding:
-                                          const EdgeInsets.only(right: 5.0),
-                                      child: PopupMenu(),
-                                    ),
+                                  Tab(
+                                    text: s.homeTabMenuFavotite,
                                   ),
+                                  Tab(
+                                    text: s.download,
+                                  )
                                 ],
                               ),
                             ),
-                            Import(),
-                          ],
-                        ),
-                      ),
-                      SliverToBoxAdapter(
-                        child: SizedBox(
-                          height: height,
-                          width: context.width,
-                          child: ScrollPodcasts(),
-                        ),
-                      ),
-                      SliverPersistentHeader(
-                        delegate: _SliverAppBarDelegate(
-                          TabBar(
-                            indicator: _getIndicator(context),
-                            isScrollable: true,
-                            indicatorSize: TabBarIndicatorSize.tab,
-                            controller: _controller,
-                            tabs: <Widget>[
-                              Tab(
-                                child: Text(s.homeTabMenuRecent),
-                              ),
-                              Tab(
-                                child: Text(s.homeTabMenuFavotite),
-                              ),
-                              Tab(
-                                child: Text(s.download),
-                              )
-                            ],
+                            pinned: true,
                           ),
-                        ),
-                        pinned: true,
-                      ),
-                    ];
-                  },
-                  body: Column(
-                    children: [
-                      Expanded(
-                        child: TabBarView(
-                          controller: _controller,
-                          children: <Widget>[
-                            NestedScrollViewInnerScrollPositionKeyWidget(
-                              Key('tab0'),
-                              _RecentUpdate(),
+                        ];
+                      },
+                      body: Column(
+                        children: [
+                          Expanded(
+                            child: TabBarView(
+                              // TODO: Add pull to refresh?
+                              controller: _controller,
+                              children: <Widget>[
+                                NestedScrollViewInnerScrollPositionKeyWidget(
+                                  Key('tab0'),
+                                  _RecentUpdate(),
+                                ),
+                                NestedScrollViewInnerScrollPositionKeyWidget(
+                                  Key('tab1'),
+                                  _MyFavorite(),
+                                ),
+                                NestedScrollViewInnerScrollPositionKeyWidget(
+                                  Key('tab2'),
+                                  _MyDownload(),
+                                ),
+                              ],
                             ),
-                            NestedScrollViewInnerScrollPositionKeyWidget(
-                              Key('tab1'),
-                              _MyFavorite(),
-                            ),
-                            NestedScrollViewInnerScrollPositionKeyWidget(
-                              Key('tab2'),
-                              _MyDownload(),
-                            ),
-                          ],
-                        ),
+                          )
+                        ],
                       ),
-                      Selector<AudioPlayerNotifier, bool>(
-                        selector: (_, audio) => audio.playerRunning,
-                        builder: (_, data, __) {
-                          return Padding(
-                            padding: EdgeInsets.only(bottom: data ? 60.0 : 0),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
+                    ),
+                    Container(
+                      child: PlayerWidget(playerKey: _playerKey),
+                    )
+                  ]),
                 ),
               ),
-              Container(
-                child: PlayerWidget(playerKey: _playerKey),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+            ),
+          );
+        });
   }
 }
 
@@ -273,16 +278,16 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   final TabBar _tabBar;
 
   @override
-  double get minExtent => _tabBar.preferredSize.height + 2;
+  double get minExtent => _tabBar.preferredSize.height;
   @override
-  double get maxExtent => _tabBar.preferredSize.height + 2;
+  double get maxExtent => _tabBar.preferredSize.height;
 
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     final s = context.s;
     return Container(
-      color: context.background,
+      color: Colors.transparent,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -301,7 +306,6 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
                   child: _PlaylistButton()),
             ],
           ),
-          Container(height: 2, color: context.primaryColor),
         ],
       ),
     );
@@ -324,7 +328,7 @@ class __PlaylistButtonState extends State<_PlaylistButton> {
   late bool _loadPlay;
 
   Future<void> _getPlaylist() async {
-    await context.read<AudioPlayerNotifier>().initPlaylist();
+    await context.read<AudioPlayerNotifier>().initPlaylists();
     if (mounted) {
       setState(() {
         _loadPlay = true;
@@ -351,7 +355,7 @@ class __PlaylistButtonState extends State<_PlaylistButton> {
             borderRadius: BorderRadius.all(Radius.circular(10))),
         elevation: 1,
         icon: Icon(Icons.playlist_play),
-        color: context.priamryContainer,
+        color: context.accentBackground,
         tooltip: s.menu,
         itemBuilder: (context) => [
           MyPopupMenuItem(
@@ -365,8 +369,8 @@ class __PlaylistButtonState extends State<_PlaylistButton> {
               ),
               child: Selector<AudioPlayerNotifier,
                   Tuple3<bool, EpisodeBrief?, int>>(
-                selector: (_, audio) => Tuple3(
-                    audio.playerRunning, audio.episode, audio.lastPosition),
+                selector: (_, audio) => Tuple3(audio.playerRunning,
+                    audio.episode, audio.audioStartPosition),
                 builder: (_, data, __) => !_loadPlay
                     ? SizedBox(
                         height: 8.0,
@@ -414,7 +418,7 @@ class __PlaylistButtonState extends State<_PlaylistButton> {
                                   padding: EdgeInsets.symmetric(vertical: 2),
                                 ),
                                 SizedBox(
-                                  height: 70,
+                                  height: 77,
                                   width: 140,
                                   child: Column(
                                     children: <Widget>[
@@ -427,7 +431,7 @@ class __PlaylistButtonState extends State<_PlaylistButton> {
                                         data.item2!.title!,
                                         maxLines: 2,
                                         textAlign: TextAlign.center,
-                                        overflow: TextOverflow.fade,
+                                        overflow: TextOverflow.ellipsis,
                                         style:
                                             TextStyle(color: context.textColor),
                                         // style: TextStyle(color: Colors.white),
@@ -518,7 +522,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
 
   /// For group fliter.
   String? _groupName;
-  List<String?>? _group;
+  List<String>? _group;
   Layout? _layout;
   bool? _hideListened;
   late bool _scroll;
@@ -549,7 +553,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
     );
   }
 
-  Future<List<EpisodeBrief>> _getRssItem(int top, List<String?> group,
+  Future<List<EpisodeBrief>> _getRssItem(int top, List<String> group,
       {bool? hideListened}) async {
     var storage = KeyValueStorage(recentLayoutKey);
     var hideListenedStorage = KeyValueStorage(hideListenedKey);
@@ -561,35 +565,84 @@ class _RecentUpdateState extends State<_RecentUpdate>
 
     List<EpisodeBrief> episodes;
     if (group.isEmpty) {
-      episodes =
-          await _dbHelper.getRecentRssItem(top, hideListened: _hideListened!);
+      episodes = await _dbHelper.getEpisodes(
+          excludedFeedIds: [
+            localFolderId
+          ],
+          optionalFields: [
+            EpisodeField.description,
+            EpisodeField.enclosureDuration,
+            EpisodeField.enclosureSize,
+            EpisodeField.isDownloaded,
+            EpisodeField.podcastImage,
+            EpisodeField.primaryColor,
+            EpisodeField.isLiked,
+            EpisodeField.isNew,
+            EpisodeField.isPlayed,
+            EpisodeField.versionInfo
+          ],
+          sortBy: Sorter.pubDate,
+          sortOrder: SortOrder.DESC,
+          limit: top,
+          filterVersions: 1,
+          filterPlayed: _hideListened! ? 1 : 0,
+          episodeState: Provider.of<EpisodeState>(context, listen: false));
     } else {
-      episodes = await _dbHelper.getGroupRssItem(top, group,
-          hideListened: _hideListened);
+      episodes = await _dbHelper.getEpisodes(
+          feedIds: group,
+          optionalFields: [
+            EpisodeField.description,
+            EpisodeField.enclosureDuration,
+            EpisodeField.enclosureSize,
+            EpisodeField.isDownloaded,
+            EpisodeField.podcastImage,
+            EpisodeField.primaryColor,
+            EpisodeField.isLiked,
+            EpisodeField.isNew,
+            EpisodeField.isPlayed,
+            EpisodeField.versionInfo
+          ],
+          sortBy: Sorter.pubDate,
+          sortOrder: SortOrder.DESC,
+          limit: top,
+          filterVersions: 1,
+          filterPlayed: _hideListened! ? 1 : 0,
+          episodeState: Provider.of<EpisodeState>(context, listen: false));
     }
     return episodes;
   }
 
-  Future<int> _getUpdateCounts(List<String?> group) async {
+  Future<int> _getUpdateCounts(List<String> group) async {
     var episodes = <EpisodeBrief>[];
 
     if (group.isEmpty) {
-      episodes = await _dbHelper.getRecentNewRssItem();
+      episodes = await _dbHelper.getEpisodes(
+          optionalFields: [EpisodeField.mediaId],
+          sortBy: Sorter.pubDate,
+          sortOrder: SortOrder.DESC,
+          filterNew: -1);
     } else {
-      episodes = await _dbHelper.getGroupNewRssItem(group);
+      episodes = await _dbHelper.getEpisodes(
+          feedIds: group,
+          optionalFields: [EpisodeField.mediaId],
+          sortBy: Sorter.pubDate,
+          sortOrder: SortOrder.DESC,
+          filterNew: -1);
     }
     return episodes.length;
   }
 
   /// Load more episodes.
   Future<void> _loadMoreEpisode() async {
-    if (mounted) setState(() => _loadMore = true);
-    await Future.delayed(Duration(seconds: 3));
-    if (mounted) {
+    if (mounted)
       setState(() {
         _top = _top + 30;
         _loadMore = false;
       });
+    await Future.delayed(Duration(
+        seconds: 1)); // TODO: Make animation dependent on when it loads
+    if (mounted) {
+      setState(() => _loadMore = true);
     }
   }
 
@@ -810,81 +863,77 @@ class _RecentUpdateState extends State<_RecentUpdate>
                               children: [
                                 if (!_multiSelect!)
                                   Container(
-                                      height: 40,
-                                      color: context.primaryColor,
-                                      child: Material(
-                                        color: Colors.transparent,
-                                        child: Row(
-                                          children: <Widget>[
-                                            _switchGroupButton(),
-                                            Spacer(),
-                                            Material(
-                                              color: Colors.transparent,
-                                              child: IconButton(
-                                                  tooltip: context.s.refresh,
-                                                  icon: Icon(
-                                                      LineIcons.alternateRedo,
-                                                      size: 16),
-                                                  onPressed: () {
-                                                    _updateRssItem();
-                                                    Fluttertoast.showToast(
-                                                      msg: s.refreshStarted,
-                                                      gravity:
-                                                          ToastGravity.BOTTOM,
-                                                    );
-                                                  }),
-                                            ),
-                                            _addNewButton(),
-                                            Material(
-                                              color: Colors.transparent,
-                                              child: IconButton(
-                                                tooltip: s.hideListenedSetting,
-                                                icon: SizedBox(
-                                                  width: 30,
-                                                  height: 15,
-                                                  child: HideListened(
-                                                    hideListened:
-                                                        _hideListened ?? false,
-                                                  ),
-                                                ),
-                                                onPressed: () {
-                                                  setState(() => _hideListened =
-                                                      !_hideListened!);
-                                                },
-                                              ),
-                                            ),
-                                            Material(
-                                              color: Colors.transparent,
-                                              child: LayoutButton(
-                                                layout: _layout,
-                                                onPressed: (layout) =>
-                                                    setState(() {
-                                                  _layout = layout;
-                                                }),
-                                              ),
-                                            ),
-                                            Material(
-                                                color: Colors.transparent,
-                                                child: IconButton(
-                                                  icon: SizedBox(
-                                                    width: 20,
-                                                    height: 10,
-                                                    child: CustomPaint(
-                                                        painter:
-                                                            MultiSelectPainter(
-                                                                color: context
-                                                                    .accentColor)),
-                                                  ),
-                                                  onPressed: () {
-                                                    setState(() {
-                                                      _selectedEpisodes = [];
-                                                      _multiSelect = true;
-                                                    });
-                                                  },
-                                                )),
-                                          ],
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                        color: context.background),
+                                    child: Row(
+                                      children: <Widget>[
+                                        _switchGroupButton(),
+                                        Spacer(),
+                                        Material(
+                                          color: Colors.transparent,
+                                          child: IconButton(
+                                              tooltip: context.s.refresh,
+                                              icon: Icon(
+                                                  LineIcons.alternateRedo,
+                                                  size: 16),
+                                              onPressed: () {
+                                                _updateRssItem();
+                                                Fluttertoast.showToast(
+                                                  msg: s.refreshStarted,
+                                                  gravity: ToastGravity.BOTTOM,
+                                                );
+                                              }),
                                         ),
-                                      )),
+                                        _addNewButton(),
+                                        Material(
+                                          color: Colors.transparent,
+                                          child: IconButton(
+                                            tooltip: s.hideListenedSetting,
+                                            icon: SizedBox(
+                                              width: 30,
+                                              height: 15,
+                                              child: HideListened(
+                                                hideListened:
+                                                    _hideListened ?? false,
+                                              ),
+                                            ),
+                                            onPressed: () {
+                                              setState(() => _hideListened =
+                                                  !_hideListened!);
+                                            },
+                                          ),
+                                        ),
+                                        Material(
+                                          color: Colors.transparent,
+                                          child: LayoutButton(
+                                            layout: _layout,
+                                            onPressed: (layout) => setState(() {
+                                              _layout = layout;
+                                            }),
+                                          ),
+                                        ),
+                                        Material(
+                                            color: Colors.transparent,
+                                            child: IconButton(
+                                              icon: SizedBox(
+                                                width: 20,
+                                                height: 10,
+                                                child: CustomPaint(
+                                                    painter: MultiSelectPainter(
+                                                        color: context
+                                                            .accentColor)),
+                                              ),
+                                              onPressed: () {
+                                                setState(() {
+                                                  _selectedEpisodes = [];
+                                                  _multiSelect = true;
+                                                });
+                                              },
+                                            )),
+                                      ],
+                                    ),
+                                  ),
                                 if (_multiSelect!)
                                   MultiSelectMenuBar(
                                     selectedList: _selectedEpisodes,
@@ -929,8 +978,37 @@ class _MyFavoriteState extends State<_MyFavorite>
       _hideListened = await hideListenedStorage.getBool(defaultValue: false);
     }
     var dbHelper = DBHelper();
-    var episodes = await dbHelper.getLikedRssItem(top, sortBy,
-        hideListened: _hideListened!);
+    Sorter sorter;
+    SortOrder order;
+    switch (sortBy) {
+      case 0:
+        sorter = Sorter.pubDate;
+        order = SortOrder.DESC;
+        break;
+      default: // case 1
+        sorter = Sorter.likedDate;
+        order = SortOrder.DESC;
+        break;
+    }
+    var episodes = await dbHelper.getEpisodes(
+        optionalFields: [
+          EpisodeField.description,
+          EpisodeField.enclosureDuration,
+          EpisodeField.enclosureSize,
+          EpisodeField.isDownloaded,
+          EpisodeField.podcastImage,
+          EpisodeField.primaryColor,
+          EpisodeField.isLiked,
+          EpisodeField.isNew,
+          EpisodeField.isPlayed,
+          EpisodeField.versionInfo
+        ],
+        sortBy: sorter,
+        sortOrder: order,
+        limit: top,
+        filterLiked: -1,
+        filterPlayed: _hideListened! ? 1 : 0,
+        episodeState: Provider.of<EpisodeState>(context, listen: false));
     return episodes;
   }
 
@@ -969,220 +1047,204 @@ class _MyFavoriteState extends State<_MyFavorite>
   Widget build(BuildContext context) {
     super.build(context);
     final s = context.s;
-    return Selector<AudioPlayerNotifier, bool>(
-        selector: (_, audio) => audio.episodeState,
-        builder: (context, episodeState, child) {
-          return FutureBuilder<List<EpisodeBrief>>(
-            future:
-                _getLikedRssItem(_top, _sortBy, hideListened: _hideListened),
-            builder: (context, snapshot) {
-              return (snapshot.hasData)
-                  ? snapshot.data!.length == 0
-                      ? Padding(
-                          padding: EdgeInsets.only(top: 150),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Icon(LineIcons.heartbeat,
-                                  size: 80, color: Colors.grey[500]),
-                              Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 10)),
-                              Text(
-                                s.noEpisodeFavorite,
-                                style: TextStyle(color: Colors.grey[500]),
-                              )
+    return FutureBuilder<List<EpisodeBrief>>(
+      future: _getLikedRssItem(_top, _sortBy, hideListened: _hideListened),
+      builder: (context, snapshot) {
+        return (snapshot.hasData)
+            ? snapshot.data!.length == 0
+                ? Padding(
+                    padding: EdgeInsets.only(top: 150),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Icon(LineIcons.heartbeat,
+                            size: 80, color: Colors.grey[500]),
+                        Padding(padding: EdgeInsets.symmetric(vertical: 10)),
+                        Text(
+                          s.noEpisodeFavorite,
+                          style: TextStyle(color: Colors.grey[500]),
+                        )
+                      ],
+                    ),
+                  )
+                : NotificationListener<ScrollNotification>(
+                    onNotification: (scrollInfo) {
+                      if (scrollInfo.metrics.pixels ==
+                              scrollInfo.metrics.maxScrollExtent &&
+                          snapshot.data!.length == _top) {
+                        if (!_loadMore) {
+                          _loadMoreEpisode();
+                        }
+                      }
+                      return true;
+                    },
+                    child: Stack(
+                      children: [
+                        ScrollConfiguration(
+                          behavior: NoGrowBehavior(),
+                          child: CustomScrollView(
+                            key: PageStorageKey<String>('favorite'),
+                            slivers: <Widget>[
+                              SliverToBoxAdapter(child: SizedBox(height: 40)),
+                              EpisodeGrid(
+                                episodes: snapshot.data,
+                                layout: _layout,
+                                initNum: 0,
+                                openPodcast: true,
+                                multiSelect: _multiSelect,
+                                selectedList: _selectedEpisodes ?? [],
+                                onSelect: (value) => setState(() {
+                                  _selectedEpisodes = value;
+                                }),
+                              ),
+                              SliverList(
+                                delegate: SliverChildBuilderDelegate(
+                                  (context, index) {
+                                    return _loadMore
+                                        ? Container(
+                                            height: 2,
+                                            child: LinearProgressIndicator())
+                                        : Center();
+                                  },
+                                  childCount: 1,
+                                ),
+                              ),
                             ],
                           ),
-                        )
-                      : NotificationListener<ScrollNotification>(
-                          onNotification: (scrollInfo) {
-                            if (scrollInfo.metrics.pixels ==
-                                    scrollInfo.metrics.maxScrollExtent &&
-                                snapshot.data!.length == _top) {
-                              if (!_loadMore) {
-                                _loadMoreEpisode();
-                              }
-                            }
-                            return true;
-                          },
-                          child: Stack(
-                            children: [
-                              ScrollConfiguration(
-                                behavior: NoGrowBehavior(),
-                                child: CustomScrollView(
-                                  key: PageStorageKey<String>('favorite'),
-                                  slivers: <Widget>[
-                                    SliverToBoxAdapter(
-                                        child: SizedBox(height: 40)),
-                                    EpisodeGrid(
-                                      episodes: snapshot.data,
-                                      layout: _layout,
-                                      initNum: 0,
-                                      openPodcast: true,
-                                      multiSelect: _multiSelect,
-                                      selectedList: _selectedEpisodes ?? [],
-                                      onSelect: (value) => setState(() {
-                                        _selectedEpisodes = value;
-                                      }),
-                                    ),
-                                    SliverList(
-                                      delegate: SliverChildBuilderDelegate(
-                                        (context, index) {
-                                          return _loadMore
-                                              ? Container(
-                                                  height: 2,
-                                                  child:
-                                                      LinearProgressIndicator())
-                                              : Center();
+                        ),
+                        Column(
+                          children: [
+                            if (!_multiSelect!)
+                              Container(
+                                height: 40,
+                                color: context.background,
+                                child: Row(
+                                  children: <Widget>[
+                                    Material(
+                                      color: Colors.transparent,
+                                      child: PopupMenuButton<int>(
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.all(
+                                                Radius.circular(10))),
+                                        elevation: 1,
+                                        tooltip: s.homeSubMenuSortBy,
+                                        child: Container(
+                                            height: 50,
+                                            padding: EdgeInsets.symmetric(
+                                                horizontal: 20),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: <Widget>[
+                                                Text(s.homeSubMenuSortBy),
+                                                Padding(
+                                                  padding: EdgeInsets.symmetric(
+                                                      horizontal: 5),
+                                                ),
+                                                Icon(
+                                                  LineIcons.hourglassStart,
+                                                  size: 18,
+                                                )
+                                              ],
+                                            )),
+                                        itemBuilder: (context) => [
+                                          PopupMenuItem(
+                                            value: 0,
+                                            child: Row(
+                                              children: [
+                                                Text(s.updateDate),
+                                                Spacer(),
+                                                if (_sortBy == 0) DotIndicator()
+                                              ],
+                                            ),
+                                          ),
+                                          PopupMenuItem(
+                                            value: 1,
+                                            child: Row(
+                                              children: [
+                                                Text(s.likeDate),
+                                                Spacer(),
+                                                if (_sortBy == 1) DotIndicator()
+                                              ],
+                                            ),
+                                          )
+                                        ],
+                                        onSelected: (value) {
+                                          if (value == 0) {
+                                            setState(() => _sortBy = 0);
+                                          } else if (value == 1) {
+                                            setState(() => _sortBy = 1);
+                                          }
                                         },
-                                        childCount: 1,
                                       ),
                                     ),
+                                    Spacer(),
+                                    Material(
+                                      color: Colors.transparent,
+                                      child: IconButton(
+                                        icon: SizedBox(
+                                          width: 30,
+                                          height: 15,
+                                          child: HideListened(
+                                            hideListened:
+                                                _hideListened ?? false,
+                                          ),
+                                        ),
+                                        onPressed: () {
+                                          setState(() =>
+                                              _hideListened = !_hideListened!);
+                                        },
+                                      ),
+                                    ),
+                                    Material(
+                                      color: Colors.transparent,
+                                      child: LayoutButton(
+                                        layout: _layout,
+                                        onPressed: (layout) => setState(() {
+                                          _layout = layout;
+                                        }),
+                                      ),
+                                    ),
+                                    Material(
+                                        color: Colors.transparent,
+                                        child: IconButton(
+                                          icon: SizedBox(
+                                            width: 20,
+                                            height: 10,
+                                            child: CustomPaint(
+                                                painter: MultiSelectPainter(
+                                                    color:
+                                                        context.accentColor)),
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              _selectedEpisodes = [];
+                                              _multiSelect = true;
+                                            });
+                                          },
+                                        )),
                                   ],
                                 ),
                               ),
-                              Column(
-                                children: [
-                                  if (!_multiSelect!)
-                                    Container(
-                                      height: 40,
-                                      color: context.primaryColor,
-                                      child: Row(
-                                        children: <Widget>[
-                                          Material(
-                                            color: Colors.transparent,
-                                            child: PopupMenuButton<int>(
-                                              shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.all(
-                                                          Radius.circular(10))),
-                                              elevation: 1,
-                                              tooltip: s.homeSubMenuSortBy,
-                                              child: Container(
-                                                  height: 50,
-                                                  padding: EdgeInsets.symmetric(
-                                                      horizontal: 20),
-                                                  child: Row(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: <Widget>[
-                                                      Text(s.homeSubMenuSortBy),
-                                                      Padding(
-                                                        padding: EdgeInsets
-                                                            .symmetric(
-                                                                horizontal: 5),
-                                                      ),
-                                                      Icon(
-                                                        LineIcons
-                                                            .hourglassStart,
-                                                        size: 18,
-                                                      )
-                                                    ],
-                                                  )),
-                                              itemBuilder: (context) => [
-                                                PopupMenuItem(
-                                                  value: 0,
-                                                  child: Row(
-                                                    children: [
-                                                      Text(s.updateDate),
-                                                      Spacer(),
-                                                      if (_sortBy == 0)
-                                                        DotIndicator()
-                                                    ],
-                                                  ),
-                                                ),
-                                                PopupMenuItem(
-                                                  value: 1,
-                                                  child: Row(
-                                                    children: [
-                                                      Text(s.likeDate),
-                                                      Spacer(),
-                                                      if (_sortBy == 1)
-                                                        DotIndicator()
-                                                    ],
-                                                  ),
-                                                )
-                                              ],
-                                              onSelected: (value) {
-                                                if (value == 0) {
-                                                  setState(() => _sortBy = 0);
-                                                } else if (value == 1) {
-                                                  setState(() => _sortBy = 1);
-                                                }
-                                              },
-                                            ),
-                                          ),
-                                          Spacer(),
-                                          Material(
-                                            color: Colors.transparent,
-                                            child: IconButton(
-                                              icon: SizedBox(
-                                                width: 30,
-                                                height: 15,
-                                                child: HideListened(
-                                                  hideListened:
-                                                      _hideListened ?? false,
-                                                ),
-                                              ),
-                                              onPressed: () {
-                                                setState(() => _hideListened =
-                                                    !_hideListened!);
-                                              },
-                                            ),
-                                          ),
-                                          Material(
-                                            color: Colors.transparent,
-                                            child: LayoutButton(
-                                              layout: _layout,
-                                              onPressed: (layout) =>
-                                                  setState(() {
-                                                _layout = layout;
-                                              }),
-                                            ),
-                                          ),
-                                          Material(
-                                              color: Colors.transparent,
-                                              child: IconButton(
-                                                icon: SizedBox(
-                                                  width: 20,
-                                                  height: 10,
-                                                  child: CustomPaint(
-                                                      painter:
-                                                          MultiSelectPainter(
-                                                              color: context
-                                                                  .accentColor)),
-                                                ),
-                                                onPressed: () {
-                                                  setState(() {
-                                                    _selectedEpisodes = [];
-                                                    _multiSelect = true;
-                                                  });
-                                                },
-                                              )),
-                                        ],
-                                      ),
-                                    ),
-                                  if (_multiSelect!)
-                                    MultiSelectMenuBar(
-                                      selectedList: _selectedEpisodes,
-                                      hideFavorite: true,
-                                      onClose: (value) {
-                                        setState(() {
-                                          if (value) {
-                                            _multiSelect = false;
-                                          }
-                                        });
-                                      },
-                                    ),
-                                ],
+                            if (_multiSelect!)
+                              MultiSelectMenuBar(
+                                selectedList: _selectedEpisodes,
+                                hideFavorite: true,
+                                onClose: (value) {
+                                  setState(() {
+                                    if (value) {
+                                      _multiSelect = false;
+                                    }
+                                  });
+                                },
                               ),
-                            ],
-                          ),
-                        )
-                  : Center();
-            },
-          );
-        });
+                          ],
+                        ),
+                      ],
+                    ),
+                  )
+            : Center();
+      },
+    );
   }
 
   @override
@@ -1209,8 +1271,40 @@ class _MyDownloadState extends State<_MyDownload>
       _hideListened = await hideListenedStorage.getBool(defaultValue: false);
     }
     var dbHelper = DBHelper();
-    var episodes = await dbHelper.getDownloadedEpisode(sortBy,
-        hideListened: _hideListened!);
+    Sorter sorter;
+    SortOrder order;
+    switch (sortBy) {
+      case 0:
+        sorter = Sorter.downloadDate;
+        order = SortOrder.DESC;
+        break;
+      case 1:
+        sorter = Sorter.downloadDate;
+        order = SortOrder.ASC;
+        break;
+      default: // case 2
+        sorter = Sorter.enclosureLength;
+        order = SortOrder.DESC;
+        break;
+    }
+    var episodes = await dbHelper.getEpisodes(
+        optionalFields: [
+          EpisodeField.description,
+          EpisodeField.enclosureDuration,
+          EpisodeField.enclosureSize,
+          EpisodeField.isDownloaded,
+          EpisodeField.podcastImage,
+          EpisodeField.primaryColor,
+          EpisodeField.isLiked,
+          EpisodeField.isNew,
+          EpisodeField.isPlayed,
+          EpisodeField.versionInfo
+        ],
+        sortBy: sorter,
+        sortOrder: order,
+        filterPlayed: hideListened ?? false ? 1 : 0,
+        filterDownloaded: -1,
+        episodeState: Provider.of<EpisodeState>(context, listen: false));
     return episodes;
   }
 
@@ -1238,7 +1332,7 @@ class _MyDownloadState extends State<_MyDownload>
                 SliverToBoxAdapter(
                   child: Container(
                       height: 40,
-                      color: context.primaryColor,
+                      color: context.background,
                       child: Row(
                         children: <Widget>[
                           Container(
@@ -1263,7 +1357,7 @@ class _MyDownloadState extends State<_MyDownload>
                           Material(
                             color: Colors.transparent,
                             child: LayoutButton(
-                              layout: _layout ?? Layout.one,
+                              layout: _layout ?? Layout.large,
                               onPressed: (layout) => setState(() {
                                 _layout = layout;
                               }),

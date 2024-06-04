@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tuple/tuple.dart';
 
 import '../state/podcast_group.dart';
 import '../type/playlist.dart';
@@ -62,10 +63,11 @@ const String playerStateKey = 'playerStateKey';
 const String openPlaylistDefaultKey = 'openPlaylistDefaultKey';
 const String openAllPodcastDefaultKey = 'openAllPodcastDefaultKey';
 const String useWallpapterThemeKey = 'useWallpaperThemeKet';
+const String versionPolicyKey = 'versionPolicyKey';
 
 class KeyValueStorage {
   final String key;
-  KeyValueStorage(this.key);
+  const KeyValueStorage(this.key);
   Future<List<GroupEntity>?> getGroups() async {
     final prefs = await SharedPreferences.getInstance();
     if (prefs.getString(key) == null) {
@@ -89,7 +91,7 @@ class KeyValueStorage {
         }));
   }
 
-  Future<List<PlaylistEntity>?> getPlaylists() async {
+  Future<List<PlaylistEntity>> getPlaylists() async {
     var prefs = await SharedPreferences.getInstance();
     if (prefs.getString(key) == null) {
       var episodeList = prefs.getStringList(playlistKey);
@@ -115,18 +117,31 @@ class KeyValueStorage {
   }
 
   Future<bool> savePlayerState(
-      String playlist, String episode, int position) async {
+      String playlist, int episodeIndex, int position) async {
     var prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(key, [playlist, episode, position.toString()]);
+    return prefs.setStringList(
+        key, [playlist, episodeIndex.toString(), position.toString()]);
   }
 
-  Future<List<String>> getPlayerState() async {
+  Future<Tuple3<String, int, int>> getPlayerState() async {
     var prefs = await SharedPreferences.getInstance();
-    if (prefs.getStringList(key) == null) {
+    List<String>? saved = prefs.getStringList(key);
+    if (saved == null) {
       final position = prefs.getInt(audioPositionKey) ?? 0;
-      await savePlayerState('', '', position);
+      await savePlayerState('', 0, position);
+      saved = ['', '0', position.toString()];
     }
-    return prefs.getStringList(key)!;
+    int episodeIndex = 0;
+    int position = 0;
+    try {
+      episodeIndex = int.parse(saved[1]);
+    } catch (e) {
+      if (!(e is FormatException)) {
+        throw e;
+      }
+    }
+    position = int.parse(saved[2]);
+    return Tuple3<String, int, int>(saved[0], episodeIndex, position);
   }
 
   Future<bool> saveInt(int setting) async {
@@ -158,10 +173,10 @@ class KeyValueStorage {
     return prefs.setString(key, string);
   }
 
-  Future<String> getString() async {
+  Future<String> getString({String defaultValue = ''}) async {
     var prefs = await SharedPreferences.getInstance();
     if (prefs.getString(key) == null) {
-      await prefs.setString(key, '');
+      await prefs.setString(key, defaultValue);
     }
     return prefs.getString(key)!;
   }

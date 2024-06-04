@@ -81,18 +81,12 @@ class _PodcastManageState extends State<PodcastManage>
   Widget build(BuildContext context) {
     final s = context.s;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
-        statusBarColor: context.priamryContainer,
-        systemNavigationBarColor: context.background,
-      ),
+      value: context.overlay,
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: context.priamryContainer,
+          backgroundColor: context.background,
           title: Text(context.s.groups(2)),
           leading: CustomBackButton(),
-          systemOverlayStyle: SystemUiOverlayStyle(
-            statusBarColor: context.priamryContainer,
-          ),
           actions: <Widget>[
             featureDiscoveryOverlay(
               context,
@@ -143,7 +137,7 @@ class _PodcastManageState extends State<PodcastManage>
                 return Stack(
                   children: <Widget>[
                     ColoredBox(
-                      color: context.priamryContainer,
+                      color: context.background,
                       child: CustomTabView(
                         itemCount: _groups.length,
                         tabBuilder: (context, index) => Tab(
@@ -490,8 +484,9 @@ class _AddGroupState extends State<AddGroup> {
       child: SafeArea(
         top: false,
         child: AlertDialog(
+          backgroundColor: context.accentBackgroundWeak,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: context.radiusMedium,
           ),
           elevation: 1,
           contentPadding: EdgeInsets.symmetric(horizontal: 20),

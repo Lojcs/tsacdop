@@ -8,11 +8,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
+import 'package:tsacdop/state/audio_state.dart';
+import 'package:tuple/tuple.dart';
 
 import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../type/episode_task.dart';
 import '../type/episodebrief.dart';
+import 'episode_state.dart';
 
 void downloadCallback(String id, DownloadTaskStatus status, int progress) {
   developer.log('Homepage callback task in $id  status ($status) $progress');
@@ -32,7 +36,9 @@ class AutoDownloader {
   final DBHelper _dbHelper = DBHelper();
   final List<EpisodeTask> _episodeTasks = [];
   final Completer _completer = Completer();
-  AutoDownloader() {
+  late final EpisodeState _episodeState;
+  AutoDownloader(BuildContext context) {
+    _episodeState = Provider.of<EpisodeState>(context, listen: false);
     FlutterDownloader.registerCallback(autoDownloadCallback);
   }
 
@@ -80,16 +86,15 @@ class AutoDownloader {
   }
 
   Future _saveMediaId(EpisodeTask episodeTask) async {
-    final completeTask = await (FlutterDownloader.loadTasksWithRawQuery(
-            query: "SELECT * FROM task WHERE task_id = '${episodeTask.taskId}'")
-        as FutureOr<List<DownloadTask>>);
-    var filePath =
-        'file://${path.join(completeTask.first.savedDir, Uri.encodeComponent(completeTask.first.filename!))}';
-    var fileStat = await File(
+    final completeTask = await FlutterDownloader.loadTasksWithRawQuery(
+        query: "SELECT * FROM task WHERE task_id = '${episodeTask.taskId}'");
+    final filePath =
+        'file://${path.join(completeTask!.first.savedDir, Uri.encodeComponent(completeTask.first.filename!))}';
+    final fileStat = await File(
             path.join(completeTask.first.savedDir, completeTask.first.filename))
         .stat();
-    await _dbHelper.saveMediaId(episodeTask.episode!.enclosureUrl, filePath,
-        episodeTask.taskId, fileStat.size);
+    await _dbHelper.saveMediaId(episodeTask.episode!, filePath, _episodeState,
+        taskId: episodeTask.taskId, size: fileStat.size);
     _episodeTasks.removeWhere((element) =>
         element.episode!.enclosureUrl == episodeTask.episode!.enclosureUrl);
     if (_episodeTasks.length == 0) _unbindBackgroundIsolate();
@@ -99,7 +104,7 @@ class AutoDownloader {
       {bool showNotification = false}) async {
     for (var episode in episodes) {
       final dir = await _getDownloadDirectory();
-      var localPath = path.join(dir.path, episode.feedTitle);
+      var localPath = path.join(dir.path, episode.podcastTitle);
       final saveDir = Directory(localPath);
       var hasExisted = await saveDir.exists();
       if (!hasExisted) {
@@ -123,8 +128,6 @@ class AutoDownloader {
         openFileFromNotification: false,
       );
       _episodeTasks.add(EpisodeTask(episode, taskId));
-      var dbHelper = DBHelper();
-      await dbHelper.saveDownloaded(episode.enclosureUrl, taskId);
     }
     await _completer.future;
     return;
@@ -134,10 +137,12 @@ class AutoDownloader {
 //For download episode inside app
 class DownloadState extends ChangeNotifier {
   final DBHelper _dbHelper = DBHelper();
+  late final EpisodeState _episodeState;
   List<EpisodeTask> _episodeTasks = [];
   List<EpisodeTask> get episodeTasks => _episodeTasks;
 
-  DownloadState() {
+  DownloadState(BuildContext context) {
+    _episodeState = Provider.of<EpisodeState>(context, listen: false);
     _autoDelete();
     _bindBackgroundIsolate();
     FlutterDownloader.registerCallback(downloadCallback);
@@ -151,11 +156,25 @@ class DownloadState extends ChangeNotifier {
 
   Future<void> _loadTasks() async {
     _episodeTasks = [];
-    var dbHelper = DBHelper();
     var tasks = await FlutterDownloader.loadTasks();
     if (tasks != null && tasks.isNotEmpty) {
       for (var task in tasks) {
-        var episode = await dbHelper.getRssItemWithUrl(task.url);
+        EpisodeBrief? episode;
+        List<EpisodeBrief> episodes = await _dbHelper.getEpisodes(episodeUrls: [
+          task.url
+        ], optionalFields: [
+          EpisodeField.isDownloaded,
+          EpisodeField.mediaId,
+          EpisodeField.isNew,
+          EpisodeField.skipSecondsStart,
+          EpisodeField.skipSecondsEnd,
+          EpisodeField.episodeImage,
+          EpisodeField.chapterLink
+        ]);
+        if (episodes.isEmpty)
+          episode = null;
+        else
+          episode = episodes[0];
         if (episode == null) {
           await FlutterDownloader.remove(
               taskId: task.taskId, shouldDeleteContent: true);
@@ -166,18 +185,22 @@ class DownloadState extends ChangeNotifier {
             if (!exist) {
               await FlutterDownloader.remove(
                   taskId: task.taskId, shouldDeleteContent: true);
-              await dbHelper.delDownloaded(episode.enclosureUrl);
+              await _dbHelper.saveMediaId(
+                  episode, episode.enclosureUrl, _episodeState);
             } else {
+              var filePath =
+                  'file://${path.join(task.savedDir, Uri.encodeComponent(task.filename!))}';
               if (episode.enclosureUrl == episode.mediaId) {
-                var filePath =
-                    'file://${path.join(task.savedDir, Uri.encodeComponent(task.filename!))}';
                 var fileStat =
                     await File(path.join(task.savedDir, task.filename)).stat();
-                await dbHelper.saveMediaId(
-                    episode.enclosureUrl, filePath, task.taskId, fileStat.size);
+                await _dbHelper.saveMediaId(episode, filePath, _episodeState,
+                    taskId: task.taskId, size: fileStat.size);
               }
-              _episodeTasks.add(EpisodeTask(episode, task.taskId,
-                  progress: task.progress, status: task.status));
+              _episodeTasks.add(EpisodeTask(
+                  episode.copyWith(mediaId: filePath, isDownloaded: true),
+                  task.taskId,
+                  progress: task.progress,
+                  status: task.status));
             }
           } else {
             _episodeTasks.add(EpisodeTask(episode, task.taskId,
@@ -236,10 +259,14 @@ class DownloadState extends ChangeNotifier {
     final fileStat = await File(
             path.join(completeTask.first.savedDir, completeTask.first.filename))
         .stat();
-    _dbHelper.saveMediaId(episodeTask.episode!.enclosureUrl, filePath,
-        episodeTask.taskId, fileStat.size);
-    final episode =
-        await _dbHelper.getRssItemWithUrl(episodeTask.episode!.enclosureUrl);
+    await _dbHelper.saveMediaId(episodeTask.episode!, filePath, _episodeState,
+        taskId: episodeTask.taskId, size: fileStat.size);
+    EpisodeBrief episode =
+        await episodeTask.episode!.copyWithFromDB(newFields: [
+      EpisodeField.isDownloaded,
+      EpisodeField.mediaId,
+      EpisodeField.isNew,
+    ]);
     _removeTask(episodeTask.episode);
     _episodeTasks.add(EpisodeTask(episode, episodeTask.taskId,
         progress: 100, status: DownloadTaskStatus.complete));
@@ -271,7 +298,7 @@ class DownloadState extends ChangeNotifier {
     if (!isDownloaded) {
       final dir = await _getDownloadDirectory();
       var localPath =
-          path.join(dir.path, episode.feedTitle?.replaceAll('/', ''));
+          path.join(dir.path, episode.podcastTitle?.replaceAll('/', ''));
       final saveDir = Directory(localPath);
       var hasExisted = await saveDir.exists();
       if (!hasExisted) {
@@ -294,8 +321,9 @@ class DownloadState extends ChangeNotifier {
         showNotification: showNotification,
         openFileFromNotification: false,
       );
-      _episodeTasks.add(EpisodeTask(episode, taskId));
-      await _dbHelper.saveDownloaded(episode.enclosureUrl, taskId);
+      _episodeTasks.add(EpisodeTask(
+          await episode.copyWithFromDB(newFields: [EpisodeField.isDownloaded]),
+          taskId));
       notifyListeners();
     }
   }
@@ -315,7 +343,6 @@ class DownloadState extends ChangeNotifier {
     var index = _episodeTasks.indexOf(task);
     _episodeTasks[index] = task.copyWith(taskId: newTaskId);
     notifyListeners();
-    await _dbHelper.saveDownloaded(episode.enclosureUrl, newTaskId);
   }
 
   Future retryTask(EpisodeBrief episode) async {
@@ -325,7 +352,6 @@ class DownloadState extends ChangeNotifier {
     var index = _episodeTasks.indexOf(task);
     _episodeTasks[index] = task.copyWith(taskId: newTaskId);
     notifyListeners();
-    await _dbHelper.saveDownloaded(episode.enclosureUrl, newTaskId);
   }
 
   Future removeTask(EpisodeBrief episode) async {
@@ -338,7 +364,7 @@ class DownloadState extends ChangeNotifier {
     var task = episodeToTask(episode);
     await FlutterDownloader.remove(
         taskId: task.taskId!, shouldDeleteContent: true);
-    await _dbHelper.delDownloaded(episode.enclosureUrl);
+    await _dbHelper.saveMediaId(episode, episode.enclosureUrl, _episodeState);
 
     for (var episodeTask in _episodeTasks) {
       if (episodeTask.taskId == task.taskId) {
@@ -362,12 +388,17 @@ class DownloadState extends ChangeNotifier {
     final deletePlayed = await deletePlayedStorage.getBool(defaultValue: false);
     if (autoDelete == 0) {
       await autoDeleteStorage.saveInt(30);
-    } else if (autoDelete > 0) {
+    } else if (autoDelete > 0 && deletePlayed) {
       var deadline = DateTime.now()
           .subtract(Duration(days: autoDelete))
           .millisecondsSinceEpoch;
-      var episodes = await _dbHelper.getOutdatedEpisode(deadline,
-          deletePlayed: deletePlayed);
+      var episodes = await _dbHelper.getEpisodes(
+          rangeParameters: [Sorter.downloadDate],
+          rangeDelimiters: [Tuple2(-1, deadline)],
+          filterPlayed: 1,
+          filterDownloaded: -1);
+      episodes.addAll(
+          await _dbHelper.getEpisodes(filterPlayed: -1, filterDownloaded: -1));
       if (episodes.isNotEmpty) {
         for (var episode in episodes) {
           await delTask(episode);

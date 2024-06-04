@@ -711,7 +711,8 @@ class _ImageRotateState extends State<ImageRotate>
           height: 30,
           child: CircleAvatar(
               backgroundColor: widget.episodeItem!.backgroudColor(context),
-              backgroundImage: widget.episodeItem!.avatarImage),
+              backgroundImage:
+                  widget.episodeItem!.episodeOrPodcastImageProvider),
         ),
       ),
     );
@@ -1086,15 +1087,15 @@ class LayoutButton extends StatelessWidget {
     return IconButton(
       padding: EdgeInsets.zero,
       onPressed: () {
-        if (layout == Layout.three) {
-          onPressed!(Layout.one);
-        } else if (layout == Layout.two) {
-          onPressed!(Layout.three);
+        if (layout == Layout.small) {
+          onPressed!(Layout.large);
+        } else if (layout == Layout.medium) {
+          onPressed!(Layout.small);
         } else {
-          onPressed!(Layout.two);
+          onPressed!(Layout.medium);
         }
       },
-      icon: layout == Layout.three
+      icon: layout == Layout.small
           ? SizedBox(
               height: 10,
               width: 30,
@@ -1102,7 +1103,7 @@ class LayoutButton extends StatelessWidget {
                 painter: LayoutPainter(0, context.textColor),
               ),
             )
-          : layout == Layout.two
+          : layout == Layout.medium
               ? SizedBox(
                   height: 10,
                   width: 30,

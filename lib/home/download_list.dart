@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:provider/provider.dart';
+import 'package:tsacdop/type/episodebrief.dart';
 
 import '../episodes/episode_detail.dart';
+import '../local_storage/sqflite_localpodcast.dart';
 import '../state/download_state.dart';
 import '../type/episode_task.dart';
 import '../util/pageroute.dart';
@@ -79,7 +81,7 @@ class _DownloadListState extends State<DownloadList> {
     return Consumer<DownloadState>(builder: (_, downloader, __) {
       final tasks = downloader.episodeTasks
           .where((task) => task.status!.value != 3)
-          .toList();
+          .toList(); // TODO: This seems to be slow and unreliable.
       return tasks.length > 0
           ? SliverPadding(
               padding: EdgeInsets.symmetric(vertical: 5.0),
@@ -90,9 +92,28 @@ class _DownloadListState extends State<DownloadList> {
                       onTap: () => Navigator.push(
                         context,
                         ScaleRoute(
-                            page: EpisodeDetail(
-                          episodeItem: tasks[index].episode,
-                        )),
+                            page: FutureBuilder(
+                                future: tasks[index]
+                                    .episode!
+                                    .copyWithFromDB(newFields: [
+                                  EpisodeField.description,
+                                  EpisodeField.enclosureDuration,
+                                  EpisodeField.enclosureSize,
+                                  EpisodeField.isDownloaded,
+                                  EpisodeField.podcastImage,
+                                  EpisodeField.primaryColor,
+                                  EpisodeField.isLiked,
+                                  EpisodeField.isNew,
+                                  EpisodeField.isPlayed,
+                                  EpisodeField.versionInfo
+                                ]),
+                                builder: ((context, snapshot) =>
+                                    snapshot.hasData
+                                        ? EpisodeDetail(
+                                            episodeItem:
+                                                snapshot.data as EpisodeBrief,
+                                          )
+                                        : Center()))),
                       ),
                       title: SizedBox(
                         height: 40,

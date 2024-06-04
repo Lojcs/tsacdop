@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:tsacdop/state/episode_state.dart';
 import 'package:tuple/tuple.dart';
 
 import 'generated/l10n.dart';
@@ -32,13 +33,17 @@ Future main() async {
         ChangeNotifierProvider(
           create: (_) => themeSetting,
         ),
-        ChangeNotifierProvider(create: (_) => AudioPlayerNotifier()),
+        ChangeNotifierProvider(create: (_) => EpisodeState()),
+        ChangeNotifierProvider(
+          lazy: false,
+          create: (context) => AudioPlayerNotifier(context),
+        ),
         ChangeNotifierProvider(create: (_) => GroupList()),
         ChangeNotifierProvider(create: (_) => RefreshWorker()),
         ChangeNotifierProvider(create: (_) => SearchState()),
         ChangeNotifierProvider(
           lazy: false,
-          create: (_) => DownloadState(),
+          create: (context) => DownloadState(context),
         )
       ],
       child: MyApp(),
@@ -56,6 +61,8 @@ Future main() async {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    Provider.of<SettingState>(context, listen: false).context = context;
+    Provider.of<EpisodeState>(context, listen: false).context = context;
     return Selector<SettingState,
         Tuple4<ThemeMode?, ThemeData, ThemeData, bool?>>(
       selector: (_, setting) => Tuple4(setting.theme, setting.lightTheme,
@@ -63,11 +70,15 @@ class MyApp extends StatelessWidget {
       builder: (_, data, child) {
         return FeatureDiscovery(
           child: DynamicColorBuilder(builder: (lightDynamic, darkDynamic) {
-            final lightTheme = data.item4!
+            final settings = Provider.of<SettingState>(context, listen: false);
+            final lightTheme = data.item4! && lightDynamic != null
                 ? data.item2.copyWith(colorScheme: lightDynamic)
                 : data.item2;
-            final darkTheme = data.item4!
-                ? data.item3.copyWith(colorScheme: lightDynamic)
+            final darkTheme = data.item4! && darkDynamic != null
+                ? data.item3.copyWith(
+                    colorScheme: settings.realDark!
+                        ? darkDynamic!.copyWith(background: Colors.black)
+                        : darkDynamic)
                 : data.item3;
             return MaterialApp(
               themeMode: data.item1,

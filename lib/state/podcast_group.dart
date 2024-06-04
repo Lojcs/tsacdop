@@ -42,7 +42,7 @@ class GroupEntity {
   final String? name;
   final String? id;
   final String? color;
-  final List<String?> podcastList;
+  final List<String> podcastList;
 
   GroupEntity(this.name, this.id, this.color, this.podcastList);
 
@@ -67,14 +67,14 @@ class PodcastGroup extends Equatable {
   final String? color;
 
   /// Id lists of podcasts in group.
-  final List<String?> podcastList;
+  final List<String> podcastList;
 
   final List<PodcastLocal> podcasts;
 
   PodcastGroup(this.name,
       {this.color = '#000000',
       String? id,
-      List<String?>? podcastList,
+      List<String>? podcastList,
       List<PodcastLocal>? podcasts})
       : id = id ?? Uuid().v4(),
         podcastList = podcastList ?? [],
@@ -484,7 +484,7 @@ class GroupList extends ChangeNotifier {
     }
     _groups = [
       ..._groups,
-      PodcastGroup(groupName, podcastList: [id], podcasts: podcasts)
+      PodcastGroup(groupName, podcastList: [id!], podcasts: podcasts)
     ];
     notifyListeners();
     await _saveGroup();
@@ -671,7 +671,7 @@ Future<void> subIsolateEntryPoint(SendPort sendPort) async {
             : <String>[];
         var podcastLocal = PodcastLocal(p.title, imageUrl, realUrl,
             primaryColor, author, uuid, imagePath, provider, link, funding,
-            description: p.description);
+            description: p.description!);
 
         await dbHelper.savePodcastLocal(podcastLocal);
 

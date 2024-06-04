@@ -30,10 +30,14 @@ class _LayoutSettingState extends State<LayoutSetting> {
       child: Scaffold(
           backgroundColor: context.background,
           appBar: AppBar(
-            title: Text(s.settingsLayout),
+            title: Text(
+              s.settingsLayout,
+              style: context.textTheme.titleLarge,
+            ),
             leading: CustomBackButton(),
             elevation: 0,
-            backgroundColor: context.primaryColor,
+            scrolledUnderElevation: 0,
+            backgroundColor: context.background,
           ),
           body: SingleChildScrollView(
             child: Column(
@@ -368,7 +372,7 @@ class _LayoutSettingState extends State<LayoutSetting> {
                       context,
                       key: key,
                       layout: snapshot.data,
-                      option: Layout.one,
+                      option: Layout.large,
                       scale: 4,
                       borderRadius: BorderRadius.only(
                           bottomLeft: Radius.circular(5),
@@ -378,13 +382,13 @@ class _LayoutSettingState extends State<LayoutSetting> {
                       context,
                       key: key,
                       layout: snapshot.data,
-                      option: Layout.two,
+                      option: Layout.medium,
                       scale: 1,
                     ),
                     _gridOptions(context,
                         key: key,
                         layout: snapshot.data,
-                        option: Layout.three,
+                        option: Layout.small,
                         scale: 0,
                         borderRadius: BorderRadius.only(
                             bottomRight: Radius.circular(5),

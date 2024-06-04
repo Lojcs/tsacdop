@@ -166,6 +166,16 @@ class S {
     );
   }
 
+  /// `Default`
+  String get capitalDefault {
+    return Intl.message(
+      'Default',
+      name: 'capitalDefault',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Cellular data warning`
   String get cellularConfirm {
     return Intl.message(
@@ -442,6 +452,36 @@ class S {
       name: 'episode',
       desc: '',
       args: [count],
+    );
+  }
+
+  /// `Downloaded if exists, else newest`
+  String get episodeVersioningNewIfNotDownloaded {
+    return Intl.message(
+      'Downloaded if exists, else newest',
+      name: 'episodeVersioningNewIfNotDownloaded',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Newest`
+  String get episodeVersioningNew {
+    return Intl.message(
+      'Newest',
+      name: 'episodeVersioningNew',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Oldest`
+  String get episodeVersioningOld {
+    return Intl.message(
+      'Oldest',
+      name: 'episodeVersioningOld',
+      desc: '',
+      args: [],
     );
   }
 
@@ -1072,6 +1112,16 @@ class S {
       name: 'listened',
       desc: '',
       args: [],
+    );
+  }
+
+  /// `Local episode at {filePath}`
+  String localEpisodeDescription(Object filePath) {
+    return Intl.message(
+      'Local episode at $filePath',
+      name: 'localEpisodeDescription',
+      desc: '',
+      args: [filePath],
     );
   }
 
@@ -2152,6 +2202,16 @@ class S {
     );
   }
 
+  /// `Are you sure you want to reenable "Discover Features"?`
+  String get settingsDiscoveryDes {
+    return Intl.message(
+      'Are you sure you want to reenable "Discover Features"?',
+      name: 'settingsDiscoveryDes',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Download position`
   String get settingsDownloadPosition {
     return Intl.message(
@@ -2177,6 +2237,36 @@ class S {
     return Intl.message(
       'Refresh all podcasts in the background to get latest episodes',
       name: 'settingsEnableSyncingDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Episode Management`
+  String get settingsEpisodeManagement {
+    return Intl.message(
+      'Episode Management',
+      name: 'settingsEpisodeManagement',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Default Episode Version`
+  String get settingsEpisodeVersioning {
+    return Intl.message(
+      'Default Episode Version',
+      name: 'settingsEpisodeVersioning',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Which version of an episode is displayed/downloaded by default. Can be overridden in podcast settings.`
+  String get settingsEpisodeVersioningDes {
+    return Intl.message(
+      'Which version of an episode is displayed/downloaded by default. Can be overridden in podcast settings.',
+      name: 'settingsEpisodeVersioningDes',
       desc: '',
       args: [],
     );

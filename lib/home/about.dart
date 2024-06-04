@@ -29,19 +29,17 @@ class AboutApp extends StatelessWidget {
 
     final s = context.s;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
-        statusBarColor: context.background,
-        statusBarIconBrightness: context.iconBrightness,
-        systemNavigationBarColor: context.background,
-        systemNavigationBarIconBrightness: context.iconBrightness,
-      ),
+      value: context.overlay,
       child: SafeArea(
         child: Scaffold(
           backgroundColor: context.background,
           appBar: AppBar(
             backgroundColor: context.background,
-            title: Text(s.homeToprightMenuAbout),
-            scrolledUnderElevation: 1,
+            title: Text(
+              s.homeToprightMenuAbout,
+              style: context.textTheme.titleLarge,
+            ),
+            scrolledUnderElevation: 0,
             leading: CustomBackButton(),
           ),
           body: SingleChildScrollView(
