@@ -53,8 +53,8 @@ class PodcastsBackup {
     return builder.buildDocument();
   }
 
-  static parseOPML(String opml) {
-    var data = <String?, List<OmplOutline>>{};
+  static Map<String, List<OmplOutline>> parseOPML(String opml) {
+    var data = <String, List<OmplOutline>>{};
     // var opml = file.readAsStringSync();
     var content = xml.XmlDocument.parse(opml);
     var title =
@@ -76,7 +76,7 @@ class PodcastsBackup {
           .findElements('outline')
           .map((ele) => OmplOutline.parse(ele))
           .toList();
-      data[title] = total;
+      data[title!] = total;
     }
     return data;
   }

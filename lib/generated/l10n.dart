@@ -312,10 +312,10 @@ class S {
     );
   }
 
-  /// `This is the default queue, can't be removed.`
+  /// `This is the default queue, can''t be removed.`
   String get defaultQueueReminder {
     return Intl.message(
-      'This is the default queue, can\'t be removed.',
+      'This is the default queue, can\'\'t be removed.',
       name: 'defaultQueueReminder',
       desc: 'Remind user that default queue can\'t be removed.',
       args: [],
@@ -1311,6 +1311,16 @@ class S {
     );
   }
 
+  /// `Network error (DNS issue)`
+  String get networkErrorDNS {
+    return Intl.message(
+      'Network error (DNS issue)',
+      name: 'networkErrorDNS',
+      desc: 'Notify the user that the host address couldn\'t be found.',
+      args: [],
+    );
+  }
+
   /// `Turn off auto update`
   String get neverAutoUpdate {
     return Intl.message(
@@ -1881,6 +1891,16 @@ class S {
       'Are you sure you want to unsubscribe?',
       name: 'removePodcastDes',
       desc: '',
+      args: [],
+    );
+  }
+
+  /// `Restart the for the changes to take effect.`
+  String get restartAppForEffect {
+    return Intl.message(
+      'Restart the for the changes to take effect.',
+      name: 'restartAppForEffect',
+      desc: 'Notify user that the change will take effect after app restart.',
       args: [],
     );
   }

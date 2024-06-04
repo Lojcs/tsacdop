@@ -134,7 +134,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "daysAgo": m2,
         "daysCount": m3,
         "defaultQueueReminder": MessageLookupByLibrary.simpleMessage(
-            "This is the default queue, can\'t be removed."),
+            "This is the default queue, can\'\'t be removed."),
         "defaultSearchEngine": MessageLookupByLibrary.simpleMessage(
             "Default podcast search engine"),
         "defaultSearchEngineDes": MessageLookupByLibrary.simpleMessage(
@@ -272,6 +272,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "minsAgo": m12,
         "minsCount": m13,
         "network": MessageLookupByLibrary.simpleMessage("Network"),
+        "networkErrorDNS":
+            MessageLookupByLibrary.simpleMessage("Network error (DNS issue)"),
         "neverAutoUpdate":
             MessageLookupByLibrary.simpleMessage("Turn off auto update"),
         "newGroup": MessageLookupByLibrary.simpleMessage("Create new group"),
@@ -355,6 +357,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "removePodcastDes": MessageLookupByLibrary.simpleMessage(
             "Are you sure you want to unsubscribe?"),
         "removedAt": m23,
+        "restartAppForEffect": MessageLookupByLibrary.simpleMessage(
+            "Restart the for the changes to take effect."),
         "save": MessageLookupByLibrary.simpleMessage("Save"),
         "schedule": MessageLookupByLibrary.simpleMessage("Schedule"),
         "search": MessageLookupByLibrary.simpleMessage("Search"),

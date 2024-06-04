@@ -62,7 +62,7 @@
   "@daysAgo": {},
   "daysCount": "{count, plural, zero{Never} one{{count} day} other{{count} days}}",
   "@daysCount": {},
-  "defaultQueueReminder": "This is the default queue, can't be removed.",
+  "defaultQueueReminder": "This is the default queue, can''t be removed.",
   "@defaultQueueReminder": {
     "description": "Remind user that default queue can't be removed."
   },
@@ -255,7 +255,8 @@
   "@localEpisodeDescription": {
     "placeholders": {
       "filePath": {}
-    }},
+    }
+  },
   "loadMore": "Load more",
   "@loadMore": {},
   "loggedInAs": "Logged in as {userName}",
@@ -303,6 +304,10 @@
   "@minsCount": {},
   "network": "Network",
   "@network": {},
+  "networkErrorDNS": "Network error (DNS issue)",
+  "@networkErrorDNS": {
+    "description": "Notify the user that the host address couldn't be found."
+  },
   "neverAutoUpdate": "Turn off auto update",
   "@neverAutoUpdate": {
     "description": "Never auto  update in podcast settings."
@@ -480,6 +485,10 @@
   },
   "removePodcastDes": "Are you sure you want to unsubscribe?",
   "@removePodcastDes": {},
+  "restartAppForEffect": "Restart the for the changes to take effect.",
+  "@restartAppForEffect": {
+    "description": "Notify user that the change will take effect after app restart."
+  },
   "save": "Save",
   "@save": {},
   "schedule": "Schedule",

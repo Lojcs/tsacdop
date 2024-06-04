@@ -535,6 +535,30 @@ class DBHelper {
     return list.first['id'];
   }
 
+  Future<PodcastLocal?> getPodcast(String id) async {
+    var dbClient = await database;
+    List<Map> list = await dbClient.rawQuery(
+        """SELECT id, title, imageUrl, rssUrl, primaryColor, author, imagePath , provider, 
+          link ,update_count, episode_count, funding, description FROM PodcastLocal WHERE id = ?""",
+        [id]);
+    if (list.length > 0) {
+      return PodcastLocal(
+          list.first['title'],
+          list.first['imageUrl'],
+          list.first['rssUrl'],
+          list.first['primaryColor'],
+          list.first['author'],
+          list.first['id'],
+          list.first['imagePath'],
+          list.first['provider'],
+          list.first['link'],
+          List<String>.from(jsonDecode(list.first['funding'])),
+          description: list.first['description'],
+          updateCount: list.first['update_count'],
+          episodeCount: list.first['episode_count']);
+    }
+  }
+
   Future savePodcastLocal(PodcastLocal podcastLocal) async {
     var milliseconds = DateTime.now().millisecondsSinceEpoch;
     var dbClient = await database;
@@ -570,10 +594,12 @@ class DBHelper {
     });
   }
 
-  Future<int> updatePodcastImage({String? id, String? filePath}) async {
+  Future<int> updatePodcastImage(
+      {String? id, String? filePath, String? color}) async {
     var dbClient = await database;
     return await dbClient.rawUpdate(
-        "UPDATE PodcastLocal SET imagePath= ? WHERE id = ?", [filePath, id]);
+        "UPDATE PodcastLocal SET primaryColor = ?, imagePath = ? WHERE id = ?",
+        [color, filePath, id]);
   }
 
   Future<int> saveFiresideData(List<String?> list) async {

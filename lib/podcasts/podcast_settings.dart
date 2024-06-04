@@ -1,8 +1,10 @@
 import 'dart:developer' as developer;
 import 'dart:io';
 
+import 'package:color_thief_dart/color_thief_dart.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image/image.dart' as img;
 import 'package:line_icons/line_icons.dart';
 import 'package:path_provider/path_provider.dart';
@@ -16,6 +18,7 @@ import '../state/podcast_group.dart';
 import '../type/play_histroy.dart';
 import '../type/podcastlocal.dart';
 import '../util/extension_helper.dart';
+import '../util/helpers.dart';
 import '../widgets/custom_dropdown.dart';
 import '../widgets/custom_widget.dart';
 import '../widgets/duraiton_picker.dart';
@@ -25,7 +28,8 @@ enum MarkStatus { start, complete, none }
 enum RefreshCoverStatus { start, complete, error, none }
 
 class PodcastSetting extends StatefulWidget {
-  const PodcastSetting({this.podcastLocal, Key? key}) : super(key: key);
+  const PodcastSetting({required this.podcastLocal, Key? key})
+      : super(key: key);
   final PodcastLocal? podcastLocal;
 
   @override
@@ -540,18 +544,40 @@ class _PodcastSettingState extends State<PodcastSetting> {
         var image = img.decodeImage(imageResponse.data!)!;
         thumbnail = img.copyResize(image, width: 300);
         File(filePath).writeAsBytesSync(img.encodePng(thumbnail));
+        final imageProvider = FileImage(File(filePath));
+        var colorImage = await getImageFromProvider(imageProvider);
+        var color = await getColorFromImage(colorImage);
+        var primaryColor = color.toString();
         _dbHelper.updatePodcastImage(
-            id: widget.podcastLocal!.id, filePath: filePath);
+            id: widget.podcastLocal!.id,
+            filePath: filePath,
+            color: primaryColor);
         print('saved image');
         if (mounted) {
           setState(() => _coverStatus = RefreshCoverStatus.complete);
         }
       } catch (e) {
         developer.log(e.toString());
-        if (mounted) setState(() => _coverStatus = RefreshCoverStatus.error);
+        if (mounted) {
+          if (e is DioError &&
+              e.error is SocketException &&
+              e.message.substring(17, 35) == "Failed host lookup") {
+            Fluttertoast.showToast(
+              msg: context.s.networkErrorDNS,
+              gravity: ToastGravity.TOP,
+            );
+          }
+          setState(() => _coverStatus = RefreshCoverStatus.error);
+        }
       }
-    } else if (_coverStatus == RefreshCoverStatus.start && mounted) {
-      setState(() => _coverStatus = RefreshCoverStatus.complete);
+    } else if (_coverStatus == RefreshCoverStatus.start) {
+      if (mounted) {
+        Fluttertoast.showToast(
+          msg: context.s.restartAppForEffect,
+          gravity: ToastGravity.TOP,
+        );
+        setState(() => _coverStatus = RefreshCoverStatus.complete);
+      }
     }
   }
 
