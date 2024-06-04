@@ -485,7 +485,7 @@
   },
   "removePodcastDes": "Are you sure you want to unsubscribe?",
   "@removePodcastDes": {},
-  "restartAppForEffect": "Restart the for the changes to take effect.",
+  "restartAppForEffect": "Restart the app for the changes to take effect.",
   "@restartAppForEffect": {
     "description": "Notify user that the change will take effect after app restart."
   },

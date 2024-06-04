@@ -552,8 +552,11 @@ class _PodcastSettingState extends State<PodcastSetting> {
             id: widget.podcastLocal!.id,
             filePath: filePath,
             color: primaryColor);
-        print('saved image');
         if (mounted) {
+          Fluttertoast.showToast(
+            msg: context.s.restartAppForEffect,
+            gravity: ToastGravity.TOP,
+          );
           setState(() => _coverStatus = RefreshCoverStatus.complete);
         }
       } catch (e) {
@@ -572,10 +575,6 @@ class _PodcastSettingState extends State<PodcastSetting> {
       }
     } else if (_coverStatus == RefreshCoverStatus.start) {
       if (mounted) {
-        Fluttertoast.showToast(
-          msg: context.s.restartAppForEffect,
-          gravity: ToastGravity.TOP,
-        );
         setState(() => _coverStatus = RefreshCoverStatus.complete);
       }
     }

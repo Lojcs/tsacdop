@@ -1895,10 +1895,10 @@ class S {
     );
   }
 
-  /// `Restart the for the changes to take effect.`
+  /// `Restart the app for the changes to take effect.`
   String get restartAppForEffect {
     return Intl.message(
-      'Restart the for the changes to take effect.',
+      'Restart the app for the changes to take effect.',
       name: 'restartAppForEffect',
       desc: 'Notify user that the change will take effect after app restart.',
       args: [],

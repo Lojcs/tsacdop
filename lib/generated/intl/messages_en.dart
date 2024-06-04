@@ -358,7 +358,7 @@ class MessageLookup extends MessageLookupByLibrary {
             "Are you sure you want to unsubscribe?"),
         "removedAt": m23,
         "restartAppForEffect": MessageLookupByLibrary.simpleMessage(
-            "Restart the for the changes to take effect."),
+            "Restart the app for the changes to take effect."),
         "save": MessageLookupByLibrary.simpleMessage("Save"),
         "schedule": MessageLookupByLibrary.simpleMessage("Schedule"),
         "search": MessageLookupByLibrary.simpleMessage("Search"),
