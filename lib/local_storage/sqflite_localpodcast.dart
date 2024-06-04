@@ -185,10 +185,10 @@ class DBHelper {
         """CREATE TABLE SubscribeHistory(id TEXT PRIMARY KEY, title TEXT, rss_url TEXT UNIQUE, 
         add_date INTEGER, remove_date INTEGER DEFAULT 0, status INTEGER DEFAULT 0)""");
     await db
-        .execute("""CREATE INDEX  podcast_search ON PodcastLocal (id, rssUrl);
+        .execute("""CREATE INDEX podcast_search ON PodcastLocal (id, rssUrl);
     """);
     await db.execute(
-        """CREATE INDEX  episode_search ON Episodes (enclosure_url, feed_id);
+        """CREATE INDEX episode_search ON Episodes (enclosure_url, feed_id);
     """);
     // await db.execute(
     //     """CREATE INDEX episode_names ON Episodes (title, milliseconds ASC, feed_id);
@@ -1006,7 +1006,10 @@ class DBHelper {
         batchOp.rawUpdate("UPDATE Episodes SET versions = ? WHERE id = ?",
             [versionIdList.join(','), versions[i]['id']]);
         if (versions[i]['milliseconds'] == milliseconds) {
-          for (; versions[i]['milliseconds'] == milliseconds; i++) {
+          for (;
+              i < versions.length &&
+                  versions[i]['milliseconds'] == milliseconds;
+              i++) {
             milliseconds++;
           }
           batchOp.rawUpdate("UPDATE Episodes SET milliseconds = ? WHERE id = ?",
@@ -1362,8 +1365,10 @@ class DBHelper {
                     image,
                     hideNewMark ? 0 : 1
                   ]);
-              await _updateNewEpisodeVersions(
-                  txn, podcastLocal.id, title, episodeId!, milliseconds);
+              if (episodeId != 0) {
+                await _updateNewEpisodeVersions(
+                    txn, podcastLocal.id, title, episodeId, milliseconds);
+              }
             });
           }
         }

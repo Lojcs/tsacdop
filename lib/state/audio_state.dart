@@ -1666,7 +1666,10 @@ class CustomAudioHandler extends BaseAudioHandler
 
   /// Naive combined seek
   Future<void> combinedSeek(final Duration position, {int? index}) async {
-    await _player.seek(position, index: index);
+    await _player.seek(_position, index: index);
+    // This is necessary since if the index and position are set at the same time
+    // position is streamed first and the history of previous episode doesn't get saved accurately
+    await _player.seek(position);
     await super.seek(position);
   }
 
@@ -1682,7 +1685,7 @@ class CustomAudioHandler extends BaseAudioHandler
   Future<void> skipToQueueItem(int index) async {
     final Duration position =
         Duration(seconds: queue.value[index].extras!['skipSecondsStart']);
-    await _player.seek(position, index: index);
+    await combinedSeek(position, index: index);
   }
 
   @override
@@ -1695,7 +1698,7 @@ class CustomAudioHandler extends BaseAudioHandler
     if (queue.value.length - _index == 1 || _stopAtEnd) {
       await stop();
     } else {
-      _player.seekToNext();
+      await skipToQueueItem(_index + 1);
     }
   }
 

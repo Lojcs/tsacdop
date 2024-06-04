@@ -162,7 +162,8 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
     return Selector<EpisodeState, bool?>(
       selector: (_, episodeState) => episodeState.episodeChangeMap[episode.id],
       builder: (_, __, ___) => FutureBuilder<EpisodeBrief>(
-        future: episode.copyWithFromDB(update: true),
+        future: widget.episode
+            .copyWithFromDB(update: true), // It needs to be widget.episode
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             episode = snapshot.data!;
@@ -192,7 +193,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                 }
                 return Selector<AudioPlayerNotifier, Tuple3<bool, bool, bool>>(
                   selector: (_, audio) => Tuple3(audio.episode == episode,
-                      audio.playlist!.contains(episode), audio.playerRunning),
+                      audio.playlist.contains(episode), audio.playerRunning),
                   builder: (_, data, __) {
                     return FocusedMenuHolder(
                       blurSize: 0,
@@ -375,156 +376,140 @@ class EpisodeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (false) {
-      return _layoutOneCard(context, episode, layout, preferEpisodeImage,
-          numberText: numberText ?? "",
-          openPodcast: openPodcast,
-          showDownload: showPlayedAndDownloaded,
-          showFavorite: showLiked,
-          showNumber: numberText != null,
-          boo: showImage);
-    } else {
-      return Container(
-        decoration: BoxDecoration(
-            borderRadius:
-                _cardDecoration(context, episode, layout).borderRadius),
-        clipBehavior: Clip.hardEdge,
-        child: Stack(
-          alignment: AlignmentDirectional.centerStart,
-          children: [
-            decorate
-                ? Container(
-                    decoration: _cardDecoration(context, episode, layout,
-                        selected: selected))
-                : Center(),
-            decorate
-                ? FutureBuilder<PlayHistory>(
-                    future: dbHelper.getPosition(episode),
-                    builder: (context, snapshot) => _progressLowerlay(
-                        context,
-                        snapshot.hasData ? snapshot.data!.seekValue! : 0,
-                        layout,
-                        hide: selected))
-                : Center(),
-            Padding(
-              padding: EdgeInsets.all(layout == Layout.small ? 6 : 8)
-                  .copyWith(bottom: layout == Layout.small ? 8 : 8),
-              child: Column(
-                children: <Widget>[
-                  if (layout != Layout.large)
-                    Expanded(
-                      flex: 3,
-                      child: Row(
-                        children: <Widget>[
-                          if (showImage)
+    return Container(
+      decoration: BoxDecoration(
+          borderRadius: _cardDecoration(context, episode, layout).borderRadius),
+      clipBehavior: Clip.hardEdge,
+      child: Stack(
+        alignment: AlignmentDirectional.centerStart,
+        children: [
+          decorate
+              ? Container(
+                  decoration: _cardDecoration(context, episode, layout,
+                      selected: selected))
+              : Center(),
+          decorate
+              ? FutureBuilder<PlayHistory>(
+                  future: dbHelper.getPosition(episode),
+                  builder: (context, snapshot) => _progressLowerlay(context,
+                      snapshot.hasData ? snapshot.data!.seekValue! : 0, layout,
+                      hide: selected))
+              : Center(),
+          Padding(
+            padding: EdgeInsets.all(layout == Layout.small ? 6 : 8)
+                .copyWith(bottom: layout == Layout.small ? 8 : 8),
+            child: Column(
+              children: <Widget>[
+                if (layout != Layout.large)
+                  Expanded(
+                    flex: 3,
+                    child: Row(
+                      children: <Widget>[
+                        if (showImage)
+                          _circleImage(
+                            context,
+                            openPodcast,
+                            preferEpisodeImage,
+                            radius: layout == Layout.small
+                                ? context.width / 20
+                                : context.width / 15,
+                            episode: episode,
+                            color: episode.getColorScheme(context).primary,
+                          ),
+                        SizedBox(
+                          width: 5,
+                        ),
+                        if (numberText != null)
+                          _numberIndicator(context, numberText!, layout),
+                        Spacer(),
+                        _pubDate(context, episode, layout, showNew),
+                      ],
+                    ),
+                  ),
+                Expanded(
+                  flex: layout == Layout.small ? 10 : 7,
+                  child: layout == Layout.large
+                      ? Row(
+                          children: [
                             _circleImage(
                               context,
                               openPodcast,
                               preferEpisodeImage,
-                              radius: layout == Layout.small
-                                  ? context.width / 20
-                                  : context.width / 15,
+                              radius: context.width / 6,
                               episode: episode,
                               color: episode.getColorScheme(context).primary,
                             ),
-                          SizedBox(
-                            width: 5,
-                          ),
-                          if (numberText != null)
-                            _numberIndicator(context, numberText!, layout),
-                          Spacer(),
-                          _pubDate(context, episode, layout, showNew),
-                        ],
-                      ),
-                    ),
-                  Expanded(
-                    flex: layout == Layout.small ? 10 : 7,
-                    child: layout == Layout.large
-                        ? Row(
-                            children: [
-                              _circleImage(
-                                context,
-                                openPodcast,
-                                preferEpisodeImage,
-                                radius: context.width / 6,
-                                episode: episode,
-                                color: episode.getColorScheme(context).primary,
-                              ),
-                              SizedBox(
-                                width: 5,
-                              ),
-                              Expanded(
-                                child: Column(
-                                  children: [
-                                    Expanded(
-                                      flex: 2,
-                                      child: Row(
-                                        children: <Widget>[
-                                          if (numberText != null)
-                                            _numberIndicator(
-                                                context, numberText!, layout),
-                                          if (numberText != null)
-                                            Text("|",
-                                                style: GoogleFonts.teko(
-                                                    textStyle: context
-                                                        .textTheme.bodyLarge)),
-                                          _podcastTitle(
+                            SizedBox(
+                              width: 5,
+                            ),
+                            Expanded(
+                              child: Column(
+                                children: [
+                                  Expanded(
+                                    flex: 2,
+                                    child: Row(
+                                      children: <Widget>[
+                                        if (numberText != null)
+                                          _numberIndicator(
+                                              context, numberText!, layout),
+                                        if (numberText != null)
+                                          Text("|",
+                                              style: GoogleFonts.teko(
+                                                  textStyle: context
+                                                      .textTheme.bodyLarge)),
+                                        _podcastTitle(episode, context, layout),
+                                        Spacer(),
+                                        _pubDate(
+                                            context, episode, layout, showNew),
+                                      ],
+                                    ),
+                                  ),
+                                  Expanded(
+                                      flex: 5,
+                                      child: _title(episode, context, layout)),
+                                  Expanded(
+                                    flex: 2,
+                                    child: Row(
+                                      children: <Widget>[
+                                        if (showLiked)
+                                          _isLikedIndicator(
                                               episode, context, layout),
-                                          Spacer(),
-                                          _pubDate(context, episode, layout,
-                                              showNew),
-                                        ],
-                                      ),
+                                        Spacer(),
+                                        if (showLengthAndSize)
+                                          _lengthAndSize(
+                                              context, layout, episode,
+                                              showPlayedAndDownloaded:
+                                                  showPlayedAndDownloaded)
+                                      ],
                                     ),
-                                    Expanded(
-                                        flex: 5,
-                                        child:
-                                            _title(episode, context, layout)),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Row(
-                                        children: <Widget>[
-                                          if (showLiked)
-                                            _isLikedIndicator(
-                                                episode, context, layout),
-                                          Spacer(),
-                                          if (showLengthAndSize)
-                                            _lengthAndSize(
-                                                context, layout, episode,
-                                                showPlayedAndDownloaded:
-                                                    showPlayedAndDownloaded)
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              )
-                            ],
-                          )
-                        : _title(episode, context, layout),
-                  ),
-                  if (layout != Layout.large)
-                    Expanded(
-                      flex: 2,
-                      child: Row(
-                        children: <Widget>[
-                          if (showLiked)
-                            _isLikedIndicator(episode, context, layout),
-                          Spacer(),
-                          if (showLengthAndSize)
-                            _lengthAndSize(context, layout, episode,
-                                showPlayedAndDownloaded:
-                                    showPlayedAndDownloaded),
-                        ],
-                      ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          ],
+                        )
+                      : _title(episode, context, layout),
+                ),
+                if (layout != Layout.large)
+                  Expanded(
+                    flex: 2,
+                    child: Row(
+                      children: <Widget>[
+                        if (showLiked)
+                          _isLikedIndicator(episode, context, layout),
+                        Spacer(),
+                        if (showLengthAndSize)
+                          _lengthAndSize(context, layout, episode,
+                              showPlayedAndDownloaded: showPlayedAndDownloaded),
+                      ],
                     ),
-                ],
-              ),
+                  ),
+              ],
             ),
-          ],
-        ),
-      );
-    }
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -800,135 +785,6 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, EpisodeBrief episode,
   ];
 }
 
-Widget _layoutOneCard(BuildContext context, EpisodeBrief episode, Layout layout,
-    bool preferEpisodeImage,
-    {String? numberText,
-    required bool openPodcast,
-    required bool showFavorite,
-    required bool showDownload,
-    required bool showNumber,
-    required bool boo}) {
-  var width = context.width;
-  return Container(
-    decoration: BoxDecoration(
-      color: episode.getColorScheme(context).secondaryContainer,
-      borderRadius: BorderRadius.circular(15.0),
-    ),
-    clipBehavior: Clip.hardEdge,
-    child: Stack(
-      alignment: AlignmentDirectional.bottomCenter,
-      children: [
-        if (episode.isPlayed!)
-          Container(
-            height: 4,
-            color: context.accentColor,
-          ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                flex: 1,
-                child: Center(
-                  child: _circleImage(context, openPodcast, preferEpisodeImage,
-                      radius: context.width / 8,
-                      episode: episode,
-                      color: episode.getColorScheme(context).primary),
-                ),
-              ),
-              Expanded(
-                flex: 4,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      flex: 1,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: <Widget>[
-                          Expanded(
-                            child: Text(episode.podcastTitle,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: episode
-                                        .getColorScheme(context)
-                                        .primary)),
-                          ),
-                          _isNewIndicator(episode, context, layout),
-                          _downloadIndicator(context, layout, showDownload,
-                              isDownloaded: episode.isDownloaded),
-                          _numberIndicator(context, numberText ?? "", layout)
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                        flex: 2,
-                        child: Align(
-                            alignment: Alignment.topLeft,
-                            child: _title(episode, context, layout))),
-                    Expanded(
-                      flex: 1,
-                      child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: <Widget>[
-                            if (episode.enclosureDuration != 0)
-                              Align(
-                                alignment: Alignment.center,
-                                child: Text(
-                                  episode.enclosureDuration!.toTime,
-                                  style: TextStyle(fontSize: width / 35),
-                                ),
-                              ),
-                            if (episode.enclosureDuration != 0 &&
-                                episode.enclosureSize != null &&
-                                episode.enclosureSize != 0 &&
-                                layout != Layout.small)
-                              Text(
-                                '|',
-                                style: TextStyle(
-                                  fontSize: width / 35,
-                                ),
-                              ),
-                            if (episode.enclosureSize != null &&
-                                episode.enclosureSize != 0)
-                              Align(
-                                alignment: Alignment.center,
-                                child: Text(
-                                  '${episode.enclosureSize! ~/ 1000000}MB',
-                                  style: TextStyle(fontSize: width / 35),
-                                ),
-                              ),
-                            SizedBox(width: 4),
-                            if (episode.isLiked!)
-                              Icon(
-                                Icons.favorite,
-                                color: Colors.red,
-                                size: width / 35,
-                              ),
-                            Spacer(),
-                            _pubDate(context, episode, layout, false),
-                          ]),
-                    )
-                  ],
-                ),
-              ),
-              SizedBox(width: 8)
-            ],
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
 /// Episode title widget.
 Widget _title(EpisodeBrief episode, BuildContext context, Layout layout) =>
     Container(
@@ -939,9 +795,7 @@ Widget _title(EpisodeBrief episode, BuildContext context, Layout layout) =>
         episode.title,
         style: (layout == Layout.small
                 ? context.textTheme.bodySmall
-                : layout == Layout.medium
-                    ? context.textTheme.bodyMedium
-                    : context.textTheme.bodyLarge)!
+                : context.textTheme.bodyMedium)!
             .copyWith(height: 1.25),
         maxLines: layout == Layout.small
             ? 4
@@ -1242,9 +1096,7 @@ Widget _pubDate(BuildContext context, EpisodeBrief episode, Layout layout,
       textAlign: TextAlign.center,
       style: (layout == Layout.small
               ? context.textTheme.labelSmall
-              : layout == Layout.medium
-                  ? context.textTheme.labelMedium
-                  : context.textTheme.labelLarge)!
+              : context.textTheme.labelMedium)!
           .copyWith(
               fontStyle: FontStyle.italic,
               color: episode.isNew!

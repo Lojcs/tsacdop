@@ -980,7 +980,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
                                       ),
                                       // Hidden widget to get the height of [HostsList]
                                       SliverToBoxAdapter(
-                                        child: Column(
+                                        child: Stack(
                                           children: [
                                             _infoHeight == 0
                                                 ? Opacity(

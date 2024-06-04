@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:auto_animated/auto_animated.dart';
+import 'package:collection/collection.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -123,14 +124,14 @@ class EpisodeGrid extends StatelessWidget {
                     : null,
                 selectMode: multiSelect!,
                 onSelect: () {
-                  if (!selectedList!.contains(episodes![index])) {
-                    selectedList!.add(episodes![index]);
+                  if (!selectedList.contains(episodes![index])) {
+                    selectedList.add(episodes![index]);
                   } else {
-                    selectedList!.remove(episodes![index]);
+                    selectedList.remove(episodes![index]);
                   }
                   onSelect!(selectedList);
                 },
-                selected: selectedList!.contains(episodes![index]),
+                selected: selectedList.contains(episodes![index]),
               ));
         },
       ),

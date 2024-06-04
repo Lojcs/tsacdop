@@ -34,7 +34,7 @@ class MenuBarState extends State<MenuBar> {
       decoration: BoxDecoration(
         color: context.realDark
             ? context.background
-            : widget.episodeItem!.cardColor(context),
+            : widget.episodeItem.cardColor(context),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
@@ -48,7 +48,7 @@ class MenuBarState extends State<MenuBar> {
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   Hero(
-                    tag: widget.episodeItem!.enclosureUrl + widget.heroTag!,
+                    tag: widget.episodeItem.enclosureUrl + widget.heroTag!,
                     child: Container(
                       padding: EdgeInsets.symmetric(horizontal: 10.0),
                       child: Container(
@@ -59,18 +59,18 @@ class MenuBarState extends State<MenuBar> {
                             : CircleAvatar(
                                 radius: 15,
                                 backgroundImage:
-                                    widget.episodeItem!.avatarImage),
+                                    widget.episodeItem.avatarImage),
                       ),
                     ),
                   ),
-                  (widget.episodeItem!.isLiked!)
+                  (widget.episodeItem.isLiked!)
                       ? _buttonOnMenu(
                           child: Icon(
                             Icons.favorite,
                             color: Colors.red,
                           ),
                           onTap: () =>
-                              episodeState.unsetLiked(widget.episodeItem!))
+                              episodeState.unsetLiked(widget.episodeItem))
                       : _buttonOnMenu(
                           child: Icon(
                             Icons.favorite_border,
@@ -80,7 +80,7 @@ class MenuBarState extends State<MenuBar> {
                                     : 500],
                           ),
                           onTap: () async {
-                            episodeState.setLiked(widget.episodeItem!);
+                            episodeState.setLiked(widget.episodeItem);
                             OverlayEntry _overlayEntry;
                             _overlayEntry =
                                 createOverlayEntry(context, leftOffset: 50);
@@ -127,7 +127,7 @@ class MenuBarState extends State<MenuBar> {
                       child: CustomPaint(
                         size: Size(25, 20),
                         painter: ListenedAllPainter(
-                            widget.episodeItem!.isPlayed!
+                            widget.episodeItem.isPlayed!
                                 ? context.accentColor
                                 : Colors.grey[
                                     context.brightness == Brightness.light
@@ -137,11 +137,11 @@ class MenuBarState extends State<MenuBar> {
                       ),
                     ),
                     onTap: () {
-                      widget.episodeItem!.isPlayed!
-                          ? episodeState.unsetListened(widget.episodeItem!)
-                          : episodeState.setListened(widget.episodeItem!);
+                      widget.episodeItem.isPlayed!
+                          ? episodeState.unsetListened(widget.episodeItem)
+                          : episodeState.setListened(widget.episodeItem);
                       Fluttertoast.showToast(
-                        msg: widget.episodeItem!.isPlayed!
+                        msg: widget.episodeItem.isPlayed!
                             ? s.markNotListened
                             : s.markListened,
                         gravity: ToastGravity.BOTTOM,

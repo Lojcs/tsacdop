@@ -1572,7 +1572,7 @@ class _ControlPanelState extends State<ControlPanel>
                                     textDirection: TextDirection.ltr);
                                 tp.layout(
                                     maxWidth: size.maxWidth -
-                                        2); //Without -2 edge values don't behave right
+                                        4); //Without -3 edge values don't behave right. -4 to be safe
                                 if (tp.didExceedMaxLines) {
                                   return Marquee(
                                     text: title!,
