@@ -346,6 +346,7 @@ class __PlaylistButtonState extends State<_PlaylistButton> {
   @override
   Widget build(BuildContext context) {
     final s = context.s;
+    final audio = context.read<AudioPlayerNotifier>();
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(100),
@@ -370,7 +371,7 @@ class __PlaylistButtonState extends State<_PlaylistButton> {
               child: Selector<AudioPlayerNotifier,
                   Tuple3<bool, EpisodeBrief?, int>>(
                 selector: (_, audio) => Tuple3(audio.playerRunning,
-                    audio.episode, audio.audioStartPosition),
+                    audio.episode, audio.startAudioPositionv),
                 builder: (_, data, __) => !_loadPlay
                     ? SizedBox(
                         height: 8.0,
@@ -383,10 +384,15 @@ class __PlaylistButtonState extends State<_PlaylistButton> {
                             borderRadius: BorderRadius.only(
                                 topLeft: Radius.circular(10.0),
                                 topRight: Radius.circular(10.0)),
-                            onTap: () {
-                              context
-                                  .read<AudioPlayerNotifier>()
-                                  .playFromLastPosition();
+                            onTap: () async {
+                              await audio.playFromLastPosition();
+                              while (audio.buffering) {
+                                await Future.delayed(
+                                    Duration(milliseconds: 50));
+                              }
+                              if (data.item3 / audio.audioDuration < 0.95) {
+                                await audio.seekTo(data.item3);
+                              }
                               Navigator.pop<int>(context);
                             },
                             child: Column(

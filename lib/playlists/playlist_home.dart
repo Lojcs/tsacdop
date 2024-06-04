@@ -209,7 +209,7 @@ class _PlaylistHomeState extends State<PlaylistHome> {
                               if (!data.item2)
                                 Selector<AudioPlayerNotifier, int>(
                                   selector: (_, audio) =>
-                                      audio.audioStartPosition,
+                                      audio.startAudioPosition,
                                   builder: (_, position, __) {
                                     return Text(
                                         '${(position ~/ 1000).toTime} / ${(data.item4?.enclosureDuration ?? 0).toTime}');

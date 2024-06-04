@@ -27,10 +27,11 @@ class _DownloadsManageState extends State<DownloadsManage> {
   //Downloaded files
   late int _fileNum;
   late bool _clearing;
-  bool? _onlyListened;
+  late bool _onlyListened;
   late List<EpisodeBrief> _selectedList;
 
-  Future<List<EpisodeBrief>> _getDownloadedEpisode(int? mode) async {
+  Future<List<EpisodeBrief>> _getDownloadedEpisode(
+      int? mode, bool onlyListened) async {
     var episodes = <EpisodeBrief>[];
     var dbHelper = DBHelper();
     Sorter sorter;
@@ -50,8 +51,15 @@ class _DownloadsManageState extends State<DownloadsManage> {
         break;
     }
     episodes = await dbHelper.getEpisodes(
+        optionalFields: [
+          EpisodeField.enclosureSize,
+          EpisodeField.downloadDate,
+          EpisodeField.episodeImage,
+          EpisodeField.podcastImage,
+        ],
         sortBy: sorter,
         sortOrder: order,
+        filterPlayed: onlyListened ? -1 : 0,
         filterDownloaded: -1,
         episodeState: Provider.of<EpisodeState>(context, listen: false));
     return episodes;
@@ -137,267 +145,269 @@ class _DownloadsManageState extends State<DownloadsManage> {
   }
 
   @override
+  void deactivate() {
+    context.statusBarColor = null;
+    super.deactivate();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final s = context.s;
+    context.statusBarColor = context.accentBackground;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: context.overlay,
       child: Scaffold(
-        appBar: AppBar(
-          leading: CustomBackButton(),
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          backgroundColor: context.background,
-        ),
+        backgroundColor: context.background,
         body: SafeArea(
           child: Stack(
             children: <Widget>[
-              Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Container(
-                    height: 140.0,
-                    color: context.primaryColor,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(left: 10),
-                          child: RichText(
-                            text: TextSpan(
-                              text: 'Total ',
-                              style: TextStyle(
-                                color: context.accentColor,
-                                fontSize: 20,
-                              ),
-                              children: <TextSpan>[
-                                TextSpan(
-                                  text: _fileNum.toString(),
-                                  style: GoogleFonts.cairo(
-                                      textStyle: TextStyle(
-                                    color: context.accentColor,
-                                    fontSize: 40,
-                                  )),
+              NestedScrollView(
+                headerSliverBuilder: (context, innerBoxIsScrolled) => [
+                  SliverAppBar(
+                    pinned: true,
+                    leading: CustomBackButton(),
+                    elevation: 0,
+                    scrolledUnderElevation: 0,
+                    backgroundColor: context.accentBackground,
+                  ),
+                  SliverAppBar(
+                    pinned: true,
+                    leading: Center(),
+                    toolbarHeight: 140,
+                    flexibleSpace: Container(
+                      height: 140.0,
+                      color: context.accentBackground,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(left: 10),
+                            child: RichText(
+                              text: TextSpan(
+                                text: 'Total ',
+                                style: TextStyle(
+                                  color: context.accentColor,
+                                  fontSize: 20,
                                 ),
-                                TextSpan(
-                                    text: _fileNum < 2
-                                        ? ' episode'
-                                        : ' episodes ',
-                                    style: TextStyle(
+                                children: <TextSpan>[
+                                  TextSpan(
+                                    text: _fileNum.toString(),
+                                    style: GoogleFonts.cairo(
+                                        textStyle: TextStyle(
                                       color: context.accentColor,
-                                      fontSize: 20,
+                                      fontSize: 40,
                                     )),
-                                TextSpan(
-                                  text: (_size ~/ 1000000) < 1000
-                                      ? (_size ~/ 1000000).toString()
-                                      : (_size / 1000000000).toStringAsFixed(1),
-                                  style: GoogleFonts.cairo(
-                                      textStyle: TextStyle(
-                                    color: Theme.of(context).accentColor,
-                                    fontSize: 50,
-                                  )),
-                                ),
-                                TextSpan(
-                                    text:
-                                        (_size ~/ 1000000) < 1000 ? 'Mb' : 'Gb',
-                                    style: TextStyle(
+                                  ),
+                                  TextSpan(
+                                      text: _fileNum < 2
+                                          ? ' episode'
+                                          : ' episodes ',
+                                      style: TextStyle(
+                                        color: context.accentColor,
+                                        fontSize: 20,
+                                      )),
+                                  TextSpan(
+                                    text: (_size ~/ 1000000) < 1000
+                                        ? (_size ~/ 1000000).toString()
+                                        : (_size / 1000000000)
+                                            .toStringAsFixed(1),
+                                    style: GoogleFonts.cairo(
+                                        textStyle: TextStyle(
                                       color: Theme.of(context).accentColor,
-                                      fontSize: 20,
+                                      fontSize: 50,
                                     )),
+                                  ),
+                                  TextSpan(
+                                      text: (_size ~/ 1000000) < 1000
+                                          ? 'Mb'
+                                          : 'Gb',
+                                      style: TextStyle(
+                                        color: Theme.of(context).accentColor,
+                                        fontSize: 20,
+                                      )),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Spacer(),
+                          SizedBox(
+                            height: 40,
+                            child: Row(
+                              children: [
+                                Material(
+                                  color: Colors.transparent,
+                                  child: PopupMenuButton<int>(
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(10))),
+                                    elevation: 1,
+                                    tooltip: s.homeSubMenuSortBy,
+                                    child: Container(
+                                        height: 40,
+                                        padding: EdgeInsets.symmetric(
+                                            horizontal: 20),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: <Widget>[
+                                            Text(s.homeSubMenuSortBy),
+                                            Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                  horizontal: 5),
+                                            ),
+                                            Icon(
+                                              _mode == 0
+                                                  ? LineIcons.hourglassStart
+                                                  : _mode == 1
+                                                      ? LineIcons.hourglassHalf
+                                                      : LineIcons.save,
+                                              size: 18,
+                                            )
+                                          ],
+                                        )),
+                                    itemBuilder: (context) => [
+                                      PopupMenuItem(
+                                        value: 0,
+                                        child: Text(s.newestFirst),
+                                      ),
+                                      PopupMenuItem(
+                                        value: 1,
+                                        child: Text(s.oldestFirst),
+                                      ),
+                                      PopupMenuItem(
+                                        value: 2,
+                                        child: Text(s.size),
+                                      ),
+                                    ],
+                                    onSelected: (value) {
+                                      if (value == 0) {
+                                        setState(() => _mode = 0);
+                                      } else if (value == 1) {
+                                        setState(() => _mode = 1);
+                                      } else if (value == 2) {
+                                        setState(() => _mode = 2);
+                                      }
+                                    },
+                                  ),
+                                ),
+                                //Spacer(),
+
+                                Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () => setState(() {
+                                      _onlyListened = !_onlyListened;
+                                    }),
+                                    child: Row(
+                                      children: [
+                                        Padding(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 5),
+                                        ),
+                                        Text(s.listened),
+                                        Transform.scale(
+                                          scale: 0.8,
+                                          child: Checkbox(
+                                              value: _onlyListened,
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  _onlyListened = value!;
+                                                });
+                                              }),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                           ),
-                        ),
-                        Spacer(),
-                        SizedBox(
-                          height: 40,
-                          child: Row(
-                            children: [
-                              Material(
-                                color: Colors.transparent,
-                                child: PopupMenuButton<int>(
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.all(
-                                          Radius.circular(10))),
-                                  elevation: 1,
-                                  tooltip: s.homeSubMenuSortBy,
-                                  child: Container(
-                                      height: 40,
-                                      padding:
-                                          EdgeInsets.symmetric(horizontal: 20),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: <Widget>[
-                                          Text(s.homeSubMenuSortBy),
-                                          Padding(
-                                            padding: EdgeInsets.symmetric(
-                                                horizontal: 5),
-                                          ),
-                                          Icon(
-                                            _mode == 0
-                                                ? LineIcons.hourglassStart
-                                                : _mode == 1
-                                                    ? LineIcons.hourglassHalf
-                                                    : LineIcons.save,
-                                            size: 18,
-                                          )
-                                        ],
-                                      )),
-                                  itemBuilder: (context) => [
-                                    PopupMenuItem(
-                                      value: 0,
-                                      child: Text(s.newestFirst),
-                                    ),
-                                    PopupMenuItem(
-                                      value: 1,
-                                      child: Text(s.oldestFirst),
-                                    ),
-                                    PopupMenuItem(
-                                      value: 2,
-                                      child: Text(s.size),
-                                    ),
-                                  ],
-                                  onSelected: (value) {
-                                    if (value == 0) {
-                                      setState(() => _mode = 0);
-                                    } else if (value == 1) {
-                                      setState(() => _mode = 1);
-                                    } else if (value == 2) {
-                                      setState(() => _mode = 2);
-                                    }
-                                  },
-                                ),
-                              ),
-                              //Spacer(),
-
-                              Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: () => setState(() {
-                                    _onlyListened = !_onlyListened!;
-                                  }),
-                                  child: Row(
-                                    children: [
-                                      Padding(
-                                        padding:
-                                            EdgeInsets.symmetric(horizontal: 5),
-                                      ),
-                                      Text(s.listened),
-                                      Transform.scale(
-                                        scale: 0.8,
-                                        child: Checkbox(
-                                            value: _onlyListened,
-                                            onChanged: (value) {
-                                              setState(() {
-                                                _onlyListened = value;
-                                              });
-                                            }),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                  Expanded(
-                    child: FutureBuilder<List<EpisodeBrief>>(
-                      future: _getDownloadedEpisode(_mode),
-                      initialData: [],
-                      builder: (context, snapshot) {
-                        var _episodes = snapshot.data!;
-                        return ListView.builder(
+                ],
+                body: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Expanded(
+                      child: FutureBuilder<List<EpisodeBrief>>(
+                        future: _getDownloadedEpisode(_mode, _onlyListened),
+                        initialData: [],
+                        builder: (context, snapshot) {
+                          var _episodes = snapshot.data!;
+                          return ListView.builder(
                             itemCount: _episodes.length,
                             shrinkWrap: true,
                             scrollDirection: Axis.vertical,
                             itemBuilder: (context, index) {
-                              return FutureBuilder(
-                                  future: _isListened(_episodes[index]),
-                                  initialData: 0,
-                                  builder: (context, snapshot) {
-                                    return (_onlyListened! &&
-                                            snapshot.data == 0)
-                                        ? Center()
-                                        : Column(
-                                            children: <Widget>[
-                                              ListTile(
-                                                onTap: () {
-                                                  if (_selectedList.contains(
-                                                      _episodes[index])) {
-                                                    setState(() => _selectedList
-                                                        .removeWhere((episode) =>
-                                                            episode
-                                                                .enclosureUrl ==
-                                                            _episodes[index]
-                                                                .enclosureUrl));
-                                                  } else {
-                                                    setState(() => _selectedList
-                                                        .add(_episodes[index]));
-                                                  }
-                                                },
-                                                leading: CircleAvatar(
-                                                    backgroundImage:
-                                                        _episodes[index]
-                                                            .avatarImage),
-                                                title: Text(
-                                                  _episodes[index].title!,
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                                subtitle: Row(
-                                                  children: [
-                                                    Text(_downloadDateToString(
-                                                        context,
-                                                        downloadDate:
-                                                            _episodes[index]
-                                                                .downloadDate!,
-                                                        pubDate:
-                                                            _episodes[index]
-                                                                .pubDate)),
-                                                    SizedBox(width: 20),
-                                                    if (_episodes[index]
-                                                            .enclosureSize !=
-                                                        0)
-                                                      Text(
-                                                          '${_episodes[index].enclosureSize! ~/ 1000000} Mb'),
-                                                  ],
-                                                ),
-                                                trailing: Checkbox(
-                                                  value: _selectedList.contains(
-                                                      _episodes[index]),
-                                                  onChanged: (boo) {
-                                                    if (boo!) {
-                                                      setState(() =>
-                                                          _selectedList.add(
-                                                              _episodes[
-                                                                  index]));
-                                                    } else {
-                                                      setState(() => _selectedList
-                                                          .removeWhere((episode) =>
-                                                              episode
-                                                                  .enclosureUrl ==
-                                                              _episodes[index]
-                                                                  .enclosureUrl));
-                                                    }
-                                                  },
-                                                ),
-                                              ),
-                                              Divider(
-                                                height: 2,
-                                              ),
-                                            ],
+                              return Column(
+                                children: <Widget>[
+                                  ListTile(
+                                    onTap: () {
+                                      if (_selectedList
+                                          .contains(_episodes[index])) {
+                                        setState(() => _selectedList
+                                            .removeWhere((episode) =>
+                                                episode.enclosureUrl ==
+                                                _episodes[index].enclosureUrl));
+                                      } else {
+                                        setState(() => _selectedList
+                                            .add(_episodes[index]));
+                                      }
+                                    },
+                                    leading: CircleAvatar(
+                                        backgroundImage:
+                                            _episodes[index].avatarImage),
+                                    title: Text(
+                                      _episodes[index].title,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    subtitle: Row(
+                                      children: [
+                                        Text(_downloadDateToString(context,
+                                            downloadDate:
+                                                _episodes[index].downloadDate!,
+                                            pubDate: _episodes[index].pubDate)),
+                                        SizedBox(width: 20),
+                                        if (_episodes[index].enclosureSize != 0)
+                                          Text(
+                                              '${_episodes[index].enclosureSize! ~/ 1000000} Mb'),
+                                      ],
+                                    ),
+                                    trailing: Checkbox(
+                                      value: _selectedList
+                                          .contains(_episodes[index]),
+                                      onChanged: (boo) {
+                                        if (boo!) {
+                                          setState(() => _selectedList
+                                              .add(_episodes[index]));
+                                        } else {
+                                          setState(
+                                            () => _selectedList.removeWhere(
+                                                (episode) =>
+                                                    episode.enclosureUrl ==
+                                                    _episodes[index]
+                                                        .enclosureUrl),
                                           );
-                                  });
-                            });
-                      },
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                  Divider(
+                                    height: 2,
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                      ),
                     ),
-                  )
-                ],
+                  ],
+                ),
               ),
               AnimatedPositioned(
                 duration: Duration(milliseconds: 800),

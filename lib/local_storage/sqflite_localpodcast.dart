@@ -392,7 +392,7 @@ class DBHelper {
     var dbClient = await database;
     List<Map> list = await dbClient.rawQuery(
         """SELECT P.id, P.title, P.imageUrl, P.rssUrl, P.primaryColor, P.author, P.imagePath,
-         P.provider, P.link ,P.update_count, P.episode_count, P.funding, description FROM PodcastLocal P INNER JOIN 
+         P.provider, P.link ,P.update_count, P.episode_count, P.funding, P.description FROM PodcastLocal P INNER JOIN 
          Episodes E ON P.id = E.feed_id WHERE E.enclosure_url = ?""", [url]);
     if (list.isNotEmpty) {
       return PodcastLocal(

@@ -216,7 +216,9 @@ class AudioPlayerNotifier extends ChangeNotifier {
   int _startAudioPositionv = 0;
 
   int get _startAudioPosition => 0;
-  set _startAudioPosition(int p) {}
+  set _startAudioPosition(int p) {
+    _startAudioPositionv = p;
+  }
   // This is here because sometimes the reported duration of an episode is
   // significantly longer than its actual stream duration so the < 0.95 check while
   // loading the _startAudioPosition doesn't work
@@ -315,8 +317,11 @@ class AudioPlayerNotifier extends ChangeNotifier {
   /// Current episode position (ms).
   int get audioPosition => _audioPosition;
 
+  /// The actual start position
+  int get startAudioPositionv => _startAudioPositionv;
+
   /// Current episode's start position (ms).
-  int get audioStartPosition => _startAudioPosition;
+  int get startAudioPosition => _startAudioPosition;
 
   /// Current episode buffered position (ms).
   int get audioBufferedPosition => _audioBufferedPosition;
@@ -474,8 +479,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
       if (_startAudioPosition == 0) {
         PlayHistory position = await _dbHelper.getPosition(_startEpisode!);
         if (position.seconds! > 0) {
-          if (position.seconds! * 1000 / _startEpisode!.enclosureDuration! <
-              0.80) {
+          if (position.seconds! / _startEpisode!.enclosureDuration! < 0.95) {
             _startAudioPosition = position.seconds! * 1000;
           } else {
             _startAudioPosition = 0;
@@ -739,6 +743,9 @@ class AudioPlayerNotifier extends ChangeNotifier {
         //     _episode!.enclosureUrl, event.updatePosition.inMilliseconds);
       }
       _audioState = event.processingState;
+      if (_playing && !event.playing) {
+        await saveHistory(savePosition: true);
+      }
       _playing = event.playing;
       // _audioPosition = event.updatePosition.inMilliseconds;
       _audioBufferedPosition = event.bufferedPosition.inMilliseconds;
