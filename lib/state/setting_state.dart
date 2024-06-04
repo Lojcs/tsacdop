@@ -230,8 +230,8 @@ class SettingState extends ChangeNotifier {
 
   ThemeData get darkTheme => ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: _accentSetColor!,
-          primary: _accentSetColor!,
+          seedColor: Colors.purple!,
+          primary: Colors.purple!,
           brightness: Brightness.dark,
           background: _realDark! ? Colors.black : null,
         ),

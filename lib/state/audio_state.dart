@@ -177,13 +177,13 @@ class AudioPlayerNotifier extends ChangeNotifier {
       : null;
 
   /// Index of currently playing episode
-  late int _episodeIndex;
+  int _episodeIndex = 0;
 
   /// Episode index to start playback from
   late int _startEpisodeIndex;
 
   /// Currently playing playlist.
-  late Playlist _playlist;
+  Playlist _playlist = Playlist("none");
 
   /// Playlist to start playback from
   late Playlist _startPlaylist;
@@ -1399,7 +1399,7 @@ class CustomAudioHandler extends BaseAudioHandler
   );
 
   int get _index => _player.currentIndex!;
-  Duration get _position => _player.position;
+  Duration _position = const Duration();
   bool get hasNext => queue.value.length > 0;
   MediaItem? get currentMediaItem => mediaItem.value;
   bool get playing => _player.playing && _playerReady;
@@ -1455,7 +1455,7 @@ class CustomAudioHandler extends BaseAudioHandler
               ProcessingState.completed: AudioProcessingState.completed,
             }[_player.processingState]!,
             playing: _player.playing,
-            updatePosition: event.updatePosition,
+            updatePosition: _position,
             bufferedPosition: event.bufferedPosition,
             queueIndex: event.currentIndex ?? 0,
             speed: _player.speed,
@@ -1479,6 +1479,8 @@ class CustomAudioHandler extends BaseAudioHandler
     // Positions in positionStream are smoothed from playbackEventStream
     _positionSubscription = _player.positionStream.listen((event) {
       customEvent.add({'position': event});
+      _position =
+          event; // This is necessary as _player.postition and playbackEvent.updatePosition seems inaccurate.
     });
 
     _playerReady = true;
@@ -1664,7 +1666,7 @@ class CustomAudioHandler extends BaseAudioHandler
   Future<void> _seekRelative(Duration offset) async {
     if (mediaItem.value!.duration == 0)
       return; // TODO: Fix skipping episode by seeking beyond audio duration if duration is 0 (while loading)
-    var newPosition = playbackState.value.position + offset;
+    var newPosition = _position + offset;
     if (newPosition < Duration.zero) newPosition = Duration.zero;
     await seek(newPosition);
   }
