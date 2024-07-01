@@ -673,15 +673,13 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, EpisodeBrief episode,
           ),
           onPressed: () async {
             if (!inPlaylist) {
-              await audio
-                  .addToPlaylistPlus([episode], playlist: audio.playlist);
+              await audio.addToPlaylist([episode]);
               await Fluttertoast.showToast(
                 msg: s.toastAddPlaylist,
                 gravity: ToastGravity.BOTTOM,
               );
             } else {
-              await audio
-                  .removeFromPlaylistPlus([episode], playlist: audio.playlist);
+              await audio.removeFromPlaylist([episode]);
               await Fluttertoast.showToast(
                 msg: s.toastRemovePlaylist,
                 gravity: ToastGravity.BOTTOM,
@@ -773,8 +771,7 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, EpisodeBrief episode,
           color: Colors.amber,
         ),
         onPressed: () {
-          audio.addToPlaylistPlus([episode],
-              playlist: audio.playlist,
+          audio.addToPlaylist([episode],
               index: audio.playlist.length > 0 ? 1 : 0);
           Fluttertoast.showToast(
             msg: s.playNextDes,

@@ -344,29 +344,37 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                       alignment: Alignment.centerLeft,
                       color: Colors.transparent,
                       child: TabBar(
+                        splashFactory: NoSplash.splashFactory,
+                        overlayColor: MaterialStateProperty.resolveWith<Color?>(
+                          (Set<MaterialState> states) {
+                            return states.contains(MaterialState.focused)
+                                ? null
+                                : Colors.transparent;
+                          },
+                        ),
                         labelPadding: EdgeInsets.fromLTRB(6.0, 5.0, 6.0, 10.0),
                         indicator: CircleTabIndicator(
                             color: context.accentColor, radius: 3),
                         isScrollable: true,
-                        tabs: groups[_groupIndex]!
-                            .podcasts
-                            .map<Widget>((podcastLocal) {
-                          final color = podcastLocal.backgroudColor(context);
-                          return Tab(
-                            child: Transform.translate(
-                              offset: Offset(
-                                  0, _slideTween.animate(_controller).value),
-                              child: LimitedBox(
-                                maxHeight: 50,
-                                maxWidth: 50,
-                                child: CircleAvatar(
-                                    backgroundColor: color.withOpacity(0.5),
-                                    backgroundImage: podcastLocal.avatarImage,
-                                    child: _updateIndicator(podcastLocal)),
+                        tabs: groups[_groupIndex]!.podcasts.map<Widget>(
+                          (podcastLocal) {
+                            final color = podcastLocal.backgroudColor(context);
+                            return Tab(
+                              child: Transform.translate(
+                                offset: Offset(
+                                    0, _slideTween.animate(_controller).value),
+                                child: LimitedBox(
+                                  maxHeight: 50,
+                                  maxWidth: 50,
+                                  child: CircleAvatar(
+                                      backgroundColor: color.withOpacity(0.5),
+                                      backgroundImage: podcastLocal.avatarImage,
+                                      child: _updateIndicator(podcastLocal)),
+                                ),
                               ),
-                            ),
-                          );
-                        }).toList(),
+                            );
+                          },
+                        ).toList(),
                       ),
                     ),
                   ],

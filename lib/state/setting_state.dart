@@ -64,7 +64,7 @@ class SettingState extends ChangeNotifier {
       KeyValueStorage(openAllPodcastDefaultKey);
   final _useWallpaperThemeStorage = KeyValueStorage(useWallpapterThemeKey);
 
-  void callbackDispatcher() {
+  static void callbackDispatcher() {
     Workmanager().executeTask((task, inputData) async {
       final dbHelper = DBHelper();
       final podcastList = await dbHelper.getPodcastLocalAll(updateOnly: true);
@@ -77,7 +77,7 @@ class SettingState extends ChangeNotifier {
         developer.log('Refresh ${podcastLocal.title}');
       }
       await FlutterDownloader.initialize();
-      final downloader = AutoDownloader(context!);
+      final downloader = AutoDownloader();
 
       final autoDownloadStorage = KeyValueStorage(autoDownloadNetworkKey);
       final autoDownloadNetwork = await autoDownloadStorage.getInt();
@@ -230,8 +230,8 @@ class SettingState extends ChangeNotifier {
 
   ThemeData get darkTheme => ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.purple!,
-          primary: Colors.purple!,
+          seedColor: _accentSetColor!,
+          primary: _accentSetColor!,
           brightness: Brightness.dark,
           background: _realDark! ? Colors.black : null,
         ),

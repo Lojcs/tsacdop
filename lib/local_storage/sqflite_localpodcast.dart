@@ -1857,9 +1857,8 @@ class DBHelper {
   }
 
   /// Saves [mediaId] and optionally [size] of an [episode]. Sets or unsets downloaded status based on [mediaId].
-  Future<int?> saveMediaId(
-      EpisodeBrief episode, String mediaId, EpisodeState episodeState,
-      {String? taskId, int? size}) async {
+  Future<int?> saveMediaId(EpisodeBrief episode, String mediaId,
+      {EpisodeState? episodeState, String? taskId, int? size}) async {
     var dbClient = await database;
     int? count;
     count = await dbClient.rawUpdate(
@@ -1870,10 +1869,12 @@ class DBHelper {
           "UPDATE Episodes SET enclosure_length = ? WHERE enclosure_url = ?",
           [size, episode.enclosureUrl]);
     }
-    if (episode.enclosureUrl != mediaId) {
-      await episodeState.setDownloaded(episode, taskId!);
-    } else {
-      await episodeState.unsetDownloaded(episode);
+    if (episodeState != null) {
+      if (episode.enclosureUrl != mediaId) {
+        await episodeState.setDownloaded(episode, taskId!);
+      } else {
+        await episodeState.unsetDownloaded(episode);
+      }
     }
     return count;
   }

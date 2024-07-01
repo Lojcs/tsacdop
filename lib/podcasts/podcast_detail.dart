@@ -205,7 +205,8 @@ class _PodcastDetailState extends State<PodcastDetail> {
         filterLiked: filter == Filter.liked ? 1 : 0,
         filterDownloaded: filter == Filter.downloaded ? 1 : 0,
         filterPlayed: _hideListened! ? 1 : 0,
-        episodeState: Provider.of<EpisodeState>(context, listen: false));
+        episodeState:
+            mounted ? Provider.of<EpisodeState>(context, listen: false) : null);
     _dataCount = episodes.length;
     return episodes;
   }

@@ -6,15 +6,23 @@ import 'package:tsacdop/widgets/episodegrid.dart';
 
 import '../state/audio_state.dart';
 import '../type/episodebrief.dart';
+import '../type/playlist.dart';
 import '../util/extension_helper.dart';
 import 'custom_widget.dart';
 
 class DismissibleContainer extends StatefulWidget {
+  final Playlist playlist;
   final EpisodeBrief episode;
   final int index;
-  final ValueChanged<bool>? onRemove;
+  final VoidCallback? onRemove;
+  final bool selectMode;
   DismissibleContainer(
-      {required this.episode, required this.index, this.onRemove, Key? key})
+      {required this.playlist,
+      required this.episode,
+      required this.index,
+      this.onRemove,
+      this.selectMode = false,
+      Key? key})
       : super(key: key);
 
   @override
@@ -82,8 +90,9 @@ class _DismissibleContainerState extends State<DismissibleContainer> {
                     setState(() {
                       _delete = true;
                     });
-                    await audio.removeFromPlaylistAtPlus(widget.index);
-                    widget.onRemove!(true);
+                    await audio.removeFromPlaylistAt(widget.index,
+                        playlist: widget.playlist);
+                    widget.onRemove!();
                     final episodeRemove = widget.episode;
                     ScaffoldMessenger.of(context).removeCurrentSnackBar();
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -95,9 +104,9 @@ class _DismissibleContainerState extends State<DismissibleContainer> {
                           textColor: context.accentColor,
                           label: s.undo,
                           onPressed: () async {
-                            await audio.addToPlaylistPlus([episodeRemove],
-                                index: widget.index);
-                            widget.onRemove!(false);
+                            await audio.addToPlaylist([episodeRemove],
+                                playlist: widget.playlist, index: widget.index);
+                            widget.onRemove!();
                           }),
                     ));
                   },
@@ -110,7 +119,7 @@ class _DismissibleContainerState extends State<DismissibleContainer> {
                       await context
                           .read<AudioPlayerNotifier>()
                           .loadEpisodeFromCurrentPlaylist(widget.index);
-                      widget.onRemove!(true);
+                      widget.onRemove!();
                     },
                   ),
                 ),

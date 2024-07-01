@@ -58,10 +58,9 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
                 splashRadius: 20,
                 icon: Icon(Icons.delete_outline_rounded),
                 onPressed: () {
-                  context
-                      .read<AudioPlayerNotifier>()
-                      .removeIndexesFromPlaylistPlus(_selectedEpisodes,
-                          playlist: widget.playlist);
+                  context.read<AudioPlayerNotifier>().removeIndexesFromPlaylist(
+                      _selectedEpisodes,
+                      playlist: widget.playlist);
                   setState(_selectedEpisodes.clear);
                 }),
           if (_selectedEpisodes.isNotEmpty)
@@ -98,8 +97,13 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
             : Future.value(true),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            return _PlaylistBody(widget.playlist, _selectedEpisodes.add,
-                _selectedEpisodes.remove, _resetSelected);
+            return _PlaylistBody(widget.playlist, (index) {
+              _selectedEpisodes.add(index);
+              if (mounted) setState(() {});
+            }, (index) {
+              _selectedEpisodes.remove(index);
+              if (mounted) setState(() {});
+            }, _resetSelected);
           } else {
             return Center();
           }

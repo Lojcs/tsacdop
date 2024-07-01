@@ -241,12 +241,10 @@ class KeyValueStorage {
     return prefs.setDouble(key, data);
   }
 
-  Future<double?> getDouble({double defaultValue = 0.0}) async {
+  Future<double> getDouble({double defaultValue = 0.0}) async {
     var prefs = await SharedPreferences.getInstance();
-    if (prefs.getDouble(key) == null) {
-      await prefs.setDouble(key, defaultValue);
-    }
-    return prefs.getDouble(key);
+    if (prefs.getDouble(key) == null) await prefs.setDouble(key, defaultValue);
+    return prefs.getDouble(key)!;
   }
 
   Future<void> addList(List<String?> addList) async {

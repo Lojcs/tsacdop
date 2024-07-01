@@ -370,8 +370,8 @@ class __PlaylistButtonState extends State<_PlaylistButton> {
               ),
               child: Selector<AudioPlayerNotifier,
                   Tuple3<bool, EpisodeBrief?, int>>(
-                selector: (_, audio) => Tuple3(audio.playerRunning,
-                    audio.episode, audio.startAudioPositionv),
+                selector: (_, audio) => Tuple3(
+                    audio.playerRunning, audio.episode, audio.historyPosition),
                 builder: (_, data, __) => !_loadPlay
                     ? SizedBox(
                         height: 8.0,
@@ -389,9 +389,6 @@ class __PlaylistButtonState extends State<_PlaylistButton> {
                               while (audio.buffering) {
                                 await Future.delayed(
                                     Duration(milliseconds: 50));
-                              }
-                              if (data.item3 / audio.audioDuration < 0.95) {
-                                await audio.seekTo(data.item3);
                               }
                               Navigator.pop<int>(context);
                             },
@@ -434,7 +431,7 @@ class __PlaylistButtonState extends State<_PlaylistButton> {
                                             TextStyle(color: context.textColor),
                                       ),
                                       Text(
-                                        data.item2!.title!,
+                                        data.item2!.title,
                                         maxLines: 2,
                                         textAlign: TextAlign.center,
                                         overflow: TextOverflow.ellipsis,

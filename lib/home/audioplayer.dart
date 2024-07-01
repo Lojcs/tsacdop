@@ -30,26 +30,88 @@ import '../widgets/audiopanel.dart';
 import '../widgets/custom_slider.dart';
 import '../widgets/custom_widget.dart';
 
-List<BoxShadow> _customShadow(
-  BuildContext context, {
-  required bool active,
-}) =>
-    [
-      BoxShadow(
-          blurRadius: 10,
-          spreadRadius: -2,
-          offset: Offset(-2, -2),
-          color: context.brightness == Brightness.light
-              ? Colors.black
-              : Colors.white),
-      BoxShadow(
-          blurRadius: 8,
-          offset: Offset(2, 2),
-          color: (context.brightness == Brightness.light
-                  ? Colors.black
-                  : Colors.white)
-              .withOpacity(0.4))
-    ];
+List<BoxShadow> _playContainerShadow(BuildContext context,
+    {required AnimationController controller}) {
+  CurvedAnimation curvedAnimation =
+      CurvedAnimation(parent: controller, curve: Curves.easeInCubic);
+  return [
+    BoxShadow(
+        blurRadius:
+            Tween<double>(begin: 30, end: 60).animate(curvedAnimation).value,
+        spreadRadius:
+            Tween<double>(begin: -16, end: -5).animate(curvedAnimation).value,
+        offset: Tween<Offset>(
+                begin: const Offset(-15, -15), end: const Offset(0, 0))
+            .animate(curvedAnimation)
+            .value,
+        color: context.brightness == Brightness.light
+            ? Colors.white
+            : Colors.white),
+    BoxShadow(
+        blurRadius:
+            Tween<double>(begin: 30, end: 30).animate(curvedAnimation).value,
+        spreadRadius:
+            Tween<double>(begin: -16, end: -10).animate(curvedAnimation).value,
+        offset:
+            Tween<Offset>(begin: const Offset(15, 15), end: const Offset(0, 0))
+                .animate(curvedAnimation)
+                .value,
+        color: context.brightness == Brightness.light
+            ? Colors.black
+            : Colors.black),
+  ];
+}
+
+List<BoxShadow> _playBackgroundShadow(BuildContext context,
+    {required AnimationController controller}) {
+  CurvedAnimation curvedAnimation =
+      CurvedAnimation(parent: controller, curve: Curves.easeInCubic);
+  return [
+    BoxShadow(
+        blurRadius:
+            Tween<double>(begin: 30, end: 100).animate(curvedAnimation).value,
+        spreadRadius:
+            Tween<double>(begin: -16, end: 0).animate(curvedAnimation).value,
+        offset: Tween<Offset>(
+                begin: const Offset(-15, -15), end: const Offset(0, 0))
+            .animate(curvedAnimation)
+            .value,
+        color: context.brightness == Brightness.light
+            ? Colors.black
+            : Colors.white),
+    BoxShadow(
+        blurRadius:
+            Tween<double>(begin: 30, end: 50).animate(curvedAnimation).value,
+        spreadRadius:
+            Tween<double>(begin: -16, end: -4).animate(curvedAnimation).value,
+        offset:
+            Tween<Offset>(begin: const Offset(15, 15), end: const Offset(0, 0))
+                .animate(curvedAnimation)
+                .value,
+        color: (context.brightness == Brightness.light
+                ? Colors.black12
+                : ColorTween(begin: Colors.white, end: Colors.white)
+                    .animate(curvedAnimation)
+                    .value!)
+            .withOpacity(1)),
+  ];
+}
+
+List<BoxShadow> _playIconShadow(BuildContext context,
+    {required AnimationController controller}) {
+  CurvedAnimation curvedAnimation =
+      CurvedAnimation(parent: controller, curve: Curves.easeInCubic);
+  return [
+    BoxShadow(
+        blurRadius:
+            Tween<double>(begin: 15, end: 30).animate(curvedAnimation).value,
+        color: context.brightness == Brightness.light
+            ? Colors.black12
+            : ColorTween(begin: Colors.white, end: Colors.white)
+                .animate(curvedAnimation)
+                .value!),
+  ];
+}
 
 const List kMinsToSelect = [10, 15, 20, 25, 30, 45, 60, 70, 80, 90, 99];
 const List kMinPlayerHeight = <double>[70.0, 75.0, 80.0];
@@ -104,7 +166,7 @@ class _MiniPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
     final s = context.s;
-    final bgColor = context.accentBackground;
+    final bgColor = context.accentBackgroundSoft;
     return Container(
       color: bgColor,
       height: 60,
@@ -274,11 +336,6 @@ class _MiniPanel extends StatelessWidget {
 class LastPosition extends StatelessWidget {
   LastPosition({Key? key}) : super(key: key);
 
-  Future<PlayHistory> getPosition(EpisodeBrief episode) async {
-    var dbHelper = DBHelper();
-    return await dbHelper.getPosition(episode);
-  }
-
   @override
   Widget build(BuildContext context) {
     final s = context.s;
@@ -365,61 +422,40 @@ class LastPosition extends StatelessWidget {
                       onPressed: () =>
                           audio.setBoostVolume(boostVolume: !data))),
               SizedBox(width: 10),
-              FutureBuilder<PlayHistory>(
-                  future: getPosition(episode!),
-                  builder: (context, snapshot) {
-                    return snapshot.hasData
-                        ? snapshot.data!.seekValue! > 0.90
-                            ? Container(
-                                height: 20,
-                                padding: EdgeInsets.symmetric(horizontal: 10),
-                                child: SizedBox(
+              Selector<AudioPlayerNotifier, int?>(
+                  selector: (_, audio) => audio.undoButtonPosition,
+                  builder: (_, data, __) {
+                    return data != null
+                        ? TextButton(
+                            style: TextButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(100.0),
+                                  side: BorderSide(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withOpacity(0.12))),
+                            ),
+                            // highlightedBorderColor: Colors.green[700],
+                            onPressed: () => audio.undoSeek(),
+                            child: Row(
+                              children: [
+                                SizedBox(
                                   width: 20,
                                   height: 20,
                                   child: CustomPaint(
-                                    painter: ListenedAllPainter(
-                                        context.accentColor,
+                                    painter: ListenedPainter(context.textColor,
                                         stroke: 2.0),
                                   ),
                                 ),
-                              )
-                            : snapshot.data!.seconds! < 10
-                                ? Center()
-                                : TextButton(
-                                    style: TextButton.styleFrom(
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(100.0),
-                                          side: BorderSide(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onSurface
-                                                  .withOpacity(0.12))),
-                                    ),
-                                    // highlightedBorderColor: Colors.green[700],
-                                    onPressed: () => audio.seekTo(
-                                        (snapshot.data!.seconds! * 1000)
-                                            .toInt()),
-                                    child: Row(
-                                      children: [
-                                        SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CustomPaint(
-                                            painter: ListenedPainter(
-                                                context.textColor,
-                                                stroke: 2.0),
-                                          ),
-                                        ),
-                                        SizedBox(width: 5),
-                                        Text(
-                                          snapshot.data!.seconds!.toTime,
-                                          style: TextStyle(
-                                              color: context.textColor),
-                                        ),
-                                      ],
-                                    ),
-                                  )
+                                SizedBox(width: 5),
+                                Text(
+                                  data.toTime,
+                                  style: TextStyle(color: context.textColor),
+                                ),
+                              ],
+                            ),
+                          )
                         : Center();
                   }),
               Selector<AudioPlayerNotifier, double>(
@@ -464,8 +500,11 @@ class _PlaylistWidgetState extends State<PlaylistWidget> {
           color: context.accentColor.withAlpha(70),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Selector<AudioPlayerNotifier, Tuple2<Playlist?, EpisodeBrief?>>(
-          selector: (_, audio) => Tuple2(audio.playlist, audio.episode),
+        child: Selector<AudioPlayerNotifier,
+            Tuple3<Playlist?, EpisodeBrief?, int?>>(
+          selector: (_, audio) =>
+              Tuple3(audio.playlist, audio.episode, audio.episodeIndex),
+          // Both of are needed since the widget should rebuild on reorder and playlist is mutable.
           builder: (_, data, __) {
             var episodes = data.item1!.episodes;
             return Column(
@@ -476,8 +515,7 @@ class _PlaylistWidgetState extends State<PlaylistWidget> {
                     padding: EdgeInsets.zero,
                     itemCount: episodes.length,
                     itemBuilder: (context, index) {
-                      final isPlaying = episodes[index] != null &&
-                          episodes[index] == data.item2;
+                      final isPlaying = index == data.item3;
                       return Material(
                         color: Colors.transparent,
                         child: InkWell(
@@ -1315,7 +1353,7 @@ class _ControlPanelState extends State<ControlPanel>
             }
           });
     _playController =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 400))
+        AnimationController(vsync: this, duration: Duration(milliseconds: 200))
           ..addListener(() {
             if (mounted) {
               setState(() {});
@@ -1341,7 +1379,7 @@ class _ControlPanelState extends State<ControlPanel>
       builder: (context, constraints) {
         final height = constraints.maxHeight;
         return Container(
-          color: context.accentBackground,
+          color: context.accentBackgroundSoft,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -1435,6 +1473,11 @@ class _ControlPanelState extends State<ControlPanel>
                     Color? greyColor = context.brightness == Brightness.light
                         ? Colors.grey[700]
                         : Colors.grey[350];
+                    if (playing) {
+                      _playController.forward();
+                    } else {
+                      _playController.reverse();
+                    }
                     return Material(
                       color: Colors.transparent,
                       child: Row(
@@ -1442,13 +1485,19 @@ class _ControlPanelState extends State<ControlPanel>
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          FlatButton(
-                            color: Colors.transparent,
-                            padding: EdgeInsets.only(right: 10, left: 10),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(100.0),
-                                side: BorderSide(color: Colors.transparent)),
-                            onPressed: playing ? () => audio.rewind() : null,
+                          TextButton(
+                            style: ButtonStyle(
+                              padding: MaterialStateProperty.all(
+                                  EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 5)),
+                              shape: MaterialStateProperty.all(
+                                RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(100.0),
+                                  side: BorderSide(color: Colors.transparent),
+                                ),
+                              ),
+                            ),
+                            onPressed: audio.rewind,
                             child: Row(
                               children: [
                                 Icon(Icons.fast_rewind,
@@ -1471,55 +1520,90 @@ class _ControlPanelState extends State<ControlPanel>
                               ],
                             ),
                           ),
+                          // Container(
+                          //   height: 60,
+                          //   width: 60,
+                          //   margin: EdgeInsets.symmetric(horizontal: 30),
+                          //   decoration: BoxDecoration(
+                          //       shape: BoxShape.circle,
+                          //       boxShadow: _playBackgroundShadow(context,
+                          //           controller: _playController)),
+                          //   child: GestureDetector(
+                          //     onTap: playing
+                          //         ? () {
+                          //             audio.pauseAduio();
+                          //             _playController.reverse();
+                          //           }
+                          //         : () {
+                          //             audio.resumeAudio();
+                          //             _playController.forward();
+                          //           },
+                          //     child: Icon(
+                          //       playing
+                          //           ? Icons.pause_rounded
+                          //           : Icons.play_arrow_rounded,
+                          //       size: 40,
+                          //       color: context.accentColor,
+                          //       shadows: _playIconShadow(context,
+                          //           controller: _playController),
+                          //     ),
+                          //   ),
+                          // ),
                           Container(
-                              margin: EdgeInsets.symmetric(horizontal: 30),
-                              height: 60,
-                              width: 60,
-                              decoration: BoxDecoration(
-                                  color: context.accentBackground,
-                                  shape: BoxShape.circle,
-                                  // border: Border.all(
-                                  //     color: context.brightness == Brightness.dark
-                                  //         ? Colors.black12
-                                  //         : Colors.white10,
-                                  //     width: 1),
-                                  boxShadow:
-                                      _customShadow(context, active: playing)),
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(30)),
-                                  onTap: playing
-                                      ? () {
-                                          audio.pauseAduio();
-                                        }
-                                      : () {
-                                          audio.resumeAudio();
-                                        },
-                                  child: SizedBox(
-                                    height: 60,
-                                    width: 60,
-                                    child: Icon(
-                                      playing
-                                          ? Icons.pause_rounded
-                                          : Icons.play_arrow_rounded,
-                                      size: 40,
-                                      color: context.accentColor,
-                                    ),
+                            margin: EdgeInsets.symmetric(horizontal: 30),
+                            height: 60,
+                            width: 60,
+                            decoration: BoxDecoration(
+                              color: context.accentBackgroundSoft,
+                              shape: BoxShape.circle,
+                              boxShadow: !context.realDark
+                                  ? _playContainerShadow(context,
+                                      controller: _playController)
+                                  : [],
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: GestureDetector(
+                                // borderRadius:
+                                //     BorderRadius.all(Radius.circular(30)),
+                                onTap: playing
+                                    ? () {
+                                        audio.pauseAduio();
+                                      }
+                                    : () {
+                                        audio.resumeAudio();
+                                      },
+                                child: SizedBox(
+                                  height: 60,
+                                  width: 60,
+                                  child: Icon(
+                                    playing
+                                        ? Icons.pause_rounded
+                                        : Icons.play_arrow_rounded,
+                                    size: 40,
+                                    color: context.accentColor,
+                                    shadows: context.realDark
+                                        ? _playIconShadow(context,
+                                            controller: _playController)
+                                        : [],
                                   ),
                                 ),
-                              )),
+                              ),
+                            ),
+                          ),
                           TextButton(
-                            // style: ButtonStyle(
-                            //   padding: EdgeInsets.only(left: 10.0, right: 10),
-                            //   backgroundColor: Colors.transparent,
-                            //   shape: RoundedRectangleBorder(
-                            //       borderRadius: BorderRadius.circular(100.0),
-                            //       side: BorderSide(color: Colors.transparent)),
-                            // ),
-                            onPressed:
-                                playing ? () => audio.fastForward() : null,
+                            style: ButtonStyle(
+                              padding: MaterialStateProperty.all(
+                                  EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 5)),
+                              shape: MaterialStateProperty.all(
+                                RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(100.0),
+                                  side: BorderSide(color: Colors.transparent),
+                                ),
+                              ),
+                            ),
+                            onPressed: audio.fastForward,
                             child: Row(
                               children: [
                                 Selector<AudioPlayerNotifier, int?>(

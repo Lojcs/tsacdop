@@ -85,7 +85,7 @@ class Playlist extends Equatable {
   final DBHelper _dbHelper = DBHelper();
 //  final KeyValueStorage _playlistStorage = KeyValueStorage(playlistKey);
 
-  /// Clears and (re)initialises the playlist with the urls in [episodeList].
+  /// (Re)initialises the playlist with the urls in [episodeList].
   Future<void> getPlaylist() async {
     // // Don't reload if already loaded
     // if (!reload && episodes.length == episodeList.length) return;
@@ -140,14 +140,8 @@ class Playlist extends Equatable {
     }
   }
 
-// Future<void> savePlaylist() async {
-//    var urls = <String>[];
-//    urls.addAll(_playlist.map((e) => e.enclosureUrl));
-//    await _playlistStorage.saveStringList(urls.toSet().toList());
-//  }
-
-  /// Adds episodes to the playlist at [index].
-  /// Don't directly use on playlists that might be live. Use [AudioState.addToPlaylistPlus] instead.
+  /// Adds [newEpisodes] to the playlist at [index].
+  /// Don't directly use on playlists that might be live. Use [AudioState.addToPlaylist] instead.
   void addEpisodes(List<EpisodeBrief> newEpisodes, int index,
       {EpisodeCollision ifExists = EpisodeCollision.Ignore}) {
     switch (ifExists) {
@@ -173,6 +167,8 @@ class Playlist extends Equatable {
     }
   }
 
+  /// Removes [delEpisodes] from the playlist.
+  /// Don't directly use on playlists that might be live. Use [AudioState.removeFromPlaylist] instead.
   void removeEpisodes(List<EpisodeBrief> delEpisodes, {bool delLocal = true}) {
     List<String> delUrls = [
       for (var episode in delEpisodes) episode.enclosureUrl
@@ -184,6 +180,8 @@ class Playlist extends Equatable {
     }
   }
 
+  /// Removes [number] episodes at [index] from playlist.
+  /// Don't directly use on playlists that might be live. Use [AudioState.removeFromPlaylistAt] instead.
   void removeEpisodesAt(int index, {int number = 1}) {
     int end = index + number;
     List<String> delEpisodes = episodeList.getRange(index, end).toList();
@@ -192,6 +190,17 @@ class Playlist extends Equatable {
     episodes.removeRange(index, end);
   }
 
+  /// Moves episode at [oldIndex] to [newIndex].
+  /// Don't directly use on playlists that might be live. Use [AudioState.reorderPlaylist] instead.
+  void reorderPlaylist(int oldIndex, int newIndex) {
+    final episode = episodes.removeAt(oldIndex);
+    episodes.insert(newIndex, episode);
+    episodeList.removeAt(oldIndex);
+    episodeList.insert(newIndex, episode.enclosureUrl);
+  }
+
+  /// Replaces matching playlist episodes with the provided [episode].
+  /// Don't directly use on playlists that might be live. Use [AudioState.updateEpisodeMediaID] instead.
   List<int> updateEpisode(EpisodeBrief episode) {
     List<int> indexes = [];
     for (int i = 0; i < episodes.length; i++) {
@@ -203,24 +212,8 @@ class Playlist extends Equatable {
     return indexes;
   }
 
-  int delFromPlaylist(EpisodeBrief episodeBrief) {
-    var index = episodes.indexOf(episodeBrief);
-    episodes.removeWhere(
-        (episode) => episode.enclosureUrl == episodeBrief.enclosureUrl);
-    episodeList.removeWhere((url) => url == episodeBrief.enclosureUrl);
-    if (isLocal!) {
-      _dbHelper.deleteLocalEpisodes([episodeBrief.enclosureUrl]);
-    }
-    return index;
-  }
-
-  void reorderPlaylist(int oldIndex, int newIndex) {
-    final episode = episodes.removeAt(oldIndex);
-    episodes.insert(newIndex, episode);
-    episodeList.removeAt(oldIndex);
-    episodeList.insert(newIndex, episode.enclosureUrl);
-  }
-
+  /// Clears all episodes in playlist.
+  /// Don't directly use on playlists that might be live. Use [AudioState.clearPlaylist] instead.
   void clear() {
     episodeList.clear();
     episodes.clear();

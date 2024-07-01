@@ -27,6 +27,7 @@ extension ContextExtension on BuildContext {
   Color get primaryColorDark => Theme.of(this).primaryColorDark;
   Color get textColor => textTheme.bodyLarge!.color!;
   Color get dialogBackgroundColor => Theme.of(this).dialogBackgroundColor;
+  Color get accentBackgroundSoft => accentColor.toSoftBackround(this);
   Color get accentBackgroundWeak => accentColor.toWeakBackround(this);
   Color get accentBackground => accentColor.toStrongBackround(this);
   Color get accentBackgroundHighlight => accentColor.toHighlightBackround(this);
@@ -192,6 +193,15 @@ extension StringExtension on String {
 }
 
 extension ColorExtension on Color {
+  /// Blend the color with background, soft look
+  Color toSoftBackround(BuildContext context) {
+    return context.realDark
+        ? context.background
+        : Color.lerp(context.background, this,
+            context.brightness == Brightness.light ? 0.4 : 0.2)!;
+  }
+
+  /// Blend the color with background, less accent
   Color toWeakBackround(BuildContext context) {
     return context.realDark
         ? context.background
@@ -204,6 +214,7 @@ extension ColorExtension on Color {
             0.5)!;
   }
 
+  /// Blend the color with background, mid accent
   Color toStrongBackround(BuildContext context) {
     return context.realDark
         ? context.background
@@ -216,6 +227,7 @@ extension ColorExtension on Color {
             0.2)!;
   }
 
+  /// Blend the color with background, most accent
   Color toHighlightBackround(BuildContext context, {Brightness? brightness}) {
     return context.realDark
         ? context.background

@@ -208,8 +208,7 @@ class _PlaylistHomeState extends State<PlaylistHome> {
                                 ),
                               if (!data.item2)
                                 Selector<AudioPlayerNotifier, int>(
-                                  selector: (_, audio) =>
-                                      audio.startAudioPosition,
+                                  selector: (_, audio) => audio.historyPosition,
                                   builder: (_, position, __) {
                                     return Text(
                                         '${(position ~/ 1000).toTime} / ${(data.item4?.enclosureDuration ?? 0).toTime}');
@@ -373,9 +372,10 @@ class __QueueState extends State<_Queue> {
                     tileColor: context.accentBackground);
               } else {
                 return DismissibleContainer(
+                  playlist: playlist,
                   episode: episodes[index],
                   index: index,
-                  onRemove: (value) => setState(() {}),
+                  onRemove: () => setState(() {}),
                   key: ValueKey(episodes[index].enclosureUrl),
                 );
               }
@@ -511,14 +511,14 @@ class __HistoryState extends State<_History> {
     final s = context.s;
     return SizedBox(
       child: Selector<AudioPlayerNotifier, List<EpisodeBrief?>>(
-        selector: (_, audio) => audio.queue.episodes,
+        selector: (_, audio) => audio.playlist.episodes,
         builder: (_, data, __) {
           return data.contains(episode)
               ? IconButton(
                   icon: Icon(Icons.playlist_add_check,
                       color: context.accentColor),
                   onPressed: () async {
-                    await audio.removeFromPlaylistPlus([episode!]);
+                    await audio.removeFromPlaylist([episode!]);
                     await Fluttertoast.showToast(
                       msg: s.toastRemovePlaylist,
                       gravity: ToastGravity.BOTTOM,
@@ -527,7 +527,7 @@ class __HistoryState extends State<_History> {
               : IconButton(
                   icon: Icon(Icons.playlist_add, color: Colors.grey[700]),
                   onPressed: () async {
-                    await audio.addToPlaylistPlus([episode!]);
+                    await audio.addToPlaylist([episode!]);
                     await Fluttertoast.showToast(
                       msg: s.toastAddPlaylist,
                       gravity: ToastGravity.BOTTOM,
@@ -896,14 +896,14 @@ class __NewPlaylistState extends State<_NewPlaylist> {
   final _dbHelper = DBHelper();
   String _playlistName = '';
   late NewPlaylistOption _option;
-  late bool _loadFolder;
+  late bool _processing;
   FocusNode? _focusNode;
   int? _error;
 
   @override
   void initState() {
     super.initState();
-    _loadFolder = false;
+    _processing = false;
     _focusNode = FocusNode();
     _option = NewPlaylistOption.blank;
   }
@@ -1077,7 +1077,7 @@ class __NewPlaylistState extends State<_NewPlaylist> {
           FlatButton(
             splashColor: context.accentColor.withAlpha(70),
             onPressed: () async {
-              if (!_loadFolder) {
+              if (!_processing) {
                 if (_playlistName == '') {
                   setState(() => _error = 0);
                 } else if (context
@@ -1093,26 +1093,48 @@ class __NewPlaylistState extends State<_NewPlaylist> {
                       );
                       break;
                     case NewPlaylistOption.latest10:
+                      if (mounted) {
+                        setState(() {
+                          _processing = true;
+                        });
+                      }
                       final recent = await _recent();
                       playlist = Playlist(
                         _playlistName,
                         episodeList: [for (var e in recent) e.enclosureUrl],
                       );
                       await playlist.getPlaylist();
+                      if (mounted) {
+                        setState(() {
+                          _processing = false;
+                        });
+                      }
                       break;
                     case NewPlaylistOption.randon10:
+                      if (mounted) {
+                        setState(() {
+                          _processing = true;
+                        });
+                      }
                       final random = await _random();
                       playlist = Playlist(
                         _playlistName,
                         episodeList: [for (var e in random) e.enclosureUrl],
                       );
                       await playlist.getPlaylist();
+                      if (mounted) {
+                        setState(() {
+                          _processing = false;
+                        });
+                      }
                       break;
                     case NewPlaylistOption.folder:
                       _focusNode!.unfocus();
-                      setState(() {
-                        _loadFolder = true;
-                      });
+                      if (mounted) {
+                        setState(() {
+                          _processing = true;
+                        });
+                      }
                       final episodes = await _loadLocalFolder();
                       playlist = Playlist(
                         _playlistName,
@@ -1122,7 +1144,7 @@ class __NewPlaylistState extends State<_NewPlaylist> {
                       await playlist.getPlaylist();
                       if (mounted) {
                         setState(() {
-                          _loadFolder = false;
+                          _processing = false;
                         });
                       }
                       break;
@@ -1135,12 +1157,12 @@ class __NewPlaylistState extends State<_NewPlaylist> {
             child: Text(s.confirm,
                 style: TextStyle(
                     color:
-                        _loadFolder ? Colors.grey[600] : context.accentColor)),
+                        _processing ? Colors.grey[600] : context.accentColor)),
           )
         ],
         title: SizedBox(
             width: context.width - 160, child: Text(s.createNewPlaylist)),
-        content: _loadFolder
+        content: _processing
             ? SizedBox(
                 height: 50,
                 child: Center(

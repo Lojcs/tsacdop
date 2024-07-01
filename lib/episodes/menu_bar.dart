@@ -90,7 +90,7 @@ class MenuBarState extends State<MenuBar> {
                           }),
                   DownloadButton(episode: widget.episodeItem),
                   Selector<AudioPlayerNotifier, List<EpisodeBrief?>>(
-                    selector: (_, audio) => audio.queue.episodes,
+                    selector: (_, audio) => audio.playlist.episodes,
                     builder: (_, data, __) {
                       final inPlaylist = data.contains(widget.episodeItem);
                       return inPlaylist
@@ -98,8 +98,8 @@ class MenuBarState extends State<MenuBar> {
                               child: Icon(Icons.playlist_add_check,
                                   color: context.accentColor),
                               onTap: () async {
-                                await audio.removeFromPlaylistPlus(
-                                    [widget.episodeItem]);
+                                await audio
+                                    .removeFromPlaylist([widget.episodeItem]);
                                 await Fluttertoast.showToast(
                                   msg: s.toastRemovePlaylist,
                                   gravity: ToastGravity.BOTTOM,
@@ -112,8 +112,7 @@ class MenuBarState extends State<MenuBar> {
                                           ? 700
                                           : 500]),
                               onTap: () async {
-                                await audio
-                                    .addToPlaylistPlus([widget.episodeItem]);
+                                await audio.addToPlaylist([widget.episodeItem]);
                                 await Fluttertoast.showToast(
                                   msg: s.toastAddPlaylist,
                                   gravity: ToastGravity.BOTTOM,

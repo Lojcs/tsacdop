@@ -9,7 +9,7 @@ import 'package:tsacdop/local_storage/sqflite_localpodcast.dart';
 import '../util/extension_helper.dart';
 
 class EpisodeBrief extends Equatable {
-  final int id; // TODO: This breaks if episodes are deleted
+  final int id;
   final String title;
   final String enclosureUrl;
   final String podcastId;

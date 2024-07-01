@@ -17,6 +17,7 @@ class RefreshItem {
 }
 
 class RefreshWorker extends ChangeNotifier {
+  // TODO: Why not workmanager?
   FlutterIsolate? refreshIsolate;
   late ReceivePort receivePort;
   late SendPort refreshSendPort;
@@ -35,7 +36,7 @@ class RefreshWorker extends ChangeNotifier {
         refreshIsolateEntryPoint, receivePort.sendPort);
   }
 
-  void _listen(List<String?>? podcasts) {
+  void _listen(List<String>? podcasts) {
     receivePort.distinct().listen((message) {
       if (message is SendPort) {
         refreshSendPort = message;
@@ -57,7 +58,7 @@ class RefreshWorker extends ChangeNotifier {
     });
   }
 
-  Future<void> start(List<String?>? podcasts) async {
+  Future<void> start(List<String>? podcasts) async {
     if (!_created) {
       if (podcasts!.isEmpty) {
         final refreshstorage = KeyValueStorage(refreshdateKey);
