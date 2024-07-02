@@ -437,7 +437,7 @@ class LastPosition extends StatelessWidget {
                                           .withOpacity(0.12))),
                             ),
                             // highlightedBorderColor: Colors.green[700],
-                            onPressed: () => audio.undoSeek(),
+                            onPressed: audio.undoSeek,
                             child: Row(
                               children: [
                                 SizedBox(
@@ -450,7 +450,7 @@ class LastPosition extends StatelessWidget {
                                 ),
                                 SizedBox(width: 5),
                                 Text(
-                                  data.toTime,
+                                  (data ~/ 1000).toTime,
                                   style: TextStyle(color: context.textColor),
                                 ),
                               ],
