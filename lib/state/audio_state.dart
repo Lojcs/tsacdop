@@ -815,25 +815,22 @@ class AudioPlayerNotifier extends ChangeNotifier {
           if (_historyPosition != 0 &&
               _historyPosition / _audioDuration < 0.95 &&
               _historyPosition > 10000) {
-            await seekTo(_historyPosition);
-            if (_historyPosition > _episode!.skipSecondsStart * 1000) {
-              _undoButtonPositionsStack
-                  .addAll([0, _episode!.skipSecondsStart * 1000]);
-            } else {
-              _undoButtonPositionsStack.add(0);
+            if (_episode!.skipSecondsStart != 0 &&
+                _historyPosition > _episode!.skipSecondsStart * 1000) {
+              _undoButtonPositionsStack.add(_episode!.skipSecondsStart * 1000);
             }
+            await seekTo(_historyPosition);
           } else if (_episode!.skipSecondsStart != 0) {
             await seekTo(_episode!.skipSecondsStart * 1000);
-            _undoButtonPositionsStack.add(0);
           }
         }
         if (_skipEnd) {
           if (_audioPosition >
               (_audioDuration - _episode!.skipSecondsEnd * 1000)) {
             _skipEnd = false;
-            await seekTo(_audioDuration);
             _undoButtonPositionsStack.clear();
             _undoButtonPositionsStack.addAll([_episode!.skipSecondsEnd, -1]);
+            await seekTo(_audioDuration);
           }
         }
         if (_lastSeekPosition != null &&
@@ -1281,12 +1278,10 @@ class AudioPlayerNotifier extends ChangeNotifier {
   }
 
   Future<void> skipToIndex(int index) async {
-    if (index != _episodeIndex) {
-      if (_playlist.isQueue) {
-        await reorderPlaylist(index, 0);
-      } else {
-        await _audioHandler.skipToQueueItem(index);
-      }
+    if (_playlist.isQueue) {
+      await reorderPlaylist(index, 0);
+    } else {
+      await _audioHandler.skipToQueueItem(index);
     }
   }
 
@@ -1305,6 +1300,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
   }
 
   Future<void> seekTo(int position) async {
+    print(_audioPosition);
     _undoButtonPositionsStack.add(_audioPosition);
     _audioPosition = position;
     _lastSeekPosition = position;
@@ -1327,9 +1323,8 @@ class AudioPlayerNotifier extends ChangeNotifier {
     }
     if (_undoButtonPositionsStack.isNotEmpty) {
       _lastSeekPosition = _undoButtonPositionsStack.last;
-      await _audioHandler
-          .seek(Duration(milliseconds: _undoButtonPositionsStack.last));
       _undoButtonPositionsStack.removeLast();
+      await _audioHandler.seek(Duration(milliseconds: _lastSeekPosition!));
     }
   }
 
@@ -1729,8 +1724,11 @@ class CustomAudioHandler extends BaseAudioHandler
 
   /// Naive combined seek
   Future<void> combinedSeek({final Duration? position, int? index}) async {
-    customEvent.add({'lastEpisodePosition': _position});
-    await _player.seek(position, index: index);
+    if ((position != null && position != _position) ||
+        (index != null && index != _index)) {
+      customEvent.add({'lastEpisodePosition': _position});
+      await _player.seek(position, index: index);
+    }
   }
 
   Future<void> _seekRelative(Duration offset) async {
