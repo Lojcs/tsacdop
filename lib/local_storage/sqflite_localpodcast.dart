@@ -491,7 +491,7 @@ class DBHelper {
     return 0;
   }
 
-  Future<int> saveSkipSecondsStart(String? id, int? seconds) async {
+  Future<int> saveSkipSecondsStart(String? id, int seconds) async {
     var dbClient = await database;
     return await dbClient.rawUpdate(
         "UPDATE PodcastLocal SET skip_seconds = ? WHERE id = ?", [seconds, id]);

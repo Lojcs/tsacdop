@@ -70,7 +70,7 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
                 onPressed: () {
                   setState(() {
                     _selectedEpisodes.clear();
-                    _resetSelected = !_resetSelected!;
+                    _resetSelected = !_resetSelected;
                   });
                 }),
           IconButton(

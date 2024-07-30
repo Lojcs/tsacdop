@@ -30,89 +30,6 @@ import '../widgets/audiopanel.dart';
 import '../widgets/custom_slider.dart';
 import '../widgets/custom_widget.dart';
 
-List<BoxShadow> _playContainerShadow(BuildContext context,
-    {required AnimationController controller}) {
-  CurvedAnimation curvedAnimation =
-      CurvedAnimation(parent: controller, curve: Curves.easeInCubic);
-  return [
-    BoxShadow(
-        blurRadius:
-            Tween<double>(begin: 30, end: 60).animate(curvedAnimation).value,
-        spreadRadius:
-            Tween<double>(begin: -16, end: -5).animate(curvedAnimation).value,
-        offset: Tween<Offset>(
-                begin: const Offset(-15, -15), end: const Offset(0, 0))
-            .animate(curvedAnimation)
-            .value,
-        color: context.brightness == Brightness.light
-            ? Colors.white
-            : Colors.white),
-    BoxShadow(
-        blurRadius:
-            Tween<double>(begin: 30, end: 30).animate(curvedAnimation).value,
-        spreadRadius:
-            Tween<double>(begin: -16, end: -10).animate(curvedAnimation).value,
-        offset:
-            Tween<Offset>(begin: const Offset(15, 15), end: const Offset(0, 0))
-                .animate(curvedAnimation)
-                .value,
-        color: context.brightness == Brightness.light
-            ? Colors.black
-            : Colors.black),
-  ];
-}
-
-List<BoxShadow> _playBackgroundShadow(BuildContext context,
-    {required AnimationController controller}) {
-  CurvedAnimation curvedAnimation =
-      CurvedAnimation(parent: controller, curve: Curves.easeInCubic);
-  return [
-    BoxShadow(
-        blurRadius:
-            Tween<double>(begin: 30, end: 100).animate(curvedAnimation).value,
-        spreadRadius:
-            Tween<double>(begin: -16, end: 0).animate(curvedAnimation).value,
-        offset: Tween<Offset>(
-                begin: const Offset(-15, -15), end: const Offset(0, 0))
-            .animate(curvedAnimation)
-            .value,
-        color: context.brightness == Brightness.light
-            ? Colors.black
-            : Colors.white),
-    BoxShadow(
-        blurRadius:
-            Tween<double>(begin: 30, end: 50).animate(curvedAnimation).value,
-        spreadRadius:
-            Tween<double>(begin: -16, end: -4).animate(curvedAnimation).value,
-        offset:
-            Tween<Offset>(begin: const Offset(15, 15), end: const Offset(0, 0))
-                .animate(curvedAnimation)
-                .value,
-        color: (context.brightness == Brightness.light
-                ? Colors.black12
-                : ColorTween(begin: Colors.white, end: Colors.white)
-                    .animate(curvedAnimation)
-                    .value!)
-            .withOpacity(1)),
-  ];
-}
-
-List<BoxShadow> _playIconShadow(BuildContext context,
-    {required AnimationController controller}) {
-  CurvedAnimation curvedAnimation =
-      CurvedAnimation(parent: controller, curve: Curves.easeInCubic);
-  return [
-    BoxShadow(
-        blurRadius:
-            Tween<double>(begin: 15, end: 30).animate(curvedAnimation).value,
-        color: context.brightness == Brightness.light
-            ? Colors.black12
-            : ColorTween(begin: Colors.white, end: Colors.white)
-                .animate(curvedAnimation)
-                .value!),
-  ];
-}
-
 const List kMinsToSelect = [10, 15, 20, 25, 30, 45, 60, 70, 80, 90, 99];
 const List kMinPlayerHeight = <double>[70.0, 75.0, 80.0];
 const List kMaxPlayerHeight = <double>[300.0, 325.0, 350.0];
@@ -350,40 +267,40 @@ class LastPosition extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Selector<AudioPlayerNotifier, bool?>(
-                  selector: (_, audio) => audio.skipSilence,
-                  builder: (_, data, __) => TextButton(
-                      child: Row(
-                        children: [
-                          Icon(Icons.flash_on,
-                              size: 18,
-                              color: data!
-                                  ? context.accentColor
-                                  : context.textColor),
-                          SizedBox(width: 5),
-                          Text(
-                            s.skipSilence,
-                            style: TextStyle(
-                                color: data
-                                    ? context.accentColor
-                                    : context.textColor),
-                          ),
-                        ],
+                selector: (_, audio) => audio.skipSilence,
+                builder: (_, data, __) => TextButton(
+                  child: Row(
+                    children: [
+                      Icon(Icons.flash_on,
+                          size: 18,
+                          color:
+                              data! ? context.accentColor : context.textColor),
+                      SizedBox(width: 5),
+                      Text(
+                        s.skipSilence,
+                        style: TextStyle(
+                            color:
+                                data ? context.accentColor : context.textColor),
                       ),
-                      style: TextButton.styleFrom(
-                        primary:
-                            data ? context.accentColor : Colors.transparent,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(100.0),
-                            side: BorderSide(
-                                color: data
-                                    ? context.accentColor
-                                    : Theme.of(context)
-                                        .colorScheme
-                                        .onSurface
-                                        .withOpacity(0.12))),
+                    ],
+                  ),
+                  style: TextButton.styleFrom(
+                    primary: data ? context.accentColor : null,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(100.0),
+                      side: BorderSide(
+                        color: data
+                            ? context.accentColor
+                            : Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withOpacity(0.12),
                       ),
-                      onPressed: () =>
-                          audio.setSkipSilence(skipSilence: !data))),
+                    ),
+                  ),
+                  onPressed: () => audio.setSkipSilence(skipSilence: !data),
+                ),
+              ),
               SizedBox(width: 10),
               Selector<AudioPlayerNotifier, bool?>(
                   selector: (_, audio) => audio.boostVolume,
@@ -406,8 +323,7 @@ class LastPosition extends StatelessWidget {
                         ],
                       ),
                       style: TextButton.styleFrom(
-                        primary:
-                            data ? context.accentColor : Colors.transparent,
+                        primary: data ? context.accentColor : null,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(100.0),
                             side: BorderSide(
@@ -491,104 +407,108 @@ class _PlaylistWidgetState extends State<PlaylistWidget> {
   @override
   Widget build(BuildContext context) {
     var audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(0),
-      child: Container(
-        alignment: Alignment.topLeft,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: context.accentColor.withAlpha(70),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Selector<AudioPlayerNotifier,
-            Tuple3<Playlist?, EpisodeBrief?, int?>>(
-          selector: (_, audio) =>
-              Tuple3(audio.playlist, audio.episode, audio.episodeIndex),
-          // Both of are needed since the widget should rebuild on reorder and playlist is mutable.
-          builder: (_, data, __) {
-            var episodes = data.item1!.episodes;
-            return Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                Expanded(
-                  child: ListView.builder(
-                    padding: EdgeInsets.zero,
-                    itemCount: episodes.length,
-                    itemBuilder: (context, index) {
-                      final isPlaying = index == data.item3;
-                      return Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () async {
-                            if (!isPlaying) {
-                              audio.loadEpisodeFromCurrentPlaylist(index);
-                            }
-                          },
-                          child: Container(
-                            color: isPlaying
-                                ? context.accentColor
-                                : Colors.transparent,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.min,
-                              children: <Widget>[
-                                Padding(
-                                  padding: EdgeInsets.all(10.0),
-                                  child: CircleAvatar(
-                                      radius: 15,
-                                      backgroundImage: episodes[index]
-                                          .episodeOrPodcastImageProvider),
-                                ),
-                                Expanded(
-                                  child: Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: Text(
-                                      episodes[index].title,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
+    return Container(
+      alignment: Alignment.topLeft,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: context.accentBackgroundHighlight,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Selector<AudioPlayerNotifier,
+          Tuple4<Playlist, EpisodeBrief?, int?, bool>>(
+        selector: (_, audio) => Tuple4(
+            audio.playlist, audio.episode, audio.episodeIndex, audio.playing),
+        // Both of are needed since the widget should rebuild on reorder and playlist is mutable.
+        builder: (_, data, __) {
+          var episodes = data.item1.episodes;
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              Expanded(
+                child: ListView.builder(
+                  padding: EdgeInsets.zero,
+                  itemCount: episodes.length,
+                  itemBuilder: (context, index) {
+                    final isPlaying = index == data.item3;
+                    return Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () async {
+                          if (!isPlaying) {
+                            audio.loadEpisodeFromCurrentPlaylist(index);
+                          }
+                        },
+                        child: Container(
+                          color: isPlaying
+                              ? context.accentColor
+                              : Colors.transparent,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              Padding(
+                                padding: EdgeInsets.all(10.0),
+                                child: CircleAvatar(
+                                    radius: 15,
+                                    backgroundImage: episodes[index]
+                                        .episodeOrPodcastImageProvider),
+                              ),
+                              Expanded(
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    episodes[index].title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                                if (isPlaying)
-                                  Container(
-                                      height: 20,
-                                      width: 20,
-                                      margin:
-                                          EdgeInsets.symmetric(horizontal: 10),
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: WaveLoader(
-                                          color: context.primaryColor)),
-                              ],
-                            ),
+                              ),
+                              if (isPlaying)
+                                Container(
+                                    height: 20,
+                                    width: 20,
+                                    margin:
+                                        EdgeInsets.symmetric(horizontal: 10),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: WaveLoader(
+                                        animate: data.item4,
+                                        color: context.accentBackground)),
+                            ],
                           ),
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
                 ),
-                SizedBox(
-                  height: 60.0,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      children: <Widget>[
-                        Text(
-                          data.item1!.name == 'Queue'
-                              ? context.s.queue
-                              : '${context.s.homeMenuPlaylist}${'-${data.item1!.name}'}',
-                          overflow: TextOverflow.fade,
-                          style: TextStyle(
-                              color: context.accentColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16),
-                        ),
-                        Spacer(),
-                        Material(
+              ),
+              SizedBox(
+                height: 60.0,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: <Widget>[
+                      Text(
+                        data.item1.name == 'Queue'
+                            ? context.s.queue
+                            : '${context.s.homeMenuPlaylist}${'-${data.item1.name}'}',
+                        overflow: TextOverflow.fade,
+                        style: TextStyle(
+                            color: context.accentColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16),
+                      ),
+                      Spacer(),
+                      Container(
+                        decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(100),
-                          color: context.primaryColor,
+                          boxShadow: context.boxShadowSmall,
+                          color: context.accentBackgroundSoft,
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
                           child: InkWell(
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                             onTap: () {
@@ -607,10 +527,16 @@ class _PlaylistWidgetState extends State<PlaylistWidget> {
                             ),
                           ),
                         ),
-                        SizedBox(width: 20),
-                        Material(
+                      ),
+                      SizedBox(width: 20),
+                      Container(
+                        decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(100),
-                          color: context.primaryColor,
+                          boxShadow: context.boxShadowSmall,
+                          color: context.accentBackgroundSoft,
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
                           child: InkWell(
                             borderRadius: BorderRadius.circular(15.0),
                             onTap: () {
@@ -632,14 +558,14 @@ class _PlaylistWidgetState extends State<PlaylistWidget> {
                             ),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            );
-          },
-        ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -694,32 +620,14 @@ class SleepModeState extends State<SleepMode>
     super.dispose();
   }
 
-  List<BoxShadow> customShadow(double scale) => [
-        BoxShadow(
-            blurRadius: 26 * (1 - scale),
-            offset: Offset(-6, -6) * (1 - scale),
-            color: Colors.white),
-        BoxShadow(
-            blurRadius: 8 * (1 - scale),
-            offset: Offset(2, 2) * (1 - scale),
-            color: Colors.grey[600]!.withOpacity(0.4))
-      ];
-  List<BoxShadow> customShadowNight(double scale) => [
-        BoxShadow(
-            blurRadius: 6 * (1 - scale),
-            offset: Offset(-1, -1) * (1 - scale),
-            color: Colors.grey[100]!.withOpacity(0.3)),
-        BoxShadow(
-            blurRadius: 8 * (1 - scale),
-            offset: Offset(2, 2) * (1 - scale),
-            color: Colors.black)
-      ];
-
   @override
   Widget build(BuildContext context) {
     final s = context.s;
-    final _colorTween =
-        ColorTween(begin: context.accentColor.withAlpha(60), end: Colors.black);
+    final _colorTweenBackground = ColorTween(
+        begin: context.accentBackgroundHighlight,
+        end: context.accentBackground);
+    final _colorTween = ColorTween(
+        begin: context.accentBackgroundSoft, end: context.accentBackground);
     var audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
     return Selector<AudioPlayerNotifier, Tuple3<int, double, SleepTimerMode>>(
       selector: (_, audio) =>
@@ -733,7 +641,7 @@ class SleepModeState extends State<SleepMode>
           var width = constraints.maxWidth;
           return Container(
             decoration: BoxDecoration(
-                color: _colorTween.transform(move),
+                color: _colorTweenBackground.transform(move),
                 borderRadius: BorderRadius.circular(10)),
             child: Stack(
               children: <Widget>[
@@ -768,8 +676,11 @@ class SleepModeState extends State<SleepMode>
                                                 decoration: BoxDecoration(
                                                   color: (e == _minSelected)
                                                       ? context.accentColor
-                                                      : context.primaryColor,
+                                                      : context
+                                                          .accentBackgroundSoft,
                                                   shape: BoxShape.circle,
+                                                  boxShadow:
+                                                      context.boxShadowSmall,
                                                 ),
                                                 alignment: Alignment.center,
                                                 height: 30,
@@ -809,10 +720,9 @@ class SleepModeState extends State<SleepMode>
                                   height: 40,
                                   width: 120,
                                   decoration: BoxDecoration(
-                                    border:
-                                        Border.all(color: context.primaryColor),
                                     color: _colorTween.transform(move),
                                     borderRadius: BorderRadius.circular(20),
+                                    boxShadow: context.boxShadowSmall,
                                   ),
                                   child: Material(
                                     color: Colors.transparent,
@@ -847,17 +757,16 @@ class SleepModeState extends State<SleepMode>
                                 Container(
                                   height: 100 * (1 - fraction),
                                   width: 1,
-                                  color: context.primaryColorDark,
+                                  color: context.accentBackgroundSoft,
                                 ),
                                 Container(
                                   height: 40,
                                   width: 120,
                                   alignment: Alignment.center,
                                   decoration: BoxDecoration(
-                                    border:
-                                        Border.all(color: context.primaryColor),
                                     color: _colorTween.transform(move),
                                     borderRadius: BorderRadius.circular(20),
+                                    boxShadow: context.boxShadowSmall,
                                   ),
                                   child: Material(
                                     color: Colors.transparent,
@@ -909,24 +818,30 @@ class SleepModeState extends State<SleepMode>
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16)),
                             Spacer(),
-                            Material(
-                              borderRadius: BorderRadius.circular(100),
-                              color: context.primaryColor,
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(15.0),
-                                onTap: () {
-                                  setState(() {
-                                    _openClock = !_openClock;
-                                  });
-                                },
-                                child: SizedBox(
-                                  height: 30.0,
-                                  width: 30.0,
-                                  child: Icon(
-                                    _openClock
-                                        ? LineIcons.stopwatch
-                                        : LineIcons.clock,
-                                    size: 20.0,
+                            Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(100),
+                                color: context.accentBackgroundSoft,
+                                boxShadow: context.boxShadowSmall,
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(15.0),
+                                  onTap: () {
+                                    setState(() {
+                                      _openClock = !_openClock;
+                                    });
+                                  },
+                                  child: SizedBox(
+                                    height: 30.0,
+                                    width: 30.0,
+                                    child: Icon(
+                                      _openClock
+                                          ? LineIcons.stopwatch
+                                          : LineIcons.clock,
+                                      size: 20.0,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -1092,7 +1007,7 @@ class _ChaptersWidgetState extends State<ChaptersWidget> {
         alignment: Alignment.topLeft,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: context.accentColor.withAlpha(70),
+          color: context.accentBackgroundHighlight,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Selector<AudioPlayerNotifier, EpisodeBrief?>(
@@ -1176,24 +1091,31 @@ class _ChaptersWidgetState extends State<ChaptersWidget> {
                         Spacer(),
                         SizedBox(width: 20),
                         if (episode.chapterLink != '')
-                          Material(
-                            borderRadius: BorderRadius.circular(100),
-                            color: context.primaryColor,
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(15.0),
-                              onTap: () {
-                                setState(() {
-                                  _showChapter = !_showChapter;
-                                });
-                              },
-                              child: SizedBox(
-                                  height: 30.0,
-                                  width: 30.0,
-                                  child: !_showChapter
-                                      ? Icon(Icons.bookmark_border_outlined,
-                                          size: 18)
-                                      : Icon(Icons.chrome_reader_mode_outlined,
-                                          size: 18)),
+                          Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(100),
+                              boxShadow: context.boxShadowSmall,
+                              color: context.accentBackgroundSoft,
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(15.0),
+                                onTap: () {
+                                  setState(() {
+                                    _showChapter = !_showChapter;
+                                  });
+                                },
+                                child: SizedBox(
+                                    height: 30.0,
+                                    width: 30.0,
+                                    child: !_showChapter
+                                        ? Icon(Icons.bookmark_border_outlined,
+                                            size: 18)
+                                        : Icon(
+                                            Icons.chrome_reader_mode_outlined,
+                                            size: 18)),
+                              ),
                             ),
                           ),
                       ],
@@ -1289,34 +1211,13 @@ class ControlPanel extends StatefulWidget {
 
 class _ControlPanelState extends State<ControlPanel>
     with TickerProviderStateMixin {
-  double? _setSpeed;
+  double _setSpeed = 0;
   late AnimationController _controller;
   late AnimationController _rewindController;
   late AnimationController _fastForwardController;
-  late AnimationController _playController;
   late Animation<double> _animation;
   TabController? _tabController;
   int _tabIndex = 0;
-  List<BoxShadow> customShadow(double scale) => [
-        BoxShadow(
-            blurRadius: 26 * (1 - scale),
-            offset: Offset(-6, -6) * (1 - scale),
-            color: Colors.white),
-        BoxShadow(
-            blurRadius: 8 * (1 - scale),
-            offset: Offset(2, 2) * (1 - scale),
-            color: Colors.grey[600]!.withOpacity(0.4))
-      ];
-  List<BoxShadow> customShadowNight(double scale) => [
-        BoxShadow(
-            blurRadius: 6 * (1 - scale),
-            offset: Offset(-1, -1) * (1 - scale),
-            color: Colors.grey[100]!.withOpacity(0.3)),
-        BoxShadow(
-            blurRadius: 8 * (1 - scale),
-            offset: Offset(2, 2) * (1 - scale),
-            color: Colors.black)
-      ];
 
   Future<List<double>> _getSpeedList() async {
     var storage = KeyValueStorage('speedListKey');
@@ -1325,13 +1226,12 @@ class _ControlPanelState extends State<ControlPanel>
 
   @override
   void initState() {
-    _setSpeed = 0;
     _tabController = TabController(vsync: this, length: 3)
       ..addListener(() {
         setState(() => _tabIndex = _tabController!.index);
       });
     _controller =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 400));
+        AnimationController(vsync: this, duration: Duration(milliseconds: 150));
     _animation = Tween<double>(begin: 0.0, end: 1.0).animate(_controller)
       ..addListener(() {
         if (mounted) {
@@ -1352,13 +1252,6 @@ class _ControlPanelState extends State<ControlPanel>
               setState(() {});
             }
           });
-    _playController =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 200))
-          ..addListener(() {
-            if (mounted) {
-              setState(() {});
-            }
-          });
     super.initState();
   }
 
@@ -1367,7 +1260,6 @@ class _ControlPanelState extends State<ControlPanel>
     _controller.dispose();
     _rewindController.dispose();
     _fastForwardController.dispose();
-    _playController.dispose();
     _tabController!.dispose();
     super.dispose();
   }
@@ -1399,7 +1291,7 @@ class _ControlPanelState extends State<ControlPanel>
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
                       Container(
-                        padding: EdgeInsets.only(top: 20, left: 30, right: 30),
+                        padding: EdgeInsets.only(top: 20, left: 20, right: 20),
                         child: SliderTheme(
                           data: SliderTheme.of(context).copyWith(
                             //activeTrackColor: height <= widget.maxHeight
@@ -1408,7 +1300,7 @@ class _ControlPanelState extends State<ControlPanel>
                             inactiveTrackColor:
                                 context.colorScheme.secondaryContainer,
                             trackHeight: 8.0,
-                            trackShape: MyRectangularTrackShape(),
+                            trackShape: RoundedRectSliderTrackShape(),
                             thumbColor: context.accentColor,
                             thumbShape: RoundSliderThumbShape(
                               enabledThumbRadius: 6.0,
@@ -1473,11 +1365,6 @@ class _ControlPanelState extends State<ControlPanel>
                     Color? greyColor = context.brightness == Brightness.light
                         ? Colors.grey[700]
                         : Colors.grey[350];
-                    if (playing) {
-                      _playController.forward();
-                    } else {
-                      _playController.reverse();
-                    }
                     return Material(
                       color: Colors.transparent,
                       child: Row(
@@ -1504,90 +1391,45 @@ class _ControlPanelState extends State<ControlPanel>
                                     size: 32, color: greyColor),
                                 SizedBox(width: 5),
                                 Selector<AudioPlayerNotifier, int?>(
-                                    selector: (_, audio) => audio.rewindSeconds,
-                                    builder: (_, seconds, __) => Padding(
-                                          padding:
-                                              const EdgeInsets.only(top: 5.0),
-                                          child: Text('$seconds s',
-                                              style: GoogleFonts.teko(
-                                                textBaseline:
-                                                    TextBaseline.ideographic,
-                                                textStyle: TextStyle(
-                                                    color: greyColor,
-                                                    fontSize: 25),
-                                              )),
-                                        )),
+                                  selector: (_, audio) => audio.rewindSeconds,
+                                  builder: (_, seconds, __) => Padding(
+                                    padding: const EdgeInsets.only(top: 5.0),
+                                    child: Text(
+                                      '$seconds s',
+                                      style: GoogleFonts.teko(
+                                        textBaseline: TextBaseline.ideographic,
+                                        textStyle: TextStyle(
+                                            color: greyColor, fontSize: 25),
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                           ),
-                          // Container(
-                          //   height: 60,
-                          //   width: 60,
-                          //   margin: EdgeInsets.symmetric(horizontal: 30),
-                          //   decoration: BoxDecoration(
-                          //       shape: BoxShape.circle,
-                          //       boxShadow: _playBackgroundShadow(context,
-                          //           controller: _playController)),
-                          //   child: GestureDetector(
-                          //     onTap: playing
-                          //         ? () {
-                          //             audio.pauseAduio();
-                          //             _playController.reverse();
-                          //           }
-                          //         : () {
-                          //             audio.resumeAudio();
-                          //             _playController.forward();
-                          //           },
-                          //     child: Icon(
-                          //       playing
-                          //           ? Icons.pause_rounded
-                          //           : Icons.play_arrow_rounded,
-                          //       size: 40,
-                          //       color: context.accentColor,
-                          //       shadows: _playIconShadow(context,
-                          //           controller: _playController),
-                          //     ),
-                          //   ),
-                          // ),
                           Container(
                             margin: EdgeInsets.symmetric(horizontal: 30),
                             height: 60,
                             width: 60,
                             decoration: BoxDecoration(
-                              color: context.accentBackgroundSoft,
-                              shape: BoxShape.circle,
-                              boxShadow: !context.realDark
-                                  ? _playContainerShadow(context,
-                                      controller: _playController)
-                                  : [],
+                              color: context.accentBackground,
+                              borderRadius: BorderRadius.circular(30),
+                              boxShadow: context.boxShadowLarge,
                             ),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: GestureDetector(
-                                // borderRadius:
-                                //     BorderRadius.all(Radius.circular(30)),
-                                onTap: playing
-                                    ? () {
-                                        audio.pauseAduio();
-                                      }
-                                    : () {
-                                        audio.resumeAudio();
-                                      },
-                                child: SizedBox(
-                                  height: 60,
-                                  width: 60,
-                                  child: Icon(
-                                    playing
-                                        ? Icons.pause_rounded
-                                        : Icons.play_arrow_rounded,
-                                    size: 40,
-                                    color: context.accentColor,
-                                    shadows: context.realDark
-                                        ? _playIconShadow(context,
-                                            controller: _playController)
-                                        : [],
-                                  ),
-                                ),
+                            child: TextButton(
+                              onPressed: playing
+                                  ? () {
+                                      audio.pauseAduio();
+                                    }
+                                  : () {
+                                      audio.resumeAudio();
+                                    },
+                              child: Icon(
+                                playing
+                                    ? Icons.pause_rounded
+                                    : Icons.play_arrow_rounded,
+                                size: 40,
+                                color: context.accentColor,
                               ),
                             ),
                           ),
@@ -1607,18 +1449,19 @@ class _ControlPanelState extends State<ControlPanel>
                             child: Row(
                               children: [
                                 Selector<AudioPlayerNotifier, int?>(
-                                    selector: (_, audio) =>
-                                        audio.fastForwardSeconds,
-                                    builder: (_, seconds, __) => Padding(
-                                          padding:
-                                              const EdgeInsets.only(top: 5.0),
-                                          child: Text('$seconds s',
-                                              style: GoogleFonts.teko(
-                                                textStyle: TextStyle(
-                                                    color: greyColor,
-                                                    fontSize: 25),
-                                              )),
-                                        )),
+                                  selector: (_, audio) =>
+                                      audio.fastForwardSeconds,
+                                  builder: (_, seconds, __) => Padding(
+                                    padding: const EdgeInsets.only(top: 5.0),
+                                    child: Text(
+                                      '$seconds s',
+                                      style: GoogleFonts.teko(
+                                        textStyle: TextStyle(
+                                            color: greyColor, fontSize: 25),
+                                      ),
+                                    ),
+                                  ),
+                                ),
                                 SizedBox(width: 10),
                                 Icon(Icons.fast_forward,
                                     size: 32.0, color: greyColor),
@@ -1722,9 +1565,11 @@ class _ControlPanelState extends State<ControlPanel>
                               .map(
                                 (e) => Container(
                                   margin: const EdgeInsets.symmetric(
-                                      horizontal: 20.0),
+                                      vertical: 5, horizontal: 20.0),
                                   decoration: BoxDecoration(
-                                      borderRadius: context.radiusLarge),
+                                    borderRadius: context.radiusLarge,
+                                    boxShadow: context.boxShadowMedium,
+                                  ),
                                   clipBehavior: Clip.antiAlias,
                                   child: e,
                                 ),
@@ -1829,75 +1674,63 @@ class _ControlPanelState extends State<ControlPanel>
                                         ),
                                       ),
                                     ),
-                                  if (_setSpeed! > 0)
+                                  if (_setSpeed > 0)
                                     Expanded(
-                                      child: SingleChildScrollView(
-                                        padding: EdgeInsets.all(10.0),
-                                        scrollDirection: Axis.horizontal,
-                                        child: FutureBuilder<List<double>>(
-                                          future: _getSpeedList(),
-                                          initialData: [],
-                                          builder: (context, snapshot) => Row(
-                                            children: snapshot.data!
-                                                .map<Widget>((e) => InkWell(
-                                                      onTap: () {
-                                                        if (_setSpeed == 1) {
-                                                          audio.setSpeed(e);
-                                                        }
-                                                      },
-                                                      child: Container(
-                                                        height: 30,
-                                                        width: 30,
-                                                        margin: EdgeInsets
-                                                            .symmetric(
-                                                                horizontal: 5),
-                                                        decoration: e ==
-                                                                    currentSpeed &&
-                                                                _setSpeed! > 0
-                                                            ? BoxDecoration(
-                                                                color: context
-                                                                    .accentColor,
-                                                                shape: BoxShape
-                                                                    .circle,
-                                                                boxShadow: context
-                                                                            .brightness ==
-                                                                        Brightness
-                                                                            .light
-                                                                    ? customShadow(
-                                                                        1.0)
-                                                                    : customShadowNight(
-                                                                        1.0),
-                                                              )
-                                                            : BoxDecoration(
-                                                                color: context
-                                                                    .primaryColor,
-                                                                shape: BoxShape
-                                                                    .circle,
-                                                                boxShadow: context
-                                                                            .brightness ==
-                                                                        Brightness
-                                                                            .light
-                                                                    ? customShadow(1 -
-                                                                        _setSpeed!)
-                                                                    : customShadowNight(1 -
-                                                                        _setSpeed!)),
-                                                        alignment:
-                                                            Alignment.center,
-                                                        child: _setSpeed! > 0
-                                                            ? Text(e.toString(),
-                                                                style: TextStyle(
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .bold,
-                                                                    color: e ==
-                                                                            currentSpeed
-                                                                        ? Colors
-                                                                            .white
-                                                                        : null))
-                                                            : Center(),
-                                                      ),
-                                                    ))
-                                                .toList(),
+                                      child: Opacity(
+                                        opacity: _setSpeed,
+                                        child: SingleChildScrollView(
+                                          scrollDirection: Axis.horizontal,
+                                          child: FutureBuilder<List<double>>(
+                                            future: _getSpeedList(),
+                                            initialData: [],
+                                            builder: (context, snapshot) => Row(
+                                              children: snapshot.data!
+                                                  .map<Widget>((e) => InkWell(
+                                                        onTap: () {
+                                                          if (_setSpeed == 1) {
+                                                            audio.setSpeed(e);
+                                                          }
+                                                        },
+                                                        child: Container(
+                                                          height: 30,
+                                                          width: 30,
+                                                          margin: EdgeInsets
+                                                              .symmetric(
+                                                                  horizontal:
+                                                                      5),
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: e == currentSpeed &&
+                                                                    _setSpeed >
+                                                                        0
+                                                                ? context
+                                                                    .accentColor
+                                                                : context
+                                                                    .accentBackground,
+                                                            shape:
+                                                                BoxShape.circle,
+                                                            boxShadow: context
+                                                                .boxShadowSmall,
+                                                          ),
+                                                          alignment:
+                                                              Alignment.center,
+                                                          child: _setSpeed! > 0
+                                                              ? Text(
+                                                                  e.toString(),
+                                                                  style: TextStyle(
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold,
+                                                                      color: e ==
+                                                                              currentSpeed
+                                                                          ? Colors
+                                                                              .white
+                                                                          : null))
+                                                              : Center(),
+                                                        ),
+                                                      ))
+                                                  .toList(),
+                                            ),
                                           ),
                                         ),
                                       ),

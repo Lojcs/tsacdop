@@ -297,9 +297,10 @@ class AudioPlayerNotifier extends ChangeNotifier {
 
   /// Audio service config
   AudioServiceConfig get _config => AudioServiceConfig(
+        androidResumeOnClick: false,
         androidNotificationChannelName: 'Tsacdop',
         androidNotificationIcon: 'drawable/ic_notification',
-        // androidNotificationOngoing: true,
+        androidNotificationOngoing: false,
         // androidEnableQueue: true,
         androidStopForegroundOnPause: true,
         preloadArtwork: false,
@@ -834,7 +835,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
           }
         }
         if (_lastSeekPosition != null &&
-            _audioPosition == _lastSeekPosition! + 30000 * _currentSpeed) {
+            _audioPosition > _lastSeekPosition! + 30000 * _currentSpeed) {
           _undoButtonPositionsStack.clear();
           _lastSeekPosition = null;
           _lastEpisode = null;

@@ -1357,7 +1357,7 @@ class _SleepTimerPickerState extends State<SleepTimerPicker> {
               },
               child: Container(
                 decoration: BoxDecoration(
-                    color: context.primaryColorDark,
+                    color: context.accentBackgroundSoft,
                     borderRadius: BorderRadius.circular(10)),
                 padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 child: Text(hour.toString().padLeft(2, '0'), style: textStyle),
@@ -1389,7 +1389,7 @@ class _SleepTimerPickerState extends State<SleepTimerPicker> {
               },
               child: Container(
                 decoration: BoxDecoration(
-                    color: context.primaryColorDark,
+                    color: context.accentBackgroundSoft,
                     borderRadius: BorderRadius.circular(10)),
                 padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 child:

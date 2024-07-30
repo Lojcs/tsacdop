@@ -82,7 +82,7 @@ class __PodcastCardState extends State<_PodcastCard>
   late AnimationController _controller;
   late Animation _animation;
   double? _value;
-  int? _seconds;
+  int _seconds = 0;
   int? _skipSeconds;
 
   @override
@@ -91,7 +91,6 @@ class __PodcastCardState extends State<_PodcastCard>
     _addGroup = false;
     _selectedGroups = [widget.group];
     _value = 0;
-    _seconds = 0;
     _controller =
         AnimationController(vsync: this, duration: Duration(milliseconds: 300));
     _animation = Tween<double>(begin: 0.0, end: 1.0).animate(_controller)
@@ -444,7 +443,7 @@ class __PodcastCardState extends State<_PodcastCard>
     return seconds;
   }
 
-  _saveSkipSeconds(String? id, int? seconds) async {
+  _saveSkipSeconds(String? id, int seconds) async {
     final dbHelper = DBHelper();
     await dbHelper.saveSkipSecondsStart(id, seconds);
   }

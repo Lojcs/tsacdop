@@ -110,11 +110,14 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                     _playerKey.currentState!.initSize! > 100) {
                   _playerKey.currentState!.backToMini();
                   return false;
+                } else if (settings.openPlaylistDefault!) {
+                  return true;
                 } else if (Platform.isAndroid) {
-                  _androidAppRetain.invokeMethod('sendToBackground');
+                  _androidAppRetain
+                      .invokeMethod('sendToBackground'); // This doesn't work
                   return false;
                 } else {
-                  return true;
+                  return false;
                 }
               },
               child: Scaffold(
@@ -386,11 +389,7 @@ class __PlaylistButtonState extends State<_PlaylistButton> {
                                 topRight: Radius.circular(10.0)),
                             onTap: () async {
                               await audio.playFromLastPosition();
-                              while (audio.buffering) {
-                                await Future.delayed(
-                                    Duration(milliseconds: 50));
-                              }
-                              Navigator.pop<int>(context);
+                              await Navigator.maybePop<int>(context);
                             },
                             child: Column(
                               children: <Widget>[

@@ -658,8 +658,8 @@ class _PodcastDetailState extends State<PodcastDetail> {
                                               child: PodcastSetting(
                                                   podcastLocal:
                                                       widget.podcastLocal),
-                                            ).then((value) {
-                                              _checkPodcast();
+                                            ).then((value) async {
+                                              await _checkPodcast();
                                               if (mounted) setState(() {});
                                             }),
                                           ),

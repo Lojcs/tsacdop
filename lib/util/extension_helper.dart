@@ -24,6 +24,7 @@ extension ContextExtension on BuildContext {
   Color get secondary => colorScheme.secondary;
   Color get onsecondary => colorScheme.onSecondary;
   Color get error => colorScheme.error;
+  Color get shadowColor => colorScheme.shadow;
   Color get primaryColorDark => Theme.of(this).primaryColorDark;
   Color get textColor => textTheme.bodyLarge!.color!;
   Color get dialogBackgroundColor => Theme.of(this).dialogBackgroundColor;
@@ -38,6 +39,15 @@ extension ContextExtension on BuildContext {
   double get height => MediaQuery.of(this).size.height;
   double get paddingTop => MediaQuery.of(this).padding.top;
   TextTheme get textTheme => Theme.of(this).textTheme;
+  List<BoxShadow> get boxShadowSmall => realDark
+      ? [BoxShadow(blurRadius: 4, spreadRadius: -1, color: shadowColor)]
+      : [BoxShadow(blurRadius: 4, spreadRadius: -2, color: shadowColor)];
+  List<BoxShadow> get boxShadowMedium => realDark
+      ? [BoxShadow(blurRadius: 4, spreadRadius: 0, color: shadowColor)]
+      : [BoxShadow(blurRadius: 3, spreadRadius: -1, color: shadowColor)];
+  List<BoxShadow> get boxShadowLarge => realDark
+      ? [BoxShadow(blurRadius: 6, spreadRadius: 0.5, color: shadowColor)]
+      : [BoxShadow(blurRadius: 4, spreadRadius: -1, color: shadowColor)];
   SystemUiOverlayStyle get overlay => SystemUiOverlayStyle(
         statusBarColor: statusBarColor,
         statusBarIconBrightness: iconBrightness,
@@ -229,13 +239,14 @@ extension ColorExtension on Color {
 
   /// Blend the color with background, most accent
   Color toHighlightBackround(BuildContext context, {Brightness? brightness}) {
+    brightness = brightness ?? context.brightness;
     return context.realDark
         ? context.background
         : Color.lerp(
             ColorScheme.fromSeed(
               seedColor: this,
-              brightness: brightness ?? context.brightness,
-            ).primaryContainer,
+              brightness: brightness,
+            ).surfaceVariant,
             this,
             0.5)!;
   }

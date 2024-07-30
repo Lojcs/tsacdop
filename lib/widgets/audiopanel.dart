@@ -81,7 +81,7 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
                 child: GestureDetector(
                   onTap: backToMini,
                   child: Container(
-                    color: context.background.withOpacity(0.9 *
+                    color: context.background.withOpacity(0.4 *
                         math.min(
                             (_animation.value - widget.minHeight) /
                                 widget.midHeight,
@@ -115,21 +115,9 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
                           blurRadius: 1,
                           color: context.brightness == Brightness.light
                               ? Colors.grey[400]!.withOpacity(0.5)
-                              : Colors.grey[800]!,
-                        ),
-                        BoxShadow(
-                          offset: Offset(-1, 0),
-                          blurRadius: 1,
-                          color: context.brightness == Brightness.light
-                              ? Colors.grey[400]!.withOpacity(0.5)
-                              : Colors.grey[800]!,
-                        ),
-                        BoxShadow(
-                          offset: Offset(1, 0),
-                          blurRadius: 1,
-                          color: context.brightness == Brightness.light
-                              ? Colors.grey[400]!.withOpacity(0.5)
-                              : Colors.grey[800]!,
+                              : !context.realDark
+                                  ? Colors.grey[900]!
+                                  : Colors.grey[800]!,
                         ),
                       ],
                     ),

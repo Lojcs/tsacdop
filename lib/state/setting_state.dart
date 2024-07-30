@@ -234,6 +234,7 @@ class SettingState extends ChangeNotifier {
           primary: _accentSetColor!,
           brightness: Brightness.dark,
           background: _realDark! ? Colors.black : null,
+          shadow: _realDark! ? _accentSetColor : Colors.black,
         ),
         brightness: Brightness.dark,
         textTheme: TextTheme(

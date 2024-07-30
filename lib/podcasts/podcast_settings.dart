@@ -40,8 +40,8 @@ class _PodcastSettingState extends State<PodcastSetting> {
   final _dbHelper = DBHelper();
   MarkStatus _markStatus = MarkStatus.none;
   RefreshCoverStatus _coverStatus = RefreshCoverStatus.none;
-  int? _secondsStart;
-  int? _secondsEnd;
+  int _secondsStart = 0;
+  int _secondsEnd = 0;
   late bool _markConfirm;
   late bool _removeConfirm;
   late bool _showStartTimePicker;
@@ -50,8 +50,6 @@ class _PodcastSettingState extends State<PodcastSetting> {
   @override
   void initState() {
     super.initState();
-    _secondsStart = 0;
-    _secondsEnd = 0;
     _markConfirm = false;
     _removeConfirm = false;
     _showStartTimePicker = false;
@@ -284,14 +282,14 @@ class _PodcastSettingState extends State<PodcastSetting> {
           _TimePicker(
               color: colorScheme.primary,
               onCancel: () {
-                _secondsStart = 0;
+                _secondsEnd = 0;
                 setState(() => _showEndTimePicker = false);
               },
               onConfirm: () async {
-                await _saveSkipSecondsStart(_secondsStart);
+                await _saveSkipSecondsEnd(_secondsEnd);
                 if (mounted) setState(() => _showEndTimePicker = false);
               },
-              onChange: (value) => _secondsStart = value.inSeconds),
+              onChange: (value) => _secondsEnd = value.inSeconds),
         ListTile(
           onTap: () {
             if (_coverStatus != RefreshCoverStatus.start) {
@@ -461,7 +459,7 @@ class _PodcastSettingState extends State<PodcastSetting> {
     if (mounted) setState(() {});
   }
 
-  Future<void> _saveSkipSecondsStart(int? seconds) async {
+  Future<void> _saveSkipSecondsStart(int seconds) async {
     await _dbHelper.saveSkipSecondsStart(widget.podcastLocal!.id, seconds);
   }
 
