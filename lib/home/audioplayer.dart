@@ -22,12 +22,10 @@ import '../playlists/playlist_home.dart';
 import '../state/audio_state.dart';
 import '../type/chapter.dart';
 import '../type/episodebrief.dart';
-import '../type/play_histroy.dart';
 import '../type/playlist.dart';
 import '../util/extension_helper.dart';
 import '../util/pageroute.dart';
 import '../widgets/audiopanel.dart';
-import '../widgets/custom_slider.dart';
 import '../widgets/custom_widget.dart';
 
 const List kMinsToSelect = [10, 15, 20, 25, 30, 45, 60, 70, 80, 90, 99];
@@ -411,7 +409,7 @@ class _PlaylistWidgetState extends State<PlaylistWidget> {
       alignment: Alignment.topLeft,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: context.accentBackgroundHighlight,
+        color: context.accentBackground,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Selector<AudioPlayerNotifier,
@@ -504,7 +502,7 @@ class _PlaylistWidgetState extends State<PlaylistWidget> {
                       Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(100),
-                          boxShadow: context.boxShadowSmall,
+                          boxShadow: context.boxShadowSmall(),
                           color: context.accentBackgroundSoft,
                         ),
                         child: Material(
@@ -532,7 +530,7 @@ class _PlaylistWidgetState extends State<PlaylistWidget> {
                       Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(100),
-                          boxShadow: context.boxShadowSmall,
+                          boxShadow: context.boxShadowSmall(),
                           color: context.accentBackgroundSoft,
                         ),
                         child: Material(
@@ -624,8 +622,7 @@ class SleepModeState extends State<SleepMode>
   Widget build(BuildContext context) {
     final s = context.s;
     final _colorTweenBackground = ColorTween(
-        begin: context.accentBackgroundHighlight,
-        end: context.accentBackground);
+        begin: context.accentBackground, end: context.accentBackground);
     final _colorTween = ColorTween(
         begin: context.accentBackgroundSoft, end: context.accentBackground);
     var audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
@@ -680,7 +677,7 @@ class SleepModeState extends State<SleepMode>
                                                           .accentBackgroundSoft,
                                                   shape: BoxShape.circle,
                                                   boxShadow:
-                                                      context.boxShadowSmall,
+                                                      context.boxShadowSmall(),
                                                 ),
                                                 alignment: Alignment.center,
                                                 height: 30,
@@ -722,7 +719,7 @@ class SleepModeState extends State<SleepMode>
                                   decoration: BoxDecoration(
                                     color: _colorTween.transform(move),
                                     borderRadius: BorderRadius.circular(20),
-                                    boxShadow: context.boxShadowSmall,
+                                    boxShadow: context.boxShadowSmall(),
                                   ),
                                   child: Material(
                                     color: Colors.transparent,
@@ -766,7 +763,7 @@ class SleepModeState extends State<SleepMode>
                                   decoration: BoxDecoration(
                                     color: _colorTween.transform(move),
                                     borderRadius: BorderRadius.circular(20),
-                                    boxShadow: context.boxShadowSmall,
+                                    boxShadow: context.boxShadowSmall(),
                                   ),
                                   child: Material(
                                     color: Colors.transparent,
@@ -822,7 +819,7 @@ class SleepModeState extends State<SleepMode>
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(100),
                                 color: context.accentBackgroundSoft,
-                                boxShadow: context.boxShadowSmall,
+                                boxShadow: context.boxShadowSmall(),
                               ),
                               child: Material(
                                 color: Colors.transparent,
@@ -1007,7 +1004,7 @@ class _ChaptersWidgetState extends State<ChaptersWidget> {
         alignment: Alignment.topLeft,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: context.accentBackgroundHighlight,
+          color: context.accentBackground,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Selector<AudioPlayerNotifier, EpisodeBrief?>(
@@ -1094,7 +1091,7 @@ class _ChaptersWidgetState extends State<ChaptersWidget> {
                           Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(100),
-                              boxShadow: context.boxShadowSmall,
+                              boxShadow: context.boxShadowSmall(),
                               color: context.accentBackgroundSoft,
                             ),
                             child: Material(
@@ -1213,6 +1210,8 @@ class _ControlPanelState extends State<ControlPanel>
     with TickerProviderStateMixin {
   double _setSpeed = 0;
   late AnimationController _controller;
+  late AnimationController _playPauseController;
+  late Animation<double> _playPauseAnimation;
   late AnimationController _rewindController;
   late AnimationController _fastForwardController;
   late Animation<double> _animation;
@@ -1226,6 +1225,7 @@ class _ControlPanelState extends State<ControlPanel>
 
   @override
   void initState() {
+    super.initState();
     _tabController = TabController(vsync: this, length: 3)
       ..addListener(() {
         setState(() => _tabIndex = _tabController!.index);
@@ -1238,6 +1238,13 @@ class _ControlPanelState extends State<ControlPanel>
           setState(() => _setSpeed = _animation.value);
         }
       });
+    _playPauseController =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 300))
+          ..addListener(() {
+            if (mounted) {
+              setState(() {});
+            }
+          });
     _rewindController =
         AnimationController(vsync: this, duration: Duration(milliseconds: 400))
           ..addListener(() {
@@ -1252,16 +1259,30 @@ class _ControlPanelState extends State<ControlPanel>
               setState(() {});
             }
           });
-    super.initState();
+    _playPauseAnimation = CurvedAnimation(
+      parent: _playPauseController,
+      curve: Curves.easeOutBack,
+      reverseCurve: Curves.easeInBack,
+    );
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _playPauseController.dispose();
     _rewindController.dispose();
     _fastForwardController.dispose();
     _tabController!.dispose();
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(ControlPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
+    if (audio.playing && _playPauseController.value == 0) {
+      _playPauseController.value = 1;
+    }
   }
 
   @override
@@ -1365,6 +1386,9 @@ class _ControlPanelState extends State<ControlPanel>
                     Color? greyColor = context.brightness == Brightness.light
                         ? Colors.grey[700]
                         : Colors.grey[350];
+                    double playButtonSizeOffset =
+                        Tween<double>(begin: 9, end: 0)
+                            .evaluate(_playPauseAnimation);
                     return Material(
                       color: Colors.transparent,
                       child: Row(
@@ -1408,27 +1432,65 @@ class _ControlPanelState extends State<ControlPanel>
                             ),
                           ),
                           Container(
-                            margin: EdgeInsets.symmetric(horizontal: 30),
-                            height: 60,
-                            width: 60,
+                            margin: EdgeInsets.symmetric(
+                                horizontal: (60 - playButtonSizeOffset) / 2),
+                            height: 60 + playButtonSizeOffset,
+                            width: 60 + playButtonSizeOffset,
                             decoration: BoxDecoration(
-                              color: context.accentBackground,
-                              borderRadius: BorderRadius.circular(30),
-                              boxShadow: context.boxShadowLarge,
-                            ),
+                                color: ColorTween(
+                                        begin: context.accentBackgroundWeak,
+                                        end: context.accentBackgroundWeak)
+                                    .evaluate(_playPauseAnimation),
+                                borderRadius: BorderRadius.circular(30),
+                                boxShadow: [
+                                  BoxShadow(
+                                      blurRadius: Tween<double>(
+                                              begin: context
+                                                  .boxShadowLarge()
+                                                  .first
+                                                  .blurRadius,
+                                              end: context
+                                                  .boxShadowMedium()
+                                                  .first
+                                                  .blurRadius)
+                                          .evaluate(_playPauseAnimation),
+                                      spreadRadius: Tween<double>(
+                                              begin: context
+                                                  .boxShadowLarge()
+                                                  .first
+                                                  .spreadRadius,
+                                              end: context
+                                                  .boxShadowMedium()
+                                                  .first
+                                                  .spreadRadius)
+                                          .evaluate(_playPauseAnimation),
+                                      color: ColorTween(
+                                              begin: context
+                                                  .boxShadowLarge()
+                                                  .first
+                                                  .color,
+                                              end: context
+                                                  .boxShadowMedium()
+                                                  .first
+                                                  .color)
+                                          .evaluate(_playPauseAnimation)!),
+                                ]),
                             child: TextButton(
+                              // splashColor: Colors.transparent,
                               onPressed: playing
                                   ? () {
                                       audio.pauseAduio();
+                                      _playPauseController.reverse();
                                     }
                                   : () {
                                       audio.resumeAudio();
+                                      _playPauseController.forward();
                                     },
                               child: Icon(
                                 playing
                                     ? Icons.pause_rounded
                                     : Icons.play_arrow_rounded,
-                                size: 40,
+                                size: 40 + (playButtonSizeOffset * 2 / 3),
                                 color: context.accentColor,
                               ),
                             ),
@@ -1568,7 +1630,7 @@ class _ControlPanelState extends State<ControlPanel>
                                       vertical: 5, horizontal: 20.0),
                                   decoration: BoxDecoration(
                                     borderRadius: context.radiusLarge,
-                                    boxShadow: context.boxShadowMedium,
+                                    boxShadow: context.boxShadowMedium(),
                                   ),
                                   clipBehavior: Clip.antiAlias,
                                   child: e,
@@ -1710,11 +1772,11 @@ class _ControlPanelState extends State<ControlPanel>
                                                             shape:
                                                                 BoxShape.circle,
                                                             boxShadow: context
-                                                                .boxShadowSmall,
+                                                                .boxShadowSmall(),
                                                           ),
                                                           alignment:
                                                               Alignment.center,
-                                                          child: _setSpeed! > 0
+                                                          child: _setSpeed > 0
                                                               ? Text(
                                                                   e.toString(),
                                                                   style: TextStyle(
@@ -1749,7 +1811,7 @@ class _ControlPanelState extends State<ControlPanel>
                                           MainAxisAlignment.spaceEvenly,
                                       children: <Widget>[
                                         Transform.rotate(
-                                            angle: math.pi * _setSpeed!,
+                                            angle: math.pi * _setSpeed,
                                             child: Text('X')),
                                         Text(currentSpeed.toStringAsFixed(1)),
                                       ],

@@ -203,7 +203,6 @@ class MessageLookup extends MessageLookupByLibrary {
             "Поздравляем! Вы успешно связали учетную запись gpodder.net. Tsacdop будет автоматически синхронизировать подписки на вашем устройстве с вашей учетной записью gpodder.net."),
         "groupExisted": MessageLookupByLibrary.simpleMessage(
             "Нажмите, чтобы добавить группу"),
-        "groupFilter": MessageLookupByLibrary.simpleMessage("Фильтр по группе"),
         "groupRemoveConfirm": MessageLookupByLibrary.simpleMessage(
             "Вы уверены, что хотите удалить эту группу? Подкасты будут перемещены в домашнюю группу."),
         "groups": m6,

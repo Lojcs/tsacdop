@@ -178,7 +178,7 @@ class EpisodeTile extends StatelessWidget {
               onTap: onTap,
               title: Container(
                 child: Text(
-                  episode.title!,
+                  episode.title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),

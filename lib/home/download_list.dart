@@ -124,7 +124,7 @@ class _DownloadListState extends State<DownloadList> {
                             Expanded(
                               flex: 5,
                               child: Text(
-                                tasks[index].episode!.title!,
+                                tasks[index].episode!.title,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),

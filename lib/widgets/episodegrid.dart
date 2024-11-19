@@ -1,81 +1,44 @@
-import 'dart:ui';
-
 import 'package:auto_animated/auto_animated.dart';
-import 'package:collection/collection.dart';
-import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:focused_menu/focused_menu.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:line_icons/line_icons.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:tsacdop/util/selection_controller.dart';
 import 'package:tuple/tuple.dart';
 
 import '../episodes/episode_detail.dart';
 import '../home/audioplayer.dart';
-import '../local_storage/key_value_storage.dart';
-import '../local_storage/sqflite_localpodcast.dart';
-import '../podcasts/podcast_detail.dart';
 import '../state/audio_state.dart';
-import '../state/download_state.dart';
-import '../state/setting_state.dart';
 import '../type/episodebrief.dart';
-import '../type/play_histroy.dart';
-import '../type/podcastlocal.dart';
 import '../util/extension_helper.dart';
 import '../util/open_container.dart';
-import '../util/pageroute.dart';
-import 'custom_widget.dart';
 import 'episode_card.dart';
-import 'general_dialog.dart';
 
 enum Layout { small, medium, large }
 
 // ignore: must_be_immutable
 class EpisodeGrid extends StatelessWidget {
-  final List<EpisodeBrief>? episodes;
+  final List<EpisodeBrief> episodes;
   final bool showFavorite;
   final bool showDownload;
   final bool preferEpisodeImage;
-  final int? episodeCount;
   final Layout? layout;
-  final SortOrder? sortOrder;
-  final bool? multiSelect;
-  final ValueChanged<List<EpisodeBrief>?>? onSelect;
   final bool openPodcast;
-  List<EpisodeBrief> selectedList;
 
   /// Count of animation items.
   final int initNum;
 
-  EpisodeGrid(
-      {Key? key,
-      required this.episodes,
-      this.initNum = 12,
-      this.showDownload = false,
-      this.showFavorite = false,
-      this.preferEpisodeImage = false,
-      this.episodeCount,
-      this.layout = Layout.small,
-      this.sortOrder,
-      this.openPodcast = false,
-      this.multiSelect = false,
-      this.onSelect,
-      this.selectedList = const <EpisodeBrief>[]})
-      : super(key: key);
-
-  final _dbHelper = DBHelper();
-
-  Future<PodcastLocal?> _getPodcast(String url) async {
-    var podcasts = await _dbHelper.getPodcastWithUrl(url);
-    return podcasts;
-  }
+  const EpisodeGrid({
+    Key? key,
+    required this.episodes,
+    this.initNum = 12,
+    this.showDownload = false,
+    this.showFavorite = false,
+    this.preferEpisodeImage = false,
+    this.layout = Layout.small,
+    this.openPodcast = false,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    var audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
-    final settings = Provider.of<SettingState>(context, listen: false);
     final options = LiveOptions(
       delay: Duration.zero,
       showItemInterval: Duration(milliseconds: 50),
@@ -83,59 +46,63 @@ class EpisodeGrid extends StatelessWidget {
     );
     final scrollController = ScrollController();
     final s = context.s;
-    return SliverPadding(
-      padding:
-          const EdgeInsets.only(top: 5.0, bottom: 5.0, left: 10.0, right: 10.0),
-      sliver: LiveSliverGrid.options(
-        controller: scrollController,
-        options: options,
-        itemCount: episodes!.length,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          childAspectRatio: layout == Layout.small
-              ? 1
-              : layout == Layout.medium
-                  ? 1.5
-                  : 4,
-          crossAxisCount: layout == Layout.small
-              ? 3
-              : layout == Layout.medium
-                  ? 2
-                  : 1,
-          mainAxisSpacing: 10.0,
-          crossAxisSpacing: 10.0,
+    late final SelectionController? selectionController =
+        Provider.of<SelectionController?>(context);
+    if (episodes.isNotEmpty) {
+      return SliverPadding(
+        padding: const EdgeInsets.only(
+            top: 8.0, bottom: 8.0, left: 10.0, right: 10.0),
+        sliver: Selector<SelectionController?, Tuple2<Set<int>?, bool>>(
+          selector: (_, selectionController) => Tuple2(
+              selectionController?.selectedIndicies,
+              selectionController?.selectMode ?? false),
+          builder: (_, data, __) => LiveSliverGrid.options(
+            controller: scrollController,
+            options: options,
+            itemCount: episodes.length,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              childAspectRatio: layout == Layout.small
+                  ? 1
+                  : layout == Layout.medium
+                      ? 1.5
+                      : 4,
+              crossAxisCount: layout == Layout.small
+                  ? 3
+                  : layout == Layout.medium
+                      ? 2
+                      : 1,
+              mainAxisSpacing: 10.0,
+              crossAxisSpacing: 10.0,
+            ),
+            itemBuilder: (context, index, animation) {
+              scrollController.addListener(() {});
+              bool selected = data.item1?.contains(index) ?? false;
+              return FadeTransition(
+                opacity: Tween<double>(begin: index < initNum ? 0 : 1, end: 1)
+                    .animate(animation),
+                child: InteractiveEpisodeCard(
+                  context,
+                  episodes[index],
+                  layout!,
+                  openPodcast: openPodcast,
+                  preferEpisodeImage: preferEpisodeImage,
+                  showNumber: true,
+                  selectMode: data.item2,
+                  onSelect: selectionController != null
+                      ? () {
+                          selectionController.select(index);
+                        }
+                      : null,
+                  selected: selected,
+                ),
+              );
+            },
+          ),
         ),
-        itemBuilder: (context, index, animation) {
-          final c = episodes![index].backgroudColor(context);
-          scrollController.addListener(() {});
-
-          return FadeTransition(
-              opacity: Tween<double>(begin: index < initNum ? 0 : 1, end: 1)
-                  .animate(animation),
-              child: InteractiveEpisodeCard(
-                context,
-                episodes![index],
-                layout!,
-                openPodcast: openPodcast,
-                preferEpisodeImage: preferEpisodeImage,
-                numberText: episodeCount != null
-                    ? (sortOrder == SortOrder.ASC
-                        ? (index + 1).toString()
-                        : (episodeCount! - index).toString())
-                    : null,
-                selectMode: multiSelect!,
-                onSelect: () {
-                  if (!selectedList.contains(episodes![index])) {
-                    selectedList.add(episodes![index]);
-                  } else {
-                    selectedList.remove(episodes![index]);
-                  }
-                  onSelect!(selectedList);
-                },
-                selected: selectedList.contains(episodes![index]),
-              ));
-        },
-      ),
-    );
+      );
+    } else {
+      return SliverToBoxAdapter();
+    }
   }
 }
 

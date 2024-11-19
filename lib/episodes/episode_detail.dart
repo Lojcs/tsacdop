@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:developer' as developer;
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -9,7 +8,6 @@ import 'package:provider/provider.dart';
 import 'package:tsacdop/episodes/menu_bar.dart';
 import 'package:tsacdop/episodes/shownote.dart';
 import 'package:tsacdop/util/helpers.dart';
-import 'package:tsacdop/widgets/custom_dropdown.dart';
 import 'package:tuple/tuple.dart';
 
 import '../home/audioplayer.dart';
@@ -440,10 +438,10 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                                               color: context
                                                                   .background),
                                                         )),
-                                                  if (_episodeItem!
+                                                  if (_episodeItem
                                                               .enclosureSize !=
                                                           null &&
-                                                      _episodeItem!
+                                                      _episodeItem
                                                               .enclosureSize !=
                                                           0)
                                                     Container(
@@ -461,7 +459,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                                       alignment:
                                                           Alignment.center,
                                                       child: Text(
-                                                        '${_episodeItem!.enclosureSize! ~/ 1000000}MB',
+                                                        '${_episodeItem.enclosureSize! ~/ 1000000}MB',
                                                         style: TextStyle(
                                                             color: context
                                                                 .background),
@@ -665,7 +663,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
               },
             ),
           ),
-          MyDropdownButton(
+          DropdownButton(
             hint: Text(
                 context.s.published(formateDate(_episodeItem.pubDate) +
                     " " +
@@ -673,6 +671,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                 style: TextStyle(color: context.accentColor)),
             underline: Center(),
             dropdownColor: context.accentBackground,
+            borderRadius: context.radiusSmall,
             isDense: true,
             value: _episodeItem,
             selectedItemBuilder: (context) => versions

@@ -28,7 +28,7 @@ class PodcastLocal extends Equatable {
 
   //set setEpisodeCount(i) => episodeCount = i;
 
-  PodcastLocal(
+  const PodcastLocal(
     this.title,
     this.imageUrl,
     this.rssUrl,

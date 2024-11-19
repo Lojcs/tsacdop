@@ -251,7 +251,7 @@ class __PlaylistItemState extends State<_PlaylistItem>
               title: Container(
                 padding: EdgeInsets.fromLTRB(0, 5.0, 20.0, 5.0),
                 child: Text(
-                  episode.title!,
+                  episode.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),

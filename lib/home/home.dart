@@ -10,6 +10,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
+import 'package:tsacdop/util/selection_controller.dart';
+import 'package:tsacdop/widgets/action_bar.dart';
 import 'package:tuple/tuple.dart';
 
 import '../local_storage/key_value_storage.dart';
@@ -29,7 +31,7 @@ import '../widgets/custom_search_delegate.dart';
 import '../widgets/custom_widget.dart';
 import '../widgets/episodegrid.dart';
 import '../widgets/feature_discovery.dart';
-import '../widgets/muiliselect_bar.dart';
+import '../widgets/multiselect_bar.dart';
 import 'audioplayer.dart';
 import 'download_list.dart';
 import 'home_groups.dart';
@@ -355,6 +357,7 @@ class __PlaylistButtonState extends State<_PlaylistButton> {
       borderRadius: BorderRadius.circular(100),
       clipBehavior: Clip.hardEdge,
       child: MyPopupMenuButton<int>(
+        menuPadding: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(10))),
         elevation: 1,
@@ -365,89 +368,81 @@ class __PlaylistButtonState extends State<_PlaylistButton> {
           MyPopupMenuItem(
             height: 50,
             value: 1,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(10.0),
-                    topRight: Radius.circular(10.0)),
-              ),
-              child: Selector<AudioPlayerNotifier,
-                  Tuple3<bool, EpisodeBrief?, int>>(
-                selector: (_, audio) => Tuple3(
-                    audio.playerRunning, audio.episode, audio.historyPosition),
-                builder: (_, data, __) => !_loadPlay
-                    ? SizedBox(
-                        height: 8.0,
-                      )
-                    : data.item1 || data.item2 == null
-                        ? SizedBox(
-                            height: 8.0,
-                          )
-                        : InkWell(
-                            borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(10.0),
-                                topRight: Radius.circular(10.0)),
-                            onTap: () async {
-                              await audio.playFromLastPosition();
-                              await Navigator.maybePop<int>(context);
-                            },
-                            child: Column(
-                              children: <Widget>[
-                                Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 5),
-                                ),
-                                Stack(
-                                  alignment: Alignment.center,
+            child:
+                Selector<AudioPlayerNotifier, Tuple3<bool, EpisodeBrief?, int>>(
+              selector: (_, audio) => Tuple3(
+                  audio.playerRunning, audio.episode, audio.historyPosition),
+              builder: (_, data, __) => !_loadPlay
+                  ? SizedBox(
+                      height: 8.0,
+                    )
+                  : data.item1 || data.item2 == null
+                      ? SizedBox(
+                          height: 8.0,
+                        )
+                      : InkWell(
+                          borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(10.0),
+                              topRight: Radius.circular(10.0)),
+                          onTap: () async {
+                            await audio.playFromLastPosition();
+                            await Navigator.maybePop<int>(context);
+                          },
+                          child: Column(
+                            children: <Widget>[
+                              Padding(
+                                padding: EdgeInsets.symmetric(vertical: 5),
+                              ),
+                              Stack(
+                                alignment: Alignment.center,
+                                children: <Widget>[
+                                  CircleAvatar(
+                                      radius: 20,
+                                      backgroundImage: data.item2!.avatarImage),
+                                  Container(
+                                    height: 40.0,
+                                    width: 40.0,
+                                    decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.black12),
+                                    child: Icon(
+                                      Icons.play_arrow,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Padding(
+                                padding: EdgeInsets.symmetric(vertical: 2),
+                              ),
+                              SizedBox(
+                                height: 77,
+                                width: 140,
+                                child: Column(
                                   children: <Widget>[
-                                    CircleAvatar(
-                                        radius: 20,
-                                        backgroundImage:
-                                            data.item2!.avatarImage),
-                                    Container(
-                                      height: 40.0,
-                                      width: 40.0,
-                                      decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Colors.black12),
-                                      child: Icon(
-                                        Icons.play_arrow,
-                                        color: Colors.white,
-                                      ),
+                                    Text(
+                                      (data.item3 ~/ 1000).toTime,
+                                      style:
+                                          TextStyle(color: context.textColor),
+                                    ),
+                                    Text(
+                                      data.item2!.title,
+                                      maxLines: 2,
+                                      textAlign: TextAlign.center,
+                                      overflow: TextOverflow.ellipsis,
+                                      style:
+                                          TextStyle(color: context.textColor),
+                                      // style: TextStyle(color: Colors.white),
                                     ),
                                   ],
                                 ),
-                                Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 2),
-                                ),
-                                SizedBox(
-                                  height: 77,
-                                  width: 140,
-                                  child: Column(
-                                    children: <Widget>[
-                                      Text(
-                                        (data.item3 ~/ 1000).toTime,
-                                        style:
-                                            TextStyle(color: context.textColor),
-                                      ),
-                                      Text(
-                                        data.item2!.title,
-                                        maxLines: 2,
-                                        textAlign: TextAlign.center,
-                                        overflow: TextOverflow.ellipsis,
-                                        style:
-                                            TextStyle(color: context.textColor),
-                                        // style: TextStyle(color: Colors.white),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Divider(
-                                  height: 1,
-                                ),
-                              ],
-                            ),
+                              ),
+                              Divider(
+                                height: 1,
+                              ),
+                            ],
                           ),
-              ),
+                        ),
             ),
           ),
           PopupMenuItem(
@@ -516,11 +511,22 @@ class _RecentUpdateState extends State<_RecentUpdate>
   //    GlobalKey<RefreshIndicatorState>();
   final _dbHelper = DBHelper();
 
+  /// Episodes to display
+  List<EpisodeBrief> _episodes = [];
+
+  /// Function to get episodes
+  ValueGetter<Future<List<EpisodeBrief>>> _getEpisodes = () async {
+    return <EpisodeBrief>[];
+  };
+
   /// Episodes loaded first time.
   int _top = 90;
 
   /// Load more episodes when scroll to bottom.
   late bool _loadMore;
+
+  /// Height of action bar
+  double _actionBarHeight = 52;
 
   /// For group fliter.
   String? _groupName;
@@ -528,9 +534,6 @@ class _RecentUpdateState extends State<_RecentUpdate>
   Layout? _layout;
   bool? _hideListened;
   late bool _scroll;
-
-  ///Selected episode list.
-  List<EpisodeBrief>? _selectedEpisodes;
 
   ///Toggle for multi-select.
   bool? _multiSelect;
@@ -573,6 +576,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
           ],
           optionalFields: [
             EpisodeField.description,
+            EpisodeField.number,
             EpisodeField.enclosureDuration,
             EpisodeField.enclosureSize,
             EpisodeField.isDownloaded,
@@ -587,13 +591,14 @@ class _RecentUpdateState extends State<_RecentUpdate>
           sortOrder: SortOrder.DESC,
           limit: top,
           filterVersions: 1,
-          filterPlayed: _hideListened! ? 1 : 0,
+          filterPlayed: _hideListened! ? false : null,
           episodeState: Provider.of<EpisodeState>(context, listen: false));
     } else {
       episodes = await _dbHelper.getEpisodes(
           feedIds: group,
           optionalFields: [
             EpisodeField.description,
+            EpisodeField.number,
             EpisodeField.enclosureDuration,
             EpisodeField.enclosureSize,
             EpisodeField.isDownloaded,
@@ -608,7 +613,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
           sortOrder: SortOrder.DESC,
           limit: top,
           filterVersions: 1,
-          filterPlayed: _hideListened! ? 1 : 0,
+          filterPlayed: _hideListened! ? false : null,
           episodeState: Provider.of<EpisodeState>(context, listen: false));
     }
     return episodes;
@@ -622,14 +627,14 @@ class _RecentUpdateState extends State<_RecentUpdate>
           optionalFields: [EpisodeField.mediaId],
           sortBy: Sorter.pubDate,
           sortOrder: SortOrder.DESC,
-          filterNew: -1);
+          filterNew: true);
     } else {
       episodes = await _dbHelper.getEpisodes(
           feedIds: group,
           optionalFields: [EpisodeField.mediaId],
           sortBy: Sorter.pubDate,
           sortOrder: SortOrder.DESC,
-          filterNew: -1);
+          filterNew: true);
     }
     return episodes.length;
   }
@@ -662,7 +667,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
       builder: (context, groupList, child) => PopupMenuButton<String>(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         elevation: 1,
-        tooltip: context.s.groupFilter,
+        tooltip: context.s.filterType(context.s.groups(1)),
         child: Container(
             padding: EdgeInsets.symmetric(horizontal: 20),
             height: 50,
@@ -787,172 +792,112 @@ class _RecentUpdateState extends State<_RecentUpdate>
         return FutureBuilder<List<EpisodeBrief>>(
           future: _getRssItem(_top, _group!, hideListened: _hideListened),
           builder: (context, snapshot) {
-            return (snapshot.hasData)
-                ? snapshot.data!.length == 0
-                    ? Padding(
-                        padding: EdgeInsets.only(top: 150),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Icon(LineIcons.alternateCloudDownload,
-                                size: 80, color: Colors.grey[500]),
-                            Padding(
-                                padding: EdgeInsets.symmetric(vertical: 10)),
-                            Text(
-                              s.noEpisodeRecent,
-                              style: TextStyle(color: Colors.grey[500]),
+            if (snapshot.hasData) {
+              return NotificationListener<ScrollNotification>(
+                onNotification: (scrollInfo) {
+                  if (scrollInfo is ScrollStartNotification &&
+                      mounted &&
+                      !_scroll) {
+                    setState(() => _scroll = true);
+                  }
+                  if (scrollInfo.metrics.pixels ==
+                          scrollInfo.metrics.maxScrollExtent &&
+                      _episodes.length == _top) {
+                    if (!_loadMore) {
+                      _loadMoreEpisode();
+                    }
+                  }
+                  return true;
+                },
+                child: ScrollConfiguration(
+                  behavior: NoGrowBehavior(),
+                  child: CustomScrollView(
+                    key: PageStorageKey<String>('update'),
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    slivers: <Widget>[
+                      SliverAppBar(
+                        pinned: true,
+                        leading: Center(),
+                        toolbarHeight: _actionBarHeight,
+                        backgroundColor: context.background,
+                        scrolledUnderElevation: 0,
+                        flexibleSpace: _multiSelect!
+                            ? MultiSelectPanel(
+                                selectionController: SelectionController(),
+                                expanded: false,
+                                getEpisodes: _getEpisodes,
+                              )
+                            : ActionBar(
+                                onGetEpisodesChanged: (getEpisodes) async {
+                                  _getEpisodes = getEpisodes;
+                                  _episodes = await _getEpisodes();
+                                  // selectionController.selectableEpisodes =
+                                  //     _episodes;
+                                  if (mounted) {
+                                    setState(() {});
+                                  }
+                                },
+                                onLayoutChanged: (layout) {
+                                  _layout = layout;
+                                  if (mounted) {
+                                    setState(() {});
+                                  }
+                                },
+                                onHeightChanged: (height) {
+                                  _actionBarHeight = height;
+                                  if (mounted) {
+                                    setState(() {});
+                                  }
+                                },
+                                limit: _top,
+                                layout: _layout ?? Layout.large,
+                                // selectionController: selectionController,
+                              ),
+                      ),
+                      _episodes.length == 0
+                          ? SliverToBoxAdapter(
+                              child: Padding(
+                                padding: EdgeInsets.only(top: 150),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    Icon(LineIcons.alternateCloudDownload,
+                                        size: 80, color: Colors.grey[500]),
+                                    Padding(
+                                        padding:
+                                            EdgeInsets.symmetric(vertical: 10)),
+                                    Text(
+                                      s.noEpisodeRecent,
+                                      style: TextStyle(color: Colors.grey[500]),
+                                    )
+                                  ],
+                                ),
+                              ),
                             )
-                          ],
-                        ),
-                      )
-                    : NotificationListener<ScrollNotification>(
-                        onNotification: (scrollInfo) {
-                          if (scrollInfo is ScrollStartNotification &&
-                              mounted &&
-                              !_scroll) {
-                            setState(() => _scroll = true);
-                          }
-                          if (scrollInfo.metrics.pixels ==
-                                  scrollInfo.metrics.maxScrollExtent &&
-                              snapshot.data!.length == _top) {
-                            if (!_loadMore) {
-                              _loadMoreEpisode();
-                            }
-                          }
-                          return true;
-                        },
-                        child: Stack(
-                          children: [
-                            ScrollConfiguration(
-                              behavior: NoGrowBehavior(),
-                              child: CustomScrollView(
-                                  key: PageStorageKey<String>('update'),
-                                  physics:
-                                      const AlwaysScrollableScrollPhysics(),
-                                  slivers: <Widget>[
-                                    SliverToBoxAdapter(
-                                      child: SizedBox(
-                                        height: 40,
-                                      ),
-                                    ),
-                                    EpisodeGrid(
-                                      episodes: snapshot.data,
-                                      layout: _layout,
-                                      initNum: _scroll ? 0 : 12,
-                                      multiSelect: _multiSelect,
-                                      openPodcast: true,
-                                      selectedList: _selectedEpisodes ?? [],
-                                      onSelect: (value) => setState(() {
-                                        _selectedEpisodes = value;
-                                      }),
-                                    ),
-                                    SliverList(
-                                      delegate: SliverChildBuilderDelegate(
-                                        (context, index) {
-                                          return _loadMore
-                                              ? Container(
-                                                  height: 2,
-                                                  child:
-                                                      LinearProgressIndicator())
-                                              : Center();
-                                        },
-                                        childCount: 1,
-                                      ),
-                                    ),
-                                  ]),
+                          : EpisodeGrid(
+                              episodes: _episodes,
+                              layout: _layout,
+                              initNum: _scroll ? 0 : 12,
+                              openPodcast: true,
                             ),
-                            Column(
-                              children: [
-                                if (!_multiSelect!)
-                                  Container(
-                                    height: 40,
-                                    decoration: BoxDecoration(
-                                        color: context.background),
-                                    child: Row(
-                                      children: <Widget>[
-                                        _switchGroupButton(),
-                                        Spacer(),
-                                        Material(
-                                          color: Colors.transparent,
-                                          child: IconButton(
-                                              tooltip: context.s.refresh,
-                                              icon: Icon(
-                                                  LineIcons.alternateRedo,
-                                                  size: 16),
-                                              onPressed: () {
-                                                _updateRssItem();
-                                                Fluttertoast.showToast(
-                                                  msg: s.refreshStarted,
-                                                  gravity: ToastGravity.BOTTOM,
-                                                );
-                                              }),
-                                        ),
-                                        _addNewButton(),
-                                        Material(
-                                          color: Colors.transparent,
-                                          child: IconButton(
-                                            tooltip: s.hideListenedSetting,
-                                            icon: SizedBox(
-                                              width: 30,
-                                              height: 15,
-                                              child: HideListened(
-                                                hideListened:
-                                                    _hideListened ?? false,
-                                              ),
-                                            ),
-                                            onPressed: () {
-                                              setState(() => _hideListened =
-                                                  !_hideListened!);
-                                            },
-                                          ),
-                                        ),
-                                        Material(
-                                          color: Colors.transparent,
-                                          child: LayoutButton(
-                                            layout: _layout,
-                                            onPressed: (layout) => setState(() {
-                                              _layout = layout;
-                                            }),
-                                          ),
-                                        ),
-                                        Material(
-                                            color: Colors.transparent,
-                                            child: IconButton(
-                                              icon: SizedBox(
-                                                width: 20,
-                                                height: 10,
-                                                child: CustomPaint(
-                                                    painter: MultiSelectPainter(
-                                                        color: context
-                                                            .accentColor)),
-                                              ),
-                                              onPressed: () {
-                                                setState(() {
-                                                  _selectedEpisodes = [];
-                                                  _multiSelect = true;
-                                                });
-                                              },
-                                            )),
-                                      ],
-                                    ),
-                                  ),
-                                if (_multiSelect!)
-                                  MultiSelectMenuBar(
-                                    selectedList: _selectedEpisodes,
-                                    onClose: (value) {
-                                      setState(() {
-                                        if (value) {
-                                          _multiSelect = false;
-                                        }
-                                      });
-                                    },
-                                  ),
-                              ],
-                            ),
-                          ],
+                      SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            return _loadMore
+                                ? Container(
+                                    height: 2, child: LinearProgressIndicator())
+                                : Center();
+                          },
+                          childCount: 1,
                         ),
-                      )
-                : Center();
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            } else {
+              return Center();
+            }
           },
         );
       },
@@ -961,6 +906,72 @@ class _RecentUpdateState extends State<_RecentUpdate>
 
   @override
   bool get wantKeepAlive => true;
+
+  Widget _oldActionBar() => Container(
+        height: 40,
+        decoration: BoxDecoration(color: context.background),
+        child: Row(
+          children: <Widget>[
+            _switchGroupButton(),
+            Spacer(),
+            Material(
+              color: Colors.transparent,
+              child: IconButton(
+                  tooltip: context.s.refresh,
+                  icon: Icon(LineIcons.alternateRedo, size: 16),
+                  onPressed: () {
+                    _updateRssItem();
+                    Fluttertoast.showToast(
+                      msg: context.s.refreshStarted,
+                      gravity: ToastGravity.BOTTOM,
+                    );
+                  }),
+            ),
+            _addNewButton(),
+            Material(
+              color: Colors.transparent,
+              child: IconButton(
+                tooltip: context.s.hideListenedSetting,
+                icon: SizedBox(
+                  width: 30,
+                  height: 15,
+                  child: HideListened(
+                    hideListened: _hideListened ?? false,
+                  ),
+                ),
+                onPressed: () {
+                  setState(() => _hideListened = !_hideListened!);
+                },
+              ),
+            ),
+            Material(
+              color: Colors.transparent,
+              child: LayoutButton(
+                layout: _layout,
+                onPressed: (layout) => setState(() {
+                  _layout = layout;
+                }),
+              ),
+            ),
+            Material(
+                color: Colors.transparent,
+                child: IconButton(
+                  icon: SizedBox(
+                    width: 20,
+                    height: 10,
+                    child: CustomPaint(
+                        painter:
+                            MultiSelectPainter(color: context.accentColor)),
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _multiSelect = true;
+                    });
+                  },
+                )),
+          ],
+        ),
+      );
 }
 
 class _MyFavorite extends StatefulWidget {
@@ -993,24 +1004,27 @@ class _MyFavoriteState extends State<_MyFavorite>
         break;
     }
     var episodes = await dbHelper.getEpisodes(
-        optionalFields: [
-          EpisodeField.description,
-          EpisodeField.enclosureDuration,
-          EpisodeField.enclosureSize,
-          EpisodeField.isDownloaded,
-          EpisodeField.podcastImage,
-          EpisodeField.primaryColor,
-          EpisodeField.isLiked,
-          EpisodeField.isNew,
-          EpisodeField.isPlayed,
-          EpisodeField.versionInfo
-        ],
-        sortBy: sorter,
-        sortOrder: order,
-        limit: top,
-        filterLiked: -1,
-        filterPlayed: _hideListened! ? 1 : 0,
-        episodeState: Provider.of<EpisodeState>(context, listen: false));
+      optionalFields: [
+        EpisodeField.description,
+        EpisodeField.number,
+        EpisodeField.enclosureDuration,
+        EpisodeField.enclosureSize,
+        EpisodeField.isDownloaded,
+        EpisodeField.podcastImage,
+        EpisodeField.primaryColor,
+        EpisodeField.isLiked,
+        EpisodeField.isNew,
+        EpisodeField.isPlayed,
+        EpisodeField.versionInfo
+      ],
+      sortBy: sorter,
+      sortOrder: order,
+      limit: top,
+      filterLiked: true,
+      filterPlayed: _hideListened! ? false : null,
+      episodeState:
+          mounted ? Provider.of<EpisodeState>(context, listen: false) : null,
+    );
     return episodes;
   }
 
@@ -1030,9 +1044,6 @@ class _MyFavoriteState extends State<_MyFavorite>
   Layout? _layout;
   int? _sortBy;
   bool? _hideListened;
-
-  ///Selected episode list.
-  List<EpisodeBrief>? _selectedEpisodes;
 
   ///Toggle for multi-select.
   bool? _multiSelect;
@@ -1089,15 +1100,10 @@ class _MyFavoriteState extends State<_MyFavorite>
                             slivers: <Widget>[
                               SliverToBoxAdapter(child: SizedBox(height: 40)),
                               EpisodeGrid(
-                                episodes: snapshot.data,
+                                episodes: snapshot.data!,
                                 layout: _layout,
                                 initNum: 0,
                                 openPodcast: true,
-                                multiSelect: _multiSelect,
-                                selectedList: _selectedEpisodes ?? [],
-                                onSelect: (value) => setState(() {
-                                  _selectedEpisodes = value;
-                                }),
                               ),
                               SliverList(
                                 delegate: SliverChildBuilderDelegate(
@@ -1219,7 +1225,6 @@ class _MyFavoriteState extends State<_MyFavorite>
                                           ),
                                           onPressed: () {
                                             setState(() {
-                                              _selectedEpisodes = [];
                                               _multiSelect = true;
                                             });
                                           },
@@ -1228,15 +1233,11 @@ class _MyFavoriteState extends State<_MyFavorite>
                                 ),
                               ),
                             if (_multiSelect!)
-                              MultiSelectMenuBar(
-                                selectedList: _selectedEpisodes,
-                                hideFavorite: true,
-                                onClose: (value) {
-                                  setState(() {
-                                    if (value) {
-                                      _multiSelect = false;
-                                    }
-                                  });
+                              MultiSelectPanel(
+                                selectionController: SelectionController(),
+                                expanded: false,
+                                getEpisodes: () async {
+                                  return <EpisodeBrief>[];
                                 },
                               ),
                           ],
@@ -1285,13 +1286,14 @@ class _MyDownloadState extends State<_MyDownload>
         order = SortOrder.ASC;
         break;
       default: // case 2
-        sorter = Sorter.enclosureLength;
+        sorter = Sorter.enclosureSize;
         order = SortOrder.DESC;
         break;
     }
     var episodes = await dbHelper.getEpisodes(
         optionalFields: [
           EpisodeField.description,
+          EpisodeField.number,
           EpisodeField.enclosureDuration,
           EpisodeField.enclosureSize,
           EpisodeField.isDownloaded,
@@ -1304,8 +1306,8 @@ class _MyDownloadState extends State<_MyDownload>
         ],
         sortBy: sorter,
         sortOrder: order,
-        filterPlayed: hideListened ?? false ? 1 : 0,
-        filterDownloaded: -1,
+        filterPlayed: hideListened ?? false ? false : null,
+        filterDownloaded: true,
         episodeState: Provider.of<EpisodeState>(context, listen: false));
     return episodes;
   }

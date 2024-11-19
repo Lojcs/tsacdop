@@ -496,7 +496,7 @@ class _PodcastSettingState extends State<PodcastSetting> {
       _markStatus = MarkStatus.start;
     });
     final episodes =
-        await _dbHelper.getEpisodes(feedIds: [podcastId!], filterPlayed: 1);
+        await _dbHelper.getEpisodes(feedIds: [podcastId!], filterPlayed: false);
     for (var episode in episodes) {
       final history = PlayHistory(episode.title, episode.enclosureUrl, 0, 1);
       await _dbHelper.saveHistory(history);

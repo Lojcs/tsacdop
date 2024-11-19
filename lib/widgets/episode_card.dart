@@ -44,7 +44,7 @@ class InteractiveEpisodeCard extends StatefulWidget {
   final bool preferEpisodeImage;
 
   /// Episode number to be shown. Null for off
-  final String? numberText;
+  final bool showNumber;
 
   /// Controls the favourite indicator
   final bool showLiked;
@@ -73,7 +73,7 @@ class InteractiveEpisodeCard extends StatefulWidget {
       {this.openPodcast = true,
       this.showImage = true,
       this.preferEpisodeImage = false,
-      this.numberText,
+      this.showNumber = false,
       this.showLiked = true,
       this.showNew = true,
       this.showLengthAndSize = true,
@@ -81,22 +81,23 @@ class InteractiveEpisodeCard extends StatefulWidget {
       this.showDate = false,
       this.selectMode = false,
       this.onSelect,
-      this.selected = false}) {
-    assert((!preferEpisodeImage &&
-            episode.fields.contains(EpisodeField.podcastImage)) ||
-        episode.fields.contains(EpisodeField.episodeImage) ||
-        episode.fields.contains(EpisodeField.podcastImage));
-    assert(!showLiked || episode.fields.contains(EpisodeField.isLiked));
-    assert(!showNew || episode.fields.contains(EpisodeField.isNew));
-    assert(!showLengthAndSize ||
-        (episode.fields.contains(EpisodeField.enclosureDuration) &&
-            episode.fields.contains(EpisodeField.enclosureSize)));
-    assert(!showPlayedAndDownloaded ||
-        !showLengthAndSize ||
-        (episode.fields.contains(EpisodeField.isPlayed) &&
-            episode.fields.contains(EpisodeField.isDownloaded)));
-    assert(episode.fields.contains(EpisodeField.primaryColor));
-  }
+      this.selected = false})
+      : assert((!preferEpisodeImage &&
+                episode.fields.contains(EpisodeField.podcastImage)) ||
+            episode.fields.contains(EpisodeField.episodeImage) ||
+            episode.fields.contains(EpisodeField.podcastImage)),
+        assert(!showNumber || episode.fields.contains(EpisodeField.number)),
+        assert(!showLiked || episode.fields.contains(EpisodeField.isLiked)),
+        assert(!showNew || episode.fields.contains(EpisodeField.isNew)),
+        assert(!showLengthAndSize ||
+            (episode.fields.contains(EpisodeField.enclosureDuration) &&
+                episode.fields.contains(EpisodeField.enclosureSize))),
+        assert(!showPlayedAndDownloaded ||
+            !showLengthAndSize ||
+            (episode.fields.contains(EpisodeField.isPlayed) &&
+                episode.fields.contains(EpisodeField.isDownloaded))),
+        assert(episode.fields.contains(EpisodeField.primaryColor));
+
   @override
   _InteractiveEpisodeCardState createState() => _InteractiveEpisodeCardState();
 }
@@ -141,6 +142,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   Widget build(BuildContext context) {
     // Apply external selection
     if (widget.selected != selected && !liveSelect && widget.selectMode) {
+      // TODO: Can this be done in didUpdateWidget?
       _firstBuild = false;
       selected = widget.selected;
       if (widget.selected) {
@@ -158,7 +160,6 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
     }
     liveSelect = false;
     DBHelper dbHelper = DBHelper();
-
     return Selector<EpisodeState, bool?>(
       selector: (_, episodeState) => episodeState.episodeChangeMap[episode.id],
       builder: (_, __, ___) => FutureBuilder<EpisodeBrief>(
@@ -284,7 +285,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                           openPodcast: widget.openPodcast,
                           showImage: widget.showImage && !boo,
                           preferEpisodeImage: widget.preferEpisodeImage,
-                          numberText: widget.numberText,
+                          showNumber: widget.showNumber,
                           showLiked: widget.showLiked,
                           showNew: widget.showNew,
                           showLengthAndSize: widget.showLengthAndSize,
@@ -323,7 +324,7 @@ class EpisodeCard extends StatelessWidget {
   final bool preferEpisodeImage;
 
   /// Episode number to be shown. Null for off
-  final String? numberText;
+  final bool showNumber;
 
   /// Controls the favourite indicator
   final bool showLiked;
@@ -349,33 +350,33 @@ class EpisodeCard extends StatelessWidget {
       {this.openPodcast = false,
       this.showImage = true,
       this.preferEpisodeImage = false,
-      this.numberText,
+      this.showNumber = false,
       this.showLiked = true,
       this.showNew = true,
       this.showLengthAndSize = true,
       this.showPlayedAndDownloaded = true,
       this.showDate = false,
       this.selected = false,
-      this.decorate = true}) {
-    assert((!preferEpisodeImage &&
-            episode.fields.contains(EpisodeField.podcastImage)) ||
-        episode.fields.contains(EpisodeField.episodeImage) ||
-        episode.fields.contains(EpisodeField.podcastImage));
-    assert(!showLiked || episode.fields.contains(EpisodeField.isLiked));
-    assert(!showNew || episode.fields.contains(EpisodeField.isNew));
-    assert(!showLengthAndSize ||
-        (episode.fields.contains(EpisodeField.enclosureDuration) &&
-            episode.fields.contains(EpisodeField.enclosureSize)));
-    assert(!showPlayedAndDownloaded ||
-        !showLengthAndSize ||
-        (episode.fields.contains(EpisodeField.isPlayed) &&
-            episode.fields.contains(EpisodeField.isDownloaded)));
-    assert(episode.fields.contains(EpisodeField.primaryColor));
-  }
-  final DBHelper dbHelper = DBHelper();
+      this.decorate = true})
+      : assert((!preferEpisodeImage &&
+                episode.fields.contains(EpisodeField.podcastImage)) ||
+            episode.fields.contains(EpisodeField.episodeImage) ||
+            episode.fields.contains(EpisodeField.podcastImage)),
+        assert(!showNumber || episode.fields.contains(EpisodeField.number)),
+        assert(!showLiked || episode.fields.contains(EpisodeField.isLiked)),
+        assert(!showNew || episode.fields.contains(EpisodeField.isNew)),
+        assert(!showLengthAndSize ||
+            (episode.fields.contains(EpisodeField.enclosureDuration) &&
+                episode.fields.contains(EpisodeField.enclosureSize))),
+        assert(!showPlayedAndDownloaded ||
+            !showLengthAndSize ||
+            (episode.fields.contains(EpisodeField.isPlayed) &&
+                episode.fields.contains(EpisodeField.isDownloaded))),
+        assert(episode.fields.contains(EpisodeField.primaryColor));
 
   @override
   Widget build(BuildContext context) {
+    final DBHelper dbHelper = DBHelper();
     return Container(
       decoration: BoxDecoration(
           borderRadius: _cardDecoration(context, episode, layout).borderRadius),
@@ -419,8 +420,9 @@ class EpisodeCard extends StatelessWidget {
                         SizedBox(
                           width: 5,
                         ),
-                        if (numberText != null)
-                          _numberIndicator(context, numberText!, layout),
+                        if (showNumber)
+                          _numberIndicator(
+                              context, episode.number!.toString(), layout),
                         Spacer(),
                         _pubDate(context, episode, layout, showNew),
                       ],
@@ -449,10 +451,12 @@ class EpisodeCard extends StatelessWidget {
                                     flex: 2,
                                     child: Row(
                                       children: <Widget>[
-                                        if (numberText != null)
+                                        if (showNumber)
                                           _numberIndicator(
-                                              context, numberText!, layout),
-                                        if (numberText != null)
+                                              context,
+                                              episode.number!.toString(),
+                                              layout),
+                                        if (showNumber)
                                           Text("|",
                                               style: GoogleFonts.teko(
                                                   textStyle: context
@@ -696,13 +700,13 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, EpisodeBrief episode,
           trailing: Icon(LineIcons.heart, color: Colors.red, size: 21),
           onPressed: () async {
             if (episode.isLiked!) {
-              await episodeState.unsetLiked(episode);
+              await episodeState.unsetLiked([episode]);
               Fluttertoast.showToast(
                 msg: s.unlike,
                 gravity: ToastGravity.BOTTOM,
               );
             } else {
-              await episodeState.setLiked(episode);
+              await episodeState.setLiked([episode]);
               Fluttertoast.showToast(
                 msg: s.liked,
                 gravity: ToastGravity.BOTTOM,
@@ -730,13 +734,13 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, EpisodeBrief episode,
           ),
           onPressed: () async {
             if (episode.isPlayed!) {
-              episodeState.unsetListened(episode);
+              episodeState.unsetListened([episode]);
               Fluttertoast.showToast(
                 msg: s.markNotListened,
                 gravity: ToastGravity.BOTTOM,
               );
             } else {
-              episodeState.setListened(episode);
+              episodeState.setListened([episode]);
               Fluttertoast.showToast(
                 msg: s.markListened,
                 gravity: ToastGravity.BOTTOM,

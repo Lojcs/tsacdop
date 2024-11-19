@@ -95,14 +95,13 @@ class KeyValueStorage {
     var prefs = await SharedPreferences.getInstance();
     if (prefs.getString(key) == null) {
       var episodeList = prefs.getStringList(playlistKey);
-      var playlist = Playlist('Queue', episodeList: episodeList);
+      var playlist = Playlist('Queue', episodeUrlList: episodeList ?? []);
       await prefs.setString(
           key,
           json.encode({
             'playlists': [playlist.toEntity().toJson()]
           }));
     }
-    print(prefs.getString(key));
     final playlist = json.decode(prefs.getString(key)!)['playlists'];
     return [for (final p in playlist) PlaylistEntity.fromJson(p)];
   }

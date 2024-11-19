@@ -114,7 +114,7 @@ class AutoDownloader {
           now.day.toString() +
           now.second.toString();
       var fileName =
-          '${episode.title!.replaceAll('/', '')}$datePlus.${episode.enclosureUrl.split('/').last.split('.').last}';
+          '${episode.title.replaceAll('/', '')}$datePlus.${episode.enclosureUrl.split('/').last.split('.').last}';
       if (fileName.length > 100) {
         fileName = fileName.substring(fileName.length - 100);
       }
@@ -300,7 +300,7 @@ class DownloadState extends ChangeNotifier {
     if (!isDownloaded) {
       final dir = await _getDownloadDirectory();
       var localPath =
-          path.join(dir.path, episode.podcastTitle?.replaceAll('/', ''));
+          path.join(dir.path, episode.podcastTitle.replaceAll('/', ''));
       final saveDir = Directory(localPath);
       var hasExisted = await saveDir.exists();
       if (!hasExisted) {
@@ -312,7 +312,7 @@ class DownloadState extends ChangeNotifier {
           now.day.toString() +
           now.second.toString();
       var fileName =
-          '${episode.title!.replaceAll('/', '')}$datePlus.${episode.enclosureUrl.split('/').last.split('.').last}';
+          '${episode.title.replaceAll('/', '')}$datePlus.${episode.enclosureUrl.split('/').last.split('.').last}';
       if (fileName.length > 100) {
         fileName = fileName.substring(fileName.length - 100);
       }
@@ -398,10 +398,10 @@ class DownloadState extends ChangeNotifier {
       var episodes = await _dbHelper.getEpisodes(
           rangeParameters: [Sorter.downloadDate],
           rangeDelimiters: [Tuple2(-1, deadline)],
-          filterPlayed: 1,
-          filterDownloaded: -1);
-      episodes.addAll(
-          await _dbHelper.getEpisodes(filterPlayed: -1, filterDownloaded: -1));
+          filterPlayed: false,
+          filterDownloaded: true);
+      episodes.addAll(await _dbHelper.getEpisodes(
+          filterPlayed: true, filterDownloaded: true));
       if (episodes.isNotEmpty) {
         for (var episode in episodes) {
           await delTask(episode);

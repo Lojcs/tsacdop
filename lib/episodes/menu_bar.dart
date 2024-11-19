@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:tsacdop/local_storage/sqflite_localpodcast.dart';
 import 'package:tsacdop/state/episode_state.dart';
-import 'package:tsacdop/type/play_histroy.dart';
 import 'package:tuple/tuple.dart';
 import 'package:provider/provider.dart';
 import 'package:tsacdop/episodes/episode_download.dart';
@@ -70,7 +68,7 @@ class MenuBarState extends State<MenuBar> {
                             color: Colors.red,
                           ),
                           onTap: () =>
-                              episodeState.unsetLiked(widget.episodeItem))
+                              episodeState.unsetLiked([widget.episodeItem]))
                       : _buttonOnMenu(
                           child: Icon(
                             Icons.favorite_border,
@@ -80,7 +78,7 @@ class MenuBarState extends State<MenuBar> {
                                     : 500],
                           ),
                           onTap: () async {
-                            episodeState.setLiked(widget.episodeItem);
+                            episodeState.setLiked([widget.episodeItem]);
                             OverlayEntry _overlayEntry;
                             _overlayEntry =
                                 createOverlayEntry(context, leftOffset: 50);
@@ -137,8 +135,8 @@ class MenuBarState extends State<MenuBar> {
                     ),
                     onTap: () {
                       widget.episodeItem.isPlayed!
-                          ? episodeState.unsetListened(widget.episodeItem)
-                          : episodeState.setListened(widget.episodeItem);
+                          ? episodeState.unsetListened([widget.episodeItem])
+                          : episodeState.setListened([widget.episodeItem]);
                       Fluttertoast.showToast(
                         msg: widget.episodeItem.isPlayed!
                             ? s.markNotListened

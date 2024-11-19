@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:tsacdop/class/settingstate.dart';
 import 'package:tsacdop/state/audio_state.dart';
+import 'package:tsacdop/type/theme_data.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import '../generated/l10n.dart';
 
@@ -39,15 +40,30 @@ extension ContextExtension on BuildContext {
   double get height => MediaQuery.of(this).size.height;
   double get paddingTop => MediaQuery.of(this).padding.top;
   TextTheme get textTheme => Theme.of(this).textTheme;
-  List<BoxShadow> get boxShadowSmall => realDark
-      ? [BoxShadow(blurRadius: 4, spreadRadius: -1, color: shadowColor)]
-      : [BoxShadow(blurRadius: 4, spreadRadius: -2, color: shadowColor)];
-  List<BoxShadow> get boxShadowMedium => realDark
-      ? [BoxShadow(blurRadius: 4, spreadRadius: 0, color: shadowColor)]
-      : [BoxShadow(blurRadius: 3, spreadRadius: -1, color: shadowColor)];
-  List<BoxShadow> get boxShadowLarge => realDark
-      ? [BoxShadow(blurRadius: 6, spreadRadius: 0.5, color: shadowColor)]
-      : [BoxShadow(blurRadius: 4, spreadRadius: -1, color: shadowColor)];
+  List<BoxShadow> boxShadowSmall({Color? color}) => realDark
+      ? [
+          BoxShadow(
+              blurRadius: 4, spreadRadius: -1, color: color ?? shadowColor)
+        ]
+      : [
+          BoxShadow(
+              blurRadius: 4, spreadRadius: -2, color: color ?? shadowColor)
+        ];
+  List<BoxShadow> boxShadowMedium({Color? color}) => realDark
+      ? [BoxShadow(blurRadius: 4, spreadRadius: 0, color: color ?? shadowColor)]
+      : [
+          BoxShadow(
+              blurRadius: 3, spreadRadius: -1, color: color ?? shadowColor)
+        ];
+  List<BoxShadow> boxShadowLarge({Color? color}) => realDark
+      ? [
+          BoxShadow(
+              blurRadius: 6, spreadRadius: 0.5, color: color ?? shadowColor)
+        ]
+      : [
+          BoxShadow(
+              blurRadius: 4, spreadRadius: -1, color: color ?? shadowColor)
+        ];
   SystemUiOverlayStyle get overlay => SystemUiOverlayStyle(
         statusBarColor: statusBarColor,
         statusBarIconBrightness: iconBrightness,
@@ -117,6 +133,15 @@ extension ContextExtension on BuildContext {
   BorderRadius get radiusMedium => BorderRadius.circular(16);
   BorderRadius get radiusLarge => BorderRadius.circular(20);
   BorderRadius get radiusHuge => BorderRadius.circular(100);
+
+  MyIconThemeData get iconTheme =>
+      (Theme.of(this).iconTheme as MyIconThemeData);
+  Color get iconColor => iconTheme.color!;
+  double get iconSize => iconTheme.size!;
+  double get iconButtonSizeVertical => iconTheme.buttonSizeVertical!;
+  double get iconButtonSizeHorizontal => iconTheme.buttonSizeVertical!;
+  Radius get iconRadius => iconTheme.radius!;
+  EdgeInsets get iconPadding => iconTheme.padding!;
 }
 
 extension IntExtension on int {
@@ -208,7 +233,7 @@ extension ColorExtension on Color {
     return context.realDark
         ? context.background
         : Color.lerp(context.background, this,
-            context.brightness == Brightness.light ? 0.4 : 0.2)!;
+            context.brightness == Brightness.light ? 0.2 : 0.2)!;
   }
 
   /// Blend the color with background, less accent

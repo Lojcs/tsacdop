@@ -240,7 +240,7 @@ class _PlaylistHomeState extends State<PlaylistHome> {
                                                     10));
                                           } else if (audio.playerRunning &&
                                               audio.audioDuration != 0) {
-                                            return ((audio.audioPosition! *
+                                            return ((audio.audioPosition *
                                                     100) ~/
                                                 audio.audioDuration);
                                           } else {
@@ -736,7 +736,8 @@ class __PlaylistsState extends State<_Playlists> {
                                           math.min(queueSnapshot.length, 4),
                                       itemBuilder: (_, index) {
                                         if (index <
-                                            queueSnapshot.episodeList.length) {
+                                            queueSnapshot
+                                                .episodeUrlList.length) {
                                           return Image(
                                             image: queueSnapshot.episodes[index]
                                                 .episodeOrPodcastImageProvider,
@@ -795,7 +796,7 @@ class __PlaylistsState extends State<_Playlists> {
                     );
                   }
                   if (index < data.item2) {
-                    final episodeList = data.item1[index].episodeList;
+                    final episodeList = data.item1[index].episodeUrlList;
                     return ListTile(
                       onTap: () async {
                         Navigator.push(
@@ -1101,7 +1102,7 @@ class __NewPlaylistState extends State<_NewPlaylist> {
                       final recent = await _recent();
                       playlist = Playlist(
                         _playlistName,
-                        episodeList: [for (var e in recent) e.enclosureUrl],
+                        episodeUrlList: [for (var e in recent) e.enclosureUrl],
                       );
                       await playlist.getPlaylist();
                       if (mounted) {
@@ -1119,7 +1120,7 @@ class __NewPlaylistState extends State<_NewPlaylist> {
                       final random = await _random();
                       playlist = Playlist(
                         _playlistName,
-                        episodeList: [for (var e in random) e.enclosureUrl],
+                        episodeUrlList: [for (var e in random) e.enclosureUrl],
                       );
                       await playlist.getPlaylist();
                       if (mounted) {
@@ -1139,7 +1140,9 @@ class __NewPlaylistState extends State<_NewPlaylist> {
                       playlist = Playlist(
                         _playlistName,
                         isLocal: true,
-                        episodeList: [for (var e in episodes) e.enclosureUrl],
+                        episodeUrlList: [
+                          for (var e in episodes) e.enclosureUrl
+                        ],
                       );
                       await playlist.getPlaylist();
                       if (mounted) {

@@ -41,19 +41,19 @@ class Playlist extends Equatable {
   final bool? isLocal;
 
   /// Episode url list for playlist.
-  final List<String> episodeList;
+  final List<String> episodeUrlList;
 
-  /// Eposides in playlist.
+  /// Episodes in playlist.
   final List<EpisodeBrief> episodes;
 
   List<MediaItem> get mediaItems =>
       [for (var episode in episodes) episode.mediaItem];
 
-  bool get isEmpty => episodeList.isEmpty;
+  bool get isEmpty => episodeUrlList.isEmpty;
 
-  bool get isNotEmpty => episodeList.isNotEmpty;
+  bool get isNotEmpty => episodeUrlList.isNotEmpty;
 
-  int get length => episodeList.length;
+  int get length => episodeUrlList.length;
 
   bool get isQueue => name == 'Queue';
 
@@ -62,15 +62,15 @@ class Playlist extends Equatable {
   Playlist(this.name,
       {String? id,
       this.isLocal = false,
-      List<String>? episodeList,
+      List<String>? episodeUrlList,
       List<EpisodeBrief>? episodes})
       : id = id ?? Uuid().v4(),
         assert(name != ''),
-        episodeList = episodeList ?? [],
+        episodeUrlList = episodeUrlList ?? [],
         episodes = episodes ?? [];
 
   PlaylistEntity toEntity() {
-    return PlaylistEntity(name, id, isLocal, episodeList.toSet().toList());
+    return PlaylistEntity(name, id, isLocal, episodeUrlList.toSet().toList());
   }
 
   static Playlist fromEntity(PlaylistEntity entity) {
@@ -78,22 +78,22 @@ class Playlist extends Equatable {
       entity.name,
       id: entity.id,
       isLocal: entity.isLocal,
-      episodeList: entity.episodeList,
+      episodeUrlList: entity.episodeList,
     );
   }
 
   final DBHelper _dbHelper = DBHelper();
 //  final KeyValueStorage _playlistStorage = KeyValueStorage(playlistKey);
 
-  /// (Re)initialises the playlist with the urls in [episodeList].
+  /// (Re)initialises the playlist with the urls in [episodeUrlList].
   Future<void> getPlaylist() async {
     // // Don't reload if already loaded
     // if (!reload && episodes.length == episodeList.length) return;
     episodes.clear();
-    if (episodeList.isNotEmpty) {
+    if (episodeUrlList.isNotEmpty) {
       // Single database call should be faster
       episodes.addAll(await _dbHelper
-          .getEpisodes(episodeUrls: episodeList, optionalFields: [
+          .getEpisodes(episodeUrls: episodeUrlList, optionalFields: [
         EpisodeField.enclosureDuration,
         EpisodeField.enclosureSize,
         EpisodeField.mediaId,
@@ -108,31 +108,32 @@ class Playlist extends Equatable {
       ]));
     }
     // Remove episode urls from episodeList if they are not in the database
-    if (episodes.length < episodeList.length) {
-      List<bool> episodesFound = List<bool>.filled(episodeList.length, false);
+    if (episodes.length < episodeUrlList.length) {
+      List<bool> episodesFound =
+          List<bool>.filled(episodeUrlList.length, false);
       for (EpisodeBrief? episode in episodes) {
-        int index = episodeList.indexOf(episode!.enclosureUrl);
+        int index = episodeUrlList.indexOf(episode!.enclosureUrl);
         episodesFound[index] = true;
       }
       for (int i = episodesFound.length - 1; i >= 0; i--) {
         if (!episodesFound[i]) {
-          episodeList.removeAt(i);
+          episodeUrlList.removeAt(i);
         }
       }
     }
     // Sort episodes in episodeList order
-    if (episodes.length == episodeList.length) {
+    if (episodes.length == episodeUrlList.length) {
       List<bool> sorted = List<bool>.filled(episodes.length, false);
       for (int i = 0; i < episodes.length; i++) {
         if (!sorted[i]) {
-          int index = episodeList.indexOf(episodes[i].enclosureUrl);
+          int index = episodeUrlList.indexOf(episodes[i].enclosureUrl);
           EpisodeBrief? temp;
           while (index != i) {
             temp = episodes[index];
             episodes[index] = episodes[i];
             episodes[i] = temp;
             sorted[index] = true;
-            index = episodeList.indexOf(episodes[i].enclosureUrl);
+            index = episodeUrlList.indexOf(episodes[i].enclosureUrl);
           }
           sorted[index] = true;
         }
@@ -150,19 +151,19 @@ class Playlist extends Equatable {
         break;
       case EpisodeCollision.Replace:
         episodes.removeWhere((episode) => newEpisodes.contains(episode));
-        episodeList.removeWhere(
+        episodeUrlList.removeWhere(
             (url) => newEpisodes.any((episode) => episode.enclosureUrl == url));
         break;
       case EpisodeCollision.Ignore:
         break;
     }
-    if (index == episodeList.length) {
+    if (index == episodeUrlList.length) {
       episodes.addAll(newEpisodes);
-      episodeList
+      episodeUrlList
           .addAll([for (var episode in newEpisodes) episode.enclosureUrl]);
     } else {
       episodes.insertAll(index, newEpisodes);
-      episodeList.insertAll(
+      episodeUrlList.insertAll(
           index, [for (var episode in newEpisodes) episode.enclosureUrl]);
     }
   }
@@ -174,7 +175,7 @@ class Playlist extends Equatable {
       for (var episode in delEpisodes) episode.enclosureUrl
     ];
     episodes.removeWhere((episode) => delEpisodes.contains(episode));
-    episodeList.removeWhere((url) => delUrls.contains(url));
+    episodeUrlList.removeWhere((url) => delUrls.contains(url));
     if (isLocal! && delLocal) {
       _dbHelper.deleteLocalEpisodes(delUrls);
     }
@@ -184,9 +185,9 @@ class Playlist extends Equatable {
   /// Don't directly use on playlists that might be live. Use [AudioState.removeFromPlaylistAt] instead.
   void removeEpisodesAt(int index, {int number = 1}) {
     int end = index + number;
-    List<String> delEpisodes = episodeList.getRange(index, end).toList();
+    List<String> delEpisodes = episodeUrlList.getRange(index, end).toList();
     _dbHelper.deleteLocalEpisodes(delEpisodes);
-    episodeList.removeRange(index, end);
+    episodeUrlList.removeRange(index, end);
     episodes.removeRange(index, end);
   }
 
@@ -195,8 +196,8 @@ class Playlist extends Equatable {
   void reorderPlaylist(int oldIndex, int newIndex) {
     final episode = episodes.removeAt(oldIndex);
     episodes.insert(newIndex, episode);
-    episodeList.removeAt(oldIndex);
-    episodeList.insert(newIndex, episode.enclosureUrl);
+    episodeUrlList.removeAt(oldIndex);
+    episodeUrlList.insert(newIndex, episode.enclosureUrl);
   }
 
   /// Replaces matching playlist episodes with the provided [episode].
@@ -215,7 +216,7 @@ class Playlist extends Equatable {
   /// Clears all episodes in playlist.
   /// Don't directly use on playlists that might be live. Use [AudioState.clearPlaylist] instead.
   void clear() {
-    episodeList.clear();
+    episodeUrlList.clear();
     episodes.clear();
   }
 

@@ -462,7 +462,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
       if (_lastHistory != history) {
         _lastHistory = history;
         if (_seekSliderValue > 0.95) {
-          await _episodeState.setListened(_episode!,
+          await _episodeState.setListened([_episode!],
               seconds: history.seconds!, seekValue: history.seekValue!);
         } else {
           await _dbHelper.saveHistory(history);
@@ -597,7 +597,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     Playlist tempPlaylist = Playlist(
       // TODO: add search playlist flag like local?
       "Search",
-      episodeList: [episode.enclosureUrl],
+      episodeUrlList: [episode.enclosureUrl],
       episodes: [episode],
     );
     _playingTemp = true;
@@ -641,7 +641,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     }
 
     notifyListeners();
-    await _episodeState.unsetNew(episode);
+    await _episodeState.unsetNew([episode]);
   }
 
   /// Skips to the episode at specified index
@@ -889,6 +889,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
         EpisodeField.enclosureSize,
         EpisodeField.mediaId,
         EpisodeField.primaryColor,
+        EpisodeField.isExplicit,
         EpisodeField.isNew,
         EpisodeField.skipSecondsStart,
         EpisodeField.skipSecondsEnd,
@@ -896,8 +897,8 @@ class AudioPlayerNotifier extends ChangeNotifier {
         EpisodeField.podcastImage,
         EpisodeField.chapterLink
       ], keepExisting: true);
-      await _episodeState.unsetNew(episodes[i]);
     }
+    await _episodeState.unsetNew(episodes);
     EpisodeCollision ifExists =
         playlist.isQueue ? EpisodeCollision.Replace : EpisodeCollision.Ignore;
 
@@ -942,7 +943,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
           optionalFields: [EpisodeField.mediaId],
           sortBy: Sorter.pubDate,
           sortOrder: SortOrder.DESC,
-          filterNew: -1,
+          filterNew: true,
           limit: 100);
     } else {
       newEpisodes = await _dbHelper.getEpisodes(
@@ -950,7 +951,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
           feedIds: group,
           sortBy: Sorter.pubDate,
           sortOrder: SortOrder.DESC,
-          filterNew: -1,
+          filterNew: true,
           limit: 100);
     }
     await addToPlaylist(newEpisodes);
@@ -1217,7 +1218,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     notifyListeners();
     _savePlaylists();
     if (playlist.isLocal!) {
-      _dbHelper.deleteLocalEpisodes(playlist.episodeList);
+      _dbHelper.deleteLocalEpisodes(playlist.episodeUrlList);
     }
   }
 
@@ -1333,7 +1334,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
   Future<void> setSpeed(double speed) async {
     await _audioHandler.customAction('setSpeed', {'speed': speed});
     _currentSpeed = speed;
-    await _speedStorage.saveDouble(_currentSpeed!);
+    await _speedStorage.saveDouble(_currentSpeed);
     notifyListeners();
   }
 

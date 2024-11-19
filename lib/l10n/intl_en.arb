@@ -18,12 +18,24 @@
   "@addSomeGroups": {
     "description": "Please add new groups"
   },
+  "after": "After",
+  "@after": {
+    "description": "Used in a button to select episodes after the selected one(s) on a list. Not used for time"
+  },
   "all": "All",
   "@all": {},
   "autoDownload": "Auto download",
   "@autoDownload": {},
   "back": "Back",
   "@back": {},
+  "before": "Before",
+  "@before": {
+    "description": "Used in a button to select episodes before the selected one(s) on a list. Not used for time"
+  },
+  "between": "Between",
+  "@between": {
+    "description": "Used in a button to select episodes between the selected one(s) on a list"
+  },
   "boostVolume": "Boost volume",
   "@boostVolume": {
     "description": "Boost volume in player widget."
@@ -84,6 +96,10 @@
   "@done": {},
   "download": "Download",
   "@download": {},
+  "downloadDate": "Download Date",
+  "@downloadDate": {
+    "description": "Download Date sort order"
+  },
   "downloaded": "Downloaded",
   "@downloaded": {},
   "downloadRemovedToast": "Download removed",
@@ -91,6 +107,10 @@
   "downloadStart": "Downloading",
   "@downloadStart": {
     "description": "Toast of downloading"
+  },
+  "duration": "Duration",
+  "@duration": {
+    "description": "Duration sort order"
   },
   "editGroupName": "Edit group name",
   "@editGroupName": {},
@@ -156,6 +176,13 @@
   "@feedbackTelegram": {},
   "filter": "Filter",
   "@filter": {},
+  "filterType": "{type} filter",
+  "@filterType": {
+    "description": "To use with different episode filter types. Ex: {Downloaded} filter, {Played} filter, {Group} filter...",
+    "placeholders": {
+      "type": {}
+    }
+  },
   "fonts": "Fonts",
   "@fonts": {},
   "fontStyle": "Font style",
@@ -174,8 +201,6 @@
   "@groupExisted": {
     "description": "Group name validate in add group dialog. User can't add group with same name."
   },
-  "groupFilter": "Group filter",
-  "@groupFilter": {},
   "groupRemoveConfirm": "Are you sure you want to delete this group? Podcasts will be moved to the Home group.",
   "@groupRemoveConfirm": {},
   "groups": "{count, plural, zero{Group} one{Group} other{Groups}}",
@@ -312,6 +337,10 @@
   "@neverAutoUpdate": {
     "description": "Never auto  update in podcast settings."
   },
+  "newPlain": "New",
+  "@newPlain": {
+    "description": "Word to describe a new episode (and use in filterType)"
+  },
   "newestFirst": "Newest first",
   "@newestFirst": {},
   "newGroup": "Create new group",
@@ -430,6 +459,10 @@
   "@popupMenuPlayDes": {},
   "privacyPolicy": "Privacy Policy",
   "@privacyPolicy": {},
+  "publishDate": "Publish Date",
+  "@publishDate": {
+    "description": "Publish Date sort order"
+  },
   "published": "Published at {date}",
   "@published": {
     "placeholders": {
@@ -450,6 +483,10 @@
   "@queue": {
     "description": "Queue"
   },
+  "random": "Random",
+  "@random": {
+    "description": "Random sort order"
+  },
   "recoverSubscribe": "Recover subscribe",
   "@recoverSubscribe": {
     "description": "User can recover subscribe podcast after remove it in subscribe history page."
@@ -460,6 +497,10 @@
   },
   "refreshArtwork": "Update artwork",
   "@refreshArtwork": {},
+  "refreshFinished": "Refresh Finished",
+  "@refreshFinished": {
+    "description": "Toast for refresh finish"
+  },
   "refreshStarted": "Refreshing",
   "@refreshStarted": {
     "description": "Toast for refresh"
@@ -697,6 +738,8 @@
   "@skipToNext": {},
   "sleepTimer": "Sleep timer",
   "@sleepTimer": {},
+  "sortBy": "Sort By",
+  "@sortBy": {},
   "status": "Status",
   "@status": {
     "description": "gpodder.net status"

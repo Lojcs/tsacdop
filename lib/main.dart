@@ -77,7 +77,7 @@ class MyApp extends StatelessWidget {
             final darkTheme = data.item4! && darkDynamic != null
                 ? data.item3.copyWith(
                     colorScheme: settings.realDark!
-                        ? darkDynamic!.copyWith(background: Colors.black)
+                        ? darkDynamic.copyWith(background: Colors.black)
                         : darkDynamic)
                 : data.item3;
             return MaterialApp(

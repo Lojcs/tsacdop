@@ -350,7 +350,7 @@ class _LayoutSettingState extends State<LayoutSetting> {
               width: 30,
               child: CustomPaint(
                 painter: LayoutPainter(
-                    scale,
+                    scale!,
                     layout == option
                         ? Colors.white
                         : context.textTheme.bodyText1!.color),

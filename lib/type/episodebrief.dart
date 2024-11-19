@@ -17,6 +17,7 @@ class EpisodeBrief extends Equatable {
   final int pubDate;
 
   final String? description;
+  final int? number;
   final int? enclosureDuration;
   final int? enclosureSize;
   final bool? isDownloaded;
@@ -38,6 +39,7 @@ class EpisodeBrief extends Equatable {
   EpisodeBrief(this.id, this.title, this.enclosureUrl, this.podcastId,
       this.podcastTitle, this.pubDate,
       {this.description,
+      this.number,
       this.enclosureDuration,
       this.enclosureSize,
       this.isDownloaded,
@@ -139,6 +141,8 @@ class EpisodeBrief extends Equatable {
     switch (episodeField) {
       case EpisodeField.description:
         return description;
+      case EpisodeField.number:
+        return number;
       case EpisodeField.enclosureDuration:
         return enclosureDuration;
       case EpisodeField.enclosureSize:
@@ -201,6 +205,7 @@ class EpisodeBrief extends Equatable {
           String? podcastTitle,
           int? pubDate,
           String? description,
+          int? number,
           int? enclosureDuration,
           int? enclosureSize,
           bool? isDownloaded,
@@ -226,6 +231,7 @@ class EpisodeBrief extends Equatable {
           podcastTitle ?? this.podcastTitle,
           pubDate ?? this.pubDate,
           description: description ?? this.description,
+          number: number ?? this.number,
           enclosureDuration: enclosureDuration ?? this.enclosureDuration,
           enclosureSize: enclosureSize ?? this.enclosureSize,
           isDownloaded: isDownloaded ?? this.isDownloaded,
@@ -258,6 +264,7 @@ class EpisodeBrief extends Equatable {
     Map<EpisodeField, List> _fieldsMap = {
       // I'm so sorry this is so ugly
       EpisodeField.description: [const Symbol("description"), description],
+      EpisodeField.number: [const Symbol("number"), number],
       EpisodeField.enclosureDuration: [
         const Symbol("enclosureDuration"),
         enclosureDuration

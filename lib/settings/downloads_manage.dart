@@ -46,7 +46,7 @@ class _DownloadsManageState extends State<DownloadsManage> {
         order = SortOrder.ASC;
         break;
       default: // case 2
-        sorter = Sorter.enclosureLength;
+        sorter = Sorter.enclosureSize;
         order = SortOrder.DESC;
         break;
     }
@@ -59,8 +59,8 @@ class _DownloadsManageState extends State<DownloadsManage> {
         ],
         sortBy: sorter,
         sortOrder: order,
-        filterPlayed: onlyListened ? -1 : 0,
-        filterDownloaded: -1,
+        filterPlayed: onlyListened ? true : null,
+        filterDownloaded: true,
         episodeState: Provider.of<EpisodeState>(context, listen: false));
     return episodes;
   }

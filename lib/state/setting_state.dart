@@ -15,6 +15,7 @@ import '../generated/l10n.dart';
 import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../type/settings_backup.dart';
+import '../type/theme_data.dart';
 import 'download_state.dart';
 
 final showNotesFontStyles = <TextStyle>[
@@ -84,7 +85,7 @@ class SettingState extends ChangeNotifier {
       final result = await Connectivity().checkConnectivity();
       if (autoDownloadNetwork == 1 || result == ConnectivityResult.wifi) {
         final episodes = await dbHelper.getEpisodes(
-            filterNew: -1, filterDownloaded: 1, filterAutoDownload: -1);
+            filterNew: true, filterDownloaded: false, filterAutoDownload: true);
         // For safety
         if (episodes.length < 100 && episodes.length > 0) {
           downloader.bindBackgroundIsolate();
@@ -226,6 +227,12 @@ class SettingState extends ChangeNotifier {
           splashColor: _accentSetColor!.withAlpha(70),
         ),
         useMaterial3: true,
+        iconTheme: MyIconThemeData(
+          color: Colors.grey[800],
+          size: 24,
+          radius: const Radius.circular(16),
+          padding: const EdgeInsets.all(6),
+        ),
       );
 
   ThemeData get darkTheme => ThemeData(
@@ -297,6 +304,12 @@ class SettingState extends ChangeNotifier {
         buttonTheme: ButtonThemeData(height: 32),
         dialogBackgroundColor: _realDark! ? Colors.grey : null,
         useMaterial3: true,
+        iconTheme: MyIconThemeData(
+          color: Colors.grey[200],
+          size: 24,
+          radius: const Radius.circular(16),
+          padding: const EdgeInsets.all(6),
+        ),
       );
 
   set setTheme(ThemeMode? mode) {

@@ -201,8 +201,6 @@ class MessageLookup extends MessageLookupByLibrary {
             "Congratulations! You  have linked gpodder.net account successfully. Tsacdop will automatically sync subscriptions on your device with your gpodder.net account."),
         "groupExisted":
             MessageLookupByLibrary.simpleMessage("Ce groupe existe déjà"),
-        "groupFilter":
-            MessageLookupByLibrary.simpleMessage("Filtrer par groupe"),
         "groupRemoveConfirm": MessageLookupByLibrary.simpleMessage(
             "Êtes-vous sûr de vouloir supprimer ce groupe ? Les podcasts seront déplacés vers le groupe Home."),
         "groups": m6,

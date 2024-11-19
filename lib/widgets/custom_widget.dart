@@ -12,23 +12,24 @@ const kHalfPi = math.pi / 2;
 
 //Layout change indicator
 class LayoutPainter extends CustomPainter {
-  double? scale;
+  double scale;
   Color? color;
-  LayoutPainter(this.scale, this.color);
+  double stroke;
+  LayoutPainter(this.scale, this.color, {this.stroke = 1});
   @override
   void paint(Canvas canvas, Size size) {
     var _paint = Paint()
       ..color = color!
-      ..strokeWidth = 1.0
+      ..strokeWidth = stroke
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
-    canvas.drawRect(Rect.fromLTRB(0, 0, 10 + 5 * scale!, 10), _paint);
-    if (scale! < 4) {
+    canvas.drawRect(Rect.fromLTRB(0, 0, 10 + 5 * scale, 10), _paint);
+    if (scale < 4) {
       canvas.drawRect(
-          Rect.fromLTRB(10 + 5 * scale!, 0, 20 + 10 * scale!, 10), _paint);
+          Rect.fromLTRB(10 + 5 * scale, 0, 20 + 10 * scale, 10), _paint);
       canvas.drawRect(
-          Rect.fromLTRB(20 + 5 * scale!, 0, 30, 10 - 10 * scale!), _paint);
+          Rect.fromLTRB(20 + 5 * scale, 0, 30, 10 - 10 * scale), _paint);
     }
   }
 
@@ -160,6 +161,99 @@ class StarSky extends CustomPainter {
   @override
   bool shouldRepaint(StarSky oldDelegate) {
     return false;
+  }
+}
+
+class BiStateIndicator extends StatefulWidget {
+  final bool state;
+  final Widget child;
+  BiStateIndicator({required this.state, required this.child, Key? key})
+      : super(key: key);
+  @override
+  _BiStateIndicatorState createState() => _BiStateIndicatorState();
+}
+
+class _BiStateIndicatorState extends State<BiStateIndicator>
+    with TickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation animation;
+  @override
+  void initState() {
+    super.initState();
+    _controller =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 300))
+          ..addListener(() {
+            if (mounted) {
+              setState(() {});
+            }
+          });
+    animation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutQuad,
+      reverseCurve: Curves.easeInQuad,
+    );
+    if (widget.state) _controller.forward();
+  }
+
+  @override
+  void didUpdateWidget(BiStateIndicator oldWidget) {
+    if (oldWidget.state != widget.state) {
+      if (widget.state) {
+        _controller.forward();
+      } else {
+        _controller.reverse();
+      }
+    }
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+        child: widget.child,
+        foregroundPainter: BiStateIndicatorPainter(
+            fraction: animation.value,
+            color: context.textColor,
+            backgroundColor: context.accentColor));
+  }
+}
+
+class BiStateIndicatorPainter extends CustomPainter {
+  Color? color;
+  Color? backgroundColor;
+  double? fraction;
+  double stroke;
+  BiStateIndicatorPainter({
+    this.color,
+    this.stroke = 1.0,
+    this.backgroundColor,
+    this.fraction,
+  });
+  @override
+  void paint(Canvas canvas, Size size) {
+    var _linePaint = Paint()
+      ..color = backgroundColor!
+      ..strokeWidth = stroke * 2
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+    if (fraction! > 0) {
+      canvas.drawLine(
+          Offset(size.width, size.height) / 5,
+          Offset(size.width, size.height) / 5 +
+              Offset(size.width, size.height) * 3 / 5 * fraction!,
+          _linePaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(BiStateIndicatorPainter oldDelegate) {
+    return oldDelegate.fraction != fraction;
   }
 }
 
@@ -413,13 +507,14 @@ class AddToPlaylistPainter extends CustomPainter {
 class RemoveNewFlagPainter extends CustomPainter {
   final Color? color;
   final Color textColor;
-  RemoveNewFlagPainter(this.color, this.textColor);
+  final double stroke;
+  RemoveNewFlagPainter(this.color, this.textColor, {this.stroke = 1});
 
   @override
   void paint(Canvas canvas, Size size) {
     var _paint = Paint()
       ..color = color!
-      ..strokeWidth = 1
+      ..strokeWidth = stroke
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
@@ -439,7 +534,10 @@ class RemoveNewFlagPainter extends CustomPainter {
         text: TextSpan(
           text: 'N',
           style: TextStyle(
-              fontStyle: FontStyle.italic, color: textColor, fontSize: 10),
+              fontStyle: FontStyle.italic,
+              color: textColor,
+              fontSize: 10,
+              fontWeight: stroke >= 2 ? FontWeight.bold : FontWeight.normal),
         ))
       ..layout();
     textPainter.paint(canvas, Offset(size.width * 4 / 7, size.height * 3 / 5));
@@ -1021,8 +1119,8 @@ class DownloadPainter extends CustomPainter {
     var height = size.height;
     var center = Offset(size.width / 2, size.height / 2);
     if (pauseProgress == 0 && progress < 1) {
-      canvas.drawLine(
-          Offset(width / 2, 4), Offset(width / 2, height * 4 / 5), _paint);
+      canvas.drawLine(Offset(width / 2, height / 8),
+          Offset(width / 2, height * 4 / 5), _paint);
       canvas.drawLine(Offset(width / 4, height / 2),
           Offset(width / 2, height * 4 / 5), _paint);
       canvas.drawLine(Offset(width * 3 / 4, height / 2),
@@ -1030,8 +1128,8 @@ class DownloadPainter extends CustomPainter {
     }
 
     if (fraction == 0) {
-      canvas.drawLine(
-          Offset(width / 5, height), Offset(width * 4 / 5, height), _paint);
+      canvas.drawLine(Offset(width / 5, height * 9 / 10),
+          Offset(width * 4 / 5, height * 9 / 10), _paint);
     } else if (progress < 1) {
       canvas.drawArc(Rect.fromCircle(center: center, radius: width / 2),
           math.pi / 2, math.pi * fraction!, false, _circlePaint);

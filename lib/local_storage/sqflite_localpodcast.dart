@@ -4,11 +4,9 @@ import 'dart:developer' as developer;
 
 import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart';
-import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:tsacdop/state/episode_state.dart';
 import 'package:tuple/tuple.dart';
@@ -19,7 +17,6 @@ import '../type/episodebrief.dart';
 import '../type/play_histroy.dart';
 import '../type/podcastlocal.dart';
 import '../type/sub_history.dart';
-import '../state/setting_state.dart';
 
 enum Filter { downloaded, liked, search, all }
 
@@ -34,16 +31,25 @@ String sortOrderToString(SortOrder sortOrder) {
   }
 }
 
-enum Sorter { pubDate, downloadDate, enclosureLength, likedDate, random }
+enum Sorter {
+  pubDate,
+  enclosureSize,
+  enclosureDuration,
+  downloadDate,
+  likedDate,
+  random
+}
 
 String sorterToString(Sorter sorter) {
   switch (sorter) {
     case Sorter.pubDate:
       return "E.milliseconds";
+    case Sorter.enclosureSize:
+      return "E.enclosure_length";
+    case Sorter.enclosureDuration:
+      return "E.duration";
     case Sorter.downloadDate:
       return "E.download_date";
-    case Sorter.enclosureLength:
-      return "E.enclosure_length";
     case Sorter.likedDate:
       return "E.liked_date";
     case Sorter.random:
@@ -53,6 +59,7 @@ String sorterToString(Sorter sorter) {
 
 enum EpisodeField {
   description,
+  number,
   enclosureDuration,
   enclosureSize,
   isDownloaded,
@@ -177,7 +184,7 @@ class DBHelper {
         liked INTEGER DEFAULT 0, liked_date INTEGER DEFAULT 0, downloaded TEXT DEFAULT 'ND', 
         download_date INTEGER DEFAULT 0, media_id TEXT, is_new INTEGER DEFAULT 0, 
         chapter_link TEXT DEFAULT '', hosts TEXT DEFAULT '', episode_image TEXT DEFAULT '',
-        versions TEXT DEFAULT '')""");
+        versions TEXT DEFAULT '', number INTEGER DEFAULT 0)""");
     await db.execute(
         """CREATE TABLE PlayHistory(id INTEGER PRIMARY KEY, title TEXT, enclosure_url TEXT,
         seconds REAL, seek_value REAL, add_date INTEGER, listen_time INTEGER DEFAULT 0)""");
@@ -296,12 +303,18 @@ class DBHelper {
     await db
         .execute("ALTER TABLE Episodes ADD version_info TEXT DEFAULT 'NONE'");
     await db.execute("ALTER TABLE Episodes ADD versions TEXT DEFAULT ''");
+    await db.execute("ALTER TABLE Episodes ADD number INTEGER DEFAULT 0");
     await db.execute(
         "ALTER TABLE PodcastLocal ADD version_policy TEXT DEFAULT 'DEF'");
     List<Map> podcasts = await db.rawQuery("SELECT id FROM PodcastLocal");
     List<Future> futures = [];
     for (var podcast in podcasts) {
       futures.add(_rescanPodcastEpisodesVersions(db, podcast['id']));
+    }
+    await Future.wait(futures);
+    futures.clear();
+    for (var podcast in podcasts) {
+      futures.add(_updateEpisodeNumbers(db, podcast['id']));
     }
     await Future.wait(futures);
   }
@@ -709,18 +722,18 @@ class DBHelper {
     return 0;
   }
 
-  Future<int?> markNotListened(String url) async {
+  Future<int?> markNotListened(List<String> urls) async {
     var dbClient = await database;
     int? count;
     await dbClient.transaction((txn) async {
       count = await txn.rawUpdate(
-          "UPDATE OR IGNORE PlayHistory SET listen_time = 0 WHERE enclosure_url = ?",
-          [url]);
+          "UPDATE OR IGNORE PlayHistory SET listen_time = 0 WHERE enclosure_url IN (${(", ?" * urls.length).substring(2)})",
+          [...urls]);
     });
     await dbClient.rawDelete(
-        'DELETE FROM PlayHistory WHERE enclosure_url=? '
+        'DELETE FROM PlayHistory WHERE enclosure_url in (${(", ?" * urls.length).substring(2)}) '
         'AND listen_time = 0 AND seconds = 0',
-        [url]);
+        [...urls]);
     return count;
   }
 
@@ -871,6 +884,24 @@ class DBHelper {
     } else {
       return summary;
     }
+  }
+
+  /// Assigns each episode in a podcast numbers based on its publish date
+  Future<void> _updateEpisodeNumbers(
+      DatabaseExecutor dbClient, String id) async {
+    List<Map> episodes = await dbClient.rawQuery(
+        """SELECT E.id, E.number FROM Episodes E INNER JOIN PodcastLocal P ON
+        E.feed_id = P.id WHERE E.feed_id = ? ORDER BY E.milliseconds ASC""",
+        [id]);
+    Batch batchOp = dbClient.batch();
+    for (int i = 0; i < episodes.length; i++) {
+      Map episode = episodes[i];
+      if (i + 1 != episode['number']) {
+        batchOp.rawUpdate("UPDATE Episodes SET number = ? WHERE id = ?",
+            [i + 1, episode['id']]);
+      }
+    }
+    await batchOp.commit(noResult: true);
   }
 
   /// Checks every episode from the given podcast, gives it a unique milliseconds value among its versions
@@ -1287,6 +1318,7 @@ class DBHelper {
               ]);
           await _updateNewEpisodeVersions(
               txn, id, title, episodeId, milliseconds);
+          await _updateEpisodeNumbers(txn, id);
           return episodeId;
         });
       }
@@ -1368,6 +1400,7 @@ class DBHelper {
               if (episodeId != 0) {
                 await _updateNewEpisodeVersions(
                     txn, podcastLocal.id, title, episodeId, milliseconds);
+                await _updateEpisodeNumbers(txn, podcastLocal.id);
               }
             });
           }
@@ -1408,8 +1441,6 @@ class DBHelper {
             episode.enclosureUrl,
             episode.episodeImage
           ]);
-      await _updateNewEpisodeVersions(
-          txn, localFolderId, episode.title, episodeId, episode.pubDate!);
     });
   }
 
@@ -1441,6 +1472,7 @@ class DBHelper {
   }
 
   /// Queries the database with the provided options and returns found episodes.
+  /// Filters are tri-state with false being inverse
   Future<List<EpisodeBrief>> getEpisodes(
       // TODO: Optimize the query via indexes and intersects
       {List<String>? feedIds,
@@ -1460,11 +1492,11 @@ class DBHelper {
       List<Tuple2<int, int>>? rangeDelimiters,
       int limit = -1,
       int filterVersions = 0,
-      int filterNew = 0,
-      int filterLiked = 0,
-      int filterPlayed = 0,
-      int filterDownloaded = 0,
-      int filterAutoDownload = 0,
+      bool? filterNew,
+      bool? filterLiked,
+      bool? filterPlayed,
+      bool? filterDownloaded,
+      bool? filterAutoDownload,
       List<String>? customFilters,
       List<String>? customArguements,
       EpisodeState? episodeState}) async {
@@ -1482,6 +1514,9 @@ class DBHelper {
         switch (field) {
           case EpisodeField.description:
             query.add(", E.description");
+            break;
+          case EpisodeField.number:
+            query.add(", E.number");
             break;
           case EpisodeField.enclosureDuration:
             query.add(", E.duration");
@@ -1549,7 +1584,7 @@ class DBHelper {
       }
     }
     query.add(" FROM Episodes E INNER JOIN PodcastLocal P ON E.feed_id = P.id");
-    if (filterPlayed != 0 || doGroup) {
+    if (filterPlayed != null || doGroup) {
       query
           .add(" LEFT JOIN PlayHistory H ON E.enclosure_url = H.enclosure_url");
     }
@@ -1617,24 +1652,24 @@ class DBHelper {
     } else if (filterVersions == -2) {
       filters.add(" (E.version_info = 'HAS' OR E.version_info = 'FHAS')");
     }
-    if (filterNew == 1) {
+    if (filterNew == false) {
       filters.add(" E.is_new = 0");
-    } else if (filterNew == -1) {
+    } else if (filterNew == true) {
       filters.add(" E.is_new = 1");
     }
-    if (filterLiked == 1) {
+    if (filterLiked == false) {
       filters.add(" E.liked = 0");
-    } else if (filterLiked == -1) {
+    } else if (filterLiked == true) {
       filters.add(" E.liked = 1");
     }
-    if (filterDownloaded == 1) {
+    if (filterDownloaded == false) {
       filters.add(" E.downloaded = 'ND'");
-    } else if (filterDownloaded == -1) {
+    } else if (filterDownloaded == true) {
       filters.add(" E.downloaded != 'ND'");
     }
-    if (filterAutoDownload == 1) {
+    if (filterAutoDownload == false) {
       filters.add(" P.auto_download = 0");
-    } else if (filterAutoDownload == -1) {
+    } else if (filterAutoDownload == true) {
       filters.add(" P.auto_download = 1");
     }
     if (rangeParameters != null &&
@@ -1666,12 +1701,12 @@ class DBHelper {
       query.add(" WHERE");
     }
     query.add(filters.join(" AND"));
-    if (filterPlayed != 0 || doGroup) {
+    if (filterPlayed != null || doGroup) {
       query.add(" GROUP BY E.enclosure_url");
     }
-    if (filterPlayed == 1) {
+    if (filterPlayed == false) {
       query.add(" HAVING SUM(H.listen_time) IS Null OR SUM(H.listen_time) = 0");
-    } else if (filterPlayed == -1) {
+    } else if (filterPlayed == true) {
       query.add(" HAVING SUM(H.listen_time) > 0");
     }
     if (sortBy != null) {
@@ -1699,6 +1734,9 @@ class DBHelper {
             switch (field) {
               case EpisodeField.description:
                 fields[const Symbol("description")] = i['description'];
+                break;
+              case EpisodeField.number:
+                fields[const Symbol("number")] = i['number'];
                 break;
               case EpisodeField.enclosureDuration:
                 fields[const Symbol("enclosureDuration")] = i['duration'];
@@ -1810,42 +1848,29 @@ class DBHelper {
     }
   }
 
-  Future<void> removeEpisodeNewMark(String? url) async {
+  Future<void> removeEpisodesNewMark(List<int> ids) async {
     var dbClient = await database;
     await dbClient.transaction((txn) async {
       await txn.rawUpdate(
-          "UPDATE Episodes SET is_new = 0 WHERE enclosure_url = ?", [url]);
+          "UPDATE Episodes SET is_new = 0 WHERE id IN (${(", ?" * ids.length).substring(2)})",
+          [...ids]);
     });
-    developer.log('remove episode mark $url');
+    developer.log('remove episode mark $ids');
   }
 
-  Future setLiked(String url) async {
+  Future setLiked(List<int> ids) async {
     var dbClient = await database;
     var milliseconds = DateTime.now().millisecondsSinceEpoch;
-    await dbClient.transaction((txn) async {
-      await txn.rawUpdate(
-          "UPDATE Episodes SET liked = 1, liked_date = ? WHERE enclosure_url= ?",
-          [milliseconds, url]);
-    });
+    await dbClient.rawUpdate(
+        "UPDATE Episodes SET liked = 1, liked_date = ? WHERE id IN (${(", ?" * ids.length).substring(2)})",
+        [milliseconds, ...ids]);
   }
 
-  Future setUnliked(String url) async {
+  Future setUnliked(List<int> ids) async {
     var dbClient = await database;
-    await dbClient.transaction((txn) async {
-      await txn.rawUpdate(
-          "UPDATE Episodes SET liked = 0 WHERE enclosure_url = ?", [url]);
-    });
-  }
-
-  Future<bool> isLiked(String url) async {
-    var dbClient = await database;
-    var list = <Map>[];
-    list = await dbClient
-        .rawQuery("SELECT liked FROM Episodes WHERE enclosure_url = ?", [url]);
-    if (list.isNotEmpty) {
-      return list.first['liked'] == 0 ? false : true;
-    }
-    return false;
+    await dbClient.rawUpdate(
+        "UPDATE Episodes SET liked = 0 WHERE id IN (${(", ?" * ids.length).substring(2)})",
+        [...ids]);
   }
 
   Future<bool> isDownloaded(String url) async {
@@ -1871,34 +1896,28 @@ class DBHelper {
     }
     if (episodeState != null) {
       if (episode.enclosureUrl != mediaId) {
-        await episodeState.setDownloaded(episode, taskId!);
+        await episodeState.setDownloaded([episode], taskId!);
       } else {
-        await episodeState.unsetDownloaded(episode);
+        await episodeState.unsetDownloaded([episode]);
       }
     }
     return count;
   }
 
-  Future<int?> setDownloaded(String url, String? id) async {
+  Future<int> setDownloaded(int episodeId, String taskId) async {
     var dbClient = await database;
     var milliseconds = DateTime.now().millisecondsSinceEpoch;
-    int? count;
-    await dbClient.transaction((txn) async {
-      count = await txn.rawUpdate(
-          "UPDATE Episodes SET downloaded = ?, download_date = ? WHERE enclosure_url = ?",
-          [id, milliseconds, url]);
-    });
+    int count = await dbClient.rawUpdate(
+        "UPDATE Episodes SET downloaded = ?, download_date = ? WHERE id = ?",
+        [taskId, milliseconds, episodeId]);
     return count;
   }
 
-  Future<int?> unsetDownloaded(String url) async {
+  Future<int> unsetDownloaded(List<int> ids) async {
     var dbClient = await database;
-    int? count;
-    await dbClient.transaction((txn) async {
-      count = await txn.rawUpdate(
-          "UPDATE Episodes SET downloaded = 'ND' WHERE enclosure_url = ?",
-          [url]);
-    });
+    int count = await dbClient.rawUpdate(
+        "UPDATE Episodes SET downloaded = 'ND' WHERE id IN (${(", ?" * ids.length).substring(2)})",
+        [...ids]);
     return count;
   }
 
