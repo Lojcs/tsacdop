@@ -70,7 +70,8 @@ dependencies:
   device_info_plus: ^11.1.1
   share_plus: ^10.1.2
   flutter_downloader: ^1.11.8
-
+  intl: any
+  xml: any
 dependency_overrides:
   linkify:
     git:

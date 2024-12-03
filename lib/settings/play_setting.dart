@@ -93,7 +93,7 @@ class _PlaySettingState extends State<PlaySetting> {
               Selector<SettingState, bool?>(
                 selector: (_, settings) => settings.autoPlay,
                 builder: (_, data, __) => ListTile(
-                  onTap: () => settings.setAutoPlay = !data!,
+                  onTap: () => settings.setAutoPlay = !data,
                   contentPadding:
                       EdgeInsets.only(left: 70.0, right: 20, bottom: 10),
                   title: Text(s.settingsMenuAutoPlay),
@@ -244,7 +244,7 @@ class _PlaySettingState extends State<PlaySetting> {
                   Selector<SettingState, bool?>(
                     selector: (_, settings) => settings.autoSleepTimer,
                     builder: (_, data, __) => ListTile(
-                      onTap: () => settings.setAutoSleepTimer = !data!,
+                      onTap: () => settings.setAutoSleepTimer = !data,
                       contentPadding: const EdgeInsets.only(
                           left: 70.0, right: 20.0, bottom: 10.0, top: 10.0),
                       title: Text(s.settingsSTAuto),

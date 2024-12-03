@@ -1351,7 +1351,6 @@ class _MyDropdownButtonState<T> extends State<MyDropdownButton<T>>
       items.add(DefaultTextStyle(
         style: _textStyle!.copyWith(color: Theme.of(context).hintColor),
         child: IgnorePointer(
-          ignoringSemantics: false,
           child: displayedHint,
         ),
       ));
@@ -1374,11 +1373,7 @@ class _MyDropdownButtonState<T> extends State<MyDropdownButton<T>>
         children: widget.isDense
             ? items
             : items.map((item) {
-                return widget.itemHeight != null
-                    ? SizedBox(height: widget.itemHeight, child: item)
-                    : Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[item]);
+                return SizedBox(height: widget.itemHeight, child: item);
               }).toList(),
       );
     }
@@ -1520,7 +1515,7 @@ class DropdownButtonFormField<T> extends FormField<T?> {
                   items: items,
                   selectedItemBuilder: selectedItemBuilder,
                   hint: hint,
-                  onChanged: onChanged == null ? null : state.didChange,
+                  onChanged: state.didChange,
                   onTap: onTap,
                   disabledHint: disabledHint,
                   elevation: elevation,

@@ -10,7 +10,6 @@ import '../local_storage/sqflite_localpodcast.dart';
 import '../podcasts/podcast_detail.dart';
 import '../podcasts/podcast_manage.dart';
 import '../podcasts/podcastlist.dart';
-import '../state/audio_state.dart';
 import '../state/episode_state.dart';
 import '../state/podcast_group.dart';
 import '../state/refresh_podcast.dart';
@@ -560,14 +559,10 @@ class _PodcastPreviewState extends State<PodcastPreview> {
 class ShowEpisode extends StatelessWidget {
   final List<EpisodeBrief>? episodes;
   final PodcastLocal? podcastLocal;
-  final DBHelper _dbHelper = DBHelper();
   ShowEpisode({Key? key, this.episodes, this.podcastLocal}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final width = context.width;
-    final s = context.s;
-    final audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
     return CustomScrollView(
       physics: NeverScrollableScrollPhysics(),
       primary: false,

@@ -66,7 +66,6 @@ Widget _downloadButton(EpisodeTask task, BuildContext context) {
           onPressed: () => downloader.delTask(task.episode!),
         ),
       ]);
-      break;
     default:
       return SizedBox(
         width: 10,

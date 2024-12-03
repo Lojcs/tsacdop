@@ -1235,7 +1235,6 @@ class DBHelper {
   }
 
   Future<int> savePodcastRss(RssFeed feed, String id) async {
-    feed.items!.removeWhere((item) => item == null);
     var result = feed.items!.length;
     var dbClient = await database;
     String? description, url;
@@ -1308,7 +1307,6 @@ class DBHelper {
       if (response.statusCode == 200) {
         var feed = RssFeed.parse(response.data);
         String? url, description;
-        feed.items!.removeWhere((item) => item == null);
 
         var dbClient = await database;
         var count = Sqflite.firstIntValue(await dbClient.rawQuery(

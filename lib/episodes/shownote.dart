@@ -25,14 +25,14 @@ class ShowNote extends StatelessWidget {
             return Selector<AudioPlayerNotifier, EpisodeBrief?>(
               selector: (_, audio) => audio.episode,
               builder: (_, playEpisode, __) {
-                if (playEpisode == episode && !description!.contains('#t=')) {
+                if (playEpisode == episode && !description.contains('#t=')) {
                   final linkList = linkify(description,
                       options: LinkifyOptions(humanize: false),
                       linkifiers: [TimeStampLinkifier()]);
                   for (final element in linkList) {
                     if (element is TimeStampElement) {
                       final time = element.timeStamp;
-                      description = description!.replaceFirst(time!,
+                      description = description.replaceFirst(time,
                           '<a rel="nofollow" href = "#t=$time">$time</a>');
                     }
                   }
@@ -119,7 +119,7 @@ class ShowNote extends StatelessWidget {
           linkifiers: [UrlLinkifier(), EmailLinkifier()]);
       for (var element in linkList) {
         if (element is UrlElement) {
-          description = description.replaceAll(element.url!,
+          description = description.replaceAll(element.url,
               '<a rel="nofollow" href = ${element.url}>${element.text}</a>');
         }
         if (element is EmailElement) {

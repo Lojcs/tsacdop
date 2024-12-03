@@ -32,8 +32,7 @@ class _MenuItem extends SingleChildRenderObjectWidget {
 }
 
 class _RenderMenuItem extends RenderShiftedBox {
-  _RenderMenuItem(this.onLayout, [RenderBox? child])
-      : super(child);
+  _RenderMenuItem(this.onLayout, [RenderBox? child]) : super(child);
 
   ValueChanged<Size> onLayout;
 
@@ -416,8 +415,7 @@ class MyPopupMenuButtonState<T> extends State<MyPopupMenuButton<T>> {
   void showButtonMenu() {
     final popupMenuTheme = PopupMenuTheme.of(context);
     final button = context.findRenderObject() as RenderBox;
-    final overlay =
-        Overlay.of(context).context.findRenderObject() as RenderBox;
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
     final position = RelativeRect.fromRect(
       Rect.fromPoints(
         button.localToGlobal(widget.offset, ancestor: overlay),
@@ -460,7 +458,6 @@ class MyPopupMenuButtonState<T> extends State<MyPopupMenuButton<T>> {
       case TargetPlatform.windows:
         return const Icon(Icons.more_horiz);
     }
-    return null;
   }
 
   @override

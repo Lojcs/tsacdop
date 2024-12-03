@@ -173,7 +173,7 @@ class _LayoutSettingState extends State<LayoutSetting> {
                       contentPadding: EdgeInsets.fromLTRB(70, 10, 10, 10),
                       onTap: () => context
                           .read<SettingState>()
-                          .openPlaylistDefault = !data!,
+                          .openPlaylistDefault = !data,
                       title: Text('Open playlist page by default'),
                       subtitle: Text(
                           'Open playlist page instead of homepage by default'),
@@ -195,7 +195,7 @@ class _LayoutSettingState extends State<LayoutSetting> {
                       contentPadding: EdgeInsets.fromLTRB(70, 10, 10, 10),
                       onTap: () => context
                           .read<SettingState>()
-                          .openAllPodcastDefault = !data!,
+                          .openAllPodcastDefault = !data,
                       title: Text('Open all podcasts page by default'),
                       subtitle: Text(
                           'Open all podcasts page instead of group page by default'),

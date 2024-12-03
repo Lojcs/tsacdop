@@ -83,7 +83,7 @@ class _StorageSettingState extends State<StorageSetting>
                         selector: (_, settings) => settings.downloadUsingData,
                         builder: (_, data, __) {
                           return ListTile(
-                            onTap: () => settings.downloadUsingData = !data!,
+                            onTap: () => settings.downloadUsingData = !data,
                             contentPadding: EdgeInsets.only(
                                 left: 70.0, right: 25, bottom: 10, top: 10),
                             title: Text(s.settingsNetworkCellular),

@@ -137,7 +137,7 @@ class ThemeSetting extends StatelessWidget {
             Selector<SettingState, bool?>(
               selector: (_, setting) => setting.realDark,
               builder: (_, data, __) => ListTile(
-                onTap: () => settings.setRealDark = !data!,
+                onTap: () => settings.setRealDark = !data,
                 contentPadding: const EdgeInsets.only(
                     left: 70.0, right: 20, bottom: 10, top: 10),
                 //  leading: Icon(Icons.colorize),
@@ -159,7 +159,7 @@ class ThemeSetting extends StatelessWidget {
             Selector<SettingState, bool?>(
               selector: (_, setting) => setting.useWallpaperTheme,
               builder: (_, data, __) => ListTile(
-                onTap: () => settings.setWallpaperTheme = !data!,
+                onTap: () => settings.setWallpaperTheme = !data,
                 contentPadding: const EdgeInsets.only(
                     left: 70.0, right: 20, bottom: 10, top: 10),
                 //  leading: Icon(Icons.colorize),

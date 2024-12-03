@@ -44,7 +44,6 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
   late bool _inPlaylist;
   late bool _downloaded;
   late bool _showPlaylists;
-  final _dbHelper = DBHelper();
 
   @override
   void initState() {
@@ -280,7 +279,8 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                           padding: const EdgeInsets.symmetric(horizontal: 5),
                           child: OutlinedButton(
                               style: OutlinedButton.styleFrom(
-                                  foregroundColor: context.textColor, side: BorderSide(
+                                  foregroundColor: context.textColor,
+                                  side: BorderSide(
                                       color:
                                           widget.color ?? context.accentColor),
                                   shape: RoundedRectangleBorder(
@@ -299,7 +299,8 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                           padding: const EdgeInsets.symmetric(horizontal: 5),
                           child: OutlinedButton(
                               style: OutlinedButton.styleFrom(
-                                  foregroundColor: context.textColor, side: BorderSide(
+                                  foregroundColor: context.textColor,
+                                  side: BorderSide(
                                       color:
                                           widget.color ?? context.accentColor),
                                   shape: RoundedRectangleBorder(
@@ -319,7 +320,8 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                             style: OutlinedButton.styleFrom(
                                 foregroundColor: widget.selectAll!
                                     ? Colors.white
-                                    : context.textColor, side: BorderSide(
+                                    : context.textColor,
+                                side: BorderSide(
                                     color: widget.color ?? context.accentColor),
                                 backgroundColor: widget.selectAll!
                                     ? widget.color ?? context.accentColor

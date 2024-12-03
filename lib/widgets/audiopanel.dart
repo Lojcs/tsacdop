@@ -30,7 +30,7 @@ class AudioPanel extends StatefulWidget {
 }
 
 class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
-  double? initSize;
+  double? size;
   late double _startdy;
   double _move = 0;
   late AnimationController _controller;
@@ -40,7 +40,7 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
 
   @override
   void initState() {
-    initSize = widget.minHeight;
+    size = widget.minHeight;
     _controller =
         AnimationController(vsync: this, duration: Duration(milliseconds: 175))
           ..addListener(() {
@@ -56,10 +56,9 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
       Provider.of<AudioPlayerNotifier>(context, listen: false)
           .playerInitialStart = false;
       _animation = Tween<double>(begin: 0, end: 0).animate(_controller);
-      _animatePanel(end: initSize, slow: true);
+      _animatePanel(end: size, slow: true);
     } else {
-      _animation =
-          Tween<double>(begin: initSize, end: initSize).animate(_controller);
+      _animation = Tween<double>(begin: size, end: size).animate(_controller);
     }
     _slideDirection = SlideDirection.up;
     super.initState();
@@ -151,15 +150,15 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
     ]);
   }
 
-  backToMini() {
+  void backToMini() {
     _animatePanel(end: widget.minHeight, slow: true);
   }
 
-  scrollToTop() {
+  void scrollToTop() {
     _animatePanel(end: widget.maxHeight, slow: true);
   }
 
-  _animatePanel(
+  void _animatePanel(
       {required double? end, bool slow = false, bool bounce = false}) {
     AnimationController controller = slow ? _slowController : _controller;
     controller.reset();
@@ -167,42 +166,38 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
         CurvedAnimation(
             parent: controller,
             curve: bounce ? Curves.easeOutBack : Curves.easeOutQuad));
-    initSize = end;
+    size = end;
     controller.forward();
   }
 
-  _start(DragStartDetails event) {
+  void _start(DragStartDetails event) {
     setState(() {
       _startdy = event.localPosition.dy;
-      _animation =
-          Tween<double>(begin: initSize, end: initSize).animate(_controller);
+      _animation = Tween<double>(begin: size, end: size).animate(_controller);
     });
   }
 
-  _update(DragUpdateDetails event) {
+  void _update(DragUpdateDetails event) {
     setState(() {
       _move = _startdy - event.localPosition.dy;
-      _animation =
-          Tween<double>(begin: initSize! + _move, end: initSize! + _move)
-              .animate(_controller);
+      _animation = Tween<double>(begin: size! + _move, end: size! + _move)
+          .animate(_controller);
       _slideDirection = _move > 0 ? SlideDirection.up : SlideDirection.down;
     });
   }
 
-  _end(DragEndDetails event) async {
+  void _end(DragEndDetails event) async {
     // Minimize / maximize on fast swipe
     if ((event.primaryVelocity ?? 0) > 3000) {
       _animatePanel(
-          end: widget.minHeight,
-          slow: initSize! > widget.midHeight ? true : false);
+          end: widget.minHeight, slow: size! > widget.midHeight ? true : false);
     } else if ((event.primaryVelocity ?? 0) < -3000) {
       _animatePanel(
-          end: widget.maxHeight,
-          slow: initSize! < widget.midHeight ? true : false);
+          end: widget.maxHeight, slow: size! < widget.midHeight ? true : false);
     }
     // Return to position on small swipe
     else if (_move.abs() < 50) {
-      _animatePanel(end: initSize, bounce: true);
+      _animatePanel(end: size, bounce: true);
     }
     // Move one step based on ongoing swipe, or total movement. Ignore small velocities to resist shaky hands
     else if ((event.primaryVelocity ?? 0) < -300 ||

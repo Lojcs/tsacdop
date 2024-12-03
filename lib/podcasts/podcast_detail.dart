@@ -580,19 +580,18 @@ class _PodcastDetailState extends State<PodcastDetail> {
                           systemNavigationBarColor: context.accentBackground)
                       : context.overlay)
                   .copyWith(statusBarIconBrightness: Brightness.light),
-              child: WillPopScope(
-                onWillPop: () {
+              child: PopScope(
+                canPop: !(_playerKey.currentState != null &&
+                        _playerKey.currentState!.size! > 100) &&
+                    !_multiSelect,
+                onPopInvokedWithResult: (_, __) {
                   if (_playerKey.currentState != null &&
-                      _playerKey.currentState!.initSize! > 100) {
+                      _playerKey.currentState!.size! > 100) {
                     _playerKey.currentState!.backToMini();
-                    return Future.value(false);
                   } else if (_multiSelect) {
                     setState(() {
                       _multiSelect = false;
                     });
-                    return Future.value(false);
-                  } else {
-                    return Future.value(true);
                   }
                 },
                 child: Scaffold(
@@ -696,7 +695,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
                                                       124))
                                               .clamp(0, 1);
                                           final titleLineTest = TextPainter(
-                                              textScaleFactor: 1,
+                                              textScaler: TextScaler.noScaling,
                                               text: TextSpan(
                                                   text: widget
                                                       .podcastLocal!.title!,
@@ -1258,7 +1257,7 @@ class _AboutPodcastState extends State<AboutPodcast> {
       return Linkify(
         text: _description,
         onOpen: (link) {
-          link.url!.launchUrl;
+          link.url.launchUrl;
         },
         linkStyle: TextStyle(
             color: widget.accentColor ?? context.accentColor,

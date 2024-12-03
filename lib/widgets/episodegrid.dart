@@ -1,4 +1,3 @@
-
 import 'package:auto_animated/auto_animated.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -8,7 +7,6 @@ import '../episodes/episode_detail.dart';
 import '../home/audioplayer.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/audio_state.dart';
-import '../state/setting_state.dart';
 import '../type/episodebrief.dart';
 import '../type/podcastlocal.dart';
 import '../util/extension_helper.dart';
@@ -50,24 +48,14 @@ class EpisodeGrid extends StatelessWidget {
       this.selectedList = const <EpisodeBrief>[]})
       : super(key: key);
 
-  final _dbHelper = DBHelper();
-
-  Future<PodcastLocal?> _getPodcast(String url) async {
-    var podcasts = await _dbHelper.getPodcastWithUrl(url);
-    return podcasts;
-  }
-
   @override
   Widget build(BuildContext context) {
-    var audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
-    final settings = Provider.of<SettingState>(context, listen: false);
     final options = LiveOptions(
       delay: Duration.zero,
       showItemInterval: Duration(milliseconds: 50),
       showItemDuration: Duration(milliseconds: 50),
     );
     final scrollController = ScrollController();
-    final s = context.s;
     return SliverPadding(
       padding:
           const EdgeInsets.only(top: 5.0, bottom: 5.0, left: 10.0, right: 10.0),
@@ -90,7 +78,6 @@ class EpisodeGrid extends StatelessWidget {
           crossAxisSpacing: 10.0,
         ),
         itemBuilder: (context, index, animation) {
-          final c = episodes![index].backgroudColor(context);
           scrollController.addListener(() {});
 
           return FadeTransition(

@@ -158,16 +158,11 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                   ? context.overlay.copyWith(
                       systemNavigationBarColor: context.accentBackground)
                   : context.overlay,
-              child: WillPopScope(
-                onWillPop: () async {
-                  if (_playerKey.currentState != null &&
-                      _playerKey.currentState!.initSize! > 100) {
-                    _playerKey.currentState!.backToMini();
-                    return false;
-                  } else {
-                    return true;
-                  }
-                },
+              child: PopScope(
+                canPop: _playerKey.currentState != null &&
+                    _playerKey.currentState!.size! > 100,
+                onPopInvokedWithResult: (_, __) =>
+                    _playerKey.currentState!.backToMini(),
                 child: Scaffold(
                   backgroundColor: context.background,
                   body: SafeArea(

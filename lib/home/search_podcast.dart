@@ -80,11 +80,9 @@ class MyHomePageDelegate extends SearchDelegate<int?> {
 
   @override
   Widget buildLeading(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        close(context, null);
-        return false;
-      },
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (_, __) => close(context, null),
       child: IconButton(
         tooltip: context.s.back,
         splashRadius: 20,

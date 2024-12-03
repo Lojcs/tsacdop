@@ -104,20 +104,18 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                 systemNavigationBarColor:
                     data ? context.accentBackground : context.background,
                 statusBarColor: context.background),
-            child: WillPopScope(
-              onWillPop: () async {
+            child: PopScope(
+              canPop: settings.openPlaylistDefault! &&
+                  !(_playerKey.currentState != null &&
+                      _playerKey.currentState!.size! > 100),
+              onPopInvokedWithResult: (_, __) {
                 if (_playerKey.currentState != null &&
-                    _playerKey.currentState!.initSize! > 100) {
+                    _playerKey.currentState!.size! > 100) {
                   _playerKey.currentState!.backToMini();
-                  return false;
-                } else if (settings.openPlaylistDefault!) {
-                  return true;
-                } else if (Platform.isAndroid) {
+                } else if (!settings.openPlaylistDefault! &&
+                    Platform.isAndroid) {
                   _androidAppRetain
                       .invokeMethod('sendToBackground'); // This doesn't work
-                  return false;
-                } else {
-                  return false;
                 }
               },
               child: Scaffold(

@@ -81,13 +81,11 @@ class _PlaylistHomeState extends State<PlaylistHome> {
         statusBarIconBrightness: Theme.of(context).colorScheme.brightness,
         systemNavigationBarColor: Theme.of(context).primaryColor,
       ),
-      child: WillPopScope(
-        onWillPop: () {
-          if (context.read<SettingState>().openPlaylistDefault!) {
+      child: PopScope(
+        canPop: !context.read<SettingState>().openPlaylistDefault!,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) {
             Navigator.push(context, SlideRightRoute(page: Home()));
-            return Future.value(false);
-          } else {
-            return Future.value(true);
           }
         },
         child: Scaffold(
@@ -436,7 +434,7 @@ class __HistoryState extends State<_History> {
     final size = (TextPainter(
             text: TextSpan(text: seconds.toTime),
             maxLines: 1,
-            textScaleFactor: MediaQuery.of(context).textScaleFactor,
+            textScaler: MediaQuery.of(context).textScaler,
             textDirection: TextDirection.ltr)
           ..layout())
         .size;
@@ -588,7 +586,7 @@ class __HistoryState extends State<_History> {
                                             onTap: () => audio
                                                 .loadEpisodeToQueue(episode,
                                                     startPosition:
-                                                        seekValue! < 0.9
+                                                        seekValue < 0.9
                                                             ? (seconds! * 1000)
                                                                 .toInt()
                                                             : 0),
