@@ -3,11 +3,9 @@ import 'dart:developer';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
-import 'package:collection/priority_queue.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:tuple/tuple.dart';
 
@@ -1333,7 +1331,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
   Future<void> setSpeed(double speed) async {
     await _audioHandler.customAction('setSpeed', {'speed': speed});
     _currentSpeed = speed;
-    await _speedStorage.saveDouble(_currentSpeed!);
+    await _speedStorage.saveDouble(_currentSpeed);
     notifyListeners();
   }
 

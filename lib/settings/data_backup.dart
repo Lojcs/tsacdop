@@ -3,7 +3,7 @@ import 'dart:developer' as developer;
 import 'dart:io';
 
 import 'package:confetti/confetti.dart';
-import 'package:device_info/device_info.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +14,7 @@ import 'package:line_icons/line_icons.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:wc_flutter_share/wc_flutter_share.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
@@ -64,7 +64,7 @@ class _DataBackupState extends State<DataBackup> {
               padding: EdgeInsets.fromLTRB(70, 0, 70, 0),
               alignment: Alignment.centerLeft,
               child: Text(s.subscribe,
-                  style: context.textTheme.bodyText1!
+                  style: context.textTheme.bodyLarge!
                       .copyWith(color: context.accentColor)),
             ),
             Padding(
@@ -91,7 +91,7 @@ class _DataBackupState extends State<DataBackup> {
                             Icon(
                               LineIcons.save,
                               color: Colors.green[700],
-                              size: context.textTheme.headline6!.fontSize,
+                              size: context.textTheme.titleLarge!.fontSize,
                             ),
                             SizedBox(width: 10),
                             Text(s.save,
@@ -117,7 +117,7 @@ class _DataBackupState extends State<DataBackup> {
                           children: [
                             Icon(
                               Icons.share,
-                              size: context.textTheme.headline6!.fontSize,
+                              size: context.textTheme.titleLarge!.fontSize,
                               color: Colors.blue[700],
                             ),
                             SizedBox(width: 10),
@@ -143,7 +143,7 @@ class _DataBackupState extends State<DataBackup> {
               alignment: Alignment.centerLeft,
               child: Text(
                 s.settings,
-                style: context.textTheme.bodyText1!
+                style: context.textTheme.bodyLarge!
                     .copyWith(color: context.accentColor),
               ),
             ),
@@ -170,7 +170,7 @@ class _DataBackupState extends State<DataBackup> {
                           Icon(
                             LineIcons.save,
                             color: Colors.green[700],
-                            size: context.textTheme.headline6!.fontSize,
+                            size: context.textTheme.titleLarge!.fontSize,
                           ),
                           SizedBox(width: 10),
                           Text(s.save,
@@ -197,7 +197,7 @@ class _DataBackupState extends State<DataBackup> {
                         children: [
                           Icon(
                             Icons.share,
-                            size: context.textTheme.headline6!.fontSize,
+                            size: context.textTheme.titleLarge!.fontSize,
                             color: Colors.blue[700],
                           ),
                           SizedBox(width: 10),
@@ -225,7 +225,7 @@ class _DataBackupState extends State<DataBackup> {
                       children: [
                         Icon(
                           LineIcons.paperclip,
-                          size: context.textTheme.headline6!.fontSize,
+                          size: context.textTheme.titleLarge!.fontSize,
                           color: Colors.red[700],
                         ),
                         SizedBox(width: 10),
@@ -270,12 +270,7 @@ class _DataBackupState extends State<DataBackup> {
   }
 
   Future<void> _shareFile(File file) async {
-    final bytes = await file.readAsBytes();
-    await WcFlutterShare.share(
-        sharePopupTitle: 'Share file',
-        fileName: file.path.split('/').last,
-        mimeType: 'text/plain',
-        bytesOfFile: bytes.buffer.asUint8List());
+    await Share.shareXFiles([XFile(file.path)]);
   }
 
   Future<File> _exportSetting(BuildContext context) async {
@@ -551,7 +546,6 @@ class __LoginGpodderState extends State<_LoginGpodder> {
           context.s.login,
           style: TextStyle(color: Colors.white),
         );
-        break;
       case LoginStatus.syncing:
         return Text(
           context.s.settingsSyncing,
@@ -578,12 +572,7 @@ class __LoginGpodderState extends State<_LoginGpodder> {
   Widget build(BuildContext context) {
     final s = context.s;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
-        statusBarIconBrightness: Brightness.dark,
-        systemNavigationBarColor: Theme.of(context).primaryColor,
-        systemNavigationBarIconBrightness:
-            Theme.of(context).accentColorBrightness,
-      ),
+      value: context.overlay,
       child: Scaffold(
         resizeToAvoidBottomInset: true,
         body: SafeArea(
@@ -591,7 +580,6 @@ class __LoginGpodderState extends State<_LoginGpodder> {
           child: CustomScrollView(
             slivers: [
               SliverAppBar(
-                brightness: Brightness.dark,
                 iconTheme: IconThemeData(
                   color: Colors.white,
                 ),
@@ -628,6 +616,7 @@ class __LoginGpodderState extends State<_LoginGpodder> {
                     ],
                   ),
                 ),
+                systemOverlayStyle: SystemUiOverlayStyle.light,
               ),
               _loginStatus == LoginStatus.complete
                   ? SliverList(
@@ -640,7 +629,7 @@ class __LoginGpodderState extends State<_LoginGpodder> {
                               child: Text(
                                 s.gpodderLoginDes,
                                 textAlign: TextAlign.center,
-                                style: context.textTheme.subtitle1!
+                                style: context.textTheme.titleMedium!
                                     .copyWith(height: 2),
                               ),
                             ),
@@ -887,12 +876,7 @@ class __GpodderInfoState extends State<_GpodderInfo> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
-        statusBarIconBrightness: Brightness.dark,
-        systemNavigationBarColor: Theme.of(context).primaryColor,
-        systemNavigationBarIconBrightness:
-            Theme.of(context).accentColorBrightness,
-      ),
+      value: context.overlay,
       child: Scaffold(
         resizeToAvoidBottomInset: true,
         body: SafeArea(
@@ -900,7 +884,6 @@ class __GpodderInfoState extends State<_GpodderInfo> {
           child: CustomScrollView(
             slivers: [
               SliverAppBar(
-                brightness: Brightness.dark,
                 iconTheme: IconThemeData(
                   color: Colors.white,
                 ),
@@ -933,6 +916,7 @@ class __GpodderInfoState extends State<_GpodderInfo> {
                     ],
                   ),
                 ),
+                systemOverlayStyle: SystemUiOverlayStyle.light,
               ),
               SliverList(
                 delegate: SliverChildListDelegate([

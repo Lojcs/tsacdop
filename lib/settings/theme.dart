@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import '../state/setting_state.dart';
 import '../util/extension_helper.dart';
 import '../widgets/custom_widget.dart';
-import '../widgets/general_dialog.dart';
 
 class ThemeSetting extends StatelessWidget {
   @override
@@ -41,7 +40,7 @@ class ThemeSetting extends StatelessWidget {
                 s.settingsInterface,
                 style: Theme.of(context)
                     .textTheme
-                    .bodyText1!
+                    .bodyLarge!
                     .copyWith(color: context.accentColor),
               ),
             ),
@@ -200,7 +199,7 @@ class ThemeSetting extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: 70),
               alignment: Alignment.centerLeft,
               child: Text(s.fontStyle,
-                  style: context.textTheme.bodyText1!
+                  style: context.textTheme.bodyLarge!
                       .copyWith(color: context.accentColor)),
             ),
             Selector<SettingState, int?>(

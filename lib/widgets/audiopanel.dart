@@ -225,9 +225,7 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
 }
 
 class _AudioPanelRoute extends StatefulWidget {
-  _AudioPanelRoute({this.expandPanel, this.height, Key? key}) : super(key: key);
-  final Widget? expandPanel;
-  final double? height;
+  _AudioPanelRoute({Key? key}) : super(key: key);
   @override
   __AudioPanelRouteState createState() => __AudioPanelRouteState();
 }
@@ -257,7 +255,6 @@ class __AudioPanelRouteState extends State<_AudioPanelRoute> {
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
-              height: widget.height,
               decoration: BoxDecoration(
                 color: context.primaryColor,
                 boxShadow: [
@@ -274,7 +271,6 @@ class __AudioPanelRouteState extends State<_AudioPanelRoute> {
                 physics: const NeverScrollableScrollPhysics(),
                 child: SizedBox(
                   height: 300,
-                  child: widget.expandPanel,
                 ),
               ),
             ),

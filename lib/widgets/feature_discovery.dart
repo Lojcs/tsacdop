@@ -37,16 +37,16 @@ Widget featureDiscoveryOverlay(BuildContext context,
         children: <Widget>[
           Text(description),
           TextButton(
-            style: TextButton.styleFrom(primary: buttonColor),
+            style: TextButton.styleFrom(foregroundColor: buttonColor),
             child: Text(s.understood,
-                style: context.textTheme.button!.copyWith(color: Colors.white)),
+                style: context.textTheme.labelLarge!.copyWith(color: Colors.white)),
             onPressed: () async =>
                 FeatureDiscovery.completeCurrentStep(context),
           ),
           TextButton(
-            style: TextButton.styleFrom(primary: buttonColor),
+            style: TextButton.styleFrom(foregroundColor: buttonColor),
             child: Text(s.dismiss,
-                style: context.textTheme.button!.copyWith(color: Colors.white)),
+                style: context.textTheme.labelLarge!.copyWith(color: Colors.white)),
             onPressed: () => FeatureDiscovery.dismissAll(context),
           ),
         ],

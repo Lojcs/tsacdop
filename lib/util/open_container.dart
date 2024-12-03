@@ -461,7 +461,7 @@ class _OpenContainerRoute extends ModalRoute<void> {
   }
 
   Size _getSize(RenderBox render) {
-    assert(render != null && render.hasSize);
+    assert(render.hasSize);
     return render.size;
   }
 
@@ -469,10 +469,10 @@ class _OpenContainerRoute extends ModalRoute<void> {
   // coordinate system of `ancestor`.
   Rect _getRect(GlobalKey key, RenderBox ancestor) {
     assert(key.currentContext != null);
-    assert(ancestor != null && ancestor.hasSize);
+    assert(ancestor.hasSize);
     final RenderBox render =
         key.currentContext!.findRenderObject() as RenderBox;
-    assert(render != null && render.hasSize);
+    assert(render.hasSize);
     return MatrixUtils.transformRect(
       render.getTransformTo(ancestor),
       Offset.zero & render.size,

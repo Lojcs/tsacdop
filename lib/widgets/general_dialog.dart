@@ -78,14 +78,14 @@ Future generalSheet(BuildContext context,
                         margin: EdgeInsets.only(top: 10.0, bottom: 2.0),
                         decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(2.0),
-                            color: context.colorScheme.onBackground),
+                            color: context.colorScheme.onSurface),
                       ),
                       Padding(
                         padding: EdgeInsets.only(
                             left: 50, right: 50, top: 6.0, bottom: 10),
                         child: Text(
                           title!,
-                          style: context.textTheme.subtitle2,
+                          style: context.textTheme.titleSmall,
                           textAlign: TextAlign.center,
                           maxLines: 1,
                           overflow: TextOverflow.clip,

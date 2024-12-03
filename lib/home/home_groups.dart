@@ -1,37 +1,27 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:focused_menu/focused_menu.dart';
-import 'package:line_icons/line_icons.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart' as tuple;
 
-import '../episodes/episode_detail.dart';
-import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../podcasts/podcast_detail.dart';
 import '../podcasts/podcast_manage.dart';
 import '../podcasts/podcastlist.dart';
 import '../state/audio_state.dart';
-import '../state/download_state.dart';
 import '../state/episode_state.dart';
 import '../state/podcast_group.dart';
 import '../state/refresh_podcast.dart';
 import '../state/setting_state.dart';
 import '../type/episodebrief.dart';
-import '../type/play_histroy.dart';
 import '../type/podcastlocal.dart';
 import '../util/extension_helper.dart';
 import '../util/hide_player_route.dart';
 import '../util/pageroute.dart';
-import '../widgets/custom_widget.dart';
 import '../widgets/episode_card.dart';
 import '../widgets/episodegrid.dart';
-import '../widgets/general_dialog.dart';
 
 class ScrollPodcasts extends StatefulWidget {
   @override
@@ -141,7 +131,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                               padding: EdgeInsets.symmetric(horizontal: 15.0),
                               child: Text(
                                 groups[_groupIndex]!.name!,
-                                style: context.textTheme.bodyText1!
+                                style: context.textTheme.bodyLarge!
                                     .copyWith(color: context.accentColor),
                               ),
                             ),
@@ -177,7 +167,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                                   child: Text(
                                     s.homeGroupsSeeAll,
                                     style:
-                                        context.textTheme.bodyText1!.copyWith(
+                                        context.textTheme.bodyLarge!.copyWith(
                                       color: import
                                           ? context.primaryColorDark
                                           : context.accentColor,
@@ -209,16 +199,16 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                   child: Center(
                       child: _groupIndex == 0
                           ? Text.rich(TextSpan(
-                              style: context.textTheme.headline6!
+                              style: context.textTheme.titleLarge!
                                   .copyWith(height: 2),
                               children: [
                                 TextSpan(
                                     text: 'Welcome to Tsacdop\n',
-                                    style: context.textTheme.headline6!
+                                    style: context.textTheme.titleLarge!
                                         .copyWith(color: context.accentColor)),
                                 TextSpan(
                                     text: 'Get started\n',
-                                    style: context.textTheme.headline6!
+                                    style: context.textTheme.titleLarge!
                                         .copyWith(color: context.accentColor)),
                                 TextSpan(text: 'Tap '),
                                 WidgetSpan(
@@ -228,7 +218,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                             ))
                           : Text(s.noPodcastGroup,
                               style: TextStyle(
-                                  color: context.textTheme.bodyText2!.color!
+                                  color: context.textTheme.bodyMedium!.color!
                                       .withOpacity(0.5)))),
                 ),
               ],
@@ -294,7 +284,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                                   const EdgeInsets.symmetric(horizontal: 15.0),
                               child: Text(
                                 groups[_groupIndex]!.name!,
-                                style: context.textTheme.bodyText1!
+                                style: context.textTheme.bodyLarge!
                                     .copyWith(color: context.accentColor),
                               )),
                           Spacer(),
@@ -327,7 +317,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                                 padding: const EdgeInsets.all(5.0),
                                 child: Text(
                                   s.homeGroupsSeeAll,
-                                  style: context.textTheme.bodyText1!.copyWith(
+                                  style: context.textTheme.bodyLarge!.copyWith(
                                       color: import
                                           ? context.primaryColorDark
                                           : context.accentColor),
@@ -345,9 +335,9 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                       color: Colors.transparent,
                       child: TabBar(
                         splashFactory: NoSplash.splashFactory,
-                        overlayColor: MaterialStateProperty.resolveWith<Color?>(
-                          (Set<MaterialState> states) {
-                            return states.contains(MaterialState.focused)
+                        overlayColor: WidgetStateProperty.resolveWith<Color?>(
+                          (Set<WidgetState> states) {
+                            return states.contains(WidgetState.focused)
                                 ? null
                                 : Colors.transparent;
                           },

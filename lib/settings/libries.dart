@@ -40,7 +40,7 @@ class Libries extends StatelessWidget {
                     child: Text('Google',
                         style: Theme.of(context)
                             .textTheme
-                            .bodyText1!
+                            .bodyLarge!
                             .copyWith(color: context.accentColor)),
                   ),
                   Column(
@@ -62,7 +62,7 @@ class Libries extends StatelessWidget {
                     child: Text(context.s.fonts,
                         style: Theme.of(context)
                             .textTheme
-                            .bodyText1!
+                            .bodyLarge!
                             .copyWith(color: context.accentColor)),
                   ),
                   Column(
@@ -84,7 +84,7 @@ class Libries extends StatelessWidget {
                     child: Text(context.s.plugins,
                         style: Theme.of(context)
                             .textTheme
-                            .bodyText1!
+                            .bodyLarge!
                             .copyWith(color: context.accentColor)),
                   ),
                   Container(

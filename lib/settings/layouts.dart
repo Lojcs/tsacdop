@@ -51,7 +51,7 @@ class _LayoutSettingState extends State<LayoutSetting> {
                   padding: const EdgeInsets.symmetric(horizontal: 70),
                   alignment: Alignment.centerLeft,
                   child: Text(s.settingsPopupMenu,
-                      style: context.textTheme.bodyText1!
+                      style: context.textTheme.bodyLarge!
                           .copyWith(color: context.accentColor)),
                 ),
                 ListTile(
@@ -75,7 +75,7 @@ class _LayoutSettingState extends State<LayoutSetting> {
                     s.player,
                     style: Theme.of(context)
                         .textTheme
-                        .bodyText1!
+                        .bodyLarge!
                         .copyWith(color: context.accentColor),
                   ),
                 ),
@@ -111,7 +111,7 @@ class _LayoutSettingState extends State<LayoutSetting> {
                     padding: EdgeInsets.symmetric(horizontal: 70),
                     alignment: Alignment.centerLeft,
                     child: Text(s.search,
-                        style: context.textTheme.bodyText1!
+                        style: context.textTheme.bodyLarge!
                             .copyWith(color: context.accentColor)),
                   ),
                 if (environment['apiKey'] != '')
@@ -163,7 +163,7 @@ class _LayoutSettingState extends State<LayoutSetting> {
                   padding: EdgeInsets.symmetric(horizontal: 70),
                   alignment: Alignment.centerLeft,
                   child: Text('Default page',
-                      style: context.textTheme.bodyText1!
+                      style: context.textTheme.bodyLarge!
                           .copyWith(color: context.accentColor)),
                 ),
                 Selector<SettingState, bool?>(
@@ -220,7 +220,7 @@ class _LayoutSettingState extends State<LayoutSetting> {
                     s.settingsDefaultGrid,
                     style: Theme.of(context)
                         .textTheme
-                        .bodyText1!
+                        .bodyLarge!
                         .copyWith(color: context.accentColor),
                   ),
                 ),
@@ -353,7 +353,7 @@ class _LayoutSettingState extends State<LayoutSetting> {
                     scale,
                     layout == option
                         ? Colors.white
-                        : context.textTheme.bodyText1!.color),
+                        : context.textTheme.bodyLarge!.color),
               ),
             ),
           ),

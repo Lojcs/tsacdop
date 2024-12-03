@@ -20,8 +20,7 @@ class ShowNote extends StatelessWidget {
       future: _getSDescription(episode!.enclosureUrl),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          var description = snapshot.data;
-          if (description == null) return Center();
+          var description = snapshot.data!;
           if (description.length > 0) {
             return Selector<AudioPlayerNotifier, EpisodeBrief?>(
               selector: (_, audio) => audio.episode,
@@ -44,7 +43,7 @@ class ShowNote extends StatelessWidget {
                     style: {
                       'html': Style.fromTextStyle(data.copyWith(fontSize: 14))
                           .copyWith(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        padding: HtmlPaddings.symmetric(horizontal: 12),
                       ),
                       'a': Style(
                         color: context.accentColor,
@@ -52,7 +51,7 @@ class ShowNote extends StatelessWidget {
                       ),
                     },
                     data: description,
-                    onLinkTap: (url, _, __, ___) {
+                    onLinkTap: (url, _, __) {
                       if (url!.substring(0, 3) == '#t=') {
                         final seconds = _getTimeStamp(url);
                         if (playEpisode == episode) {
@@ -107,7 +106,7 @@ class ShowNote extends StatelessWidget {
     return seconds;
   }
 
-  Future<String?> _getSDescription(String url) async {
+  Future<String> _getSDescription(String url) async {
     final dbHelper = DBHelper();
     String description;
     description = (await dbHelper.getDescription(url))!

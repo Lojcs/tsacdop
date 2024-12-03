@@ -213,7 +213,7 @@ class _DownloadsManageState extends State<DownloadsManage> {
                                             .toStringAsFixed(1),
                                     style: GoogleFonts.cairo(
                                         textStyle: TextStyle(
-                                      color: Theme.of(context).accentColor,
+                                      color: Theme.of(context).colorScheme.secondary,
                                       fontSize: 50,
                                     )),
                                   ),
@@ -222,7 +222,7 @@ class _DownloadsManageState extends State<DownloadsManage> {
                                           ? 'Mb'
                                           : 'Gb',
                                       style: TextStyle(
-                                        color: Theme.of(context).accentColor,
+                                        color: Theme.of(context).colorScheme.secondary,
                                         fontSize: 20,
                                       )),
                                 ],
@@ -428,7 +428,7 @@ class _DownloadsManageState extends State<DownloadsManage> {
                           decoration: BoxDecoration(
                             borderRadius:
                                 BorderRadius.all(Radius.circular(20.0)),
-                            color: Theme.of(context).accentColor,
+                            color: Theme.of(context).colorScheme.secondary,
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,

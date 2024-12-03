@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 import 'dart:math' as math;
-import 'dart:ui' show window;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -85,8 +84,8 @@ class _DropdownScrollBehavior extends ScrollBehavior {
       Theme.of(context).platform;
 
   @override
-  Widget buildViewportChrome(
-          BuildContext context, Widget child, AxisDirection axisDirection) =>
+  Widget buildOverscrollIndicator(BuildContext context, Widget child,
+          ScrollableDetails scrollableDetails) =>
       child;
 
   @override
@@ -340,7 +339,6 @@ class _DropdownMenuRouteLayout<T> extends SingleChildLayoutDelegate {
       }
       return true;
     }());
-    assert(textDirection != null);
     late double left;
     switch (textDirection) {
       case TextDirection.rtl:
@@ -621,8 +619,7 @@ class _MenuItem<T> extends SingleChildRenderObjectWidget {
     Key? key,
     required this.onLayout,
     required this.item,
-  })  : assert(onLayout != null),
-        super(key: key, child: item);
+  }) : super(key: key, child: item);
 
   final ValueChanged<Size> onLayout;
   final DropdownMenuItem<T> item;
@@ -640,9 +637,7 @@ class _MenuItem<T> extends SingleChildRenderObjectWidget {
 }
 
 class _RenderMenuItem extends RenderProxyBox {
-  _RenderMenuItem(this.onLayout, [RenderBox? child])
-      : assert(onLayout != null),
-        super(child);
+  _RenderMenuItem(this.onLayout, [RenderBox? child]) : super(child);
 
   ValueChanged<Size> onLayout;
 
@@ -663,8 +658,7 @@ class _DropdownMenuItemContainer extends StatelessWidget {
   const _DropdownMenuItemContainer({
     Key? key,
     required this.child,
-  })  : assert(child != null),
-        super(key: key);
+  }) : super(key: key);
 
   /// The widget below this widget in the tree.
   ///
@@ -1012,7 +1006,7 @@ class MyDropdownButton<T> extends StatefulWidget {
   /// ```
   /// {@end-tool}
   ///
-  /// Defaults to the [TextTheme.subtitle1] value of the current
+  /// Defaults to the [TextTheme.titleMedium] value of the current
   /// [ThemeData.textTheme] of the current [Theme].
   final TextStyle? style;
 
@@ -1196,7 +1190,7 @@ class _MyDropdownButtonState<T> extends State<MyDropdownButton<T>>
   }
 
   TextStyle? get _textStyle =>
-      widget.style ?? Theme.of(context).textTheme.subtitle1;
+      widget.style ?? Theme.of(context).textTheme.titleMedium;
 
   void _handleTap() {
     final itemBox = context.findRenderObject() as RenderBox;
@@ -1268,7 +1262,7 @@ class _MyDropdownButtonState<T> extends State<MyDropdownButton<T>>
   // would be clipped.
   double get _denseButtonHeight {
     final fontSize = _textStyle!.fontSize ??
-        Theme.of(context).textTheme.subtitle1!.fontSize!;
+        Theme.of(context).textTheme.titleMedium!.fontSize!;
     return math.max(fontSize, math.max(widget.iconSize, _kDenseButtonHeight));
   }
 
@@ -1423,7 +1417,7 @@ class _MyDropdownButtonState<T> extends State<MyDropdownButton<T>>
     );
 
     if (!DropdownButtonHideUnderline.at(context)) {
-      final bottom = (widget.isDense || widget.itemHeight == null) ? 0.0 : 8.0;
+      final bottom = (widget.isDense) ? 0.0 : 8.0;
       result = Stack(
         children: <Widget>[
           result,

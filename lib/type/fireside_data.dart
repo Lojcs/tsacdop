@@ -27,8 +27,8 @@ class FiresideData {
 
   Future fatchData() async {
     var options = BaseOptions(
-      connectTimeout: 20000,
-      receiveTimeout: 20000,
+      connectTimeout: Duration(seconds: 20),
+      receiveTimeout: Duration(seconds: 20),
     );
 
     var response = await Dio(options).get(parseLink(link)!);

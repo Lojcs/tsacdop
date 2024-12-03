@@ -47,7 +47,7 @@ class _SyncingSettingState extends State<SyncingSetting> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(70, 20, 70, 10),
                   child: Text(s.settingsSyncing,
-                      style: context.textTheme.bodyText1!
+                      style: context.textTheme.bodyLarge!
                           .copyWith(color: context.accentColor)),
                 ),
                 ListTile(
@@ -109,7 +109,7 @@ class _SyncingSettingState extends State<SyncingSetting> {
                   padding: EdgeInsets.symmetric(horizontal: 70),
                   alignment: Alignment.centerLeft,
                   child: Text(s.settingsEpisodeManagement,
-                      style: context.textTheme.bodyText1!
+                      style: context.textTheme.bodyLarge!
                           .copyWith(color: context.accentColor)),
                 ),
                 ListTile(

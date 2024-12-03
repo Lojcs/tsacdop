@@ -3,7 +3,7 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:connectivity/connectivity.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
@@ -148,7 +148,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
         final autoDownloadNetwork = await autoDownloadStorage.getInt();
         if (autoDownloadNetwork == 1 || result == ConnectivityResult.wifi) {
           var episodes = await _dbHelper.getEpisodes(
-              feedIds: [podcastLocal.id!],
+              feedIds: [podcastLocal.id],
               filterNew: -1,
               filterDownloaded: 1,
               filterAutoDownload: -1);
@@ -437,7 +437,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
                                           width: 18,
                                           child: CustomPaint(
                                               painter: RemoveNewFlagPainter(
-                                                  context.textTheme.bodyText1!
+                                                  context.textTheme.bodyLarge!
                                                       .color,
                                                   Colors.red))),
                                       onPressed: () async {
@@ -478,12 +478,12 @@ class _PodcastDetailState extends State<PodcastDetail> {
                                 ),
                                 iconSize: 18,
                                 onPressed: () {
-                                  setState(() => {
-                                        if (_sortOrder == SortOrder.ASC)
-                                          _sortOrder = SortOrder.DESC
-                                        else
-                                          _sortOrder = SortOrder.ASC
-                                      });
+                                  setState(() {
+                                    if (_sortOrder == SortOrder.ASC)
+                                      _sortOrder = SortOrder.DESC;
+                                    else
+                                      _sortOrder = SortOrder.ASC;
+                                  });
                                 },
                               ),
                             ),
@@ -785,8 +785,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
                                                                 crossAxisAlignment:
                                                                     CrossAxisAlignment
                                                                         .start,
-                                                                children: <
-                                                                    Widget>[
+                                                                children: <Widget>[
                                                                   Text(
                                                                       widget.podcastLocal!.author ??
                                                                           '',
@@ -1156,7 +1155,7 @@ class HostsList extends StatelessWidget {
                                       SizedBox(height: 4),
                                       Text(
                                         host.name!,
-                                        style: context.textTheme.subtitle2,
+                                        style: context.textTheme.titleSmall,
                                         textAlign: TextAlign.center,
                                         maxLines: 2,
                                         overflow: TextOverflow.fade,
@@ -1222,7 +1221,7 @@ Widget _podcastLink(BuildContext context,
         SizedBox(height: 4),
         Text(
           title,
-          style: context.textTheme.subtitle2,
+          style: context.textTheme.titleSmall,
           textAlign: TextAlign.center,
           maxLines: 2,
           overflow: TextOverflow.fade,
@@ -1271,8 +1270,7 @@ class _AboutPodcastState extends State<AboutPodcast> {
 
   void getDescription(String? id) async {
     final dbHelper = DBHelper();
-    if (widget.podcastLocal!.description == null ||
-        widget.podcastLocal!.description == "") {
+    if (widget.podcastLocal!.description == "") {
       final description = await dbHelper.getFeedDescription(id);
       if (description == null || description.isEmpty) {
         _description = '';

@@ -1,8 +1,7 @@
 import 'dart:developer' as developer;
 import 'dart:io';
 
-import 'package:connectivity/connectivity.dart';
-import 'package:dynamic_color/dynamic_color.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
@@ -143,17 +142,10 @@ class SettingState extends ChangeNotifier {
   ThemeMode? get theme => _theme;
 
   ThemeData get lightTheme => ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: _accentSetColor!,
-          primary: _accentSetColor!,
-          brightness: Brightness.light,
-        ),
         brightness: Brightness.light,
         primaryColor: Colors.grey[100],
         primaryColorLight: Colors.white,
         primaryColorDark: Colors.grey[300],
-        dialogBackgroundColor: Colors.white,
-        backgroundColor: Colors.grey[100],
         appBarTheme: AppBarTheme(
             color: Colors.grey[100],
             elevation: 0,
@@ -219,13 +211,64 @@ class SettingState extends ChangeNotifier {
           cursorColor: _accentSetColor,
           selectionHandleColor: _accentSetColor,
         ),
-        toggleableActiveColor: _accentSetColor,
         buttonTheme: ButtonThemeData(
           height: 32,
           hoverColor: _accentSetColor!.withAlpha(70),
           splashColor: _accentSetColor!.withAlpha(70),
         ),
         useMaterial3: true,
+        checkboxTheme: CheckboxThemeData(
+          fillColor: WidgetStateProperty.resolveWith<Color?>(
+              (Set<WidgetState> states) {
+            if (states.contains(WidgetState.disabled)) {
+              return null;
+            }
+            if (states.contains(WidgetState.selected)) {
+              return _accentSetColor;
+            }
+            return null;
+          }),
+        ),
+        radioTheme: RadioThemeData(
+          fillColor: WidgetStateProperty.resolveWith<Color?>(
+              (Set<WidgetState> states) {
+            if (states.contains(WidgetState.disabled)) {
+              return null;
+            }
+            if (states.contains(WidgetState.selected)) {
+              return _accentSetColor;
+            }
+            return null;
+          }),
+        ),
+        switchTheme: SwitchThemeData(
+          thumbColor: WidgetStateProperty.resolveWith<Color?>(
+              (Set<WidgetState> states) {
+            if (states.contains(WidgetState.disabled)) {
+              return null;
+            }
+            if (states.contains(WidgetState.selected)) {
+              return _accentSetColor;
+            }
+            return null;
+          }),
+          trackColor: WidgetStateProperty.resolveWith<Color?>(
+              (Set<WidgetState> states) {
+            if (states.contains(WidgetState.disabled)) {
+              return null;
+            }
+            if (states.contains(WidgetState.selected)) {
+              return _accentSetColor;
+            }
+            return null;
+          }),
+        ),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: _accentSetColor!,
+          primary: _accentSetColor!,
+          brightness: Brightness.light,
+        ).copyWith(surface: Colors.grey[100]),
+        dialogTheme: DialogTheme(backgroundColor: Colors.white),
       );
 
   ThemeData get darkTheme => ThemeData(
@@ -295,8 +338,9 @@ class SettingState extends ChangeNotifier {
             scrolledUnderElevation: 0,
             systemOverlayStyle: SystemUiOverlayStyle.light),
         buttonTheme: ButtonThemeData(height: 32),
-        dialogBackgroundColor: _realDark! ? Colors.grey : null,
         useMaterial3: true,
+        dialogTheme:
+            DialogTheme(backgroundColor: _realDark! ? Colors.grey : null),
       );
 
   set setTheme(ThemeMode? mode) {

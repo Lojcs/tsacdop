@@ -1,23 +1,16 @@
-import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
-import 'package:tsacdop/episodes/episode_download.dart';
 
-import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/audio_state.dart';
-import '../state/download_state.dart';
 import '../state/episode_state.dart';
 import '../type/episodebrief.dart';
-import '../type/play_histroy.dart';
 import '../type/playlist.dart';
 import '../util/extension_helper.dart';
 import '../util/helpers.dart';
 import 'custom_widget.dart';
-import 'general_dialog.dart';
 
 class MultiSelectMenuBar extends StatefulWidget {
   MultiSelectMenuBar(
@@ -30,8 +23,7 @@ class MultiSelectMenuBar extends StatefulWidget {
       this.hideFavorite = false,
       this.color,
       Key? key})
-      : assert(onClose != null),
-        super(key: key);
+      : super(key: key);
   final List<EpisodeBrief>? selectedList;
   final bool? selectAll;
   final ValueChanged<bool>? onSelectAll;
@@ -275,7 +267,7 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                             padding: EdgeInsets.symmetric(horizontal: 20.0),
                             child: Text(
                                 '${widget.selectedList!.length} selected',
-                                style: context.textTheme.headline6!.copyWith(
+                                style: context.textTheme.titleLarge!.copyWith(
                                     color:
                                         widget.color ?? context.accentColor))),
                       ),
@@ -288,10 +280,9 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                           padding: const EdgeInsets.symmetric(horizontal: 5),
                           child: OutlinedButton(
                               style: OutlinedButton.styleFrom(
-                                  side: BorderSide(
+                                  foregroundColor: context.textColor, side: BorderSide(
                                       color:
                                           widget.color ?? context.accentColor),
-                                  primary: context.textColor,
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.all(
                                           Radius.circular(100)))),
@@ -308,10 +299,9 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                           padding: const EdgeInsets.symmetric(horizontal: 5),
                           child: OutlinedButton(
                               style: OutlinedButton.styleFrom(
-                                  side: BorderSide(
+                                  foregroundColor: context.textColor, side: BorderSide(
                                       color:
                                           widget.color ?? context.accentColor),
-                                  primary: context.textColor,
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.all(
                                           Radius.circular(100)))),
@@ -327,14 +317,13 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                         padding: const EdgeInsets.symmetric(horizontal: 5),
                         child: OutlinedButton(
                             style: OutlinedButton.styleFrom(
-                                side: BorderSide(
+                                foregroundColor: widget.selectAll!
+                                    ? Colors.white
+                                    : context.textColor, side: BorderSide(
                                     color: widget.color ?? context.accentColor),
                                 backgroundColor: widget.selectAll!
                                     ? widget.color ?? context.accentColor
                                     : null,
-                                primary: widget.selectAll!
-                                    ? Colors.white
-                                    : context.textColor,
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.all(
                                         Radius.circular(100)))),
@@ -370,7 +359,7 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                               );
                               OverlayEntry _overlayEntry;
                               _overlayEntry = createOverlayEntry(context);
-                              Overlay.of(context)!.insert(_overlayEntry);
+                              Overlay.of(context).insert(_overlayEntry);
                               await Future.delayed(Duration(seconds: 2));
                               _overlayEntry.remove();
                             } else {
@@ -521,7 +510,7 @@ class _MultiSelectMenuBarState extends State<MultiSelectMenuBar> {
                             padding: EdgeInsets.symmetric(horizontal: 10.0),
                             child: Text(
                                 '${widget.selectedList!.length} selected',
-                                style: context.textTheme.headline6!.copyWith(
+                                style: context.textTheme.titleLarge!.copyWith(
                                     color:
                                         widget.color ?? context.accentColor))),
                       ),

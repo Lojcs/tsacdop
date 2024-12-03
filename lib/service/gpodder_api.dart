@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:developer' as developer;
 
 import 'package:cookie_jar/cookie_jar.dart';
-import 'package:device_info/device_info.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:path_provider/path_provider.dart';
@@ -15,9 +15,9 @@ enum GpodderSyncStatus { none, success, fail, authError }
 
 class Gpodder {
   final _dio = Dio(BaseOptions(
-    connectTimeout: 30000,
-    receiveTimeout: 90000,
-    sendTimeout: 90000,
+    connectTimeout: Duration(seconds: 30),
+    receiveTimeout: Duration(seconds: 90),
+    sendTimeout: Duration(seconds: 90),
   ));
   final _storage = KeyValueStorage(gpodderApiKey);
   final _addStorage = KeyValueStorage(gpodderAddKey);
@@ -60,7 +60,6 @@ class Gpodder {
 
   Future<int?> logout() async {
     final loginInfo = await _storage.getStringList();
-    if (loginInfo == null) return null;
     final username = loginInfo[0];
     await _initDio();
     var status;
@@ -147,7 +146,6 @@ class Gpodder {
     final syncDataTime = DateTime.now().millisecondsSinceEpoch;
     await _dateTimeStorage.saveInt(syncDataTime);
     final loginInfo = await _storage.getStringList();
-    if (loginInfo == null) return null;
     final username = loginInfo[0];
     final deviceId = loginInfo[1];
     await _initDio();

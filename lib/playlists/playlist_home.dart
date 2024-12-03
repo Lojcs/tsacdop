@@ -60,8 +60,8 @@ class _PlaylistHomeState extends State<PlaylistHome> {
       Color? color}) {
     return OutlinedButton.icon(
         style: OutlinedButton.styleFrom(
+            foregroundColor: color,
             side: BorderSide(color: context.background),
-            primary: color,
             backgroundColor:
                 isSelected ? context.primaryColorDark : Colors.transparent,
             shape: RoundedRectangleBorder(
@@ -240,7 +240,7 @@ class _PlaylistHomeState extends State<PlaylistHome> {
                                                     10));
                                           } else if (audio.playerRunning &&
                                               audio.audioDuration != 0) {
-                                            return ((audio.audioPosition! *
+                                            return ((audio.audioPosition *
                                                     100) ~/
                                                 audio.audioDuration);
                                           } else {
@@ -758,13 +758,13 @@ class __PlaylistsState extends State<_Playlists> {
                               children: [
                                 Text(
                                   s.queue,
-                                  style: context.textTheme.headline6,
+                                  style: context.textTheme.titleLarge,
                                 ),
                                 Text(
                                     '${queue.length} ${s.episode(queue.length).toLowerCase()}'),
                                 TextButton(
                                   style: TextButton.styleFrom(
-                                      primary: context.accentColor,
+                                      foregroundColor: context.accentColor,
                                       textStyle: TextStyle(
                                           fontWeight: FontWeight.bold)),
                                   onPressed: () {
@@ -831,7 +831,7 @@ class __PlaylistsState extends State<_Playlists> {
                           '${data.item1[index].length} ${s.episode(data.item1[index].length).toLowerCase()}'),
                       trailing: TextButton(
                         style: TextButton.styleFrom(
-                            primary: context.accentColor,
+                            foregroundColor: context.accentColor,
                             textStyle: TextStyle(fontWeight: FontWeight.bold)),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -1066,16 +1066,14 @@ class __NewPlaylistState extends State<_NewPlaylist> {
         titlePadding: EdgeInsets.all(20),
         actionsPadding: EdgeInsets.zero,
         actions: <Widget>[
-          FlatButton(
-            splashColor: context.accentColor.withAlpha(70),
+          TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: Text(
               s.cancel,
               style: TextStyle(color: Colors.grey[600]),
             ),
           ),
-          FlatButton(
-            splashColor: context.accentColor.withAlpha(70),
+          TextButton(
             onPressed: () async {
               if (!_processing) {
                 if (_playlistName == '') {

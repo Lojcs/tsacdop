@@ -77,7 +77,7 @@ class _PlayedHistoryState extends State<PlayedHistory>
                               future: getData(),
                               builder: (context, snapshot) {
                                 return snapshot.hasData
-                                    ? HistoryChart(snapshot.data)
+                                    ? HistoryChart(snapshot.data!)
                                     : Center();
                               }),
                         ),
@@ -91,7 +91,7 @@ class _PlayedHistoryState extends State<PlayedHistory>
                         controller: _controller,
                         indicatorColor: context.accentColor,
                         labelColor: context.textColor,
-                        labelStyle: context.textTheme.headline6,
+                        labelStyle: context.textTheme.titleLarge,
                         tabs: <Widget>[
                           Tab(
                             child: Text(s.listen),
@@ -368,8 +368,8 @@ class _PlayedHistoryState extends State<PlayedHistory>
     var subscribeWorker = context.watch<GroupList>();
     try {
       var options = BaseOptions(
-        connectTimeout: 10000,
-        receiveTimeout: 10000,
+        connectTimeout: Duration(seconds: 10),
+        receiveTimeout: Duration(seconds: 10),
       );
       var response = await Dio(options).get(url);
       var p = RssFeed.parse(response.data);
@@ -418,7 +418,7 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
 }
 
 class HistoryChart extends StatelessWidget {
-  final List<FlSpot>? stats;
+  final List<FlSpot> stats;
   HistoryChart(this.stats);
   @override
   Widget build(BuildContext context) {
@@ -442,32 +442,42 @@ class HistoryChart extends StatelessWidget {
           ),
           titlesData: FlTitlesData(
             show: true,
-            bottomTitles: SideTitles(
-              getTextStyles: (_, i) => TextStyle(
-                color: const Color(0xff67727d),
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                getTitlesWidget: (value, _) => Padding(
+                  padding: EdgeInsets.only(top: 5),
+                  child: Text(
+                    DateFormat.E().format(DateTime.now()
+                        .subtract(Duration(days: (7 - value.toInt())))),
+                    style: TextStyle(
+                      color: const Color(0xff67727d),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+                showTitles: true,
+                reservedSize: 10,
               ),
-              showTitles: true,
-              reservedSize: 10,
-              getTitles: (value) {
-                return DateFormat.E().format(DateTime.now()
-                    .subtract(Duration(days: (7 - value.toInt()))));
-              },
-              margin: 5,
             ),
-            leftTitles: SideTitles(
-              showTitles: true,
-              getTextStyles: (_, s) => TextStyle(
-                color: const Color(0xff67727d),
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                getTitlesWidget: (value, _) => Padding(
+                  padding: EdgeInsets.only(top: 5),
+                  child: Text(
+                    value % 60 == 0 && value > 0
+                        ? '${value ~/ 60}h'
+                        : '', // TODO: l10n
+                    style: TextStyle(
+                      color: const Color(0xff67727d),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+                showTitles: true,
+                reservedSize: 20,
               ),
-              getTitles: (value) {
-                return value % 60 == 0 && value > 0 ? '${value ~/ 60}h' : '';
-              },
-              reservedSize: 20,
-              margin: 5,
             ),
           ),
           borderData: FlBorderData(
@@ -478,12 +488,12 @@ class HistoryChart extends StatelessWidget {
           lineTouchData: LineTouchData(
             enabled: true,
             touchTooltipData: LineTouchTooltipData(
-              tooltipBgColor: context.background,
+              getTooltipColor: (_) => context.background,
               fitInsideHorizontally: true,
               getTooltipItems: (touchedBarSpots) {
                 return touchedBarSpots.map((barSpot) {
                   return LineTooltipItem(context.s.minsCount(barSpot.y.toInt()),
-                      context.textTheme.subtitle1!);
+                      context.textTheme.titleMedium!);
                 }).toList();
               },
             ),
@@ -507,24 +517,23 @@ class HistoryChart extends StatelessWidget {
             LineChartBarData(
               spots: stats,
               isCurved: true,
-              colors: [context.accentColor],
+              color: context.accentColor,
               preventCurveOverShooting: true,
               barWidth: 3,
               isStrokeCapRound: true,
               belowBarData: BarAreaData(
-                  show: true,
-                  gradientFrom: Offset(0, 0),
-                  gradientTo: Offset(0, 1),
-                  gradientColorStops: [
-                    0.3,
-                    0.8,
-                    0.99
-                  ],
+                show: true,
+                gradient: LinearGradient(
                   colors: [
-                    context.accentColor.withOpacity(0.6),
-                    context.accentColor.withOpacity(0.1),
-                    context.accentColor.withOpacity(0)
-                  ]),
+                    context.accentColor.withAlpha(156),
+                    context.accentColor.withAlpha(26),
+                    context.accentColor.withAlpha(0),
+                  ],
+                  stops: [0.3, 0.8, 0.99],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
               dotData: FlDotData(
                   show: true,
                   getDotPainter: (spot, percent, barData, index) {

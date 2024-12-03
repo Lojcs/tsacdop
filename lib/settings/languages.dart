@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/intl_standalone.dart';
 
@@ -50,7 +49,7 @@ class _LanguagesSettingState extends State<LanguagesSetting> {
   }
 
   Widget _langListTile(String lang, {Locale? locale}) => ListTile(
-        title: Text(lang, style: context.textTheme.bodyText2),
+        title: Text(lang, style: context.textTheme.bodyMedium),
         onTap: () => _setLocale(locale),
         dense: true,
         contentPadding: const EdgeInsets.symmetric(horizontal: 20),
@@ -65,7 +64,7 @@ class _LanguagesSettingState extends State<LanguagesSetting> {
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = context.textTheme.bodyText2!;
+    final textStyle = context.textTheme.bodyMedium!;
     final s = context.s;
     return Column(
       children: [

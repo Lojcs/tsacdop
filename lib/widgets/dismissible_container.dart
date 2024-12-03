@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
-import 'package:tsacdop/widgets/episode_card.dart';
-import 'package:tsacdop/widgets/episodegrid.dart';
 
 import '../state/audio_state.dart';
 import '../type/episodebrief.dart';
@@ -146,8 +144,7 @@ class EpisodeTile extends StatelessWidget {
       this.showDivider = true,
       this.havePadding = false,
       Key? key})
-      : assert(episode != null),
-        super(key: key);
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -178,7 +175,7 @@ class EpisodeTile extends StatelessWidget {
               onTap: onTap,
               title: Container(
                 child: Text(
-                  episode.title!,
+                  episode.title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),

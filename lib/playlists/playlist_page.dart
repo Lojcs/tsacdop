@@ -251,7 +251,7 @@ class __PlaylistItemState extends State<_PlaylistItem>
               title: Container(
                 padding: EdgeInsets.fromLTRB(0, 5.0, 20.0, 5.0),
                 child: Text(
-                  episode.title!,
+                  episode.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -347,7 +347,7 @@ class __PlaylistSettingState extends State<_PlaylistSetting> {
   @override
   Widget build(BuildContext context) {
     final s = context.s;
-    final textStyle = context.textTheme.bodyText2;
+    final textStyle = context.textTheme.bodyMedium;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -379,8 +379,19 @@ class __PlaylistSettingState extends State<_PlaylistSetting> {
                   child:
                       Text(s.cancel, style: TextStyle(color: Colors.grey[600])),
                 ),
-                FlatButton(
-                    splashColor: Colors.red.withAlpha(70),
+                TextButton(
+                    style: ButtonStyle(
+                      overlayColor: WidgetStateProperty.resolveWith<Color?>(
+                          (Set<WidgetState> states) {
+                        if (states.contains(WidgetState.focused))
+                          return Colors.red[300]!;
+                        if (states.contains(WidgetState.hovered))
+                          return Colors.red[300]!;
+                        if (states.contains(WidgetState.pressed))
+                          return Colors.red;
+                        return null;
+                      }),
+                    ),
                     onPressed: () async {
                       context
                           .read<AudioPlayerNotifier>()
@@ -422,8 +433,19 @@ class __PlaylistSettingState extends State<_PlaylistSetting> {
                   child:
                       Text(s.cancel, style: TextStyle(color: Colors.grey[600])),
                 ),
-                FlatButton(
-                    splashColor: Colors.red.withAlpha(70),
+                TextButton(
+                    style: ButtonStyle(
+                      overlayColor: WidgetStateProperty.resolveWith<Color?>(
+                          (Set<WidgetState> states) {
+                        if (states.contains(WidgetState.focused))
+                          return Colors.red[300]!;
+                        if (states.contains(WidgetState.hovered))
+                          return Colors.red[300]!;
+                        if (states.contains(WidgetState.pressed))
+                          return Colors.red;
+                        return null;
+                      }),
+                    ),
                     onPressed: () async {
                       final audio = context.read<AudioPlayerNotifier>();
                       audio.deletePlaylist(widget.playlist);

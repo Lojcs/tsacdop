@@ -28,7 +28,7 @@ class _SettingsState extends State<Settings> {
   late bool _showTitle;
   ScrollController? _controller;
   _scrollListener() {
-    if (_controller!.offset > context.textTheme.headline5!.fontSize!) {
+    if (_controller!.offset > context.textTheme.headlineSmall!.fontSize!) {
       if (!_showTitle) setState(() => _showTitle = true);
     } else if (_showTitle) setState(() => _showTitle = false);
   }
@@ -60,7 +60,7 @@ class _SettingsState extends State<Settings> {
             Text(
               name,
               maxLines: 2,
-              style: context.textTheme.bodyText2,
+              style: context.textTheme.bodyMedium,
             ),
           ],
         ),
@@ -97,7 +97,7 @@ class _SettingsState extends State<Settings> {
                   padding: EdgeInsets.symmetric(horizontal: 70),
                   alignment: Alignment.centerLeft,
                   child: Text(s.settingsPrefrence,
-                      style: context.textTheme.bodyText1!
+                      style: context.textTheme.bodyLarge!
                           .copyWith(color: context.accentColor)),
                 ),
                 ListTile(
@@ -191,8 +191,8 @@ class _SettingsState extends State<Settings> {
                   child: Text(s.settingsInfo,
                       style: Theme.of(context)
                           .textTheme
-                          .bodyText1!
-                          .copyWith(color: Theme.of(context).accentColor)),
+                          .bodyLarge!
+                          .copyWith(color: Theme.of(context).colorScheme.secondary)),
                 ),
                 ListTile(
                   onTap: () => Navigator.push(context,

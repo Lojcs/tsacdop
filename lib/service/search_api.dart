@@ -21,7 +21,9 @@ const podcastIndexApi = {
 enum SearchEngine { podcastIndex, listenNotes }
 
 class ListenNotesSearch {
-  final _dio = Dio(BaseOptions(connectTimeout: 30000, receiveTimeout: 90000));
+  final _dio = Dio(BaseOptions(
+      connectTimeout: Duration(seconds: 30),
+      receiveTimeout: Duration(seconds: 90)));
   final _baseUrl = "https://listen-api.listennotes.com/api/v2/";
   final _apiKey = environment['apiKey'];
   bool get _validApi => _apiKey != '';
@@ -90,7 +92,9 @@ class ItunesSearch {
 }
 
 class PodcastsIndexSearch {
-  final _dio = Dio(BaseOptions(connectTimeout: 30000, receiveTimeout: 90000));
+  final _dio = Dio(BaseOptions(
+      connectTimeout: Duration(seconds: 30),
+      receiveTimeout: Duration(seconds: 90)));
   final _baseUrl = 'https://api.podcastindex.org';
   Map<String, String> _initSearch() {
     final unixTime =

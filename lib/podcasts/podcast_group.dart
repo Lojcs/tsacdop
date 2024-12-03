@@ -297,7 +297,7 @@ class __PodcastCardState extends State<_PodcastCard>
                                                 color: snapshot.data!
                                                     ? context.accentColor
                                                     : context.textTheme
-                                                        .subtitle1!.color!)
+                                                        .titleMedium!.color!)
                                             : null,
                                         shape: BoxShape.circle,
                                         color: snapshot.data!
@@ -429,7 +429,7 @@ class __PodcastCardState extends State<_PodcastCard>
                 Expanded(
                   child: icon,
                 ),
-                Text(tooltip, style: context.textTheme.subtitle2),
+                Text(tooltip, style: context.textTheme.titleSmall),
               ],
             ),
           ),

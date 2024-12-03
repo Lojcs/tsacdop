@@ -68,7 +68,7 @@ class _PlaySettingState extends State<PlaySetting> {
                 padding: EdgeInsets.symmetric(horizontal: 40),
                 alignment: Alignment.center,
                 child: Text(s.notificationSetting,
-                    style: context.textTheme.bodyText1!
+                    style: context.textTheme.bodyLarge!
                         .copyWith(color: context.accentColor)),
               ),
               _NotificationLayout(),
@@ -86,7 +86,7 @@ class _PlaySettingState extends State<PlaySetting> {
                   s.homeMenuPlaylist,
                   style: Theme.of(context)
                       .textTheme
-                      .bodyText1!
+                      .bodyLarge!
                       .copyWith(color: context.accentColor),
                 ),
               ),
@@ -132,7 +132,7 @@ class _PlaySettingState extends State<PlaySetting> {
                 padding: EdgeInsets.symmetric(horizontal: 70),
                 alignment: Alignment.centerLeft,
                 child: Text(s.playback,
-                    style: context.textTheme.bodyText1!
+                    style: context.textTheme.bodyLarge!
                         .copyWith(color: context.accentColor)),
               ),
               ListTile(
@@ -211,7 +211,7 @@ class _PlaySettingState extends State<PlaySetting> {
                 alignment: Alignment.centerLeft,
                 child: Text(
                   s.sleepTimer,
-                  style: context.textTheme.bodyText1!
+                  style: context.textTheme.bodyLarge!
                       .copyWith(color: context.accentColor),
                 ),
               ),

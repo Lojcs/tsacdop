@@ -4,11 +4,9 @@ import 'dart:developer' as developer;
 
 import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart';
-import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:tsacdop/state/episode_state.dart';
 import 'package:tuple/tuple.dart';
@@ -19,7 +17,6 @@ import '../type/episodebrief.dart';
 import '../type/play_histroy.dart';
 import '../type/podcastlocal.dart';
 import '../type/sub_history.dart';
-import '../state/setting_state.dart';
 
 enum Filter { downloaded, liked, search, all }
 
@@ -557,6 +554,7 @@ class DBHelper {
           updateCount: list.first['update_count'],
           episodeCount: list.first['episode_count']);
     }
+    return null;
   }
 
   Future savePodcastLocal(PodcastLocal podcastLocal) async {
@@ -628,10 +626,8 @@ class DBHelper {
         """SELECT downloaded FROM Episodes WHERE downloaded != 'ND' AND feed_id = ?""",
         [id]);
     for (var i in list) {
-      if (i != null) {
-        await FlutterDownloader.remove(
-            taskId: i['downloaded'], shouldDeleteContent: true);
-      }
+      await FlutterDownloader.remove(
+          taskId: i['downloaded'], shouldDeleteContent: true);
     }
     await dbClient.rawDelete('DELETE FROM Episodes WHERE feed_id=?', [id]);
     var milliseconds = DateTime.now().millisecondsSinceEpoch;
@@ -1258,8 +1254,8 @@ class DBHelper {
       final title = feed.items![i].itunes!.title ?? feed.items![i].title;
       final length = feed.items![i].enclosure?.length;
       final pubDate = feed.items![i].pubDate;
-      final date = _parsePubDate(pubDate);
-      final milliseconds = date.millisecondsSinceEpoch;
+      final milliseconds = pubDate?.millisecondsSinceEpoch ??
+          DateTime.now().millisecondsSinceEpoch;
       final duration = feed.items![i].itunes!.duration?.inSeconds ?? 0;
       final explicit = _getExplicit(feed.items![i].itunes!.explicit);
       final chapter = feed.items![i].podcastChapters?.url ?? '';
@@ -1303,8 +1299,8 @@ class DBHelper {
   Future<int> updatePodcastRss(PodcastLocal podcastLocal,
       {int? removeMark = 0}) async {
     final options = BaseOptions(
-      connectTimeout: 20000,
-      receiveTimeout: 20000,
+      connectTimeout: Duration(seconds: 20),
+      receiveTimeout: Duration(seconds: 20),
     );
     final hideNewMark = await getHideNewMark(podcastLocal.id);
     try {
@@ -1337,8 +1333,8 @@ class DBHelper {
           final title = item.itunes!.title ?? item.title;
           final length = item.enclosure?.length ?? 0;
           final pubDate = item.pubDate;
-          final date = _parsePubDate(pubDate);
-          final milliseconds = date.millisecondsSinceEpoch;
+          final milliseconds = pubDate?.millisecondsSinceEpoch ??
+              DateTime.now().millisecondsSinceEpoch;
           final duration = item.itunes!.duration?.inSeconds ?? 0;
           final explicit = _getExplicit(item.itunes!.explicit);
           final chapter = item.podcastChapters?.url ?? '';
@@ -1409,7 +1405,7 @@ class DBHelper {
             episode.episodeImage
           ]);
       await _updateNewEpisodeVersions(
-          txn, localFolderId, episode.title, episodeId, episode.pubDate!);
+          txn, localFolderId, episode.title, episodeId, episode.pubDate);
     });
   }
 

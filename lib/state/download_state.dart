@@ -9,7 +9,6 @@ import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:tsacdop/state/audio_state.dart';
 import 'package:tuple/tuple.dart';
 
 import '../local_storage/key_value_storage.dart';
@@ -18,13 +17,13 @@ import '../type/episode_task.dart';
 import '../type/episodebrief.dart';
 import 'episode_state.dart';
 
-void downloadCallback(String id, DownloadTaskStatus status, int progress) {
+void downloadCallback(String id, int status, int progress) {
   developer.log('Homepage callback task in $id  status ($status) $progress');
   final send = IsolateNameServer.lookupPortByName('downloader_send_port')!;
   send.send([id, status, progress]);
 }
 
-void autoDownloadCallback(String id, DownloadTaskStatus status, int progress) {
+void autoDownloadCallback(String id, int status, int progress) {
   developer
       .log('Autodownload callback task in $id  status ($status) $progress');
   final send = IsolateNameServer.lookupPortByName('auto_downloader_send_port')!;
@@ -50,13 +49,13 @@ class AutoDownloader {
       return;
     }
     _port.listen((dynamic data) {
-      String? id = data[0];
-      DownloadTaskStatus? status = data[1];
-      int? progress = data[2];
+      String id = data[0];
+      int status = data[1];
+      int progress = data[2];
 
       for (var episodeTask in _episodeTasks) {
         if (episodeTask.taskId == id) {
-          episodeTask.status = status;
+          episodeTask.status = DownloadTaskStatus.fromInt(status);
           episodeTask.progress = progress;
           if (status == DownloadTaskStatus.complete) {
             _saveMediaId(episodeTask);
@@ -114,7 +113,7 @@ class AutoDownloader {
           now.day.toString() +
           now.second.toString();
       var fileName =
-          '${episode.title!.replaceAll('/', '')}$datePlus.${episode.enclosureUrl.split('/').last.split('.').last}';
+          '${episode.title.replaceAll('/', '')}$datePlus.${episode.enclosureUrl.split('/').last.split('.').last}';
       if (fileName.length > 100) {
         fileName = fileName.substring(fileName.length - 100);
       }
@@ -230,13 +229,13 @@ class DownloadState extends ChangeNotifier {
     }
 
     _port.listen((dynamic data) {
-      String? id = data[0];
-      DownloadTaskStatus? status = data[1];
-      int? progress = data[2];
+      String id = data[0];
+      int status = data[1];
+      int progress = data[2];
 
       for (var episodeTask in _episodeTasks) {
         if (episodeTask.taskId == id) {
-          episodeTask.status = status;
+          episodeTask.status = DownloadTaskStatus.fromInt(status);
           episodeTask.progress = progress;
           if (status == DownloadTaskStatus.complete) {
             _saveMediaId(episodeTask).then((value) {
@@ -300,7 +299,7 @@ class DownloadState extends ChangeNotifier {
     if (!isDownloaded) {
       final dir = await _getDownloadDirectory();
       var localPath =
-          path.join(dir.path, episode.podcastTitle?.replaceAll('/', ''));
+          path.join(dir.path, episode.podcastTitle.replaceAll('/', ''));
       final saveDir = Directory(localPath);
       var hasExisted = await saveDir.exists();
       if (!hasExisted) {
@@ -312,7 +311,7 @@ class DownloadState extends ChangeNotifier {
           now.day.toString() +
           now.second.toString();
       var fileName =
-          '${episode.title!.replaceAll('/', '')}$datePlus.${episode.enclosureUrl.split('/').last.split('.').last}';
+          '${episode.title.replaceAll('/', '')}$datePlus.${episode.enclosureUrl.split('/').last.split('.').last}';
       if (fileName.length > 100) {
         fileName = fileName.substring(fileName.length - 100);
       }

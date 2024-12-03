@@ -37,8 +37,8 @@ class MyHomePageDelegate extends SearchDelegate<int?> {
   static Future _getRss(String url) async {
     try {
       final options = BaseOptions(
-        connectTimeout: 30000,
-        receiveTimeout: 90000,
+        connectTimeout: Duration(seconds: 30),
+        receiveTimeout: Duration(seconds: 90),
       );
       final response = await Dio(options).get(url);
       return RssFeed.parse(response.data);
@@ -53,7 +53,7 @@ class MyHomePageDelegate extends SearchDelegate<int?> {
         padding: EdgeInsets.only(top: 200),
         alignment: Alignment.topCenter,
         child: Text(context.s.searchInvalidRss,
-            style: context.textTheme.headline6!.copyWith(color: Colors.red)),
+            style: context.textTheme.titleLarge!.copyWith(color: Colors.red)),
       );
 
   @override
@@ -240,7 +240,7 @@ class _RssResultState extends State<RssResult> {
                           child: Text(_onlinePodcast!.title!,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
-                              style: context.textTheme.headline5),
+                              style: context.textTheme.headlineSmall),
                         ),
                         SubscribeButton(_onlinePodcast),
                       ],
@@ -311,12 +311,12 @@ class _RssResultState extends State<RssResult> {
                   Align(
                     alignment: Alignment.topLeft,
                     child: Html(
-                      onLinkTap: (url, _, __, ___) {
+                      onLinkTap: (url, _, __) {
                         url!.launchUrl;
                       },
                       style: {
                         'html': Style(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          padding: HtmlPaddings.symmetric(horizontal: 12),
                         ),
                         'a': Style(
                           color: context.accentColor,
@@ -338,7 +338,8 @@ class _RssResultState extends State<RssResult> {
                         alignment: Alignment.center,
                         child: TextButton(
                           style: TextButton.styleFrom(
-                            onSurface: context.accentColor.withOpacity(0.5),
+                            disabledForegroundColor:
+                                context.accentColor.withOpacity(0.5),
                           ),
                           child: Text(context.s.loadMore),
                           onPressed: () => setState(
@@ -502,7 +503,7 @@ class __ListenNotesSearchState extends State<_ListenNotesSearch> {
       child: FutureBuilder<List>(
         future: _searchFuture!.then((value) => value as List<dynamic>),
         builder: (context, snapshot) {
-          if (!snapshot.hasData && widget.query != null) {
+          if (!snapshot.hasData) {
             return Container(
               padding: EdgeInsets.only(top: 200),
               alignment: Alignment.topCenter,
@@ -517,7 +518,7 @@ class __ListenNotesSearchState extends State<_ListenNotesSearch> {
                 padding: EdgeInsets.only(top: 200),
                 alignment: Alignment.topCenter,
                 child: Text('Network error.',
-                    style: context.textTheme.headline6!
+                    style: context.textTheme.titleLarge!
                         .copyWith(color: Colors.red)),
               );
             } else {
@@ -525,7 +526,7 @@ class __ListenNotesSearchState extends State<_ListenNotesSearch> {
                 padding: EdgeInsets.only(top: 200),
                 alignment: Alignment.topCenter,
                 child: Text('No result.',
-                    style: context.textTheme.headline6!
+                    style: context.textTheme.titleLarge!
                         .copyWith(color: context.accentColor)),
               );
             }
@@ -549,7 +550,8 @@ class __ListenNotesSearchState extends State<_ListenNotesSearch> {
                     TextButton(
                       style: TextButton.styleFrom(
                         side: BorderSide(color: context.accentColor),
-                        onSurface: context.accentColor.withOpacity(0.5),
+                        disabledForegroundColor:
+                            context.accentColor.withOpacity(0.5),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(100),
                         ),
@@ -684,7 +686,7 @@ class __PodcastIndexSearchState extends State<_PodcastIndexSearch> {
                 padding: EdgeInsets.only(top: 200),
                 alignment: Alignment.topCenter,
                 child: Text('Network error.',
-                    style: context.textTheme.headline6!
+                    style: context.textTheme.titleLarge!
                         .copyWith(color: Colors.red)),
               );
             } else {
@@ -692,7 +694,7 @@ class __PodcastIndexSearchState extends State<_PodcastIndexSearch> {
                 padding: EdgeInsets.only(top: 200),
                 alignment: Alignment.topCenter,
                 child: Text('No result found.',
-                    style: context.textTheme.headline6!
+                    style: context.textTheme.titleLarge!
                         .copyWith(color: context.accentColor)),
               );
             }
@@ -716,7 +718,8 @@ class __PodcastIndexSearchState extends State<_PodcastIndexSearch> {
                     TextButton(
                       style: TextButton.styleFrom(
                         side: BorderSide(color: context.accentColor),
-                        onSurface: context.accentColor.withOpacity(0.5),
+                        disabledForegroundColor:
+                            context.accentColor.withOpacity(0.5),
                       ),
                       child: _loading
                           ? SizedBox(
@@ -1006,7 +1009,8 @@ class _SearchResultDetailState extends State<SearchResultDetail>
                       child: TextButton(
                           style: TextButton.styleFrom(
                             side: BorderSide(color: context.accentColor),
-                            onSurface: context.accentColor.withOpacity(0.5),
+                            disabledForegroundColor:
+                                context.accentColor.withOpacity(0.5),
                           ),
                           child: _loading
                               ? SizedBox(
@@ -1058,12 +1062,12 @@ class _SearchResultDetailState extends State<SearchResultDetail>
                         }
                         return TextButton(
                           style: ButtonStyle(
-                              foregroundColor: MaterialStateProperty.all<Color>(
+                              foregroundColor: WidgetStateProperty.all<Color>(
                                   context.accentColor),
-                              overlayColor: MaterialStateProperty.all<Color>(
-                                  context.background.withOpacity(0.3)),
+                              overlayColor: WidgetStateProperty.all<Color>(
+                                  context.background.withAlpha(72)),
                               padding:
-                                  MaterialStateProperty.all<EdgeInsetsGeometry>(
+                                  WidgetStateProperty.all<EdgeInsetsGeometry>(
                                       EdgeInsets.symmetric(horizontal: 2))),
                           child: Text(context.s.play.toUpperCase()),
                           onPressed: () {
@@ -1128,7 +1132,7 @@ class _SearchResultDetailState extends State<SearchResultDetail>
                                   child: Text(widget.onlinePodcast.title!,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: context.textTheme.headline5),
+                                      style: context.textTheme.headlineSmall),
                                 ),
                                 Text(
                                   widget.onlinePodcast.interval != null
@@ -1228,7 +1232,7 @@ class _SearchResultDetailState extends State<SearchResultDetail>
                           : null,
                       children: [
                         Html(
-                          onLinkTap: (url, _, __, ___) {
+                          onLinkTap: (url, _, __) {
                             url!.launchUrl;
                           },
                           style: {'a': Style(color: context.accentColor)},
@@ -1277,7 +1281,8 @@ class SubscribeButton extends StatelessWidget {
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(100.0),
                           side: BorderSide(color: context.accentColor)),
-                      onSurface: context.accentColor.withOpacity(0.5),
+                      disabledForegroundColor:
+                          context.accentColor.withOpacity(0.5),
                     ),
                     child: Text(s.subscribe,
                         style: TextStyle(color: context.accentColor)),
@@ -1294,7 +1299,7 @@ class SubscribeButton extends StatelessWidget {
                 height: 32,
                 child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
-                      primary: context.accentColor.withOpacity(0.5),
+                      foregroundColor: context.accentColor.withOpacity(0.5),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(100.0),
                           side: BorderSide(color: Colors.grey[500]!)),

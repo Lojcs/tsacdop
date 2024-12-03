@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:developer' as developer;
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -77,7 +76,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
         });
       }
     }
-    if (_controller.offset > context.textTheme.headline5!.fontSize!) {
+    if (_controller.offset > context.textTheme.headlineSmall!.fontSize!) {
       if (!_showTitle) setState(() => _showTitle = true);
     } else if (_showTitle) setState(() => _showTitle = false);
     if (_controller.position.userScrollDirection ==
@@ -440,10 +439,10 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                                               color: context
                                                                   .background),
                                                         )),
-                                                  if (_episodeItem!
+                                                  if (_episodeItem
                                                               .enclosureSize !=
                                                           null &&
-                                                      _episodeItem!
+                                                      _episodeItem
                                                               .enclosureSize !=
                                                           0)
                                                     Container(
@@ -461,7 +460,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                                       alignment:
                                                           Alignment.center,
                                                       child: Text(
-                                                        '${_episodeItem!.enclosureSize! ~/ 1000000}MB',
+                                                        '${_episodeItem.enclosureSize! ~/ 1000000}MB',
                                                         style: TextStyle(
                                                             color: context
                                                                 .background),
@@ -588,7 +587,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                 height: _showMenu ? 50 : 0,
                                 child: SingleChildScrollView(
                                   scrollDirection: Axis.vertical,
-                                  child: MenuBar(
+                                  child: EpisodeActionBar(
                                       episodeItem: _episodeItem,
                                       heroTag: widget.heroTag,
                                       hide: widget.hide),
