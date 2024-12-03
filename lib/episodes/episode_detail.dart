@@ -75,7 +75,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
         });
       }
     }
-    if (_controller.offset > context.textTheme.headline5!.fontSize!) {
+    if (_controller.offset > context.textTheme.headlineSmall!.fontSize!) {
       if (!_showTitle) setState(() => _showTitle = true);
     } else if (_showTitle) setState(() => _showTitle = false);
     if (_controller.position.userScrollDirection ==
@@ -157,16 +157,11 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                   ? context.overlay.copyWith(
                       systemNavigationBarColor: context.accentBackground)
                   : context.overlay,
-              child: WillPopScope(
-                onWillPop: () async {
-                  if (_playerKey.currentState != null &&
-                      _playerKey.currentState!.initSize! > 100) {
-                    _playerKey.currentState!.backToMini();
-                    return false;
-                  } else {
-                    return true;
-                  }
-                },
+              child: PopScope(
+                canPop: _playerKey.currentState != null &&
+                    _playerKey.currentState!.size! > 100,
+                onPopInvokedWithResult: (_, __) =>
+                    _playerKey.currentState!.backToMini(),
                 child: Scaffold(
                   backgroundColor: context.background,
                   body: SafeArea(
@@ -586,7 +581,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                 height: _showMenu ? 50 : 0,
                                 child: SingleChildScrollView(
                                   scrollDirection: Axis.vertical,
-                                  child: MenuBar(
+                                  child: EpisodeActionBar(
                                       episodeItem: _episodeItem,
                                       heroTag: widget.heroTag,
                                       hide: widget.hide),

@@ -570,6 +570,7 @@ class DBHelper {
           updateCount: list.first['update_count'],
           episodeCount: list.first['episode_count']);
     }
+    return null;
   }
 
   Future savePodcastLocal(PodcastLocal podcastLocal) async {
@@ -641,10 +642,8 @@ class DBHelper {
         """SELECT downloaded FROM Episodes WHERE downloaded != 'ND' AND feed_id = ?""",
         [id]);
     for (var i in list) {
-      if (i != null) {
-        await FlutterDownloader.remove(
-            taskId: i['downloaded'], shouldDeleteContent: true);
-      }
+      await FlutterDownloader.remove(
+          taskId: i['downloaded'], shouldDeleteContent: true);
     }
     await dbClient.rawDelete('DELETE FROM Episodes WHERE feed_id=?', [id]);
     var milliseconds = DateTime.now().millisecondsSinceEpoch;
@@ -1270,7 +1269,6 @@ class DBHelper {
   }
 
   Future<int> savePodcastRss(RssFeed feed, String id) async {
-    feed.items!.removeWhere((item) => item == null);
     var result = feed.items!.length;
     var dbClient = await database;
     String? description, url;
@@ -1289,8 +1287,8 @@ class DBHelper {
       final title = feed.items![i].itunes!.title ?? feed.items![i].title;
       final length = feed.items![i].enclosure?.length;
       final pubDate = feed.items![i].pubDate;
-      final date = _parsePubDate(pubDate);
-      final milliseconds = date.millisecondsSinceEpoch;
+      final milliseconds = pubDate?.millisecondsSinceEpoch ??
+          DateTime.now().millisecondsSinceEpoch;
       final duration = feed.items![i].itunes!.duration?.inSeconds ?? 0;
       final explicit = _getExplicit(feed.items![i].itunes!.explicit);
       final chapter = feed.items![i].podcastChapters?.url ?? '';
@@ -1335,8 +1333,8 @@ class DBHelper {
   Future<int> updatePodcastRss(PodcastLocal podcastLocal,
       {int? removeMark = 0}) async {
     final options = BaseOptions(
-      connectTimeout: 20000,
-      receiveTimeout: 20000,
+      connectTimeout: Duration(seconds: 20),
+      receiveTimeout: Duration(seconds: 20),
     );
     final hideNewMark = await getHideNewMark(podcastLocal.id);
     try {
@@ -1344,7 +1342,6 @@ class DBHelper {
       if (response.statusCode == 200) {
         var feed = RssFeed.parse(response.data);
         String? url, description;
-        feed.items!.removeWhere((item) => item == null);
 
         var dbClient = await database;
         var count = Sqflite.firstIntValue(await dbClient.rawQuery(
@@ -1369,8 +1366,8 @@ class DBHelper {
           final title = item.itunes!.title ?? item.title;
           final length = item.enclosure?.length ?? 0;
           final pubDate = item.pubDate;
-          final date = _parsePubDate(pubDate);
-          final milliseconds = date.millisecondsSinceEpoch;
+          final milliseconds = pubDate?.millisecondsSinceEpoch ??
+              DateTime.now().millisecondsSinceEpoch;
           final duration = item.itunes!.duration?.inSeconds ?? 0;
           final explicit = _getExplicit(item.itunes!.explicit);
           final chapter = item.podcastChapters?.url ?? '';

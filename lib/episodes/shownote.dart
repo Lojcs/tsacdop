@@ -20,20 +20,19 @@ class ShowNote extends StatelessWidget {
       future: _getSDescription(episode!.enclosureUrl),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          var description = snapshot.data;
-          if (description == null) return Center();
+          var description = snapshot.data!;
           if (description.length > 0) {
             return Selector<AudioPlayerNotifier, EpisodeBrief?>(
               selector: (_, audio) => audio.episode,
               builder: (_, playEpisode, __) {
-                if (playEpisode == episode && !description!.contains('#t=')) {
+                if (playEpisode == episode && !description.contains('#t=')) {
                   final linkList = linkify(description,
                       options: LinkifyOptions(humanize: false),
                       linkifiers: [TimeStampLinkifier()]);
                   for (final element in linkList) {
                     if (element is TimeStampElement) {
                       final time = element.timeStamp;
-                      description = description!.replaceFirst(time!,
+                      description = description.replaceFirst(time,
                           '<a rel="nofollow" href = "#t=$time">$time</a>');
                     }
                   }
@@ -44,7 +43,7 @@ class ShowNote extends StatelessWidget {
                     style: {
                       'html': Style.fromTextStyle(data.copyWith(fontSize: 14))
                           .copyWith(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        padding: HtmlPaddings.symmetric(horizontal: 12),
                       ),
                       'a': Style(
                         color: context.accentColor,
@@ -52,7 +51,7 @@ class ShowNote extends StatelessWidget {
                       ),
                     },
                     data: description,
-                    onLinkTap: (url, _, __, ___) {
+                    onLinkTap: (url, _, __) {
                       if (url!.substring(0, 3) == '#t=') {
                         final seconds = _getTimeStamp(url);
                         if (playEpisode == episode) {
@@ -107,7 +106,7 @@ class ShowNote extends StatelessWidget {
     return seconds;
   }
 
-  Future<String?> _getSDescription(String url) async {
+  Future<String> _getSDescription(String url) async {
     final dbHelper = DBHelper();
     String description;
     description = (await dbHelper.getDescription(url))!
@@ -120,7 +119,7 @@ class ShowNote extends StatelessWidget {
           linkifiers: [UrlLinkifier(), EmailLinkifier()]);
       for (var element in linkList) {
         if (element is UrlElement) {
-          description = description.replaceAll(element.url!,
+          description = description.replaceAll(element.url,
               '<a rel="nofollow" href = ${element.url}>${element.text}</a>');
         }
         if (element is EmailElement) {

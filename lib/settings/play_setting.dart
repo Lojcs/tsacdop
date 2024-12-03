@@ -68,7 +68,7 @@ class _PlaySettingState extends State<PlaySetting> {
                 padding: EdgeInsets.symmetric(horizontal: 40),
                 alignment: Alignment.center,
                 child: Text(s.notificationSetting,
-                    style: context.textTheme.bodyText1!
+                    style: context.textTheme.bodyLarge!
                         .copyWith(color: context.accentColor)),
               ),
               _NotificationLayout(),
@@ -86,14 +86,14 @@ class _PlaySettingState extends State<PlaySetting> {
                   s.homeMenuPlaylist,
                   style: Theme.of(context)
                       .textTheme
-                      .bodyText1!
+                      .bodyLarge!
                       .copyWith(color: context.accentColor),
                 ),
               ),
               Selector<SettingState, bool?>(
                 selector: (_, settings) => settings.autoPlay,
                 builder: (_, data, __) => ListTile(
-                  onTap: () => settings.setAutoPlay = !data!,
+                  onTap: () => settings.setAutoPlay = !data,
                   contentPadding:
                       EdgeInsets.only(left: 70.0, right: 20, bottom: 10),
                   title: Text(s.settingsMenuAutoPlay),
@@ -132,7 +132,7 @@ class _PlaySettingState extends State<PlaySetting> {
                 padding: EdgeInsets.symmetric(horizontal: 70),
                 alignment: Alignment.centerLeft,
                 child: Text(s.playback,
-                    style: context.textTheme.bodyText1!
+                    style: context.textTheme.bodyLarge!
                         .copyWith(color: context.accentColor)),
               ),
               ListTile(
@@ -211,7 +211,7 @@ class _PlaySettingState extends State<PlaySetting> {
                 alignment: Alignment.centerLeft,
                 child: Text(
                   s.sleepTimer,
-                  style: context.textTheme.bodyText1!
+                  style: context.textTheme.bodyLarge!
                       .copyWith(color: context.accentColor),
                 ),
               ),
@@ -244,7 +244,7 @@ class _PlaySettingState extends State<PlaySetting> {
                   Selector<SettingState, bool?>(
                     selector: (_, settings) => settings.autoSleepTimer,
                     builder: (_, data, __) => ListTile(
-                      onTap: () => settings.setAutoSleepTimer = !data!,
+                      onTap: () => settings.setAutoSleepTimer = !data,
                       contentPadding: const EdgeInsets.only(
                           left: 70.0, right: 20.0, bottom: 10.0, top: 10.0),
                       title: Text(s.settingsSTAuto),

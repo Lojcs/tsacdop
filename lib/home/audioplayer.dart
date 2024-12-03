@@ -283,8 +283,7 @@ class LastPosition extends StatelessWidget {
                     ],
                   ),
                   style: TextButton.styleFrom(
-                    primary: data ? context.accentColor : null,
-                    shape: RoundedRectangleBorder(
+                    foregroundColor: data ? context.accentColor : null, shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(100.0),
                       side: BorderSide(
                         color: data
@@ -321,8 +320,7 @@ class LastPosition extends StatelessWidget {
                         ],
                       ),
                       style: TextButton.styleFrom(
-                        primary: data ? context.accentColor : null,
-                        shape: RoundedRectangleBorder(
+                        foregroundColor: data ? context.accentColor : null, shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(100.0),
                             side: BorderSide(
                                 color: data
@@ -961,7 +959,7 @@ class _ChaptersWidgetState extends State<ChaptersWidget> {
                   Text(chapters.title!,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: context.textTheme.bodyText1),
+                      style: context.textTheme.bodyLarge),
                   if (chapters.url != '')
                     Row(
                       children: [
@@ -972,9 +970,9 @@ class _ChaptersWidgetState extends State<ChaptersWidget> {
                                 style: TextStyle(color: context.accentColor))),
                         TextButton(
                             style: ButtonStyle(
-                              foregroundColor: MaterialStateProperty.all<Color>(
+                              foregroundColor: WidgetStateProperty.all<Color>(
                                   context.accentColor),
-                              overlayColor: MaterialStateProperty.all<Color>(
+                              overlayColor: WidgetStateProperty.all<Color>(
                                   context.primaryColor.withOpacity(0.3)),
                             ),
                             onPressed: () => chapters.url!.launchUrl,
@@ -1398,10 +1396,10 @@ class _ControlPanelState extends State<ControlPanel>
                         children: [
                           TextButton(
                             style: ButtonStyle(
-                              padding: MaterialStateProperty.all(
+                              padding: WidgetStateProperty.all(
                                   EdgeInsets.symmetric(
                                       horizontal: 10, vertical: 5)),
-                              shape: MaterialStateProperty.all(
+                              shape: WidgetStateProperty.all(
                                 RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(100.0),
                                   side: BorderSide(color: Colors.transparent),
@@ -1497,10 +1495,10 @@ class _ControlPanelState extends State<ControlPanel>
                           ),
                           TextButton(
                             style: ButtonStyle(
-                              padding: MaterialStateProperty.all(
+                              padding: WidgetStateProperty.all(
                                   EdgeInsets.symmetric(
                                       horizontal: 10, vertical: 5)),
-                              shape: MaterialStateProperty.all(
+                              shape: WidgetStateProperty.all(
                                 RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(100.0),
                                   side: BorderSide(color: Colors.transparent),

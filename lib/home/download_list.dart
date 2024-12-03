@@ -18,7 +18,7 @@ class DownloadList extends StatefulWidget {
 
 Widget _downloadButton(EpisodeTask task, BuildContext context) {
   var downloader = Provider.of<DownloadState>(context, listen: false);
-  switch (task.status!.value) {
+  switch (task.status!.index) {
     case 2:
       return Row(
         mainAxisSize: MainAxisSize.min,
@@ -66,7 +66,6 @@ Widget _downloadButton(EpisodeTask task, BuildContext context) {
           onPressed: () => downloader.delTask(task.episode!),
         ),
       ]);
-      break;
     default:
       return SizedBox(
         width: 10,
@@ -80,7 +79,7 @@ class _DownloadListState extends State<DownloadList> {
   Widget build(BuildContext context) {
     return Consumer<DownloadState>(builder: (_, downloader, __) {
       final tasks = downloader.episodeTasks
-          .where((task) => task.status!.value != 3)
+          .where((task) => task.status!.index != 3)
           .toList(); // TODO: This seems to be slow and unreliable.
       return tasks.length > 0
           ? SliverPadding(

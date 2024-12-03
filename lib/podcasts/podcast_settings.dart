@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:color_thief_dart/color_thief_dart.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image/image.dart' as img;
@@ -60,7 +61,7 @@ class _PodcastSettingState extends State<PodcastSetting> {
   Widget build(BuildContext context) {
     final s = context.s;
     final groupList = context.watch<GroupList>();
-    final textStyle = context.textTheme.bodyText2!;
+    final textStyle = context.textTheme.bodyMedium!;
     final colorScheme = ColorScheme.fromSeed(
         seedColor: widget.podcastLocal!.primaryColor!.toColor(),
         brightness: context.brightness);
@@ -511,8 +512,8 @@ class _PodcastSettingState extends State<PodcastSetting> {
   Future<void> _refreshArtWork() async {
     setState(() => _coverStatus = RefreshCoverStatus.start);
     var options = BaseOptions(
-      connectTimeout: 30000,
-      receiveTimeout: 90000,
+      connectTimeout: Duration(seconds: 30),
+      receiveTimeout: Duration(seconds: 90),
     );
     var dir = await getApplicationDocumentsDirectory();
     var filePath = "${dir.path}/${widget.podcastLocal!.id}.png";
@@ -539,7 +540,7 @@ class _PodcastSettingState extends State<PodcastSetting> {
             options: Options(
               responseType: ResponseType.bytes,
             ));
-        var image = img.decodeImage(imageResponse.data!)!;
+        var image = img.decodeImage(Uint8List.fromList(imageResponse.data!))!;
         thumbnail = img.copyResize(image, width: 300);
         File(filePath).writeAsBytesSync(img.encodePng(thumbnail));
         final imageProvider = FileImage(File(filePath));
@@ -560,9 +561,9 @@ class _PodcastSettingState extends State<PodcastSetting> {
       } catch (e) {
         developer.log(e.toString());
         if (mounted) {
-          if (e is DioError &&
+          if (e is DioException &&
               e.error is SocketException &&
-              e.message.substring(17, 35) == "Failed host lookup") {
+              e.message?.substring(17, 35) == "Failed host lookup") {
             Fluttertoast.showToast(
               msg: context.s.networkErrorDNS,
               gravity: ToastGravity.TOP,

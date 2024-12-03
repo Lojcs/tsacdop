@@ -3,11 +3,9 @@ import 'dart:developer';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
-import 'package:collection/priority_queue.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:tuple/tuple.dart';
 
@@ -131,9 +129,6 @@ class AudioPlayerNotifier extends ChangeNotifier {
 
   /// Settings varibales
 
-  /// Unused. Current position.
-  late int _currentPosition;
-
   /// Unused (only takes value 0). Record plyaer position.
   int _lastPosition = 0;
 
@@ -163,7 +158,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
   bool? _boostVolume;
   late int _volumeGain;
 
-  /// Mark as listened when skipped
+  /// Mark as listened when skipped // TODO: Actually do this.
   late bool _markListened;
 
   /// Current state variables
@@ -247,9 +242,6 @@ class AudioPlayerNotifier extends ChangeNotifier {
 
   /// Last episode's last position for history saving (ms)
   int _lastEpisodePosition = 0;
-
-  /// Unused. (Internal slider animation lock)
-  bool _noSlide = true;
 
   /// Error message.
   String? _remoteErrorMessage;
@@ -1696,7 +1688,6 @@ class CustomAudioHandler extends BaseAudioHandler
       }
       queue.add(queue.value..insertAll(index, items));
       await _playlist.insertAll(index, sources);
-      var a = _playlist;
     }
   }
 
@@ -1779,24 +1770,6 @@ class CustomAudioHandler extends BaseAudioHandler
       case MediaButton.previous:
         await rewind();
         break;
-    }
-  }
-
-  /// Plays the current audio source from the start (with skips)
-  Future<void> _playFromStart() async {
-    AudioSession.instance.then((value) => value.setActive(true));
-    if (mediaItem.value!.extras!['skipSecondsStart'] > 0 ||
-        mediaItem.value!.extras!['skipSecondsEnd'] > 0) {
-      _player.seek(
-          Duration(seconds: mediaItem.value!.extras!['skipSecondsStart']));
-    }
-    if (_player.playbackEvent.processingState !=
-        AudioProcessingState.buffering) {
-      try {
-        _player.play();
-      } catch (e) {
-        // _setState(processingState: AudioProcessingState.error);
-      }
     }
   }
 

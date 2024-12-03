@@ -45,7 +45,6 @@ class EpisodeGrid extends StatelessWidget {
       showItemDuration: Duration(milliseconds: 50),
     );
     final scrollController = ScrollController();
-    final s = context.s;
     late final SelectionController? selectionController =
         Provider.of<SelectionController?>(context);
     if (episodes.isNotEmpty) {

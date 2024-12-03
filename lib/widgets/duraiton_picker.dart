@@ -94,7 +94,7 @@ class _DialPainter extends CustomPainter {
             text: '$minutes$seconds',
             style: Theme.of(context)
                 .textTheme
-                .headline4!
+                .headlineMedium!
                 .copyWith(fontSize: size.shortestSide * 0.15)),
         textDirection: TextDirection.ltr)
       ..layout();
@@ -107,7 +107,7 @@ class _DialPainter extends CustomPainter {
         textAlign: TextAlign.center,
         text: TextSpan(
             text: 'sec', //th: ${theta}',
-            style: Theme.of(context).textTheme.bodyText1),
+            style: Theme.of(context).textTheme.bodyLarge),
         textDirection: TextDirection.ltr)
       ..layout();
     textMinPainter.paint(
@@ -139,7 +139,6 @@ class _DialPainter extends CustomPainter {
 
     // Paint the labels (the minute strings)
     void paintLabels(List<TextPainter> labels) {
-      if (labels == null) return;
       final labelThetaIncrement = -_kTwoPi / labels.length;
       var labelTheta = _kPiByTwo;
 
@@ -170,8 +169,7 @@ class _Dial extends StatefulWidget {
       {required this.duration,
       required this.onChanged,
       this.snapToMins = 1.0,
-      this.color})
-      : assert(duration != null);
+      this.color});
 
   final Duration duration;
   final ValueChanged<Duration>? onChanged;
@@ -388,7 +386,7 @@ class _DialState extends State<_Dial> with SingleTickerProviderStateMixin {
   }
 
   List<TextPainter> _buildSeconds(TextTheme textTheme) {
-    final style = textTheme.subtitle1;
+    final style = textTheme.titleMedium;
 
     const _secondsMarkerValues = <Duration>[
       Duration(seconds: 0),
@@ -424,7 +422,7 @@ class _DialState extends State<_Dial> with SingleTickerProviderStateMixin {
         backgroundColor = Colors.grey[200];
         break;
       case Brightness.dark:
-        backgroundColor = themeData.backgroundColor;
+        backgroundColor = themeData.colorScheme.surface;
         break;
     }
 
@@ -449,7 +447,7 @@ class _DialState extends State<_Dial> with SingleTickerProviderStateMixin {
             selectedValue: selectedDialValue,
             labels: _buildSeconds(theme.textTheme),
             backgroundColor: backgroundColor,
-            accentColor: widget.color ?? themeData.accentColor,
+            accentColor: widget.color ?? themeData.colorScheme.secondary,
             theta: _theta.value,
             textDirection: Directionality.of(context),
           ),
@@ -469,8 +467,7 @@ class _DurationPickerDialog extends StatefulWidget {
   /// [initialTime] must not be null.
   const _DurationPickerDialog(
       {Key? key, required this.initialTime, this.snapToMins})
-      : assert(initialTime != null),
-        super(key: key);
+      : super(key: key);
 
   /// The duration initially selected when the dialog is shown.
   final Duration initialTime;
@@ -527,11 +524,11 @@ class _DurationPickerDialogState extends State<_DurationPickerDialog> {
               snapToMins: widget.snapToMins,
             )));
 
-    final Widget actions = ButtonBar(children: <Widget>[
-      FlatButton(
+    final Widget actions = OverflowBar(children: <Widget>[
+      TextButton(
           child: Text(localizations.cancelButtonLabel),
           onPressed: _handleCancel),
-      FlatButton(
+      TextButton(
           child: Text(localizations.okButtonLabel), onPressed: _handleOk),
     ]);
 
@@ -550,7 +547,6 @@ class _DurationPickerDialogState extends State<_DurationPickerDialog> {
         ),
       );
 
-      assert(orientation != null);
       switch (orientation) {
         case Orientation.portrait:
           return SizedBox(
@@ -581,7 +577,7 @@ class _DurationPickerDialogState extends State<_DurationPickerDialog> {
 
     return Theme(
       data: theme.copyWith(
-        dialogBackgroundColor: Colors.transparent,
+        dialogTheme: DialogTheme(backgroundColor: Colors.transparent),
       ),
       child: dialog,
     );
@@ -610,9 +606,6 @@ Future<Duration?> showDurationPicker(
     {required BuildContext context,
     required Duration initialTime,
     double? snapToMins}) async {
-  assert(context != null);
-  assert(initialTime != null);
-
   return await showDialog<Duration>(
     context: context,
     builder: (context) =>

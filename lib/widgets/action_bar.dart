@@ -1122,7 +1122,7 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
         buttonType: ActionBarButtonType.onOff,
         onPressed: (value) {
           if (mounted) setState(() => secondRow = value!);
-          switch (value) {
+          switch (value!) {
             case false:
               _switchSecondRowController.reverse();
               break;

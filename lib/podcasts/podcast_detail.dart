@@ -3,7 +3,7 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:connectivity/connectivity.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
@@ -176,19 +176,18 @@ class _PodcastDetailState extends State<PodcastDetail> {
                         systemNavigationBarColor: context.accentBackground)
                     : context.overlay)
                 .copyWith(statusBarIconBrightness: Brightness.light),
-            child: WillPopScope(
-              onWillPop: () {
+            child: PopScope(
+              canPop: !(_playerKey.currentState != null &&
+                      _playerKey.currentState!.size! > 100) &&
+                  !selectionController.selectMode,
+              onPopInvokedWithResult: (_, __) {
                 if (_playerKey.currentState != null &&
-                    _playerKey.currentState!.initSize! > 100) {
+                    _playerKey.currentState!.size! > 100) {
                   _playerKey.currentState!.backToMini();
-                  return Future.value(false);
                 } else if (selectionController.selectMode) {
                   setState(() {
                     selectionController.selectMode = false;
                   });
-                  return Future.value(false);
-                } else {
-                  return Future.value(true);
                 }
               },
               child: Scaffold(
@@ -719,7 +718,7 @@ class HostsList extends StatelessWidget {
                                       SizedBox(height: 4),
                                       Text(
                                         host.name!,
-                                        style: context.textTheme.subtitle2,
+                                        style: context.textTheme.titleSmall,
                                         textAlign: TextAlign.center,
                                         maxLines: 2,
                                         overflow: TextOverflow.fade,
@@ -785,7 +784,7 @@ Widget _podcastLink(BuildContext context,
         SizedBox(height: 4),
         Text(
           title,
-          style: context.textTheme.subtitle2,
+          style: context.textTheme.titleSmall,
           textAlign: TextAlign.center,
           maxLines: 2,
           overflow: TextOverflow.fade,
@@ -822,7 +821,7 @@ class _AboutPodcastState extends State<AboutPodcast> {
       return Linkify(
         text: _description,
         onOpen: (link) {
-          link.url!.launchUrl;
+          link.url.launchUrl;
         },
         linkStyle: TextStyle(
             color: widget.accentColor ?? context.accentColor,
@@ -834,8 +833,7 @@ class _AboutPodcastState extends State<AboutPodcast> {
 
   void getDescription(String? id) async {
     final dbHelper = DBHelper();
-    if (widget.podcastLocal!.description == null ||
-        widget.podcastLocal!.description == "") {
+    if (widget.podcastLocal!.description == "") {
       final description = await dbHelper.getFeedDescription(id);
       if (description == null || description.isEmpty) {
         _description = '';

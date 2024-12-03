@@ -34,9 +34,7 @@ class _MenuItem extends SingleChildRenderObjectWidget {
 }
 
 class _RenderMenuItem extends RenderShiftedBox {
-  _RenderMenuItem(this.onLayout, [RenderBox? child])
-      : assert(onLayout != null),
-        super(child);
+  _RenderMenuItem(this.onLayout, [RenderBox? child]) : super(child);
 
   ValueChanged<Size> onLayout;
 
@@ -228,7 +226,7 @@ class _PopupMenuRouteLayout extends SingleChildLayoutDelegate {
   @override
   Offset getPositionForChild(Size size, Size childSize) {
     var y = position!.top;
-    if (selectedItemIndex != null && itemSizes != null) {
+    if (selectedItemIndex != null) {
       var selectedItemOffset = _kMenuVerticalPadding;
       for (var index = 0; index < selectedItemIndex!; index += 1) {
         selectedItemOffset += itemSizes[index]!.height;
@@ -247,7 +245,6 @@ class _PopupMenuRouteLayout extends SingleChildLayoutDelegate {
       x = position!.left;
     } else {
       // Menu button is equidistant from both edges, so grow in reading direction.
-      assert(textDirection != null);
       switch (textDirection) {
         case TextDirection.rtl:
           x = size.width - position!.right - childSize.width;
@@ -596,7 +593,6 @@ class MyPopupMenuButtonState<T> extends State<MyPopupMenuButton<T>> {
   }
 
   Icon? _getIcon(TargetPlatform platform) {
-    assert(platform != null);
     switch (platform) {
       case TargetPlatform.android:
       case TargetPlatform.fuchsia:
@@ -607,7 +603,6 @@ class MyPopupMenuButtonState<T> extends State<MyPopupMenuButton<T>> {
       case TargetPlatform.windows:
         return const Icon(Icons.more_horiz);
     }
-    return null;
   }
 
   @override
@@ -687,7 +682,7 @@ class MyPopupMenuItemState<int, W extends MyPopupMenuItem<int>>
     final popupMenuTheme = PopupMenuTheme.of(context);
     var style = widget.textStyle ??
         popupMenuTheme.textStyle ??
-        theme.textTheme.subtitle1!;
+        theme.textTheme.titleMedium!;
 
     Widget item = AnimatedDefaultTextStyle(
       style: style,

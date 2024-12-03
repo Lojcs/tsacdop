@@ -124,11 +124,9 @@ class _PodcastManageState extends State<PodcastManage>
           ],
         ),
         body: SafeArea(
-          child: WillPopScope(
-            onWillPop: () async {
-              context.read<GroupList>().clearOrderChanged();
-              return true;
-            },
+          child: PopScope(
+            onPopInvokedWithResult: (_, __) =>
+                context.read<GroupList>().clearOrderChanged(),
             child: Consumer<GroupList>(
               builder: (_, groupList, __) {
                 // var _isLoading = groupList.isLoading;

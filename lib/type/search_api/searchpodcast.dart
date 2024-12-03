@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:json_annotation/json_annotation.dart';
 part 'searchpodcast.g.dart';
 
@@ -66,7 +64,7 @@ class OnlinePodcast {
       onlinePodcast is OnlinePodcast && onlinePodcast.id == id;
 
   @override
-  int get hashCode => hashValues(id, title);
+  int get hashCode => Object.hash(id, title);
 
   int? get interval {
     if (count! < 1) {

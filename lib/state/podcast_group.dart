@@ -3,6 +3,7 @@ import 'dart:developer' as developer;
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:color_thief_dart/color_thief_dart.dart';
 import 'package:dio/dio.dart';
@@ -581,8 +582,8 @@ Future<void> subIsolateEntryPoint(SendPort sendPort) async {
     var rss = item.url!;
     sendPort.send([item.title, item.url, 1]);
     var options = BaseOptions(
-      connectTimeout: 30000,
-      receiveTimeout: 90000,
+      connectTimeout: Duration(seconds: 30),
+      receiveTimeout: Duration(seconds: 90),
     );
 
     try {
@@ -618,20 +619,21 @@ Future<void> subIsolateEntryPoint(SendPort sendPort) async {
           var imageResponse = await Dio().get<List<int>>(p.itunes!.image!.href!,
               options: Options(
                 responseType: ResponseType.bytes,
-                receiveTimeout: 90000,
+                receiveTimeout: Duration(seconds: 90),
               ));
           imageUrl = p.itunes!.image!.href;
-          var image = img.decodeImage(imageResponse.data!)!;
+          var image = img.decodeImage(Uint8List.fromList(imageResponse.data!))!;
           thumbnail = img.copyResize(image, width: 300);
         } catch (e) {
           try {
             var imageResponse = await Dio().get<List<int>>(item.imgUrl!,
                 options: Options(
                   responseType: ResponseType.bytes,
-                  receiveTimeout: 90000,
+                  receiveTimeout: Duration(seconds: 90),
                 ));
             imageUrl = item.imgUrl;
-            var image = img.decodeImage(imageResponse.data!)!;
+            var image =
+                img.decodeImage(Uint8List.fromList(imageResponse.data!))!;
             thumbnail = img.copyResize(image, width: 300);
           } catch (e) {
             developer.log(e.toString(), name: 'Download image error');
@@ -643,7 +645,8 @@ Future<void> subIsolateEntryPoint(SendPort sendPort) async {
                   options: Options(responseType: ResponseType.bytes));
               imageUrl = "https://ui-avatars.com/api/?size=300&background="
                   "${listColor[index]}&color=fff&name=${item.title}&length=2&bold=true";
-              thumbnail = img.decodeImage(imageResponse.data!);
+              thumbnail =
+                  img.decodeImage(Uint8List.fromList(imageResponse.data!));
             } catch (e) {
               developer.log(e.toString(), name: 'Donwload image error');
               sendPort.send([item.title, item.url, 6]);

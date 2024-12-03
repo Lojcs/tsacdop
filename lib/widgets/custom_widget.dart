@@ -1223,8 +1223,8 @@ class LayoutButton extends StatelessWidget {
 /// Remove scroll view overlay effect.
 class NoGrowBehavior extends ScrollBehavior {
   @override
-  Widget buildViewportChrome(
-      BuildContext context, Widget child, AxisDirection axisDirection) {
+  Widget buildOverscrollIndicator(
+      BuildContext context, Widget child, ScrollableDetails scrollableDetails) {
     return child;
   }
 }

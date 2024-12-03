@@ -233,7 +233,7 @@ class _SelectionOptions extends StatelessWidget {
                 context.s.selected(
                     "${Provider.of<SelectionController>(context).selectedEpisodes.length}" +
                         (selectionController.selectionTentative ? "+" : "")),
-                style: context.textTheme.headline6!.copyWith(color: color),
+                style: context.textTheme.titleLarge!.copyWith(color: color),
               ),
             ),
           ),
@@ -278,9 +278,9 @@ class _SelectionOptions extends StatelessWidget {
                     side: BorderSide(color: color),
                     backgroundColor:
                         selectionController.selectBefore ? color : null,
-                    primary: selectionController.selectBefore
-                        ? Colors.white
-                        : context.textColor,
+                    // primary: selectionController.selectBefore
+                    //     ? Colors.white
+                    //     : context.textColor,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.all(Radius.circular(100)))),
                 onPressed: () {
@@ -300,9 +300,9 @@ class _SelectionOptions extends StatelessWidget {
                       side: BorderSide(color: color),
                       backgroundColor:
                           selectionController.selectAfter ? color : null,
-                      primary: selectionController.selectAfter
-                          ? Colors.white
-                          : context.textColor,
+                      // primary: selectionController.selectAfter
+                      //     ? Colors.white
+                      //     : context.textColor,
                       shape: RoundedRectangleBorder(
                           borderRadius:
                               BorderRadius.all(Radius.circular(100)))),
@@ -322,9 +322,9 @@ class _SelectionOptions extends StatelessWidget {
                     side: BorderSide(color: color),
                     backgroundColor:
                         selectionController.selectAll ? color : null,
-                    primary: selectionController.selectAll
-                        ? Colors.white
-                        : context.textColor,
+                    // primary: selectionController.selectAll
+                    //     ? Colors.white
+                    //     : context.textColor,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.all(Radius.circular(100)))),
                 onPressed: () {
@@ -697,7 +697,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                   child: Text(
                       context.s.selected("${selectedEpisodes.length}" +
                           (selectionController.selectionTentative ? "+" : "")),
-                      style: context.textTheme.headline6!
+                      style: context.textTheme.titleLarge!
                           .copyWith(color: widget.color))),
             ),
           ),

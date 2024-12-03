@@ -11,17 +11,18 @@ import 'package:tsacdop/widgets/custom_widget.dart';
 
 import '../util/helpers.dart';
 
-class MenuBar extends StatefulWidget {
+class EpisodeActionBar extends StatefulWidget {
   final EpisodeBrief episodeItem;
   final String? heroTag;
   final bool? hide;
-  MenuBar({required this.episodeItem, this.heroTag, this.hide, Key? key})
+  EpisodeActionBar(
+      {required this.episodeItem, this.heroTag, this.hide, Key? key})
       : super(key: key);
   @override
-  MenuBarState createState() => MenuBarState();
+  EpisodeActionBarState createState() => EpisodeActionBarState();
 }
 
-class MenuBarState extends State<MenuBar> {
+class EpisodeActionBarState extends State<EpisodeActionBar> {
   @override
   Widget build(BuildContext context) {
     final audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
@@ -82,7 +83,7 @@ class MenuBarState extends State<MenuBar> {
                             OverlayEntry _overlayEntry;
                             _overlayEntry =
                                 createOverlayEntry(context, leftOffset: 50);
-                            Overlay.of(context)!.insert(_overlayEntry);
+                            Overlay.of(context).insert(_overlayEntry);
                             await Future.delayed(Duration(seconds: 2));
                             _overlayEntry.remove();
                           }),

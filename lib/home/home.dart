@@ -106,20 +106,18 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                 systemNavigationBarColor:
                     data ? context.accentBackground : context.background,
                 statusBarColor: context.background),
-            child: WillPopScope(
-              onWillPop: () async {
+            child: PopScope(
+              canPop: settings.openPlaylistDefault! &&
+                  !(_playerKey.currentState != null &&
+                      _playerKey.currentState!.size! > 100),
+              onPopInvokedWithResult: (_, __) {
                 if (_playerKey.currentState != null &&
-                    _playerKey.currentState!.initSize! > 100) {
+                    _playerKey.currentState!.size! > 100) {
                   _playerKey.currentState!.backToMini();
-                  return false;
-                } else if (settings.openPlaylistDefault!) {
-                  return true;
-                } else if (Platform.isAndroid) {
+                } else if (!settings.openPlaylistDefault! &&
+                    Platform.isAndroid) {
                   _androidAppRetain
                       .invokeMethod('sendToBackground'); // This doesn't work
-                  return false;
-                } else {
-                  return false;
                 }
               },
               child: Scaffold(
@@ -128,10 +126,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                 body: SafeArea(
                   bottom: data,
                   child: Stack(children: <Widget>[
-                    NestedScrollView(
-                      innerScrollPositionKeyBuilder: () {
-                        return Key('tab${_controller!.index}');
-                      },
+                    ExtendedNestedScrollView(
                       pinnedHeaderSliverHeightBuilder: () => 50,
                       headerSliverBuilder: (context, innerBoxScrolled) {
                         return <Widget>[
@@ -248,17 +243,17 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                               // TODO: Add pull to refresh?
                               controller: _controller,
                               children: <Widget>[
-                                NestedScrollViewInnerScrollPositionKeyWidget(
-                                  Key('tab0'),
-                                  _RecentUpdate(),
+                                KeyedSubtree(
+                                  key: Key('tab0'),
+                                  child: _RecentUpdate(),
                                 ),
-                                NestedScrollViewInnerScrollPositionKeyWidget(
-                                  Key('tab1'),
-                                  _MyFavorite(),
+                                KeyedSubtree(
+                                  key: Key('tab1'),
+                                  child: _MyFavorite(),
                                 ),
-                                NestedScrollViewInnerScrollPositionKeyWidget(
-                                  Key('tab2'),
-                                  _MyDownload(),
+                                KeyedSubtree(
+                                  key: Key('tab2'),
+                                  child: _MyDownload(),
                                 ),
                               ],
                             ),
@@ -743,7 +738,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
                             width: 20,
                             child: CustomPaint(
                                 painter: RemoveNewFlagPainter(
-                                    context.textTheme.bodyText1!.color,
+                                    context.textTheme.bodyLarge!.color,
                                     Colors.red))),
                         onPressed: () async {
                           _removeNewMark(_group!);
@@ -758,7 +753,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
                     //          width: 20,
                     //          child: CustomPaint(
                     //              painter: AddToPlaylistPainter(
-                    //                  context.textTheme.bodyText1.color,
+                    //                  context.textTheme.bodyLarge.color,
                     //                  Colors.red))),
                     //      onPressed: () async {
                     //        await audio.addNewEpisode(_group);

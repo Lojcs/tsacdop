@@ -166,7 +166,6 @@ class _PopupMenuSettingState extends State<PopupMenuSetting> {
                                     ),
                                     text: s.play,
                                     description: s.popupMenuPlayDes);
-                                break;
                               case 1:
                                 return _popupMenuItem(menu, e,
                                     icon: Icon(
@@ -175,14 +174,12 @@ class _PopupMenuSettingState extends State<PopupMenuSetting> {
                                     ),
                                     text: s.later,
                                     description: s.popupMenuLaterDes);
-                                break;
                               case 2:
                                 return _popupMenuItem(menu, e,
                                     icon: Icon(LineIcons.heart,
                                         color: Colors.red, size: 21),
                                     text: s.like,
                                     description: s.popupMenuLikeDes);
-                                break;
                               case 3:
                                 return _popupMenuItem(menu, e,
                                     icon: SizedBox(
@@ -195,7 +192,6 @@ class _PopupMenuSettingState extends State<PopupMenuSetting> {
                                     ),
                                     text: s.markListened,
                                     description: s.popupMenuMarkDes);
-                                break;
                               case 4:
                                 return _popupMenuItem(menu, e,
                                     icon: Icon(
@@ -204,7 +200,6 @@ class _PopupMenuSettingState extends State<PopupMenuSetting> {
                                     ),
                                     text: s.download,
                                     description: s.popupMenuDownloadDes);
-                                break;
                               case 5:
                                 return _popupMenuItem(menu, e,
                                     icon: Icon(
@@ -213,10 +208,8 @@ class _PopupMenuSettingState extends State<PopupMenuSetting> {
                                     ),
                                     text: s.playNext,
                                     description: s.playNextDes);
-                                break;
                               default:
                                 return Center();
-                                break;
                             }
                           }).toList(),
                         ],

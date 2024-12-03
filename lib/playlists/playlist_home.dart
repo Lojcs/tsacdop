@@ -60,8 +60,8 @@ class _PlaylistHomeState extends State<PlaylistHome> {
       Color? color}) {
     return OutlinedButton.icon(
         style: OutlinedButton.styleFrom(
+            foregroundColor: color,
             side: BorderSide(color: context.background),
-            primary: color,
             backgroundColor:
                 isSelected ? context.primaryColorDark : Colors.transparent,
             shape: RoundedRectangleBorder(
@@ -81,13 +81,11 @@ class _PlaylistHomeState extends State<PlaylistHome> {
         statusBarIconBrightness: Theme.of(context).colorScheme.brightness,
         systemNavigationBarColor: Theme.of(context).primaryColor,
       ),
-      child: WillPopScope(
-        onWillPop: () {
-          if (context.read<SettingState>().openPlaylistDefault!) {
+      child: PopScope(
+        canPop: !context.read<SettingState>().openPlaylistDefault!,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) {
             Navigator.push(context, SlideRightRoute(page: Home()));
-            return Future.value(false);
-          } else {
-            return Future.value(true);
           }
         },
         child: Scaffold(
@@ -436,7 +434,7 @@ class __HistoryState extends State<_History> {
     final size = (TextPainter(
             text: TextSpan(text: seconds.toTime),
             maxLines: 1,
-            textScaleFactor: MediaQuery.of(context).textScaleFactor,
+            textScaler: MediaQuery.of(context).textScaler,
             textDirection: TextDirection.ltr)
           ..layout())
         .size;
@@ -588,7 +586,7 @@ class __HistoryState extends State<_History> {
                                             onTap: () => audio
                                                 .loadEpisodeToQueue(episode,
                                                     startPosition:
-                                                        seekValue! < 0.9
+                                                        seekValue < 0.9
                                                             ? (seconds! * 1000)
                                                                 .toInt()
                                                             : 0),
@@ -759,13 +757,13 @@ class __PlaylistsState extends State<_Playlists> {
                               children: [
                                 Text(
                                   s.queue,
-                                  style: context.textTheme.headline6,
+                                  style: context.textTheme.titleLarge,
                                 ),
                                 Text(
                                     '${queue.length} ${s.episode(queue.length).toLowerCase()}'),
                                 TextButton(
                                   style: TextButton.styleFrom(
-                                      primary: context.accentColor,
+                                      foregroundColor: context.accentColor,
                                       textStyle: TextStyle(
                                           fontWeight: FontWeight.bold)),
                                   onPressed: () {
@@ -832,7 +830,7 @@ class __PlaylistsState extends State<_Playlists> {
                           '${data.item1[index].length} ${s.episode(data.item1[index].length).toLowerCase()}'),
                       trailing: TextButton(
                         style: TextButton.styleFrom(
-                            primary: context.accentColor,
+                            foregroundColor: context.accentColor,
                             textStyle: TextStyle(fontWeight: FontWeight.bold)),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -1067,16 +1065,14 @@ class __NewPlaylistState extends State<_NewPlaylist> {
         titlePadding: EdgeInsets.all(20),
         actionsPadding: EdgeInsets.zero,
         actions: <Widget>[
-          FlatButton(
-            splashColor: context.accentColor.withAlpha(70),
+          TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: Text(
               s.cancel,
               style: TextStyle(color: Colors.grey[600]),
             ),
           ),
-          FlatButton(
-            splashColor: context.accentColor.withAlpha(70),
+          TextButton(
             onPressed: () async {
               if (!_processing) {
                 if (_playlistName == '') {

@@ -89,7 +89,7 @@ class DiscoveryPageState extends State<DiscoveryPage> {
                     child: Text(
                       context.s.searchHelper,
                       textAlign: TextAlign.center,
-                      style: context.textTheme.headline6!
+                      style: context.textTheme.titleLarge!
                           .copyWith(color: Colors.grey[400]),
                     ),
                   ),
@@ -149,7 +149,7 @@ class DiscoveryPageState extends State<DiscoveryPage> {
                         Padding(
                           padding: EdgeInsets.fromLTRB(20, 10, 10, 4),
                           child: Text('Categories',
-                              style: context.textTheme.headline6!
+                              style: context.textTheme.titleLarge!
                                   .copyWith(color: context.accentColor)),
                         ),
                         ListView(
@@ -164,7 +164,7 @@ class DiscoveryPageState extends State<DiscoveryPage> {
                                       context.read<SearchState>().setGenre = e;
                                     },
                                     title: Text(e.name!,
-                                        style: context.textTheme.headline6),
+                                        style: context.textTheme.titleLarge),
                                   ))
                               .toList(),
                         ),
@@ -228,7 +228,7 @@ class DiscoveryPageState extends State<DiscoveryPage> {
                 children: [
                   Container(
                     width: 80,
-                    height: context.textTheme.bodyText1!.fontSize,
+                    height: context.textTheme.bodyLarge!.fontSize,
                     decoration: BoxDecoration(
                         color: context.primaryColorDark,
                         borderRadius: BorderRadius.circular(4)),
@@ -236,7 +236,7 @@ class DiscoveryPageState extends State<DiscoveryPage> {
                   SizedBox(height: 10),
                   Container(
                     width: 40,
-                    height: context.textTheme.bodyText1!.fontSize,
+                    height: context.textTheme.bodyLarge!.fontSize,
                     decoration: BoxDecoration(
                         color: context.primaryColorDark,
                         borderRadius: BorderRadius.circular(4)),
@@ -251,7 +251,7 @@ class DiscoveryPageState extends State<DiscoveryPage> {
                   height: 32,
                   child: OutlinedButton(
                       style: OutlinedButton.styleFrom(
-                        primary: context.accentColor.withOpacity(0.5),
+                        foregroundColor: context.accentColor.withOpacity(0.5),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(100.0),
                             side: BorderSide(color: Colors.grey[500]!)),
@@ -282,7 +282,7 @@ class DiscoveryPageState extends State<DiscoveryPage> {
                       padding: const EdgeInsets.fromLTRB(8, 2, 0, 0),
                       child: TextButton.icon(
                         style: TextButton.styleFrom(
-                          primary: Colors.accents[history.indexOf(e)],
+                          foregroundColor: Colors.accents[history.indexOf(e)],
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(100.0),
                           ),
@@ -429,7 +429,7 @@ class __TopPodcastListState extends State<_TopPodcastList> {
               child: Padding(
                 padding: EdgeInsets.fromLTRB(20, 10, 10, 4),
                 child: Text(widget.genre!.name!,
-                    style: context.textTheme.headline6!
+                    style: context.textTheme.titleLarge!
                         .copyWith(color: context.accentColor)),
               ),
             ),

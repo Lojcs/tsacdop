@@ -7,7 +7,6 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:tsacdop/class/settingstate.dart';
-import 'package:tsacdop/state/audio_state.dart';
 import 'package:tsacdop/type/theme_data.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import '../generated/l10n.dart';
@@ -18,7 +17,7 @@ extension ContextExtension on BuildContext {
   Color get primaryColor => Theme.of(this).colorScheme.onPrimary;
   Color get priamryContainer => Theme.of(this).colorScheme.primaryContainer;
   Color get onPrimary => Theme.of(this).colorScheme.onPrimary;
-  Color get background => Theme.of(this).colorScheme.background;
+  Color get background => Theme.of(this).colorScheme.surface;
   Color get tertiary => colorScheme.tertiary;
   Color get tertiaryContainer => colorScheme.tertiaryContainer;
   Color get onTertiary => colorScheme.onTertiary;
@@ -271,7 +270,7 @@ extension ColorExtension on Color {
             ColorScheme.fromSeed(
               seedColor: this,
               brightness: brightness,
-            ).surfaceVariant,
+            ).surfaceContainerHighest,
             this,
             0.5)!;
   }

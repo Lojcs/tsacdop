@@ -1,14 +1,9 @@
-import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:focused_menu/focused_menu.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:line_icons/line_icons.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
-import 'package:tsacdop/episodes/episode_download.dart';
-import 'package:tsacdop/state/download_state.dart';
 import 'package:tsacdop/state/episode_state.dart';
 import 'package:tsacdop/type/episodebrief.dart';
 import 'package:tsacdop/util/extension_helper.dart';
@@ -18,13 +13,11 @@ import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../podcasts/podcast_detail.dart';
 import '../state/audio_state.dart';
-import '../state/setting_state.dart';
 import '../type/play_histroy.dart';
 import '../util/helpers.dart';
 import '../util/pageroute.dart';
 import 'custom_widget.dart';
 import 'episodegrid.dart';
-import 'general_dialog.dart';
 
 /// [EpisodeCard] widget that responds to user interaction.
 class InteractiveEpisodeCard extends StatefulWidget {

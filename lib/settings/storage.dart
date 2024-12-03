@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -78,14 +76,14 @@ class _StorageSettingState extends State<StorageSetting>
                         padding: EdgeInsets.symmetric(horizontal: 70),
                         alignment: Alignment.centerLeft,
                         child: Text(s.network,
-                            style: context.textTheme.bodyText1!
+                            style: context.textTheme.bodyLarge!
                                 .copyWith(color: context.accentColor)),
                       ),
                       Selector<SettingState, bool?>(
                         selector: (_, settings) => settings.downloadUsingData,
                         builder: (_, data, __) {
                           return ListTile(
-                            onTap: () => settings.downloadUsingData = !data!,
+                            onTap: () => settings.downloadUsingData = !data,
                             contentPadding: EdgeInsets.only(
                                 left: 70.0, right: 25, bottom: 10, top: 10),
                             title: Text(s.settingsNetworkCellular),
@@ -135,7 +133,7 @@ class _StorageSettingState extends State<StorageSetting>
                         padding: EdgeInsets.symmetric(horizontal: 70),
                         alignment: Alignment.centerLeft,
                         child: Text(s.settingStorage,
-                            style: context.textTheme.bodyText1!
+                            style: context.textTheme.bodyLarge!
                                 .copyWith(color: context.accentColor)),
                       ),
                       ListTile(
@@ -251,12 +249,12 @@ class _StorageSettingState extends State<StorageSetting>
                         trailing: Text.rich(TextSpan(
                             text: '${(_value ~/ 100) * 100}',
                             style: GoogleFonts.teko(
-                                textStyle: context.textTheme.headline6!
+                                textStyle: context.textTheme.titleLarge!
                                     .copyWith(color: context.accentColor)),
                             children: [
                               TextSpan(
                                   text: ' Mb',
-                                  style: context.textTheme.subtitle2),
+                                  style: context.textTheme.titleSmall),
                             ])),
                       ),
                       Padding(

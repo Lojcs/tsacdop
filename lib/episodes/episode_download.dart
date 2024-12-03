@@ -83,7 +83,7 @@ class _DownloadButtonState extends State<DownloadButton> {
   }
 
   Widget _downloadButton(EpisodeTask task, BuildContext context) {
-    switch (task.status!.value) {
+    switch (task.status!.index) {
       case 0: // DownloadTaskStatus.undefined
         return _buttonOnMenu(
             Center(

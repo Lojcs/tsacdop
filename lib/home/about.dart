@@ -80,8 +80,7 @@ class AboutApp extends StatelessWidget {
                         onPressed: () =>
                             'https://tsacdop.stonegate.me/#/privacy'.launchUrl,
                         style: TextButton.styleFrom(
-                            primary: context.accentColor,
-                            textStyle: TextStyle(fontWeight: FontWeight.bold)),
+                            foregroundColor: context.accentColor, textStyle: TextStyle(fontWeight: FontWeight.bold)),
                         child: Text(
                           s.privacyPolicy,
                         ),
@@ -98,8 +97,7 @@ class AboutApp extends StatelessWidget {
                             'https://tsacdop.stonegate.me/#/changelog'
                                 .launchUrl,
                         style: TextButton.styleFrom(
-                            primary: context.accentColor,
-                            textStyle: TextStyle(fontWeight: FontWeight.bold)),
+                            foregroundColor: context.accentColor, textStyle: TextStyle(fontWeight: FontWeight.bold)),
                         child: Text(s.changelog,
                             style: TextStyle(color: context.accentColor)),
                       ),
@@ -127,7 +125,7 @@ class AboutApp extends StatelessWidget {
                                   'https://www.buymeacoffee.com/stonegate'
                                       .launchUrl,
                               style: ElevatedButton.styleFrom(
-                                primary: Color(0xffffdd00),
+                                backgroundColor: Color(0xffffdd00),
                                 elevation: 0,
                                 enableFeedback: false,
                               ),
@@ -208,7 +206,7 @@ class AboutApp extends StatelessWidget {
                       onTapDown: (detail) async {
                         OverlayEntry _overlayEntry;
                         _overlayEntry = _createOverlayEntry(detail);
-                        Overlay.of(context)!.insert(_overlayEntry);
+                        Overlay.of(context).insert(_overlayEntry);
                         await Future.delayed(Duration(seconds: 2));
                         _overlayEntry.remove();
                       },
