@@ -104,8 +104,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                 systemNavigationBarIconBrightness: context.iconBrightness,
                 statusBarIconBrightness: context.iconBrightness,
                 systemNavigationBarColor:
-                    data ? context.accentBackground : context.background,
-                statusBarColor: context.background),
+                    data ? context.accentBackground : context.surface,
+                statusBarColor: context.surface),
             child: PopScope(
               canPop: settings.openPlaylistDefault! &&
                   !(_playerKey.currentState != null &&
@@ -122,7 +122,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
               },
               child: Scaffold(
                 key: _scaffoldKey,
-                backgroundColor: context.background,
+                backgroundColor: context.surface,
                 body: SafeArea(
                   bottom: data,
                   child: Stack(children: <Widget>[
@@ -784,116 +784,104 @@ class _RecentUpdateState extends State<_RecentUpdate>
       selector: (_, refreshWorkder, groupWorker) =>
           Tuple2(refreshWorkder.created, groupWorker.created),
       builder: (_, data, __) {
-        return FutureBuilder<List<EpisodeBrief>>(
-          future: _getRssItem(_top, _group!, hideListened: _hideListened),
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              return NotificationListener<ScrollNotification>(
-                onNotification: (scrollInfo) {
-                  if (scrollInfo is ScrollStartNotification &&
-                      mounted &&
-                      !_scroll) {
-                    setState(() => _scroll = true);
-                  }
-                  if (scrollInfo.metrics.pixels ==
-                          scrollInfo.metrics.maxScrollExtent &&
-                      _episodes.length == _top) {
-                    if (!_loadMore) {
-                      _loadMoreEpisode();
-                    }
-                  }
-                  return true;
-                },
-                child: ScrollConfiguration(
-                  behavior: NoGrowBehavior(),
-                  child: CustomScrollView(
-                    key: PageStorageKey<String>('update'),
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    slivers: <Widget>[
-                      SliverAppBar(
-                        pinned: true,
-                        leading: Center(),
-                        toolbarHeight: _actionBarHeight,
-                        backgroundColor: context.background,
-                        scrolledUnderElevation: 0,
-                        flexibleSpace: _multiSelect!
-                            ? MultiSelectPanel(
-                                selectionController: SelectionController(),
-                                expanded: false,
-                                getEpisodes: _getEpisodes,
-                              )
-                            : ActionBar(
-                                onGetEpisodesChanged: (getEpisodes) async {
-                                  _getEpisodes = getEpisodes;
-                                  _episodes = await _getEpisodes();
-                                  // selectionController.selectableEpisodes =
-                                  //     _episodes;
-                                  if (mounted) {
-                                    setState(() {});
-                                  }
-                                },
-                                onLayoutChanged: (layout) {
-                                  _layout = layout;
-                                  if (mounted) {
-                                    setState(() {});
-                                  }
-                                },
-                                onHeightChanged: (height) {
-                                  _actionBarHeight = height;
-                                  if (mounted) {
-                                    setState(() {});
-                                  }
-                                },
-                                limit: _top,
-                                layout: _layout ?? Layout.large,
-                                // selectionController: selectionController,
-                              ),
-                      ),
-                      _episodes.length == 0
-                          ? SliverToBoxAdapter(
-                              child: Padding(
-                                padding: EdgeInsets.only(top: 150),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    Icon(LineIcons.alternateCloudDownload,
-                                        size: 80, color: Colors.grey[500]),
-                                    Padding(
-                                        padding:
-                                            EdgeInsets.symmetric(vertical: 10)),
-                                    Text(
-                                      s.noEpisodeRecent,
-                                      style: TextStyle(color: Colors.grey[500]),
-                                    )
-                                  ],
-                                ),
-                              ),
-                            )
-                          : EpisodeGrid(
-                              episodes: _episodes,
-                              layout: _layout,
-                              initNum: _scroll ? 0 : 12,
-                              openPodcast: true,
-                            ),
-                      SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            return _loadMore
-                                ? Container(
-                                    height: 2, child: LinearProgressIndicator())
-                                : Center();
+        return NotificationListener<ScrollNotification>(
+          onNotification: (scrollInfo) {
+            if (scrollInfo is ScrollStartNotification && mounted && !_scroll) {
+              setState(() => _scroll = true);
+            }
+            if (scrollInfo.metrics.pixels ==
+                    scrollInfo.metrics.maxScrollExtent &&
+                _episodes.length == _top) {
+              if (!_loadMore) {
+                _loadMoreEpisode();
+              }
+            }
+            return true;
+          },
+          child: ScrollConfiguration(
+            behavior: NoGrowBehavior(),
+            child: CustomScrollView(
+              key: PageStorageKey<String>('update'),
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: <Widget>[
+                SliverAppBar(
+                  pinned: true,
+                  leading: Center(),
+                  toolbarHeight: _actionBarHeight,
+                  backgroundColor: context.surface,
+                  scrolledUnderElevation: 0,
+                  flexibleSpace: _multiSelect!
+                      ? MultiSelectPanel(
+                          selectionController: SelectionController(),
+                          expanded: false,
+                          getEpisodes: _getEpisodes,
+                        )
+                      : ActionBar(
+                          onGetEpisodesChanged: (getEpisodes) async {
+                            _getEpisodes = getEpisodes;
+                            _episodes = await _getEpisodes();
+                            // selectionController.selectableEpisodes =
+                            //     _episodes;
+                            if (mounted) {
+                              setState(() {});
+                            }
                           },
-                          childCount: 1,
+                          onLayoutChanged: (layout) {
+                            _layout = layout;
+                            if (mounted) {
+                              setState(() {});
+                            }
+                          },
+                          onHeightChanged: (height) {
+                            _actionBarHeight = height;
+                            if (mounted) {
+                              setState(() {});
+                            }
+                          },
+                          limit: _top,
+                          layout: _layout ?? Layout.large,
+                          // selectionController: selectionController,
                         ),
+                ),
+                _episodes.length == 0
+                    ? SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.only(top: 150),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Icon(LineIcons.alternateCloudDownload,
+                                  size: 80, color: Colors.grey[500]),
+                              Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 10)),
+                              Text(
+                                s.noEpisodeRecent,
+                                style: TextStyle(color: Colors.grey[500]),
+                              )
+                            ],
+                          ),
+                        ),
+                      )
+                    : EpisodeGrid(
+                        episodes: _episodes,
+                        layout: _layout ?? Layout.large,
+                        initNum: _scroll ? 0 : 12,
+                        openPodcast: true,
                       ),
-                    ],
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      return _loadMore
+                          ? Container(
+                              height: 2, child: LinearProgressIndicator())
+                          : Center();
+                    },
+                    childCount: 1,
                   ),
                 ),
-              );
-            } else {
-              return Center();
-            }
-          },
+              ],
+            ),
+          ),
         );
       },
     );
@@ -904,7 +892,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
 
   Widget _oldActionBar() => Container(
         height: 40,
-        decoration: BoxDecoration(color: context.background),
+        decoration: BoxDecoration(color: context.surface),
         child: Row(
           children: <Widget>[
             _switchGroupButton(),
@@ -1096,7 +1084,7 @@ class _MyFavoriteState extends State<_MyFavorite>
                               SliverToBoxAdapter(child: SizedBox(height: 40)),
                               EpisodeGrid(
                                 episodes: snapshot.data!,
-                                layout: _layout,
+                                layout: _layout ?? Layout.large,
                                 initNum: 0,
                                 openPodcast: true,
                               ),
@@ -1120,7 +1108,7 @@ class _MyFavoriteState extends State<_MyFavorite>
                             if (!_multiSelect!)
                               Container(
                                 height: 40,
-                                color: context.background,
+                                color: context.surface,
                                 child: Row(
                                   children: <Widget>[
                                     Material(
@@ -1331,7 +1319,7 @@ class _MyDownloadState extends State<_MyDownload>
                 SliverToBoxAdapter(
                   child: Container(
                       height: 40,
-                      color: context.background,
+                      color: context.surface,
                       child: Row(
                         children: <Widget>[
                           Container(
@@ -1386,7 +1374,7 @@ class _MyDownloadState extends State<_MyDownload>
                       )
                     : EpisodeGrid(
                         episodes: episodes,
-                        layout: _layout,
+                        layout: _layout ?? Layout.large,
                         openPodcast: true,
                         initNum: 0,
                       ),

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:tsacdop/util/extension_helper.dart';
@@ -14,13 +16,15 @@ enum ActionBarButtonType { single, onOff, noneOnOff, partialOnOff }
 /// partialOnOff: State switched null->true->false->true.
 class ActionBarButton extends StatefulWidget {
   final Widget child;
+  final ExpansionController? expansionController;
+  final Widget? shrunkChild;
   final Widget? falseChild;
   final Widget? partialChild;
   final bool? state;
   final ActionBarButtonType buttonType;
   final ValueChanged<bool?> onPressed;
-  final Decoration? decoration;
   final double? width;
+  final double? shrunkWidth;
   final double? height;
   final EdgeInsets? innerPadding;
   final Color color;
@@ -33,13 +37,15 @@ class ActionBarButton extends StatefulWidget {
   final bool connectRight;
   const ActionBarButton({
     required this.child,
+    this.expansionController,
+    this.shrunkChild,
     this.falseChild,
     this.partialChild,
     this.state,
     this.buttonType = ActionBarButtonType.single,
     required this.onPressed,
-    this.decoration,
     this.width,
+    this.shrunkWidth,
     this.height,
     this.innerPadding,
     required this.color,
@@ -57,9 +63,11 @@ class ActionBarButton extends StatefulWidget {
 }
 
 class _ActionBarButtonState extends State<ActionBarButton>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final Animation<double> animation;
   late final AnimationController animationController;
+  late final Animation<double>? expandAnimation;
+  late final AnimationController? expandAnimationController;
 
   late bool? state;
 
@@ -68,7 +76,68 @@ class _ActionBarButtonState extends State<ActionBarButton>
       : widget.buttonType == ActionBarButtonType.partialOnOff
           ? state != false
           : state!;
+  double get widgetWidthNotNull =>
+      widget.width ?? context.actionBarSizeHorizontal;
+  double get shrunkWidth => widget.shrunkWidth ?? widgetWidthNotNull;
+  late final double minExpandedWidth = min(shrunkWidth * 3, widgetWidthNotNull);
+  late Tween<double> widthTween = Tween<double>(
+      begin: shrunkWidth,
+      end: hasExpansionController ? shrunkWidth : widgetWidthNotNull);
+  late void Function(bool) _expand = (shouldExpand) {
+    if (shouldExpand) {
+      expandAnimationController!.forward();
+    } else {
+      expandAnimationController!.reverse();
+    }
+  };
+  void expand(bool shouldExpand) {
+    if (expands && mounted) _expand(shouldExpand);
+  }
 
+  late Expandable expandableItem = Expandable(
+    minWidth: shrunkWidth,
+    minExpandedWidth: minExpandedWidth,
+    maxExpandedWidth: widgetWidthNotNull,
+    onWidthChanged: (value) async {
+      if (expands && mounted) {
+        newWidth = value;
+        if (width < value) {
+          widthTween = Tween<double>(begin: width, end: value);
+          expandAnimationController!.value = 0;
+          await expandAnimationController!.forward();
+        } else {
+          widthTween = Tween<double>(begin: value, end: width);
+          expandAnimationController!.value = 1;
+          await expandAnimationController!.reverse();
+        }
+      }
+    },
+  );
+
+  bool get hasExpansionController => widget.expansionController != null;
+  bool get expands => widget.shrunkWidth != null && widget.shrunkChild != null;
+  double get width =>
+      expands ? widthTween.evaluate(expandAnimation!) : widgetWidthNotNull;
+  late double newWidth = widgetWidthNotNull;
+  double get expandRatio =>
+      ((width - shrunkWidth) / (widgetWidthNotNull - shrunkWidth)).clamp(0, 1);
+  Widget get child => Stack(
+        alignment: AlignmentDirectional.center,
+        children: [
+          if (expandRatio != 1)
+            Opacity(
+              opacity: 1 - expandRatio,
+              child: widget.shrunkChild,
+            ),
+          if (expandRatio != 0)
+            Opacity(
+              opacity: expandRatio,
+              child: widget.child,
+            ),
+        ],
+      );
+
+  bool firstBuild = true;
   @override
   void initState() {
     switch (widget.buttonType) {
@@ -94,11 +163,27 @@ class _ActionBarButtonState extends State<ActionBarButton>
     animation.addListener(() {
       if (mounted) setState(() {});
     });
+    if (expands) {
+      expandAnimationController = AnimationController(
+          vsync: this, duration: const Duration(milliseconds: 300))
+        ..addListener(() {
+          if (mounted) setState(() {});
+        });
+      expandAnimation = CurvedAnimation(
+        parent: expandAnimationController!,
+        curve: Curves.easeOutExpo,
+        reverseCurve: Curves.easeInExpo,
+      );
+    } else {
+      expandAnimationController = null;
+      expandAnimation = null;
+    }
     if (active) {
       if (widget.buttonType == ActionBarButtonType.single) {
         animationController.value = 1;
       } else {
         animationController.forward();
+        expand(true);
       }
     }
   }
@@ -106,6 +191,7 @@ class _ActionBarButtonState extends State<ActionBarButton>
   @override
   void dispose() {
     animationController.dispose();
+    if (expands) expandAnimationController!.dispose();
     super.dispose();
   }
 
@@ -129,95 +215,110 @@ class _ActionBarButtonState extends State<ActionBarButton>
       }
       if (active) {
         animationController.forward();
+        expand(true);
       } else {
         animationController.reverse();
+        expand(false);
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (firstBuild) {
+      firstBuild = false;
+      if (hasExpansionController) {
+        _expand = widget.expansionController!.addItem(expandableItem);
+      }
+    }
     BorderRadius borderRadius = widget.borderRadius ??
         BorderRadius.horizontal(
-          left: !widget.connectLeft ? context.iconRadius : Radius.zero,
-          right: !widget.connectRight ? context.iconRadius : Radius.zero,
+          left: !widget.connectLeft ? context.actionBarIconRadius : Radius.zero,
+          right:
+              !widget.connectRight ? context.actionBarIconRadius : Radius.zero,
         );
-    return Container(
-      margin: EdgeInsets.only(
-        left: !widget.connectLeft ? context.iconPadding.left / 2 : 0,
-        right: !widget.connectRight ? context.iconPadding.right / 2 : 0,
-      ),
-      decoration: widget.decoration ??
-          BoxDecoration(
-            color: widget.enabled
-                ? ColorTween(
-                        begin: widget.color.toWeakBackround(context),
-                        end: widget.activeColor ?? widget.color)
-                    .evaluate(animation)
-                : context.brightness == Brightness.light
-                    ? Colors.grey[300]
-                    : !context.realDark
-                        ? Colors.grey[800]
-                        : context.background,
-            borderRadius: borderRadius,
-          ),
-      width: widget.width ?? context.iconButtonSizeHorizontal,
-      height: widget.height ?? context.iconButtonSizeVertical,
-      child: Material(
-        color: Colors.transparent,
-        clipBehavior: Clip.hardEdge,
-        borderRadius: borderRadius,
-        child: IconButton(
-          padding: widget.innerPadding ?? context.iconPadding,
-          icon: SizedBox(
-            width: widget.width ?? context.iconButtonSizeHorizontal,
-            height: widget.height ?? context.iconButtonSizeVertical,
-            child: widget.buttonType == ActionBarButtonType.noneOnOff
-                ? BiStateIndicator(
-                    state: state == false,
-                    child: state == false && widget.falseChild != null
-                        ? widget.falseChild!
-                        : widget.child,
-                  )
-                : state != null
-                    ? state == true
-                        ? widget.child
-                        : widget.falseChild ?? widget.child
-                    : widget.partialChild ?? widget.falseChild ?? widget.child,
-          ),
-          iconSize: context.iconSize,
-          onPressed: widget.enabled
-              ? () {
-                  if (mounted) {
-                    setState(() {
-                      switch (state) {
-                        case null:
-                          state = true;
-                          break;
-                        case false:
-                          if (widget.buttonType ==
-                              ActionBarButtonType.noneOnOff) {
-                            state = null;
-                          } else if (widget.buttonType !=
-                              ActionBarButtonType.single) {
+    return Tooltip(
+      message: widget.tooltip ?? "",
+      child: Container(
+        margin: EdgeInsets.only(
+          left: !widget.connectLeft ? context.actionBarIconPadding.left / 2 : 0,
+          right:
+              !widget.connectRight ? context.actionBarIconPadding.right / 2 : 0,
+        ),
+        decoration: BoxDecoration(
+          color: widget.enabled
+              ? ColorTween(
+                      begin: widget.color.toWeakBackround(context),
+                      end: widget.activeColor ?? widget.color)
+                  .evaluate(animation)
+              : context.brightness == Brightness.light
+                  ? Colors.grey[300]
+                  : !context.realDark
+                      ? Colors.grey[800]
+                      : context.surface,
+          borderRadius: borderRadius,
+        ),
+        width: width,
+        height: widget.height ?? context.actionBarSizeVertical,
+        child: Material(
+          color: Colors.transparent,
+          clipBehavior: Clip.hardEdge,
+          borderRadius: borderRadius,
+          child: InkWell(
+            onTap: widget.enabled
+                ? () {
+                    if (mounted) {
+                      setState(() {
+                        switch (state) {
+                          case null:
                             state = true;
-                          }
-                          break;
-                        case true:
-                          if (widget.buttonType != ActionBarButtonType.single) {
-                            state = false;
-                          }
+                            break;
+                          case false:
+                            if (widget.buttonType ==
+                                ActionBarButtonType.noneOnOff) {
+                              state = null;
+                            } else if (widget.buttonType !=
+                                ActionBarButtonType.single) {
+                              state = true;
+                            }
+                            break;
+                          case true:
+                            if (widget.buttonType !=
+                                ActionBarButtonType.single) {
+                              state = false;
+                            }
+                        }
+                      });
+                      if (active) {
+                        animationController.forward();
+                        expand(true);
+                      } else {
+                        animationController.reverse();
+                        expand(false);
                       }
-                    });
-                    if (active) {
-                      animationController.forward();
-                    } else {
-                      animationController.reverse();
                     }
+                    widget.onPressed(state);
                   }
-                  widget.onPressed(state);
-                }
-              : null,
+                : null,
+            child: Container(
+              margin: widget.innerPadding ?? context.actionBarIconPadding,
+              alignment: Alignment.centerLeft,
+              width: width,
+              height: widget.height ?? context.actionBarSizeVertical,
+              child: widget.buttonType == ActionBarButtonType.noneOnOff
+                  ? BiStateIndicator(
+                      state: state == false,
+                      child: state == false && widget.falseChild != null
+                          ? widget.falseChild!
+                          : child,
+                    )
+                  : state != null
+                      ? state == true
+                          ? child
+                          : widget.falseChild ?? child
+                      : widget.partialChild ?? widget.falseChild ?? child,
+            ),
+          ),
         ),
       ),
     );
@@ -267,7 +368,6 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
     with TickerProviderStateMixin {
   late final Animation<double> activeAnimation;
   late final Animation<double>? expandAnimation;
-  late Animation<double>? expandRatioAnimation;
   late final Animation<double> openAnimation;
   late final AnimationController activeAnimationController;
   late final AnimationController? expandAnimationController;
@@ -279,13 +379,13 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
   late final double minExpandedWidth = widget.minExpandedWidth ??
       (widget.maxExpandedWidth != null
           ? widget.maxExpandedWidth!
-              .clamp(0, context.iconButtonSizeHorizontal * 3)
-          : context.iconButtonSizeHorizontal);
+              .clamp(0, context.actionBarSizeHorizontal * 3)
+          : context.actionBarSizeHorizontal);
   late Tween<double> widthTween = Tween<double>(
-      begin: context.iconButtonSizeHorizontal,
+      begin: context.actionBarSizeHorizontal,
       end: hasExpansionController
-          ? context.iconButtonSizeHorizontal
-          : widget.maxExpandedWidth ?? context.iconButtonSizeHorizontal);
+          ? context.actionBarSizeHorizontal
+          : widget.maxExpandedWidth ?? context.actionBarSizeHorizontal);
   late void Function(bool) _expand = hasExpansionController
       ? widget.expansionController!.addItem(expandableItem)
       : (shouldExpand) {
@@ -300,10 +400,10 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
   }
 
   late Expandable expandableItem = Expandable(
-    minWidth: context.iconButtonSizeHorizontal,
+    minWidth: context.actionBarSizeHorizontal,
     minExpandedWidth: minExpandedWidth,
     maxExpandedWidth:
-        widget.maxExpandedWidth ?? context.iconButtonSizeHorizontal,
+        widget.maxExpandedWidth ?? context.actionBarSizeHorizontal,
     onWidthChanged: (value) async {
       if (expands && mounted) {
         newWidth = value;
@@ -324,9 +424,10 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
   bool get expands => widget.expandedChild != null;
   double get width => expands
       ? widthTween.evaluate(expandAnimation!)
-      : context.iconButtonSizeHorizontal;
-  late double newWidth = context.iconButtonSizeHorizontal;
+      : context.actionBarSizeHorizontal;
+  late double newWidth = context.actionBarSizeHorizontal;
 
+  bool firstBuild = true;
   @override
   void initState() {
     super.initState();
@@ -350,11 +451,9 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
         curve: Curves.easeOutExpo,
         reverseCurve: Curves.easeInExpo,
       );
-      expandRatioAnimation = expandAnimation;
     } else {
       expandAnimationController = null;
       expandAnimation = null;
-      expandRatioAnimation = null;
     }
     openAnimationController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 300))
@@ -373,7 +472,6 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
     openAnimationController.dispose();
     activeAnimationController.dispose();
     if (expands) expandAnimationController!.dispose();
-
     super.dispose();
   }
 
@@ -388,29 +486,40 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
 
   @override
   Widget build(BuildContext context) {
-    if (expands && expandRatioAnimation != null) {
-      expandRatioAnimation = CurvedAnimation(
-          parent: widthTween.animate(expandAnimation!),
-          curve: Interval(context.iconButtonSizeHorizontal, minExpandedWidth));
+    if (firstBuild) {
+      firstBuild = false;
+      if (hasExpansionController) {
+        _expand = widget.expansionController!.addItem(expandableItem);
+      }
     }
     var borderRadiusTween = BorderRadiusTween(
       begin: BorderRadius.only(
-        topLeft: !widget.connectLeft ? context.iconRadius : Radius.zero,
-        topRight: !widget.connectRight ? context.iconRadius : Radius.zero,
-        bottomLeft: !widget.connectLeft ? context.iconRadius : Radius.zero,
-        bottomRight: !widget.connectRight ? context.iconRadius : Radius.zero,
+        topLeft:
+            !widget.connectLeft ? context.actionBarIconRadius : Radius.zero,
+        topRight:
+            !widget.connectRight ? context.actionBarIconRadius : Radius.zero,
+        bottomLeft:
+            !widget.connectLeft ? context.actionBarIconRadius : Radius.zero,
+        bottomRight:
+            !widget.connectRight ? context.actionBarIconRadius : Radius.zero,
       ),
       end: BorderRadius.only(
-        topLeft: !widget.connectLeft ? context.iconRadius : Radius.zero,
-        topRight: !widget.connectRight ? context.iconRadius : Radius.zero,
+        topLeft:
+            !widget.connectLeft ? context.actionBarIconRadius : Radius.zero,
+        topRight:
+            !widget.connectRight ? context.actionBarIconRadius : Radius.zero,
         bottomLeft: Radius.zero,
         bottomRight: Radius.zero,
       ),
     );
+    double expandRatio = ((width - context.actionBarSizeHorizontal) /
+            (minExpandedWidth - context.actionBarSizeHorizontal))
+        .clamp(0, 1);
     return Container(
       margin: EdgeInsets.only(
-        left: !widget.connectLeft ? context.iconPadding.left / 2 : 0,
-        right: !widget.connectRight ? context.iconPadding.right / 2 : 0,
+        left: !widget.connectLeft ? context.actionBarIconPadding.left / 2 : 0,
+        right:
+            !widget.connectRight ? context.actionBarIconPadding.right / 2 : 0,
       ),
       decoration: BoxDecoration(
         color: ColorTween(
@@ -419,7 +528,7 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
             .evaluate(activeAnimation),
         borderRadius: borderRadiusTween.evaluate(openAnimation),
       ),
-      height: context.iconButtonSizeVertical,
+      height: context.actionBarSizeVertical,
       width: width,
       child: Material(
         color: Colors.transparent,
@@ -430,33 +539,36 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
           padding: EdgeInsets.zero,
           menuPadding: EdgeInsets.symmetric(vertical: 0),
           constraints: BoxConstraints(
-            minWidth: context.iconButtonSizeHorizontal,
+            minWidth: context.actionBarSizeHorizontal,
             maxWidth: newWidth,
           ),
           visibleItemCount: widget.visibleItemCount,
-          itemExtent: context.iconButtonSizeVertical,
+          itemExtent: context.actionBarSizeVertical,
           position: PopupMenuPosition.under,
           color: widget.activeColor ?? widget.color,
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(bottom: context.iconRadius)),
+              borderRadius:
+                  BorderRadius.vertical(bottom: context.actionBarIconRadius)),
           elevation: 1,
           tooltip: widget.tooltip,
           child: Container(
-            padding: context.iconPadding,
+            padding: context.actionBarIconPadding,
             alignment: Alignment.centerLeft,
             child: widget.expandedChild == null
                 ? widget.child
                 : Stack(
                     alignment: AlignmentDirectional.centerStart,
                     children: [
-                      FadeTransition(
-                        opacity: ReverseAnimation(expandRatioAnimation!),
-                        child: widget.child,
-                      ),
-                      FadeTransition(
-                        opacity: expandRatioAnimation!,
-                        child: widget.expandedChild,
-                      )
+                      if (expandRatio != 1)
+                        Opacity(
+                          opacity: 1 - expandRatio,
+                          child: widget.child,
+                        ),
+                      if (expandRatio != 0)
+                        Opacity(
+                          opacity: expandRatio,
+                          child: widget.expandedChild,
+                        ),
                     ],
                   ),
           ),
@@ -524,16 +636,15 @@ class _ActionBarExpandingSearchButtonState
   late final Animation<double> activeAnimation;
   late final AnimationController activeAnimationController;
   late final Animation<double>? expandAnimation;
-  late Animation<double>? expandRatioAnimation;
   late final AnimationController? expandAnimationController;
 
   late String query = widget.query;
 
-  late final double minExpandedWidth = context.iconButtonSizeHorizontal * 3;
+  late final double minExpandedWidth = context.actionBarSizeHorizontal * 3;
   late Tween<double> widthTween = Tween<double>(
-      begin: context.iconButtonSizeHorizontal,
+      begin: context.actionBarSizeHorizontal,
       end: hasExpansionController
-          ? context.iconButtonSizeHorizontal
+          ? context.actionBarSizeHorizontal
           : widget.expandedWidth);
   late void Function(bool) _expand = (shouldExpand) {
     if (shouldExpand) {
@@ -547,7 +658,7 @@ class _ActionBarExpandingSearchButtonState
   }
 
   late Expandable expandableItem = Expandable(
-    minWidth: context.iconButtonSizeHorizontal,
+    minWidth: context.actionBarSizeHorizontal,
     minExpandedWidth: minExpandedWidth,
     maxExpandedWidth: widget.expandedWidth,
     onWidthChanged: (value) async {
@@ -569,8 +680,8 @@ class _ActionBarExpandingSearchButtonState
   bool get hasExpansionController => widget.expansionController != null;
   double get width => widget.expands
       ? widthTween.evaluate(expandAnimation!)
-      : context.iconButtonSizeHorizontal;
-  late double newWidth = context.iconButtonSizeHorizontal;
+      : context.actionBarSizeHorizontal;
+  late double newWidth = context.actionBarSizeHorizontal;
 
   bool firstBuild = true;
   @override
@@ -596,11 +707,9 @@ class _ActionBarExpandingSearchButtonState
         curve: Curves.easeOutExpo,
         reverseCurve: Curves.easeInExpo,
       );
-      expandRatioAnimation = expandAnimation;
     } else {
       expandAnimationController = null;
       expandAnimation = null;
-      expandRatioAnimation = null;
     }
   }
 
@@ -624,24 +733,34 @@ class _ActionBarExpandingSearchButtonState
   Widget build(BuildContext context) {
     if (firstBuild) {
       firstBuild = false;
-      if (widget.expands && expandRatioAnimation != null) {
-        expandRatioAnimation = CurvedAnimation(
-            parent: expandAnimation!,
-            curve: Interval(
-                0, widthTween.end! / context.iconButtonSizeHorizontal));
-      }
       if (hasExpansionController) {
         _expand = widget.expansionController!.addItem(expandableItem);
       }
     }
     BorderRadius borderRadius = BorderRadius.horizontal(
-      left: !widget.connectLeft ? context.iconRadius : Radius.zero,
-      right: !widget.connectRight ? context.iconRadius : Radius.zero,
+      left: !widget.connectLeft ? context.actionBarIconRadius : Radius.zero,
+      right: !widget.connectRight ? context.actionBarIconRadius : Radius.zero,
     );
+    var borderRadiusTween = BorderRadiusTween(
+      begin: BorderRadius.only(
+        topLeft:
+            !widget.connectLeft ? context.actionBarIconRadius : Radius.zero,
+        topRight:
+            !widget.connectRight ? context.actionBarIconRadius : Radius.zero,
+        bottomLeft:
+            !widget.connectLeft ? context.actionBarIconRadius : Radius.zero,
+        bottomRight:
+            !widget.connectRight ? context.actionBarIconRadius : Radius.zero,
+      ),
+      end: BorderRadius.all(context.actionBarIconRadius),
+    );
+    double expandRatio =
+        (((width / context.actionBarSizeHorizontal) - 1) / 2).clamp(0, 1);
     return Container(
       margin: EdgeInsets.only(
-        left: !widget.connectLeft ? context.iconPadding.left / 2 : 0,
-        right: !widget.connectRight ? context.iconPadding.right / 2 : 0,
+        left: !widget.connectLeft ? context.actionBarIconPadding.left / 2 : 0,
+        right:
+            !widget.connectRight ? context.actionBarIconPadding.right / 2 : 0,
       ),
       decoration: BoxDecoration(
         color: ColorTween(
@@ -650,13 +769,13 @@ class _ActionBarExpandingSearchButtonState
             .evaluate(activeAnimation),
         borderRadius: borderRadius,
       ),
-      height: context.iconButtonSizeVertical,
+      height: context.actionBarSizeVertical,
       width: width,
       child: Material(
         color: Colors.transparent,
         clipBehavior: Clip.hardEdge,
-        borderRadius: borderRadius,
-        child: expandRatioAnimation == null
+        borderRadius: borderRadiusTween.evaluate(expandAnimation!),
+        child: !widget.expands
             ? _SearchIconButton(
                 query: query,
                 onFieldSubmitted: (value) {
@@ -670,19 +789,12 @@ class _ActionBarExpandingSearchButtonState
             : Stack(
                 alignment: AlignmentDirectional.centerEnd,
                 children: [
-                  if (expandRatioAnimation!.value != 1)
-                    FadeTransition(
-                      opacity: expandRatioAnimation!,
-                      child: IconButton(
+                  if (expandRatio != 1)
+                    Opacity(
+                      opacity: 1 - expandRatio,
+                      child: InkWell(
                         splashColor: Colors.transparent,
-                        padding: context.iconPadding,
-                        icon: SizedBox(
-                          width: context.iconButtonSizeHorizontal,
-                          height: context.iconButtonSizeVertical,
-                          child: Icon(Icons.search),
-                        ),
-                        iconSize: context.iconSize,
-                        onPressed: () async {
+                        onTap: () async {
                           activeAnimationController.forward();
                           expand(true);
                           if (widget.popupSearch) {
@@ -709,11 +821,20 @@ class _ActionBarExpandingSearchButtonState
                             );
                           }
                         },
+                        child: Container(
+                          margin: context.actionBarIconPadding,
+                          width: context.actionBarSizeHorizontal,
+                          height: context.actionBarSizeVertical,
+                          child: Icon(
+                            Icons.search,
+                            size: context.actionBarIconSize,
+                          ),
+                        ),
                       ),
                     ),
-                  if (expandRatioAnimation!.value != 0)
-                    FadeTransition(
-                      opacity: expandRatioAnimation!,
+                  if (expandRatio != 0)
+                    Opacity(
+                      opacity: expandRatio,
                       child: Row(
                         children: [
                           if (widget.popupSearch)
@@ -781,7 +902,7 @@ class _ActionBarExpandingSearchButtonState
                             )
                           else
                             Container(
-                              width: width - context.iconButtonSizeHorizontal,
+                              width: width - context.actionBarSizeHorizontal,
                               alignment: Alignment.center,
                               child: TextFormField(
                                 initialValue: query,
@@ -804,17 +925,17 @@ class _ActionBarExpandingSearchButtonState
                               ),
                             ),
                           Container(
-                            width: context.iconButtonSizeHorizontal,
+                            width: context.actionBarSizeHorizontal,
                             child: Material(
                               color: Colors.transparent,
                               child: IconButton(
-                                padding: context.iconPadding,
+                                padding: context.actionBarIconPadding,
                                 icon: SizedBox(
-                                  width: context.iconButtonSizeHorizontal,
-                                  height: context.iconButtonSizeVertical,
+                                  width: context.actionBarSizeHorizontal,
+                                  height: context.actionBarSizeVertical,
                                   child: Icon(Icons.close),
                                 ),
-                                iconSize: context.iconSize,
+                                iconSize: context.actionBarIconSize,
                                 onPressed: () async {
                                   if (mounted) setState(() => query = "");
                                   activeAnimationController.reverse();
@@ -846,32 +967,36 @@ class _SearchIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-        splashColor: Colors.transparent,
-        padding: context.iconPadding,
-        icon: SizedBox(
-          width: context.iconButtonSizeHorizontal,
-          height: context.iconButtonSizeVertical,
-          child: Icon(Icons.search),
+    return InkWell(
+      radius: 0,
+      splashColor: Colors.transparent,
+      onTap: () async {
+        activeAnimationController.forward();
+        await showGeneralDialog(
+          context: context,
+          barrierDismissible: true,
+          barrierLabel:
+              MaterialLocalizations.of(context).modalBarrierDismissLabel,
+          barrierColor: Colors.black54,
+          transitionDuration: const Duration(milliseconds: 200),
+          pageBuilder: (context, animaiton, secondaryAnimation) =>
+              SearchEpisode(
+            onSearch: onFieldSubmitted!,
+            accentColor: color,
+            query: query,
+          ),
+        );
+      },
+      child: Container(
+        margin: context.actionBarIconPadding,
+        width: context.actionBarSizeHorizontal,
+        height: context.actionBarSizeVertical,
+        child: Icon(
+          Icons.search,
+          size: context.actionBarIconSize,
         ),
-        iconSize: context.iconSize,
-        onPressed: () async {
-          activeAnimationController.forward();
-          await showGeneralDialog(
-            context: context,
-            barrierDismissible: true,
-            barrierLabel:
-                MaterialLocalizations.of(context).modalBarrierDismissLabel,
-            barrierColor: Colors.black54,
-            transitionDuration: const Duration(milliseconds: 200),
-            pageBuilder: (context, animaiton, secondaryAnimation) =>
-                SearchEpisode(
-              onSearch: onFieldSubmitted!,
-              accentColor: color,
-              query: query,
-            ),
-          );
-        });
+      ),
+    );
   }
 }
 

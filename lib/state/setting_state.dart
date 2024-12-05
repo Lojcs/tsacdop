@@ -218,12 +218,14 @@ class SettingState extends ChangeNotifier {
           splashColor: _accentSetColor!.withAlpha(70),
         ),
         useMaterial3: true,
-        iconTheme: MyIconThemeData(
-          color: Colors.grey[800],
-          size: 24,
-          radius: const Radius.circular(16),
-          padding: const EdgeInsets.all(6),
-        ),
+        extensions: [
+          ActionBarTheme(
+            iconColor: Colors.grey[800],
+            size: 24,
+            radius: const Radius.circular(16),
+            padding: const EdgeInsets.all(6),
+          ),
+        ],
         checkboxTheme: CheckboxThemeData(
           fillColor: WidgetStateProperty.resolveWith<Color?>(
               (Set<WidgetState> states) {
@@ -284,7 +286,6 @@ class SettingState extends ChangeNotifier {
           primary: _accentSetColor!,
           brightness: Brightness.dark,
           surface: _realDark! ? Colors.black : null,
-          shadow: _realDark! ? _accentSetColor : Colors.black,
         ),
         brightness: Brightness.dark,
         textTheme: TextTheme(
@@ -346,12 +347,14 @@ class SettingState extends ChangeNotifier {
             systemOverlayStyle: SystemUiOverlayStyle.light),
         buttonTheme: ButtonThemeData(height: 32),
         useMaterial3: true,
-        iconTheme: MyIconThemeData(
-          color: Colors.grey[200],
-          size: 24,
-          radius: const Radius.circular(16),
-          padding: const EdgeInsets.all(6),
-        ),
+        extensions: [
+          ActionBarTheme(
+            iconColor: Colors.grey[200],
+            size: 24,
+            radius: const Radius.circular(16),
+            padding: const EdgeInsets.all(6),
+          ),
+        ],
         dialogTheme:
             DialogTheme(backgroundColor: _realDark! ? Colors.grey : null),
       );

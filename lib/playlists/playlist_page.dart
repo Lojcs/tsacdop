@@ -32,9 +32,9 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
   Widget build(BuildContext context) {
     final s = context.s;
     return Scaffold(
-      backgroundColor: context.background,
+      backgroundColor: context.surface,
       appBar: AppBar(
-        backgroundColor: context.background,
+        backgroundColor: context.surface,
         scrolledUnderElevation: 0,
         leading: IconButton(
           splashRadius: 20,

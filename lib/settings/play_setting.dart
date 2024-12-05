@@ -46,7 +46,7 @@ class _PlaySettingState extends State<PlaySetting> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: context.overlay,
       child: Scaffold(
-        backgroundColor: context.background,
+        backgroundColor: context.surface,
         appBar: AppBar(
           title: Text(
             s.play,
@@ -55,7 +55,7 @@ class _PlaySettingState extends State<PlaySetting> {
           leading: CustomBackButton(),
           elevation: 0,
           scrolledUnderElevation: 0,
-          backgroundColor: context.background,
+          backgroundColor: context.surface,
         ),
         body: SingleChildScrollView(
           scrollDirection: Axis.vertical,

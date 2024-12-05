@@ -1063,7 +1063,7 @@ class _SearchResultDetailState extends State<SearchResultDetail>
                               foregroundColor: WidgetStateProperty.all<Color>(
                                   context.accentColor),
                               overlayColor: WidgetStateProperty.all<Color>(
-                                  context.background.withAlpha(72)),
+                                  context.surface.withAlpha(72)),
                               padding:
                                   WidgetStateProperty.all<EdgeInsetsGeometry>(
                                       EdgeInsets.symmetric(horizontal: 2))),
@@ -1222,7 +1222,7 @@ class _SearchResultDetailState extends State<SearchResultDetail>
                 ),
               Expanded(
                 child: Container(
-                  color: context.background,
+                  color: context.surface,
                   child: TabBarView(children: [
                     ListView(
                       physics: _animation.value != widget.maxHeight
@@ -1335,7 +1335,7 @@ class PodcastSlideup extends StatelessWidget {
               child: GestureDetector(
                 onTap: searchState.clearSelect,
                 child: Container(
-                  color: context.background.withOpacity(0.9),
+                  color: context.surface.withOpacity(0.9),
                 ),
               ),
             ),

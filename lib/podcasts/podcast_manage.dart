@@ -84,7 +84,7 @@ class _PodcastManageState extends State<PodcastManage>
       value: context.overlay,
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: context.background,
+          backgroundColor: context.surface,
           title: Text(context.s.groups(2)),
           leading: CustomBackButton(),
           actions: <Widget>[
@@ -135,7 +135,7 @@ class _PodcastManageState extends State<PodcastManage>
                 return Stack(
                   children: <Widget>[
                     ColoredBox(
-                      color: context.background,
+                      color: context.surface,
                       child: CustomTabView(
                         itemCount: _groups.length,
                         tabBuilder: (context, index) => Tab(
@@ -181,7 +181,7 @@ class _PodcastManageState extends State<PodcastManage>
                             }
                           },
                           child: Container(
-                            color: context.background.withOpacity(
+                            color: context.surface.withOpacity(
                                 0.8 * math.min(_menuController.value * 2, 1.0)),
                           ),
                         ),

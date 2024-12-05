@@ -45,7 +45,7 @@ class _StorageSettingState extends State<StorageSetting>
     return AnnotatedRegion(
       value: context.overlay,
       child: Scaffold(
-        backgroundColor: context.background,
+        backgroundColor: context.surface,
         body: SafeArea(
           child: ScrollConfiguration(
             behavior: NoGrowBehavior(),
@@ -61,7 +61,7 @@ class _StorageSettingState extends State<StorageSetting>
                   scrolledUnderElevation: 0,
                   floating: true,
                   pinned: true,
-                  backgroundColor: context.background,
+                  backgroundColor: context.surface,
                 ),
                 SliverToBoxAdapter(
                   child: Column(

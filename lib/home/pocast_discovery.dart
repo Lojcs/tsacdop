@@ -307,7 +307,7 @@ class DiscoveryPageState extends State<DiscoveryPage> {
     return Container(
       decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          color: context.background,
+          color: context.surface,
           border:
               Border.all(color: context.textColor.withOpacity(0.1), width: 1)),
       width: 140,

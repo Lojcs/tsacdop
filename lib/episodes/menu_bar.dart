@@ -32,7 +32,7 @@ class EpisodeActionBarState extends State<EpisodeActionBar> {
       height: 50.0,
       decoration: BoxDecoration(
         color: context.realDark
-            ? context.background
+            ? context.surface
             : widget.episodeItem.cardColor(context),
       ),
       child: Row(

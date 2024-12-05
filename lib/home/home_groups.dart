@@ -40,6 +40,8 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
             tween: Tween<double>(begin: -value, end: 0), weight: 1 / 5)
       ]);
 
+  int? updateCount;
+
   @override
   void initState() {
     super.initState();
@@ -356,9 +358,11 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                                   maxHeight: 50,
                                   maxWidth: 50,
                                   child: CircleAvatar(
-                                      backgroundColor: color.withOpacity(0.5),
-                                      backgroundImage: podcastLocal.avatarImage,
-                                      child: _updateIndicator(podcastLocal)),
+                                    backgroundColor: color.withOpacity(0.5),
+                                    backgroundImage: podcastLocal.avatarImage,
+                                    child: _updateIndicator(
+                                        podcastLocal), // TODO: This doesn't update currently
+                                  ),
                                 ),
                               ),
                             );
@@ -417,7 +421,10 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
 
   Future<int?> _getPodcastUpdateCounts(String? id) async {
     final dbHelper = DBHelper();
-    return await dbHelper.getPodcastUpdateCounts(id);
+    if (updateCount == null) {
+      updateCount = await dbHelper.getPodcastUpdateCounts(id);
+    }
+    return updateCount;
   }
 
   Widget _circleContainer(BuildContext context) => Container(
@@ -441,7 +448,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                     width: 10,
                     decoration: BoxDecoration(
                         color: Colors.red,
-                        border: Border.all(color: context.background, width: 2),
+                        border: Border.all(color: context.surface, width: 2),
                         shape: BoxShape.circle),
                   ),
                 )
@@ -460,12 +467,11 @@ class PodcastPreview extends StatefulWidget {
 }
 
 class _PodcastPreviewState extends State<PodcastPreview> {
-  Future? _getRssItem;
+  List<EpisodeBrief> episodePreview = [];
 
   @override
   void initState() {
     super.initState();
-    _getRssItem = _getRssItemTop(widget.podcastLocal!);
   }
 
   @override
@@ -478,10 +484,8 @@ class _PodcastPreviewState extends State<PodcastPreview> {
             selector: (_, refreshWorker, groupWorker) =>
                 tuple.Tuple2(refreshWorker.created, groupWorker.created),
             builder: (_, data, __) {
-              _getRssItem = _getRssItemTop(widget.podcastLocal!);
               return FutureBuilder<List<EpisodeBrief>>(
-                future:
-                    _getRssItem!.then((value) => value as List<EpisodeBrief>),
+                future: _getPodcastPreview(widget.podcastLocal!),
                 builder: (context, snapshot) {
                   return (snapshot.hasData)
                       ? ShowEpisode(
@@ -529,12 +533,12 @@ class _PodcastPreviewState extends State<PodcastPreview> {
     );
   }
 
-  Future<List<EpisodeBrief>> _getRssItemTop(PodcastLocal podcastLocal) async {
-    final dbHelper = DBHelper();
-    final episodes = await dbHelper.getEpisodes(
-        feedIds: [
-          podcastLocal.id
-        ],
+  Future<List<EpisodeBrief>> _getPodcastPreview(
+      PodcastLocal podcastLocal) async {
+    if (episodePreview.isEmpty) {
+      final dbHelper = DBHelper();
+      episodePreview = await dbHelper.getEpisodes(
+        feedIds: [podcastLocal.id],
         optionalFields: [
           EpisodeField.description,
           EpisodeField.enclosureDuration,
@@ -551,8 +555,10 @@ class _PodcastPreviewState extends State<PodcastPreview> {
         sortBy: Sorter.pubDate,
         sortOrder: SortOrder.DESC,
         limit: 2,
-        episodeState: Provider.of<EpisodeState>(context, listen: false));
-    return episodes;
+        episodeState: Provider.of<EpisodeState>(context, listen: false),
+      );
+    }
+    return episodePreview;
   }
 }
 

@@ -35,9 +35,9 @@ class _PodcastListState extends State<PodcastList> {
       value: context.overlay,
       child: SafeArea(
         child: Scaffold(
-          backgroundColor: context.background,
+          backgroundColor: context.surface,
           appBar: AppBar(
-            backgroundColor: context.background,
+            backgroundColor: context.surface,
             title: Text(context.s.podcast(2)),
             leading: CustomBackButton(),
             actions: [
@@ -60,7 +60,7 @@ class _PodcastListState extends State<PodcastList> {
             ],
           ),
           body: Container(
-            color: context.background,
+            color: context.surface,
             child: FutureBuilder<List<PodcastLocal>>(
               future: _getPodcastLocal(),
               builder: (context, snapshot) {

@@ -19,7 +19,6 @@ import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/audio_state.dart';
 import '../state/download_state.dart';
-import '../state/episode_state.dart';
 import '../type/episodebrief.dart';
 import '../type/fireside_data.dart';
 import '../type/podcastlocal.dart';
@@ -157,7 +156,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
   @override
   Widget build(BuildContext context) {
     final color = context.realDark
-        ? context.background
+        ? context.surface
         : widget.podcastLocal!.primaryColor!
             .toColor()
             .toHighlightBackround(context, brightness: Brightness.dark);
@@ -191,7 +190,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
                 }
               },
               child: Scaffold(
-                backgroundColor: context.background,
+                backgroundColor: context.surface,
                 body: SafeArea(
                   child: Stack(
                     children: <Widget>[
@@ -213,30 +212,14 @@ class _PodcastDetailState extends State<PodcastDetail> {
                                 selectionController: selectionController,
                               ),
                             ),
-                            Selector<AudioPlayerNotifier,
-                                Tuple2<bool, PlayerHeight?>>(
-                              selector: (_, audio) => Tuple2(
-                                  audio.playerRunning, audio.playerHeight),
-                              builder: (_, data, __) {
-                                var height =
-                                    kMinPlayerHeight[data.item2!.index];
-                                return Column(
-                                  children: [
-                                    MultiSelectPanel(
-                                      selectionController: selectionController,
-                                      expanded: true,
-                                      color: _podcastAccent,
-                                      getEpisodes: _getEpisodes,
-                                    ),
-                                    SizedBox(
-                                      height: data.item1 ? height : 0,
-                                    ),
-                                  ],
-                                );
-                              },
-                            ),
                           ],
                         ),
+                      ),
+                      MultiSelectPanelIntegration(
+                        selectionController: selectionController,
+                        expanded: true,
+                        color: _podcastAccent,
+                        getEpisodes: _getEpisodes,
                       ),
                       Container(child: PlayerWidget(playerKey: _playerKey)),
                     ],
@@ -342,7 +325,7 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
   @override
   Widget build(BuildContext context) {
     final color = context.realDark
-        ? context.background
+        ? context.surface
         : widget.podcastLocal!.primaryColor!
             .toColor()
             .toHighlightBackround(context, brightness: Brightness.dark);
@@ -511,7 +494,7 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
                         alignment: Alignment.bottomCenter,
                         child: _showInfo!
                             ? Container(
-                                color: context.background,
+                                color: context.surface,
                                 height: _infoHeight,
                                 child: HostsList(context, widget.podcastLocal!),
                               )
@@ -548,7 +531,7 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
                 pinned: true,
                 leading: Center(),
                 toolbarHeight: _actionBarHeight,
-                backgroundColor: context.background,
+                backgroundColor: context.surface,
                 scrolledUnderElevation: 0,
                 flexibleSpace: ActionBar(
                   onGetEpisodesChanged: (getEpisodes) async {
@@ -596,7 +579,7 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
             EpisodeGrid(
               episodes: _episodes,
               showFavorite: true,
-              layout: _layout,
+              layout: _layout ?? Layout.large,
               initNum: _scroll ? 0 : 12,
               preferEpisodeImage: false,
             ),

@@ -133,7 +133,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
   Widget build(BuildContext context) {
     _lateInit();
     final Color color =
-        context.realDark ? context.background : _episodeItem.cardColor(context);
+        context.realDark ? context.surface : _episodeItem.cardColor(context);
     context.statusBarColor = color;
     context.navBarColor = color;
     final s = context.s;
@@ -158,12 +158,12 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                       systemNavigationBarColor: context.accentBackground)
                   : context.overlay,
               child: PopScope(
-                canPop: _playerKey.currentState != null &&
-                    _playerKey.currentState!.size! > 100,
+                canPop: !(_playerKey.currentState != null &&
+                    _playerKey.currentState!.size! > 100),
                 onPopInvokedWithResult: (_, __) =>
-                    _playerKey.currentState!.backToMini(),
+                    _playerKey.currentState?.backToMini(),
                 child: Scaffold(
-                  backgroundColor: context.background,
+                  backgroundColor: context.surface,
                   body: SafeArea(
                     child: Stack(
                       children: <Widget>[
@@ -298,7 +298,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                   toolbarHeight: titleHeight,
                                   collapsedHeight: titleHeight,
                                   expandedHeight: titleHeight,
-                                  backgroundColor: context.background,
+                                  backgroundColor: context.surface,
                                   scrolledUnderElevation: 0,
                                   flexibleSpace: LayoutBuilder(
                                     builder: (context, constraints) {
@@ -330,7 +330,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                   toolbarHeight: 100,
                                   collapsedHeight: 100,
                                   expandedHeight: 100,
-                                  backgroundColor: context.background,
+                                  backgroundColor: context.surface,
                                   scrolledUnderElevation: 0,
                                   flexibleSpace: LayoutBuilder(
                                     builder: (context, constraints) {
@@ -431,7 +431,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                                           ),
                                                           style: TextStyle(
                                                               color: context
-                                                                  .background),
+                                                                  .surface),
                                                         )),
                                                   if (_episodeItem
                                                               .enclosureSize !=
@@ -457,7 +457,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                                         '${_episodeItem.enclosureSize! ~/ 1000000}MB',
                                                         style: TextStyle(
                                                             color: context
-                                                                .background),
+                                                                .surface),
                                                       ),
                                                     ),
                                                   FutureBuilder<PlayHistory>(

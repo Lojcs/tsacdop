@@ -44,13 +44,13 @@ class _PlayedHistoryState extends State<PlayedHistory>
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: context.overlay,
       child: Scaffold(
-        backgroundColor: context.background,
+        backgroundColor: context.surface,
         body: SafeArea(
           child: NestedScrollView(
             headerSliverBuilder: (context, innerBoxScrolled) {
               return <Widget>[
                 SliverAppBar(
-                  backgroundColor: context.background,
+                  backgroundColor: context.surface,
                   leading: CustomBackButton(),
                   elevation: 0,
                   scrolledUnderElevation: 0,
@@ -101,7 +101,7 @@ class _PlayedHistoryState extends State<PlayedHistory>
                           )
                         ],
                       ),
-                      context.background),
+                      context.surface),
                   pinned: true,
                 ),
               ];
@@ -140,7 +140,7 @@ class _PlayedHistoryState extends State<PlayedHistory>
                                   return Container(
                                     padding:
                                         const EdgeInsets.symmetric(vertical: 5),
-                                    color: context.background,
+                                    color: context.surface,
                                     child: Column(
                                       children: <Widget>[
                                         ListTile(
@@ -239,7 +239,7 @@ class _PlayedHistoryState extends State<PlayedHistory>
                           itemBuilder: (context, index) {
                             var _status = snapshot.data![index].status;
                             return Container(
-                              color: context.background,
+                              color: context.surface,
                               child: Column(
                                 children: <Widget>[
                                   ListTile(
@@ -488,7 +488,7 @@ class HistoryChart extends StatelessWidget {
           lineTouchData: LineTouchData(
             enabled: true,
             touchTooltipData: LineTouchTooltipData(
-              getTooltipColor: (_) => context.background,
+              getTooltipColor: (_) => context.surface,
               fitInsideHorizontally: true,
               getTooltipItems: (touchedBarSpots) {
                 return touchedBarSpots.map((barSpot) {

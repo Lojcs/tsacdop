@@ -157,7 +157,7 @@ class _DownloadsManageState extends State<DownloadsManage> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: context.overlay,
       child: Scaffold(
-        backgroundColor: context.background,
+        backgroundColor: context.surface,
         body: SafeArea(
           child: Stack(
             children: <Widget>[
@@ -213,7 +213,9 @@ class _DownloadsManageState extends State<DownloadsManage> {
                                             .toStringAsFixed(1),
                                     style: GoogleFonts.cairo(
                                         textStyle: TextStyle(
-                                      color: Theme.of(context).colorScheme.secondary,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .secondary,
                                       fontSize: 50,
                                     )),
                                   ),
@@ -222,7 +224,9 @@ class _DownloadsManageState extends State<DownloadsManage> {
                                           ? 'Mb'
                                           : 'Gb',
                                       style: TextStyle(
-                                        color: Theme.of(context).colorScheme.secondary,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .secondary,
                                         fontSize: 20,
                                       )),
                                 ],

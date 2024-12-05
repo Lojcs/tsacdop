@@ -104,6 +104,10 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   // Wheter the card has been selected internally
   bool liveSelect = false;
   late EpisodeBrief episode;
+  PlayHistory? savedPosition;
+
+  bool _firstestBuild = true;
+  late bool? episodeChange;
   @override
   void initState() {
     super.initState();
@@ -133,6 +137,12 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
 
   @override
   Widget build(BuildContext context) {
+    if (_firstestBuild) {
+      _firstestBuild = false;
+
+      episodeChange =
+          Provider.of<EpisodeState>(context).episodeChangeMap[episode.id];
+    }
     // Apply external selection
     if (widget.selected != selected && !liveSelect && widget.selectMode) {
       // TODO: Can this be done in didUpdateWidget?
@@ -152,14 +162,21 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
       });
     }
     liveSelect = false;
-    DBHelper dbHelper = DBHelper();
     return Selector<EpisodeState, bool?>(
       selector: (_, episodeState) => episodeState.episodeChangeMap[episode.id],
-      builder: (_, __, ___) => FutureBuilder<EpisodeBrief>(
-        future: widget.episode
-            .copyWithFromDB(update: true), // It needs to be widget.episode
+      builder: (_, data, ___) => FutureBuilder<EpisodeBrief?>(
+        future: () async {
+          if (data != episodeChange) {
+            // Prevents unnecessary database calls when the card is rebuilt for other reasons
+            episodeChange = data;
+            return widget.episode
+                .copyWithFromDB(update: true); // It needs to be widget.episode
+          } else {
+            return null;
+          }
+        }(),
         builder: (context, snapshot) {
-          if (snapshot.hasData) {
+          if (snapshot.hasData && snapshot.data != null) {
             episode = snapshot.data!;
           }
           return OpenContainerWrapper(
@@ -189,6 +206,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                   selector: (_, audio) => Tuple3(audio.episode == episode,
                       audio.playlist.contains(episode), audio.playerRunning),
                   builder: (_, data, __) {
+                    if (data.item1) savedPosition = null;
                     return FocusedMenuHolder(
                       blurSize: 0,
                       menuItemExtent: widget.layout == Layout.small
@@ -230,7 +248,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                                   hide: selected),
                             )
                           : FutureBuilder<PlayHistory>(
-                              future: dbHelper.getPosition(episode),
+                              future: _getSavedPosition(),
                               // initialData: PlayHistory("", "", 0, 0),
                               builder: (context, snapshot) => _progressLowerlay(
                                   context,
@@ -243,7 +261,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                       duration: const Duration(milliseconds: 100),
                       openWithTap: tapToOpen,
                       animateMenuItems: false,
-                      blurBackgroundColor: context.background,
+                      blurBackgroundColor: context.surface,
                       bottomOffsetHeight: 10,
                       menuOffset: 10,
                       menuItems: _menuItemList(context, episode, data.item1,
@@ -296,6 +314,14 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
         },
       ),
     );
+  }
+
+  Future<PlayHistory> _getSavedPosition() async {
+    if (savedPosition == null) {
+      DBHelper dbHelper = DBHelper();
+      savedPosition = await dbHelper.getPosition(episode);
+    }
+    return savedPosition!;
   }
 }
 
@@ -530,10 +556,10 @@ Widget _progressLowerlay(BuildContext context, double seekValue, Layout layout,
       height: double.infinity,
       child: LinearProgressIndicator(
           color: context.realDark
-              ? context.background.withOpacity(0.7)
+              ? context.surface.withOpacity(0.7)
               : context.brightness == Brightness.light
-                  ? context.background.withOpacity(0.7)
-                  : context.background.withOpacity(0.6),
+                  ? context.surface.withOpacity(0.7)
+                  : context.surface.withOpacity(0.6),
           backgroundColor: Colors.transparent,
           value: seekValue),
     ),
@@ -549,17 +575,17 @@ BoxDecoration _cardDecoration(
       color: context.realDark
           ? controller == null
               ? selected
-                  ? Color.lerp(context.background,
+                  ? Color.lerp(context.surface,
                       episode.getColorScheme(context).primary, 0.25)
-                  : context.background
+                  : context.surface
               : selected
                   ? ColorTween(
-                          begin: context.background,
-                          end: Color.lerp(context.background,
+                          begin: context.surface,
+                          end: Color.lerp(context.surface,
                               episode.getColorScheme(context).primary, 0.25))
                       .animate(controller)
                       .value!
-                  : context.background
+                  : context.surface
           : controller == null
               ? selected
                   ? Color.lerp(

@@ -85,10 +85,11 @@ class Playlist extends Equatable {
   final DBHelper _dbHelper = DBHelper();
 //  final KeyValueStorage _playlistStorage = KeyValueStorage(playlistKey);
 
-  /// (Re)initialises the playlist with the urls in [episodeUrlList].
+  /// Initialises the playlist with the urls in [episodeUrlList].
   Future<void> getPlaylist() async {
-    // // Don't reload if already loaded
-    // if (!reload && episodes.length == episodeList.length) return;
+    // Don't reload if already loaded (hope this doesn't break anything)
+    if (episodes.length == episodeUrlList.length) return;
+
     episodes.clear();
     if (episodeUrlList.isNotEmpty) {
       // Single database call should be faster

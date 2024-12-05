@@ -286,7 +286,7 @@ class ListenedPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(ListenedPainter oldDelegate) {
-    return false;
+    return oldDelegate._color != _color;
   }
 }
 
@@ -545,7 +545,8 @@ class RemoveNewFlagPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(RemoveNewFlagPainter oldDelegate) => false;
+  bool shouldRepaint(RemoveNewFlagPainter oldDelegate) =>
+      oldDelegate.color != color;
 
   @override
   bool shouldRebuildSemantics(RemoveNewFlagPainter oldDelegate) => false;
@@ -1169,7 +1170,8 @@ class DownloadPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(DownloadPainter oldDelegate) {
-    return oldDelegate.fraction != fraction ||
+    return oldDelegate.color != color ||
+        oldDelegate.fraction != fraction ||
         oldDelegate.progress != progress ||
         oldDelegate.pauseProgress != pauseProgress;
   }

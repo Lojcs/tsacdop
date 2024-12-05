@@ -37,7 +37,7 @@ Future generalSheet(BuildContext context,
             topRight: context.radiusMedium.topRight),
       ),
       elevation: 2,
-      backgroundColor: color?.toWeakBackround(context) ?? context.background,
+      backgroundColor: color?.toWeakBackround(context) ?? context.surface,
       context: context,
       builder: (context) {
         final statusHeight = MediaQuery.of(context).padding.top;
@@ -65,8 +65,8 @@ Future generalSheet(BuildContext context,
                       margin: EdgeInsets.only(top: 1.0),
                       decoration: BoxDecoration(
                         borderRadius: context.radiusMedium,
-                        color: color?.toWeakBackround(context) ??
-                            context.background,
+                        color:
+                            color?.toWeakBackround(context) ?? context.surface,
                       ),
                     ),
                   Column(

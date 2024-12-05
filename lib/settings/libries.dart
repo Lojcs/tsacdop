@@ -11,7 +11,7 @@ class Libries extends StatelessWidget {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: context.overlay,
       child: Scaffold(
-        backgroundColor: context.background,
+        backgroundColor: context.surface,
         appBar: AppBar(
           title: Text(
             context.s.settingsLibraries,
@@ -20,7 +20,7 @@ class Libries extends StatelessWidget {
           leading: CustomBackButton(),
           elevation: 0,
           scrolledUnderElevation: 0,
-          backgroundColor: context.background,
+          backgroundColor: context.surface,
         ),
         body: SafeArea(
           child: Scrollbar(

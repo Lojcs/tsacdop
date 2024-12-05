@@ -125,8 +125,8 @@ class ActionBar extends StatefulWidget {
       ActionBarEntry.switchSecondRow,
     ],
     this.itemsSecondRow = const [
-      // ActionBarEntry.dropdownGroups,
-      // ActionBarEntry.dropdownPodcasts,
+      ActionBarEntry.dropdownGroups,
+      ActionBarEntry.dropdownPodcasts,
       ActionBarEntry.searchTitle,
       ActionBarEntry.spacer,
       ActionBarEntry.filterNew,
@@ -164,7 +164,7 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
     seedColor: color,
     brightness: Brightness.dark,
   );
-  late Color activeColor = context.realDark
+  Color get activeColor => context.realDark
       ? colorScheme.secondaryContainer
       : color.toStrongBackround(context);
 
@@ -190,8 +190,12 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
   late bool secondRow = widget.secondRow;
 
   double get totalHeight => Tween<double>(
-          begin: 10 + context.iconSize + context.iconPadding.vertical * 3 / 2,
-          end: 10 + context.iconSize * 2 + context.iconPadding.vertical * 3)
+          begin: 10 +
+              context.actionBarIconSize +
+              context.actionBarIconPadding.vertical * 3 / 2,
+          end: 10 +
+              context.actionBarIconSize * 2 +
+              context.actionBarIconPadding.vertical * 3)
       .evaluate(_switchSecondRowSlideAnimation);
   String searchTitleQuery = "";
 
@@ -364,7 +368,7 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
       widget.onGetEpisodesChanged(_getGetEpisodes(getPodcasts: true));
       initialBuild = false;
       _expansionControllerSecondRow
-          .addWidth(16 + context.iconPadding.horizontal / 2);
+          .addWidth(16 + context.actionBarIconPadding.horizontal / 2);
     }
     return SizedBox(
       height: totalHeight,
@@ -379,10 +383,10 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
           children: [
             Container(
               padding: EdgeInsets.only(
-                left: context.iconPadding.left / 2,
-                top: context.iconPadding.top / 2,
-                right: context.iconPadding.right / 2,
-                bottom: context.iconPadding.bottom /
+                left: context.actionBarIconPadding.left / 2,
+                top: context.actionBarIconPadding.top / 2,
+                right: context.actionBarIconPadding.right / 2,
+                bottom: context.actionBarIconPadding.bottom /
                     2 *
                     _switchSecondRowAppearAnimation.value,
               ),
@@ -395,11 +399,11 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
               Container(
                 padding: EdgeInsets.only(
                   // left: iconPadding.left / 2,
-                  top: context.iconPadding.top /
+                  top: context.actionBarIconPadding.top /
                       2 *
                       _switchSecondRowAppearAnimation.value,
-                  right: context.iconPadding.right / 2,
-                  bottom: context.iconPadding.bottom /
+                  right: context.actionBarIconPadding.right / 2,
+                  bottom: context.actionBarIconPadding.bottom /
                       2 *
                       _switchSecondRowAppearAnimation.value,
                 ),
@@ -420,7 +424,7 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
     List<Widget> widgets = [];
     expansionController(rowIndex).resetWidth();
     expansionController(rowIndex)
-        .addWidth(16 + context.iconPadding.horizontal / 2);
+        .addWidth(16 + context.actionBarIconPadding.horizontal / 2);
     for (int i = 0; i < entryList(rowIndex).length; i++) {
       Widget newWidget = _getWidget(rowIndex, i);
       widgets.add(newWidget);
@@ -649,7 +653,7 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
     bool connectLeft = false,
     bool connectRight = false,
   }) {
-    double expandedWidth = context.iconButtonSizeHorizontal;
+    double expandedWidth = context.actionBarSizeHorizontal;
     for (var group in groups) {
       if (group != null) {
         final groupNameTest = TextPainter(
@@ -659,15 +663,18 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
             ),
             textDirection: TextDirection.ltr);
         groupNameTest.layout();
-        expandedWidth = (groupNameTest.width + context.iconPadding.horizontal)
-            .clamp(expandedWidth, 200);
+        expandedWidth =
+            (groupNameTest.width + context.actionBarIconPadding.horizontal)
+                .clamp(expandedWidth, 200);
       }
     }
     expansionController.addWidth(
-        (!connectLeft ? context.iconPadding.left / 2 : 0) +
-            (!connectRight ? context.iconPadding.right / 2 : 0));
+        (!connectLeft ? context.actionBarIconPadding.left / 2 : 0) +
+            (!connectRight
+                ? context.actionBarIconPadding.right / 2
+                : 0)); // TODO: Move this to generic widgets
     return ActionBarDropdownButton<PodcastGroup>(
-        child: Icon(Icons.all_out),
+        child: Icon(Icons.all_out, color: context.actionBarIconColor),
         selected: group,
         expansionController: expansionController,
         expandedChild: Text(
@@ -695,6 +702,8 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
     for (final group in groups) {
       if (group != null) {
         items.add(PopupMenuItem(
+          padding: context.actionBarIconPadding,
+          height: context.actionBarSizeVertical,
           child: Tooltip(
             child: Text(
               group.name!,
@@ -716,7 +725,7 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
     bool connectLeft = false,
     bool connectRight = false,
   }) {
-    double expandedWidth = context.iconButtonSizeHorizontal;
+    double expandedWidth = context.actionBarSizeHorizontal;
     for (var podcast in podcasts) {
       final podcastNameTest = TextPainter(
           text: TextSpan(
@@ -725,14 +734,15 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
           ),
           textDirection: TextDirection.ltr);
       podcastNameTest.layout();
-      expandedWidth = (podcastNameTest.width + context.iconPadding.horizontal)
-          .clamp(expandedWidth, 200);
+      expandedWidth =
+          (podcastNameTest.width + context.actionBarIconPadding.horizontal)
+              .clamp(expandedWidth, 200);
     }
     expansionController.addWidth(
-        (!connectLeft ? context.iconPadding.left / 2 : 0) +
-            (!connectRight ? context.iconPadding.right / 2 : 0));
+        (!connectLeft ? context.actionBarIconPadding.left / 2 : 0) +
+            (!connectRight ? context.actionBarIconPadding.right / 2 : 0));
     return ActionBarDropdownButton<PodcastLocal>(
-        child: Icon(Icons.podcasts),
+        child: Icon(Icons.podcasts, color: context.actionBarIconColor),
         selected: podcast,
         expansionController: expansionController,
         expandedChild: Text(
@@ -759,8 +769,8 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
     List<PopupMenuEntry<PodcastLocal>> items = [];
     for (final podcast in podcasts) {
       items.add(PopupMenuItem(
-        padding: context.iconPadding,
-        height: context.iconButtonSizeVertical,
+        padding: context.actionBarIconPadding,
+        height: context.actionBarSizeVertical,
         child: Tooltip(
           child: Text(
             podcast.title!,
@@ -781,8 +791,8 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
       bool connectLeft = false,
       bool connectRight = false}) {
     expansionController(rowIndex).addWidth(
-        (!connectLeft ? context.iconPadding.left / 2 : 0) +
-            (!connectRight ? context.iconPadding.right / 2 : 0));
+        (!connectLeft ? context.actionBarIconPadding.left / 2 : 0) +
+            (!connectRight ? context.actionBarIconPadding.right / 2 : 0));
     return ActionBarDropdownButton<Sorter>(
       child: _getSorterIcon(sortBy),
       selected: sortBy,
@@ -807,8 +817,8 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
       switch (sorter) {
         case Sorter.pubDate:
           items.add(PopupMenuItem(
-            padding: context.iconPadding,
-            height: context.iconButtonSizeVertical,
+            padding: context.actionBarIconPadding,
+            height: context.actionBarSizeVertical,
             child: Tooltip(
               child: _getSorterIcon(sorter),
               message: s.publishDate,
@@ -818,8 +828,8 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
           break;
         case Sorter.enclosureSize:
           items.add(PopupMenuItem(
-            padding: context.iconPadding,
-            height: context.iconButtonSizeVertical,
+            padding: context.actionBarIconPadding,
+            height: context.actionBarSizeVertical,
             child: Tooltip(
               child: _getSorterIcon(sorter),
               message: s.size,
@@ -829,8 +839,8 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
           break;
         case Sorter.enclosureDuration:
           items.add(PopupMenuItem(
-            padding: context.iconPadding,
-            height: context.iconButtonSizeVertical,
+            padding: context.actionBarIconPadding,
+            height: context.actionBarSizeVertical,
             child: Tooltip(
               child: _getSorterIcon(sorter),
               message: s.duration,
@@ -840,8 +850,8 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
           break;
         case Sorter.downloadDate:
           items.add(PopupMenuItem(
-            padding: context.iconPadding,
-            height: context.iconButtonSizeVertical,
+            padding: context.actionBarIconPadding,
+            height: context.actionBarSizeVertical,
             child: Tooltip(
               child: _getSorterIcon(sorter),
               message: s.downloadDate,
@@ -851,8 +861,8 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
           break;
         case Sorter.likedDate:
           items.add(PopupMenuItem(
-            padding: context.iconPadding,
-            height: context.iconButtonSizeVertical,
+            padding: context.actionBarIconPadding,
+            height: context.actionBarSizeVertical,
             child: Tooltip(
               child: _getSorterIcon(sorter),
               message: s.likeDate,
@@ -862,8 +872,8 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
           break;
         case Sorter.random:
           items.add(PopupMenuItem(
-            padding: context.iconPadding,
-            height: context.iconButtonSizeVertical,
+            padding: context.actionBarIconPadding,
+            height: context.actionBarSizeVertical,
             child: Tooltip(
               child: _getSorterIcon(sorter),
               message: s.random,
@@ -879,17 +889,17 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
   Icon _getSorterIcon(Sorter sorter) {
     switch (sorter) {
       case Sorter.pubDate:
-        return Icon(Icons.date_range);
+        return Icon(Icons.date_range, color: context.actionBarIconColor);
       case Sorter.enclosureSize:
-        return Icon(Icons.data_usage);
+        return Icon(Icons.data_usage, color: context.actionBarIconColor);
       case Sorter.enclosureDuration:
-        return Icon(Icons.timer_outlined);
+        return Icon(Icons.timer_outlined, color: context.actionBarIconColor);
       case Sorter.downloadDate:
-        return Icon(Icons.download);
+        return Icon(Icons.download, color: context.actionBarIconColor);
       case Sorter.likedDate:
-        return Icon(Icons.favorite_border);
+        return Icon(Icons.favorite_border, color: context.actionBarIconColor);
       case Sorter.random:
-        return Icon(Icons.question_mark);
+        return Icon(Icons.question_mark, color: context.actionBarIconColor);
     }
   }
 
@@ -900,7 +910,8 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
   }) =>
       _button(
         rowIndex: rowIndex,
-        child: Icon(Icons.new_releases_outlined),
+        child: Icon(Icons.new_releases_outlined,
+            color: context.actionBarIconColor),
         state: filterNew,
         buttonType: ActionBarButtonType.noneOnOff,
         onPressed: (value) {
@@ -919,7 +930,7 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
   }) =>
       _button(
         rowIndex: rowIndex,
-        child: Icon(Icons.favorite_border),
+        child: Icon(Icons.favorite_border, color: context.actionBarIconColor),
         state: filterLiked,
         buttonType: ActionBarButtonType.noneOnOff,
         onPressed: (value) {
@@ -938,8 +949,8 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
   }) =>
       _button(
         rowIndex: rowIndex,
-        child:
-            CustomPaint(painter: ListenedPainter(context.textColor, stroke: 2)),
+        child: CustomPaint(
+            painter: ListenedPainter(context.actionBarIconColor, stroke: 2)),
         state: filterPlayed,
         buttonType: ActionBarButtonType.noneOnOff,
         onPressed: (value) {
@@ -960,9 +971,9 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
         rowIndex: rowIndex,
         child: CustomPaint(
           painter: DownloadPainter(
-            color: context.textColor,
+            color: context.actionBarIconColor,
             fraction: 0,
-            progressColor: context.textColor,
+            progressColor: context.actionBarIconColor,
             progress: 0,
             stroke: 2,
           ),
@@ -989,6 +1000,7 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
           sortOrder == SortOrder.ASC
               ? LineIcons.sortAmountUp
               : LineIcons.sortAmountDown,
+          color: context.actionBarIconColor,
         ),
         buttonType: ActionBarButtonType.single,
         onPressed: (value) {
@@ -1020,27 +1032,17 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
     return _button(
       rowIndex: rowIndex,
       child: layout == Layout.small
-          ? SizedBox(
-              height: height,
-              width: width,
-              child: CustomPaint(
-                painter: LayoutPainter(0, context.textColor, stroke: 2),
-              ),
+          ? CustomPaint(
+              painter: LayoutPainter(0, context.actionBarIconColor, stroke: 2),
             )
           : layout == Layout.medium
-              ? SizedBox(
-                  height: height,
-                  width: width,
-                  child: CustomPaint(
-                    painter: LayoutPainter(1, context.textColor, stroke: 2),
-                  ),
+              ? CustomPaint(
+                  painter:
+                      LayoutPainter(1, context.actionBarIconColor, stroke: 2),
                 )
-              : SizedBox(
-                  height: height,
-                  width: width,
-                  child: CustomPaint(
-                    painter: LayoutPainter(4, context.textColor, stroke: 2),
-                  ),
+              : CustomPaint(
+                  painter:
+                      LayoutPainter(4, context.actionBarIconColor, stroke: 2),
                 ),
       buttonType: ActionBarButtonType.single,
       onPressed: (value) {
@@ -1063,12 +1065,12 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
           widget.onLayoutChanged!(layout);
         }
       },
-      width: width + context.iconPadding.horizontal,
+      width: width + context.actionBarIconPadding.horizontal,
       innerPadding: EdgeInsets.only(
-        left: context.iconPadding.left,
-        top: (context.iconButtonSizeVertical - height) / 2,
-        right: context.iconPadding.right,
-        bottom: (context.iconButtonSizeVertical - height) / 2,
+        left: context.actionBarIconPadding.left,
+        top: (context.actionBarSizeVertical - height) / 2,
+        right: context.actionBarIconPadding.right,
+        bottom: (context.actionBarSizeVertical - height) / 2,
       ),
       connectLeft: connectLeft,
       connectRight: connectRight,
@@ -1081,24 +1083,19 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
     bool connectRight = false,
   }) {
     double height = 10;
-    double width = 20;
     return _button(
       rowIndex: rowIndex,
-      child: SizedBox(
-        width: height,
-        height: width,
-        child: CustomPaint(painter: MultiSelectPainter(color: color)),
-      ),
+      child: CustomPaint(painter: MultiSelectPainter(color: color)),
       state: selectMode,
       buttonType: ActionBarButtonType.onOff,
       onPressed: (value) {
         selectionController!.selectMode = value!;
       },
       innerPadding: EdgeInsets.only(
-        left: context.iconPadding.left,
-        top: (context.iconButtonSizeVertical - height) / 2,
-        right: context.iconPadding.right,
-        bottom: (context.iconButtonSizeVertical - height) / 2,
+        left: context.actionBarIconPadding.left,
+        top: (context.actionBarSizeVertical - height) / 2,
+        right: context.actionBarIconPadding.right,
+        bottom: (context.actionBarSizeVertical - height) / 2,
       ),
       enabled: selectionController != null,
       animation: _switchSelectModeController,
@@ -1115,9 +1112,7 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
       _button(
         rowIndex: rowIndex,
         child: UpDownIndicator(
-          status: secondRow,
-          color: context.textColor,
-        ),
+            status: secondRow, color: context.actionBarIconColor),
         state: secondRow,
         buttonType: ActionBarButtonType.onOff,
         onPressed: (value) {
@@ -1188,16 +1183,17 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
     return _button(
       rowIndex: rowIndex,
       child: CustomPaint(
-          painter: RemoveNewFlagPainter(
-              !enabled && context.realDark
-                  ? Colors.grey[800]
-                  : context.textColor,
-              enabled
-                  ? Colors.red
-                  : context.realDark
-                      ? Colors.grey[800]!
-                      : context.textColor,
-              stroke: 2)),
+        painter: RemoveNewFlagPainter(
+            !enabled && context.realDark
+                ? Colors.grey[800]
+                : context.actionBarIconColor,
+            enabled
+                ? Colors.red
+                : context.realDark
+                    ? Colors.grey[800]!
+                    : context.actionBarIconColor,
+            stroke: 2),
+      ),
       buttonType: ActionBarButtonType.single,
       onPressed: (value) async {
         if (_buttonRemoveNewMarkController.value == 0) {
@@ -1238,11 +1234,15 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
     bool connectRight = false,
   }) {
     expansionController(rowIndex).addWidth(
-        (width ?? context.iconButtonSizeHorizontal) +
-            (!connectLeft ? context.iconPadding.left / 2 : 0) +
-            (!connectRight ? context.iconPadding.right / 2 : 0));
+        (width ?? context.actionBarSizeHorizontal) +
+            (!connectLeft ? context.actionBarIconPadding.left / 2 : 0) +
+            (!connectRight ? context.actionBarIconPadding.right / 2 : 0));
     return ActionBarButton(
-      child: child,
+      child: SizedBox(
+        height: context.actionBarSizeVertical,
+        width: context.actionBarSizeHorizontal,
+        child: child,
+      ),
       state: state,
       buttonType: buttonType ?? ActionBarButtonType.single,
       onPressed: onPressed,
@@ -1264,8 +1264,8 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
       bool connectLeft = false,
       bool connectRight = false}) {
     expansionController.addWidth(
-        (!connectLeft ? context.iconPadding.left / 2 : 0) +
-            (!connectRight ? context.iconPadding.right / 2 : 0));
+        (!connectLeft ? context.actionBarIconPadding.left / 2 : 0) +
+            (!connectRight ? context.actionBarIconPadding.right / 2 : 0));
     return ActionBarExpandingSearchButton(
       expansionController: expansionController,
       onQueryChanged: (value) async {

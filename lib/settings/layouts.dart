@@ -28,7 +28,7 @@ class _LayoutSettingState extends State<LayoutSetting> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: context.overlay,
       child: Scaffold(
-          backgroundColor: context.background,
+          backgroundColor: context.surface,
           appBar: AppBar(
             title: Text(
               s.settingsLayout,
@@ -37,7 +37,7 @@ class _LayoutSettingState extends State<LayoutSetting> {
             leading: CustomBackButton(),
             elevation: 0,
             scrolledUnderElevation: 0,
-            backgroundColor: context.background,
+            backgroundColor: context.surface,
           ),
           body: SingleChildScrollView(
             child: Column(

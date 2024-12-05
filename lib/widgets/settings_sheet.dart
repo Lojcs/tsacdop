@@ -58,7 +58,7 @@ class _SettingsSheetState extends State<SettingsSheet>
                 Navigator.pop(context);
               },
               child: Container(
-                color: context.background.withOpacity(
+                color: context.surface.withOpacity(
                     0.8 * math.min(_animation.value / widget.height, 1.0)),
               ),
             ),

@@ -73,7 +73,7 @@ class _SettingsState extends State<Settings> {
       value: context.overlay,
       child: SafeArea(
         child: Scaffold(
-          backgroundColor: context.background,
+          backgroundColor: context.surface,
           appBar: AppBar(
             title: Text(
               s.settings,
@@ -82,7 +82,7 @@ class _SettingsState extends State<Settings> {
             leading: CustomBackButton(),
             elevation: _showTitle ? 1 : 0,
             scrolledUnderElevation: 0,
-            backgroundColor: context.background,
+            backgroundColor: context.surface,
           ),
           body: SingleChildScrollView(
             scrollDirection: Axis.vertical,
@@ -189,10 +189,8 @@ class _SettingsState extends State<Settings> {
                   padding: EdgeInsets.symmetric(horizontal: 70),
                   alignment: Alignment.centerLeft,
                   child: Text(s.settingsInfo,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyLarge!
-                          .copyWith(color: Theme.of(context).colorScheme.secondary)),
+                      style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                          color: Theme.of(context).colorScheme.secondary)),
                 ),
                 ListTile(
                   onTap: () => Navigator.push(context,

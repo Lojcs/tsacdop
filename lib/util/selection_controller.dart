@@ -66,6 +66,11 @@ class SelectionController extends ChangeNotifier {
     }
   }
 
+// Flips to indicate that episodes were updated.
+// Listeners aren't notified since the update most likely originates from a FutureBuilder
+// and its children can just check it when rebuilding.
+  bool episodesUpdated = false;
+
   /// Replaces stored episodes with the provided versions.
   void updateEpisodes(List<EpisodeBrief> episodes) {
     Map<int, EpisodeBrief> episodeMap = {
@@ -85,10 +90,14 @@ class SelectionController extends ChangeNotifier {
     }
     _newlySelectedEpisodes = null;
     _selectedEpisodes = null;
+    episodesUpdated = !episodesUpdated;
   }
 
   /// List of explicitly selected selectable episodes ordered in select order.
   final List<int> _explicitlySelectedIndicies = [];
+
+  /// Number of explicitly selected indicies for limiting batch selection options.
+  int get explicitlySelectedCount => _explicitlySelectedIndicies.length;
 
   /// Tentative set of indicies of selected selectable episodes.
   Set<int> get selectedIndicies {
@@ -264,22 +273,7 @@ class SelectionController extends ChangeNotifier {
   /// Marks [i]th selectable episode with [selected]
   void select(int i) {
     if (i >= 0 && i < _selectableEpisodes.length) {
-      if (!_explicitlySelectedIndicies.contains(i)) {
-        _explicitlySelectedIndicies.add(i);
-        if (selectBefore && i < _selectBefore!) {
-          _selectBefore = i;
-        }
-        if (selectAfter && i > _selectAfter!) {
-          _selectAfter = i;
-        }
-        if (selectBetween) {
-          if (i < _selectBetween![0]) {
-            _selectBetween![0] = i;
-          } else if (i > _selectBetween![1]) {
-            _selectBetween![1] = i;
-          }
-        }
-      } else {
+      if (_explicitlySelectedIndicies.contains(i)) {
         _previouslySelectedEpisodes.remove(_selectableEpisodes[i]);
         _explicitlySelectedIndicies.remove(i);
         if (selectBefore && i == _selectBefore!) {
@@ -309,6 +303,21 @@ class SelectionController extends ChangeNotifier {
               _selectBetween![1] = _explicitlySelectedIndicies
                   .reduce((value, element) => math.max(value, element));
             }
+          }
+        }
+      } else {
+        _explicitlySelectedIndicies.add(i);
+        if (selectBefore && i < _selectBefore!) {
+          _selectBefore = i;
+        }
+        if (selectAfter && i > _selectAfter!) {
+          _selectAfter = i;
+        }
+        if (selectBetween) {
+          if (i < _selectBetween![0]) {
+            _selectBetween![0] = i;
+          } else if (i > _selectBetween![1]) {
+            _selectBetween![1] = i;
           }
         }
       }

@@ -52,7 +52,7 @@ class _PodcastGroupListState extends State<PodcastGroupList> {
                 (podcastLocal) {
                   return Container(
                     margin: EdgeInsets.only(top: 0.5, bottom: 0.5),
-                    decoration: BoxDecoration(color: context.background),
+                    decoration: BoxDecoration(color: context.surface),
                     key: ObjectKey(podcastLocal.title),
                     child: _PodcastCard(
                       podcastLocal: podcastLocal,
@@ -183,7 +183,7 @@ class __PodcastCardState extends State<_PodcastCard>
             : Container(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: context.background,
+                    color: context.surface,
                   ),
                   // border: Border(
                   //     bottom: BorderSide(

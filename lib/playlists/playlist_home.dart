@@ -61,7 +61,7 @@ class _PlaylistHomeState extends State<PlaylistHome> {
     return OutlinedButton.icon(
         style: OutlinedButton.styleFrom(
             foregroundColor: color,
-            side: BorderSide(color: context.background),
+            side: BorderSide(color: context.surface),
             backgroundColor:
                 isSelected ? context.primaryColorDark : Colors.transparent,
             shape: RoundedRectangleBorder(
@@ -89,7 +89,7 @@ class _PlaylistHomeState extends State<PlaylistHome> {
           }
         },
         child: Scaffold(
-            backgroundColor: context.background,
+            backgroundColor: context.surface,
             appBar: AppBar(
               leading: CustomBackButton(),
               centerTitle: true,
@@ -103,13 +103,13 @@ class _PlaylistHomeState extends State<PlaylistHome> {
                   );
                 },
               ),
-              backgroundColor: context.background,
+              backgroundColor: context.surface,
               scrolledUnderElevation: 0,
             ),
             body: Column(
               children: [
                 Container(
-                  color: context.background,
+                  color: context.surface,
                   height: 100,
                   child: Selector<AudioPlayerNotifier,
                       Tuple4<Playlist?, bool, bool, EpisodeBrief?>>(
@@ -276,7 +276,7 @@ class _PlaylistHomeState extends State<PlaylistHome> {
                   ),
                 ),
                 Container(
-                  color: context.background,
+                  color: context.surface,
                   height: 50,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,

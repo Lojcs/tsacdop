@@ -20,7 +20,7 @@ class EpisodeGrid extends StatelessWidget {
   final bool showFavorite;
   final bool showDownload;
   final bool preferEpisodeImage;
-  final Layout? layout;
+  final Layout layout;
   final bool openPodcast;
 
   /// Count of animation items.
@@ -154,8 +154,8 @@ class OpenContainerWrapper extends StatelessWidget {
         endColor: Theme.of(context).primaryColor,
         closedColor: Theme.of(context).brightness == Brightness.light
             ? context.primaryColor
-            : context.background,
-        openColor: context.background,
+            : context.surface,
+        openColor: context.surface,
         openElevation: 0,
         closedElevation: 0,
         openShape: RoundedRectangleBorder(borderRadius: context.radiusSmall),

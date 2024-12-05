@@ -17,7 +17,7 @@ extension ContextExtension on BuildContext {
   Color get primaryColor => Theme.of(this).colorScheme.onPrimary;
   Color get priamryContainer => Theme.of(this).colorScheme.primaryContainer;
   Color get onPrimary => Theme.of(this).colorScheme.onPrimary;
-  Color get background => Theme.of(this).colorScheme.surface;
+  Color get surface => Theme.of(this).colorScheme.surface;
   Color get tertiary => colorScheme.tertiary;
   Color get tertiaryContainer => colorScheme.tertiaryContainer;
   Color get onTertiary => colorScheme.onTertiary;
@@ -90,7 +90,7 @@ extension ContextExtension on BuildContext {
   /// Returns the last item from the statusBarColor stack. Useful for keeping track of the current
   Color get statusBarColor =>
       Provider.of<SettingState>(this, listen: false).statusBarColor.isEmpty
-          ? background
+          ? surface
           : Provider.of<SettingState>(this, listen: false).statusBarColor.last;
 
   /// Adds the color to the statusBarColor stack if it's not already the last item. Pass null when exiting the page to pop the last item.
@@ -111,7 +111,7 @@ extension ContextExtension on BuildContext {
   /// Returns the last item from the statusBarColor stack. Useful for keeping track of the current
   Color get navBarColor =>
       Provider.of<SettingState>(this, listen: false).navBarColor.isEmpty
-          ? background
+          ? surface
           : Provider.of<SettingState>(this, listen: false).navBarColor.last;
 
   /// Adds the color to the statusBarColor stack if it's not already the last item. Pass null when exiting the page to pop the last item.
@@ -133,14 +133,15 @@ extension ContextExtension on BuildContext {
   BorderRadius get radiusLarge => BorderRadius.circular(20);
   BorderRadius get radiusHuge => BorderRadius.circular(100);
 
-  MyIconThemeData get iconTheme =>
-      (Theme.of(this).iconTheme as MyIconThemeData);
-  Color get iconColor => iconTheme.color!;
-  double get iconSize => iconTheme.size!;
-  double get iconButtonSizeVertical => iconTheme.buttonSizeVertical!;
-  double get iconButtonSizeHorizontal => iconTheme.buttonSizeVertical!;
-  Radius get iconRadius => iconTheme.radius!;
-  EdgeInsets get iconPadding => iconTheme.padding!;
+  ActionBarTheme get actionBarTheme =>
+      Theme.of(this).extension<ActionBarTheme>()!;
+
+  Color get actionBarIconColor => actionBarTheme.iconColor!;
+  double get actionBarIconSize => actionBarTheme.size!;
+  double get actionBarSizeVertical => actionBarTheme.sizeVertical!;
+  double get actionBarSizeHorizontal => actionBarTheme.sizeHorizontal!;
+  Radius get actionBarIconRadius => actionBarTheme.radius!;
+  EdgeInsets get actionBarIconPadding => actionBarTheme.padding!;
 }
 
 extension IntExtension on int {
@@ -230,17 +231,17 @@ extension ColorExtension on Color {
   /// Blend the color with background, soft look
   Color toSoftBackround(BuildContext context) {
     return context.realDark
-        ? context.background
-        : Color.lerp(context.background, this,
+        ? context.surface
+        : Color.lerp(context.surface, this,
             context.brightness == Brightness.light ? 0.2 : 0.2)!;
   }
 
   /// Blend the color with background, less accent
   Color toWeakBackround(BuildContext context) {
     return context.realDark
-        ? context.background
+        ? context.surface
         : Color.lerp(
-            context.background,
+            context.surface,
             ColorScheme.fromSeed(
               seedColor: this,
               brightness: context.brightness,
@@ -251,7 +252,7 @@ extension ColorExtension on Color {
   /// Blend the color with background, mid accent
   Color toStrongBackround(BuildContext context) {
     return context.realDark
-        ? context.background
+        ? context.surface
         : Color.lerp(
             ColorScheme.fromSeed(
               seedColor: this,
@@ -265,7 +266,7 @@ extension ColorExtension on Color {
   Color toHighlightBackround(BuildContext context, {Brightness? brightness}) {
     brightness = brightness ?? context.brightness;
     return context.realDark
-        ? context.background
+        ? context.surface
         : Color.lerp(
             ColorScheme.fromSeed(
               seedColor: this,

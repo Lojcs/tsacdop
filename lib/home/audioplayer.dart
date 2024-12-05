@@ -283,7 +283,8 @@ class LastPosition extends StatelessWidget {
                     ],
                   ),
                   style: TextButton.styleFrom(
-                    foregroundColor: data ? context.accentColor : null, shape: RoundedRectangleBorder(
+                    foregroundColor: data ? context.accentColor : null,
+                    shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(100.0),
                       side: BorderSide(
                         color: data
@@ -320,7 +321,8 @@ class LastPosition extends StatelessWidget {
                         ],
                       ),
                       style: TextButton.styleFrom(
-                        foregroundColor: data ? context.accentColor : null, shape: RoundedRectangleBorder(
+                        foregroundColor: data ? context.accentColor : null,
+                        shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(100.0),
                             side: BorderSide(
                                 color: data

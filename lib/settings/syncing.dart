@@ -24,7 +24,7 @@ class _SyncingSettingState extends State<SyncingSetting> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: context.overlay,
       child: Scaffold(
-        backgroundColor: context.background,
+        backgroundColor: context.surface,
         appBar: AppBar(
           title: Text(
             s.settingsSyncing,
@@ -33,7 +33,7 @@ class _SyncingSettingState extends State<SyncingSetting> {
           leading: CustomBackButton(),
           elevation: 0,
           scrolledUnderElevation: 0,
-          backgroundColor: context.background,
+          backgroundColor: context.surface,
         ),
         body: SingleChildScrollView(
           child: Selector<SettingState, Tuple3<bool?, int?, VersionPolicy?>>(

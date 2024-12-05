@@ -41,7 +41,7 @@ class _DataBackupState extends State<DataBackup> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: context.overlay,
       child: Scaffold(
-        backgroundColor: context.background,
+        backgroundColor: context.surface,
         appBar: AppBar(
           elevation: 0,
           scrolledUnderElevation: 0,
@@ -50,7 +50,7 @@ class _DataBackupState extends State<DataBackup> {
             style: context.textTheme.titleLarge,
           ),
           leading: CustomBackButton(),
-          backgroundColor: context.background,
+          backgroundColor: context.surface,
         ),
         body: Column(
           mainAxisAlignment: MainAxisAlignment.start,

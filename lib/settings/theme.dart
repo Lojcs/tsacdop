@@ -14,7 +14,7 @@ class ThemeSetting extends StatelessWidget {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: context.overlay,
       child: Scaffold(
-        backgroundColor: context.background,
+        backgroundColor: context.surface,
         appBar: AppBar(
           title: Text(
             s.settingsAppearance,
@@ -23,7 +23,7 @@ class ThemeSetting extends StatelessWidget {
           leading: CustomBackButton(),
           elevation: 0,
           scrolledUnderElevation: 0,
-          backgroundColor: context.background,
+          backgroundColor: context.surface,
         ),
         body: Column(
           mainAxisAlignment: MainAxisAlignment.start,

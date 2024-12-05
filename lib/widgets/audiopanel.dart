@@ -80,7 +80,7 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
                 child: GestureDetector(
                   onTap: backToMini,
                   child: Container(
-                    color: context.background.withOpacity(0.4 *
+                    color: context.surface.withOpacity(0.4 *
                         math.min(
                             (_animation.value - widget.minHeight) /
                                 widget.midHeight,
@@ -124,15 +124,9 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
                     child: SingleChildScrollView(
                       physics: const NeverScrollableScrollPhysics(),
                       child: SizedBox(
-                        height: math.max(widget.midHeight,
-                            math.min(_animation.value, widget.maxHeight!)),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Expanded(child: widget.maxiPanel),
-                          ],
-                        ),
-                      ),
+                          height: math.max(widget.midHeight,
+                              math.min(_animation.value, widget.maxHeight!)),
+                          child: widget.maxiPanel),
                     ),
                   ),
                 ),
