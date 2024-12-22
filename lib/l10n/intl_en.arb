@@ -176,9 +176,9 @@
   "@feedbackTelegram": {},
   "filter": "Filter",
   "@filter": {},
-  "filterType": "{type} filter",
+  "filterType": "{type} Filter",
   "@filterType": {
-    "description": "To use with different episode filter types. Ex: {Downloaded} filter, {Played} filter, {Group} filter...",
+    "description": "To use with different episode filter types. Ex: {Downloaded} Filter, {Played} Filter, {Group} Filter...",
     "placeholders": {
       "type": {}
     }
@@ -327,6 +327,8 @@
   "@minsAgo": {},
   "minsCount": "{count, plural, zero{0 min} one{{count} min} other{{count} mins}}",
   "@minsCount": {},
+  "moreOptions": "More Options",
+  "@moreOptions": {},
   "network": "Network",
   "@network": {},
   "networkErrorDNS": "Network error (DNS issue)",
@@ -554,6 +556,8 @@
       "count": {}
     }
   },
+  "selectMode": "Selection Mode",
+  "@selectMode": {},
   "settings": "Settings",
   "@settings": {},
   "settingsAccentColor": "Accent color",
@@ -740,6 +744,8 @@
   "@sleepTimer": {},
   "sortBy": "Sort By",
   "@sortBy": {},
+  "sortOrder": "Sort Order",
+  "@sortOrder": {},
   "status": "Status",
   "@status": {
     "description": "gpodder.net status"

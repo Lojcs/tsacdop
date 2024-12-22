@@ -12,15 +12,14 @@ import '../util/extension_helper.dart';
 import '../util/open_container.dart';
 import 'episode_card.dart';
 
-enum Layout { small, medium, large }
+enum EpisodeGridLayout { small, medium, large }
 
-// ignore: must_be_immutable
 class EpisodeGrid extends StatelessWidget {
   final List<EpisodeBrief> episodes;
   final bool showFavorite;
   final bool showDownload;
   final bool preferEpisodeImage;
-  final Layout layout;
+  final EpisodeGridLayout layout;
   final bool openPodcast;
 
   /// Count of animation items.
@@ -33,7 +32,7 @@ class EpisodeGrid extends StatelessWidget {
     this.showDownload = false,
     this.showFavorite = false,
     this.preferEpisodeImage = false,
-    this.layout = Layout.small,
+    this.layout = EpisodeGridLayout.small,
     this.openPodcast = false,
   }) : super(key: key);
 
@@ -60,21 +59,20 @@ class EpisodeGrid extends StatelessWidget {
             options: options,
             itemCount: episodes.length,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              childAspectRatio: layout == Layout.small
+              childAspectRatio: layout == EpisodeGridLayout.small
                   ? 1
-                  : layout == Layout.medium
+                  : layout == EpisodeGridLayout.medium
                       ? 1.5
                       : 4,
-              crossAxisCount: layout == Layout.small
+              crossAxisCount: layout == EpisodeGridLayout.small
                   ? 3
-                  : layout == Layout.medium
+                  : layout == EpisodeGridLayout.medium
                       ? 2
                       : 1,
               mainAxisSpacing: 10.0,
               crossAxisSpacing: 10.0,
             ),
             itemBuilder: (context, index, animation) {
-              scrollController.addListener(() {});
               bool selected = data.item1?.contains(index) ?? false;
               return FadeTransition(
                 opacity: Tween<double>(begin: index < initNum ? 0 : 1, end: 1)
@@ -82,7 +80,7 @@ class EpisodeGrid extends StatelessWidget {
                 child: InteractiveEpisodeCard(
                   context,
                   episodes[index],
-                  layout!,
+                  layout,
                   openPodcast: openPodcast,
                   preferEpisodeImage: preferEpisodeImage,
                   showNumber: true,
@@ -120,7 +118,7 @@ class OpenContainerWrapper extends StatelessWidget {
   final bool? playerRunning;
   final double? avatarSize;
   final bool preferEpisodeImage;
-  final Layout layout;
+  final EpisodeGridLayout layout;
   final VoidCallback? onClosed;
 
   @override
@@ -136,10 +134,10 @@ class OpenContainerWrapper extends StatelessWidget {
                 : episode.podcastImageProvider),
         flightWidgetBeginSize: avatarSize,
         flightWidgetEndSize: 30,
-        flightWidgetBeginOffsetX: layout == Layout.small ? 6 : 8,
-        flightWidgetBeginOffsetY: layout == Layout.small
+        flightWidgetBeginOffsetX: layout == EpisodeGridLayout.small ? 6 : 8,
+        flightWidgetBeginOffsetY: layout == EpisodeGridLayout.small
             ? 6
-            : layout == Layout.medium
+            : layout == EpisodeGridLayout.medium
                 ? 8
                 : 14,
         flightWidgetEndOffsetX: 10,
@@ -160,9 +158,9 @@ class OpenContainerWrapper extends StatelessWidget {
         closedElevation: 0,
         openShape: RoundedRectangleBorder(borderRadius: context.radiusSmall),
         closedShape: RoundedRectangleBorder(
-            borderRadius: layout == Layout.small
+            borderRadius: layout == EpisodeGridLayout.small
                 ? context.radiusSmall
-                : layout == Layout.medium
+                : layout == EpisodeGridLayout.medium
                     ? context.radiusMedium
                     : context.radiusLarge),
         transitionType: ContainerTransitionType.fadeThrough,

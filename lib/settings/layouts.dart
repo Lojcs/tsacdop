@@ -266,10 +266,10 @@ class _LayoutSettingState extends State<LayoutSetting> {
   }
 
   final _hideDiscoveyStorage = KeyValueStorage(hidePodcastDiscoveryKey);
-  Future<Layout> _getLayout(String key) async {
+  Future<EpisodeGridLayout> _getLayout(String key) async {
     final keyValueStorage = KeyValueStorage(key);
     final layout = await keyValueStorage.getInt();
-    return Layout.values[layout];
+    return EpisodeGridLayout.values[layout];
   }
 
   Future<bool> _getHideDiscovery() async {
@@ -321,8 +321,8 @@ class _LayoutSettingState extends State<LayoutSetting> {
 
   Widget _gridOptions(BuildContext context,
           {required String key,
-          Layout? layout,
-          Layout? option,
+          EpisodeGridLayout? layout,
+          EpisodeGridLayout? option,
           double? scale,
           BorderRadiusGeometry? borderRadius}) =>
       Padding(
@@ -361,7 +361,7 @@ class _LayoutSettingState extends State<LayoutSetting> {
       );
 
   Widget _setDefaultGrid(BuildContext context, {required String key}) {
-    return FutureBuilder<Layout>(
+    return FutureBuilder<EpisodeGridLayout>(
         future: _getLayout(key),
         builder: (context, snapshot) {
           return snapshot.hasData
@@ -372,7 +372,7 @@ class _LayoutSettingState extends State<LayoutSetting> {
                       context,
                       key: key,
                       layout: snapshot.data,
-                      option: Layout.large,
+                      option: EpisodeGridLayout.large,
                       scale: 4,
                       borderRadius: BorderRadius.only(
                           bottomLeft: Radius.circular(5),
@@ -382,13 +382,13 @@ class _LayoutSettingState extends State<LayoutSetting> {
                       context,
                       key: key,
                       layout: snapshot.data,
-                      option: Layout.medium,
+                      option: EpisodeGridLayout.medium,
                       scale: 1,
                     ),
                     _gridOptions(context,
                         key: key,
                         layout: snapshot.data,
-                        option: Layout.small,
+                        option: EpisodeGridLayout.small,
                         scale: 0,
                         borderRadius: BorderRadius.only(
                             bottomRight: Radius.circular(5),

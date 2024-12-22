@@ -526,7 +526,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
   /// For group fliter.
   String? _groupName;
   List<String>? _group;
-  Layout? _layout;
+  EpisodeGridLayout? _layout;
   bool? _hideListened;
   late bool _scroll;
 
@@ -558,7 +558,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
     var storage = KeyValueStorage(recentLayoutKey);
     var hideListenedStorage = KeyValueStorage(hideListenedKey);
     var index = await storage.getInt(defaultValue: 1);
-    if (_layout == null) _layout = Layout.values[index];
+    if (_layout == null) _layout = EpisodeGridLayout.values[index];
     if (_hideListened == null) {
       _hideListened = await hideListenedStorage.getBool(defaultValue: false);
     }
@@ -804,45 +804,49 @@ class _RecentUpdateState extends State<_RecentUpdate>
               key: PageStorageKey<String>('update'),
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: <Widget>[
-                SliverAppBar(
-                  pinned: true,
-                  leading: Center(),
-                  toolbarHeight: _actionBarHeight,
-                  backgroundColor: context.surface,
-                  scrolledUnderElevation: 0,
-                  flexibleSpace: _multiSelect!
-                      ? MultiSelectPanel(
-                          selectionController: SelectionController(),
+                _multiSelect!
+                    ? SliverAppBar(
+                        pinned: true,
+                        leading: Center(),
+                        toolbarHeight: _actionBarHeight,
+                        backgroundColor: context.surface,
+                        scrolledUnderElevation: 0,
+                        flexibleSpace: MultiSelectPanel(
                           expanded: false,
-                          getEpisodes: _getEpisodes,
-                        )
-                      : ActionBar(
-                          onGetEpisodesChanged: (getEpisodes) async {
-                            _getEpisodes = getEpisodes;
-                            _episodes = await _getEpisodes();
-                            // selectionController.selectableEpisodes =
-                            //     _episodes;
-                            if (mounted) {
-                              setState(() {});
-                            }
-                          },
-                          onLayoutChanged: (layout) {
-                            _layout = layout;
-                            if (mounted) {
-                              setState(() {});
-                            }
-                          },
-                          onHeightChanged: (height) {
-                            _actionBarHeight = height;
-                            if (mounted) {
-                              setState(() {});
-                            }
-                          },
-                          limit: _top,
-                          layout: _layout ?? Layout.large,
-                          // selectionController: selectionController,
                         ),
-                ),
+                      )
+                    : ActionBar(
+                        onGetEpisodesChanged: (getEpisodes) async {
+                          _getEpisodes = getEpisodes;
+                          _episodes = await _getEpisodes();
+                          // selectionController.selectableEpisodes =
+                          //     _episodes;
+                          if (mounted) {
+                            setState(() {});
+                          }
+                        },
+                        onLayoutChanged: (layout) {
+                          _layout = layout;
+                          if (mounted) {
+                            setState(() {});
+                          }
+                        },
+                        limit: _top,
+                        layout: _layout ?? EpisodeGridLayout.large,
+                        widgetsFirstRow: [
+                          ActionBarDropdownSortBy(0, 0),
+                          ActionBarSwitchSortOrder(0, 1),
+                          ActionBarSpacer(0, 2),
+                          ActionBarButtonRefresh(0, 3),
+                          ActionBarButtonRemoveNewMark(0, 4),
+                          ActionBarFilterPlayed(0, 5),
+                          ActionBarFilterDownloaded(0, 6),
+                          ActionBarSwitchLayout(0, 7),
+                          ActionBarSwitchSelectMode(0, 8),
+                          ActionBarSwitchSecondRow(0, 9),
+                        ],
+                        // selectionController: selectionController,
+                      ),
                 _episodes.length == 0
                     ? SliverToBoxAdapter(
                         child: Padding(
@@ -864,7 +868,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
                       )
                     : EpisodeGrid(
                         episodes: _episodes,
-                        layout: _layout ?? Layout.large,
+                        layout: _layout ?? EpisodeGridLayout.large,
                         initNum: _scroll ? 0 : 12,
                         openPodcast: true,
                       ),
@@ -969,7 +973,7 @@ class _MyFavoriteState extends State<_MyFavorite>
     var storage = KeyValueStorage(favLayoutKey);
     var index = await storage.getInt(defaultValue: 1);
     var hideListenedStorage = KeyValueStorage(hideListenedKey);
-    if (_layout == null) _layout = Layout.values[index];
+    if (_layout == null) _layout = EpisodeGridLayout.values[index];
     if (_hideListened == null) {
       _hideListened = await hideListenedStorage.getBool(defaultValue: false);
     }
@@ -1024,7 +1028,7 @@ class _MyFavoriteState extends State<_MyFavorite>
 
   int _top = 90;
   late bool _loadMore;
-  Layout? _layout;
+  EpisodeGridLayout? _layout;
   int? _sortBy;
   bool? _hideListened;
 
@@ -1084,7 +1088,7 @@ class _MyFavoriteState extends State<_MyFavorite>
                               SliverToBoxAdapter(child: SizedBox(height: 40)),
                               EpisodeGrid(
                                 episodes: snapshot.data!,
-                                layout: _layout ?? Layout.large,
+                                layout: _layout ?? EpisodeGridLayout.large,
                                 initNum: 0,
                                 openPodcast: true,
                               ),
@@ -1217,11 +1221,7 @@ class _MyFavoriteState extends State<_MyFavorite>
                               ),
                             if (_multiSelect!)
                               MultiSelectPanel(
-                                selectionController: SelectionController(),
                                 expanded: false,
-                                getEpisodes: () async {
-                                  return <EpisodeBrief>[];
-                                },
                               ),
                           ],
                         ),
@@ -1244,7 +1244,7 @@ class _MyDownload extends StatefulWidget {
 
 class _MyDownloadState extends State<_MyDownload>
     with AutomaticKeepAliveClientMixin {
-  Layout? _layout;
+  EpisodeGridLayout? _layout;
   int? _sortBy;
   bool? _hideListened;
   Future<List<EpisodeBrief>> _getDownloadedEpisodes(int? sortBy,
@@ -1252,7 +1252,7 @@ class _MyDownloadState extends State<_MyDownload>
     var storage = KeyValueStorage(downloadLayoutKey);
     var index = await storage.getInt(defaultValue: 1);
     var hideListenedStorage = KeyValueStorage(hideListenedKey);
-    if (_layout == null) _layout = Layout.values[index];
+    if (_layout == null) _layout = EpisodeGridLayout.values[index];
     if (_hideListened == null) {
       _hideListened = await hideListenedStorage.getBool(defaultValue: false);
     }
@@ -1344,7 +1344,7 @@ class _MyDownloadState extends State<_MyDownload>
                           Material(
                             color: Colors.transparent,
                             child: LayoutButton(
-                              layout: _layout ?? Layout.large,
+                              layout: _layout ?? EpisodeGridLayout.large,
                               onPressed: (layout) => setState(() {
                                 _layout = layout;
                               }),
@@ -1374,7 +1374,7 @@ class _MyDownloadState extends State<_MyDownload>
                       )
                     : EpisodeGrid(
                         episodes: episodes,
-                        layout: _layout ?? Layout.large,
+                        layout: _layout ?? EpisodeGridLayout.large,
                         openPodcast: true,
                         initNum: 0,
                       ),

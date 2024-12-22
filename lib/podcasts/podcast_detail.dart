@@ -11,6 +11,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:html/parser.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
+import 'package:tsacdop/type/theme_data.dart';
 import 'package:tsacdop/widgets/action_bar.dart';
 import 'package:tuple/tuple.dart';
 
@@ -37,7 +38,7 @@ const String kDefaultAvatar = """http://xuanmei.us/assets/default/avatar_small-
 class PodcastDetail extends StatefulWidget {
   PodcastDetail({Key? key, required this.podcastLocal, this.hide = false})
       : super(key: key);
-  final PodcastLocal? podcastLocal;
+  final PodcastLocal podcastLocal;
   final bool hide;
   @override
   _PodcastDetailState createState() => _PodcastDetailState();
@@ -48,58 +49,50 @@ class _PodcastDetailState extends State<PodcastDetail> {
       GlobalKey<RefreshIndicatorState>();
 
   final GlobalKey<AudioPanelState> _playerKey = GlobalKey<AudioPanelState>();
-  final GlobalKey _infoKey = GlobalKey();
   final _dbHelper = DBHelper();
-  late final Color _podcastAccent = ColorScheme.fromSeed(
-          seedColor: widget.podcastLocal!.primaryColor!.toColor(),
-          brightness: context.brightness)
-      .primary;
-
-  /// Episodes to display
-  List<EpisodeBrief> _episodes = [];
-
-  /// Function to get episodes
-  ValueGetter<Future<List<EpisodeBrief>>> _getEpisodes = () async {
-    return <EpisodeBrief>[];
-  };
-
-  /// Default layout.
-  Layout? _layout;
-
-  /// If true, stop grid load animation.
-  bool _scroll = false;
-
-  double _topHeight = 0;
+  late final CardColorScheme cardColorScheme = CardColorScheme(
+    ColorScheme.fromSeed(
+      seedColor: widget.podcastLocal.primaryColor!.toColor(),
+      brightness: context.brightness,
+    ),
+  );
 
   late ScrollController _controller;
 
-  /// Episodes num load first time.
-  int _top = 96;
-
-  /// Load more episodes when scroll to bottom.
-  bool _loadMore = false;
-
-  /// Height of action bar
-  double _actionBarHeight = 52;
-
   Widget? actionBar;
 
-  ///Show podcast info.
-  bool? _showInfo;
+  late SelectionController selectionController;
 
-  double _infoHeightValue = 0;
-  double get _infoHeight => _infoHeightValue;
-  set _infoHeight(double height) {
-    _infoHeightValue = math.max(_infoHeightValue, height);
-  }
+  late Widget body = RefreshIndicator(
+    key: _refreshIndicatorKey,
+    displacement: context.paddingTop + 40,
+    color: cardColorScheme.colorScheme.primary,
+    onRefresh: () async {
+      await _updateRssItem(context, widget.podcastLocal);
+    },
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Expanded(
+          child: PodcastDetailBody(
+            podcastLocal: widget.podcastLocal,
+            selectionController: selectionController,
+            key: Key(widget.podcastLocal.id.toString() + "_body"),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  late Widget multiSelect = MultiSelectPanelIntegration(expanded: true);
+  late Widget player = Container(child: PlayerWidget(playerKey: _playerKey));
 
   @override
   void initState() {
     super.initState();
-    _loadMore = false;
     _controller = ScrollController();
-    _scroll = false;
-    _showInfo = false;
   }
 
   @override
@@ -155,26 +148,23 @@ class _PodcastDetailState extends State<PodcastDetail> {
 
   @override
   Widget build(BuildContext context) {
-    final color = context.realDark
-        ? context.surface
-        : widget.podcastLocal!.primaryColor!
-            .toColor()
-            .toHighlightBackround(context, brightness: Brightness.dark);
-    final s = context.s;
-    context.statusBarColor = color;
-    return ChangeNotifierProvider<SelectionController>(
-      create: (context) => SelectionController(),
+    context.statusBarColor =
+        context.realDark ? context.surface : cardColorScheme.saturated;
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<SelectionController>(
+            create: (context) => SelectionController()),
+        Provider<CardColorScheme>.value(value: cardColorScheme),
+      ],
       child: Selector<AudioPlayerNotifier, bool>(
         selector: (_, audio) => audio.playerRunning,
         builder: (context, data, __) {
-          SelectionController selectionController =
-              Provider.of<SelectionController>(context);
+          selectionController = Provider.of<SelectionController>(context);
           return AnnotatedRegion<SystemUiOverlayStyle>(
             value: (data
-                    ? context.overlay.copyWith(
-                        systemNavigationBarColor: context.accentBackground)
-                    : context.overlay)
-                .copyWith(statusBarIconBrightness: Brightness.light),
+                ? context.overlay.copyWith(
+                    systemNavigationBarColor: context.accentBackground)
+                : context.overlay),
             child: PopScope(
               canPop: !(_playerKey.currentState != null &&
                       _playerKey.currentState!.size! > 100) &&
@@ -194,34 +184,9 @@ class _PodcastDetailState extends State<PodcastDetail> {
                 body: SafeArea(
                   child: Stack(
                     children: <Widget>[
-                      RefreshIndicator(
-                        key: _refreshIndicatorKey,
-                        displacement: context.paddingTop + 40,
-                        color: _podcastAccent,
-                        onRefresh: () async {
-                          await _updateRssItem(context, widget.podcastLocal!);
-                        },
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Expanded(
-                              child: PodcastDetailBody(
-                                podcastLocal: widget.podcastLocal,
-                                selectionController: selectionController,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      MultiSelectPanelIntegration(
-                        selectionController: selectionController,
-                        expanded: true,
-                        color: _podcastAccent,
-                        getEpisodes: _getEpisodes,
-                      ),
-                      Container(child: PlayerWidget(playerKey: _playerKey)),
+                      body,
+                      multiSelect,
+                      player,
                     ],
                   ),
                 ),
@@ -236,6 +201,8 @@ class _PodcastDetailState extends State<PodcastDetail> {
 
 class PodcastDetailBody extends StatefulWidget {
   final SelectionController selectionController;
+  final PodcastLocal podcastLocal;
+  final bool hide;
 
   PodcastDetailBody(
       {Key? key,
@@ -243,19 +210,16 @@ class PodcastDetailBody extends StatefulWidget {
       required this.selectionController,
       this.hide = false})
       : super(key: key);
-  final PodcastLocal? podcastLocal;
-  final bool hide;
   @override
   _PodcastDetailBodyState createState() => _PodcastDetailBodyState();
 }
 
 class _PodcastDetailBodyState extends State<PodcastDetailBody> {
   final GlobalKey _infoKey = GlobalKey();
-  final _dbHelper = DBHelper();
   late final Color _podcastAccent = ColorScheme.fromSeed(
-          seedColor: widget.podcastLocal!.primaryColor!.toColor(),
+          seedColor: widget.podcastLocal.primaryColor!.toColor(),
           brightness: context.brightness)
-      .primary;
+      .primaryFixed;
 
   /// Episodes to display
   List<EpisodeBrief> _episodes = [];
@@ -266,12 +230,10 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
   };
 
   /// Default layout.
-  Layout? _layout;
+  EpisodeGridLayout? _layout;
 
   /// If true, stop grid load animation.
   bool _scroll = false;
-
-  double _topHeight = 0;
 
   late ScrollController _controller;
 
@@ -280,14 +242,6 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
 
   /// Load more episodes when scroll to bottom.
   bool _loadMore = false;
-
-  /// Height of action bar
-  double _actionBarHeight = 52;
-
-  Widget? actionBar;
-
-  ///Show podcast info.
-  bool? _showInfo;
 
   double _infoHeightValue = 0;
   double get _infoHeight => _infoHeightValue;
@@ -298,10 +252,7 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
   @override
   void initState() {
     super.initState();
-    _loadMore = false;
     _controller = ScrollController();
-    _scroll = false;
-    _showInfo = false;
   }
 
   @override
@@ -315,20 +266,8 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
     super.dispose();
   }
 
-  Future<void> _checkPodcast() async {
-    final exist = await _dbHelper.checkPodcast(widget.podcastLocal!.rssUrl);
-    if (exist == '') {
-      Navigator.of(context).pop();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final color = context.realDark
-        ? context.surface
-        : widget.podcastLocal!.primaryColor!
-            .toColor()
-            .toHighlightBackround(context, brightness: Brightness.dark);
     return ScrollConfiguration(
       behavior: NoGrowBehavior(),
       child: CustomScrollView(
@@ -347,242 +286,72 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
           }),
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: <Widget>[
-          SliverAppBar(
-            actions: <Widget>[
-              IconButton(
-                icon: Icon(Icons.more_vert),
-                splashRadius: 20,
-                tooltip: context.s.menu,
-                onPressed: () => generalSheet(
-                  context,
-                  title: widget.podcastLocal!.title,
-                  color: widget.podcastLocal!.primaryColor!.toColor(),
-                  child: PodcastSetting(podcastLocal: widget.podcastLocal),
-                ).then((value) async {
-                  await _checkPodcast();
-                  if (mounted) setState(() {});
-                }),
-              ),
-            ],
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            iconTheme: IconThemeData(
-              color: Colors.white,
-            ),
-            expandedHeight: math.max(130 + context.paddingTop, 180) +
-                (_showInfo! ? _infoHeight : 0),
-            backgroundColor: color,
-            floating: true,
-            pinned: true,
-            leading: CustomBackButton(),
-            flexibleSpace: LayoutBuilder(builder: (context, constraints) {
-              _topHeight = constraints.biggest.height;
-              double expandRatio = (1 -
-                      ((context.paddingTop +
-                              (_showInfo! ? _infoHeight : 0) -
-                              _topHeight +
-                              180) /
-                          124))
-                  .clamp(0, 1);
-              double fullExpandRatio =
-                  (1 - ((context.paddingTop - _topHeight + 180) / 124))
-                      .clamp(0, 1);
-              final titleLineTest = TextPainter(
-                  textScaleFactor: 1,
-                  text: TextSpan(
-                      text: widget.podcastLocal!.title!,
-                      style: context.textTheme.headlineSmall!),
-                  textDirection: TextDirection.ltr);
-              titleLineTest.layout(maxWidth: context.width - 185);
-              double titleScale =
-                  ((context.width - 185) / titleLineTest.size.width)
-                      .clamp(1, 1.2);
-              double titleLineHeight = titleLineTest.size.height /
-                  titleLineTest.computeLineMetrics().length;
-              int titleLineCount = titleLineTest.computeLineMetrics().length;
-              return FlexibleSpaceBar(
-                  titlePadding: EdgeInsets.only(
-                      left: 55,
-                      right: 55 + (fullExpandRatio == 0 ? 0 : 75),
-                      bottom: _topHeight -
-                          (40 +
-                              (titleLineCount == 1
-                                  ? expandRatio * 54
-                                  : titleLineCount == 2
-                                      ? expandRatio * 39 +
-                                          (expandRatio < 0.2
-                                              ? 0
-                                              : titleLineHeight)
-                                      : expandRatio * 24 +
-                                          (expandRatio < 0.2
-                                              ? 0
-                                              : expandRatio < 0.4
-                                                  ? titleLineHeight
-                                                  : titleLineHeight * 2)))),
-                  expandedTitleScale: titleScale,
-                  background: Stack(
-                    children: <Widget>[
-                      Padding(
-                        padding: EdgeInsets.only(top: 120),
-                        child: InkWell(
-                          onTap: () => setState(() {
-                            _showInfo = !_showInfo!;
-
-                            if (_infoHeight == 0) {
-                              _infoHeight = (_infoKey.currentContext!
-                                      .findRenderObject() as RenderBox)
-                                  .size
-                                  .height;
-                            }
-                          }),
-                          child: Container(
-                            height: 60,
-                            padding: EdgeInsets.only(left: 80, right: 130),
-                            color: Colors.white10,
-                            alignment: Alignment.centerLeft,
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: <Widget>[
-                                      Text(widget.podcastLocal!.author ?? '',
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style:
-                                              TextStyle(color: Colors.white)),
-                                      if (widget
-                                          .podcastLocal!.provider!.isNotEmpty)
-                                        Text(
-                                          context.s.hostedOn(
-                                              widget.podcastLocal!.provider!),
-                                          maxLines: 1,
-                                          style: TextStyle(color: Colors.white),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                                UpDownIndicator(
-                                    status: _showInfo, color: Colors.white),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      Container(
-                        alignment: Alignment.topRight,
-                        padding: EdgeInsets.only(right: 20, top: 70),
-                        child: Container(
-                          height: 100,
-                          width: 100,
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.white, width: 2),
-                          ),
-                          child: Image.file(
-                            File("${widget.podcastLocal!.imagePath}"),
-                            errorBuilder: (context, _, __) {
-                              return ColoredBox(
-                                  color: color, child: Icon(Icons.error));
-                            },
-                          ),
-                        ),
-                      ),
-                      Align(
-                        alignment: Alignment.bottomCenter,
-                        child: _showInfo!
-                            ? Container(
-                                color: context.surface,
-                                height: _infoHeight,
-                                child: HostsList(context, widget.podcastLocal!),
-                              )
-                            : Center(),
-                      )
-                    ],
-                  ),
-                  title: Opacity(
-                    opacity: 1,
-                    child: Tooltip(
-                      message: widget.podcastLocal!.title!,
-                      child: Text(widget.podcastLocal!.title!,
-                          maxLines: titleLineCount < 3
-                              ? expandRatio < 0.2
-                                  ? 1
-                                  : 2
-                              : expandRatio < 0.2
-                                  ? 1
-                                  : expandRatio < 0.4
-                                      ? 2
-                                      : 3,
-                          overflow: TextOverflow.ellipsis,
-                          style: context.textTheme.headlineSmall!
-                              .copyWith(color: Colors.white)),
-                    ),
-                  ));
-            }),
-          ),
-          FutureBuilder<Tuple2<Layout, bool>>(
-            future: getDefaults(),
-            builder: (_, snapshot) {
-              _layout = snapshot.data?.item1;
-              return SliverAppBar(
-                pinned: true,
-                leading: Center(),
-                toolbarHeight: _actionBarHeight,
-                backgroundColor: context.surface,
-                scrolledUnderElevation: 0,
-                flexibleSpace: ActionBar(
-                  onGetEpisodesChanged: (getEpisodes) async {
-                    _getEpisodes = getEpisodes;
-                    _episodes = await _getEpisodes();
-                    if (_loadMore) {
-                      if (mounted) setState(() {});
-                      _loadMore = false;
-                      widget.selectionController
-                          .setSelectableEpisodes(_episodes, compatible: true);
-                    } else {
-                      widget.selectionController
-                          .setSelectableEpisodes(_episodes);
-                    }
-                    if (mounted) {
-                      setState(() {});
-                    }
-                  },
-                  onLayoutChanged: (layout) {
-                    _layout = layout;
-                    if (mounted) {
-                      setState(() {});
-                    }
-                  },
-                  onHeightChanged: (height) {
-                    _actionBarHeight = height;
-                    if (mounted) {
-                      setState(() {});
-                    }
-                  },
-                  // color: widget.podcastLocal!.primaryColor!
-                  //     .toColor(),
-                  color: _podcastAccent,
-                  limit: _top,
-                  podcast: widget.podcastLocal,
-                  filterPlayed: snapshot.data?.item2,
-                  layout: _layout ?? Layout.large,
-                  selectionController: widget.selectionController,
+          Builder(
+            builder: (context) {
+              if (_infoHeight == 0 && _infoKey.currentContext != null) {
+                _infoHeight =
+                    (_infoKey.currentContext!.findRenderObject() as RenderBox)
+                        .size
+                        .height;
+              }
+              return Selector<CardColorScheme, Tuple2<Color, Color>>(
+                selector: (context, cardColorScheme) => Tuple2(
+                    context.realDark ? Colors.black : cardColorScheme.saturated,
+                    cardColorScheme.colorScheme.onPrimaryContainer),
+                builder: (context, data, _) => _PodcastDetailAppBar(
+                  podcastLocal: widget.podcastLocal,
+                  color: data.item1,
+                  textColor: data.item2,
+                  infoHeight: _infoHeight,
                 ),
               );
             },
           ),
-
+          FutureBuilder<Tuple2<EpisodeGridLayout, bool?>>(
+            future: getLayoutAndShowListened(),
+            builder: (_, snapshot) {
+              if (_layout == null) {
+                _layout = snapshot.data?.item1;
+              }
+              return ActionBar(
+                onGetEpisodesChanged: (getEpisodes) async {
+                  _getEpisodes = getEpisodes;
+                  _episodes = await _getEpisodes();
+                  if (_loadMore) {
+                    if (mounted) setState(() {});
+                    _loadMore = false;
+                    widget.selectionController
+                        .setSelectableEpisodes(_episodes, compatible: true);
+                  } else {
+                    widget.selectionController.setSelectableEpisodes(_episodes);
+                  }
+                  if (mounted) {
+                    setState(() {});
+                  }
+                },
+                onLayoutChanged: (layout) {
+                  _layout = layout;
+                  if (mounted) {
+                    setState(() {});
+                  }
+                },
+                limit: _top,
+                podcast: widget.podcastLocal,
+                filterPlayed: snapshot.data?.item2,
+                layout: _layout ?? EpisodeGridLayout.large,
+              );
+            },
+          ),
           if (!widget.hide)
             EpisodeGrid(
               episodes: _episodes,
               showFavorite: true,
-              layout: _layout ?? Layout.large,
+              layout: _layout ?? EpisodeGridLayout.large,
               initNum: _scroll ? 0 : 12,
               preferEpisodeImage: false,
+              key: Key(widget.podcastLocal.id.toString() + "_grid"),
             ),
+
           SliverList(
             delegate: SliverChildBuilderDelegate(
               (context, index) {
@@ -601,7 +370,7 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
                     ? Opacity(
                         opacity: 0,
                         key: _infoKey,
-                        child: HostsList(context, widget.podcastLocal!),
+                        child: HostsList(context, widget.podcastLocal),
                       )
                     : Center(),
               ],
@@ -610,6 +379,250 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
         ],
       ),
     );
+  }
+}
+
+class _PodcastDetailAppBar extends StatefulWidget {
+  final PodcastLocal podcastLocal;
+  final Color color;
+  final Color textColor;
+  final double infoHeight;
+
+  const _PodcastDetailAppBar({
+    required this.podcastLocal,
+    required this.color,
+    required this.textColor,
+    required this.infoHeight,
+  });
+  @override
+  __PodcastDetailAppBarState createState() => __PodcastDetailAppBarState();
+}
+
+class __PodcastDetailAppBarState extends State<_PodcastDetailAppBar>
+    with SingleTickerProviderStateMixin {
+  double _topHeight = 0;
+
+  ///Show podcast info.
+  bool _showInfo = false;
+  late AnimationController _slideController;
+  late Animation<double> _slideAnimation;
+  late Tween<double> _infoHeightTween =
+      Tween<double>(begin: 0, end: widget.infoHeight);
+  double get currentInfoHeight => _infoHeightTween.evaluate(_slideAnimation);
+  @override
+  void initState() {
+    super.initState();
+    _slideController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 300))
+      ..addListener(() {
+        if (mounted) {
+          setState(() {});
+        }
+      });
+    _slideAnimation = CurvedAnimation(
+      parent: _slideController,
+      curve: Curves.easeInOutCubicEmphasized,
+      reverseCurve: Curves.easeInOutCirc,
+    );
+  }
+
+  @override
+  void dispose() {
+    _slideController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(_PodcastDetailAppBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.infoHeight != widget.infoHeight) {
+      _infoHeightTween = Tween<double>(begin: 0, end: widget.infoHeight);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverAppBar(
+      actions: <Widget>[
+        IconButton(
+          icon: Icon(Icons.more_vert),
+          splashRadius: 20,
+          tooltip: context.s.menu,
+          onPressed: () => generalSheet(
+            context,
+            title: widget.podcastLocal.title,
+            color: widget.podcastLocal.primaryColor!.toColor(),
+            child: PodcastSetting(podcastLocal: widget.podcastLocal),
+          ).then((value) async {
+            await _checkPodcast();
+            if (mounted) setState(() {});
+          }),
+        ),
+      ],
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      iconTheme: IconThemeData(
+        color: context.realDark ? widget.textColor : context.textColor,
+      ),
+      expandedHeight:
+          math.max(130 + context.paddingTop, 180) + currentInfoHeight,
+      backgroundColor: widget.color,
+      floating: true,
+      pinned: true,
+      leading: CustomBackButton(),
+      flexibleSpace: LayoutBuilder(
+        builder: (context, constraints) {
+          _topHeight = constraints.biggest.height;
+          double expandRatio = (1 -
+                  ((context.paddingTop + currentInfoHeight - _topHeight + 180) /
+                      124))
+              .clamp(0, 1);
+          double fullExpandRatio =
+              (1 - ((context.paddingTop - _topHeight + 180) / 124)).clamp(0, 1);
+          final titleLineTest = TextPainter(
+              text: TextSpan(
+                  text: widget.podcastLocal.title!,
+                  style: context.textTheme.headlineSmall!),
+              textDirection: TextDirection.ltr);
+          titleLineTest.layout(maxWidth: context.width - 185);
+          double titleScale =
+              ((context.width - 185) / titleLineTest.size.width).clamp(1, 1.2);
+          double titleLineHeight = titleLineTest.size.height /
+              titleLineTest.computeLineMetrics().length;
+          int titleLineCount = titleLineTest.computeLineMetrics().length;
+          return FlexibleSpaceBar(
+            titlePadding: EdgeInsets.only(
+                left: 55,
+                right: 55 + (fullExpandRatio == 0 ? 0 : 75),
+                bottom: _topHeight -
+                    (40 +
+                        (titleLineCount == 1
+                            ? expandRatio * 54
+                            : titleLineCount == 2
+                                ? expandRatio * 39 +
+                                    (expandRatio < 0.2 ? 0 : titleLineHeight)
+                                : expandRatio * 24 +
+                                    (expandRatio < 0.2
+                                        ? 0
+                                        : expandRatio < 0.4
+                                            ? titleLineHeight
+                                            : titleLineHeight * 2)))),
+            expandedTitleScale: titleScale,
+            background: Stack(
+              children: <Widget>[
+                Padding(
+                  padding: EdgeInsets.only(top: 120),
+                  child: InkWell(
+                    onTap: () => setState(() {
+                      if (_showInfo) {
+                        _showInfo = false;
+                        _slideController.reverse();
+                      } else {
+                        _showInfo = true;
+                        _slideController.forward();
+                      }
+                    }),
+                    child: Container(
+                      height: 60,
+                      padding: EdgeInsets.only(left: 40, right: 130),
+                      color: context.brightness == Brightness.light
+                          ? Color.lerp(widget.color, Colors.black, 0.08)
+                          : Color.lerp(widget.color, Colors.white, 0.12),
+                      alignment: Alignment.centerLeft,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: <Widget>[
+                                Text(widget.podcastLocal.author ?? '',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: context.textTheme.titleMedium),
+                                if (widget.podcastLocal.provider.isNotEmpty)
+                                  Text(
+                                    widget.podcastLocal.provider,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: context.textTheme.titleSmall,
+                                  ),
+                              ],
+                            ),
+                          ),
+                          UpDownIndicator(
+                              status: _showInfo, color: context.textColor),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Container(
+                  alignment: Alignment.topRight,
+                  padding: EdgeInsets.only(right: 20, top: 70),
+                  child: Container(
+                    height: 100,
+                    width: 100,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: Image.file(
+                      File("${widget.podcastLocal.imagePath}"),
+                      errorBuilder: (context, _, __) {
+                        return ColoredBox(
+                            color: widget.color, child: Icon(Icons.error));
+                      },
+                    ),
+                  ),
+                ),
+                if (currentInfoHeight > 0)
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Container(
+                      color: context.surface,
+                      height: currentInfoHeight,
+                      child: SingleChildScrollView(
+                        clipBehavior: Clip.hardEdge,
+                        child: HostsList(context, widget.podcastLocal),
+                      ),
+                    ),
+                  )
+              ],
+            ),
+            title: Opacity(
+              opacity: 1,
+              child: Tooltip(
+                message: widget.podcastLocal.title!,
+                child: Text(
+                  widget.podcastLocal.title!,
+                  maxLines: titleLineCount < 3
+                      ? expandRatio < 0.2
+                          ? 1
+                          : 2
+                      : expandRatio < 0.2
+                          ? 1
+                          : expandRatio < 0.4
+                              ? 2
+                              : 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.textTheme.headlineSmall?.copyWith(
+                      color: context.realDark ? widget.textColor : null),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _checkPodcast() async {
+    DBHelper dbHelper = DBHelper();
+    final exist = await dbHelper.checkPodcast(widget.podcastLocal.rssUrl);
+    if (exist == '') {
+      Navigator.of(context).pop();
+    }
   }
 }
 
@@ -637,12 +650,20 @@ class HostsList extends StatelessWidget {
                       children: [
                         _podcastLink(context,
                             title: 'Link',
-                            child: Icon(Icons.link, size: 30),
+                            child: Icon(
+                              Icons.link,
+                              size: 30,
+                              color: Colors.white,
+                            ),
                             backgroundColor: Colors.green[600]!,
                             onTap: () => podcastLocal.link!.launchUrl),
                         _podcastLink(context,
                             title: 'Rss',
-                            child: Icon(LineIcons.rssSquare, size: 30),
+                            child: Icon(
+                              LineIcons.rssSquare,
+                              size: 30,
+                              color: Colors.white,
+                            ),
                             backgroundColor: Colors.blue[600]!,
                             onTap: () => podcastLocal.rssUrl.launchUrl),
                         if (podcastLocal.funding.isNotEmpty)

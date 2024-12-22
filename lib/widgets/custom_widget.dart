@@ -1180,22 +1180,22 @@ class DownloadPainter extends CustomPainter {
 /// Layout icon button.
 class LayoutButton extends StatelessWidget {
   const LayoutButton({this.layout, this.onPressed, Key? key}) : super(key: key);
-  final Layout? layout;
-  final ValueChanged<Layout>? onPressed;
+  final EpisodeGridLayout? layout;
+  final ValueChanged<EpisodeGridLayout>? onPressed;
   @override
   Widget build(BuildContext context) {
     return IconButton(
       padding: EdgeInsets.zero,
       onPressed: () {
-        if (layout == Layout.small) {
-          onPressed!(Layout.large);
-        } else if (layout == Layout.medium) {
-          onPressed!(Layout.small);
+        if (layout == EpisodeGridLayout.small) {
+          onPressed!(EpisodeGridLayout.large);
+        } else if (layout == EpisodeGridLayout.medium) {
+          onPressed!(EpisodeGridLayout.small);
         } else {
-          onPressed!(Layout.medium);
+          onPressed!(EpisodeGridLayout.medium);
         }
       },
-      icon: layout == Layout.small
+      icon: layout == EpisodeGridLayout.small
           ? SizedBox(
               height: 10,
               width: 30,
@@ -1203,7 +1203,7 @@ class LayoutButton extends StatelessWidget {
                 painter: LayoutPainter(0, context.textColor),
               ),
             )
-          : layout == Layout.medium
+          : layout == EpisodeGridLayout.medium
               ? SizedBox(
                   height: 10,
                   width: 30,
@@ -1502,9 +1502,9 @@ class _SleepTimerPickerState extends State<SleepTimerPicker> {
 }
 
 class UpDownIndicator extends StatefulWidget {
-  final bool? status;
+  final bool status;
   final Color color;
-  UpDownIndicator({this.status, this.color = Colors.white, Key? key})
+  UpDownIndicator({this.status = false, this.color = Colors.white, Key? key})
       : super(key: key);
 
   @override
@@ -1513,41 +1513,54 @@ class UpDownIndicator extends StatefulWidget {
 
 class _UpDownIndicatorState extends State<UpDownIndicator>
     with SingleTickerProviderStateMixin {
-  late double _value;
-  late AnimationController _controller;
-  late Animation _animation;
+  late AnimationController controller;
+  late Animation<double> turnAnimation =
+      Tween<double>(begin: unfinishedBegin ?? 0, end: unfinishedEnd ?? 0.5)
+          .animate(controller);
+
+  double? unfinishedBegin;
+  double? unfinishedEnd;
+
   @override
   void initState() {
     super.initState();
-    _value = 0;
-    _controller =
+    controller =
         AnimationController(vsync: this, duration: Duration(milliseconds: 300));
-    _animation = Tween<double>(begin: 0.0, end: 1.0).animate(_controller)
-      ..addListener(() {
-        setState(() {
-          _value = _animation.value;
-        });
-      });
   }
 
   @override
   void didUpdateWidget(covariant UpDownIndicator oldWidget) {
     if (widget.status != oldWidget.status) {
-      widget.status! ? _controller.forward() : _controller.reverse();
+      if (widget.status) {
+        if (controller.isAnimating) {
+          unfinishedEnd = controller.value;
+        } else {
+          unfinishedEnd = null;
+        }
+        controller.forward();
+      } else {
+        if (controller.isAnimating) {
+          unfinishedBegin = controller.value;
+        } else {
+          unfinishedBegin = null;
+        }
+        controller.reverse();
+      }
+      widget.status ? controller.forward() : controller.reverse();
     }
     super.didUpdateWidget(oldWidget);
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Transform.rotate(
-      angle: widget.status! ? math.pi * _value : -math.pi * _value,
+    return RotationTransition(
+      turns: turnAnimation,
       child: Icon(
         Icons.keyboard_arrow_down,
         color: widget.color,

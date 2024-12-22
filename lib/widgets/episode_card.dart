@@ -14,6 +14,7 @@ import '../local_storage/sqflite_localpodcast.dart';
 import '../podcasts/podcast_detail.dart';
 import '../state/audio_state.dart';
 import '../type/play_histroy.dart';
+import '../type/podcastlocal.dart';
 import '../util/helpers.dart';
 import '../util/pageroute.dart';
 import 'custom_widget.dart';
@@ -25,7 +26,7 @@ class InteractiveEpisodeCard extends StatefulWidget {
   final EpisodeBrief episode;
 
   /// General card layout
-  final Layout layout;
+  final EpisodeGridLayout layout;
 
   /// Opens the podcast details if avatar image is tapped
   final bool openPodcast;
@@ -89,7 +90,8 @@ class InteractiveEpisodeCard extends StatefulWidget {
             !showLengthAndSize ||
             (episode.fields.contains(EpisodeField.isPlayed) &&
                 episode.fields.contains(EpisodeField.isDownloaded))),
-        assert(episode.fields.contains(EpisodeField.primaryColor));
+        assert(episode.fields.contains(EpisodeField.primaryColor)),
+        super(key: Key(episode.id.toString()));
 
   @override
   _InteractiveEpisodeCardState createState() => _InteractiveEpisodeCardState();
@@ -97,7 +99,6 @@ class InteractiveEpisodeCard extends StatefulWidget {
 
 class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
     with TickerProviderStateMixin {
-  bool _firstBuild = true;
   late AnimationController _controller;
   late AnimationController _shadowController;
   bool selected = false;
@@ -106,26 +107,17 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   late EpisodeBrief episode;
   PlayHistory? savedPosition;
 
-  bool _firstestBuild = true;
+  bool _initialBuild = true;
   late bool? episodeChange;
+  late Widget _body = _getBody();
   @override
   void initState() {
     super.initState();
     episode = widget.episode;
     _controller = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 200))
-      ..addListener(() {
-        if (mounted) {
-          setState(() {});
-        }
-      });
+        vsync: this, duration: const Duration(milliseconds: 200));
     _shadowController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 200))
-      ..addListener(() {
-        if (mounted) {
-          setState(() {});
-        }
-      });
+        vsync: this, duration: const Duration(milliseconds: 200));
   }
 
   @override
@@ -136,23 +128,28 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   }
 
   @override
-  Widget build(BuildContext context) {
-    if (_firstestBuild) {
-      _firstestBuild = false;
-
-      episodeChange =
-          Provider.of<EpisodeState>(context).episodeChangeMap[episode.id];
-    }
+  void didUpdateWidget(covariant InteractiveEpisodeCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
     // Apply external selection
     if (widget.selected != selected && !liveSelect && widget.selectMode) {
-      // TODO: Can this be done in didUpdateWidget?
-      _firstBuild = false;
       selected = widget.selected;
       if (widget.selected) {
         _controller.forward();
       } else {
         _controller.reverse();
       }
+    }
+    if (widget.layout != oldWidget.layout) {
+      _body = _getBody();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_initialBuild) {
+      _initialBuild = false;
+      episodeChange =
+          Provider.of<EpisodeState>(context).episodeChangeMap[episode.id];
     }
     // Unselect on selectMode exit
     if (!widget.selectMode && selected) {
@@ -162,6 +159,10 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
       });
     }
     liveSelect = false;
+    return _body; // This is to avoid rebuild when selecting or enabling select mode.
+  }
+
+  Widget _getBody() {
     return Selector<EpisodeState, bool?>(
       selector: (_, episodeState) => episodeState.episodeChangeMap[episode.id],
       builder: (_, data, ___) => FutureBuilder<EpisodeBrief?>(
@@ -181,9 +182,9 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
           }
           return OpenContainerWrapper(
             layout: widget.layout,
-            avatarSize: widget.layout == Layout.small
+            avatarSize: widget.layout == EpisodeGridLayout.small
                 ? context.width / 20
-                : widget.layout == Layout.medium
+                : widget.layout == EpisodeGridLayout.medium
                     ? context.width / 15
                     : context.width / 6,
             episode: episode,
@@ -198,100 +199,14 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
               builder: (context, snapshot) {
                 final tapToOpen = snapshot.data!.item1;
                 final menuList = snapshot.data!.item2;
-                int menuLength = 0;
-                for (int i = 0; i < 6; i++) {
-                  if (menuList.contains(i)) menuLength++;
-                }
                 return Selector<AudioPlayerNotifier, Tuple3<bool, bool, bool>>(
                   selector: (_, audio) => Tuple3(audio.episode == episode,
                       audio.playlist.contains(episode), audio.playerRunning),
                   builder: (_, data, __) {
                     if (data.item1) savedPosition = null;
-                    return FocusedMenuHolder(
-                      blurSize: 0,
-                      menuItemExtent: widget.layout == Layout.small
-                          ? 41.5
-                          : widget.layout == Layout.medium
-                              ? 42.5
-                              : 100 / menuLength,
-                      enableMenuScroll: false,
-                      menuBoxDecoration: BoxDecoration(
-                        color: context.accentBackground,
-                        border: Border.all(
-                          color: context.accentColor,
-                          width: 1.0,
-                        ),
-                        borderRadius: widget.layout == Layout.small
-                            ? context.radiusSmall
-                            : widget.layout == Layout.medium
-                                ? context.radiusMedium
-                                : context.radiusLarge,
-                      ),
-                      childDecoration: _cardDecoration(
-                          context, episode, widget.layout,
-                          selected: selected,
-                          controller: _firstBuild ? null : _controller,
-                          shadowController: _shadowController),
-                      openChildDecoration: _cardDecoration(
-                          context, episode, widget.layout,
-                          selected: true, shadowController: _shadowController),
-                      childHighlightColor: context.brightness ==
-                              Brightness.light
-                          ? episode.colorSchemeDark.primary
-                          : episode.colorSchemeLight
-                              .onSecondaryContainer, // TODO: Bug in flutter breaks the color. Need to update https://github.com/flutter/flutter/pull/110552
-                      childLowerlay: data.item1
-                          ? Selector<AudioPlayerNotifier, double>(
-                              selector: (_, audio) => audio.seekSliderValue,
-                              builder: (_, seekValue, __) => _progressLowerlay(
-                                  context, seekValue, widget.layout,
-                                  hide: selected),
-                            )
-                          : FutureBuilder<PlayHistory>(
-                              future: _getSavedPosition(),
-                              // initialData: PlayHistory("", "", 0, 0),
-                              builder: (context, snapshot) => _progressLowerlay(
-                                  context,
-                                  snapshot.hasData
-                                      ? snapshot.data!.seekValue!
-                                      : 0,
-                                  widget.layout,
-                                  hide: selected,
-                                  animator: _controller)),
-                      duration: const Duration(milliseconds: 100),
-                      openWithTap: tapToOpen,
-                      animateMenuItems: false,
-                      blurBackgroundColor: context.surface,
-                      bottomOffsetHeight: 10,
-                      menuOffset: 10,
-                      menuItems: _menuItemList(context, episode, data.item1,
-                          data.item2, data.item3, menuList),
-                      onPressed: widget.selectMode
-                          ? () async {
-                              widget.onSelect!();
-                              // await Future.delayed(
-                              //     Duration(milliseconds: 100));
-                              // selected = !selected;
-                              // _controller.reset();
-                              // _controller.forward();
-                              if (mounted) {
-                                setState(() {
-                                  if (selected)
-                                    _controller.reverse();
-                                  else
-                                    _controller.forward();
-                                  selected = !selected;
-                                  liveSelect = true;
-                                  if (_firstBuild) _firstBuild = false;
-                                });
-                              }
-                            }
-                          : () async {
-                              _shadowController.forward();
-                              // await Future.delayed(
-                              //     Duration(milliseconds: 150));
-                              action();
-                            },
+                    List<FocusedMenuItem> menuItemList = _menuItemList(context,
+                        episode, data.item1, data.item2, data.item3, menuList);
+                    return _FocusedMenuHolderWrapper(
                       child: EpisodeCard(context, episode, widget.layout,
                           openPodcast: widget.openPodcast,
                           showImage: widget.showImage && !boo,
@@ -303,8 +218,71 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                           showPlayedAndDownloaded:
                               widget.showPlayedAndDownloaded,
                           showDate: widget.showDate,
-                          selected: selected,
                           decorate: false),
+                      onPressed: () async {
+                        if (widget.selectMode) {
+                          widget.onSelect!();
+                          if (mounted) {
+                            setState(() {
+                              if (selected) {
+                                _controller.reverse();
+                              } else {
+                                _controller.forward();
+                              }
+                              selected = !selected;
+                              liveSelect = true;
+                            });
+                          }
+                        } else {
+                          _shadowController.forward();
+                          action();
+                        }
+                      },
+                      episode: episode,
+                      layout: widget.layout,
+                      tapToOpen: tapToOpen,
+                      menuItemList: menuItemList,
+                      menuItemExtent: widget.layout == EpisodeGridLayout.small
+                          ? 41.5
+                          : widget.layout == EpisodeGridLayout.medium
+                              ? 42.5
+                              : 100 / menuItemList.length,
+                      menuBoxDecoration: BoxDecoration(
+                        color: context.accentBackground,
+                        border: Border.all(
+                          color: context.accentColor,
+                          width: 1.0,
+                        ),
+                        borderRadius: widget.layout == EpisodeGridLayout.small
+                            ? context.radiusSmall
+                            : widget.layout == EpisodeGridLayout.medium
+                                ? context.radiusMedium
+                                : context.radiusLarge,
+                      ),
+                      childLowerlay: data.item1
+                          ? Selector<AudioPlayerNotifier, double>(
+                              selector: (_, audio) => audio.seekSliderValue,
+                              builder: (_, seekValue, __) => _ProgressLowerlay(
+                                episode,
+                                seekValue,
+                                widget.layout,
+                                animator: _controller,
+                              ),
+                            )
+                          : FutureBuilder<PlayHistory>(
+                              future: _getSavedPosition(),
+                              // initialData: PlayHistory("", "", 0, 0),
+                              builder: (context, snapshot) => _ProgressLowerlay(
+                                episode,
+                                snapshot.hasData
+                                    ? snapshot.data!.seekValue!
+                                    : 0,
+                                widget.layout,
+                                animator: _controller,
+                              ),
+                            ),
+                      controller: _controller,
+                      shadowController: _shadowController,
                     );
                   },
                 );
@@ -319,9 +297,86 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   Future<PlayHistory> _getSavedPosition() async {
     if (savedPosition == null) {
       DBHelper dbHelper = DBHelper();
-      savedPosition = await dbHelper.getPosition(episode);
+      savedPosition = await dbHelper.getPosition(widget.episode);
     }
     return savedPosition!;
+  }
+}
+
+class _FocusedMenuHolderWrapper extends StatefulWidget {
+  final Widget child;
+  final Function onPressed;
+  final EpisodeBrief episode;
+  final EpisodeGridLayout layout;
+
+  final bool tapToOpen;
+  final List<FocusedMenuItem> menuItemList;
+  final double? menuItemExtent;
+  final BoxDecoration? menuBoxDecoration;
+  final Widget? childLowerlay;
+
+  final AnimationController controller;
+  final AnimationController shadowController;
+  const _FocusedMenuHolderWrapper(
+      {required this.child,
+      required this.onPressed,
+      required this.episode,
+      required this.layout,
+      required this.tapToOpen,
+      required this.menuItemList,
+      required this.menuItemExtent,
+      required this.menuBoxDecoration,
+      required this.childLowerlay,
+      required this.controller,
+      required this.shadowController});
+  @override
+  _FocusedMenuHolderWrapperState createState() =>
+      _FocusedMenuHolderWrapperState();
+}
+
+class _FocusedMenuHolderWrapperState extends State<_FocusedMenuHolderWrapper> {
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(() {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+    widget.shadowController.addListener(() {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FocusedMenuHolder(
+      blurSize: 0,
+      menuItemExtent: widget.menuItemExtent,
+      enableMenuScroll: false,
+      menuBoxDecoration: widget.menuBoxDecoration,
+      childDecoration: _cardDecoration(context, widget.episode, widget.layout,
+          controller: widget.controller,
+          shadowController: widget.shadowController),
+      openChildDecoration: _cardDecoration(
+        context,
+        widget.episode,
+        widget.layout,
+        selected: true,
+      ),
+      childLowerlay: widget.childLowerlay,
+      duration: const Duration(milliseconds: 100),
+      openWithTap: widget.tapToOpen,
+      animateMenuItems: false,
+      blurBackgroundColor: context.surface,
+      bottomOffsetHeight: 10,
+      menuOffset: 10,
+      menuItems: widget.menuItemList,
+      onPressed: widget.onPressed,
+      child: widget.child,
+    );
   }
 }
 
@@ -331,7 +386,7 @@ class EpisodeCard extends StatelessWidget {
   final EpisodeBrief episode;
 
   /// General card layout
-  final Layout layout;
+  final EpisodeGridLayout layout;
 
   /// Opens the podcast details if avatar image is tapped
   final bool openPodcast;
@@ -411,31 +466,36 @@ class EpisodeCard extends StatelessWidget {
           decorate
               ? FutureBuilder<PlayHistory>(
                   future: dbHelper.getPosition(episode),
-                  builder: (context, snapshot) => _progressLowerlay(context,
+                  builder: (context, snapshot) => _ProgressLowerlay(episode,
                       snapshot.hasData ? snapshot.data!.seekValue! : 0, layout,
                       hide: selected))
               : Center(),
           Padding(
-            padding: EdgeInsets.all(layout == Layout.small ? 6 : 8)
-                .copyWith(bottom: layout == Layout.small ? 8 : 8),
+            padding: EdgeInsets.all(layout == EpisodeGridLayout.small ? 6 : 8)
+                .copyWith(bottom: layout == EpisodeGridLayout.small ? 8 : 8),
             child: Column(
               children: <Widget>[
-                if (layout != Layout.large)
+                if (layout != EpisodeGridLayout.large)
                   Expanded(
                     flex: 3,
                     child: Row(
                       children: <Widget>[
-                        if (showImage)
-                          _circleImage(
-                            context,
-                            openPodcast,
-                            preferEpisodeImage,
-                            radius: layout == Layout.small
-                                ? context.width / 20
-                                : context.width / 15,
-                            episode: episode,
-                            color: episode.getColorScheme(context).primary,
-                          ),
+                        showImage
+                            ? _circleImage(
+                                context,
+                                openPodcast,
+                                preferEpisodeImage,
+                                radius: layout == EpisodeGridLayout.small
+                                    ? context.width / 20
+                                    : context.width / 15,
+                                episode: episode,
+                                color: episode.colorScheme(context).primary,
+                              )
+                            : SizedBox(
+                                width: layout == EpisodeGridLayout.small
+                                    ? context.width / 20
+                                    : context.width / 15,
+                              ),
                         SizedBox(
                           width: 5,
                         ),
@@ -448,8 +508,8 @@ class EpisodeCard extends StatelessWidget {
                     ),
                   ),
                 Expanded(
-                  flex: layout == Layout.small ? 10 : 7,
-                  child: layout == Layout.large
+                  flex: layout == EpisodeGridLayout.small ? 10 : 7,
+                  child: layout == EpisodeGridLayout.large
                       ? Row(
                           children: [
                             _circleImage(
@@ -458,7 +518,7 @@ class EpisodeCard extends StatelessWidget {
                               preferEpisodeImage,
                               radius: context.width / 6,
                               episode: episode,
-                              color: episode.getColorScheme(context).primary,
+                              color: episode.colorScheme(context).primary,
                             ),
                             SizedBox(
                               width: 5,
@@ -513,7 +573,7 @@ class EpisodeCard extends StatelessWidget {
                         )
                       : _title(episode, context, layout),
                 ),
-                if (layout != Layout.large)
+                if (layout != EpisodeGridLayout.large)
                   Expanded(
                     flex: 2,
                     child: Row(
@@ -536,125 +596,102 @@ class EpisodeCard extends StatelessWidget {
   }
 }
 
-Widget _progressLowerlay(BuildContext context, double seekValue, Layout layout,
-    {bool hide = false, AnimationController? animator}) {
-  return Opacity(
-    opacity: animator == null
-        ? hide
-            ? 0
-            : 1
-        : 1 - animator.value,
-    child: Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(layout == Layout.small
-            ? 12
-            : layout == Layout.medium
-                ? 16
-                : 20),
+class _ProgressLowerlay extends StatelessWidget {
+  final EpisodeBrief episode;
+  final double seekValue;
+  final EpisodeGridLayout layout;
+  final bool hide;
+  final AnimationController? animator;
+  _ProgressLowerlay(this.episode, this.seekValue, this.layout,
+      {this.hide = false, this.animator});
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: animator == null
+          ? hide
+              ? AlwaysStoppedAnimation(0)
+              : const AlwaysStoppedAnimation(1)
+          : ReverseAnimation(animator!),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(layout == EpisodeGridLayout.small
+              ? 12
+              : layout == EpisodeGridLayout.medium
+                  ? 16
+                  : 20),
+        ),
+        clipBehavior: Clip.hardEdge,
+        height: double.infinity,
+        child: LinearProgressIndicator(
+            color: context.realDark
+                ? context.surface
+                : episode.progressIndicatorColor(context),
+            backgroundColor: Colors.transparent,
+            value: seekValue),
       ),
-      clipBehavior: Clip.hardEdge,
-      height: double.infinity,
-      child: LinearProgressIndicator(
-          color: context.realDark
-              ? context.surface.withOpacity(0.7)
-              : context.brightness == Brightness.light
-                  ? context.surface.withOpacity(0.7)
-                  : context.surface.withOpacity(0.6),
-          backgroundColor: Colors.transparent,
-          value: seekValue),
-    ),
-  );
+    );
+  }
 }
 
 BoxDecoration _cardDecoration(
-    BuildContext context, EpisodeBrief episode, Layout layout,
-    {bool selected = false,
-    AnimationController? controller,
-    AnimationController? shadowController}) {
+  BuildContext context,
+  EpisodeBrief episode,
+  EpisodeGridLayout layout, {
+  bool selected = false,
+  AnimationController? controller,
+  AnimationController?
+      shadowController, // Hide shadow during expanding transition
+}) {
+  Color shownShadowColor = controller == null
+      ? episode.cardShadowColor(context)
+      : ColorTween(
+              begin: episode.cardShadowColor(context),
+              end: Color.lerp(episode.cardColor(context), Colors.white, 0))
+          .evaluate(controller)!;
   return BoxDecoration(
-      color: context.realDark
-          ? controller == null
-              ? selected
-                  ? Color.lerp(context.surface,
-                      episode.getColorScheme(context).primary, 0.25)
-                  : context.surface
-              : selected
-                  ? ColorTween(
-                          begin: context.surface,
-                          end: Color.lerp(context.surface,
-                              episode.getColorScheme(context).primary, 0.25))
-                      .animate(controller)
-                      .value!
-                  : context.surface
-          : controller == null
-              ? selected
-                  ? Color.lerp(
-                      episode.getColorScheme(context).secondaryContainer,
-                      episode.getColorScheme(context).primary,
-                      0.15)
-                  : episode.getColorScheme(context).secondaryContainer
-              : selected
-                  ? ColorTween(
-                          begin: episode
-                              .getColorScheme(context)
-                              .secondaryContainer,
-                          end: Color.lerp(
-                              episode
-                                  .getColorScheme(context)
-                                  .secondaryContainer,
-                              episode.getColorScheme(context).primary,
-                              0.15))
-                      .animate(controller)
-                      .value!
-                  : episode.getColorScheme(context).secondaryContainer,
-      borderRadius: BorderRadius.circular(layout == Layout.small
+      color: controller == null
+          ? selected
+              ? episode.selectedCardColor(context)
+              : episode.cardColor(context)
+          : ColorTween(
+                  begin: episode.cardColor(context),
+                  end: episode.selectedCardColor(context))
+              .evaluate(controller)!,
+      borderRadius: BorderRadius.circular(layout == EpisodeGridLayout.small
           ? 12
-          : layout == Layout.medium
+          : layout == EpisodeGridLayout.medium
               ? 16
               : 20),
       border: Border.all(
         color: context.realDark
             ? controller == null
                 ? selected
-                    ? Color.lerp(episode.getColorScheme(context).primary,
-                        Colors.white, 0.5)!
-                    : episode.getColorScheme(context).primary
+                    ? episode.realDarkBorderColorSelected
+                    : episode.realDarkBorderColor
                 : ColorTween(
-                        begin: episode.getColorScheme(context).primary,
-                        end: Color.lerp(episode.getColorScheme(context).primary,
-                            Colors.white, 0.5)!)
-                    .animate(controller)
-                    .value!
-            : controller == null
-                ? selected
-                    ? episode.getColorScheme(context).primary
-                    : Colors.transparent
-                : ColorTween(
-                        begin: Colors.transparent,
-                        end: episode.getColorScheme(context).primary)
-                    .animate(controller)
-                    .value!,
+                        begin: episode.realDarkBorderColor,
+                        end: episode.realDarkBorderColorSelected)
+                    .evaluate(controller)!
+            : Colors.transparent,
         width: 1.0,
       ),
       boxShadow: [
+        // Difference between the values with and without controller is intentional
         BoxShadow(
           color: shadowController == null
-              ? episode.getColorScheme(context).primary
-              : ColorTween(
-                      begin: episode.getColorScheme(context).primary,
-                      end: Colors.transparent)
-                  .animate(shadowController)
-                  .value!,
-          blurRadius: controller == null
-              ? selected
-                  ? 8
-                  : 5
-              : Tween<double>(begin: 5, end: 8).animate(controller).value,
+              ? shownShadowColor
+              : ColorTween(begin: shownShadowColor, end: Colors.transparent)
+                  .evaluate(shadowController)!,
+          blurRadius: 5,
           spreadRadius: controller == null
               ? selected
-                  ? 2
-                  : -1
-              : Tween<double>(begin: -1, end: 2).animate(controller).value,
+                  ? -2
+                  : -3
+              : Tween<double>(
+                      begin: context.brightness == Brightness.light ? -2 : 1,
+                      end: -3)
+                  .evaluate(controller),
           offset: Offset.fromDirection(0, 0),
         )
       ]);
@@ -806,20 +843,22 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, EpisodeBrief episode,
 }
 
 /// Episode title widget.
-Widget _title(EpisodeBrief episode, BuildContext context, Layout layout) =>
+Widget _title(
+        EpisodeBrief episode, BuildContext context, EpisodeGridLayout layout) =>
     Container(
-      alignment:
-          layout == Layout.large ? Alignment.centerLeft : Alignment.topLeft,
-      padding: EdgeInsets.only(top: layout == Layout.large ? 0 : 2),
+      alignment: layout == EpisodeGridLayout.large
+          ? Alignment.centerLeft
+          : Alignment.topLeft,
+      padding: EdgeInsets.only(top: layout == EpisodeGridLayout.large ? 0 : 2),
       child: Text(
         episode.title,
-        style: (layout == Layout.small
+        style: (layout == EpisodeGridLayout.small
                 ? context.textTheme.bodySmall
                 : context.textTheme.bodyMedium)!
             .copyWith(height: 1.25),
-        maxLines: layout == Layout.small
+        maxLines: layout == EpisodeGridLayout.small
             ? 4
-            : layout == Layout.medium
+            : layout == EpisodeGridLayout.medium
                 ? 3
                 : 2,
         overflow: TextOverflow.ellipsis,
@@ -828,22 +867,23 @@ Widget _title(EpisodeBrief episode, BuildContext context, Layout layout) =>
 
 /// Episode title widget.
 Widget _podcastTitle(
-        EpisodeBrief episode, BuildContext context, Layout layout) =>
+        EpisodeBrief episode, BuildContext context, EpisodeGridLayout layout) =>
     Container(
-      alignment:
-          layout == Layout.large ? Alignment.centerLeft : Alignment.topLeft,
-      padding: EdgeInsets.only(top: layout == Layout.large ? 0 : 2),
+      alignment: layout == EpisodeGridLayout.large
+          ? Alignment.centerLeft
+          : Alignment.topLeft,
+      padding: EdgeInsets.only(top: layout == EpisodeGridLayout.large ? 0 : 2),
       width: context.width / 2.25,
       child: Text(
         episode.podcastTitle,
-        style: (layout == Layout.small
+        style: (layout == EpisodeGridLayout.small
                 ? context.textTheme.bodySmall
-                : layout == Layout.medium
+                : layout == EpisodeGridLayout.medium
                     ? context.textTheme.bodyMedium
                     : context.textTheme.bodyLarge)!
             .copyWith(
                 fontWeight: FontWeight.bold,
-                color: episode.getColorScheme(context).primary),
+                color: episode.colorScheme(context).primary),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
@@ -876,14 +916,16 @@ Widget _circleImage(
                 borderRadius: BorderRadius.circular(radius),
                 onTap: () async {
                   DBHelper dbHelper = DBHelper();
-                  Navigator.push(
-                    context,
-                    SlideLeftRoute(
-                        page: PodcastDetail(
-                      podcastLocal: await dbHelper
-                          .getPodcastWithUrl(episode.enclosureUrl),
-                    )),
-                  );
+                  PodcastLocal? podcast =
+                      await dbHelper.getPodcastWithUrl(episode.enclosureUrl);
+                  if (podcast != null) {
+                    Navigator.push(
+                      context,
+                      SlideLeftRoute(
+                        page: PodcastDetail(podcastLocal: podcast),
+                      ),
+                    );
+                  }
                 },
               ),
             ),
@@ -895,7 +937,8 @@ Widget _circleImage(
 // https://stackoverflow.com/questions/68230022/how-to-remove-space-between-widgets-in-column-or-row-in-flutter
 // ListView's initial animation is too distracting to use.
 // Custom paint perhaps?
-Widget _lengthAndSize(BuildContext context, Layout layout, EpisodeBrief episode,
+Widget _lengthAndSize(
+        BuildContext context, EpisodeGridLayout layout, EpisodeBrief episode,
         {bool showPlayedAndDownloaded = false}) =>
     Row(
       children: [
@@ -913,40 +956,36 @@ Widget _lengthAndSize(BuildContext context, Layout layout, EpisodeBrief episode,
                     border: Border.all(
                         color: context.realDark
                             ? Colors.transparent
-                            : episode
-                                .getColorScheme(context)
-                                .onSecondaryContainer,
+                            : episode.colorScheme(context).onSecondaryContainer,
                         width: 1),
                     color: showPlayedAndDownloaded && episode.isPlayed!
                         ? context.realDark
-                            ? episode.getColorScheme(context).secondaryContainer
-                            : episode
-                                .getColorScheme(context)
-                                .onSecondaryContainer
+                            ? episode.colorScheme(context).secondaryContainer
+                            : episode.colorScheme(context).onSecondaryContainer
                         : Colors.transparent),
                 alignment: Alignment.center,
                 child: Text(
                   episode.enclosureDuration!.toTime,
-                  style: (layout == Layout.large
+                  style: (layout == EpisodeGridLayout.large
                           ? context.textTheme.labelMedium
                           : context.textTheme.labelSmall)!
                       .copyWith(
                           color: context.realDark
                               ? episode
-                                  .getColorScheme(context)
+                                  .colorScheme(context)
                                   .onSecondaryContainer
                               : showPlayedAndDownloaded && episode.isPlayed!
                                   ? episode
-                                      .getColorScheme(context)
+                                      .colorScheme(context)
                                       .secondaryContainer
                                   : episode
-                                      .getColorScheme(context)
+                                      .colorScheme(context)
                                       .onSecondaryContainer),
                 ),
               ),
               Container(
                   width: 1,
-                  height: (layout == Layout.large
+                  height: (layout == EpisodeGridLayout.large
                           ? context.textTheme.bodyMedium
                           : context.textTheme.bodySmall)!
                       .fontSize,
@@ -954,7 +993,7 @@ Widget _lengthAndSize(BuildContext context, Layout layout, EpisodeBrief episode,
                           (!showPlayedAndDownloaded ||
                               !episode.isDownloaded! && !episode.isPlayed!) &&
                           episode.enclosureSize != 0
-                      ? episode.getColorScheme(context).onSecondaryContainer
+                      ? episode.colorScheme(context).onSecondaryContainer
                       : Colors.transparent)
             ],
           ),
@@ -992,38 +1031,34 @@ Widget _lengthAndSize(BuildContext context, Layout layout, EpisodeBrief episode,
                   border: Border.all(
                       color: context.realDark
                           ? Colors.transparent
-                          : episode
-                              .getColorScheme(context)
-                              .onSecondaryContainer,
+                          : episode.colorScheme(context).onSecondaryContainer,
                       width: 1),
                   color: showPlayedAndDownloaded && episode.isDownloaded!
                       ? context.realDark
-                          ? episode.getColorScheme(context).secondaryContainer
-                          : episode.getColorScheme(context).onSecondaryContainer
+                          ? episode.colorScheme(context).secondaryContainer
+                          : episode.colorScheme(context).onSecondaryContainer
                       : Colors.transparent),
               alignment: Alignment.center,
               child: Text(
                 '${episode.enclosureSize! ~/ 1000000}MB',
-                style: (layout == Layout.large
+                style: (layout == EpisodeGridLayout.large
                         ? context.textTheme.labelMedium
                         : context.textTheme.labelSmall)!
                     .copyWith(
                         color: context.realDark
-                            ? episode
-                                .getColorScheme(context)
-                                .onSecondaryContainer
+                            ? episode.colorScheme(context).onSecondaryContainer
                             : showPlayedAndDownloaded && episode.isDownloaded!
                                 ? episode
-                                    .getColorScheme(context)
+                                    .colorScheme(context)
                                     .secondaryContainer
                                 : episode
-                                    .getColorScheme(context)
+                                    .colorScheme(context)
                                     .onSecondaryContainer),
               ),
             ),
             Container(
                 width: 1,
-                height: (layout == Layout.large
+                height: (layout == EpisodeGridLayout.large
                         ? context.textTheme.bodyMedium
                         : context.textTheme.bodySmall)!
                     .fontSize,
@@ -1031,16 +1066,16 @@ Widget _lengthAndSize(BuildContext context, Layout layout, EpisodeBrief episode,
                         (!showPlayedAndDownloaded ||
                             !episode.isDownloaded! && !episode.isPlayed!) &&
                         episode.enclosureDuration != 0
-                    ? episode.getColorScheme(context).onSecondaryContainer
+                    ? episode.colorScheme(context).onSecondaryContainer
                     : Colors.transparent)
           ]),
       ],
     );
 
 Widget _downloadIndicator(
-        BuildContext context, Layout layout, bool showDownload,
+        BuildContext context, EpisodeGridLayout layout, bool showDownload,
         {bool? isDownloaded}) =>
-    showDownload && layout != Layout.small
+    showDownload && layout != EpisodeGridLayout.small
         ? isDownloaded!
             ? Container(
                 height: 20,
@@ -1068,12 +1103,12 @@ Widget _downloadIndicator(
 
 /// New indicator widget.
 Widget _isNewIndicator(
-        EpisodeBrief episode, BuildContext context, Layout layout) =>
+        EpisodeBrief episode, BuildContext context, EpisodeGridLayout layout) =>
     episode.isNew!
         ? Container(
             padding: EdgeInsets.symmetric(horizontal: 2),
             child: Text('New',
-                style: (layout == Layout.large
+                style: (layout == EpisodeGridLayout.large
                         ? context.textTheme.labelMedium
                         : context.textTheme.labelSmall)!
                     .copyWith(color: Colors.red, fontStyle: FontStyle.italic)),
@@ -1082,13 +1117,13 @@ Widget _isNewIndicator(
 
 /// Liked indicator widget.
 Widget _isLikedIndicator(
-        EpisodeBrief episode, BuildContext context, Layout layout) =>
+        EpisodeBrief episode, BuildContext context, EpisodeGridLayout layout) =>
     Container(
       alignment: Alignment.center,
       child: episode.isLiked!
           ? Icon(Icons.favorite,
               color: Colors.red,
-              size: layout == Layout.small
+              size: layout == EpisodeGridLayout.small
                   ? context.textTheme.bodySmall!.fontSize
                   : context.textTheme.bodyLarge!.fontSize)
           : Center(),
@@ -1096,32 +1131,32 @@ Widget _isLikedIndicator(
 
 /// Count indicator widget.
 Widget _numberIndicator(
-        BuildContext context, String numberText, Layout layout) =>
+        BuildContext context, String numberText, EpisodeGridLayout layout) =>
     Text(
       numberText,
       style: GoogleFonts.teko(
-          textStyle: layout == Layout.small
+          textStyle: layout == EpisodeGridLayout.small
               ? context.textTheme.bodySmall
-              : layout == Layout.medium
+              : layout == EpisodeGridLayout.medium
                   ? context.textTheme.bodyMedium
                   : context.textTheme.bodyLarge),
     );
 
 /// Pubdate widget
-Widget _pubDate(BuildContext context, EpisodeBrief episode, Layout layout,
-        bool showNew) =>
+Widget _pubDate(BuildContext context, EpisodeBrief episode,
+        EpisodeGridLayout layout, bool showNew) =>
     Text(
       episode.pubDate.toDate(context),
       overflow: TextOverflow.visible,
       textAlign: TextAlign.center,
-      style: (layout == Layout.small
+      style: (layout == EpisodeGridLayout.small
               ? context.textTheme.labelSmall
               : context.textTheme.labelMedium)!
           .copyWith(
               fontStyle: FontStyle.italic,
               color: episode.isNew!
                   ? Colors.red
-                  : episode.getColorScheme(context).onSecondaryContainer),
+                  : episode.colorScheme(context).onSecondaryContainer),
     );
 
 Future<Tuple2<bool, List<int>>> _initData(EpisodeBrief episode) async {

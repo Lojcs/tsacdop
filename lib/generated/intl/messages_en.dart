@@ -35,7 +35,7 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m4(count) =>
       "${Intl.plural(count, zero: '', one: 'Episode', other: 'Episodes')}";
 
-  static String m32(type) => "${type} filter";
+  static String m32(type) => "${type} Filter";
 
   static String m5(time) => "From ${time}";
 
@@ -278,6 +278,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "menuVisitSite": MessageLookupByLibrary.simpleMessage("Visit Site"),
         "minsAgo": m12,
         "minsCount": m13,
+        "moreOptions": MessageLookupByLibrary.simpleMessage("More Options"),
         "network": MessageLookupByLibrary.simpleMessage("Network"),
         "networkErrorDNS":
             MessageLookupByLibrary.simpleMessage("Network error (DNS issue)"),
@@ -383,6 +384,7 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Search for podcasts"),
         "secCount": m24,
         "secondsAgo": m25,
+        "selectMode": MessageLookupByLibrary.simpleMessage("Selection Mode"),
         "selected": m26,
         "settingStorage": MessageLookupByLibrary.simpleMessage("Storage"),
         "settings": MessageLookupByLibrary.simpleMessage("Settings"),
@@ -535,6 +537,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "skipToNext": MessageLookupByLibrary.simpleMessage("Skip to next"),
         "sleepTimer": MessageLookupByLibrary.simpleMessage("Sleep timer"),
         "sortBy": MessageLookupByLibrary.simpleMessage("Sort By"),
+        "sortOrder": MessageLookupByLibrary.simpleMessage("Sort Order"),
         "status": MessageLookupByLibrary.simpleMessage("Status"),
         "statusAuthError":
             MessageLookupByLibrary.simpleMessage("Authentication error"),

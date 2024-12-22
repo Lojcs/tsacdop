@@ -6,6 +6,7 @@ import 'package:equatable/equatable.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:tsacdop/local_storage/sqflite_localpodcast.dart';
+import 'package:tsacdop/type/theme_data.dart';
 import '../util/extension_helper.dart';
 
 class EpisodeBrief extends Equatable {
@@ -25,7 +26,7 @@ class EpisodeBrief extends Equatable {
   final String? mediaId;
   final String? episodeImage;
   final String? podcastImage;
-  final String? primaryColor;
+  final Color? primaryColor;
   final bool? isExplicit;
   final bool? isLiked;
   final bool? isNew;
@@ -110,25 +111,64 @@ class EpisodeBrief extends Equatable {
           : podcastImageProvider;
 
   Color backgroudColor(BuildContext context) {
-    return getColorScheme(context).onSecondaryContainer;
+    return colorScheme(context).onSecondaryContainer;
   }
 
+  /// Convenience method to get the card color for current theme
   Color cardColor(BuildContext context) {
-    return getColorScheme(context).secondaryContainer;
+    return context.realDark
+        ? context.surface
+        : context.brightness == Brightness.light
+            ? cardColorSchemeLight.card
+            : cardColorSchemeDark.card;
+  }
+
+  /// Convenience method to get the selected card color for current theme
+  Color selectedCardColor(BuildContext context) {
+    return context.realDark
+        ? context.surface
+        : context.brightness == Brightness.light
+            ? cardColorSchemeLight.selected
+            : cardColorSchemeDark.selected;
+  }
+
+  /// Convenience method to get the card shadow color for current theme
+  Color cardShadowColor(BuildContext context) {
+    return context.brightness == Brightness.light
+        ? cardColorSchemeLight.shadow
+        : cardColorSchemeDark.shadow;
+  }
+
+  /// Convenience method to get the card progress indicator color for current theme
+  Color progressIndicatorColor(BuildContext context) {
+    return context.realDark
+        ? context.surface
+        : context.brightness == Brightness.light
+            ? cardColorSchemeLight.faded
+            : cardColorSchemeDark.faded;
   }
 
   late final ColorScheme colorSchemeLight = ColorScheme.fromSeed(
-    seedColor: primaryColor!.toColor(),
+    seedColor: primaryColor!,
     brightness: Brightness.light,
   );
   late final ColorScheme colorSchemeDark = ColorScheme.fromSeed(
-    seedColor: primaryColor!.toColor(),
+    seedColor: primaryColor!,
     brightness: Brightness.dark,
   );
+  late final CardColorScheme cardColorSchemeLight =
+      CardColorScheme(colorSchemeLight);
+  late final CardColorScheme cardColorSchemeDark =
+      CardColorScheme(colorSchemeDark);
+
+  late final Color realDarkBorderColor =
+      Color.lerp(colorSchemeDark.primary, Colors.black, 0.5)!;
+  late final Color realDarkBorderColorSelected =
+      Color.lerp(colorSchemeDark.primary, Colors.white, 0.5)!;
 
   /// Gets the episode color sceme for the provided [context].brightness.
   /// Caches its results so can be used freely.
-  ColorScheme getColorScheme(BuildContext context) {
+  ColorScheme colorScheme(BuildContext context) {
     return context.brightness == Brightness.light
         ? colorSchemeLight
         : colorSchemeDark;
@@ -213,7 +253,7 @@ class EpisodeBrief extends Equatable {
           String? mediaId,
           String? episodeImage,
           String? podcastImage,
-          String? primaryColor,
+          Color? primaryColor,
           bool? isExplicit,
           bool? isLiked,
           bool? isNew,

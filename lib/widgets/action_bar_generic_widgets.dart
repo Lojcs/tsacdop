@@ -2,7 +2,10 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:tsacdop/type/theme_data.dart';
 import 'package:tsacdop/util/extension_helper.dart';
+import 'package:tuple/tuple.dart';
 
 import 'custom_popupmenu.dart';
 import 'custom_widget.dart';
@@ -12,8 +15,10 @@ enum ActionBarButtonType { single, onOff, noneOnOff, partialOnOff }
 /// General purpose button with flexible state types.
 /// Single: State handled outside the button
 /// onOff: State swtiched false->true->false
-/// noneOnOff: State switched null->true->false->null. False (off) is represented with crossing out of the child.
+/// noneOnOff: State switched null->true->false->null. False (off) is represented with crossing out of the (false)child.
 /// partialOnOff: State switched null->true->false->true.
+/// Can shrink to shrunkWidth in off state.
+/// Passing color is mandatory either directly or with a [CardColorScheme] [Provider]
 class ActionBarButton extends StatefulWidget {
   final Widget child;
   final ExpansionController? expansionController;
@@ -27,9 +32,8 @@ class ActionBarButton extends StatefulWidget {
   final double? shrunkWidth;
   final double? height;
   final EdgeInsets? innerPadding;
-  final Color color;
+  final Color? color;
   final Color? activeColor;
-  final BorderRadius? borderRadius;
   final String? tooltip;
   final bool enabled;
   final Animation<double>? animation;
@@ -48,9 +52,8 @@ class ActionBarButton extends StatefulWidget {
     this.shrunkWidth,
     this.height,
     this.innerPadding,
-    required this.color,
+    this.color,
     this.activeColor,
-    this.borderRadius,
     this.tooltip,
     this.enabled = true,
     this.animation,
@@ -70,14 +73,19 @@ class _ActionBarButtonState extends State<ActionBarButton>
   late final AnimationController? expandAnimationController;
 
   late bool? state;
-
   bool get active => widget.buttonType == ActionBarButtonType.noneOnOff
       ? state != null
       : widget.buttonType == ActionBarButtonType.partialOnOff
           ? state != false
           : state!;
+
+  late BorderRadius borderRadius = BorderRadius.horizontal(
+    left: !widget.connectLeft ? context.actionBarIconRadius : Radius.zero,
+    right: !widget.connectRight ? context.actionBarIconRadius : Radius.zero,
+  );
+
   double get widgetWidthNotNull =>
-      widget.width ?? context.actionBarSizeHorizontal;
+      widget.width ?? context.actionBarButtonSizeHorizontal;
   double get shrunkWidth => widget.shrunkWidth ?? widgetWidthNotNull;
   late final double minExpandedWidth = min(shrunkWidth * 3, widgetWidthNotNull);
   late Tween<double> widthTween = Tween<double>(
@@ -228,95 +236,105 @@ class _ActionBarButtonState extends State<ActionBarButton>
     if (firstBuild) {
       firstBuild = false;
       if (hasExpansionController) {
-        _expand = widget.expansionController!.addItem(expandableItem);
+        widget.expansionController!.addWidth(
+            (!widget.connectLeft ? context.actionBarIconPadding.left / 2 : 0) +
+                (!widget.connectRight
+                    ? context.actionBarIconPadding.right / 2
+                    : 0));
+        if (expands) {
+          _expand = widget.expansionController!.addItem(expandableItem);
+        } else {
+          widget.expansionController!
+              .addWidth(widget.width ?? context.actionBarButtonSizeHorizontal);
+        }
       }
     }
-    BorderRadius borderRadius = widget.borderRadius ??
-        BorderRadius.horizontal(
-          left: !widget.connectLeft ? context.actionBarIconRadius : Radius.zero,
-          right:
-              !widget.connectRight ? context.actionBarIconRadius : Radius.zero,
-        );
+
     return Tooltip(
       message: widget.tooltip ?? "",
-      child: Container(
-        margin: EdgeInsets.only(
-          left: !widget.connectLeft ? context.actionBarIconPadding.left / 2 : 0,
-          right:
-              !widget.connectRight ? context.actionBarIconPadding.right / 2 : 0,
-        ),
-        decoration: BoxDecoration(
-          color: widget.enabled
-              ? ColorTween(
-                      begin: widget.color.toWeakBackround(context),
-                      end: widget.activeColor ?? widget.color)
-                  .evaluate(animation)
-              : context.brightness == Brightness.light
-                  ? Colors.grey[300]
-                  : !context.realDark
-                      ? Colors.grey[800]
-                      : context.surface,
-          borderRadius: borderRadius,
-        ),
-        width: width,
-        height: widget.height ?? context.actionBarSizeVertical,
-        child: Material(
-          color: Colors.transparent,
-          clipBehavior: Clip.hardEdge,
-          borderRadius: borderRadius,
-          child: InkWell(
-            onTap: widget.enabled
-                ? () {
-                    if (mounted) {
-                      setState(() {
-                        switch (state) {
-                          case null:
-                            state = true;
-                            break;
-                          case false:
-                            if (widget.buttonType ==
-                                ActionBarButtonType.noneOnOff) {
-                              state = null;
-                            } else if (widget.buttonType !=
-                                ActionBarButtonType.single) {
+      child: Selector<CardColorScheme, Tuple2<Color, Color>>(
+        selector: (context, cardColorScheme) => Tuple2(
+            widget.color ?? cardColorScheme.card,
+            widget.activeColor ?? widget.color ?? cardColorScheme.selected),
+        builder: (context, data, _) => Container(
+          margin: EdgeInsets.only(
+            left:
+                !widget.connectLeft ? context.actionBarIconPadding.left / 2 : 0,
+            right: !widget.connectRight
+                ? context.actionBarIconPadding.right / 2
+                : 0,
+          ),
+          decoration: BoxDecoration(
+            color: widget.enabled
+                ? ColorTween(begin: data.item1, end: data.item2)
+                    .evaluate(animation)
+                : context.brightness == Brightness.light
+                    ? Colors.grey[300]
+                    : !context.realDark
+                        ? Colors.grey[800]
+                        : context.surface,
+            borderRadius: borderRadius,
+          ),
+          width: width,
+          height: widget.height ?? context.actionBarButtonSizeVertical,
+          child: Material(
+            color: Colors.transparent,
+            clipBehavior: Clip.hardEdge,
+            borderRadius: borderRadius,
+            child: InkWell(
+              onTap: widget.enabled
+                  ? () {
+                      if (mounted) {
+                        setState(() {
+                          switch (state) {
+                            case null:
                               state = true;
-                            }
-                            break;
-                          case true:
-                            if (widget.buttonType !=
-                                ActionBarButtonType.single) {
-                              state = false;
-                            }
+                              break;
+                            case false:
+                              if (widget.buttonType ==
+                                  ActionBarButtonType.noneOnOff) {
+                                state = null;
+                              } else if (widget.buttonType !=
+                                  ActionBarButtonType.single) {
+                                state = true;
+                              }
+                              break;
+                            case true:
+                              if (widget.buttonType !=
+                                  ActionBarButtonType.single) {
+                                state = false;
+                              }
+                          }
+                        });
+                        if (active) {
+                          animationController.forward();
+                          expand(true);
+                        } else {
+                          animationController.reverse();
+                          expand(false);
                         }
-                      });
-                      if (active) {
-                        animationController.forward();
-                        expand(true);
-                      } else {
-                        animationController.reverse();
-                        expand(false);
                       }
+                      widget.onPressed(state);
                     }
-                    widget.onPressed(state);
-                  }
-                : null,
-            child: Container(
-              margin: widget.innerPadding ?? context.actionBarIconPadding,
-              alignment: Alignment.centerLeft,
-              width: width,
-              height: widget.height ?? context.actionBarSizeVertical,
-              child: widget.buttonType == ActionBarButtonType.noneOnOff
-                  ? BiStateIndicator(
-                      state: state == false,
-                      child: state == false && widget.falseChild != null
-                          ? widget.falseChild!
-                          : child,
-                    )
-                  : state != null
-                      ? state == true
-                          ? child
-                          : widget.falseChild ?? child
-                      : widget.partialChild ?? widget.falseChild ?? child,
+                  : null,
+              child: Container(
+                margin: widget.innerPadding ?? context.actionBarIconPadding,
+                alignment: Alignment.centerLeft,
+                width: width,
+                height: widget.height ?? context.actionBarButtonSizeVertical,
+                child: widget.buttonType == ActionBarButtonType.noneOnOff
+                    ? BiStateIndicator(
+                        state: state == false,
+                        child: state == false && widget.falseChild != null
+                            ? widget.falseChild!
+                            : child,
+                      )
+                    : state != null
+                        ? state == true
+                            ? child
+                            : widget.falseChild ?? child
+                        : widget.partialChild ?? widget.falseChild ?? child,
+              ),
             ),
           ),
         ),
@@ -326,6 +344,7 @@ class _ActionBarButtonState extends State<ActionBarButton>
 }
 
 /// Doropdown button that can shrink into an icon when not opened
+/// Passing color is mandatory either directly or with a [CardColorScheme] [Provider]
 class ActionBarDropdownButton<T> extends StatefulWidget {
   final Widget child;
   final T selected;
@@ -336,7 +355,7 @@ class ActionBarDropdownButton<T> extends StatefulWidget {
   final double? minExpandedWidth;
   final double? maxExpandedWidth;
   final int visibleItemCount;
-  final Color color;
+  final Color? color;
   final Color? activeColor;
   final String? tooltip;
   final bool Function(T) active;
@@ -352,7 +371,7 @@ class ActionBarDropdownButton<T> extends StatefulWidget {
     this.minExpandedWidth,
     this.maxExpandedWidth,
     this.visibleItemCount = 10,
-    required this.color,
+    this.color,
     this.activeColor,
     this.tooltip,
     required this.active,
@@ -376,34 +395,32 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
   late T selected = widget.selected;
   bool get active => widget.active(selected);
 
-  late final double minExpandedWidth = widget.minExpandedWidth ??
+  late double minExpandedWidth = widget.minExpandedWidth ??
       (widget.maxExpandedWidth != null
           ? widget.maxExpandedWidth!
-              .clamp(0, context.actionBarSizeHorizontal * 3)
-          : context.actionBarSizeHorizontal);
+              .clamp(0, context.actionBarButtonSizeHorizontal * 3)
+          : context.actionBarButtonSizeHorizontal);
   late Tween<double> widthTween = Tween<double>(
-      begin: context.actionBarSizeHorizontal,
+      begin: context.actionBarButtonSizeHorizontal,
       end: hasExpansionController
-          ? context.actionBarSizeHorizontal
-          : widget.maxExpandedWidth ?? context.actionBarSizeHorizontal);
-  late void Function(bool) _expand = hasExpansionController
-      ? widget.expansionController!.addItem(expandableItem)
-      : (shouldExpand) {
-          if (shouldExpand) {
-            expandAnimationController!.forward();
-          } else {
-            expandAnimationController!.reverse();
-          }
-        };
+          ? context.actionBarButtonSizeHorizontal
+          : widget.maxExpandedWidth ?? context.actionBarButtonSizeHorizontal);
+  late void Function(bool) _expand = (shouldExpand) {
+    if (shouldExpand) {
+      expandAnimationController!.forward();
+    } else {
+      expandAnimationController!.reverse();
+    }
+  };
   void expand(bool shouldExpand) {
     if (expands && mounted) _expand(shouldExpand);
   }
 
   late Expandable expandableItem = Expandable(
-    minWidth: context.actionBarSizeHorizontal,
+    minWidth: context.actionBarButtonSizeHorizontal,
     minExpandedWidth: minExpandedWidth,
     maxExpandedWidth:
-        widget.maxExpandedWidth ?? context.actionBarSizeHorizontal,
+        widget.maxExpandedWidth ?? context.actionBarButtonSizeHorizontal,
     onWidthChanged: (value) async {
       if (expands && mounted) {
         newWidth = value;
@@ -424,8 +441,8 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
   bool get expands => widget.expandedChild != null;
   double get width => expands
       ? widthTween.evaluate(expandAnimation!)
-      : context.actionBarSizeHorizontal;
-  late double newWidth = context.actionBarSizeHorizontal;
+      : context.actionBarButtonSizeHorizontal;
+  late double newWidth = context.actionBarButtonSizeHorizontal;
 
   bool firstBuild = true;
   @override
@@ -465,6 +482,10 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
       curve: Curves.easeOutExpo,
       reverseCurve: Curves.easeInExpo,
     );
+    if (active && !activeAnimationController.isCompleted) {
+      activeAnimationController.forward();
+      expand(true);
+    }
   }
 
   @override
@@ -478,7 +499,26 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
   @override
   void didUpdateWidget(ActionBarDropdownButton<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (active) {
+    if (widget.minExpandedWidth != oldWidget.minExpandedWidth ||
+        widget.maxExpandedWidth != oldWidget.maxExpandedWidth) {
+      minExpandedWidth = widget.minExpandedWidth ??
+          (widget.maxExpandedWidth != null
+              ? widget.maxExpandedWidth!
+                  .clamp(0, context.actionBarButtonSizeHorizontal * 3)
+              : context.actionBarButtonSizeHorizontal);
+      expandableItem.minExpandedWidth = minExpandedWidth;
+    }
+    if (widget.maxExpandedWidth != oldWidget.maxExpandedWidth) {
+      widthTween = Tween<double>(
+          begin: context.actionBarButtonSizeHorizontal,
+          end: hasExpansionController
+              ? context.actionBarButtonSizeHorizontal
+              : widget.maxExpandedWidth ??
+                  context.actionBarButtonSizeHorizontal);
+      expandableItem.maxExpandedWidth =
+          widget.maxExpandedWidth ?? context.actionBarButtonSizeHorizontal;
+    }
+    if (active && !activeAnimationController.isCompleted) {
       activeAnimationController.forward();
       expand(true);
     }
@@ -489,7 +529,13 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
     if (firstBuild) {
       firstBuild = false;
       if (hasExpansionController) {
-        _expand = widget.expansionController!.addItem(expandableItem);
+        widget.expansionController!.addWidth(
+            (!widget.connectLeft ? context.actionBarIconPadding.left / 2 : 0) +
+                (!widget.connectRight
+                    ? context.actionBarIconPadding.right / 2
+                    : 0));
+        if (expands)
+          _expand = widget.expansionController!.addItem(expandableItem);
       }
     }
     var borderRadiusTween = BorderRadiusTween(
@@ -512,89 +558,92 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
         bottomRight: Radius.zero,
       ),
     );
-    double expandRatio = ((width - context.actionBarSizeHorizontal) /
-            (minExpandedWidth - context.actionBarSizeHorizontal))
+    double expandRatio = ((width - context.actionBarButtonSizeHorizontal) /
+            (minExpandedWidth - context.actionBarButtonSizeHorizontal))
         .clamp(0, 1);
-    return Container(
-      margin: EdgeInsets.only(
-        left: !widget.connectLeft ? context.actionBarIconPadding.left / 2 : 0,
-        right:
-            !widget.connectRight ? context.actionBarIconPadding.right / 2 : 0,
-      ),
-      decoration: BoxDecoration(
-        color: ColorTween(
-                begin: widget.color.toWeakBackround(context),
-                end: widget.activeColor ?? widget.color)
-            .evaluate(activeAnimation),
-        borderRadius: borderRadiusTween.evaluate(openAnimation),
-      ),
-      height: context.actionBarSizeVertical,
-      width: width,
-      child: Material(
-        color: Colors.transparent,
-        clipBehavior: Clip.hardEdge,
-        borderRadius: borderRadiusTween.evaluate(openAnimation),
-        child: MyPopupMenuButton<T>(
-          splashRadius: 0,
-          padding: EdgeInsets.zero,
-          menuPadding: EdgeInsets.symmetric(vertical: 0),
-          constraints: BoxConstraints(
-            minWidth: context.actionBarSizeHorizontal,
-            maxWidth: newWidth,
+    return Selector<CardColorScheme, Tuple2<Color, Color>>(
+      selector: (context, cardColorScheme) => Tuple2(
+          widget.color ?? cardColorScheme.card,
+          widget.activeColor ?? widget.color ?? cardColorScheme.selected),
+      builder: (context, data, _) => Container(
+        margin: EdgeInsets.only(
+          left: !widget.connectLeft ? context.actionBarIconPadding.left / 2 : 0,
+          right:
+              !widget.connectRight ? context.actionBarIconPadding.right / 2 : 0,
+        ),
+        decoration: BoxDecoration(
+          color: ColorTween(begin: data.item1, end: data.item2)
+              .evaluate(activeAnimation),
+          borderRadius: borderRadiusTween.evaluate(openAnimation),
+        ),
+        height: context.actionBarButtonSizeVertical,
+        width: width,
+        child: Material(
+          color: Colors.transparent,
+          clipBehavior: Clip.hardEdge,
+          borderRadius: borderRadiusTween.evaluate(openAnimation),
+          child: MyPopupMenuButton<T>(
+            splashRadius: 0,
+            padding: EdgeInsets.zero,
+            menuPadding: EdgeInsets.symmetric(vertical: 0),
+            constraints: BoxConstraints(
+              minWidth: context.actionBarButtonSizeHorizontal,
+              maxWidth: newWidth,
+            ),
+            visibleItemCount: widget.visibleItemCount,
+            itemExtent: context.actionBarButtonSizeVertical,
+            position: PopupMenuPosition.under,
+            color: data.item2,
+            shape: RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius.vertical(bottom: context.actionBarIconRadius)),
+            elevation: 1,
+            tooltip: widget.tooltip,
+            child: Container(
+              padding: context.actionBarIconPadding,
+              alignment: Alignment.centerLeft,
+              child: widget.expandedChild == null
+                  ? widget.child
+                  : Stack(
+                      alignment: AlignmentDirectional.centerStart,
+                      children: [
+                        if (expandRatio != 1)
+                          Opacity(
+                            opacity: 1 - expandRatio,
+                            child: widget.child,
+                          ),
+                        if (expandRatio != 0)
+                          Opacity(
+                            opacity: expandRatio,
+                            child: widget.expandedChild,
+                          ),
+                      ],
+                    ),
+            ),
+            itemBuilder: (context) {
+              return widget.itemBuilder();
+            },
+            onSelected: (value) {
+              if (value != selected) {
+                if (mounted) setState(() => selected = value);
+                widget.onSelected(value);
+              }
+            },
+            beforeOpened: () async {
+              activeAnimationController.forward();
+              expand(true);
+              openAnimationController.forward();
+              await Future.delayed(Duration(milliseconds: 100));
+            },
+            afterClosed: () async {
+              await Future.delayed(Duration(milliseconds: 150));
+              if (!active) {
+                activeAnimationController.reverse();
+                expand(false);
+              }
+              openAnimationController.reverse();
+            },
           ),
-          visibleItemCount: widget.visibleItemCount,
-          itemExtent: context.actionBarSizeVertical,
-          position: PopupMenuPosition.under,
-          color: widget.activeColor ?? widget.color,
-          shape: RoundedRectangleBorder(
-              borderRadius:
-                  BorderRadius.vertical(bottom: context.actionBarIconRadius)),
-          elevation: 1,
-          tooltip: widget.tooltip,
-          child: Container(
-            padding: context.actionBarIconPadding,
-            alignment: Alignment.centerLeft,
-            child: widget.expandedChild == null
-                ? widget.child
-                : Stack(
-                    alignment: AlignmentDirectional.centerStart,
-                    children: [
-                      if (expandRatio != 1)
-                        Opacity(
-                          opacity: 1 - expandRatio,
-                          child: widget.child,
-                        ),
-                      if (expandRatio != 0)
-                        Opacity(
-                          opacity: expandRatio,
-                          child: widget.expandedChild,
-                        ),
-                    ],
-                  ),
-          ),
-          itemBuilder: (context) {
-            return widget.itemBuilder();
-          },
-          onSelected: (value) {
-            if (value != selected) {
-              if (mounted) setState(() => selected = value);
-              widget.onSelected(value);
-            }
-          },
-          beforeOpened: () async {
-            activeAnimationController.forward();
-            expand(true);
-            openAnimationController.forward();
-            await Future.delayed(Duration(milliseconds: 100));
-          },
-          afterClosed: () async {
-            await Future.delayed(Duration(milliseconds: 150));
-            if (!active) {
-              activeAnimationController.reverse();
-              expand(false);
-            }
-            openAnimationController.reverse();
-          },
         ),
       ),
     );
@@ -602,6 +651,7 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
 }
 
 /// Search button that can expand to show an in-place text field.
+/// Passing color is mandatory either directly or with a [CardColorScheme] [Provider]
 class ActionBarExpandingSearchButton extends StatefulWidget {
   final String query;
   final bool popupSearch;
@@ -609,7 +659,7 @@ class ActionBarExpandingSearchButton extends StatefulWidget {
   final ExpansionController? expansionController;
   final ValueChanged<String> onQueryChanged;
   final double expandedWidth;
-  final Color color;
+  final Color? color;
   final Color? activeColor;
   final bool connectLeft;
   final bool connectRight;
@@ -620,7 +670,7 @@ class ActionBarExpandingSearchButton extends StatefulWidget {
     this.expansionController,
     required this.onQueryChanged,
     this.expandedWidth = 200,
-    required this.color,
+    this.color,
     this.activeColor,
     this.connectLeft = false,
     this.connectRight = false,
@@ -640,11 +690,12 @@ class _ActionBarExpandingSearchButtonState
 
   late String query = widget.query;
 
-  late final double minExpandedWidth = context.actionBarSizeHorizontal * 3;
+  late final double minExpandedWidth =
+      context.actionBarButtonSizeHorizontal * 3;
   late Tween<double> widthTween = Tween<double>(
-      begin: context.actionBarSizeHorizontal,
+      begin: context.actionBarButtonSizeHorizontal,
       end: hasExpansionController
-          ? context.actionBarSizeHorizontal
+          ? context.actionBarButtonSizeHorizontal
           : widget.expandedWidth);
   late void Function(bool) _expand = (shouldExpand) {
     if (shouldExpand) {
@@ -658,7 +709,7 @@ class _ActionBarExpandingSearchButtonState
   }
 
   late Expandable expandableItem = Expandable(
-    minWidth: context.actionBarSizeHorizontal,
+    minWidth: context.actionBarButtonSizeHorizontal,
     minExpandedWidth: minExpandedWidth,
     maxExpandedWidth: widget.expandedWidth,
     onWidthChanged: (value) async {
@@ -680,8 +731,8 @@ class _ActionBarExpandingSearchButtonState
   bool get hasExpansionController => widget.expansionController != null;
   double get width => widget.expands
       ? widthTween.evaluate(expandAnimation!)
-      : context.actionBarSizeHorizontal;
-  late double newWidth = context.actionBarSizeHorizontal;
+      : context.actionBarButtonSizeHorizontal;
+  late double newWidth = context.actionBarButtonSizeHorizontal;
 
   bool firstBuild = true;
   @override
@@ -723,7 +774,9 @@ class _ActionBarExpandingSearchButtonState
   @override
   void didUpdateWidget(ActionBarExpandingSearchButton oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (query != "") {
+    if (widget.query != query) {
+      query = widget.query;
+      widget.onQueryChanged(query);
       activeAnimationController.forward();
       expand(true);
     }
@@ -734,7 +787,13 @@ class _ActionBarExpandingSearchButtonState
     if (firstBuild) {
       firstBuild = false;
       if (hasExpansionController) {
-        _expand = widget.expansionController!.addItem(expandableItem);
+        widget.expansionController!.addWidth(
+            (!widget.connectLeft ? context.actionBarIconPadding.left / 2 : 0) +
+                (!widget.connectRight
+                    ? context.actionBarIconPadding.right / 2
+                    : 0));
+        if (widget.expands)
+          _expand = widget.expansionController!.addItem(expandableItem);
       }
     }
     BorderRadius borderRadius = BorderRadius.horizontal(
@@ -755,200 +814,210 @@ class _ActionBarExpandingSearchButtonState
       end: BorderRadius.all(context.actionBarIconRadius),
     );
     double expandRatio =
-        (((width / context.actionBarSizeHorizontal) - 1) / 2).clamp(0, 1);
-    return Container(
-      margin: EdgeInsets.only(
-        left: !widget.connectLeft ? context.actionBarIconPadding.left / 2 : 0,
-        right:
-            !widget.connectRight ? context.actionBarIconPadding.right / 2 : 0,
-      ),
-      decoration: BoxDecoration(
-        color: ColorTween(
-                begin: widget.color.toWeakBackround(context),
-                end: widget.activeColor ?? widget.color)
-            .evaluate(activeAnimation),
-        borderRadius: borderRadius,
-      ),
-      height: context.actionBarSizeVertical,
-      width: width,
-      child: Material(
-        color: Colors.transparent,
-        clipBehavior: Clip.hardEdge,
-        borderRadius: borderRadiusTween.evaluate(expandAnimation!),
-        child: !widget.expands
-            ? _SearchIconButton(
-                query: query,
-                onFieldSubmitted: (value) {
-                  if (value != query) {
-                    if (mounted) setState(() => query = value);
-                    widget.onQueryChanged(query);
-                  }
-                },
-                activeAnimationController: activeAnimationController,
-                color: widget.color)
-            : Stack(
-                alignment: AlignmentDirectional.centerEnd,
-                children: [
-                  if (expandRatio != 1)
-                    Opacity(
-                      opacity: 1 - expandRatio,
-                      child: InkWell(
-                        splashColor: Colors.transparent,
-                        onTap: () async {
-                          activeAnimationController.forward();
-                          expand(true);
-                          if (widget.popupSearch) {
-                            await showGeneralDialog(
-                              context: context,
-                              barrierDismissible: true,
-                              barrierLabel: MaterialLocalizations.of(context)
-                                  .modalBarrierDismissLabel,
-                              barrierColor: Colors.black54,
-                              transitionDuration:
-                                  const Duration(milliseconds: 200),
-                              pageBuilder:
-                                  (context, animaiton, secondaryAnimation) =>
-                                      SearchEpisode(
-                                onSearch: (value) {
-                                  if (value != query) {
-                                    if (mounted) setState(() => query = value);
-                                    widget.onQueryChanged(query);
-                                  }
-                                },
-                                accentColor: widget.color,
-                                query: query,
-                              ),
-                            );
-                          }
-                        },
-                        child: Container(
-                          margin: context.actionBarIconPadding,
-                          width: context.actionBarSizeHorizontal,
-                          height: context.actionBarSizeVertical,
-                          child: Icon(
-                            Icons.search,
-                            size: context.actionBarIconSize,
+        (((width / context.actionBarButtonSizeHorizontal) - 1) / 2).clamp(0, 1);
+    return Selector<CardColorScheme, Tuple2<Color, Color>>(
+      selector: (context, cardColorScheme) => Tuple2(
+          widget.color ?? cardColorScheme.card,
+          widget.activeColor ?? widget.color ?? cardColorScheme.selected),
+      builder: (context, data, _) => Container(
+        margin: EdgeInsets.only(
+          left: !widget.connectLeft ? context.actionBarIconPadding.left / 2 : 0,
+          right:
+              !widget.connectRight ? context.actionBarIconPadding.right / 2 : 0,
+        ),
+        decoration: BoxDecoration(
+          color: ColorTween(begin: data.item1, end: data.item2)
+              .evaluate(activeAnimation),
+          borderRadius: borderRadius,
+        ),
+        height: context.actionBarButtonSizeVertical,
+        width: width,
+        child: Material(
+          color: Colors.transparent,
+          clipBehavior: Clip.hardEdge,
+          borderRadius: borderRadiusTween.evaluate(expandAnimation!),
+          child: !widget.expands
+              ? _SearchIconButton(
+                  query: query,
+                  onFieldSubmitted: (value) {
+                    if (value != query) {
+                      if (mounted) setState(() => query = value);
+                      widget.onQueryChanged(query);
+                    }
+                  },
+                  activeAnimationController: activeAnimationController,
+                  color: data.item1,
+                )
+              : Stack(
+                  alignment: AlignmentDirectional.centerEnd,
+                  children: [
+                    if (expandRatio != 1)
+                      Opacity(
+                        opacity: 1 - expandRatio,
+                        child: InkWell(
+                          splashColor: Colors.transparent,
+                          onTap: () async {
+                            activeAnimationController.forward();
+                            expand(true);
+                            if (widget.popupSearch) {
+                              await showGeneralDialog(
+                                context: context,
+                                barrierDismissible: true,
+                                barrierLabel: MaterialLocalizations.of(context)
+                                    .modalBarrierDismissLabel,
+                                barrierColor: Colors.black54,
+                                transitionDuration:
+                                    const Duration(milliseconds: 200),
+                                pageBuilder:
+                                    (context, animaiton, secondaryAnimation) =>
+                                        SearchEpisode(
+                                  onSearch: (value) {
+                                    if (value != query) {
+                                      if (mounted)
+                                        setState(() => query = value);
+                                      widget.onQueryChanged(query);
+                                    }
+                                  },
+                                  accentColor: data.item1,
+                                  query: query,
+                                ),
+                              );
+                            }
+                          },
+                          child: Container(
+                            margin: context.actionBarIconPadding,
+                            width: context.actionBarButtonSizeHorizontal,
+                            height: context.actionBarButtonSizeVertical,
+                            child: Icon(
+                              Icons.search,
+                              size: context.actionBarIconSize,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  if (expandRatio != 0)
-                    Opacity(
-                      opacity: expandRatio,
-                      child: Row(
-                        children: [
-                          if (widget.popupSearch)
-                            Container(
-                              padding: EdgeInsets.only(
-                                  top: 5, bottom: 5, left: 2, right: 2),
-                              decoration: BoxDecoration(
-                                  borderRadius: borderRadius,
-                                  border: Border.all(
-                                      width: 2,
-                                      color:
-                                          context.textColor.withOpacity(0.2))),
-                              child: InkWell(
-                                child: query == ""
-                                    ? Row(
-                                        children: [
-                                          Text(
-                                            context.s.search,
-                                            maxLines: 1,
-                                            style: TextStyle(
-                                              color: context.textColor
-                                                  .withOpacity(0.4),
-                                            ),
-                                          ),
-                                          Spacer()
-                                        ],
-                                      )
-                                    : Row(
-                                        children: [
-                                          Expanded(
-                                            child: Text(
-                                              query,
+                    if (expandRatio != 0)
+                      Opacity(
+                        opacity: expandRatio,
+                        child: Row(
+                          children: [
+                            if (widget.popupSearch)
+                              Container(
+                                padding: EdgeInsets.only(
+                                    top: 5, bottom: 5, left: 2, right: 2),
+                                decoration: BoxDecoration(
+                                    borderRadius: borderRadius,
+                                    border: Border.all(
+                                        width: 2,
+                                        color: context.textColor
+                                            .withOpacity(0.2))),
+                                child: InkWell(
+                                  child: query == ""
+                                      ? Row(
+                                          children: [
+                                            Text(
+                                              context.s.search,
                                               maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                color: context.textColor
+                                                    .withOpacity(0.4),
+                                              ),
                                             ),
-                                          ),
-                                        ],
+                                            Spacer()
+                                          ],
+                                        )
+                                      : Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                query,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                  onTap: () async {
+                                    await showGeneralDialog(
+                                      context: context,
+                                      barrierDismissible: true,
+                                      barrierLabel:
+                                          MaterialLocalizations.of(context)
+                                              .modalBarrierDismissLabel,
+                                      barrierColor: Colors.black54,
+                                      transitionDuration:
+                                          const Duration(milliseconds: 200),
+                                      pageBuilder: (context, animaiton,
+                                              secondaryAnimation) =>
+                                          SearchEpisode(
+                                        onSearch: (value) {
+                                          if (value != query) {
+                                            if (mounted)
+                                              setState(() => query = value);
+                                            widget.onQueryChanged(query);
+                                          }
+                                        },
+                                        accentColor: data.item1,
+                                        query: query,
                                       ),
-                                onTap: () async {
-                                  await showGeneralDialog(
-                                    context: context,
-                                    barrierDismissible: true,
-                                    barrierLabel:
-                                        MaterialLocalizations.of(context)
-                                            .modalBarrierDismissLabel,
-                                    barrierColor: Colors.black54,
-                                    transitionDuration:
-                                        const Duration(milliseconds: 200),
-                                    pageBuilder: (context, animaiton,
-                                            secondaryAnimation) =>
-                                        SearchEpisode(
-                                      onSearch: (value) {
-                                        if (value != query) {
-                                          if (mounted)
-                                            setState(() => query = value);
-                                          widget.onQueryChanged(query);
-                                        }
-                                      },
-                                      accentColor: widget.color,
-                                      query: query,
-                                    ),
-                                  );
-                                },
+                                    );
+                                  },
+                                ),
+                              )
+                            else
+                              Container(
+                                width: width -
+                                    context.actionBarButtonSizeHorizontal,
+                                alignment: Alignment.center,
+                                child: TextFormField(
+                                  initialValue: query,
+                                  decoration: InputDecoration(
+                                    contentPadding:
+                                        EdgeInsets.symmetric(horizontal: 8),
+                                    hintText: context.s.searchEpisode,
+                                    hintStyle: context.textTheme.titleMedium,
+                                    border: OutlineInputBorder(
+                                        borderSide: BorderSide.none),
+                                  ),
+                                  autofocus: false,
+                                  maxLines: 1,
+                                  onFieldSubmitted: (value) {
+                                    if (value != query) {
+                                      if (mounted)
+                                        setState(() => query = value);
+                                      widget.onQueryChanged(query);
+                                    }
+                                  },
+                                ),
                               ),
-                            )
-                          else
                             Container(
-                              width: width - context.actionBarSizeHorizontal,
-                              alignment: Alignment.center,
-                              child: TextFormField(
-                                initialValue: query,
-                                decoration: InputDecoration(
-                                  contentPadding:
-                                      EdgeInsets.symmetric(horizontal: 8),
-                                  hintText: context.s.searchEpisode,
-                                  hintStyle: TextStyle(fontSize: 18),
-                                  border: OutlineInputBorder(
-                                      borderSide: BorderSide.none),
-                                ),
-                                autofocus: false,
-                                maxLines: 1,
-                                onFieldSubmitted: (value) {
-                                  if (value != query) {
-                                    if (mounted) setState(() => query = value);
+                              width: context.actionBarButtonSizeHorizontal,
+                              child: Material(
+                                color: Colors.transparent,
+                                child: IconButton(
+                                  padding: context.actionBarIconPadding,
+                                  icon: SizedBox(
+                                    width:
+                                        context.actionBarButtonSizeHorizontal,
+                                    height: context.actionBarButtonSizeVertical,
+                                    child: Icon(Icons.close,
+                                        color: context.actionBarIconColor),
+                                  ),
+                                  iconSize: context.actionBarIconSize,
+                                  onPressed: () async {
+                                    if (mounted) setState(() => query = "");
                                     widget.onQueryChanged(query);
-                                  }
-                                },
-                              ),
-                            ),
-                          Container(
-                            width: context.actionBarSizeHorizontal,
-                            child: Material(
-                              color: Colors.transparent,
-                              child: IconButton(
-                                padding: context.actionBarIconPadding,
-                                icon: SizedBox(
-                                  width: context.actionBarSizeHorizontal,
-                                  height: context.actionBarSizeVertical,
-                                  child: Icon(Icons.close),
+                                    activeAnimationController.reverse();
+                                    expand(false);
+                                  },
                                 ),
-                                iconSize: context.actionBarIconSize,
-                                onPressed: () async {
-                                  if (mounted) setState(() => query = "");
-                                  activeAnimationController.reverse();
-                                  expand(false);
-                                },
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                ],
-              ),
+                  ],
+                ),
+        ),
       ),
     );
   }
@@ -989,8 +1058,8 @@ class _SearchIconButton extends StatelessWidget {
       },
       child: Container(
         margin: context.actionBarIconPadding,
-        width: context.actionBarSizeHorizontal,
-        height: context.actionBarSizeVertical,
+        width: context.actionBarButtonSizeHorizontal,
+        height: context.actionBarButtonSizeVertical,
         child: Icon(
           Icons.search,
           size: context.actionBarIconSize,
@@ -1101,7 +1170,10 @@ class ExpansionController {
   }
 
   /// Use to add the width of non-expandable items.
-  void addWidth(double width) => _itemsWidth += width;
+  void addWidth(double width) {
+    _itemsWidth += width;
+    adjustWidths();
+  }
 
   /// Adds an expandable item. Returns callback used to change shouldExpand property of the item.
   void Function(bool shouldExpand) addItem(Expandable item) {
@@ -1131,7 +1203,7 @@ class ExpansionController {
       }
       minimize++;
       assert(minimize < _expandedItems.length * _expandedItems.length,
-          "Widget widths don't fit");
+          "Widget widths don't fit. This probably means you're readding widgets that are already added to the controller.");
     }
     for (int i = 0; i < _items.length; i++) {
       Expandable item = _items[i];
@@ -1146,10 +1218,10 @@ class Expandable {
   final double minWidth;
 
   /// Minimum width while expanded
-  final double minExpandedWidth;
+  double minExpandedWidth;
 
   /// Maximum necessary width while expanded
-  final double maxExpandedWidth;
+  double maxExpandedWidth;
 
   /// Wheter the item can expand
   bool _shouldExpand = false;

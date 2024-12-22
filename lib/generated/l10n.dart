@@ -788,13 +788,13 @@ class S {
     );
   }
 
-  /// `{type} filter`
+  /// `{type} Filter`
   String filterType(Object type) {
     return Intl.message(
-      '$type filter',
+      '$type Filter',
       name: 'filterType',
       desc:
-          'To use with different episode filter types. Ex: {Downloaded} filter, {Played} filter, {Group} filter...',
+          'To use with different episode filter types. Ex: {Downloaded} Filter, {Played} Filter, {Group} Filter...',
       args: [type],
     );
   }
@@ -1352,6 +1352,16 @@ class S {
       name: 'minsCount',
       desc: '',
       args: [count],
+    );
+  }
+
+  /// `More Options`
+  String get moreOptions {
+    return Intl.message(
+      'More Options',
+      name: 'moreOptions',
+      desc: '',
+      args: [],
     );
   }
 
@@ -2102,6 +2112,16 @@ class S {
       name: 'selected',
       desc: '',
       args: [count],
+    );
+  }
+
+  /// `Selection Mode`
+  String get selectMode {
+    return Intl.message(
+      'Selection Mode',
+      name: 'selectMode',
+      desc: '',
+      args: [],
     );
   }
 
@@ -2971,6 +2991,16 @@ class S {
     return Intl.message(
       'Sort By',
       name: 'sortBy',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sort Order`
+  String get sortOrder {
+    return Intl.message(
+      'Sort Order',
+      name: 'sortOrder',
       desc: '',
       args: [],
     );

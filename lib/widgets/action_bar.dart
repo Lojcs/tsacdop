@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:collection/collection.dart' show IterableExtension;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -8,9 +9,11 @@ import 'package:provider/provider.dart';
 import 'package:tsacdop/state/podcast_group.dart';
 import 'package:tsacdop/type/episodebrief.dart';
 import 'package:tsacdop/type/podcastlocal.dart';
+import 'package:tsacdop/type/theme_data.dart';
 import 'package:tsacdop/util/extension_helper.dart';
 import 'package:tsacdop/util/selection_controller.dart';
 import 'package:tsacdop/widgets/action_bar_generic_widgets.dart';
+import 'package:tsacdop/widgets/multiselect_bar.dart';
 import 'package:tuple/tuple.dart';
 import 'package:webfeed/domain/media/group.dart';
 
@@ -41,35 +44,75 @@ enum ActionBarEntry {
   spacer,
 }
 
-/// Action bar to use with episodegrid
+Set<ActionBarEntry> filterEntries = {
+  ActionBarEntry.dropdownGroups,
+  ActionBarEntry.dropdownPodcasts,
+  ActionBarEntry.filterNew,
+  ActionBarEntry.filterLiked,
+  ActionBarEntry.filterPlayed,
+  ActionBarEntry.filterDownloaded,
+  ActionBarEntry.searchTitle,
+};
+Set<ActionBarEntry> controlEntriesWithRemoveNewMark = {
+  ActionBarEntry.switchLayout,
+  ActionBarEntry.switchSelectMode,
+  ActionBarEntry.switchSecondRow,
+  ActionBarEntry.buttonRefresh,
+  ActionBarEntry.buttonRemoveNewMark,
+};
+
+Set<Type> _filterWidgets = {
+  ActionBarDropdownGroups,
+  ActionBarDropdownPodcasts,
+  ActionBarFilterNew,
+  ActionBarFilterLiked,
+  ActionBarFilterPlayed,
+  ActionBarFilterDownloaded,
+  ActionBarSearchTitle
+};
+Set<Type> _sortWidgets = {
+  ActionBarDropdownSortBy,
+  ActionBarSwitchSortOrder,
+};
+Set<Type> _controlWidgets = {
+  ActionBarSwitchLayout,
+  ActionBarSwitchSelectMode,
+  ActionBarSwitchSecondRow,
+  ActionBarButtonRefresh,
+  ActionBarButtonRemoveNewMark,
+};
+
+/// Bar with buttons to sort, filter episodes and control view.
+/// Returns the get episodes callback with the [onGetEpisodesChanged] callback.
+/// Subwidgets can be chosen by passing [widgetsFirstRow] & [widgetsFirstRow]
+/// Filters can be controlled from outside by passing them.
+/// Configure colors with a [CardColorScheme] provided with a [ChangeNotifierProvider], defaults to the global theme
+/// Select mode switch works when [SelectionController] if provided with a [ChangeNotifierProvider]
 class ActionBar extends StatefulWidget {
   /// Callback to return the episode list based on filters
   final ValueSetter<ValueGetter<Future<List<EpisodeBrief>>>>
       onGetEpisodesChanged;
 
   /// Callback to return the layout status
-  final ValueChanged<Layout>? onLayoutChanged;
-
-  /// Callback to return the select mode status
-  final ValueChanged<double>? onHeightChanged;
-
-  /// Wheter to show integrated multiselect bar on select mode
-  final bool showMultiSelectBar;
+  final ValueChanged<EpisodeGridLayout>? onLayoutChanged;
 
   /// Items to show on the bar
-  final List<ActionBarEntry> itemsFirstRow;
+  final List<ActionBarWidget> widgetsFirstRow;
 
   /// Items to show in custom popup menu
-  final List<ActionBarEntry> itemsSecondRow;
+  final List<ActionBarWidget> widgetsSecondRow;
 
   /// Sorters to show in the sort by dropdown button
   final List<Sorter> sortByItems;
 
-  /// Accent color to use
-  final Color? color;
+  /// Wheter to show integrated multiselect bar on select mode
+  final bool showMultiSelectBar;
 
-  /// For late animation start
-  final bool hide;
+  /// Default second row
+  final bool expandSecondRow;
+
+  /// Pin sliver to top
+  final bool pinned;
 
   /// Limit of episode list size
   final int limit;
@@ -99,38 +142,30 @@ class ActionBar extends StatefulWidget {
   final SortOrder sortOrder;
 
   /// Default layout (overrides general default)
-  final Layout layout;
-
-  /// Controller for select mode. Necessary for the button to be enabled
-  final SelectionController? selectionController;
-
-  /// Default second row
-  final bool secondRow;
+  final EpisodeGridLayout layout;
 
   const ActionBar({
     required this.onGetEpisodesChanged,
     this.onLayoutChanged,
-    this.onHeightChanged,
-    this.showMultiSelectBar = true,
-    this.itemsFirstRow = const [
-      ActionBarEntry.dropdownSortBy,
-      ActionBarEntry.switchSortOrder,
-      ActionBarEntry.spacer,
-      ActionBarEntry.buttonRefresh,
-      ActionBarEntry.buttonRemoveNewMark,
-      ActionBarEntry.filterPlayed,
-      ActionBarEntry.filterDownloaded,
-      ActionBarEntry.switchLayout,
-      ActionBarEntry.switchSelectMode,
-      ActionBarEntry.switchSecondRow,
+    this.widgetsFirstRow = const [
+      ActionBarDropdownSortBy(0, 0),
+      ActionBarSwitchSortOrder(0, 1),
+      ActionBarSpacer(0, 2),
+      ActionBarButtonRefresh(0, 3),
+      ActionBarButtonRemoveNewMark(0, 4),
+      ActionBarFilterPlayed(0, 5),
+      ActionBarFilterDownloaded(0, 6),
+      ActionBarSwitchLayout(0, 7),
+      ActionBarSwitchSelectMode(0, 8),
+      ActionBarSwitchSecondRow(0, 9),
     ],
-    this.itemsSecondRow = const [
-      ActionBarEntry.dropdownGroups,
-      ActionBarEntry.dropdownPodcasts,
-      ActionBarEntry.searchTitle,
-      ActionBarEntry.spacer,
-      ActionBarEntry.filterNew,
-      ActionBarEntry.filterLiked,
+    this.widgetsSecondRow = const [
+      ActionBarDropdownGroups(1, 0),
+      ActionBarDropdownPodcasts(1, 1),
+      ActionBarSearchTitle(1, 2),
+      ActionBarSpacer(1, 3),
+      ActionBarFilterNew(1, 4),
+      ActionBarFilterLiked(1, 5),
     ],
     this.sortByItems = const [
       Sorter.pubDate,
@@ -138,8 +173,9 @@ class ActionBar extends StatefulWidget {
       Sorter.enclosureDuration,
       Sorter.random
     ],
-    this.color,
-    this.hide = false,
+    this.showMultiSelectBar = false,
+    this.expandSecondRow = false,
+    this.pinned = true,
     this.limit = 100,
     this.group,
     this.podcast,
@@ -149,46 +185,151 @@ class ActionBar extends StatefulWidget {
     this.filterPlayed,
     this.filterDownloaded,
     this.sortOrder = SortOrder.DESC,
-    this.layout = Layout.large,
-    this.selectionController,
-    this.secondRow = false,
+    this.layout = EpisodeGridLayout.large,
   });
   @override
   _ActionBarState createState() => _ActionBarState();
 }
 
 class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
-  /// Accent color to use
-  late final Color color = widget.color ?? context.accentColor;
-  late final ColorScheme colorScheme = ColorScheme.fromSeed(
-    seedColor: color,
-    brightness: Brightness.dark,
-  );
-  Color get activeColor => context.realDark
-      ? colorScheme.secondaryContainer
-      : color.toStrongBackround(context);
+  late AnimationController _switchSecondRowController;
+  late AnimationController _buttonRefreshController;
+  late AnimationController _buttonRemoveNewMarkController;
 
-  late PodcastGroup group;
-  late final PodcastGroup _groupAll;
-  late final List<PodcastGroup?> groups;
+  late _ActionBarSharedState _sharedState;
+  bool initialBuild = true;
+  @override
+  void initState() {
+    super.initState();
+    _initAnimations();
+  }
 
-  late PodcastLocal podcast;
-  late final PodcastLocal _podcastAll;
-  late List<PodcastLocal> podcasts;
+  void _initAnimations() {
+    _switchSecondRowController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 300));
+    _buttonRefreshController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 200));
+    _buttonRemoveNewMarkController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 200));
+  }
 
-  late Sorter sortBy = widget.sortBy;
-  late bool? filterNew = widget.filterNew;
-  late bool? filterLiked = widget.filterLiked;
-  late bool? filterPlayed = widget.filterPlayed;
-  late bool? filterDownloaded = widget.filterDownloaded;
-  late SortOrder sortOrder = widget.sortOrder;
-  late Layout layout = widget.layout;
-  late final SelectionController? selectionController =
-      widget.selectionController;
-  late bool selectMode =
-      selectionController != null ? selectionController!.selectMode : false;
-  late bool secondRow = widget.secondRow;
+  @override
+  void dispose() {
+    _switchSecondRowController.dispose();
+    _buttonRefreshController.dispose();
+    _buttonRemoveNewMarkController.dispose();
+    _sharedState.dispose();
+    super.dispose();
+  }
 
+  @override
+  void didUpdateWidget(ActionBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.expandSecondRow != widget.expandSecondRow) {
+      _sharedState.expandSecondRow = widget.expandSecondRow;
+    }
+    if (oldWidget.limit != widget.limit) {
+      _sharedState.limit = widget.limit;
+    }
+    if (oldWidget.group != widget.group) {
+      _sharedState.group = widget.group;
+    }
+    if (oldWidget.podcast != widget.podcast) {
+      _sharedState.podcast = widget.podcast;
+    }
+    if (oldWidget.sortBy != widget.sortBy) {
+      _sharedState.sortBy = widget.sortBy;
+    }
+    if (oldWidget.filterNew != widget.filterNew) {
+      _sharedState.filterNew = widget.filterNew;
+    }
+    if (oldWidget.filterLiked != widget.filterLiked) {
+      _sharedState.filterLiked = widget.filterLiked;
+    }
+    if (oldWidget.filterPlayed != widget.filterPlayed) {
+      _sharedState.filterPlayed = widget.filterPlayed;
+    }
+    if (oldWidget.filterDownloaded != widget.filterDownloaded) {
+      _sharedState.filterDownloaded = widget.filterDownloaded;
+    }
+    if (oldWidget.sortOrder != widget.sortOrder) {
+      _sharedState.sortOrder = widget.sortOrder;
+    }
+    if (oldWidget.layout != widget.layout) {
+      _sharedState.layout = widget.layout;
+    }
+    if (oldWidget.expandSecondRow != widget.expandSecondRow) {
+      if (widget.expandSecondRow) {
+        _switchSecondRowController.forward();
+      } else {
+        _switchSecondRowController.reverse();
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (initialBuild) {
+      initialBuild = false;
+      _sharedState = _ActionBarSharedState(
+        context,
+        onGetEpisodesChanged: widget.onGetEpisodesChanged,
+        onLayoutChanged: widget.onLayoutChanged,
+        widgetsFirstRow: widget.widgetsFirstRow,
+        widgetsSecondRow: widget.widgetsSecondRow,
+        sortByItems: widget.sortByItems,
+        expandSecondRow: widget.expandSecondRow,
+        limit: widget.limit,
+        group: widget.group,
+        podcast: widget.podcast,
+        sortBy: widget.sortBy,
+        filterNew: widget.filterNew,
+        filterLiked: widget.filterLiked,
+        filterPlayed: widget.filterPlayed,
+        filterDownloaded: widget.filterDownloaded,
+        sortOrder: widget.sortOrder,
+        layout: widget.layout,
+        switchSecondRowController: _switchSecondRowController,
+        buttonRefreshController: _buttonRefreshController,
+        buttonRemoveNewMarkController: _buttonRemoveNewMarkController,
+      );
+      SelectionController? selectionController =
+          Provider.of<SelectionController?>(context, listen: false);
+      if (selectionController != null) {
+        selectionController.onGetEpisodesLimitless = (() =>
+            _sharedState.getGetEpisodes(
+                limitless: true))(); // Nested function is necessary I think
+      }
+    }
+    CardColorScheme? cardColorScheme = Provider.of<CardColorScheme?>(context);
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<_ActionBarSharedState>.value(
+            value: _sharedState),
+        if (cardColorScheme == null)
+          Provider<CardColorScheme>.value(
+              value: Theme.of(context).extension<CardColorScheme>()!),
+      ],
+      builder: (context, child) => _ActionBarOuter(
+          Row(children: widget.widgetsFirstRow),
+          Row(children: widget.widgetsSecondRow),
+          pinned: widget.pinned),
+    );
+  }
+}
+
+class _ActionBarOuter extends StatefulWidget {
+  final Widget firstRow;
+  final Widget secondRow;
+  final bool pinned;
+  _ActionBarOuter(this.firstRow, this.secondRow, {required this.pinned});
+
+  @override
+  __ActionBarOuterState createState() => __ActionBarOuterState();
+}
+
+class __ActionBarOuterState extends State<_ActionBarOuter>
+    with TickerProviderStateMixin {
   double get totalHeight => Tween<double>(
           begin: 10 +
               context.actionBarIconSize +
@@ -197,1137 +338,1141 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
               context.actionBarIconSize * 2 +
               context.actionBarIconPadding.vertical * 3)
       .evaluate(_switchSecondRowSlideAnimation);
-  String searchTitleQuery = "";
 
-  late ExpansionController _expansionControllerFirstRow =
-      ExpansionController(maxWidth: () => context.width);
-  late ExpansionController _expansionControllerSecondRow =
-      ExpansionController(maxWidth: () => context.width);
-
-  List<ActionBarEntry> entryList(int rowIndex) =>
-      [widget.itemsFirstRow, widget.itemsSecondRow][rowIndex];
-  ExpansionController expansionController(int rowIndex) =>
-      [_expansionControllerFirstRow, _expansionControllerSecondRow][rowIndex];
-
-  List<EpisodeBrief> episodes = [];
-
-  bool initialBuild = true;
-  late DBHelper _dbHelper;
-
-  final Duration _durationShort = const Duration(milliseconds: 300);
-  final Duration _durationMedium = const Duration(milliseconds: 500);
-
-  late AnimationController _switchSelectModeController;
-  late AnimationController _switchSecondRowController;
   late Animation<double> _switchSecondRowAppearAnimation;
   late Animation<double> _switchSecondRowSlideAnimation;
-  late AnimationController _buttonRefreshController;
-  late AnimationController _buttonRemoveNewMarkController;
-
-  Set<ActionBarEntry> filterEntries = {
-    ActionBarEntry.dropdownGroups,
-    ActionBarEntry.dropdownPodcasts,
-    ActionBarEntry.filterNew,
-    ActionBarEntry.filterLiked,
-    ActionBarEntry.filterPlayed,
-    ActionBarEntry.filterDownloaded,
-    ActionBarEntry.searchTitle,
-  };
-
-  Set<ActionBarEntry> controlEntriesWithoutRemoveNewMark = {
-    ActionBarEntry.switchLayout,
-    ActionBarEntry.switchSelectMode,
-    ActionBarEntry.switchSecondRow,
-    ActionBarEntry.buttonRefresh,
-  };
-  Set<ActionBarEntry> controlEntriesWithRemoveNewMark = {
-    ActionBarEntry.switchLayout,
-    ActionBarEntry.switchSelectMode,
-    ActionBarEntry.switchSecondRow,
-    ActionBarEntry.buttonRefresh,
-    ActionBarEntry.buttonRemoveNewMark,
-  };
 
   @override
   void initState() {
     super.initState();
-    if (selectionController != null) {
-      selectionController!.addListener(() {
-        if (selectMode != selectionController!.selectMode) {
-          if (selectionController!.selectMode) {
-            _switchSelectModeController.forward();
-          } else {
-            _switchSelectModeController.reverse();
-          }
-          if (mounted) {
-            setState(() => selectMode = selectionController!.selectMode);
-          }
-        }
-      });
-      selectionController!.onGetEpisodesLimitless = () => _dbHelper.getEpisodes(
-            feedIds: podcast != _podcastAll
-                ? group.podcastList.isEmpty ||
-                        group.podcastList.contains(podcast.id)
-                    ? [podcast.id]
-                    : []
-                : group.podcastList,
-            likeEpisodeTitles:
-                searchTitleQuery == "" ? null : [searchTitleQuery],
-            optionalFields: [
-              EpisodeField.description,
-              EpisodeField.number,
-              EpisodeField.enclosureDuration,
-              EpisodeField.enclosureSize,
-              EpisodeField.isDownloaded,
-              EpisodeField.episodeImage,
-              EpisodeField.podcastImage,
-              EpisodeField.primaryColor,
-              EpisodeField.isLiked,
-              EpisodeField.isNew,
-              EpisodeField.isPlayed,
-              EpisodeField.versionInfo
-            ],
-            sortBy: sortBy,
-            sortOrder: sortOrder,
-            filterVersions: 1,
-            filterNew: filterNew,
-            filterLiked: filterLiked,
-            filterPlayed: filterPlayed,
-            filterDownloaded: filterDownloaded,
-          );
-    }
-    _dbHelper = DBHelper();
-    _initAnimations();
-  }
-
-  void _initAnimations() {
-    _switchSelectModeController =
-        AnimationController(vsync: this, duration: _durationShort)
-          ..addListener(_animationListener);
-    _switchSecondRowController =
-        AnimationController(vsync: this, duration: _durationMedium)
-          ..addListener(() {
-            if (mounted) setState(() {});
-            if (widget.onHeightChanged != null) {
-              widget.onHeightChanged!(totalHeight);
-            }
-          });
-    _buttonRefreshController =
-        AnimationController(vsync: this, duration: _durationShort)
-          ..addListener(_animationListener);
-    _buttonRemoveNewMarkController =
-        AnimationController(vsync: this, duration: _durationShort)
-          ..addListener(_animationListener);
-
+    _ActionBarSharedState actionBarSharedState =
+        Provider.of<_ActionBarSharedState>(context, listen: false);
+    actionBarSharedState.switchSecondRowController.addListener(() {
+      if (mounted) setState(() {});
+    });
     _switchSecondRowSlideAnimation = CurvedAnimation(
-      parent: _switchSecondRowController,
-      curve: Curves.easeInOutExpo,
+      parent: actionBarSharedState.switchSecondRowController,
+      curve: Curves.easeInOutCubicEmphasized,
+      reverseCurve: Curves.easeInOutCirc,
     );
     _switchSecondRowAppearAnimation = CurvedAnimation(
         parent: _switchSecondRowSlideAnimation, curve: Interval(0.75, 1));
-
-    if (selectMode) _switchSelectModeController.forward();
-    if (secondRow) _switchSecondRowController.forward();
-  }
-
-  void _animationListener() {
-    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
-    _switchSelectModeController.dispose();
-    _switchSecondRowController.dispose();
-    _buttonRefreshController.dispose();
-    _buttonRemoveNewMarkController.dispose();
     super.dispose();
   }
 
   @override
-  void didUpdateWidget(ActionBar oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.limit != widget.limit) {
-      widget.onGetEpisodesChanged(_getGetEpisodes());
-    }
-    if (oldWidget.layout != widget.layout) {
-      layout = widget.layout;
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if (initialBuild) {
-      _groupAll = PodcastGroup(context.s.all, podcastList: []);
-      groups = [_groupAll]
-        ..addAll(Provider.of<GroupList>(context, listen: false).groups);
-      _podcastAll =
-          PodcastLocal(context.s.all, '', '', '', '', '', '', '', '', []);
-      podcasts = [_podcastAll];
-      group = widget.group ?? _groupAll;
-      podcast = widget.podcast ?? _podcastAll;
-      widget.onGetEpisodesChanged(_getGetEpisodes(getPodcasts: true));
-      initialBuild = false;
-      _expansionControllerSecondRow
-          .addWidth(16 + context.actionBarIconPadding.horizontal / 2);
-    }
-    return SizedBox(
-      height: totalHeight,
-      child: Padding(
-        padding: EdgeInsets.only(
-          left: 8,
-          top: 5,
-          right: 8,
-          bottom: 5 * _switchSecondRowAppearAnimation.value,
-        ),
-        child: Column(
-          children: [
-            Container(
-              padding: EdgeInsets.only(
-                left: context.actionBarIconPadding.left / 2,
-                top: context.actionBarIconPadding.top / 2,
-                right: context.actionBarIconPadding.right / 2,
-                bottom: context.actionBarIconPadding.bottom /
-                    2 *
-                    _switchSecondRowAppearAnimation.value,
-              ),
-              child: Row(
-                children: getRowWidgets(0),
-              ),
-            ),
-            if (_switchSecondRowAppearAnimation.value >
-                0) // This still clips 10.5 pixels if the padding isn't animated
+    return SliverAppBar(
+      pinned: widget.pinned,
+      leading: Center(),
+      toolbarHeight: totalHeight,
+      backgroundColor: context.surface,
+      scrolledUnderElevation: 0,
+      flexibleSpace: Container(
+        color: context.surface,
+        height: totalHeight,
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 8,
+            top: 5,
+            right: 8,
+            bottom: 5 * _switchSecondRowAppearAnimation.value,
+          ),
+          child: Column(
+            children: [
               Container(
                 padding: EdgeInsets.only(
-                  // left: iconPadding.left / 2,
-                  top: context.actionBarIconPadding.top /
-                      2 *
-                      _switchSecondRowAppearAnimation.value,
+                  left: context.actionBarIconPadding.left / 2,
+                  top: context.actionBarIconPadding.top / 2,
                   right: context.actionBarIconPadding.right / 2,
                   bottom: context.actionBarIconPadding.bottom /
                       2 *
                       _switchSecondRowAppearAnimation.value,
                 ),
-                child: FadeTransition(
-                  opacity: _switchSecondRowAppearAnimation,
-                  child: Row(
-                    children: getRowWidgets(1),
+                child: widget.firstRow,
+              ),
+              if (_switchSecondRowAppearAnimation.value >
+                  0) // This still clips 10.5 pixels if the padding isn't animated
+                Container(
+                  padding: EdgeInsets.only(
+                    // left: iconPadding.left / 2,
+                    top: context.actionBarIconPadding.top /
+                        2 *
+                        _switchSecondRowAppearAnimation.value,
+                    right: context.actionBarIconPadding.right / 2,
+                    bottom: context.actionBarIconPadding.bottom /
+                        2 *
+                        _switchSecondRowAppearAnimation.value,
+                  ),
+                  child: FadeTransition(
+                    opacity: _switchSecondRowAppearAnimation,
+                    child: widget.secondRow,
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
+}
 
-  List<Widget> getRowWidgets(int rowIndex) {
-    List<Widget> widgets = [];
-    expansionController(rowIndex).resetWidth();
-    expansionController(rowIndex)
-        .addWidth(16 + context.actionBarIconPadding.horizontal / 2);
-    for (int i = 0; i < entryList(rowIndex).length; i++) {
-      Widget newWidget = _getWidget(rowIndex, i);
-      widgets.add(newWidget);
-    }
-    return widgets;
-  }
+class _ActionBarSharedState extends ChangeNotifier {
+  final BuildContext context;
+  final ValueSetter<ValueGetter<Future<List<EpisodeBrief>>>>
+      onGetEpisodesChanged;
+  final ValueChanged<EpisodeGridLayout>? onLayoutChanged;
 
-  Widget _getWidget(int rowIndex, int index) {
-    bool connectLeft = false;
-    bool connectRight = false;
-    switch (entryList(rowIndex)[index]) {
-      case ActionBarEntry.dropdownGroups:
-        if (index - 1 >= 0 &&
-            filterEntries.contains(entryList(rowIndex)[index - 1])) {
-          connectLeft = true;
-        }
-        if (index + 1 < entryList(rowIndex).length &&
-            filterEntries.contains(entryList(rowIndex)[index + 1])) {
-          connectRight = true;
-        }
-        return _dropdownGroups(
-            expansionController: expansionController(rowIndex),
-            connectLeft: connectLeft,
-            connectRight: connectRight);
+  final List<ActionBarWidget> widgetsFirstRow;
+  final List<ActionBarWidget> widgetsSecondRow;
+  final List<Sorter> sortByItems;
 
-      case ActionBarEntry.dropdownPodcasts:
-        if (index - 1 >= 0 &&
-            filterEntries.contains(entryList(rowIndex)[index - 1])) {
-          connectLeft = true;
-        }
-        if (index + 1 < entryList(rowIndex).length &&
-            filterEntries.contains(entryList(rowIndex)[index + 1])) {
-          connectRight = true;
-        }
-        return _dropdownPodcasts(
-            expansionController: expansionController(rowIndex),
-            connectLeft: connectLeft,
-            connectRight: connectRight);
-
-      case ActionBarEntry.dropdownSortBy:
-        if (index - 1 >= 0 &&
-            entryList(rowIndex)[index - 1] == ActionBarEntry.switchSortOrder) {
-          connectLeft = true;
-        }
-        if (index + 1 < entryList(rowIndex).length &&
-            entryList(rowIndex)[index + 1] == ActionBarEntry.switchSortOrder) {
-          connectRight = true;
-        }
-        return _dropDownSortBy(
-          rowIndex: rowIndex,
-          connectLeft: connectLeft,
-          connectRight: connectRight,
-        );
-
-      case ActionBarEntry.filterNew:
-        if (index - 1 >= 0 &&
-            filterEntries.contains(entryList(rowIndex)[index - 1])) {
-          connectLeft = true;
-        }
-        if (index + 1 < entryList(rowIndex).length &&
-            filterEntries.contains(entryList(rowIndex)[index + 1])) {
-          connectRight = true;
-        }
-        return _filterNew(
-            rowIndex: rowIndex,
-            connectLeft: connectLeft,
-            connectRight: connectRight);
-
-      case ActionBarEntry.filterLiked:
-        if (index - 1 >= 0 &&
-            filterEntries.contains(entryList(rowIndex)[index - 1])) {
-          connectLeft = true;
-        }
-        if (index + 1 < entryList(rowIndex).length &&
-            filterEntries.contains(entryList(rowIndex)[index + 1])) {
-          connectRight = true;
-        }
-        return _filterLiked(
-            rowIndex: rowIndex,
-            connectLeft: connectLeft,
-            connectRight: connectRight);
-
-      case ActionBarEntry.filterPlayed:
-        if (index - 1 >= 0 &&
-            filterEntries.contains(entryList(rowIndex)[index - 1])) {
-          connectLeft = true;
-        }
-        if (index + 1 < entryList(rowIndex).length &&
-            filterEntries.contains(entryList(rowIndex)[index + 1])) {
-          connectRight = true;
-        }
-        return _filterPlayed(
-            rowIndex: rowIndex,
-            connectLeft: connectLeft,
-            connectRight: connectRight);
-
-      case ActionBarEntry.filterDownloaded:
-        if (index - 1 >= 0 &&
-            filterEntries.contains(entryList(rowIndex)[index - 1])) {
-          connectLeft = true;
-        }
-        if (index + 1 < entryList(rowIndex).length &&
-            filterEntries.contains(entryList(rowIndex)[index + 1])) {
-          connectRight = true;
-        }
-        return _filterDownloaded(
-            rowIndex: rowIndex,
-            connectLeft: connectLeft,
-            connectRight: connectRight);
-
-      case ActionBarEntry.switchSortOrder:
-        if (index - 1 >= 0 &&
-            entryList(rowIndex)[index - 1] == ActionBarEntry.dropdownSortBy) {
-          connectLeft = true;
-        }
-        if (index + 1 < entryList(rowIndex).length &&
-            entryList(rowIndex)[index + 1] == ActionBarEntry.dropdownSortBy) {
-          connectRight = true;
-        }
-        return _switchSortOrder(
-            rowIndex: rowIndex,
-            connectLeft: connectLeft,
-            connectRight: connectRight);
-
-      case ActionBarEntry.switchLayout:
-        if (index - 1 >= 0 &&
-            controlEntriesWithRemoveNewMark
-                .contains(entryList(rowIndex)[index - 1])) {
-          connectLeft = true;
-        }
-        if (index + 1 < entryList(rowIndex).length &&
-            controlEntriesWithRemoveNewMark
-                .contains(entryList(rowIndex)[index + 1])) {
-          connectRight = true;
-        }
-        return _switchLayout(
-            rowIndex: rowIndex,
-            connectLeft: connectLeft,
-            connectRight: connectRight);
-
-      case ActionBarEntry.switchSelectMode:
-        if (index - 1 >= 0 &&
-            controlEntriesWithRemoveNewMark
-                .contains(entryList(rowIndex)[index - 1])) {
-          connectLeft = true;
-        }
-        if (index + 1 < entryList(rowIndex).length &&
-            controlEntriesWithRemoveNewMark
-                .contains(entryList(rowIndex)[index + 1])) {
-          connectRight = true;
-        }
-        return _switchSelectMode(
-            rowIndex: rowIndex,
-            connectLeft: connectLeft,
-            connectRight: connectRight);
-
-      case ActionBarEntry.switchSecondRow:
-        if (index - 1 >= 0 &&
-            controlEntriesWithRemoveNewMark
-                .contains(entryList(rowIndex)[index - 1])) {
-          connectLeft = true;
-        }
-        if (index + 1 < entryList(rowIndex).length &&
-            controlEntriesWithRemoveNewMark
-                .contains(entryList(rowIndex)[index + 1])) {
-          connectRight = true;
-        }
-        return _switchSecondRow(
-            rowIndex: rowIndex,
-            connectLeft: connectLeft,
-            connectRight: connectRight);
-
-      case ActionBarEntry.buttonRefresh:
-        if (index - 1 >= 0 &&
-            controlEntriesWithRemoveNewMark
-                .contains(entryList(rowIndex)[index - 1])) {
-          connectLeft = true;
-        }
-        if (index + 1 < entryList(rowIndex).length &&
-            controlEntriesWithRemoveNewMark
-                .contains(entryList(rowIndex)[index + 1])) {
-          connectRight = true;
-        }
-        return _buttonRefresh(
-            rowIndex: rowIndex,
-            connectLeft: connectLeft,
-            connectRight: connectRight);
-
-      case ActionBarEntry.buttonRemoveNewMark:
-        if (index - 1 >= 0 &&
-            controlEntriesWithRemoveNewMark
-                .contains(entryList(rowIndex)[index - 1])) {
-          connectLeft = true;
-        }
-        if (index + 1 < entryList(rowIndex).length &&
-            controlEntriesWithRemoveNewMark
-                .contains(entryList(rowIndex)[index + 1])) {
-          connectRight = true;
-        }
-        return _buttonRemoveNewMark(
-            rowIndex: rowIndex,
-            connectLeft: connectLeft,
-            connectRight: connectRight);
-
-      case ActionBarEntry.searchTitle:
-        if (index - 1 >= 0 &&
-            filterEntries.contains(entryList(rowIndex)[index - 1])) {
-          connectLeft = true;
-        }
-        if (index + 1 < entryList(rowIndex).length &&
-            filterEntries.contains(entryList(rowIndex)[index + 1])) {
-          connectRight = true;
-        }
-        return _searchTitle(
-            expansionController: expansionController(rowIndex),
-            connectLeft: connectLeft,
-            connectRight: connectRight);
-
-      case ActionBarEntry.spacer:
-        return Spacer();
-    }
-  }
-
-  Widget _dropdownGroups({
-    required ExpansionController expansionController,
-    bool connectLeft = false,
-    bool connectRight = false,
-  }) {
-    double expandedWidth = context.actionBarSizeHorizontal;
-    for (var group in groups) {
-      if (group != null) {
-        final groupNameTest = TextPainter(
-            text: TextSpan(
-              text: group.name,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            textDirection: TextDirection.ltr);
-        groupNameTest.layout();
-        expandedWidth =
-            (groupNameTest.width + context.actionBarIconPadding.horizontal)
-                .clamp(expandedWidth, 200);
+  bool _expandSecondRow;
+  bool get expandSecondRow => _expandSecondRow;
+  set expandSecondRow(bool boo) {
+    if (_expandSecondRow != boo) {
+      _expandSecondRow = boo;
+      if (boo) {
+        switchSecondRowController.forward();
+      } else {
+        switchSecondRowController.reverse();
       }
+      notifyListeners();
     }
-    expansionController.addWidth(
-        (!connectLeft ? context.actionBarIconPadding.left / 2 : 0) +
-            (!connectRight
-                ? context.actionBarIconPadding.right / 2
-                : 0)); // TODO: Move this to generic widgets
-    return ActionBarDropdownButton<PodcastGroup>(
-        child: Icon(Icons.all_out, color: context.actionBarIconColor),
-        selected: group,
-        expansionController: expansionController,
-        expandedChild: Text(
-          group.name!,
-          style: Theme.of(context).textTheme.titleMedium,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        itemBuilder: _getGroups,
-        onSelected: (value) {
-          if (mounted) setState(() => group = value);
-          widget.onGetEpisodesChanged(_getGetEpisodes());
-        },
-        maxExpandedWidth: expandedWidth,
-        color: color,
-        activeColor: activeColor,
-        tooltip: context.s.filterType(context.s.groups(1)),
-        active: (value) => value != _groupAll,
-        connectLeft: connectLeft,
-        connectRight: connectRight);
   }
 
-  List<PopupMenuEntry<PodcastGroup>> _getGroups() {
-    List<PopupMenuEntry<PodcastGroup>> items = [];
-    for (final group in groups) {
-      if (group != null) {
-        items.add(PopupMenuItem(
-          padding: context.actionBarIconPadding,
-          height: context.actionBarSizeVertical,
-          child: Tooltip(
-            child: Text(
-              group.name!,
-              style: Theme.of(context).textTheme.titleMedium,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            message: group.name,
-          ),
-          value: group,
-        ));
-      }
+  int _limit;
+  int get limit => _limit;
+  set limit(int i) {
+    if (_limit != i) {
+      _limit = i;
+      onGetEpisodesChanged(getGetEpisodes());
     }
-    return items;
   }
 
-  Widget _dropdownPodcasts({
-    required ExpansionController expansionController,
-    bool connectLeft = false,
-    bool connectRight = false,
-  }) {
-    double expandedWidth = context.actionBarSizeHorizontal;
-    for (var podcast in podcasts) {
-      final podcastNameTest = TextPainter(
-          text: TextSpan(
-            text: podcast.title,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          textDirection: TextDirection.ltr);
-      podcastNameTest.layout();
-      expandedWidth =
-          (podcastNameTest.width + context.actionBarIconPadding.horizontal)
-              .clamp(expandedWidth, 200);
-    }
-    expansionController.addWidth(
-        (!connectLeft ? context.actionBarIconPadding.left / 2 : 0) +
-            (!connectRight ? context.actionBarIconPadding.right / 2 : 0));
-    return ActionBarDropdownButton<PodcastLocal>(
-        child: Icon(Icons.podcasts, color: context.actionBarIconColor),
-        selected: podcast,
-        expansionController: expansionController,
-        expandedChild: Text(
-          podcast.title!,
-          style: Theme.of(context).textTheme.titleMedium,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        itemBuilder: _getPodcasts,
-        onSelected: (value) {
-          if (mounted) setState(() => podcast = value);
-          widget.onGetEpisodesChanged(_getGetEpisodes());
-        },
-        maxExpandedWidth: expandedWidth,
-        color: color,
-        activeColor: activeColor,
-        tooltip: context.s.filterType(context.s.podcast(1)),
-        active: (value) => value != _podcastAll,
-        connectLeft: connectLeft,
-        connectRight: connectRight);
+  PodcastGroup _group;
+  PodcastGroup get group => _group;
+  set group(PodcastGroup? podcastGroup) {
+    _group = podcastGroup ?? groupAll;
+    notifyListeners();
   }
 
-  List<PopupMenuEntry<PodcastLocal>> _getPodcasts() {
-    List<PopupMenuEntry<PodcastLocal>> items = [];
-    for (final podcast in podcasts) {
-      items.add(PopupMenuItem(
-        padding: context.actionBarIconPadding,
-        height: context.actionBarSizeVertical,
-        child: Tooltip(
-          child: Text(
-            podcast.title!,
+  PodcastLocal _podcast;
+  PodcastLocal get podcast => _podcast;
+  set podcast(PodcastLocal? podcastLocal) {
+    _podcast = podcastLocal ?? podcastAll;
+    notifyListeners();
+  }
+
+  Sorter _sortBy;
+  Sorter get sortBy => _sortBy;
+  set sortBy(Sorter sorter) {
+    _sortBy = sorter;
+    notifyListeners();
+  }
+
+  bool? _filterNew;
+  bool? get filterNew => _filterNew;
+  set filterNew(bool? boo) {
+    _filterNew = boo;
+    notifyListeners();
+  }
+
+  bool? _filterLiked;
+  bool? get filterLiked => _filterLiked;
+  set filterLiked(bool? boo) {
+    _filterLiked = boo;
+    notifyListeners();
+  }
+
+  bool? _filterPlayed;
+  bool? get filterPlayed => _filterPlayed;
+  set filterPlayed(bool? boo) {
+    _filterPlayed = boo;
+    notifyListeners();
+  }
+
+  bool? _filterDownloaded;
+  bool? get filterDownloaded => _filterDownloaded;
+  set filterDownloaded(bool? boo) {
+    _filterDownloaded = boo;
+    notifyListeners();
+  }
+
+  SortOrder _sortOrder;
+  SortOrder get sortOrder => _sortOrder;
+  set sortOrder(SortOrder sortOrder) {
+    _sortOrder = sortOrder;
+    notifyListeners();
+  }
+
+  EpisodeGridLayout _layout;
+  EpisodeGridLayout get layout => _layout;
+  set layout(EpisodeGridLayout layout) {
+    _layout = layout;
+    notifyListeners();
+  }
+
+  final AnimationController switchSecondRowController;
+  final AnimationController buttonRefreshController;
+  final AnimationController buttonRemoveNewMarkController;
+
+  _ActionBarSharedState(
+    this.context, {
+    required this.onGetEpisodesChanged,
+    required this.onLayoutChanged,
+    required this.widgetsFirstRow,
+    required this.widgetsSecondRow,
+    required this.sortByItems,
+    required bool expandSecondRow,
+    required int limit,
+    required PodcastGroup? group,
+    required PodcastLocal? podcast,
+    required Sorter sortBy,
+    required bool? filterNew,
+    required bool? filterLiked,
+    required bool? filterPlayed,
+    required bool? filterDownloaded,
+    required SortOrder sortOrder,
+    required EpisodeGridLayout layout,
+    required this.switchSecondRowController,
+    required this.buttonRefreshController,
+    required this.buttonRemoveNewMarkController,
+  })  : _expandSecondRow = expandSecondRow,
+        _limit = limit,
+        _group =
+            group ?? PodcastGroup(context.s.all, podcastList: [], id: "All"),
+        _podcast = podcast ??
+            PodcastLocal(context.s.all, '', '', '', '', 'All', '', '', '', []),
+        _sortBy = sortBy,
+        _filterNew = filterNew,
+        _filterLiked = filterLiked,
+        _filterPlayed = filterPlayed,
+        _filterDownloaded = filterDownloaded,
+        _sortOrder = sortOrder,
+        _layout = layout {
+    if (expandSecondRow) switchSecondRowController.forward();
+    onGetEpisodesChanged(getGetEpisodes(getPodcasts: true));
+  }
+
+  bool _disposedd = false;
+
+  @override
+  void dispose() {
+    _disposedd = true;
+    // super.dispose(); // TODO: Why does this cause exeption?
+  }
+
+  late final PodcastGroup groupAll =
+      PodcastGroup(context.s.all, podcastList: [], id: "All");
+  List<PodcastGroup> get groups => [groupAll]..addAll(!_disposedd
+      ? Provider.of<GroupList>(context, listen: false).groups.nonNulls.toList()
+      : []);
+  double? maxGroupTitleWidth;
+
+  late final PodcastLocal podcastAll =
+      PodcastLocal(context.s.all, '', '', '', '', 'All', '', '', '', []);
+  Future<List<PodcastLocal>> get podcasts async =>
+      [podcastAll]..addAll(await DBHelper().getPodcastLocalAll());
+  double? maxPodcastTitleWidth;
+
+  String searchTitleQuery = "";
+
+  List<EpisodeBrief> episodes = [];
+
+  late ExpansionController expansionControllerFirstRow =
+      ExpansionController(maxWidth: maxWidth);
+  late ExpansionController expansionControllerSecondRow =
+      ExpansionController(maxWidth: maxWidth);
+
+  List<ExpansionController> get expansionControllers =>
+      [expansionControllerFirstRow, expansionControllerSecondRow];
+  late List<List<ActionBarWidget>> rows = [widgetsFirstRow, widgetsSecondRow];
+
+  double maxWidth() =>
+      context.width - (16 + context.actionBarIconPadding.horizontal / 2);
+
+  ValueGetter<Future<List<EpisodeBrief>>> getGetEpisodes(
+      {bool getPodcasts = false, bool limitless = false}) {
+    DBHelper dbHelper = DBHelper();
+    return () async {
+      episodes = await dbHelper.getEpisodes(
+          feedIds: podcast != podcastAll
+              ? group.podcastList.isEmpty ||
+                      group.podcastList.contains(podcast.id)
+                  ? [podcast.id]
+                  : []
+              : group.podcastList,
+          likeEpisodeTitles: searchTitleQuery == "" ? null : [searchTitleQuery],
+          optionalFields: [
+            EpisodeField.description,
+            EpisodeField.number,
+            EpisodeField.enclosureDuration,
+            EpisodeField.enclosureSize,
+            EpisodeField.isDownloaded,
+            EpisodeField.episodeImage,
+            EpisodeField.podcastImage,
+            EpisodeField.primaryColor,
+            EpisodeField.isLiked,
+            EpisodeField.isNew,
+            EpisodeField.isPlayed,
+            EpisodeField.versionInfo
+          ],
+          sortBy: sortBy,
+          sortOrder: sortOrder,
+          limit: limitless ? -1 : limit,
+          filterVersions: 1, // TODO: Make version button
+          filterNew: filterNew,
+          filterLiked: filterLiked,
+          filterPlayed: filterPlayed,
+          filterDownloaded: filterDownloaded,
+          episodeState: !_disposedd
+              ? Provider.of<EpisodeState>(context, listen: false)
+              : null);
+      return episodes;
+    };
+  }
+}
+
+abstract class ActionBarWidget extends StatelessWidget {
+  final int rowIndex;
+  final int index;
+  const ActionBarWidget(this.rowIndex, this.index);
+}
+
+class ActionBarSpacer extends ActionBarWidget {
+  const ActionBarSpacer(super.rowIndex, super.index);
+  @override
+  Widget build(BuildContext context) {
+    return Spacer();
+  }
+}
+
+class ActionBarDropdownGroups extends ActionBarWidget {
+  const ActionBarDropdownGroups(super.rowIndex, super.index);
+  @override
+  Widget build(BuildContext context) {
+    _ActionBarSharedState sharedState =
+        Provider.of<_ActionBarSharedState>(context, listen: false);
+    return Selector<_ActionBarSharedState, PodcastGroup>(
+      selector: (_, sharedState) => sharedState.group,
+      builder: (context, data, _) {
+        if (sharedState.maxGroupTitleWidth == null) {
+          double expandedWidth = context.actionBarButtonSizeHorizontal;
+          for (var group in sharedState.groups) {
+            final groupNameTest = TextPainter(
+                text: TextSpan(
+                  text: group.name,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                textDirection: TextDirection.ltr);
+            groupNameTest.layout();
+            expandedWidth =
+                (groupNameTest.width + context.actionBarIconPadding.horizontal)
+                    .clamp(expandedWidth, 200);
+          }
+          sharedState.maxGroupTitleWidth =
+              expandedWidth; // It's tricky to update this after the fact.
+        }
+        return ActionBarDropdownButton<PodcastGroup>(
+          child: Icon(Icons.all_out, color: context.actionBarIconColor),
+          selected: data,
+          expansionController: sharedState.expansionControllers[rowIndex],
+          expandedChild: Text(
+            data.name!,
             style: Theme.of(context).textTheme.titleMedium,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          message: podcast.title,
-        ),
-        value: podcast,
-      ));
-    }
-    return items;
-  }
-
-  Widget _dropDownSortBy(
-      {required int rowIndex,
-      bool connectLeft = false,
-      bool connectRight = false}) {
-    expansionController(rowIndex).addWidth(
-        (!connectLeft ? context.actionBarIconPadding.left / 2 : 0) +
-            (!connectRight ? context.actionBarIconPadding.right / 2 : 0));
-    return ActionBarDropdownButton<Sorter>(
-      child: _getSorterIcon(sortBy),
-      selected: sortBy,
-      itemBuilder: _getSortBy,
-      onSelected: (value) {
-        if (mounted) setState(() => sortBy = value);
-        widget.onGetEpisodesChanged(_getGetEpisodes());
+          itemBuilder: () => sharedState.groups
+              .map<PopupMenuItem<PodcastGroup>>(
+                (podcastGroup) => PopupMenuItem(
+                  padding: context.actionBarIconPadding,
+                  height: context.actionBarButtonSizeVertical,
+                  child: Tooltip(
+                    child: Text(
+                      podcastGroup.name!,
+                      style: Theme.of(context).textTheme.titleMedium,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    message: podcastGroup.name,
+                  ),
+                  value: podcastGroup,
+                ),
+              )
+              .toList(),
+          onSelected: (value) {
+            sharedState.group = value;
+            sharedState.onGetEpisodesChanged(sharedState.getGetEpisodes());
+          },
+          maxExpandedWidth: sharedState.maxGroupTitleWidth,
+          tooltip: context.s.filterType(context.s.groups(1)),
+          active: (value) => value != sharedState.groupAll,
+          connectLeft: index != 0 &&
+              _filterWidgets
+                  .contains(sharedState.rows[rowIndex][index - 1].runtimeType),
+          connectRight: index != sharedState.rows[rowIndex].length - 1 &&
+              _filterWidgets
+                  .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+        );
       },
-      color: color,
-      activeColor: activeColor,
-      tooltip: context.s.sortBy,
-      active: (_) => true,
-      connectLeft: connectLeft,
-      connectRight: connectRight,
     );
   }
+}
 
-  List<PopupMenuEntry<Sorter>> _getSortBy() {
-    List<PopupMenuEntry<Sorter>> items = [];
-    var s = context.s;
-    for (final sorter in widget.sortByItems) {
-      switch (sorter) {
-        case Sorter.pubDate:
-          items.add(PopupMenuItem(
-            padding: context.actionBarIconPadding,
-            height: context.actionBarSizeVertical,
-            child: Tooltip(
-              child: _getSorterIcon(sorter),
-              message: s.publishDate,
-            ),
-            value: Sorter.pubDate,
-          ));
-          break;
-        case Sorter.enclosureSize:
-          items.add(PopupMenuItem(
-            padding: context.actionBarIconPadding,
-            height: context.actionBarSizeVertical,
-            child: Tooltip(
-              child: _getSorterIcon(sorter),
-              message: s.size,
-            ),
-            value: Sorter.enclosureSize,
-          ));
-          break;
-        case Sorter.enclosureDuration:
-          items.add(PopupMenuItem(
-            padding: context.actionBarIconPadding,
-            height: context.actionBarSizeVertical,
-            child: Tooltip(
-              child: _getSorterIcon(sorter),
-              message: s.duration,
-            ),
-            value: Sorter.enclosureDuration,
-          ));
-          break;
-        case Sorter.downloadDate:
-          items.add(PopupMenuItem(
-            padding: context.actionBarIconPadding,
-            height: context.actionBarSizeVertical,
-            child: Tooltip(
-              child: _getSorterIcon(sorter),
-              message: s.downloadDate,
-            ),
-            value: Sorter.downloadDate,
-          ));
-          break;
-        case Sorter.likedDate:
-          items.add(PopupMenuItem(
-            padding: context.actionBarIconPadding,
-            height: context.actionBarSizeVertical,
-            child: Tooltip(
-              child: _getSorterIcon(sorter),
-              message: s.likeDate,
-            ),
-            value: Sorter.likedDate,
-          ));
-          break;
-        case Sorter.random:
-          items.add(PopupMenuItem(
-            padding: context.actionBarIconPadding,
-            height: context.actionBarSizeVertical,
-            child: Tooltip(
-              child: _getSorterIcon(sorter),
-              message: s.random,
-            ),
-            value: Sorter.random,
-          ));
-          break;
-      }
-    }
-    return items;
+class ActionBarDropdownPodcasts extends ActionBarWidget {
+  const ActionBarDropdownPodcasts(super.rowIndex, super.index);
+  @override
+  Widget build(BuildContext context) {
+    _ActionBarSharedState sharedState =
+        Provider.of<_ActionBarSharedState>(context, listen: false);
+    return Selector<_ActionBarSharedState, PodcastLocal>(
+      selector: (_, sharedState) => sharedState.podcast,
+      builder: (context, data, _) {
+        return FutureBuilder<List<PodcastLocal>>(
+          future: sharedState.podcasts,
+          initialData: [],
+          builder: (context, snapshot) {
+            double expandedWidth = context.actionBarButtonSizeHorizontal;
+            for (var podcast in snapshot.data!) {
+              final podcastNameTest = TextPainter(
+                  text: TextSpan(
+                    text: podcast.title,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  textDirection: TextDirection.ltr);
+              podcastNameTest.layout();
+              expandedWidth = (podcastNameTest.width +
+                      context.actionBarIconPadding.horizontal)
+                  .clamp(expandedWidth, 200);
+            }
+            sharedState.maxPodcastTitleWidth =
+                expandedWidth; // It's tricky to update this after the fact.
+
+            return ActionBarDropdownButton<PodcastLocal>(
+              child: Icon(Icons.podcasts, color: context.actionBarIconColor),
+              selected: data,
+              expansionController: sharedState.expansionControllers[rowIndex],
+              expandedChild: Text(
+                data.title!,
+                style: Theme.of(context).textTheme.titleMedium,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              itemBuilder: () => snapshot.data!
+                  .map<PopupMenuItem<PodcastLocal>>(
+                    (podcast) => PopupMenuItem(
+                      padding: context.actionBarIconPadding,
+                      height: context.actionBarButtonSizeVertical,
+                      child: Tooltip(
+                        child: Text(
+                          podcast.title!,
+                          style: Theme.of(context).textTheme.titleMedium,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        message: podcast.title,
+                      ),
+                      value: podcast,
+                    ),
+                  )
+                  .toList(),
+              onSelected: (value) {
+                sharedState.podcast = value;
+                sharedState.onGetEpisodesChanged(sharedState.getGetEpisodes());
+              },
+              maxExpandedWidth: sharedState.maxPodcastTitleWidth,
+              tooltip: context.s.filterType(context.s.podcast(1)),
+              active: (value) => value != sharedState.podcastAll,
+              connectLeft: index != 0 &&
+                  _filterWidgets.contains(
+                      sharedState.rows[rowIndex][index - 1].runtimeType),
+              connectRight: index != sharedState.rows[rowIndex].length - 1 &&
+                  _filterWidgets.contains(
+                      sharedState.rows[rowIndex][index + 1].runtimeType),
+            );
+          },
+        );
+      },
+    );
   }
+}
 
-  Icon _getSorterIcon(Sorter sorter) {
+class ActionBarDropdownSortBy extends ActionBarWidget {
+  const ActionBarDropdownSortBy(super.rowIndex, super.index);
+  @override
+  Widget build(BuildContext context) {
+    _ActionBarSharedState sharedState =
+        Provider.of<_ActionBarSharedState>(context, listen: false);
+    return Selector<_ActionBarSharedState, Sorter>(
+      selector: (_, sharedState) => sharedState.sortBy,
+      builder: (context, data, _) {
+        return ActionBarDropdownButton<Sorter>(
+          child: _getSorterIcon(context, sharedState.sortBy),
+          selected: data,
+          expansionController: sharedState.expansionControllers[rowIndex],
+          itemBuilder: () => _getSortBy(context, sharedState.sortByItems),
+          onSelected: (value) {
+            sharedState.sortBy = value;
+            sharedState.onGetEpisodesChanged(sharedState.getGetEpisodes());
+          },
+          tooltip: context.s.sortBy,
+          active: (_) => true,
+          connectLeft: index != 0 &&
+              _sortWidgets
+                  .contains(sharedState.rows[rowIndex][index - 1].runtimeType),
+          connectRight: index != sharedState.rows[rowIndex].length - 1 &&
+              _sortWidgets
+                  .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+        );
+      },
+    );
+  }
+}
+
+List<PopupMenuEntry<Sorter>> _getSortBy(
+    BuildContext context, List<Sorter> sortByItems) {
+  List<PopupMenuEntry<Sorter>> items = [];
+  var s = context.s;
+  for (final sorter in sortByItems) {
     switch (sorter) {
       case Sorter.pubDate:
-        return Icon(Icons.date_range, color: context.actionBarIconColor);
+        items.add(PopupMenuItem(
+          padding: context.actionBarIconPadding,
+          height: context.actionBarButtonSizeVertical,
+          child: Tooltip(
+            child: _getSorterIcon(context, sorter),
+            message: s.publishDate,
+          ),
+          value: Sorter.pubDate,
+        ));
+        break;
       case Sorter.enclosureSize:
-        return Icon(Icons.data_usage, color: context.actionBarIconColor);
+        items.add(PopupMenuItem(
+          padding: context.actionBarIconPadding,
+          height: context.actionBarButtonSizeVertical,
+          child: Tooltip(
+            child: _getSorterIcon(context, sorter),
+            message: s.size,
+          ),
+          value: Sorter.enclosureSize,
+        ));
+        break;
       case Sorter.enclosureDuration:
-        return Icon(Icons.timer_outlined, color: context.actionBarIconColor);
+        items.add(PopupMenuItem(
+          padding: context.actionBarIconPadding,
+          height: context.actionBarButtonSizeVertical,
+          child: Tooltip(
+            child: _getSorterIcon(context, sorter),
+            message: s.duration,
+          ),
+          value: Sorter.enclosureDuration,
+        ));
+        break;
       case Sorter.downloadDate:
-        return Icon(Icons.download, color: context.actionBarIconColor);
+        items.add(PopupMenuItem(
+          padding: context.actionBarIconPadding,
+          height: context.actionBarButtonSizeVertical,
+          child: Tooltip(
+            child: _getSorterIcon(context, sorter),
+            message: s.downloadDate,
+          ),
+          value: Sorter.downloadDate,
+        ));
+        break;
       case Sorter.likedDate:
-        return Icon(Icons.favorite_border, color: context.actionBarIconColor);
+        items.add(PopupMenuItem(
+          padding: context.actionBarIconPadding,
+          height: context.actionBarButtonSizeVertical,
+          child: Tooltip(
+            child: _getSorterIcon(context, sorter),
+            message: s.likeDate,
+          ),
+          value: Sorter.likedDate,
+        ));
+        break;
       case Sorter.random:
-        return Icon(Icons.question_mark, color: context.actionBarIconColor);
+        items.add(PopupMenuItem(
+          padding: context.actionBarIconPadding,
+          height: context.actionBarButtonSizeVertical,
+          child: Tooltip(
+            child: _getSorterIcon(context, sorter),
+            message: s.random,
+          ),
+          value: Sorter.random,
+        ));
+        break;
     }
   }
+  return items;
+}
 
-  Widget _filterNew({
-    required int rowIndex,
-    bool connectLeft = false,
-    bool connectRight = false,
-  }) =>
-      _button(
-        rowIndex: rowIndex,
-        child: Icon(Icons.new_releases_outlined,
-            color: context.actionBarIconColor),
-        state: filterNew,
-        buttonType: ActionBarButtonType.noneOnOff,
-        onPressed: (value) {
-          if (mounted) setState(() => filterNew = value);
-          widget.onGetEpisodesChanged(_getGetEpisodes());
-        },
-        tooltip: context.s.filterType(context.s.newPlain),
-        connectLeft: connectLeft,
-        connectRight: connectRight,
-      );
+Icon _getSorterIcon(BuildContext context, Sorter sorter) {
+  switch (sorter) {
+    case Sorter.pubDate:
+      return Icon(Icons.date_range, color: context.actionBarIconColor);
+    case Sorter.enclosureSize:
+      return Icon(Icons.data_usage, color: context.actionBarIconColor);
+    case Sorter.enclosureDuration:
+      return Icon(Icons.timer_outlined, color: context.actionBarIconColor);
+    case Sorter.downloadDate:
+      return Icon(Icons.download, color: context.actionBarIconColor);
+    case Sorter.likedDate:
+      return Icon(Icons.favorite_border, color: context.actionBarIconColor);
+    case Sorter.random:
+      return Icon(Icons.question_mark, color: context.actionBarIconColor);
+  }
+}
 
-  Widget _filterLiked({
-    required int rowIndex,
-    bool connectLeft = false,
-    bool connectRight = false,
-  }) =>
-      _button(
-        rowIndex: rowIndex,
-        child: Icon(Icons.favorite_border, color: context.actionBarIconColor),
-        state: filterLiked,
-        buttonType: ActionBarButtonType.noneOnOff,
-        onPressed: (value) {
-          if (mounted) setState(() => filterLiked = value);
-          widget.onGetEpisodesChanged(_getGetEpisodes());
-        },
-        tooltip: context.s.filterType(context.s.liked),
-        connectLeft: connectLeft,
-        connectRight: connectRight,
-      );
-
-  Widget _filterPlayed({
-    required int rowIndex,
-    bool connectLeft = false,
-    bool connectRight = false,
-  }) =>
-      _button(
-        rowIndex: rowIndex,
-        child: CustomPaint(
-            painter: ListenedPainter(context.actionBarIconColor, stroke: 2)),
-        state: filterPlayed,
-        buttonType: ActionBarButtonType.noneOnOff,
-        onPressed: (value) {
-          if (mounted) setState(() => filterPlayed = value);
-          widget.onGetEpisodesChanged(_getGetEpisodes());
-        },
-        tooltip: context.s.filterType(context.s.listened),
-        connectLeft: connectLeft,
-        connectRight: connectRight,
-      );
-
-  Widget _filterDownloaded({
-    required int rowIndex,
-    bool connectLeft = false,
-    bool connectRight = false,
-  }) =>
-      _button(
-        rowIndex: rowIndex,
-        child: CustomPaint(
-          painter: DownloadPainter(
-            color: context.actionBarIconColor,
-            fraction: 0,
-            progressColor: context.actionBarIconColor,
-            progress: 0,
-            stroke: 2,
+class ActionBarFilterNew extends ActionBarWidget {
+  const ActionBarFilterNew(super.rowIndex, super.index);
+  @override
+  Widget build(BuildContext context) {
+    _ActionBarSharedState sharedState =
+        Provider.of<_ActionBarSharedState>(context, listen: false);
+    return Selector<_ActionBarSharedState, bool?>(
+      selector: (_, sharedState) => sharedState.filterNew,
+      builder: (context, data, _) {
+        return ActionBarButton(
+          child: SizedBox(
+            height: context.actionBarButtonSizeVertical,
+            width: context.actionBarButtonSizeHorizontal,
+            child: Icon(
+              Icons.new_releases_outlined,
+              color: context.actionBarIconColor,
+            ),
           ),
-        ),
-        state: filterDownloaded,
-        buttonType: ActionBarButtonType.noneOnOff,
-        onPressed: (value) {
-          if (mounted) setState(() => filterDownloaded = value);
-          widget.onGetEpisodesChanged(_getGetEpisodes());
-        },
-        tooltip: context.s.filterType(context.s.downloaded),
-        connectLeft: connectLeft,
-        connectRight: connectRight,
-      );
+          expansionController: sharedState.expansionControllers[rowIndex],
+          state: data,
+          buttonType: ActionBarButtonType.noneOnOff,
+          onPressed: (value) {
+            sharedState.filterNew = value;
+            sharedState.onGetEpisodesChanged(sharedState.getGetEpisodes());
+          },
+          tooltip: context.s.filterType(context.s.newPlain),
+          connectLeft: index != 0 &&
+              _filterWidgets
+                  .contains(sharedState.rows[rowIndex][index - 1].runtimeType),
+          connectRight: index != sharedState.rows[rowIndex].length - 1 &&
+              _filterWidgets
+                  .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+        );
+      },
+    );
+  }
+}
 
-  Widget _switchSortOrder({
-    required int rowIndex,
-    bool connectLeft = false,
-    bool connectRight = false,
-  }) =>
-      _button(
-        rowIndex: rowIndex,
-        child: Icon(
-          sortOrder == SortOrder.ASC
-              ? LineIcons.sortAmountUp
-              : LineIcons.sortAmountDown,
-          color: context.actionBarIconColor,
-        ),
-        buttonType: ActionBarButtonType.single,
-        onPressed: (value) {
-          if (mounted) {
-            setState(() {
-              switch (sortOrder) {
-                case SortOrder.ASC:
-                  sortOrder = SortOrder.DESC;
-                  break;
-                case SortOrder.DESC:
-                  sortOrder = SortOrder.ASC;
-                  break;
-              }
-            });
-          }
-          widget.onGetEpisodesChanged(_getGetEpisodes());
-        },
-        connectLeft: connectLeft,
-        connectRight: connectRight,
-      );
+class ActionBarFilterLiked extends ActionBarWidget {
+  const ActionBarFilterLiked(super.rowIndex, super.index);
+  @override
+  Widget build(BuildContext context) {
+    _ActionBarSharedState sharedState =
+        Provider.of<_ActionBarSharedState>(context, listen: false);
+    return Selector<_ActionBarSharedState, bool?>(
+      selector: (_, sharedState) => sharedState.filterLiked,
+      builder: (context, data, _) {
+        return ActionBarButton(
+          child: SizedBox(
+            height: context.actionBarButtonSizeVertical,
+            width: context.actionBarButtonSizeHorizontal,
+            child:
+                Icon(Icons.favorite_border, color: context.actionBarIconColor),
+          ),
+          expansionController: sharedState.expansionControllers[rowIndex],
+          state: data,
+          buttonType: ActionBarButtonType.noneOnOff,
+          onPressed: (value) {
+            sharedState.filterLiked = value;
+            sharedState.onGetEpisodesChanged(sharedState.getGetEpisodes());
+          },
+          tooltip: context.s.filterType(context.s.liked),
+          connectLeft: index != 0 &&
+              _filterWidgets
+                  .contains(sharedState.rows[rowIndex][index - 1].runtimeType),
+          connectRight: index != sharedState.rows[rowIndex].length - 1 &&
+              _filterWidgets
+                  .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+        );
+      },
+    );
+  }
+}
 
-  Widget _switchLayout({
-    required int rowIndex,
-    bool connectLeft = false,
-    bool connectRight = false,
-  }) {
-    double height = 10;
-    double width = 30;
-    return _button(
-      rowIndex: rowIndex,
-      child: layout == Layout.small
-          ? CustomPaint(
-              painter: LayoutPainter(0, context.actionBarIconColor, stroke: 2),
-            )
-          : layout == Layout.medium
-              ? CustomPaint(
-                  painter:
-                      LayoutPainter(1, context.actionBarIconColor, stroke: 2),
-                )
-              : CustomPaint(
-                  painter:
-                      LayoutPainter(4, context.actionBarIconColor, stroke: 2),
-                ),
-      buttonType: ActionBarButtonType.single,
-      onPressed: (value) {
-        if (mounted) {
-          setState(() {
-            switch (layout) {
-              case Layout.small:
-                layout = Layout.large;
+class ActionBarFilterPlayed extends ActionBarWidget {
+  const ActionBarFilterPlayed(super.rowIndex, super.index);
+  @override
+  Widget build(BuildContext context) {
+    _ActionBarSharedState sharedState =
+        Provider.of<_ActionBarSharedState>(context, listen: false);
+    return Selector<_ActionBarSharedState, bool?>(
+      selector: (_, sharedState) => sharedState.filterPlayed,
+      builder: (context, data, _) {
+        return ActionBarButton(
+          child: SizedBox(
+            height: context.actionBarButtonSizeVertical,
+            width: context.actionBarButtonSizeHorizontal,
+            child: CustomPaint(
+              painter: ListenedPainter(context.actionBarIconColor, stroke: 2),
+            ),
+          ),
+          expansionController: sharedState.expansionControllers[rowIndex],
+          state: data,
+          buttonType: ActionBarButtonType.noneOnOff,
+          onPressed: (value) {
+            sharedState.filterPlayed = value;
+            sharedState.onGetEpisodesChanged(sharedState.getGetEpisodes());
+          },
+          tooltip: context.s.filterType(context.s.listened),
+          connectLeft: index != 0 &&
+              _filterWidgets
+                  .contains(sharedState.rows[rowIndex][index - 1].runtimeType),
+          connectRight: index != sharedState.rows[rowIndex].length - 1 &&
+              _filterWidgets
+                  .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+        );
+      },
+    );
+  }
+}
+
+class ActionBarFilterDownloaded extends ActionBarWidget {
+  const ActionBarFilterDownloaded(super.rowIndex, super.index);
+  @override
+  Widget build(BuildContext context) {
+    _ActionBarSharedState sharedState =
+        Provider.of<_ActionBarSharedState>(context, listen: false);
+    return Selector<_ActionBarSharedState, bool?>(
+      selector: (_, sharedState) => sharedState.filterDownloaded,
+      builder: (context, data, _) {
+        return ActionBarButton(
+          child: SizedBox(
+            height: context.actionBarButtonSizeVertical,
+            width: context.actionBarButtonSizeHorizontal,
+            child: CustomPaint(
+              painter: DownloadPainter(
+                color: context.actionBarIconColor,
+                fraction: 0,
+                progressColor: context.actionBarIconColor,
+                progress: 0,
+                stroke: 2,
+              ),
+            ),
+          ),
+          expansionController: sharedState.expansionControllers[rowIndex],
+          state: data,
+          buttonType: ActionBarButtonType.noneOnOff,
+          onPressed: (value) {
+            sharedState.filterDownloaded = value;
+            sharedState.onGetEpisodesChanged(sharedState.getGetEpisodes());
+          },
+          tooltip: context.s.filterType(context.s.downloaded),
+          connectLeft: index != 0 &&
+              _filterWidgets
+                  .contains(sharedState.rows[rowIndex][index - 1].runtimeType),
+          connectRight: index != sharedState.rows[rowIndex].length - 1 &&
+              _filterWidgets
+                  .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+        );
+      },
+    );
+  }
+}
+
+class ActionBarSwitchSortOrder extends ActionBarWidget {
+  const ActionBarSwitchSortOrder(super.rowIndex, super.index);
+  @override
+  Widget build(BuildContext context) {
+    _ActionBarSharedState sharedState =
+        Provider.of<_ActionBarSharedState>(context, listen: false);
+    return Selector<_ActionBarSharedState, Tuple2<SortOrder, Sorter>>(
+      selector: (_, sharedState) =>
+          Tuple2(sharedState.sortOrder, sharedState.sortBy),
+      builder: (context, data, _) {
+        return ActionBarButton(
+          child: SizedBox(
+            height: context.actionBarButtonSizeVertical,
+            width: context.actionBarButtonSizeHorizontal,
+            child: Icon(
+              data.item2 == Sorter.random
+                  ? Icons.casino
+                  : data.item1 == SortOrder.ASC
+                      ? LineIcons.sortAmountUp
+                      : LineIcons.sortAmountDown,
+              color: context.actionBarIconColor,
+            ),
+          ),
+          expansionController: sharedState.expansionControllers[rowIndex],
+          buttonType: ActionBarButtonType.single,
+          onPressed: (value) {
+            switch (data.item1) {
+              case SortOrder.ASC:
+                sharedState.sortOrder = SortOrder.DESC;
                 break;
-              case Layout.medium:
-                layout = Layout.small;
-                break;
-              case Layout.large:
-                layout = Layout.medium;
+              case SortOrder.DESC:
+                sharedState.sortOrder = SortOrder.ASC;
                 break;
             }
-          });
-        }
-        if (widget.onLayoutChanged != null) {
-          widget.onLayoutChanged!(layout);
-        }
+            sharedState.onGetEpisodesChanged(sharedState.getGetEpisodes());
+          },
+          tooltip: context.s.sortOrder,
+          connectLeft: index != 0 &&
+              _sortWidgets
+                  .contains(sharedState.rows[rowIndex][index - 1].runtimeType),
+          connectRight: index != sharedState.rows[rowIndex].length - 1 &&
+              _sortWidgets
+                  .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+        );
       },
-      width: width + context.actionBarIconPadding.horizontal,
-      innerPadding: EdgeInsets.only(
-        left: context.actionBarIconPadding.left,
-        top: (context.actionBarSizeVertical - height) / 2,
-        right: context.actionBarIconPadding.right,
-        bottom: (context.actionBarSizeVertical - height) / 2,
-      ),
-      connectLeft: connectLeft,
-      connectRight: connectRight,
     );
   }
+}
 
-  Widget _switchSelectMode({
-    required int rowIndex,
-    bool connectLeft = false,
-    bool connectRight = false,
-  }) {
+class ActionBarSwitchLayout extends ActionBarWidget {
+  const ActionBarSwitchLayout(super.rowIndex, super.index);
+  @override
+  Widget build(BuildContext context) {
     double height = 10;
-    return _button(
-      rowIndex: rowIndex,
-      child: CustomPaint(painter: MultiSelectPainter(color: color)),
-      state: selectMode,
-      buttonType: ActionBarButtonType.onOff,
-      onPressed: (value) {
-        selectionController!.selectMode = value!;
+    double width = 30;
+    _ActionBarSharedState sharedState =
+        Provider.of<_ActionBarSharedState>(context, listen: false);
+    return Selector<_ActionBarSharedState, EpisodeGridLayout>(
+      selector: (_, sharedState) => sharedState.layout,
+      builder: (context, data, _) {
+        return ActionBarButton(
+          child: SizedBox(
+            height: context.actionBarButtonSizeVertical,
+            width: context.actionBarButtonSizeHorizontal,
+            child: data == EpisodeGridLayout.small
+                ? CustomPaint(
+                    painter:
+                        LayoutPainter(0, context.actionBarIconColor, stroke: 2),
+                  )
+                : data == EpisodeGridLayout.medium
+                    ? CustomPaint(
+                        painter: LayoutPainter(1, context.actionBarIconColor,
+                            stroke: 2),
+                      )
+                    : CustomPaint(
+                        painter: LayoutPainter(4, context.actionBarIconColor,
+                            stroke: 2),
+                      ),
+          ),
+          expansionController: sharedState.expansionControllers[rowIndex],
+          buttonType: ActionBarButtonType.single,
+          onPressed: (value) {
+            switch (data) {
+              case EpisodeGridLayout.small:
+                sharedState.layout = EpisodeGridLayout.large;
+                break;
+              case EpisodeGridLayout.medium:
+                sharedState.layout = EpisodeGridLayout.small;
+                break;
+              case EpisodeGridLayout.large:
+                sharedState.layout = EpisodeGridLayout.medium;
+                break;
+            }
+            sharedState.onGetEpisodesChanged(sharedState.getGetEpisodes());
+            if (sharedState.onLayoutChanged != null) {
+              sharedState.onLayoutChanged!(sharedState.layout);
+            }
+          },
+          width: width + context.actionBarIconPadding.horizontal,
+          innerPadding: EdgeInsets.only(
+            left: context.actionBarIconPadding.left,
+            top: (context.actionBarButtonSizeVertical - height) / 2,
+            right: context.actionBarIconPadding.right,
+            bottom: (context.actionBarButtonSizeVertical - height) / 2,
+          ),
+          tooltip: context.s.changeLayout,
+          connectLeft: index != 0 &&
+              _controlWidgets
+                  .contains(sharedState.rows[rowIndex][index - 1].runtimeType),
+          connectRight: index != sharedState.rows[rowIndex].length - 1 &&
+              _controlWidgets
+                  .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+        );
       },
-      innerPadding: EdgeInsets.only(
-        left: context.actionBarIconPadding.left,
-        top: (context.actionBarSizeVertical - height) / 2,
-        right: context.actionBarIconPadding.right,
-        bottom: (context.actionBarSizeVertical - height) / 2,
-      ),
-      enabled: selectionController != null,
-      animation: _switchSelectModeController,
-      connectLeft: connectLeft,
-      connectRight: connectRight,
     );
   }
+}
 
-  Widget _switchSecondRow({
-    required int rowIndex,
-    bool connectLeft = false,
-    bool connectRight = false,
-  }) =>
-      _button(
-        rowIndex: rowIndex,
-        child: UpDownIndicator(
-            status: secondRow, color: context.actionBarIconColor),
-        state: secondRow,
+class ActionBarSwitchSelectMode extends ActionBarWidget {
+  const ActionBarSwitchSelectMode(super.rowIndex, super.index);
+  @override
+  Widget build(BuildContext context) {
+    double height = 10;
+    _ActionBarSharedState sharedState =
+        Provider.of<_ActionBarSharedState>(context, listen: false);
+    if (Provider.of<SelectionController?>(context, listen: false) != null) {
+      return Selector<SelectionController, bool>(
+        selector: (_, selectionController) => selectionController.selectMode,
+        builder: (context, data, _) {
+          return ActionBarButton(
+            child: SizedBox(
+              height: context.actionBarButtonSizeVertical,
+              width: context.actionBarButtonSizeHorizontal,
+              child: CustomPaint(
+                  painter:
+                      MultiSelectPainter(color: context.actionBarIconColor)),
+            ),
+            expansionController: sharedState.expansionControllers[rowIndex],
+            state: data,
+            buttonType: ActionBarButtonType.onOff,
+            onPressed: (value) {
+              Provider.of<SelectionController>(context, listen: false)
+                  .selectMode = value!;
+            },
+            innerPadding: EdgeInsets.only(
+              left: context.actionBarIconPadding.left,
+              top: (context.actionBarButtonSizeVertical - height) / 2,
+              right: context.actionBarIconPadding.right,
+              bottom: (context.actionBarButtonSizeVertical - height) / 2,
+            ),
+            tooltip: context.s.selectMode,
+            enabled: true,
+            connectLeft: index != 0 &&
+                _controlWidgets.contains(
+                    sharedState.rows[rowIndex][index - 1].runtimeType),
+            connectRight: index != sharedState.rows[rowIndex].length - 1 &&
+                _controlWidgets.contains(
+                    sharedState.rows[rowIndex][index + 1].runtimeType),
+          );
+        },
+      );
+    } else {
+      return ActionBarButton(
+        child: SizedBox(
+          height: context.actionBarButtonSizeVertical,
+          width: context.actionBarButtonSizeHorizontal,
+          child: CustomPaint(
+              painter: MultiSelectPainter(color: context.actionBarIconColor)),
+        ),
+        expansionController: sharedState.expansionControllers[rowIndex],
+        state: false,
         buttonType: ActionBarButtonType.onOff,
         onPressed: (value) {
-          if (mounted) setState(() => secondRow = value!);
-          switch (value!) {
-            case false:
-              _switchSecondRowController.reverse();
-              break;
-            case true:
-              _switchSecondRowController.forward();
-              _expansionControllerSecondRow =
-                  ExpansionController(maxWidth: () => context.width);
-              break;
-          }
+          Provider.of<SelectionController>(context, listen: false).selectMode =
+              value!;
         },
-        animation: _switchSecondRowController,
-        connectLeft: connectLeft,
-        connectRight: connectRight,
+        innerPadding: EdgeInsets.only(
+          left: context.actionBarIconPadding.left,
+          top: (context.actionBarButtonSizeVertical - height) / 2,
+          right: context.actionBarIconPadding.right,
+          bottom: (context.actionBarButtonSizeVertical - height) / 2,
+        ),
+        tooltip: context.s.selectMode,
+        enabled: false,
+        connectLeft: index != 0 &&
+            _controlWidgets
+                .contains(sharedState.rows[rowIndex][index - 1].runtimeType),
+        connectRight: index != sharedState.rows[rowIndex].length - 1 &&
+            _controlWidgets
+                .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
       );
+    }
+  }
+}
 
-  Widget _buttonRefresh({
-    required int rowIndex,
-    bool connectLeft = false,
-    bool connectRight = false,
-  }) {
-    return _button(
-      rowIndex: rowIndex,
-      child: Icon(Icons.refresh),
+class ActionBarSwitchSecondRow extends ActionBarWidget {
+  const ActionBarSwitchSecondRow(super.rowIndex, super.index);
+  @override
+  Widget build(BuildContext context) {
+    _ActionBarSharedState sharedState =
+        Provider.of<_ActionBarSharedState>(context, listen: false);
+    return Selector<_ActionBarSharedState, bool>(
+      selector: (_, sharedState) => sharedState.expandSecondRow,
+      builder: (context, data, _) {
+        return ActionBarButton(
+          child: SizedBox(
+            height: context.actionBarButtonSizeVertical,
+            width: context.actionBarButtonSizeHorizontal,
+            child: UpDownIndicator(
+                status: data, color: context.actionBarIconColor),
+          ),
+          expansionController: sharedState.expansionControllers[rowIndex],
+          state: data,
+          buttonType: ActionBarButtonType.onOff,
+          onPressed: (value) {
+            sharedState.expandSecondRow = value!;
+            switch (value) {
+              case false:
+                sharedState.switchSecondRowController.reverse();
+                break;
+              case true:
+                sharedState.switchSecondRowController.forward();
+                sharedState.expansionControllerSecondRow =
+                    ExpansionController(maxWidth: sharedState.maxWidth);
+                break;
+            }
+          },
+          tooltip: context.s.moreOptions,
+          animation: sharedState.switchSecondRowController,
+          connectLeft: index != 0 &&
+              _controlWidgets
+                  .contains(sharedState.rows[rowIndex][index - 1].runtimeType),
+          connectRight: index != sharedState.rows[rowIndex].length - 1 &&
+              _controlWidgets
+                  .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+        );
+      },
+    );
+  }
+}
+
+class ActionBarButtonRefresh extends ActionBarWidget {
+  const ActionBarButtonRefresh(super.rowIndex, super.index);
+  @override
+  Widget build(BuildContext context) {
+    _ActionBarSharedState sharedState =
+        Provider.of<_ActionBarSharedState>(context, listen: false);
+
+    return ActionBarButton(
+      child: SizedBox(
+        height: context.actionBarButtonSizeVertical,
+        width: context.actionBarButtonSizeHorizontal,
+        child: Icon(Icons.refresh, color: context.actionBarIconColor),
+      ),
+      expansionController: sharedState.expansionControllers[rowIndex],
       buttonType: ActionBarButtonType.single,
       onPressed: (value) async {
-        if (_buttonRefreshController.value == 0) {
+        if (sharedState.buttonRefreshController.value == 0) {
           final refreshWorker = context.read<RefreshWorker>();
           Future refreshFuture;
-          if (podcast != _podcastAll) {
-            refreshFuture = refreshWorker.start([podcast.id]);
-          } else if (group != _podcastAll) {
-            refreshFuture = refreshWorker.start(group.podcastList);
+          if (sharedState.podcast != sharedState.podcastAll) {
+            refreshFuture = refreshWorker.start([sharedState.podcast.id]);
+          } else if (sharedState.group != sharedState.podcastAll) {
+            refreshFuture = refreshWorker.start(sharedState.group.podcastList);
           } else {
             refreshFuture = refreshWorker.start([]);
           }
-          _buttonRefreshController.forward();
+          sharedState.buttonRefreshController.forward();
           Fluttertoast.showToast(
             msg: context.s.refreshStarted,
             gravity: ToastGravity.BOTTOM,
           );
           await refreshFuture;
-          _buttonRefreshController.reverse();
+          sharedState.buttonRefreshController.reverse();
           // Fluttertoast.cancel();
           // Fluttertoast.showToast(
           //   msg: context.s.refreshFinished,
           //   gravity: ToastGravity.BOTTOM,
           // ); // TODO: Toast on refresh finish
-          widget.onGetEpisodesChanged(_getGetEpisodes());
+          sharedState.onGetEpisodesChanged(sharedState.getGetEpisodes());
         }
       },
-      animation: _buttonRefreshController,
-      connectLeft: connectLeft,
-      connectRight: connectRight,
+      tooltip: context.s.refresh,
+      animation: sharedState.buttonRefreshController,
+      connectLeft: index != 0 &&
+          _controlWidgets
+              .contains(sharedState.rows[rowIndex][index - 1].runtimeType),
+      connectRight: index != sharedState.rows[rowIndex].length - 1 &&
+          _controlWidgets
+              .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
     );
   }
-
-  Widget _buttonRemoveNewMark({
-    required int rowIndex,
-    bool connectLeft = false,
-    bool connectRight = false,
-  }) {
-    bool enabled = episodes.any((episode) => episode.isNew == true);
-    return _button(
-      rowIndex: rowIndex,
-      child: CustomPaint(
-        painter: RemoveNewFlagPainter(
-            !enabled && context.realDark
-                ? Colors.grey[800]
-                : context.actionBarIconColor,
-            enabled
-                ? Colors.red
-                : context.realDark
-                    ? Colors.grey[800]!
-                    : context.actionBarIconColor,
-            stroke: 2),
-      ),
-      buttonType: ActionBarButtonType.single,
-      onPressed: (value) async {
-        if (_buttonRemoveNewMarkController.value == 0) {
-          _buttonRemoveNewMarkController.forward();
-          Future removeFuture;
-          if (podcast != _podcastAll) {
-            removeFuture = _dbHelper.removeGroupNewMark([podcast.id]);
-          } else if (group != _groupAll) {
-            removeFuture = _dbHelper.removeGroupNewMark(group.podcastList);
-          } else {
-            removeFuture = _dbHelper.removeAllNewMark();
-          }
-          await Future.wait(
-              [removeFuture, Future.delayed(Duration(seconds: 1))]);
-          widget.onGetEpisodesChanged(_getGetEpisodes());
-        }
-      },
-      enabled: enabled,
-      animation: _buttonRefreshController,
-      connectLeft: connectLeft,
-      connectRight: connectRight,
-    );
-  }
-
-  Widget _button({
-    required int rowIndex,
-    required Widget child,
-    bool? state,
-    ActionBarButtonType? buttonType,
-    required void Function(bool?) onPressed,
-    double? width,
-    double? height,
-    EdgeInsets? innerPadding,
-    String? tooltip,
-    bool enabled = true,
-    Animation<double>? animation,
-    bool connectLeft = false,
-    bool connectRight = false,
-  }) {
-    expansionController(rowIndex).addWidth(
-        (width ?? context.actionBarSizeHorizontal) +
-            (!connectLeft ? context.actionBarIconPadding.left / 2 : 0) +
-            (!connectRight ? context.actionBarIconPadding.right / 2 : 0));
-    return ActionBarButton(
-      child: SizedBox(
-        height: context.actionBarSizeVertical,
-        width: context.actionBarSizeHorizontal,
-        child: child,
-      ),
-      state: state,
-      buttonType: buttonType ?? ActionBarButtonType.single,
-      onPressed: onPressed,
-      width: width,
-      height: height,
-      innerPadding: innerPadding,
-      color: color,
-      activeColor: activeColor,
-      tooltip: tooltip,
-      enabled: enabled,
-      animation: animation,
-      connectLeft: connectLeft,
-      connectRight: connectRight,
-    );
-  }
-
-  Widget _searchTitle(
-      {required ExpansionController expansionController,
-      bool connectLeft = false,
-      bool connectRight = false}) {
-    expansionController.addWidth(
-        (!connectLeft ? context.actionBarIconPadding.left / 2 : 0) +
-            (!connectRight ? context.actionBarIconPadding.right / 2 : 0));
-    return ActionBarExpandingSearchButton(
-      expansionController: expansionController,
-      onQueryChanged: (value) async {
-        if (mounted) setState(() => searchTitleQuery = value);
-        widget.onGetEpisodesChanged(_getGetEpisodes());
-      },
-      color: color,
-      activeColor: activeColor,
-      connectLeft: connectLeft,
-      connectRight: connectRight,
-    );
-  }
-
-  ValueGetter<Future<List<EpisodeBrief>>> _getGetEpisodes(
-          {bool getPodcasts = false}) =>
-      () async {
-        if (getPodcasts) {
-          podcasts.addAll(await _dbHelper.getPodcastLocalAll());
-        }
-        episodes = await _dbHelper.getEpisodes(
-            feedIds: podcast != _podcastAll
-                ? group.podcastList.isEmpty ||
-                        group.podcastList.contains(podcast.id)
-                    ? [podcast.id]
-                    : []
-                : group.podcastList,
-            likeEpisodeTitles:
-                searchTitleQuery == "" ? null : [searchTitleQuery],
-            optionalFields: [
-              EpisodeField.description,
-              EpisodeField.number,
-              EpisodeField.enclosureDuration,
-              EpisodeField.enclosureSize,
-              EpisodeField.isDownloaded,
-              EpisodeField.episodeImage,
-              EpisodeField.podcastImage,
-              EpisodeField.primaryColor,
-              EpisodeField.isLiked,
-              EpisodeField.isNew,
-              EpisodeField.isPlayed,
-              EpisodeField.versionInfo
-            ],
-            sortBy: sortBy,
-            sortOrder: sortOrder,
-            limit: widget.limit,
-            filterVersions: 1, // TODO: Make version button
-            filterNew: filterNew,
-            filterLiked: filterLiked,
-            filterPlayed: filterPlayed,
-            filterDownloaded: filterDownloaded,
-            episodeState: mounted
-                ? Provider.of<EpisodeState>(context, listen: false)
-                : null);
-        return episodes;
-      };
 }
 
-Future<Tuple2<Layout, bool>> getDefaults() async {
+class ActionBarButtonRemoveNewMark extends ActionBarWidget {
+  const ActionBarButtonRemoveNewMark(super.rowIndex, super.index);
+  @override
+  Widget build(BuildContext context) {
+    DBHelper dbHelper = DBHelper();
+    _ActionBarSharedState sharedState =
+        Provider.of<_ActionBarSharedState>(context, listen: false);
+    return Selector<_ActionBarSharedState, List<EpisodeBrief>>(
+      selector: (_, sharedState) => sharedState.episodes,
+      builder: (context, data, _) {
+        bool enabled = data.any((episode) => episode.isNew == true);
+        return ActionBarButton(
+          child: SizedBox(
+            height: context.actionBarButtonSizeVertical,
+            width: context.actionBarButtonSizeHorizontal,
+            child: CustomPaint(
+              painter: RemoveNewFlagPainter(
+                  !enabled && context.realDark
+                      ? Colors.grey[800]
+                      : context.actionBarIconColor,
+                  enabled
+                      ? Colors.red
+                      : context.realDark
+                          ? Colors.grey[800]!
+                          : context.actionBarIconColor,
+                  stroke: 2),
+            ),
+          ),
+          expansionController: sharedState.expansionControllers[rowIndex],
+          buttonType: ActionBarButtonType.single,
+          onPressed: (value) async {
+            if (sharedState.buttonRemoveNewMarkController.value == 0) {
+              sharedState.buttonRemoveNewMarkController.forward();
+              Future removeFuture;
+              if (sharedState.podcast != sharedState.podcastAll) {
+                removeFuture =
+                    dbHelper.removeGroupNewMark([sharedState.podcast.id]);
+              } else if (sharedState.group != sharedState.groupAll) {
+                removeFuture =
+                    dbHelper.removeGroupNewMark(sharedState.group.podcastList);
+              } else {
+                removeFuture = dbHelper.removeAllNewMark();
+              }
+              await Future.wait(
+                  [removeFuture, Future.delayed(Duration(seconds: 1))]);
+              sharedState.onGetEpisodesChanged(sharedState.getGetEpisodes());
+            }
+          },
+          tooltip: context.s.removeNewMark,
+          enabled: enabled,
+          animation: sharedState.buttonRemoveNewMarkController,
+          connectLeft: index != 0 &&
+              _controlWidgets
+                  .contains(sharedState.rows[rowIndex][index - 1].runtimeType),
+          connectRight: index != sharedState.rows[rowIndex].length - 1 &&
+              _controlWidgets
+                  .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+        );
+      },
+    );
+  }
+}
+
+class ActionBarSearchTitle extends ActionBarWidget {
+  const ActionBarSearchTitle(super.rowIndex, super.index);
+  @override
+  Widget build(BuildContext context) {
+    _ActionBarSharedState sharedState =
+        Provider.of<_ActionBarSharedState>(context, listen: false);
+    return Selector<_ActionBarSharedState, String>(
+      selector: (_, sharedState) => sharedState.searchTitleQuery,
+      builder: (context, data, _) {
+        return ActionBarExpandingSearchButton(
+          query: data,
+          expansionController: sharedState.expansionControllers[rowIndex],
+          onQueryChanged: (value) async {
+            sharedState.searchTitleQuery = value;
+            sharedState.onGetEpisodesChanged(sharedState.getGetEpisodes());
+          },
+          connectLeft: index != 0 &&
+              _filterWidgets
+                  .contains(sharedState.rows[rowIndex][index - 1].runtimeType),
+          connectRight: index != sharedState.rows[rowIndex].length - 1 &&
+              _filterWidgets
+                  .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+        );
+      },
+    );
+  }
+}
+
+Future<Tuple2<EpisodeGridLayout, bool?>> getLayoutAndShowListened() async {
   final layoutStorage = KeyValueStorage(podcastLayoutKey);
   final index = await layoutStorage.getInt(defaultValue: 1);
-  Layout layout = Layout.values[index];
+  EpisodeGridLayout layout = EpisodeGridLayout.values[index];
   final hideListenedStorage = KeyValueStorage(hideListenedKey);
   bool hideListened = await hideListenedStorage.getBool(defaultValue: false);
-  return Tuple2(layout, hideListened);
+  return Tuple2(layout, hideListened ? false : null);
 }

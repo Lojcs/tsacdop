@@ -8,7 +8,9 @@ import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:tsacdop/episodes/episode_detail.dart';
 import 'package:tsacdop/state/episode_state.dart';
+import 'package:tsacdop/util/extension_helper.dart';
 import 'package:tuple/tuple.dart';
 import 'package:webfeed/webfeed.dart';
 
@@ -1757,7 +1759,8 @@ class DBHelper {
                 fields[const Symbol("podcastImage")] = i['imagePath'];
                 break;
               case EpisodeField.primaryColor:
-                fields[const Symbol("primaryColor")] = i['primaryColor'];
+                fields[const Symbol("primaryColor")] =
+                    (i['primaryColor'] as String).toColor();
                 break;
               case EpisodeField.isExplicit:
                 fields[const Symbol("isExplicit")] = i['explicit'] == 1;

@@ -138,8 +138,9 @@ extension ContextExtension on BuildContext {
 
   Color get actionBarIconColor => actionBarTheme.iconColor!;
   double get actionBarIconSize => actionBarTheme.size!;
-  double get actionBarSizeVertical => actionBarTheme.sizeVertical!;
-  double get actionBarSizeHorizontal => actionBarTheme.sizeHorizontal!;
+  double get actionBarButtonSizeVertical => actionBarTheme.buttonSizeVertical!;
+  double get actionBarButtonSizeHorizontal =>
+      actionBarTheme.buttonSizeHorizontal!;
   Radius get actionBarIconRadius => actionBarTheme.radius!;
   EdgeInsets get actionBarIconPadding => actionBarTheme.padding!;
 }

@@ -142,222 +142,182 @@ class SettingState extends ChangeNotifier {
   ThemeMode? _theme;
   ThemeMode? get theme => _theme;
 
-  ThemeData get lightTheme => ThemeData(
+  ThemeData get lightTheme {
+    ColorScheme colorScheme = ColorScheme.fromSeed(
+        seedColor: _accentSetColor!,
+        primary: _accentSetColor!,
         brightness: Brightness.light,
-        primaryColor: Colors.grey[100],
-        primaryColorLight: Colors.white,
-        primaryColorDark: Colors.grey[300],
-        appBarTheme: AppBarTheme(
-            color: Colors.grey[100],
-            elevation: 0,
-            titleTextStyle: TextStyle(color: Colors.black),
-            scrolledUnderElevation: 1,
-            iconTheme: IconThemeData(color: Colors.black),
-            systemOverlayStyle: SystemUiOverlayStyle.dark),
-        textTheme: TextTheme(
-          bodyLarge: TextStyle(
-              fontSize: 15.0,
-              color: Colors.black,
-              fontWeight: FontWeight.normal),
-          bodyMedium: TextStyle(
-              fontSize: 14.0,
-              color: Colors.black,
-              fontWeight: FontWeight.normal),
-          bodySmall: TextStyle(
-              fontSize: 13.0,
-              color: Colors.black,
-              fontWeight: FontWeight.normal),
-          labelLarge: TextStyle(
-              fontSize: 14.0,
-              color: Colors.black,
-              fontWeight: FontWeight.normal),
-          labelMedium: TextStyle(
-              fontSize: 12.0,
-              color: Colors.black,
-              fontWeight: FontWeight.normal),
-          labelSmall: TextStyle(
-              fontSize: 10.0,
-              color: Colors.black,
-              fontWeight: FontWeight.normal),
-          titleLarge: TextStyle(
-              fontSize: 20.0,
-              color: Colors.black,
-              fontWeight: FontWeight.normal),
-          titleMedium: TextStyle(
-              fontSize: 16.0,
-              color: Colors.black,
-              fontWeight: FontWeight.normal),
-          titleSmall: TextStyle(
-              fontSize: 14.0,
-              color: Colors.black,
-              fontWeight: FontWeight.normal),
-          headlineLarge: TextStyle(
-              fontSize: 28.0,
-              color: Colors.black,
-              fontWeight: FontWeight.normal),
-          headlineMedium: TextStyle(
-              fontSize: 24.0,
-              color: Colors.black,
-              fontWeight: FontWeight.normal),
-          headlineSmall: TextStyle(
-              fontSize: 20.0,
-              color: Colors.black,
-              fontWeight: FontWeight.normal),
+        surface: Colors.white);
+    return ThemeData(
+      colorScheme: colorScheme,
+      brightness: Brightness.light,
+      primaryColor: Colors.grey[100],
+      primaryColorLight: Colors.white,
+      primaryColorDark: Colors.grey[300],
+      appBarTheme: AppBarTheme(
+          color: Colors.grey[100],
+          elevation: 0,
+          titleTextStyle: TextStyle(color: Colors.black),
+          scrolledUnderElevation: 1,
+          iconTheme: IconThemeData(color: Colors.black),
+          systemOverlayStyle: SystemUiOverlayStyle.dark),
+      textTheme: TextTheme(
+        bodyLarge: TextStyle(
+            fontSize: 15.0, color: Colors.black, fontWeight: FontWeight.normal),
+        bodyMedium: TextStyle(
+            fontSize: 14.0, color: Colors.black, fontWeight: FontWeight.normal),
+        bodySmall: TextStyle(
+            fontSize: 13.0, color: Colors.black, fontWeight: FontWeight.normal),
+        labelLarge: TextStyle(
+            fontSize: 14.0, color: Colors.black, fontWeight: FontWeight.normal),
+        labelMedium: TextStyle(
+            fontSize: 12.0, color: Colors.black, fontWeight: FontWeight.normal),
+        labelSmall: TextStyle(
+            fontSize: 10.0, color: Colors.black, fontWeight: FontWeight.normal),
+        titleLarge: TextStyle(
+            fontSize: 20.0, color: Colors.black, fontWeight: FontWeight.normal),
+        titleMedium: TextStyle(
+            fontSize: 16.0, color: Colors.black, fontWeight: FontWeight.normal),
+        titleSmall: TextStyle(
+            fontSize: 14.0, color: Colors.black, fontWeight: FontWeight.normal),
+        headlineLarge: TextStyle(
+            fontSize: 28.0, color: Colors.black, fontWeight: FontWeight.normal),
+        headlineMedium: TextStyle(
+            fontSize: 24.0, color: Colors.black, fontWeight: FontWeight.normal),
+        headlineSmall: TextStyle(
+            fontSize: 20.0, color: Colors.black, fontWeight: FontWeight.normal),
+      ),
+      tabBarTheme: TabBarTheme(
+        labelColor: Colors.black,
+        unselectedLabelColor: Colors.grey[400],
+      ),
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: _accentSetColor,
+        selectionHandleColor: _accentSetColor,
+      ),
+      buttonTheme: ButtonThemeData(
+        height: 32,
+        hoverColor: _accentSetColor!.withAlpha(70),
+        splashColor: _accentSetColor!.withAlpha(70),
+      ),
+      useMaterial3: true,
+      extensions: [
+        ActionBarTheme(
+          iconColor: Colors.grey[800],
+          size: 24,
+          radius: const Radius.circular(16),
+          padding: const EdgeInsets.all(6),
         ),
-        tabBarTheme: TabBarTheme(
-          labelColor: Colors.black,
-          unselectedLabelColor: Colors.grey[400],
-        ),
-        textSelectionTheme: TextSelectionThemeData(
-          cursorColor: _accentSetColor,
-          selectionHandleColor: _accentSetColor,
-        ),
-        buttonTheme: ButtonThemeData(
-          height: 32,
-          hoverColor: _accentSetColor!.withAlpha(70),
-          splashColor: _accentSetColor!.withAlpha(70),
-        ),
-        useMaterial3: true,
-        extensions: [
-          ActionBarTheme(
-            iconColor: Colors.grey[800],
-            size: 24,
-            radius: const Radius.circular(16),
-            padding: const EdgeInsets.all(6),
-          ),
-        ],
-        checkboxTheme: CheckboxThemeData(
-          fillColor: WidgetStateProperty.resolveWith<Color?>(
-              (Set<WidgetState> states) {
-            if (states.contains(WidgetState.disabled)) {
-              return null;
-            }
-            if (states.contains(WidgetState.selected)) {
-              return _accentSetColor;
-            }
+        CardColorScheme(colorScheme),
+      ],
+      checkboxTheme: CheckboxThemeData(
+        fillColor:
+            WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
+          if (states.contains(WidgetState.disabled)) {
             return null;
-          }),
-        ),
-        radioTheme: RadioThemeData(
-          fillColor: WidgetStateProperty.resolveWith<Color?>(
-              (Set<WidgetState> states) {
-            if (states.contains(WidgetState.disabled)) {
-              return null;
-            }
-            if (states.contains(WidgetState.selected)) {
-              return _accentSetColor;
-            }
+          }
+          if (states.contains(WidgetState.selected)) {
+            return _accentSetColor;
+          }
+          return null;
+        }),
+      ),
+      radioTheme: RadioThemeData(
+        fillColor:
+            WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
+          if (states.contains(WidgetState.disabled)) {
             return null;
-          }),
-        ),
-        switchTheme: SwitchThemeData(
-          thumbColor: WidgetStateProperty.resolveWith<Color?>(
-              (Set<WidgetState> states) {
-            if (states.contains(WidgetState.disabled)) {
-              return null;
-            }
-            if (states.contains(WidgetState.selected)) {
-              return _accentSetColor;
-            }
+          }
+          if (states.contains(WidgetState.selected)) {
+            return _accentSetColor;
+          }
+          return null;
+        }),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor:
+            WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
+          if (states.contains(WidgetState.disabled)) {
             return null;
-          }),
-          trackColor: WidgetStateProperty.resolveWith<Color?>(
-              (Set<WidgetState> states) {
-            if (states.contains(WidgetState.disabled)) {
-              return null;
-            }
-            if (states.contains(WidgetState.selected)) {
-              return _accentSetColor;
-            }
+          }
+          if (states.contains(WidgetState.selected)) {
+            return _accentSetColor;
+          }
+          return null;
+        }),
+        trackColor:
+            WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
+          if (states.contains(WidgetState.disabled)) {
             return null;
-          }),
-        ),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: _accentSetColor!,
-          primary: _accentSetColor!,
-          brightness: Brightness.light,
-        ).copyWith(surface: Colors.grey[100]),
-        dialogTheme: DialogTheme(backgroundColor: Colors.white),
-      );
+          }
+          if (states.contains(WidgetState.selected)) {
+            return _accentSetColor;
+          }
+          return null;
+        }),
+      ),
+      dialogTheme: DialogTheme(backgroundColor: Colors.white),
+    );
+  }
 
-  ThemeData get darkTheme => ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: _accentSetColor!,
-          primary: _accentSetColor!,
-          brightness: Brightness.dark,
-          surface: _realDark! ? Colors.black : null,
+  ThemeData get darkTheme {
+    ColorScheme colorScheme = ColorScheme.fromSeed(
+      seedColor: _accentSetColor!,
+      primary: _accentSetColor!,
+      brightness: Brightness.dark,
+      surface: _realDark! ? Colors.black : null,
+    );
+    return ThemeData(
+      colorScheme: colorScheme,
+      brightness: Brightness.dark,
+      textTheme: TextTheme(
+        bodyLarge: TextStyle(
+            fontSize: 15.0, color: Colors.white, fontWeight: FontWeight.normal),
+        bodyMedium: TextStyle(
+            fontSize: 14.0, color: Colors.white, fontWeight: FontWeight.normal),
+        bodySmall: TextStyle(
+            fontSize: 13.0, color: Colors.white, fontWeight: FontWeight.normal),
+        labelLarge: TextStyle(
+            fontSize: 14.0, color: Colors.white, fontWeight: FontWeight.normal),
+        labelMedium: TextStyle(
+            fontSize: 12.0, color: Colors.white, fontWeight: FontWeight.normal),
+        labelSmall: TextStyle(
+            fontSize: 10.0, color: Colors.white, fontWeight: FontWeight.normal),
+        titleLarge: TextStyle(
+            fontSize: 20.0, color: Colors.white, fontWeight: FontWeight.normal),
+        titleMedium: TextStyle(
+            fontSize: 16.0, color: Colors.white, fontWeight: FontWeight.normal),
+        titleSmall: TextStyle(
+            fontSize: 14.0, color: Colors.white, fontWeight: FontWeight.normal),
+        headlineLarge: TextStyle(
+            fontSize: 28.0, color: Colors.white, fontWeight: FontWeight.normal),
+        headlineMedium: TextStyle(
+            fontSize: 24.0, color: Colors.white, fontWeight: FontWeight.normal),
+        headlineSmall: TextStyle(
+            fontSize: 20.0, color: Colors.white, fontWeight: FontWeight.normal),
+      ),
+      popupMenuTheme: PopupMenuThemeData()
+          .copyWith(color: _realDark! ? Colors.grey[900] : null),
+      appBarTheme: AppBarTheme(
+          color: Colors.grey[900],
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          systemOverlayStyle: SystemUiOverlayStyle.light),
+      buttonTheme: ButtonThemeData(height: 32),
+      useMaterial3: true,
+      extensions: [
+        ActionBarTheme(
+          iconColor: Colors.grey[200],
+          size: 24,
+          radius: const Radius.circular(16),
+          padding: const EdgeInsets.all(6),
         ),
-        brightness: Brightness.dark,
-        textTheme: TextTheme(
-          bodyLarge: TextStyle(
-              fontSize: 15.0,
-              color: Colors.white,
-              fontWeight: FontWeight.normal),
-          bodyMedium: TextStyle(
-              fontSize: 14.0,
-              color: Colors.white,
-              fontWeight: FontWeight.normal),
-          bodySmall: TextStyle(
-              fontSize: 13.0,
-              color: Colors.white,
-              fontWeight: FontWeight.normal),
-          labelLarge: TextStyle(
-              fontSize: 14.0,
-              color: Colors.white,
-              fontWeight: FontWeight.normal),
-          labelMedium: TextStyle(
-              fontSize: 12.0,
-              color: Colors.white,
-              fontWeight: FontWeight.normal),
-          labelSmall: TextStyle(
-              fontSize: 10.0,
-              color: Colors.white,
-              fontWeight: FontWeight.normal),
-          titleLarge: TextStyle(
-              fontSize: 20.0,
-              color: Colors.white,
-              fontWeight: FontWeight.normal),
-          titleMedium: TextStyle(
-              fontSize: 16.0,
-              color: Colors.white,
-              fontWeight: FontWeight.normal),
-          titleSmall: TextStyle(
-              fontSize: 14.0,
-              color: Colors.white,
-              fontWeight: FontWeight.normal),
-          headlineLarge: TextStyle(
-              fontSize: 28.0,
-              color: Colors.white,
-              fontWeight: FontWeight.normal),
-          headlineMedium: TextStyle(
-              fontSize: 24.0,
-              color: Colors.white,
-              fontWeight: FontWeight.normal),
-          headlineSmall: TextStyle(
-              fontSize: 20.0,
-              color: Colors.white,
-              fontWeight: FontWeight.normal),
-        ),
-        popupMenuTheme: PopupMenuThemeData()
-            .copyWith(color: _realDark! ? Colors.grey[900] : null),
-        appBarTheme: AppBarTheme(
-            color: Colors.grey[900],
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            systemOverlayStyle: SystemUiOverlayStyle.light),
-        buttonTheme: ButtonThemeData(height: 32),
-        useMaterial3: true,
-        extensions: [
-          ActionBarTheme(
-            iconColor: Colors.grey[200],
-            size: 24,
-            radius: const Radius.circular(16),
-            padding: const EdgeInsets.all(6),
-          ),
-        ],
-        dialogTheme:
-            DialogTheme(backgroundColor: _realDark! ? Colors.grey : null),
-      );
+        CardColorScheme(colorScheme),
+      ],
+      dialogTheme:
+          DialogTheme(backgroundColor: _realDark! ? Colors.grey : null),
+    );
+  }
 
   set setTheme(ThemeMode? mode) {
     _theme = mode;

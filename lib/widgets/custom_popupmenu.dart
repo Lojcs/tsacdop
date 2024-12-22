@@ -541,8 +541,7 @@ class MyPopupMenuButtonState<T> extends State<MyPopupMenuButton<T>> {
     await widget.beforeOpened?.call();
     final popupMenuTheme = PopupMenuTheme.of(context);
     final button = context.findRenderObject() as RenderBox;
-    final overlay =
-        Overlay.of(context)!.context.findRenderObject() as RenderBox;
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
     final Offset offset;
     switch (widget.position) {
       case PopupMenuPosition.over:

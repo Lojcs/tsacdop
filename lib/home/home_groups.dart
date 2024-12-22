@@ -585,7 +585,7 @@ class ShowEpisode extends StatelessWidget {
             delegate: SliverChildBuilderDelegate(
               (context, index) {
                 return InteractiveEpisodeCard(
-                    context, episodes![index], Layout.medium,
+                    context, episodes![index], EpisodeGridLayout.medium,
                     preferEpisodeImage: false);
               },
               childCount: math.min(episodes!.length, 2),
