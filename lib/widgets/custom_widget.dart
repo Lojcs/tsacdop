@@ -66,7 +66,7 @@ class MultiSelectPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(MultiSelectPainter oldDelegate) {
-    return false;
+    return oldDelegate.color != color;
   }
 }
 

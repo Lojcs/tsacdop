@@ -118,6 +118,10 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
         vsync: this, duration: const Duration(milliseconds: 200));
     _shadowController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 200));
+    selected = widget.selected;
+    if (widget.selected) {
+      _controller.value = 1;
+    }
   }
 
   @override

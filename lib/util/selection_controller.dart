@@ -21,8 +21,9 @@ class SelectionController extends ChangeNotifier {
     super.dispose();
   }
 
+  /// Gets all episodes the selection covers so batch actions can be performed
   Future getEpisodesLimitless() async {
-    if (!hasAllSelectableEpisodes) {
+    if (!hasAllSelectableEpisodes && selectionTentative) {
       hasAllSelectableEpisodes = true;
       _selectableEpisodes =
           await onGetEpisodesLimitless?.call() ?? _selectableEpisodes;
@@ -66,9 +67,9 @@ class SelectionController extends ChangeNotifier {
     }
   }
 
-// Flips to indicate that episodes were updated.
-// Listeners aren't notified since the update most likely originates from a FutureBuilder
-// and its children can just check it when rebuilding.
+  /// Flips to indicate that episodes were updated.
+  /// Listeners aren't notified since the update most likely originates from a FutureBuilder
+  /// and its children can just check it when rebuilding.
   bool episodesUpdated = false;
 
   /// Replaces stored episodes with the provided versions.
@@ -270,7 +271,7 @@ class SelectionController extends ChangeNotifier {
     _selectionChanged();
   }
 
-  /// Marks [i]th selectable episode with [selected]
+  /// Inverts the selection of [i]th selectable episode
   void select(int i) {
     if (i >= 0 && i < _selectableEpisodes.length) {
       if (_explicitlySelectedIndicies.contains(i)) {
@@ -324,6 +325,17 @@ class SelectionController extends ChangeNotifier {
 
       _selectionChanged();
     }
+  }
+
+  /// Deselects all episodes
+  void deselectAll() {
+    _explicitlySelectedIndicies.clear();
+    _previouslySelectedEpisodes.clear();
+    selectAll = false;
+    _selectBefore = null;
+    _selectAfter = null;
+    _selectBetween = null;
+    _selectionChanged();
   }
 
   void _selectionChanged() {

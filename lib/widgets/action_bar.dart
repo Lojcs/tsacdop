@@ -1099,7 +1099,7 @@ class ActionBarSwitchSortOrder extends ActionBarWidget {
             width: context.actionBarButtonSizeHorizontal,
             child: Icon(
               data.item2 == Sorter.random
-                  ? Icons.casino
+                  ? Icons.casino_outlined
                   : data.item1 == SortOrder.ASC
                       ? LineIcons.sortAmountUp
                       : LineIcons.sortAmountDown,
@@ -1250,7 +1250,10 @@ class ActionBarSwitchSelectMode extends ActionBarWidget {
           height: context.actionBarButtonSizeVertical,
           width: context.actionBarButtonSizeHorizontal,
           child: CustomPaint(
-              painter: MultiSelectPainter(color: context.actionBarIconColor)),
+              painter: MultiSelectPainter(
+                  color: context.realDark
+                      ? Colors.grey[800]!
+                      : context.actionBarIconColor)),
         ),
         expansionController: sharedState.expansionControllers[rowIndex],
         state: false,

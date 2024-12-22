@@ -385,6 +385,16 @@ class S {
     );
   }
 
+  /// `Deselect All`
+  String get deselectAll {
+    return Intl.message(
+      'Deselect All',
+      name: 'deselectAll',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Developer`
   String get developer {
     return Intl.message(

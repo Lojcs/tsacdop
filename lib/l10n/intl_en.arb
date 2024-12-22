@@ -86,6 +86,8 @@
   },
   "delete": "Delete",
   "@delete": {},
+  "deselectAll": "Deselect All",
+  "@deselectAll": {},
   "developer": "Developer",
   "@developer": {
     "description": "Can also translate to About me"

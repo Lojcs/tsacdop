@@ -221,13 +221,17 @@ class _ActionBarButtonState extends State<ActionBarButton>
           state = true;
           break;
       }
-      if (active) {
-        animationController.forward();
-        expand(true);
-      } else {
-        animationController.reverse();
-        expand(false);
-      }
+      Future.microtask(
+        () {
+          if (active) {
+            animationController.forward();
+            expand(true);
+          } else {
+            animationController.reverse();
+            expand(false);
+          }
+        },
+      ); // This is in a microtask since it sets state during build
     }
   }
 
@@ -254,7 +258,8 @@ class _ActionBarButtonState extends State<ActionBarButton>
       message: widget.tooltip ?? "",
       child: Selector<CardColorScheme, Tuple2<Color, Color>>(
         selector: (context, cardColorScheme) => Tuple2(
-            widget.color ?? cardColorScheme.card,
+            widget.color ??
+                (context.realDark ? context.surface : cardColorScheme.card),
             widget.activeColor ?? widget.color ?? cardColorScheme.selected),
         builder: (context, data, _) => Container(
           margin: EdgeInsets.only(
@@ -563,7 +568,8 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
         .clamp(0, 1);
     return Selector<CardColorScheme, Tuple2<Color, Color>>(
       selector: (context, cardColorScheme) => Tuple2(
-          widget.color ?? cardColorScheme.card,
+          widget.color ??
+              (context.realDark ? context.surface : cardColorScheme.card),
           widget.activeColor ?? widget.color ?? cardColorScheme.selected),
       builder: (context, data, _) => Container(
         margin: EdgeInsets.only(
@@ -817,7 +823,8 @@ class _ActionBarExpandingSearchButtonState
         (((width / context.actionBarButtonSizeHorizontal) - 1) / 2).clamp(0, 1);
     return Selector<CardColorScheme, Tuple2<Color, Color>>(
       selector: (context, cardColorScheme) => Tuple2(
-          widget.color ?? cardColorScheme.card,
+          widget.color ??
+              (context.realDark ? context.surface : cardColorScheme.card),
           widget.activeColor ?? widget.color ?? cardColorScheme.selected),
       builder: (context, data, _) => Container(
         margin: EdgeInsets.only(

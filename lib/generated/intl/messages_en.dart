@@ -145,6 +145,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "defaultSearchEngineDes": MessageLookupByLibrary.simpleMessage(
             "Choose the default podcast search engine"),
         "delete": MessageLookupByLibrary.simpleMessage("Delete"),
+        "deselectAll": MessageLookupByLibrary.simpleMessage("Deselect All"),
         "developer": MessageLookupByLibrary.simpleMessage("Developer"),
         "dismiss": MessageLookupByLibrary.simpleMessage("Dismiss"),
         "done": MessageLookupByLibrary.simpleMessage("Done"),
