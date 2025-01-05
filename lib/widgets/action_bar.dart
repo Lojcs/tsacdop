@@ -90,7 +90,7 @@ Set<Type> _controlWidgets = {
 /// Select mode switch works when [SelectionController] if provided with a [ChangeNotifierProvider]
 class ActionBar extends StatefulWidget {
   /// Callback to return the episode list based on filters
-  final ValueSetter<ValueGetter<Future<List<EpisodeBrief>>>>
+  final ValueSetter<Future<List<EpisodeBrief>> Function(int count)>
       onGetEpisodesChanged;
 
   /// Callback to return the layout status
@@ -113,9 +113,6 @@ class ActionBar extends StatefulWidget {
 
   /// Pin sliver to top
   final bool pinned;
-
-  /// Limit of episode list size
-  final int limit;
 
   /// Default podcast group
   final PodcastGroup? group;
@@ -176,7 +173,6 @@ class ActionBar extends StatefulWidget {
     this.showMultiSelectBar = false,
     this.expandSecondRow = false,
     this.pinned = true,
-    this.limit = 100,
     this.group,
     this.podcast,
     this.sortBy = Sorter.pubDate,
@@ -228,9 +224,6 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
     if (oldWidget.expandSecondRow != widget.expandSecondRow) {
       _sharedState.expandSecondRow = widget.expandSecondRow;
     }
-    if (oldWidget.limit != widget.limit) {
-      _sharedState.limit = widget.limit;
-    }
     if (oldWidget.group != widget.group) {
       _sharedState.group = widget.group;
     }
@@ -279,7 +272,6 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
         widgetsSecondRow: widget.widgetsSecondRow,
         sortByItems: widget.sortByItems,
         expandSecondRow: widget.expandSecondRow,
-        limit: widget.limit,
         group: widget.group,
         podcast: widget.podcast,
         sortBy: widget.sortBy,
@@ -296,9 +288,8 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
       SelectionController? selectionController =
           Provider.of<SelectionController?>(context, listen: false);
       if (selectionController != null) {
-        selectionController.onGetEpisodesLimitless = (() =>
-            _sharedState.getGetEpisodes(
-                limitless: true))(); // Nested function is necessary I think
+        selectionController.onGetEpisodesLimitless = selectionController
+            .onGetEpisodesLimitless = () => _sharedState.getGetEpisodes()(-1);
       }
     }
     CardColorScheme? cardColorScheme = Provider.of<CardColorScheme?>(context);
@@ -423,7 +414,7 @@ class __ActionBarOuterState extends State<_ActionBarOuter>
 
 class _ActionBarSharedState extends ChangeNotifier {
   final BuildContext context;
-  final ValueSetter<ValueGetter<Future<List<EpisodeBrief>>>>
+  final ValueSetter<Future<List<EpisodeBrief>> Function(int count)>
       onGetEpisodesChanged;
   final ValueChanged<EpisodeGridLayout>? onLayoutChanged;
 
@@ -442,15 +433,6 @@ class _ActionBarSharedState extends ChangeNotifier {
         switchSecondRowController.reverse();
       }
       notifyListeners();
-    }
-  }
-
-  int _limit;
-  int get limit => _limit;
-  set limit(int i) {
-    if (_limit != i) {
-      _limit = i;
-      onGetEpisodesChanged(getGetEpisodes());
     }
   }
 
@@ -529,7 +511,6 @@ class _ActionBarSharedState extends ChangeNotifier {
     required this.widgetsSecondRow,
     required this.sortByItems,
     required bool expandSecondRow,
-    required int limit,
     required PodcastGroup? group,
     required PodcastLocal? podcast,
     required Sorter sortBy,
@@ -543,7 +524,6 @@ class _ActionBarSharedState extends ChangeNotifier {
     required this.buttonRefreshController,
     required this.buttonRemoveNewMarkController,
   })  : _expandSecondRow = expandSecondRow,
-        _limit = limit,
         _group =
             group ?? PodcastGroup(context.s.all, podcastList: [], id: "All"),
         _podcast = podcast ??
@@ -556,22 +536,13 @@ class _ActionBarSharedState extends ChangeNotifier {
         _sortOrder = sortOrder,
         _layout = layout {
     if (expandSecondRow) switchSecondRowController.forward();
-    onGetEpisodesChanged(getGetEpisodes(getPodcasts: true));
-  }
-
-  bool _disposedd = false;
-
-  @override
-  void dispose() {
-    _disposedd = true;
-    // super.dispose(); // TODO: Why does this cause exeption?
+    Future.microtask(() => onGetEpisodesChanged(getGetEpisodes()));
   }
 
   late final PodcastGroup groupAll =
       PodcastGroup(context.s.all, podcastList: [], id: "All");
-  List<PodcastGroup> get groups => [groupAll]..addAll(!_disposedd
-      ? Provider.of<GroupList>(context, listen: false).groups.nonNulls.toList()
-      : []);
+  List<PodcastGroup> get groups => [groupAll]..addAll(
+      Provider.of<GroupList>(context, listen: false).groups.nonNulls.toList());
   double? maxGroupTitleWidth;
 
   late final PodcastLocal podcastAll =
@@ -596,10 +567,9 @@ class _ActionBarSharedState extends ChangeNotifier {
   double maxWidth() =>
       context.width - (16 + context.actionBarIconPadding.horizontal / 2);
 
-  ValueGetter<Future<List<EpisodeBrief>>> getGetEpisodes(
-      {bool getPodcasts = false, bool limitless = false}) {
+  Future<List<EpisodeBrief>> Function(int count) getGetEpisodes() {
     DBHelper dbHelper = DBHelper();
-    return () async {
+    return (int count) async {
       episodes = await dbHelper.getEpisodes(
           feedIds: podcast != podcastAll
               ? group.podcastList.isEmpty ||
@@ -624,15 +594,13 @@ class _ActionBarSharedState extends ChangeNotifier {
           ],
           sortBy: sortBy,
           sortOrder: sortOrder,
-          limit: limitless ? -1 : limit,
+          limit: count,
           filterVersions: 1, // TODO: Make version button
           filterNew: filterNew,
           filterLiked: filterLiked,
           filterPlayed: filterPlayed,
           filterDownloaded: filterDownloaded,
-          episodeState: !_disposedd
-              ? Provider.of<EpisodeState>(context, listen: false)
-              : null);
+          episodeState: Provider.of<EpisodeState>(context, listen: false));
       return episodes;
     };
   }

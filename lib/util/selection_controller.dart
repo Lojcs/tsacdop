@@ -21,8 +21,8 @@ class SelectionController extends ChangeNotifier {
     super.dispose();
   }
 
-  /// Gets all episodes the selection covers so batch actions can be performed
-  Future getEpisodesLimitless() async {
+  /// Gets all episodes the selection covers so batch actions can be performed.
+  Future<void> getEpisodesLimitless() async {
     if (!hasAllSelectableEpisodes && selectionTentative) {
       hasAllSelectableEpisodes = true;
       _selectableEpisodes =
@@ -42,11 +42,12 @@ class SelectionController extends ChangeNotifier {
   /// Otherwise this might not include previously selected episodes no longer in view.
   void setSelectableEpisodes(List<EpisodeBrief> episodes,
       {bool compatible = false}) {
-    for (int i = 0; i < episodes.length; i++) {}
     if (episodes != _selectableEpisodes) {
       if (compatible) {
-        _selectableEpisodes =
-            episodes.toList(); // Prevent spooky action at a distance
+        if (selectionTentative) {
+          _selectableEpisodes =
+              episodes.toList(); // Prevent spooky action at a distance
+        }
       } else {
         _previouslySelectedEpisodes.addAll(newlySelectedEpisodes);
         _selectAll = false;
@@ -68,11 +69,9 @@ class SelectionController extends ChangeNotifier {
   }
 
   /// Flips to indicate that episodes were updated.
-  /// Listeners aren't notified since the update most likely originates from a FutureBuilder
-  /// and its children can just check it when rebuilding.
   bool episodesUpdated = false;
 
-  /// Replaces stored episodes with the provided versions.
+  /// Replaces stored episodes with the provided versions and notifies listeners.
   void updateEpisodes(List<EpisodeBrief> episodes) {
     Map<int, EpisodeBrief> episodeMap = {
       for (var episode in episodes) episode.id: episode
@@ -92,6 +91,7 @@ class SelectionController extends ChangeNotifier {
     _newlySelectedEpisodes = null;
     _selectedEpisodes = null;
     episodesUpdated = !episodesUpdated;
+    notifyListeners();
   }
 
   /// List of explicitly selected selectable episodes ordered in select order.
@@ -126,7 +126,8 @@ class SelectionController extends ChangeNotifier {
 
   Set<int>? _selectedIndicies;
 
-  /// Tentative list of indicies of newly selected selectable episodes.
+  /// Tentative list of indicies of selected selectable episodes taht weren't
+  /// selected previously (thus newly selected)
   List<int> get newlySelectedIndicies {
     if (_newlySelectedIndicies == null) {
       _newlySelectedIndicies = [];

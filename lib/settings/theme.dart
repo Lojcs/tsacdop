@@ -290,6 +290,8 @@ class __ColorPickerState extends State<_ColorPicker>
               indicatorColor: Colors.transparent,
               indicatorSize: TabBarIndicatorSize.tab,
               isScrollable: true,
+              dividerHeight: 0,
+              tabAlignment: TabAlignment.start,
               tabs: Colors.primaries
                   .map<Widget>((color) => Tab(
                         child: Container(

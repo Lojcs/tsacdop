@@ -1869,6 +1869,8 @@ class _ControlPanelState extends State<ControlPanel>
                             labelColor: context.accentColor,
                             unselectedLabelColor: context.textColor,
                             indicator: BoxDecoration(),
+                            dividerHeight: 0,
+                            tabAlignment: TabAlignment.start,
                             tabs: [
                               SizedBox(
                                   height: 20,

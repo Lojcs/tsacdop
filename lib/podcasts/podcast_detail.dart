@@ -12,6 +12,7 @@ import 'package:html/parser.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:tsacdop/type/theme_data.dart';
+import 'package:tsacdop/util/helpers.dart';
 import 'package:tsacdop/widgets/action_bar.dart';
 import 'package:tuple/tuple.dart';
 
@@ -58,8 +59,6 @@ class _PodcastDetailState extends State<PodcastDetail> {
   );
 
   late ScrollController _controller;
-
-  Widget? actionBar;
 
   late SelectionController selectionController;
 
@@ -216,16 +215,12 @@ class PodcastDetailBody extends StatefulWidget {
 
 class _PodcastDetailBodyState extends State<PodcastDetailBody> {
   final GlobalKey _infoKey = GlobalKey();
-  late final Color _podcastAccent = ColorScheme.fromSeed(
-          seedColor: widget.podcastLocal.primaryColor!.toColor(),
-          brightness: context.brightness)
-      .primaryFixed;
 
   /// Episodes to display
   List<EpisodeBrief> _episodes = [];
 
   /// Function to get episodes
-  ValueGetter<Future<List<EpisodeBrief>>> _getEpisodes = () async {
+  Future<List<EpisodeBrief>> Function(int count) _getEpisodes = (int _) async {
     return <EpisodeBrief>[];
   };
 
@@ -238,7 +233,7 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
   late ScrollController _controller;
 
   /// Episodes num load first time.
-  int _top = 96;
+  late int _top = 108;
 
   /// Load more episodes when scroll to bottom.
   bool _loadMore = false;
@@ -273,14 +268,20 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
       child: CustomScrollView(
         controller: _controller
           ..addListener(() async {
-            if (_controller.offset == _controller.position.maxScrollExtent &&
+            if (_controller.offset >=
+                    _controller.position.maxScrollExtent -
+                        context.width * 2 / 3 &&
                 _episodes.length == _top) {
-              if (mounted) {
+              if (!_loadMore) {
+                if (mounted) setState(() => _loadMore = true);
                 _top = _top + 36;
-                setState(() => _loadMore = true);
+                _episodes = await _getEpisodes(_top);
+                widget.selectionController
+                    .setSelectableEpisodes(_episodes, compatible: true);
+                if (mounted) setState(() => _loadMore = false);
               }
             }
-            if (_controller.offset > 0 && mounted && !_scroll) {
+            if (mounted && !_scroll && _controller.offset > 0) {
               setState(() => _scroll = true);
             }
           }),
@@ -316,15 +317,8 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
               return ActionBar(
                 onGetEpisodesChanged: (getEpisodes) async {
                   _getEpisodes = getEpisodes;
-                  _episodes = await _getEpisodes();
-                  if (_loadMore) {
-                    if (mounted) setState(() {});
-                    _loadMore = false;
-                    widget.selectionController
-                        .setSelectableEpisodes(_episodes, compatible: true);
-                  } else {
-                    widget.selectionController.setSelectableEpisodes(_episodes);
-                  }
+                  _episodes = await _getEpisodes(_top);
+                  widget.selectionController.setSelectableEpisodes(_episodes);
                   if (mounted) {
                     setState(() {});
                   }
@@ -335,12 +329,24 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
                     setState(() {});
                   }
                 },
-                limit: _top,
                 podcast: widget.podcastLocal,
                 filterPlayed: snapshot.data?.item2,
                 layout: _layout ?? EpisodeGridLayout.large,
               );
             },
+          ),
+          SliverAppBar(
+            pinned: true,
+            leading: Center(),
+            toolbarHeight: 2,
+            backgroundColor: Colors.transparent,
+            scrolledUnderElevation: 0,
+            flexibleSpace: _loadMore
+                ? LinearProgressIndicator(
+                    color: Provider.of<CardColorScheme>(context).saturated,
+                    backgroundColor: Colors.transparent,
+                  )
+                : Center(),
           ),
           if (!widget.hide)
             EpisodeGrid(
@@ -352,16 +358,6 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
               key: Key(widget.podcastLocal.id.toString() + "_grid"),
             ),
 
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                return _loadMore
-                    ? Container(height: 2, child: LinearProgressIndicator())
-                    : Center();
-              },
-              childCount: 1,
-            ),
-          ),
           // Hidden widget to get the height of [HostsList]
           SliverToBoxAdapter(
             child: Stack(

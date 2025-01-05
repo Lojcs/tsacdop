@@ -219,6 +219,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                 indicatorSize: TabBarIndicatorSize.tab,
                                 controller: _controller,
                                 labelStyle: context.textTheme.titleMedium,
+                                dividerHeight: 0,
+                                tabAlignment: TabAlignment.start,
                                 tabs: <Widget>[
                                   Tab(
                                     text: s.homeTabMenuRecent,
@@ -496,6 +498,8 @@ class __PlaylistButtonState extends State<_PlaylistButton> {
 }
 
 class _RecentUpdate extends StatefulWidget {
+  final ScrollController? scrollController;
+  const _RecentUpdate({this.scrollController});
   @override
   _RecentUpdateState createState() => _RecentUpdateState();
 }
@@ -510,7 +514,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
   List<EpisodeBrief> _episodes = [];
 
   /// Function to get episodes
-  ValueGetter<Future<List<EpisodeBrief>>> _getEpisodes = () async {
+  Future<List<EpisodeBrief>> Function(int count) _getEpisodes = (int _) async {
     return <EpisodeBrief>[];
   };
 
@@ -551,67 +555,6 @@ class _RecentUpdateState extends State<_RecentUpdate>
       msg: context.s.refreshStarted,
       gravity: ToastGravity.BOTTOM,
     );
-  }
-
-  Future<List<EpisodeBrief>> _getRssItem(int top, List<String> group,
-      {bool? hideListened}) async {
-    var storage = KeyValueStorage(recentLayoutKey);
-    var hideListenedStorage = KeyValueStorage(hideListenedKey);
-    var index = await storage.getInt(defaultValue: 1);
-    if (_layout == null) _layout = EpisodeGridLayout.values[index];
-    if (_hideListened == null) {
-      _hideListened = await hideListenedStorage.getBool(defaultValue: false);
-    }
-
-    List<EpisodeBrief> episodes;
-    if (group.isEmpty) {
-      episodes = await _dbHelper.getEpisodes(
-          excludedFeedIds: [
-            localFolderId
-          ],
-          optionalFields: [
-            EpisodeField.description,
-            EpisodeField.number,
-            EpisodeField.enclosureDuration,
-            EpisodeField.enclosureSize,
-            EpisodeField.isDownloaded,
-            EpisodeField.podcastImage,
-            EpisodeField.primaryColor,
-            EpisodeField.isLiked,
-            EpisodeField.isNew,
-            EpisodeField.isPlayed,
-            EpisodeField.versionInfo
-          ],
-          sortBy: Sorter.pubDate,
-          sortOrder: SortOrder.DESC,
-          limit: top,
-          filterVersions: 1,
-          filterPlayed: _hideListened! ? false : null,
-          episodeState: Provider.of<EpisodeState>(context, listen: false));
-    } else {
-      episodes = await _dbHelper.getEpisodes(
-          feedIds: group,
-          optionalFields: [
-            EpisodeField.description,
-            EpisodeField.number,
-            EpisodeField.enclosureDuration,
-            EpisodeField.enclosureSize,
-            EpisodeField.isDownloaded,
-            EpisodeField.podcastImage,
-            EpisodeField.primaryColor,
-            EpisodeField.isLiked,
-            EpisodeField.isNew,
-            EpisodeField.isPlayed,
-            EpisodeField.versionInfo
-          ],
-          sortBy: Sorter.pubDate,
-          sortOrder: SortOrder.DESC,
-          limit: top,
-          filterVersions: 1,
-          filterPlayed: _hideListened! ? false : null,
-          episodeState: Provider.of<EpisodeState>(context, listen: false));
-    }
-    return episodes;
   }
 
   Future<int> _getUpdateCounts(List<String> group) async {
@@ -801,6 +744,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
           child: ScrollConfiguration(
             behavior: NoGrowBehavior(),
             child: CustomScrollView(
+              controller: widget.scrollController,
               key: PageStorageKey<String>('update'),
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: <Widget>[
@@ -818,7 +762,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
                     : ActionBar(
                         onGetEpisodesChanged: (getEpisodes) async {
                           _getEpisodes = getEpisodes;
-                          _episodes = await _getEpisodes();
+                          _episodes = await _getEpisodes(_top);
                           // selectionController.selectableEpisodes =
                           //     _episodes;
                           if (mounted) {
@@ -831,7 +775,6 @@ class _RecentUpdateState extends State<_RecentUpdate>
                             setState(() {});
                           }
                         },
-                        limit: _top,
                         layout: _layout ?? EpisodeGridLayout.large,
                         widgetsFirstRow: [
                           ActionBarDropdownSortBy(0, 0),

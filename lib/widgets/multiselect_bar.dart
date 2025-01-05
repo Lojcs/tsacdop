@@ -59,21 +59,18 @@ class _MultiSelectPanelIntegrationState
           children: [
             Selector<EpisodeState, bool>(
               selector: (_, episodeState) => episodeState.globalChange,
-              builder: (_, data, ___) => FutureBuilder<List<EpisodeBrief>?>(
+              builder: (_, data, ___) => FutureBuilder<void>(
                 future: () async {
                   if (data != episodeStateGlobalChange) {
                     // Prevents unnecessary database calls when the bar is rebuilt for other reasons
                     episodeStateGlobalChange = data;
-                    return _getUpdatedEpisodes(context);
-                  } else {
-                    return null;
+                    List<EpisodeBrief> updatedEpisodes =
+                        await _getUpdatedEpisodes(context);
+                    Provider.of<SelectionController>(context, listen: false)
+                        .updateEpisodes(updatedEpisodes);
                   }
                 }(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasData && snapshot.data != null) {
-                    Provider.of<SelectionController>(context, listen: false)
-                        .updateEpisodes(snapshot.data!);
-                  }
+                builder: (context, _) {
                   return MultiSelectPanel(
                     expanded: widget.expanded,
                     key: widget.key,
@@ -807,9 +804,11 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                   if (selectedEpisodes.isNotEmpty) {
                     EpisodeState episodeState =
                         Provider.of<EpisodeState>(context, listen: false);
-                    await Provider.of<SelectionController>(context,
-                            listen: false)
-                        .getEpisodesLimitless();
+                    SelectionController selectionController =
+                        Provider.of<SelectionController>(context,
+                            listen: false);
+                    await selectionController.getEpisodesLimitless();
+                    selectedEpisodes = selectionController.selectedEpisodes;
                     liked = value;
                     if (value!) {
                       await episodeState.setLiked(selectedEpisodes);
@@ -857,9 +856,11 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                   if (selectedEpisodes.isNotEmpty) {
                     EpisodeState episodeState =
                         Provider.of<EpisodeState>(context, listen: false);
-                    await Provider.of<SelectionController>(context,
-                            listen: false)
-                        .getEpisodesLimitless();
+                    SelectionController selectionController =
+                        Provider.of<SelectionController>(context,
+                            listen: false);
+                    await selectionController.getEpisodesLimitless();
+                    selectedEpisodes = selectionController.selectedEpisodes;
                     played = value;
                     if (value!) {
                       await episodeState.setListened(selectedEpisodes);
@@ -919,9 +920,11 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                 buttonType: ActionBarButtonType.partialOnOff,
                 onPressed: (value) async {
                   if (selectedEpisodes.isNotEmpty) {
-                    await Provider.of<SelectionController>(context,
-                            listen: false)
-                        .getEpisodesLimitless();
+                    SelectionController selectionController =
+                        Provider.of<SelectionController>(context,
+                            listen: false);
+                    await selectionController.getEpisodesLimitless();
+                    selectedEpisodes = selectionController.selectedEpisodes;
                     downloaded = value;
                     if (value!) {
                       await requestDownload(
@@ -971,9 +974,11 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                 buttonType: ActionBarButtonType.partialOnOff,
                 onPressed: (value) async {
                   if (selectedEpisodes.isNotEmpty) {
-                    await Provider.of<SelectionController>(context,
-                            listen: false)
-                        .getEpisodesLimitless();
+                    SelectionController selectionController =
+                        Provider.of<SelectionController>(context,
+                            listen: false);
+                    await selectionController.getEpisodesLimitless();
+                    selectedEpisodes = selectionController.selectedEpisodes;
                     inPlaylist = value;
                     if (value!) {
                       await Provider.of<AudioPlayerNotifier>(context,

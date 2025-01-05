@@ -347,6 +347,8 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                         indicator: CircleTabIndicator(
                             color: context.accentColor, radius: 3),
                         isScrollable: true,
+                        dividerHeight: 0,
+                        tabAlignment: TabAlignment.start,
                         tabs: groups[_groupIndex]!.podcasts.map<Widget>(
                           (podcastLocal) {
                             final color = podcastLocal.backgroudColor(context);

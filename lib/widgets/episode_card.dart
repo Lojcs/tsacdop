@@ -692,10 +692,7 @@ BoxDecoration _cardDecoration(
               ? selected
                   ? -2
                   : -3
-              : Tween<double>(
-                      begin: context.brightness == Brightness.light ? -2 : 1,
-                      end: -3)
-                  .evaluate(controller),
+              : Tween<double>(begin: -2, end: -3).evaluate(controller),
           offset: Offset.fromDirection(0, 0),
         )
       ]);
