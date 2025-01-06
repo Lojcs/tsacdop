@@ -47,7 +47,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final GlobalKey<AudioPanelState> _playerKey = GlobalKey<AudioPanelState>();
-  TabController? _controller;
+  late TabController _controller;
   Decoration _getIndicator(BuildContext context) {
     return UnderlineTabIndicator(
         borderSide: BorderSide(color: context.accentColor, width: 3),
@@ -61,6 +61,16 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   var feature1OverflowMode = OverflowMode.clipContent;
   var feature1EnablePulsingAnimation = false;
   double top = 0;
+
+  SelectionController _recentUpdateSelectionController = SelectionController();
+  SelectionController _myFavouriteSelectionController = SelectionController();
+  SelectionController _myDownloadedSelectionController = SelectionController();
+
+  SelectionController _tabSelectionController(int i) => i == 0
+      ? _recentUpdateSelectionController
+      : i == 1
+          ? _myFavouriteSelectionController
+          : _myDownloadedSelectionController;
 
   @override
   void initState() {
@@ -109,11 +119,15 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             child: PopScope(
               canPop: settings.openPlaylistDefault! &&
                   !(_playerKey.currentState != null &&
-                      _playerKey.currentState!.size! > 100),
+                      _playerKey.currentState!.size! > 100) &&
+                  !_tabSelectionController(_controller.index).selectMode,
               onPopInvokedWithResult: (_, __) {
                 if (_playerKey.currentState != null &&
                     _playerKey.currentState!.size! > 100) {
                   _playerKey.currentState!.backToMini();
+                } else if (_tabSelectionController(_controller.index)
+                    .selectMode) {
+                  _tabSelectionController(_controller.index).selectMode = false;
                 } else if (!settings.openPlaylistDefault! &&
                     Platform.isAndroid) {
                   _androidAppRetain
@@ -128,6 +142,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                   child: Stack(children: <Widget>[
                     ExtendedNestedScrollView(
                       pinnedHeaderSliverHeightBuilder: () => 50,
+                      // floatHeaderSlivers: true,
                       headerSliverBuilder: (context, innerBoxScrolled) {
                         return <Widget>[
                           SliverToBoxAdapter(
@@ -247,15 +262,45 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                               children: <Widget>[
                                 KeyedSubtree(
                                   key: Key('tab0'),
-                                  child: _RecentUpdate(),
+                                  child: ChangeNotifierProvider<
+                                      SelectionController>.value(
+                                    value: _recentUpdateSelectionController,
+                                    child: Stack(
+                                      children: [
+                                        _RecentUpdate(),
+                                        MultiSelectPanelIntegration(
+                                            expanded: true),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                                 KeyedSubtree(
                                   key: Key('tab1'),
-                                  child: _MyFavorite(),
+                                  child: ChangeNotifierProvider<
+                                      SelectionController>.value(
+                                    value: _myFavouriteSelectionController,
+                                    child: Stack(
+                                      children: [
+                                        _MyFavorite(),
+                                        MultiSelectPanelIntegration(
+                                            expanded: true),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                                 KeyedSubtree(
                                   key: Key('tab2'),
-                                  child: _MyDownload(),
+                                  child: ChangeNotifierProvider<
+                                      SelectionController>.value(
+                                    value: _myDownloadedSelectionController,
+                                    child: Stack(
+                                      children: [
+                                        _MyDownload(),
+                                        MultiSelectPanelIntegration(
+                                            expanded: true),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
@@ -498,17 +543,14 @@ class __PlaylistButtonState extends State<_PlaylistButton> {
 }
 
 class _RecentUpdate extends StatefulWidget {
-  final ScrollController? scrollController;
-  const _RecentUpdate({this.scrollController});
   @override
   _RecentUpdateState createState() => _RecentUpdateState();
 }
 
 class _RecentUpdateState extends State<_RecentUpdate>
-    with AutomaticKeepAliveClientMixin, SingleTickerProviderStateMixin {
+    with AutomaticKeepAliveClientMixin {
   //final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
   //    GlobalKey<RefreshIndicatorState>();
-  final _dbHelper = DBHelper();
 
   /// Episodes to display
   List<EpisodeBrief> _episodes = [];
@@ -519,389 +561,133 @@ class _RecentUpdateState extends State<_RecentUpdate>
   };
 
   /// Episodes loaded first time.
-  int _top = 90;
+  int _top = 108;
 
   /// Load more episodes when scroll to bottom.
-  late bool _loadMore;
+  bool _loadMore = false;
 
-  /// Height of action bar
-  double _actionBarHeight = 52;
-
-  /// For group fliter.
-  String? _groupName;
-  List<String>? _group;
   EpisodeGridLayout? _layout;
-  bool? _hideListened;
-  late bool _scroll;
 
-  ///Toggle for multi-select.
-  bool? _multiSelect;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadMore = false;
-    _groupName = 'All';
-    _group = [];
-    _scroll = false;
-    _multiSelect = false;
-  }
-
-  Future<void> _updateRssItem() async {
-    final refreshWorker = context.read<RefreshWorker>();
-    refreshWorker.start(_group);
-    await Future.delayed(Duration(seconds: 1));
-    Fluttertoast.showToast(
-      msg: context.s.refreshStarted,
-      gravity: ToastGravity.BOTTOM,
-    );
-  }
-
-  Future<int> _getUpdateCounts(List<String> group) async {
-    var episodes = <EpisodeBrief>[];
-
-    if (group.isEmpty) {
-      episodes = await _dbHelper.getEpisodes(
-          optionalFields: [EpisodeField.mediaId],
-          sortBy: Sorter.pubDate,
-          sortOrder: SortOrder.DESC,
-          filterNew: true);
-    } else {
-      episodes = await _dbHelper.getEpisodes(
-          feedIds: group,
-          optionalFields: [EpisodeField.mediaId],
-          sortBy: Sorter.pubDate,
-          sortOrder: SortOrder.DESC,
-          filterNew: true);
-    }
-    return episodes.length;
-  }
-
-  /// Load more episodes.
-  Future<void> _loadMoreEpisode() async {
-    if (mounted)
-      setState(() {
-        _top = _top + 30;
-        _loadMore = false;
-      });
-    await Future.delayed(Duration(
-        seconds: 1)); // TODO: Make animation dependent on when it loads
-    if (mounted) {
-      setState(() => _loadMore = true);
-    }
-  }
-
-  /// Remove new mark.
-  Future<void> _removeNewMark(List<String?> group) async {
-    if (group.isEmpty) {
-      _dbHelper.removeAllNewMark();
-    } else {
-      _dbHelper.removeGroupNewMark(group);
-    }
-  }
-
-  Widget _switchGroupButton() {
-    return Consumer<GroupList>(
-      builder: (context, groupList, child) => PopupMenuButton<String>(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        elevation: 1,
-        tooltip: context.s.filterType(context.s.groups(1)),
-        child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 20),
-            height: 50,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Text(_groupName == 'All' ? context.s.all : _groupName!),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 5),
-                ),
-                Icon(
-                  LineIcons.filter,
-                  size: 18,
-                )
-              ],
-            )),
-        itemBuilder: (context) => [
-          PopupMenuItem(
-              child: Row(children: [
-                Text(context.s.all),
-                Spacer(),
-                if (_groupName == 'All') DotIndicator()
-              ]),
-              value: 'All')
-        ]..addAll(groupList.groups
-            .map<PopupMenuEntry<String>>((e) => PopupMenuItem(
-                value: e!.name,
-                child: Row(
-                  children: [
-                    Text(e.name!),
-                    Spacer(),
-                    if (e.name == _groupName) DotIndicator()
-                  ],
-                )))
-            .toList()),
-        onSelected: (value) {
-          if (value == 'All') {
-            setState(() {
-              _groupName = 'All';
-              _group = [];
-            });
-          } else {
-            for (var group in groupList.groups) {
-              if (group!.name == value) {
-                setState(() {
-                  _groupName = value;
-                  _group = group.podcastList;
-                });
-              }
-            }
-          }
-        },
-      ),
-    );
-  }
-
-  Widget _addNewButton() {
-    //  final audio = context.read<AudioPlayerNotifier>();
-    final s = context.s;
-    return FutureBuilder<int>(
-      future: _getUpdateCounts(_group!),
-      initialData: 0,
-      builder: (context, snapshot) {
-        return snapshot.data != 0
-            ? Material(
-                color: Colors.transparent,
-                child: Row(
-                  children: [
-                    IconButton(
-                        tooltip: s.removeNewMark,
-                        icon: SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CustomPaint(
-                                painter: RemoveNewFlagPainter(
-                                    context.textTheme.bodyLarge!.color,
-                                    Colors.red))),
-                        onPressed: () async {
-                          _removeNewMark(_group!);
-                          if (mounted) {
-                            setState(() {});
-                          }
-                        }),
-                    //  IconButton(
-                    //      tooltip: s.addNewEpisodeTooltip,
-                    //      icon: SizedBox(
-                    //          height: 15,
-                    //          width: 20,
-                    //          child: CustomPaint(
-                    //              painter: AddToPlaylistPainter(
-                    //                  context.textTheme.bodyLarge.color,
-                    //                  Colors.red))),
-                    //      onPressed: () async {
-                    //        await audio.addNewEpisode(_group);
-                    //        if (mounted) {
-                    //          setState(() {});
-                    //        }
-                    //        Fluttertoast.showToast(
-                    //          msg: _groupName == 'All'
-                    //              ? s.addNewEpisodeAll(snapshot.data)
-                    //              : s.addEpisodeGroup(
-                    //                  _groupName, snapshot.data),
-                    //          gravity: ToastGravity.BOTTOM,
-                    //        );
-                    //      }),
-                  ],
-                ),
-              )
-            : Center();
-      },
-    );
-  }
+  // Stop animating after first scroll
+  bool _scroll = false;
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
     final s = context.s;
-    return Selector2<RefreshWorker, GroupList, Tuple2<bool, bool>>(
-      selector: (_, refreshWorkder, groupWorker) =>
-          Tuple2(refreshWorkder.created, groupWorker.created),
-      builder: (_, data, __) {
-        return NotificationListener<ScrollNotification>(
-          onNotification: (scrollInfo) {
-            if (scrollInfo is ScrollStartNotification && mounted && !_scroll) {
-              setState(() => _scroll = true);
-            }
-            if (scrollInfo.metrics.pixels ==
-                    scrollInfo.metrics.maxScrollExtent &&
-                _episodes.length == _top) {
-              if (!_loadMore) {
-                _loadMoreEpisode();
-              }
-            }
-            return true;
-          },
-          child: ScrollConfiguration(
-            behavior: NoGrowBehavior(),
-            child: CustomScrollView(
-              controller: widget.scrollController,
-              key: PageStorageKey<String>('update'),
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: <Widget>[
-                _multiSelect!
-                    ? SliverAppBar(
-                        pinned: true,
-                        leading: Center(),
-                        toolbarHeight: _actionBarHeight,
-                        backgroundColor: context.surface,
-                        scrolledUnderElevation: 0,
-                        flexibleSpace: MultiSelectPanel(
-                          expanded: false,
-                        ),
-                      )
-                    : ActionBar(
-                        onGetEpisodesChanged: (getEpisodes) async {
-                          _getEpisodes = getEpisodes;
-                          _episodes = await _getEpisodes(_top);
-                          // selectionController.selectableEpisodes =
-                          //     _episodes;
-                          if (mounted) {
-                            setState(() {});
-                          }
-                        },
-                        onLayoutChanged: (layout) {
-                          _layout = layout;
-                          if (mounted) {
-                            setState(() {});
-                          }
-                        },
-                        layout: _layout ?? EpisodeGridLayout.large,
-                        widgetsFirstRow: [
-                          ActionBarDropdownSortBy(0, 0),
-                          ActionBarSwitchSortOrder(0, 1),
-                          ActionBarSpacer(0, 2),
-                          ActionBarButtonRefresh(0, 3),
-                          ActionBarButtonRemoveNewMark(0, 4),
-                          ActionBarFilterPlayed(0, 5),
-                          ActionBarFilterDownloaded(0, 6),
-                          ActionBarSwitchLayout(0, 7),
-                          ActionBarSwitchSelectMode(0, 8),
-                          ActionBarSwitchSecondRow(0, 9),
-                        ],
-                        // selectionController: selectionController,
-                      ),
-                _episodes.length == 0
-                    ? SliverToBoxAdapter(
-                        child: Padding(
-                          padding: EdgeInsets.only(top: 150),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Icon(LineIcons.alternateCloudDownload,
-                                  size: 80, color: Colors.grey[500]),
-                              Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 10)),
-                              Text(
-                                s.noEpisodeRecent,
-                                style: TextStyle(color: Colors.grey[500]),
-                              )
-                            ],
-                          ),
-                        ),
-                      )
-                    : EpisodeGrid(
-                        episodes: _episodes,
-                        layout: _layout ?? EpisodeGridLayout.large,
-                        initNum: _scroll ? 0 : 12,
-                        openPodcast: true,
-                      ),
-                SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      return _loadMore
-                          ? Container(
-                              height: 2, child: LinearProgressIndicator())
-                          : Center();
-                    },
-                    childCount: 1,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
+    return NotificationListener<ScrollNotification>(
+      onNotification: (scrollInfo) {
+        if (scrollInfo.metrics.pixels >=
+                scrollInfo.metrics.maxScrollExtent - context.width &&
+            _episodes.length == _top) {
+          if (!_loadMore) {
+            Future.microtask(() async {
+              if (mounted) setState(() => _loadMore = true);
+              _top = _top + 36;
+              _episodes = await _getEpisodes(_top);
+              Provider.of<SelectionController>(context, listen: false)
+                  .setSelectableEpisodes(_episodes, compatible: true);
+              if (mounted) setState(() => _loadMore = false);
+            });
+          }
+        }
+        if (mounted && !_scroll && scrollInfo.metrics.pixels > 0) {
+          setState(() => _scroll = true);
+        }
+        return true;
       },
+      child: ScrollConfiguration(
+        behavior: NoGrowBehavior(),
+        child: CustomScrollView(
+          key: PageStorageKey<String>('update'),
+          slivers: <Widget>[
+            FutureBuilder<Tuple2<EpisodeGridLayout, bool?>>(
+              future: getLayoutAndShowListened(),
+              builder: (_, snapshot) {
+                if (_layout == null) {
+                  _layout = snapshot.data?.item1;
+                }
+                return ActionBar(
+                  onGetEpisodesChanged: (getEpisodes) async {
+                    _getEpisodes = getEpisodes;
+                    _episodes = await _getEpisodes(_top);
+                    Provider.of<SelectionController>(context, listen: false)
+                        .setSelectableEpisodes(_episodes);
+                    if (mounted) setState(() {});
+                  },
+                  onLayoutChanged: (layout) {
+                    _layout = layout;
+                    if (mounted) setState(() {});
+                  },
+                  widgetsFirstRow: const [
+                    ActionBarDropdownSortBy(0, 0),
+                    ActionBarSwitchSortOrder(0, 1),
+                    ActionBarDropdownGroups(0, 2),
+                    ActionBarSpacer(0, 3),
+                    ActionBarFilterPlayed(0, 4),
+                    ActionBarFilterNew(0, 5),
+                    ActionBarButtonRemoveNewMark(0, 6),
+                    ActionBarSwitchSelectMode(0, 7),
+                    ActionBarSwitchSecondRow(0, 8),
+                  ],
+                  widgetsSecondRow: const [
+                    ActionBarDropdownPodcasts(1, 0),
+                    ActionBarSearchTitle(1, 1),
+                    ActionBarSpacer(1, 2),
+                    ActionBarFilterDownloaded(1, 3),
+                    ActionBarFilterLiked(1, 4),
+                    ActionBarSwitchLayout(1, 5),
+                    ActionBarButtonRefresh(1, 6),
+                  ],
+                  filterPlayed: false,
+                  layout: _layout ?? EpisodeGridLayout.large,
+                );
+              },
+            ),
+            SliverAppBar(
+              pinned: true,
+              leading: Center(),
+              toolbarHeight: 2,
+              backgroundColor: Colors.transparent,
+              scrolledUnderElevation: 0,
+              flexibleSpace: _loadMore
+                  ? LinearProgressIndicator(
+                      backgroundColor: Colors.transparent,
+                    )
+                  : Center(),
+            ),
+            _episodes.length != 0
+                ? EpisodeGrid(
+                    episodes: _episodes,
+                    layout: _layout ?? EpisodeGridLayout.large,
+                    initNum: _scroll ? 0 : 12,
+                    openPodcast: true,
+                  )
+                : SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.only(top: 150),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Icon(LineIcons.alternateCloudDownload,
+                              size: 80, color: Colors.grey[500]),
+                          Padding(padding: EdgeInsets.symmetric(vertical: 10)),
+                          Text(
+                            s.noEpisodeRecent,
+                            style: TextStyle(color: Colors.grey[500]),
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+          ],
+        ),
+      ),
     );
   }
 
   @override
   bool get wantKeepAlive => true;
-
-  Widget _oldActionBar() => Container(
-        height: 40,
-        decoration: BoxDecoration(color: context.surface),
-        child: Row(
-          children: <Widget>[
-            _switchGroupButton(),
-            Spacer(),
-            Material(
-              color: Colors.transparent,
-              child: IconButton(
-                  tooltip: context.s.refresh,
-                  icon: Icon(LineIcons.alternateRedo, size: 16),
-                  onPressed: () {
-                    _updateRssItem();
-                    Fluttertoast.showToast(
-                      msg: context.s.refreshStarted,
-                      gravity: ToastGravity.BOTTOM,
-                    );
-                  }),
-            ),
-            _addNewButton(),
-            Material(
-              color: Colors.transparent,
-              child: IconButton(
-                tooltip: context.s.hideListenedSetting,
-                icon: SizedBox(
-                  width: 30,
-                  height: 15,
-                  child: HideListened(
-                    hideListened: _hideListened ?? false,
-                  ),
-                ),
-                onPressed: () {
-                  setState(() => _hideListened = !_hideListened!);
-                },
-              ),
-            ),
-            Material(
-              color: Colors.transparent,
-              child: LayoutButton(
-                layout: _layout,
-                onPressed: (layout) => setState(() {
-                  _layout = layout;
-                }),
-              ),
-            ),
-            Material(
-                color: Colors.transparent,
-                child: IconButton(
-                  icon: SizedBox(
-                    width: 20,
-                    height: 10,
-                    child: CustomPaint(
-                        painter:
-                            MultiSelectPainter(color: context.accentColor)),
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _multiSelect = true;
-                    });
-                  },
-                )),
-          ],
-        ),
-      );
 }
 
 class _MyFavorite extends StatefulWidget {
@@ -911,268 +697,126 @@ class _MyFavorite extends StatefulWidget {
 
 class _MyFavoriteState extends State<_MyFavorite>
     with AutomaticKeepAliveClientMixin {
-  Future<List<EpisodeBrief>> _getLikedRssItem(int top, int? sortBy,
-      {bool? hideListened}) async {
-    var storage = KeyValueStorage(favLayoutKey);
-    var index = await storage.getInt(defaultValue: 1);
-    var hideListenedStorage = KeyValueStorage(hideListenedKey);
-    if (_layout == null) _layout = EpisodeGridLayout.values[index];
-    if (_hideListened == null) {
-      _hideListened = await hideListenedStorage.getBool(defaultValue: false);
-    }
-    var dbHelper = DBHelper();
-    Sorter sorter;
-    SortOrder order;
-    switch (sortBy) {
-      case 0:
-        sorter = Sorter.pubDate;
-        order = SortOrder.DESC;
-        break;
-      default: // case 1
-        sorter = Sorter.likedDate;
-        order = SortOrder.DESC;
-        break;
-    }
-    var episodes = await dbHelper.getEpisodes(
-      optionalFields: [
-        EpisodeField.description,
-        EpisodeField.number,
-        EpisodeField.enclosureDuration,
-        EpisodeField.enclosureSize,
-        EpisodeField.isDownloaded,
-        EpisodeField.podcastImage,
-        EpisodeField.primaryColor,
-        EpisodeField.isLiked,
-        EpisodeField.isNew,
-        EpisodeField.isPlayed,
-        EpisodeField.versionInfo
-      ],
-      sortBy: sorter,
-      sortOrder: order,
-      limit: top,
-      filterLiked: true,
-      filterPlayed: _hideListened! ? false : null,
-      episodeState:
-          mounted ? Provider.of<EpisodeState>(context, listen: false) : null,
-    );
-    return episodes;
-  }
+  /// Episodes to display
+  List<EpisodeBrief> _episodes = [];
 
-  Future<void> _loadMoreEpisode() async {
-    if (mounted) setState(() => _loadMore = true);
-    await Future.delayed(Duration(seconds: 3));
-    if (mounted) {
-      setState(() {
-        _top = _top + 30;
-        _loadMore = false;
-      });
-    }
-  }
+  /// Function to get episodes
+  Future<List<EpisodeBrief>> Function(int count) _getEpisodes = (int _) async {
+    return <EpisodeBrief>[];
+  };
 
-  int _top = 90;
-  late bool _loadMore;
+  /// Episodes loaded first time.
+  int _top = 108;
+
+  /// Load more episodes when scroll to bottom.
+  bool _loadMore = false;
+
   EpisodeGridLayout? _layout;
-  int? _sortBy;
-  bool? _hideListened;
 
-  ///Toggle for multi-select.
-  bool? _multiSelect;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadMore = false;
-    _sortBy = 0;
-    _multiSelect = false;
-  }
+  // Stop animating after first scroll
+  bool _scroll = false;
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
     final s = context.s;
-    return FutureBuilder<List<EpisodeBrief>>(
-      future: _getLikedRssItem(_top, _sortBy, hideListened: _hideListened),
-      builder: (context, snapshot) {
-        return (snapshot.hasData)
-            ? snapshot.data!.length == 0
-                ? Padding(
-                    padding: EdgeInsets.only(top: 150),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Icon(LineIcons.heartbeat,
-                            size: 80, color: Colors.grey[500]),
-                        Padding(padding: EdgeInsets.symmetric(vertical: 10)),
-                        Text(
-                          s.noEpisodeFavorite,
-                          style: TextStyle(color: Colors.grey[500]),
-                        )
-                      ],
-                    ),
-                  )
-                : NotificationListener<ScrollNotification>(
-                    onNotification: (scrollInfo) {
-                      if (scrollInfo.metrics.pixels ==
-                              scrollInfo.metrics.maxScrollExtent &&
-                          snapshot.data!.length == _top) {
-                        if (!_loadMore) {
-                          _loadMoreEpisode();
-                        }
-                      }
-                      return true;
-                    },
-                    child: Stack(
-                      children: [
-                        ScrollConfiguration(
-                          behavior: NoGrowBehavior(),
-                          child: CustomScrollView(
-                            key: PageStorageKey<String>('favorite'),
-                            slivers: <Widget>[
-                              SliverToBoxAdapter(child: SizedBox(height: 40)),
-                              EpisodeGrid(
-                                episodes: snapshot.data!,
-                                layout: _layout ?? EpisodeGridLayout.large,
-                                initNum: 0,
-                                openPodcast: true,
-                              ),
-                              SliverList(
-                                delegate: SliverChildBuilderDelegate(
-                                  (context, index) {
-                                    return _loadMore
-                                        ? Container(
-                                            height: 2,
-                                            child: LinearProgressIndicator())
-                                        : Center();
-                                  },
-                                  childCount: 1,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Column(
-                          children: [
-                            if (!_multiSelect!)
-                              Container(
-                                height: 40,
-                                color: context.surface,
-                                child: Row(
-                                  children: <Widget>[
-                                    Material(
-                                      color: Colors.transparent,
-                                      child: PopupMenuButton<int>(
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.all(
-                                                Radius.circular(10))),
-                                        elevation: 1,
-                                        tooltip: s.homeSubMenuSortBy,
-                                        child: Container(
-                                            height: 50,
-                                            padding: EdgeInsets.symmetric(
-                                                horizontal: 20),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: <Widget>[
-                                                Text(s.homeSubMenuSortBy),
-                                                Padding(
-                                                  padding: EdgeInsets.symmetric(
-                                                      horizontal: 5),
-                                                ),
-                                                Icon(
-                                                  LineIcons.hourglassStart,
-                                                  size: 18,
-                                                )
-                                              ],
-                                            )),
-                                        itemBuilder: (context) => [
-                                          PopupMenuItem(
-                                            value: 0,
-                                            child: Row(
-                                              children: [
-                                                Text(s.updateDate),
-                                                Spacer(),
-                                                if (_sortBy == 0) DotIndicator()
-                                              ],
-                                            ),
-                                          ),
-                                          PopupMenuItem(
-                                            value: 1,
-                                            child: Row(
-                                              children: [
-                                                Text(s.likeDate),
-                                                Spacer(),
-                                                if (_sortBy == 1) DotIndicator()
-                                              ],
-                                            ),
-                                          )
-                                        ],
-                                        onSelected: (value) {
-                                          if (value == 0) {
-                                            setState(() => _sortBy = 0);
-                                          } else if (value == 1) {
-                                            setState(() => _sortBy = 1);
-                                          }
-                                        },
-                                      ),
-                                    ),
-                                    Spacer(),
-                                    Material(
-                                      color: Colors.transparent,
-                                      child: IconButton(
-                                        icon: SizedBox(
-                                          width: 30,
-                                          height: 15,
-                                          child: HideListened(
-                                            hideListened:
-                                                _hideListened ?? false,
-                                          ),
-                                        ),
-                                        onPressed: () {
-                                          setState(() =>
-                                              _hideListened = !_hideListened!);
-                                        },
-                                      ),
-                                    ),
-                                    Material(
-                                      color: Colors.transparent,
-                                      child: LayoutButton(
-                                        layout: _layout,
-                                        onPressed: (layout) => setState(() {
-                                          _layout = layout;
-                                        }),
-                                      ),
-                                    ),
-                                    Material(
-                                        color: Colors.transparent,
-                                        child: IconButton(
-                                          icon: SizedBox(
-                                            width: 20,
-                                            height: 10,
-                                            child: CustomPaint(
-                                                painter: MultiSelectPainter(
-                                                    color:
-                                                        context.accentColor)),
-                                          ),
-                                          onPressed: () {
-                                            setState(() {
-                                              _multiSelect = true;
-                                            });
-                                          },
-                                        )),
-                                  ],
-                                ),
-                              ),
-                            if (_multiSelect!)
-                              MultiSelectPanel(
-                                expanded: false,
-                              ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  )
-            : Center();
+    return NotificationListener<ScrollNotification>(
+      onNotification: (scrollInfo) {
+        if (scrollInfo.metrics.pixels >=
+                scrollInfo.metrics.maxScrollExtent - context.width &&
+            _episodes.length == _top) {
+          if (!_loadMore) {
+            Future.microtask(() async {
+              if (mounted) setState(() => _loadMore = true);
+              _top = _top + 36;
+              _episodes = await _getEpisodes(_top);
+              Provider.of<SelectionController>(context, listen: false)
+                  .setSelectableEpisodes(_episodes, compatible: true);
+              if (mounted) setState(() => _loadMore = false);
+            });
+          }
+        }
+        if (mounted && !_scroll && scrollInfo.metrics.pixels > 0) {
+          setState(() => _scroll = true);
+        }
+        return true;
       },
+      child: ScrollConfiguration(
+        behavior: NoGrowBehavior(),
+        child: CustomScrollView(
+          key: PageStorageKey<String>('favorite'),
+          slivers: <Widget>[
+            FutureBuilder<Tuple2<EpisodeGridLayout, bool?>>(
+              future: getLayoutAndShowListened(),
+              builder: (_, snapshot) {
+                if (_layout == null) {
+                  _layout = snapshot.data?.item1;
+                }
+                return ActionBar(
+                  onGetEpisodesChanged: (getEpisodes) async {
+                    _getEpisodes = getEpisodes;
+                    _episodes = await _getEpisodes(_top);
+                    Provider.of<SelectionController>(context, listen: false)
+                        .setSelectableEpisodes(_episodes);
+                    if (mounted) setState(() {});
+                  },
+                  onLayoutChanged: (layout) {
+                    _layout = layout;
+                    if (mounted) setState(() {});
+                  },
+                  widgetsFirstRow: const [
+                    ActionBarDropdownSortBy(0, 0),
+                    ActionBarSwitchSortOrder(0, 1),
+                    ActionBarDropdownGroups(0, 2),
+                    ActionBarSpacer(0, 3),
+                    ActionBarFilterLiked(0, 4),
+                    ActionBarSwitchLayout(0, 5),
+                    ActionBarSwitchSelectMode(0, 6),
+                  ],
+                  filterLiked: true,
+                  layout: _layout ?? EpisodeGridLayout.large,
+                );
+              },
+            ),
+            SliverAppBar(
+              pinned: true,
+              leading: Center(),
+              toolbarHeight: 2,
+              backgroundColor: Colors.transparent,
+              scrolledUnderElevation: 0,
+              flexibleSpace: _loadMore
+                  ? LinearProgressIndicator(
+                      backgroundColor: Colors.transparent,
+                    )
+                  : Center(),
+            ),
+            _episodes.length != 0
+                ? EpisodeGrid(
+                    episodes: _episodes,
+                    layout: _layout ?? EpisodeGridLayout.large,
+                    initNum: _scroll ? 0 : 12,
+                    openPodcast: true,
+                  )
+                : SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.only(top: 150),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Icon(LineIcons.alternateCloudDownload,
+                              size: 80, color: Colors.grey[500]),
+                          Padding(padding: EdgeInsets.symmetric(vertical: 10)),
+                          Text(
+                            s.noEpisodeRecent,
+                            style: TextStyle(color: Colors.grey[500]),
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1187,144 +831,127 @@ class _MyDownload extends StatefulWidget {
 
 class _MyDownloadState extends State<_MyDownload>
     with AutomaticKeepAliveClientMixin {
-  EpisodeGridLayout? _layout;
-  int? _sortBy;
-  bool? _hideListened;
-  Future<List<EpisodeBrief>> _getDownloadedEpisodes(int? sortBy,
-      {bool? hideListened}) async {
-    var storage = KeyValueStorage(downloadLayoutKey);
-    var index = await storage.getInt(defaultValue: 1);
-    var hideListenedStorage = KeyValueStorage(hideListenedKey);
-    if (_layout == null) _layout = EpisodeGridLayout.values[index];
-    if (_hideListened == null) {
-      _hideListened = await hideListenedStorage.getBool(defaultValue: false);
-    }
-    var dbHelper = DBHelper();
-    Sorter sorter;
-    SortOrder order;
-    switch (sortBy) {
-      case 0:
-        sorter = Sorter.downloadDate;
-        order = SortOrder.DESC;
-        break;
-      case 1:
-        sorter = Sorter.downloadDate;
-        order = SortOrder.ASC;
-        break;
-      default: // case 2
-        sorter = Sorter.enclosureSize;
-        order = SortOrder.DESC;
-        break;
-    }
-    var episodes = await dbHelper.getEpisodes(
-        optionalFields: [
-          EpisodeField.description,
-          EpisodeField.number,
-          EpisodeField.enclosureDuration,
-          EpisodeField.enclosureSize,
-          EpisodeField.isDownloaded,
-          EpisodeField.podcastImage,
-          EpisodeField.primaryColor,
-          EpisodeField.isLiked,
-          EpisodeField.isNew,
-          EpisodeField.isPlayed,
-          EpisodeField.versionInfo
-        ],
-        sortBy: sorter,
-        sortOrder: order,
-        filterPlayed: hideListened ?? false ? false : null,
-        filterDownloaded: true,
-        episodeState: Provider.of<EpisodeState>(context, listen: false));
-    return episodes;
-  }
+  /// Episodes to display
+  List<EpisodeBrief> _episodes = [];
 
-  @override
-  void initState() {
-    super.initState();
-    _sortBy = 0;
-  }
+  /// Function to get episodes
+  Future<List<EpisodeBrief>> Function(int count) _getEpisodes = (int _) async {
+    return <EpisodeBrief>[];
+  };
+
+  /// Episodes loaded first time.
+  int _top = 108;
+
+  /// Load more episodes when scroll to bottom.
+  bool _loadMore = false;
+
+  EpisodeGridLayout? _layout;
+
+  // Stop animating after first scroll
+  bool _scroll = false;
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
     final s = context.s;
-    return Consumer<DownloadState>(
-      builder: (_, data, __) => FutureBuilder<List<EpisodeBrief>>(
-        future: _getDownloadedEpisodes(_sortBy, hideListened: _hideListened),
-        builder: (context, snapshot) {
-          var episodes = snapshot.data ?? [];
-          return ScrollConfiguration(
-            behavior: NoGrowBehavior(),
-            child: CustomScrollView(
-              key: PageStorageKey<String>('download_list'),
-              slivers: <Widget>[
-                DownloadList(),
-                SliverToBoxAdapter(
-                  child: Container(
-                      height: 40,
-                      color: context.surface,
-                      child: Row(
-                        children: <Widget>[
-                          Container(
-                              padding: EdgeInsets.symmetric(horizontal: 20),
-                              child: Text(s.downloaded)),
-                          Spacer(),
-                          Material(
-                            color: Colors.transparent,
-                            child: IconButton(
-                              icon: SizedBox(
-                                width: 30,
-                                height: 15,
-                                child: HideListened(
-                                  hideListened: _hideListened ?? false,
-                                ),
-                              ),
-                              onPressed: () {
-                                setState(() => _hideListened = !_hideListened!);
-                              },
-                            ),
-                          ),
-                          Material(
-                            color: Colors.transparent,
-                            child: LayoutButton(
-                              layout: _layout ?? EpisodeGridLayout.large,
-                              onPressed: (layout) => setState(() {
-                                _layout = layout;
-                              }),
-                            ),
-                          ),
-                        ],
-                      )),
-                ),
-                episodes.length == 0
-                    ? SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 110),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Icon(LineIcons.download,
-                                  size: 80, color: Colors.grey[500]),
-                              Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 10)),
-                              Text(
-                                s.noEpisodeDownload,
-                                style: TextStyle(color: Colors.grey[500]),
-                              )
-                            ],
-                          ),
-                        ),
-                      )
-                    : EpisodeGrid(
-                        episodes: episodes,
-                        layout: _layout ?? EpisodeGridLayout.large,
-                        openPodcast: true,
-                        initNum: 0,
-                      ),
-              ],
+    return NotificationListener<ScrollNotification>(
+      onNotification: (scrollInfo) {
+        if (scrollInfo.metrics.pixels >=
+                scrollInfo.metrics.maxScrollExtent - context.width &&
+            _episodes.length == _top) {
+          if (!_loadMore) {
+            Future.microtask(() async {
+              if (mounted) setState(() => _loadMore = true);
+              _top = _top + 36;
+              _episodes = await _getEpisodes(_top);
+              Provider.of<SelectionController>(context, listen: false)
+                  .setSelectableEpisodes(_episodes, compatible: true);
+              if (mounted) setState(() => _loadMore = false);
+            });
+          }
+        }
+        if (mounted && !_scroll && scrollInfo.metrics.pixels > 0) {
+          setState(() => _scroll = true);
+        }
+        return true;
+      },
+      child: ScrollConfiguration(
+        behavior: NoGrowBehavior(),
+        child: CustomScrollView(
+          key: PageStorageKey<String>('download_list'),
+          slivers: <Widget>[
+            FutureBuilder<Tuple2<EpisodeGridLayout, bool?>>(
+              future: getLayoutAndShowListened(),
+              builder: (_, snapshot) {
+                if (_layout == null) {
+                  _layout = snapshot.data?.item1;
+                }
+                return ActionBar(
+                  onGetEpisodesChanged: (getEpisodes) async {
+                    _getEpisodes = getEpisodes;
+                    _episodes = await _getEpisodes(_top);
+                    Provider.of<SelectionController>(context, listen: false)
+                        .setSelectableEpisodes(_episodes);
+                    if (mounted) setState(() {});
+                  },
+                  onLayoutChanged: (layout) {
+                    _layout = layout;
+                    if (mounted) setState(() {});
+                  },
+                  widgetsFirstRow: const [
+                    ActionBarDropdownSortBy(0, 0),
+                    ActionBarSwitchSortOrder(0, 1),
+                    ActionBarDropdownGroups(0, 2),
+                    ActionBarSpacer(0, 3),
+                    ActionBarFilterPlayed(0, 4),
+                    ActionBarFilterDownloaded(0, 5),
+                    ActionBarSwitchLayout(0, 6),
+                    ActionBarSwitchSelectMode(0, 7),
+                  ],
+                  filterDownloaded: true,
+                  layout: _layout ?? EpisodeGridLayout.large,
+                );
+              },
             ),
-          );
-        },
+            DownloadList(),
+            SliverAppBar(
+              pinned: true,
+              leading: Center(),
+              toolbarHeight: 2,
+              backgroundColor: Colors.transparent,
+              scrolledUnderElevation: 0,
+              flexibleSpace: _loadMore
+                  ? LinearProgressIndicator(
+                      backgroundColor: Colors.transparent,
+                    )
+                  : Center(),
+            ),
+            _episodes.length != 0
+                ? EpisodeGrid(
+                    episodes: _episodes,
+                    layout: _layout ?? EpisodeGridLayout.large,
+                    openPodcast: true,
+                    initNum: 0,
+                  )
+                : SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 110),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Icon(LineIcons.download,
+                              size: 80, color: Colors.grey[500]),
+                          Padding(padding: EdgeInsets.symmetric(vertical: 10)),
+                          Text(
+                            s.noEpisodeDownload,
+                            style: TextStyle(color: Colors.grey[500]),
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+          ],
+        ),
       ),
     );
   }

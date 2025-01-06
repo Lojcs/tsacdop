@@ -12,7 +12,6 @@ import 'package:html/parser.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:tsacdop/type/theme_data.dart';
-import 'package:tsacdop/util/helpers.dart';
 import 'package:tsacdop/widgets/action_bar.dart';
 import 'package:tuple/tuple.dart';
 
@@ -157,39 +156,44 @@ class _PodcastDetailState extends State<PodcastDetail> {
       ],
       child: Selector<AudioPlayerNotifier, bool>(
         selector: (_, audio) => audio.playerRunning,
-        builder: (context, data, __) {
-          selectionController = Provider.of<SelectionController>(context);
+        builder: (context, playerRunning, __) {
+          selectionController =
+              Provider.of<SelectionController>(context, listen: false);
           return AnnotatedRegion<SystemUiOverlayStyle>(
-            value: (data
+            value: (playerRunning
                 ? context.overlay.copyWith(
                     systemNavigationBarColor: context.accentBackground)
                 : context.overlay),
-            child: PopScope(
-              canPop: !(_playerKey.currentState != null &&
-                      _playerKey.currentState!.size! > 100) &&
-                  !selectionController.selectMode,
-              onPopInvokedWithResult: (_, __) {
-                if (_playerKey.currentState != null &&
-                    _playerKey.currentState!.size! > 100) {
-                  _playerKey.currentState!.backToMini();
-                } else if (selectionController.selectMode) {
-                  setState(() {
-                    selectionController.selectMode = false;
-                  });
-                }
-              },
-              child: Scaffold(
-                backgroundColor: context.surface,
-                body: SafeArea(
-                  child: Stack(
-                    children: <Widget>[
-                      body,
-                      multiSelect,
-                      player,
-                    ],
+            child: Selector<SelectionController, bool>(
+              selector: (_, selectionController) =>
+                  selectionController.selectMode,
+              builder: (context, selectMode, __) {
+                return PopScope(
+                  canPop: !(_playerKey.currentState != null &&
+                          _playerKey.currentState!.size! > 100) &&
+                      !selectMode,
+                  onPopInvokedWithResult: (_, __) {
+                    if (_playerKey.currentState != null &&
+                        _playerKey.currentState!.size! > 100) {
+                      _playerKey.currentState!.backToMini();
+                    } else if (selectionController.selectMode) {
+                      selectionController.selectMode = false;
+                    }
+                  },
+                  child: Scaffold(
+                    backgroundColor: context.surface,
+                    body: SafeArea(
+                      child: Stack(
+                        children: <Widget>[
+                          body,
+                          multiSelect,
+                          player,
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
           );
         },
@@ -251,11 +255,6 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
   }
 
   @override
-  void deactivate() {
-    super.deactivate();
-  }
-
-  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
@@ -269,8 +268,7 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
         controller: _controller
           ..addListener(() async {
             if (_controller.offset >=
-                    _controller.position.maxScrollExtent -
-                        context.width * 2 / 3 &&
+                    _controller.position.maxScrollExtent - context.width &&
                 _episodes.length == _top) {
               if (!_loadMore) {
                 if (mounted) setState(() => _loadMore = true);
@@ -319,16 +317,30 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
                   _getEpisodes = getEpisodes;
                   _episodes = await _getEpisodes(_top);
                   widget.selectionController.setSelectableEpisodes(_episodes);
-                  if (mounted) {
-                    setState(() {});
-                  }
+                  if (mounted) setState(() {});
                 },
                 onLayoutChanged: (layout) {
                   _layout = layout;
-                  if (mounted) {
-                    setState(() {});
-                  }
+                  if (mounted) setState(() {});
                 },
+                widgetsFirstRow: const [
+                  ActionBarDropdownSortBy(0, 0),
+                  ActionBarSwitchSortOrder(0, 1),
+                  ActionBarSpacer(0, 2),
+                  ActionBarFilterNew(0, 3),
+                  ActionBarFilterLiked(0, 4),
+                  ActionBarFilterPlayed(0, 5),
+                  ActionBarFilterDownloaded(0, 6),
+                  ActionBarSwitchSelectMode(0, 7),
+                  ActionBarSwitchSecondRow(0, 8),
+                ],
+                widgetsSecondRow: const [
+                  ActionBarSearchTitle(1, 0),
+                  ActionBarSpacer(1, 1),
+                  ActionBarButtonRemoveNewMark(1, 2),
+                  ActionBarSwitchLayout(1, 3),
+                  ActionBarButtonRefresh(1, 4),
+                ],
                 podcast: widget.podcastLocal,
                 filterPlayed: snapshot.data?.item2,
                 layout: _layout ?? EpisodeGridLayout.large,
@@ -465,7 +477,7 @@ class __PodcastDetailAppBarState extends State<_PodcastDetailAppBar>
       backgroundColor: widget.color,
       floating: true,
       pinned: true,
-      leading: CustomBackButton(),
+      leading: Center(),
       flexibleSpace: LayoutBuilder(
         builder: (context, constraints) {
           _topHeight = constraints.biggest.height;

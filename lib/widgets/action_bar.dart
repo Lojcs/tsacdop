@@ -135,6 +135,13 @@ class ActionBar extends StatefulWidget {
   /// Default filter downloaded
   final bool? filterDownloaded;
 
+  /// Extra episode fields to fill. All fields needed for episode cards are already filled.
+  /// These are: [EpisodeField.description], [EpisodeField.number], [EpisodeField.enclosureDuration]
+  /// [EpisodeField.enclosureSize], [EpisodeField.isDownloaded], [EpisodeField.episodeImage]
+  /// [EpisodeField.podcastImage], [EpisodeField.primaryColor], [EpisodeField.isLiked]
+  /// [EpisodeField.isNew], [EpisodeField.isPlayed], [EpisodeField.versionInfo]
+  final List<EpisodeField> extraFields;
+
   /// Default sort order
   final SortOrder sortOrder;
 
@@ -181,6 +188,7 @@ class ActionBar extends StatefulWidget {
     this.filterPlayed,
     this.filterDownloaded,
     this.sortOrder = SortOrder.DESC,
+    this.extraFields = const [],
     this.layout = EpisodeGridLayout.large,
   });
   @override
@@ -280,6 +288,7 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
         filterPlayed: widget.filterPlayed,
         filterDownloaded: widget.filterDownloaded,
         sortOrder: widget.sortOrder,
+        extraFields: widget.extraFields,
         layout: widget.layout,
         switchSecondRowController: _switchSecondRowController,
         buttonRefreshController: _buttonRefreshController,
@@ -390,7 +399,7 @@ class __ActionBarOuterState extends State<_ActionBarOuter>
                   0) // This still clips 10.5 pixels if the padding isn't animated
                 Container(
                   padding: EdgeInsets.only(
-                    // left: iconPadding.left / 2,
+                    left: context.actionBarIconPadding.left / 2,
                     top: context.actionBarIconPadding.top /
                         2 *
                         _switchSecondRowAppearAnimation.value,
@@ -492,6 +501,8 @@ class _ActionBarSharedState extends ChangeNotifier {
     notifyListeners();
   }
 
+  List<EpisodeField> extraFields;
+
   EpisodeGridLayout _layout;
   EpisodeGridLayout get layout => _layout;
   set layout(EpisodeGridLayout layout) {
@@ -519,6 +530,7 @@ class _ActionBarSharedState extends ChangeNotifier {
     required bool? filterPlayed,
     required bool? filterDownloaded,
     required SortOrder sortOrder,
+    required this.extraFields,
     required EpisodeGridLayout layout,
     required this.switchSecondRowController,
     required this.buttonRefreshController,
@@ -579,19 +591,20 @@ class _ActionBarSharedState extends ChangeNotifier {
               : group.podcastList,
           likeEpisodeTitles: searchTitleQuery == "" ? null : [searchTitleQuery],
           optionalFields: [
-            EpisodeField.description,
-            EpisodeField.number,
-            EpisodeField.enclosureDuration,
-            EpisodeField.enclosureSize,
-            EpisodeField.isDownloaded,
-            EpisodeField.episodeImage,
-            EpisodeField.podcastImage,
-            EpisodeField.primaryColor,
-            EpisodeField.isLiked,
-            EpisodeField.isNew,
-            EpisodeField.isPlayed,
-            EpisodeField.versionInfo
-          ],
+                EpisodeField.description,
+                EpisodeField.number,
+                EpisodeField.enclosureDuration,
+                EpisodeField.enclosureSize,
+                EpisodeField.isDownloaded,
+                EpisodeField.episodeImage,
+                EpisodeField.podcastImage,
+                EpisodeField.primaryColor,
+                EpisodeField.isLiked,
+                EpisodeField.isNew,
+                EpisodeField.isPlayed,
+                EpisodeField.versionInfo
+              ] +
+              extraFields,
           sortBy: sortBy,
           sortOrder: sortOrder,
           limit: count,

@@ -223,10 +223,12 @@ class _ActionBarButtonState extends State<ActionBarButton>
       }
       Future.microtask(
         () {
-          if (active) {
+          if (active && !animationController.isCompleted) {
             animationController.forward();
             expand(true);
-          } else {
+          } else if (!active &&
+              !(animationController.status == AnimationStatus.reverse ||
+                  animationController.value == 0)) {
             animationController.reverse();
             expand(false);
           }
@@ -523,10 +525,22 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
       expandableItem.maxExpandedWidth =
           widget.maxExpandedWidth ?? context.actionBarButtonSizeHorizontal;
     }
-    if (active && !activeAnimationController.isCompleted) {
-      activeAnimationController.forward();
-      expand(true);
+    if (widget.selected != selected && widget.selected != null) {
+      selected = widget.selected;
     }
+    Future.microtask(
+      () {
+        if (active && !activeAnimationController.isCompleted) {
+          activeAnimationController.forward();
+          expand(true);
+        } else if (!active &&
+            !(activeAnimationController.status == AnimationStatus.reverse ||
+                activeAnimationController.value == 0)) {
+          activeAnimationController.reverse();
+          expand(false);
+        }
+      },
+    ); // This is in a microtask since it sets state during build
   }
 
   @override
@@ -1209,7 +1223,7 @@ class ExpansionController {
             item.changeWidthBy(_availableWidth, minimize: minimize > i);
       }
       minimize++;
-      assert(minimize < _expandedItems.length * _expandedItems.length,
+      assert(minimize <= _expandedItems.length * _expandedItems.length,
           "Widget widths don't fit. This probably means you're readding widgets that are already added to the controller.");
     }
     for (int i = 0; i < _items.length; i++) {

@@ -1866,6 +1866,7 @@ class _ControlPanelState extends State<ControlPanel>
                           child: TabBar(
                             controller: _tabController,
                             indicatorSize: TabBarIndicatorSize.label,
+                            isScrollable: true,
                             labelColor: context.accentColor,
                             unselectedLabelColor: context.textColor,
                             indicator: BoxDecoration(),
