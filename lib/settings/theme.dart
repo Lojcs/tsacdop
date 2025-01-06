@@ -313,7 +313,6 @@ class __ColorPickerState extends State<_ColorPicker>
           Expanded(
             child: TabBarView(
               physics: const ClampingScrollPhysics(),
-              key: UniqueKey(),
               controller: _controller,
               children: Colors.primaries
                   .map<Widget>(

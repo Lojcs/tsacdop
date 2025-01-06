@@ -449,30 +449,14 @@ class __PodcastCardState extends State<_PodcastCard>
   }
 
   _setAutoDownload(String? id, bool boo) async {
-    final permission = await _checkPermmison();
-    if (permission) {
-      final dbHelper = DBHelper();
-      await dbHelper.saveAutoDownload(id, boo: boo);
-    }
+    // We don't need storage permission to download to app storage
+    final dbHelper = DBHelper();
+    await dbHelper.saveAutoDownload(id, boo: boo);
   }
 
   Future<bool> _getAutoDownload(String? id) async {
     final dbHelper = DBHelper();
     return await dbHelper.getAutoDownload(id);
-  }
-
-  Future<bool> _checkPermmison() async {
-    final permission = await Permission.storage.status;
-    if (permission != PermissionStatus.granted) {
-      final permissions = await [Permission.storage].request();
-      if (permissions[Permission.storage] == PermissionStatus.granted) {
-        return true;
-      } else {
-        return false;
-      }
-    } else {
-      return true;
-    }
   }
 }
 

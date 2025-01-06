@@ -437,10 +437,8 @@ class _PodcastSettingState extends State<PodcastSetting> {
   }
 
   Future<void> _setAutoDownload(bool boo) async {
-    var permission = await _checkPermmison();
-    if (permission) {
-      await _dbHelper.saveAutoDownload(widget.podcastLocal!.id, boo: boo);
-    }
+    // We don't need storage permission to download to app storage
+    await _dbHelper.saveAutoDownload(widget.podcastLocal!.id, boo: boo);
     if (mounted) setState(() {});
   }
 
@@ -576,20 +574,6 @@ class _PodcastSettingState extends State<PodcastSetting> {
       if (mounted) {
         setState(() => _coverStatus = RefreshCoverStatus.complete);
       }
-    }
-  }
-
-  Future<bool> _checkPermmison() async {
-    var permission = await Permission.storage.status;
-    if (permission != PermissionStatus.granted) {
-      var permissions = await [Permission.storage].request();
-      if (permissions[Permission.storage] == PermissionStatus.granted) {
-        return true;
-      } else {
-        return false;
-      }
-    } else {
-      return true;
     }
   }
 

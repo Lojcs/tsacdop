@@ -19,6 +19,7 @@ import 'state/podcast_group.dart';
 import 'state/refresh_podcast.dart';
 import 'state/search_state.dart';
 import 'state/setting_state.dart';
+import 'type/theme_data.dart';
 
 ///Initial theme settings
 final SettingState themeSetting = SettingState();
@@ -71,10 +72,33 @@ class MyApp extends StatelessWidget {
         return FeatureDiscovery(
           child: DynamicColorBuilder(builder: (lightDynamic, darkDynamic) {
             final lightTheme = data.item4! && lightDynamic != null
-                ? data.item2.copyWith(colorScheme: lightDynamic)
+                ? data.item2.copyWith(colorScheme: lightDynamic, extensions: [
+                    ActionBarTheme(
+                      iconColor: Colors.grey[800],
+                      size: 24,
+                      radius: const Radius.circular(16),
+                      padding: const EdgeInsets.all(6),
+                    ),
+                    CardColorScheme(lightDynamic),
+                  ])
                 : data.item2;
             final darkTheme = data.item4! && darkDynamic != null
-                ? data.item3.copyWith(colorScheme: darkDynamic)
+                ? data.item3.copyWith(
+                    colorScheme: darkDynamic.copyWith(
+                      surface: Provider.of<SettingState>(context, listen: false)
+                              .realDark!
+                          ? Colors.black
+                          : null,
+                    ),
+                    extensions: [
+                        ActionBarTheme(
+                          iconColor: Colors.grey[200],
+                          size: 24,
+                          radius: const Radius.circular(16),
+                          padding: const EdgeInsets.all(6),
+                        ),
+                        CardColorScheme(darkDynamic),
+                      ])
                 : data.item3;
             return MaterialApp(
               themeMode: data.item1,

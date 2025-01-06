@@ -477,7 +477,6 @@ class __PodcastDetailAppBarState extends State<_PodcastDetailAppBar>
       backgroundColor: widget.color,
       floating: true,
       pinned: true,
-      leading: Center(),
       flexibleSpace: LayoutBuilder(
         builder: (context, constraints) {
           _topHeight = constraints.biggest.height;

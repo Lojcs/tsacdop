@@ -222,7 +222,7 @@ class _StorageSettingState extends State<StorageSetting>
                           builder: (context, snapshot) {
                             return ListTile(
                               onTap: () async {
-                                _setDeleteAfterPlayed(snapshot.data);
+                                _setDeleteAfterPlayed(!snapshot.data!);
                                 setState(() {});
                               },
                               contentPadding:

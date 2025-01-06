@@ -1,8 +1,4 @@
-import 'dart:math';
-
-import 'package:collection/collection.dart' show IterableExtension;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
@@ -13,16 +9,11 @@ import 'package:tsacdop/type/theme_data.dart';
 import 'package:tsacdop/util/extension_helper.dart';
 import 'package:tsacdop/util/selection_controller.dart';
 import 'package:tsacdop/widgets/action_bar_generic_widgets.dart';
-import 'package:tsacdop/widgets/multiselect_bar.dart';
 import 'package:tuple/tuple.dart';
-import 'package:webfeed/domain/media/group.dart';
-
 import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/episode_state.dart';
 import '../state/refresh_podcast.dart';
-import 'custom_dropdown.dart';
-import 'custom_popupmenu.dart';
 import 'custom_widget.dart';
 import 'episodegrid.dart';
 

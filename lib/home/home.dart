@@ -6,7 +6,6 @@ import 'package:feature_discovery/feature_discovery.dart';
 import 'package:flutter/material.dart' hide NestedScrollView, showSearch;
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
@@ -14,14 +13,8 @@ import 'package:tsacdop/util/selection_controller.dart';
 import 'package:tsacdop/widgets/action_bar.dart';
 import 'package:tuple/tuple.dart';
 
-import '../local_storage/key_value_storage.dart';
-import '../local_storage/sqflite_localpodcast.dart';
 import '../playlists/playlist_home.dart';
 import '../state/audio_state.dart';
-import '../state/download_state.dart';
-import '../state/episode_state.dart';
-import '../state/podcast_group.dart';
-import '../state/refresh_podcast.dart';
 import '../state/setting_state.dart';
 import '../type/episodebrief.dart';
 import '../util/extension_helper.dart';
@@ -803,11 +796,11 @@ class _MyFavoriteState extends State<_MyFavorite>
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          Icon(LineIcons.alternateCloudDownload,
+                          Icon(LineIcons.heartbeat,
                               size: 80, color: Colors.grey[500]),
                           Padding(padding: EdgeInsets.symmetric(vertical: 10)),
                           Text(
-                            s.noEpisodeRecent,
+                            s.noEpisodeFavorite,
                             style: TextStyle(color: Colors.grey[500]),
                           )
                         ],

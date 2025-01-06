@@ -40,60 +40,47 @@ Future<void> requestDownload(List<EpisodeBrief> episodes, BuildContext context,
     {VoidCallback? onSuccess}) async {
   final downloadUsingData = await KeyValueStorage(downloadUsingDataKey)
       .getBool(defaultValue: true, reverse: true);
-  final permissionGranted;
-  var permission = await Permission.storage.status;
-  if (permission != PermissionStatus.granted) {
-    var permissions = await [Permission.storage].request();
-    if (permissions[Permission.storage] == PermissionStatus.granted) {
-      permissionGranted = true;
-    } else {
-      permissionGranted = false;
-    }
-  } else {
-    permissionGranted = true;
-  }
+  // We don't need storage permission to download to app storage
   final result = await Connectivity().checkConnectivity();
   final usingData = result == ConnectivityResult.mobile;
   var useData = false;
   final s = context.s;
-  if (permissionGranted) {
-    if (downloadUsingData && usingData) {
-      await generalDialog(
-        context,
-        title: Text(s.cellularConfirm),
-        content: Text(s.cellularConfirmDes),
-        actions: <Widget>[
-          TextButton(
-            onPressed: Navigator.of(context).pop,
-            child: Text(
-              s.cancel,
-              style: TextStyle(color: context.colorScheme.onSecondaryContainer),
-            ),
+  if (downloadUsingData && usingData) {
+    await generalDialog(
+      context,
+      title: Text(s.cellularConfirm),
+      content: Text(s.cellularConfirmDes),
+      actions: <Widget>[
+        TextButton(
+          onPressed: Navigator.of(context).pop,
+          child: Text(
+            s.cancel,
+            style: TextStyle(color: context.colorScheme.onSecondaryContainer),
           ),
-          TextButton(
-            onPressed: () {
-              useData = true;
-              Navigator.of(context).pop();
-            },
-            child: Text(
-              s.confirm,
-              style: TextStyle(color: context.error),
-            ),
-          )
-        ],
-      );
+        ),
+        TextButton(
+          onPressed: () {
+            useData = true;
+            Navigator.of(context).pop();
+          },
+          child: Text(
+            s.confirm,
+            style: TextStyle(color: context.error),
+          ),
+        )
+      ],
+    );
+  }
+  if (useData || !usingData) {
+    for (var episode in episodes) {
+      Provider.of<DownloadState>(context, listen: false).startTask(episode);
     }
-    if (useData || !usingData) {
-      for (var episode in episodes) {
-        Provider.of<DownloadState>(context, listen: false).startTask(episode);
-      }
-      Fluttertoast.showToast(
-        msg: context.s.downloadStart,
-        gravity: ToastGravity.BOTTOM,
-      );
-      if (onSuccess != null) {
-        onSuccess();
-      }
+    Fluttertoast.showToast(
+      msg: context.s.downloadStart,
+      gravity: ToastGravity.BOTTOM,
+    );
+    if (onSuccess != null) {
+      onSuccess();
     }
   }
 }

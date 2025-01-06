@@ -516,14 +516,18 @@ class EpisodeCard extends StatelessWidget {
                   child: layout == EpisodeGridLayout.large
                       ? Row(
                           children: [
-                            _circleImage(
-                              context,
-                              openPodcast,
-                              preferEpisodeImage,
-                              radius: context.width / 6,
-                              episode: episode,
-                              color: episode.colorScheme(context).primary,
-                            ),
+                            showImage
+                                ? _circleImage(
+                                    context,
+                                    openPodcast,
+                                    preferEpisodeImage,
+                                    radius: context.width / 6,
+                                    episode: episode,
+                                    color: episode.colorScheme(context).primary,
+                                  )
+                                : SizedBox(
+                                    width: context.width / 6,
+                                  ),
                             SizedBox(
                               width: 5,
                             ),

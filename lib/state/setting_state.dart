@@ -195,11 +195,7 @@ class SettingState extends ChangeNotifier {
         cursorColor: _accentSetColor,
         selectionHandleColor: _accentSetColor,
       ),
-      buttonTheme: ButtonThemeData(
-        height: 32,
-        hoverColor: _accentSetColor!.withAlpha(70),
-        splashColor: _accentSetColor!.withAlpha(70),
-      ),
+      buttonTheme: ButtonThemeData(height: 32),
       useMaterial3: true,
       extensions: [
         ActionBarTheme(
@@ -315,7 +311,7 @@ class SettingState extends ChangeNotifier {
         CardColorScheme(colorScheme),
       ],
       dialogTheme:
-          DialogTheme(backgroundColor: _realDark! ? Colors.grey : null),
+          DialogTheme(backgroundColor: _realDark! ? Colors.black : null),
     );
   }
 
@@ -612,8 +608,18 @@ class SettingState extends ChangeNotifier {
   }
 
   Future<void> _saveAccentSetColor() async {
-    await _accentStorage
-        .saveString(_accentSetColor.toString().substring(10, 16));
+    String colorString = _accentSetColor.toString().substring(10, 16);
+    // Sometimes this gets saved as somthing like `' Col``.
+    try {
+      int.parse('FF${colorString.toUpperCase()}', radix: 16);
+    } catch (e) {
+      if (e is! FormatException) throw e;
+      developer.log(
+          "Invalid saved color string: $colorString of color: ${_accentSetColor.toString()}",
+          error: e);
+      colorString = "009688"; // Teal
+    }
+    await _accentStorage.saveString(colorString);
   }
 
   Future<void> _setRealDark() async {
