@@ -29,6 +29,9 @@ import 'pocast_discovery.dart';
 
 class MyHomePageDelegate extends SearchDelegate<int?> {
   final String? searchFieldLabel;
+
+  bool _closing = false;
+
   MyHomePageDelegate({this.searchFieldLabel})
       : super(
           searchFieldLabel: searchFieldLabel,
@@ -58,6 +61,7 @@ class MyHomePageDelegate extends SearchDelegate<int?> {
 
   @override
   void close(BuildContext context, int? result) {
+    _closing = true;
     final searchState = context.read<SearchState>();
     final selectedPodcast = searchState.selectedPodcast;
     if (selectedPodcast != null) {
@@ -81,8 +85,12 @@ class MyHomePageDelegate extends SearchDelegate<int?> {
   @override
   Widget buildLeading(BuildContext context) {
     return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (_, __) => close(context, null),
+      canPop: !_closing,
+      onPopInvokedWithResult: (_, __) {
+        if (!_closing) {
+          close(context, null);
+        }
+      },
       child: IconButton(
         tooltip: context.s.back,
         splashRadius: 20,

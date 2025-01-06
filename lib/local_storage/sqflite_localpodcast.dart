@@ -1305,7 +1305,7 @@ class DBHelper {
                 title,
                 url,
                 length,
-                pubDate,
+                '',
                 description,
                 id,
                 milliseconds,
@@ -1345,26 +1345,33 @@ class DBHelper {
         String? url, description;
 
         var dbClient = await database;
-        var count = Sqflite.firstIntValue(await dbClient.rawQuery(
-            'SELECT COUNT(*) FROM Episodes WHERE feed_id = ?',
-            [podcastLocal.id]))!;
+        List<String> urls = (await dbClient.rawQuery(
+                'SELECT enclosure_url FROM Episodes WHERE feed_id = ?',
+                [podcastLocal.id]))
+            .map(
+              (e) => e['enclosure_url'] as String,
+            )
+            .toList();
+        var count = urls.length;
         if (removeMark == 0) {
           await dbClient.rawUpdate(
               "UPDATE Episodes SET is_new = 0 WHERE feed_id = ?",
               [podcastLocal.id]);
         }
+
         for (var item in feed.items!) {
           developer.log(item.title!);
-          description = _getDescription(item.content!.value,
-              item.description ?? '', item.itunes!.summary ?? '');
 
           if (item.enclosure?.url != null) {
             _isXimalaya(item.enclosure!.url!)
                 ? url = item.enclosure!.url!.split('=').last
                 : url = item.enclosure!.url;
           }
+          if (urls.contains(url)) continue;
 
           final title = item.itunes!.title ?? item.title;
+          description = _getDescription(item.content?.value ?? '',
+              item.description ?? '', item.itunes?.summary ?? '');
           final length = item.enclosure?.length ?? 0;
           final pubDate = item.pubDate;
           final milliseconds = pubDate?.millisecondsSinceEpoch ??
@@ -1384,7 +1391,7 @@ class DBHelper {
                     title,
                     url,
                     length,
-                    pubDate,
+                    '',
                     description,
                     podcastLocal.id,
                     milliseconds,

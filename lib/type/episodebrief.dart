@@ -90,7 +90,7 @@ class EpisodeBrief extends Equatable {
     return AssetImage('assets/avatar_backup.png');
   }
 
-  late final ImageProvider episodeImageProvider = ((episodeImage != null)
+  late final ImageProvider _episodeImageProvider = ((episodeImage != null)
       ? (File(episodeImage!).existsSync())
           ? FileImage(File(episodeImage!))
           : (episodeImage != '')
@@ -104,11 +104,14 @@ class EpisodeBrief extends Equatable {
           : const AssetImage('assets/avatar_backup.png')
       : const AssetImage('assets/avatar_backup.png')) as ImageProvider;
 
-  late final ImageProvider
-      episodeOrPodcastImageProvider = // TODO: Control internet usage
-      episodeImageProvider != const AssetImage('assets/avatar_backup.png')
-          ? episodeImageProvider
-          : podcastImageProvider;
+  // late final ImageProvider
+  //     episodeOrPodcastImageProvider = // TODO: Control internet usage
+  //     _episodeImageProvider != const AssetImage('assets/avatar_backup.png')
+  //         ? _episodeImageProvider
+  //         : podcastImageProvider;
+
+  // Until episode image caching is implemented don't use episode images
+  late final ImageProvider episodeOrPodcastImageProvider = podcastImageProvider;
 
   Color backgroudColor(BuildContext context) {
     return colorScheme(context).onSecondaryContainer;

@@ -1,13 +1,12 @@
 import 'dart:developer' as developer;
 import 'dart:io';
 
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/intl_standalone.dart';
+import 'package:tsacdop/state/refresh_podcast.dart';
 import 'package:workmanager/workmanager.dart';
 
 import '../generated/l10n.dart';
@@ -15,7 +14,16 @@ import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../type/settings_backup.dart';
 import '../type/theme_data.dart';
-import 'download_state.dart';
+
+@pragma('vm:entry-point')
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) async {
+    if (task == "update_podcasts") {
+      await podcastSync();
+    }
+    return Future.value(true);
+  });
+}
 
 final showNotesFontStyles = <TextStyle>[
   TextStyle(
@@ -63,40 +71,6 @@ class SettingState extends ChangeNotifier {
   final _openAllPodcastDefaultStorage =
       KeyValueStorage(openAllPodcastDefaultKey);
   final _useWallpaperThemeStorage = KeyValueStorage(useWallpapterThemeKey);
-
-  static void callbackDispatcher() {
-    Workmanager().executeTask((task, inputData) async {
-      final dbHelper = DBHelper();
-      final podcastList = await dbHelper.getPodcastLocalAll(updateOnly: true);
-      //lastWork is a indicator for if the app was opened since last backgroundwork
-      //if the app wes opend,then the old marked new episode would be marked not new.
-      final lastWorkStorage = KeyValueStorage(lastWorkKey);
-      final lastWork = await lastWorkStorage.getInt();
-      for (var podcastLocal in podcastList) {
-        await dbHelper.updatePodcastRss(podcastLocal, removeMark: lastWork);
-        developer.log('Refresh ${podcastLocal.title}');
-      }
-      await FlutterDownloader.initialize();
-      final downloader = AutoDownloader();
-
-      final autoDownloadStorage = KeyValueStorage(autoDownloadNetworkKey);
-      final autoDownloadNetwork = await autoDownloadStorage.getInt();
-      final result = await Connectivity().checkConnectivity();
-      if (autoDownloadNetwork == 1 || result == ConnectivityResult.wifi) {
-        final episodes = await dbHelper.getEpisodes(
-            filterNew: true, filterDownloaded: false, filterAutoDownload: true);
-        // For safety
-        if (episodes.length < 100 && episodes.length > 0) {
-          downloader.bindBackgroundIsolate();
-          await downloader.startTask(episodes);
-        }
-      }
-      await lastWorkStorage.saveInt(1);
-      var refreshstorage = KeyValueStorage(refreshdateKey);
-      await refreshstorage.saveInt(DateTime.now().millisecondsSinceEpoch);
-      return Future.value(true);
-    });
-  }
 
   Future initData() async {
     await _getTheme();
