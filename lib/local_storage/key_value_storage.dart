@@ -143,9 +143,13 @@ class KeyValueStorage {
     return Tuple3<String, int, int>(saved[0], episodeIndex, position);
   }
 
-  Future<bool> saveInt(int setting) async {
-    var prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(key, setting);
+  Future<bool> saveInt(int? setting) async {
+    if (setting != null) {
+      var prefs = await SharedPreferences.getInstance();
+      return prefs.setInt(key, setting);
+    } else {
+      return Future.value(false);
+    }
   }
 
   Future<int> getInt({int defaultValue = 0}) async {
@@ -154,9 +158,13 @@ class KeyValueStorage {
     return prefs.getInt(key)!;
   }
 
-  Future<bool> saveStringList(List<String?> playList) async {
-    var prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(key, playList as List<String>);
+  Future<bool> saveStringList(List<String?>? playList) async {
+    if (playList != null) {
+      var prefs = await SharedPreferences.getInstance();
+      return prefs.setStringList(key, playList.nonNulls.toList());
+    } else {
+      return Future.value(false);
+    }
   }
 
   Future<List<String>> getStringList() async {
@@ -167,9 +175,13 @@ class KeyValueStorage {
     return prefs.getStringList(key) ?? [];
   }
 
-  Future<bool> saveString(String string) async {
-    var prefs = await SharedPreferences.getInstance();
-    return prefs.setString(key, string);
+  Future<bool> saveString(String? string) async {
+    if (string != null) {
+      var prefs = await SharedPreferences.getInstance();
+      return prefs.setString(key, string);
+    } else {
+      return Future.value(false);
+    }
   }
 
   Future<String> getString({String defaultValue = ''}) async {
@@ -228,11 +240,15 @@ class KeyValueStorage {
   }
 
   /// Rreverse is used for compatite bool value save before which set true = 0, false = 1
-  Future<bool> saveBool(boo, {reverse = false}) async {
-    var prefs = await SharedPreferences.getInstance();
-    return reverse
-        ? prefs.setInt(key, boo ? 0 : 1)
-        : prefs.setInt(key, boo ? 1 : 0);
+  Future<bool> saveBool(bool? boo, {reverse = false}) async {
+    if (boo != null) {
+      var prefs = await SharedPreferences.getInstance();
+      return reverse
+          ? prefs.setInt(key, boo ? 0 : 1)
+          : prefs.setInt(key, boo ? 1 : 0);
+    } else {
+      return Future.value(false);
+    }
   }
 
   Future<bool> saveDouble(double data) async {

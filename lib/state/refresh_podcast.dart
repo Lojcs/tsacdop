@@ -82,6 +82,7 @@ class RefreshWorker extends ChangeNotifier {
   }
 }
 
+@pragma('vm:entry-point')
 Future<void> refreshIsolateEntryPoint(SendPort sendPort) async {
   var refreshReceivePort = ReceivePort();
   sendPort.send(refreshReceivePort.sendPort);

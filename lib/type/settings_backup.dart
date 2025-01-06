@@ -114,7 +114,7 @@ class SettingsBackup {
     };
   }
 
-  static SettingsBackup fromJson(Map<String, Object> json) {
+  static SettingsBackup fromJson(Map<String, dynamic> json) {
     final menuList =
         List<String>.from(json['episodePopupMenu'] as Iterable<dynamic>);
     final speedList = List<String>.from(json['speedList'] as Iterable<dynamic>);

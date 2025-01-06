@@ -555,6 +555,7 @@ class GroupList extends ChangeNotifier {
   }
 }
 
+@pragma('vm:entry-point')
 Future<void> subIsolateEntryPoint(SendPort sendPort) async {
   if (Platform.isAndroid) SharedPreferencesAndroid.registerWith();
   if (Platform.isAndroid) PathProviderAndroid.registerWith();

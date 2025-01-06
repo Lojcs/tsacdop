@@ -721,40 +721,40 @@ class SettingState extends ChangeNotifier {
   }
 
   Future<void> restore(SettingsBackup backup) async {
-    await _themeStorage.saveInt(backup.theme!);
-    await _accentStorage.saveString(backup.accentColor!);
+    await _themeStorage.saveInt(backup.theme);
+    await _accentStorage.saveString(backup.accentColor);
     await _realDarkStorage.saveBool(backup.realDark);
     await _useWallpaperThemeStorage.saveBool(backup.useWallpaperTheme);
     await _autoPlayStorage.saveBool(backup.autoPlay, reverse: true);
     await _autoupdateStorage.saveBool(backup.autoUpdate, reverse: true);
-    await _intervalStorage.saveInt(backup.updateInterval!);
-    await _versionPolicyStorage.saveString(backup.versionPolicy!);
+    await _intervalStorage.saveInt(backup.updateInterval);
+    await _versionPolicyStorage.saveString(backup.versionPolicy);
     await _downloadUsingDataStorage.saveBool(backup.downloadUsingData,
         reverse: true);
-    await _cacheStorage.saveInt(backup.cacheMax!);
-    await _podcastLayoutStorage.saveInt(backup.podcastLayout!);
-    await _recentLayoutStorage.saveInt(backup.recentLayout!);
-    await _favLayoutStorage.saveInt(backup.favLayout!);
-    await _downloadLayoutStorage.saveInt(backup.downloadLayout!);
+    await _cacheStorage.saveInt(backup.cacheMax);
+    await _podcastLayoutStorage.saveInt(backup.podcastLayout);
+    await _recentLayoutStorage.saveInt(backup.recentLayout);
+    await _favLayoutStorage.saveInt(backup.favLayout);
+    await _downloadLayoutStorage.saveInt(backup.downloadLayout);
     await _autoDownloadStorage.saveBool(backup.autoDownloadNetwork);
     await KeyValueStorage(episodePopupMenuKey)
-        .saveStringList(backup.episodePopupMenu!);
-    await _autoDeleteStorage.saveInt(backup.autoDelete!);
+        .saveStringList(backup.episodePopupMenu);
+    await _autoDeleteStorage.saveInt(backup.autoDelete);
     await _autoSleepTimerStorage.saveBool(backup.autoSleepTimer);
-    await _autoSleepTimerStartStorage.saveInt(backup.autoSleepTimerStart!);
-    await _autoSleepTimerEndStorage.saveInt(backup.autoSleepTimerEnd!);
-    await _autoSleepTimerModeStorage.saveInt(backup.autoSleepTimerMode!);
-    await _defaultSleepTimerStorage.saveInt(backup.defaultSleepTime!);
-    await _fastForwardSecondsStorage.saveInt(backup.fastForwardSeconds!);
-    await _rewindSecondsStorage.saveInt(backup.rewindSeconds!);
-    await KeyValueStorage(playerHeightKey).saveInt(backup.playerHeight!);
+    await _autoSleepTimerStartStorage.saveInt(backup.autoSleepTimerStart);
+    await _autoSleepTimerEndStorage.saveInt(backup.autoSleepTimerEnd);
+    await _autoSleepTimerModeStorage.saveInt(backup.autoSleepTimerMode);
+    await _defaultSleepTimerStorage.saveInt(backup.defaultSleepTime);
+    await _fastForwardSecondsStorage.saveInt(backup.fastForwardSeconds);
+    await _rewindSecondsStorage.saveInt(backup.rewindSeconds);
+    await KeyValueStorage(playerHeightKey).saveInt(backup.playerHeight);
     await KeyValueStorage(tapToOpenPopupMenuKey)
         .saveBool(backup.tapToOpenPopupMenu);
     await KeyValueStorage(hideListenedKey).saveBool(backup.hideListened);
     await KeyValueStorage(notificationLayoutKey)
-        .saveInt(backup.notificationLayout!);
-    await _showNotesFontStorage.saveInt(backup.showNotesFont!);
-    await KeyValueStorage(speedListKey).saveStringList(backup.speedList!);
+        .saveInt(backup.notificationLayout);
+    await _showNotesFontStorage.saveInt(backup.showNotesFont);
+    await KeyValueStorage(speedListKey).saveStringList(backup.speedList);
     await KeyValueStorage(markListenedAfterSkipKey)
         .saveBool(backup.markListenedAfterSkip);
     await KeyValueStorage(deleteAfterPlayedKey)
