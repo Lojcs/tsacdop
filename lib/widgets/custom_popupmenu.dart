@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
-import 'package:line_icons/line_icons.dart';
 import 'package:tsacdop/util/extension_helper.dart';
 
 const Duration _kMenuDuration = Duration(milliseconds: 300);

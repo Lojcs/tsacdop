@@ -28,7 +28,6 @@ extension ContextExtension on BuildContext {
   Color get primaryColorDark => Theme.of(this).primaryColorDark;
   Color get textColor => textTheme.bodyLarge!.color!;
   Color get dialogBackgroundColor => Theme.of(this).dialogBackgroundColor;
-  Color get accentBackgroundSoft => accentColor.toSoftBackround(this);
   Color get accentBackgroundWeak => accentColor.toWeakBackround(this);
   Color get accentBackground => accentColor.toStrongBackround(this);
   Color get accentBackgroundHighlight => accentColor.toHighlightBackround(this);
@@ -133,9 +132,19 @@ extension ContextExtension on BuildContext {
   BorderRadius get radiusLarge => BorderRadius.circular(20);
   BorderRadius get radiusHuge => BorderRadius.circular(100);
 
+  CardColorScheme get cardColorScheme =>
+      Theme.of(this).extension<CardColorScheme>()!;
+  Color get cardColorSchemeCard => realDark ? surface : cardColorScheme.card;
+  Color get cardColorSchemeSelected =>
+      realDark ? surface : cardColorScheme.selected;
+  Color get cardColorSchemeSaturated =>
+      realDark ? surface : cardColorScheme.saturated;
+  Color get cardColorSchemeFaded => realDark ? surface : cardColorScheme.faded;
+  Color get cardColorSchemeShadow =>
+      realDark ? surface : cardColorScheme.shadow;
+
   ActionBarTheme get actionBarTheme =>
       Theme.of(this).extension<ActionBarTheme>()!;
-
   Color get actionBarIconColor => actionBarTheme.iconColor!;
   double get actionBarIconSize => actionBarTheme.size!;
   double get actionBarButtonSizeVertical => actionBarTheme.buttonSizeVertical!;
@@ -229,14 +238,6 @@ extension StringExtension on String {
 }
 
 extension ColorExtension on Color {
-  /// Blend the color with background, soft look
-  Color toSoftBackround(BuildContext context) {
-    return context.realDark
-        ? context.surface
-        : Color.lerp(context.surface, this,
-            context.brightness == Brightness.light ? 0.2 : 0.2)!;
-  }
-
   /// Blend the color with background, less accent
   Color toWeakBackround(BuildContext context) {
     return context.realDark

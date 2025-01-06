@@ -765,7 +765,7 @@ class HostsList extends StatelessWidget {
 
 Future<Tuple2<String?, List<PodcastHost>?>> _getHosts(
     PodcastLocal podcastLocal) async {
-  if (!podcastLocal.provider!.contains('fireside')) return Tuple2('', []);
+  if (!podcastLocal.provider.contains('fireside')) return Tuple2('', []);
   var data = FiresideData(podcastLocal.id, podcastLocal.link);
   await data.getData();
   var backgroundImage = data.background;

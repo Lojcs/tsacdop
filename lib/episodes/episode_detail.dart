@@ -20,7 +20,6 @@ import '../type/play_histroy.dart';
 import '../util/extension_helper.dart';
 import '../widgets/audiopanel.dart';
 import '../widgets/custom_widget.dart';
-import '../widgets/episode_card.dart';
 
 class EpisodeDetail extends StatefulWidget {
   final EpisodeBrief episodeItem;

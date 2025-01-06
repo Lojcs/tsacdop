@@ -89,7 +89,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
   @override
   void dispose() {
-    _controller!.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
@@ -397,7 +397,7 @@ class __PlaylistButtonState extends State<_PlaylistButton> {
             borderRadius: BorderRadius.all(Radius.circular(10))),
         elevation: 1,
         icon: Icon(Icons.playlist_play),
-        color: context.accentBackground,
+        color: context.cardColorSchemeCard,
         tooltip: s.menu,
         itemBuilder: (context) => [
           MyPopupMenuItem(

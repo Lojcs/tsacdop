@@ -143,7 +143,8 @@ class StarSky extends CustomPainter {
       path.close();
 
       canvas.drawPath(path, _fullPaint);
-      canvas.drawShadow(path.shift(Offset(0, -6)), Colors.white, 10, true);
+      // canvas.drawShadow(path.shift(Offset(0, -6)), Colors.white, 10, true);
+      // This line freezes the ui with no exceptions raised
     }
 
     for (var center in pisces) {
@@ -1459,7 +1460,7 @@ class _SleepTimerPickerState extends State<SleepTimerPicker> {
               },
               child: Container(
                 decoration: BoxDecoration(
-                    color: context.accentBackgroundSoft,
+                    color: context.cardColorSchemeCard,
                     borderRadius: BorderRadius.circular(10)),
                 padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 child: Text(hour.toString().padLeft(2, '0'), style: textStyle),
@@ -1491,7 +1492,7 @@ class _SleepTimerPickerState extends State<SleepTimerPicker> {
               },
               child: Container(
                 decoration: BoxDecoration(
-                    color: context.accentBackgroundSoft,
+                    color: context.cardColorSchemeCard,
                     borderRadius: BorderRadius.circular(10)),
                 padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 child:

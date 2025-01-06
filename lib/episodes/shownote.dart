@@ -17,7 +17,7 @@ class ShowNote extends StatelessWidget {
     final audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
     final s = context.s;
     return FutureBuilder<String?>(
-      future: _getSDescription(episode!.enclosureUrl),
+      future: _getSDescription(episode.enclosureUrl),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           var description = snapshot.data!;
