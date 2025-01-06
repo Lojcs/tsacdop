@@ -9,8 +9,8 @@ import 'package:tsacdop/type/episodebrief.dart';
 import 'package:tsacdop/util/extension_helper.dart';
 
 class ShowNote extends StatelessWidget {
-  final EpisodeBrief? episode;
-  const ShowNote({this.episode, Key? key}) : super(key: key);
+  final EpisodeBrief episode;
+  const ShowNote({required this.episode, Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +44,7 @@ class ShowNote extends StatelessWidget {
                       'html': Style.fromTextStyle(data.copyWith(fontSize: 14))
                           .copyWith(
                         padding: HtmlPaddings.symmetric(horizontal: 12),
+                        color: episode.colorScheme(context).onSurface,
                       ),
                       'a': Style(
                         color: context.accentColor,

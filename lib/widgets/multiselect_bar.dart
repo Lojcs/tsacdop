@@ -224,14 +224,15 @@ class _MultiSelectPanelState extends State<MultiSelectPanel>
               .evaluate(_secondRowSlideAnimation),
       child: SingleChildScrollView(
         physics: const NeverScrollableScrollPhysics(),
-        child: Selector<CardColorScheme, Color>(
-          selector: (_, cardColorScheme) => cardColorScheme.shadow,
-          builder: (context, shadowColor, _) => Container(
+        child: Selector<CardColorScheme, Tuple2<Color, Color>>(
+          selector: (_, cardColorScheme) => Tuple2(
+              cardColorScheme.shadow, cardColorScheme.colorScheme.surface),
+          builder: (context, data, _) => Container(
             decoration: BoxDecoration(
-              color: context.surface,
+              color: context.realDark ? context.surface : data.item2,
               borderRadius: context.radiusMedium,
               boxShadow: context.boxShadowMedium(
-                  color: context.realDark ? shadowColor : null),
+                  color: context.realDark ? data.item1 : null),
             ),
             clipBehavior: Clip.hardEdge,
             margin: EdgeInsets.only(

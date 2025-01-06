@@ -401,7 +401,7 @@ class EpisodeCard extends StatelessWidget {
   /// Prefer episode image over podcast image for avatar (requires [showimage])
   final bool preferEpisodeImage;
 
-  /// Episode number to be shown. Null for off
+  /// Episode number to be shown.
   final bool showNumber;
 
   /// Controls the favourite indicator
@@ -543,11 +543,6 @@ class EpisodeCard extends StatelessWidget {
                                               context,
                                               episode.number!.toString(),
                                               layout),
-                                        if (showNumber)
-                                          Text("|",
-                                              style: GoogleFonts.teko(
-                                                  textStyle: context
-                                                      .textTheme.bodyLarge)),
                                         _podcastTitle(episode, context, layout),
                                         Spacer(),
                                         _pubDate(
@@ -860,7 +855,10 @@ Widget _title(
         style: (layout == EpisodeGridLayout.small
                 ? context.textTheme.bodySmall
                 : context.textTheme.bodyMedium)!
-            .copyWith(height: 1.25),
+            .copyWith(
+          height: 1.25,
+          color: episode.colorScheme(context).onSurface,
+        ),
         maxLines: layout == EpisodeGridLayout.small
             ? 4
             : layout == EpisodeGridLayout.medium
@@ -888,7 +886,7 @@ Widget _podcastTitle(
                     : context.textTheme.bodyLarge)!
             .copyWith(
                 fontWeight: FontWeight.bold,
-                color: episode.colorScheme(context).primary),
+                color: episode.colorScheme(context).onSecondaryContainer),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
@@ -1137,14 +1135,17 @@ Widget _isLikedIndicator(
 /// Count indicator widget.
 Widget _numberIndicator(
         BuildContext context, String numberText, EpisodeGridLayout layout) =>
-    Text(
-      numberText,
-      style: GoogleFonts.teko(
-          textStyle: layout == EpisodeGridLayout.small
-              ? context.textTheme.bodySmall
-              : layout == EpisodeGridLayout.medium
-                  ? context.textTheme.bodyMedium
-                  : context.textTheme.bodyLarge),
+    Padding(
+      padding: EdgeInsets.only(top: 0.5),
+      child: Text(
+        numberText + (layout == EpisodeGridLayout.large ? "|" : ""),
+        style: GoogleFonts.teko(
+            textStyle: layout == EpisodeGridLayout.small
+                ? context.textTheme.bodySmall
+                : layout == EpisodeGridLayout.medium
+                    ? context.textTheme.bodyMedium
+                    : context.textTheme.bodyLarge),
+      ),
     );
 
 /// Pubdate widget

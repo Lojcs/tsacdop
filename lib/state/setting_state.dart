@@ -206,52 +206,6 @@ class SettingState extends ChangeNotifier {
         ),
         CardColorScheme(colorScheme),
       ],
-      checkboxTheme: CheckboxThemeData(
-        fillColor:
-            WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
-          if (states.contains(WidgetState.disabled)) {
-            return null;
-          }
-          if (states.contains(WidgetState.selected)) {
-            return _accentSetColor;
-          }
-          return null;
-        }),
-      ),
-      radioTheme: RadioThemeData(
-        fillColor:
-            WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
-          if (states.contains(WidgetState.disabled)) {
-            return null;
-          }
-          if (states.contains(WidgetState.selected)) {
-            return _accentSetColor;
-          }
-          return null;
-        }),
-      ),
-      switchTheme: SwitchThemeData(
-        thumbColor:
-            WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
-          if (states.contains(WidgetState.disabled)) {
-            return null;
-          }
-          if (states.contains(WidgetState.selected)) {
-            return _accentSetColor;
-          }
-          return null;
-        }),
-        trackColor:
-            WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
-          if (states.contains(WidgetState.disabled)) {
-            return null;
-          }
-          if (states.contains(WidgetState.selected)) {
-            return _accentSetColor;
-          }
-          return null;
-        }),
-      ),
       dialogTheme: DialogTheme(backgroundColor: Colors.white),
     );
   }

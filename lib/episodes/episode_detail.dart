@@ -4,6 +4,7 @@ import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:tsacdop/episodes/menu_bar.dart';
 import 'package:tsacdop/episodes/shownote.dart';
@@ -19,6 +20,7 @@ import '../type/play_histroy.dart';
 import '../util/extension_helper.dart';
 import '../widgets/audiopanel.dart';
 import '../widgets/custom_widget.dart';
+import '../widgets/episode_card.dart';
 
 class EpisodeDetail extends StatefulWidget {
   final EpisodeBrief episodeItem;
@@ -163,7 +165,9 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                 onPopInvokedWithResult: (_, __) =>
                     _playerKey.currentState?.backToMini(),
                 child: Scaffold(
-                  backgroundColor: context.surface,
+                  backgroundColor: context.realDark
+                      ? context.surface
+                      : widget.episodeItem.colorScheme(context).surface,
                   body: SafeArea(
                     child: Stack(
                       children: <Widget>[
@@ -259,22 +263,35 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                                     .episodeOrPodcastImageProvider),
                                           ),
                                         ),
-                                        title: Stack(
+                                        title: Row(
                                           children: [
-                                            Opacity(
-                                              opacity: 1,
-                                              child: Tooltip(
-                                                message:
-                                                    _episodeItem.podcastTitle,
-                                                child: Text(
-                                                    _episodeItem.podcastTitle,
-                                                    maxLines: 3,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                    style: context.textTheme
-                                                        .headlineSmall!),
+                                            Padding(
+                                              padding: EdgeInsets.only(top: 2),
+                                              child: Text(
+                                                _episodeItem.number.toString() +
+                                                    " | ",
+                                                style: GoogleFonts.teko(
+                                                    textStyle: context.textTheme
+                                                        .headlineSmall),
                                               ),
-                                            )
+                                            ),
+                                            Tooltip(
+                                              message:
+                                                  _episodeItem.podcastTitle,
+                                              child: Text(
+                                                _episodeItem.podcastTitle,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: context
+                                                    .textTheme.headlineSmall!
+                                                    .copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: _episodeItem
+                                                      .colorScheme(context)
+                                                      .onSecondaryContainer,
+                                                ),
+                                              ),
+                                            ),
                                           ],
                                         ),
                                       );
@@ -288,7 +305,11 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                   pinned: true,
                                   // floating: true,
                                   scrolledUnderElevation: 0,
-                                  leading: CustomBackButton(),
+                                  leading: CustomBackButton(
+                                    color: _episodeItem
+                                        .colorScheme(context)
+                                        .onSecondaryContainer,
+                                  ),
                                   elevation: 0,
                                 ),
                                 // Infobar
@@ -298,7 +319,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                   toolbarHeight: titleHeight,
                                   collapsedHeight: titleHeight,
                                   expandedHeight: titleHeight,
-                                  backgroundColor: context.surface,
+                                  backgroundColor: color,
                                   scrolledUnderElevation: 0,
                                   flexibleSpace: LayoutBuilder(
                                     builder: (context, constraints) {
@@ -306,7 +327,6 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                         height: titleHeight,
                                         padding: EdgeInsets.only(
                                             left: 30, right: 30),
-                                        color: color,
                                         child: Tooltip(
                                           message: _episodeItem.title,
                                           child: Text(
@@ -316,7 +336,12 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                             textAlign: TextAlign.left,
                                             style: Theme.of(context)
                                                 .textTheme
-                                                .headlineMedium,
+                                                .headlineMedium!
+                                                .copyWith(
+                                                  color: _episodeItem
+                                                      .colorScheme(context)
+                                                      .onSecondaryContainer,
+                                                ),
                                           ),
                                         ),
                                       );
@@ -330,7 +355,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                   toolbarHeight: 100,
                                   collapsedHeight: 100,
                                   expandedHeight: 100,
-                                  backgroundColor: context.surface,
+                                  backgroundColor: color,
                                   scrolledUnderElevation: 0,
                                   flexibleSpace: LayoutBuilder(
                                     builder: (context, constraints) {
@@ -338,7 +363,6 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                         height: 100,
                                         padding: EdgeInsets.only(
                                             left: 10, right: 10),
-                                        color: color,
                                         alignment: Alignment.centerLeft,
                                         child: Column(
                                           mainAxisAlignment:
@@ -391,12 +415,13 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                                   SizedBox(width: 10),
                                                   if (_episodeItem.isExplicit ==
                                                       true)
-                                                    Text('E',
-                                                        style: TextStyle(
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            color:
-                                                                context.error))
+                                                    Text(
+                                                      'E',
+                                                      style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color: context.error),
+                                                    )
                                                 ],
                                               ),
                                             ),
@@ -486,13 +511,18 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                                             style:
                                                                 OutlinedButton
                                                                     .styleFrom(
-                                                              shape: RoundedRectangleBorder(
-                                                                  borderRadius:
-                                                                      context
-                                                                          .radiusHuge,
-                                                                  side: BorderSide(
-                                                                      color: context
-                                                                          .accentColor)),
+                                                              shape:
+                                                                  RoundedRectangleBorder(
+                                                                borderRadius:
+                                                                    context
+                                                                        .radiusHuge,
+                                                              ),
+                                                              side: BorderSide(
+                                                                color: _episodeItem
+                                                                    .colorScheme(
+                                                                        context)
+                                                                    .onSecondaryContainer,
+                                                              ),
                                                             ),
                                                             onPressed: () => audio
                                                                 .loadEpisodeToQueue(

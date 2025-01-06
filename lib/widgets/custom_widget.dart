@@ -1358,12 +1358,14 @@ class TabIndicator extends CustomPainter {
 
 /// Custom back button
 class CustomBackButton extends StatelessWidget {
-  const CustomBackButton({Key? key}) : super(key: key);
+  final Color? color;
+  const CustomBackButton({this.color, super.key});
   @override
   Widget build(BuildContext context) {
     return IconButton(
       splashRadius: 20,
       icon: const BackButtonIcon(),
+      color: color,
       tooltip: context.s.back,
       onPressed: () {
         Navigator.maybePop(context);

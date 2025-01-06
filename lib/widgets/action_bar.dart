@@ -302,9 +302,13 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
               value: Theme.of(context).extension<CardColorScheme>()!),
       ],
       builder: (context, child) => _ActionBarOuter(
-          Row(children: widget.widgetsFirstRow),
-          Row(children: widget.widgetsSecondRow),
-          pinned: widget.pinned),
+        Row(children: widget.widgetsFirstRow),
+        Row(children: widget.widgetsSecondRow),
+        pinned: widget.pinned,
+        surface: context.realDark
+            ? context.surface
+            : cardColorScheme?.colorScheme.surface,
+      ),
     );
   }
 }
@@ -313,7 +317,9 @@ class _ActionBarOuter extends StatefulWidget {
   final Widget firstRow;
   final Widget secondRow;
   final bool pinned;
-  _ActionBarOuter(this.firstRow, this.secondRow, {required this.pinned});
+  final Color? surface;
+  _ActionBarOuter(this.firstRow, this.secondRow,
+      {required this.pinned, this.surface});
 
   @override
   __ActionBarOuterState createState() => __ActionBarOuterState();
@@ -361,10 +367,9 @@ class __ActionBarOuterState extends State<_ActionBarOuter>
       pinned: widget.pinned,
       leading: Center(),
       toolbarHeight: totalHeight,
-      backgroundColor: context.surface,
+      backgroundColor: widget.surface ?? context.surface,
       scrolledUnderElevation: 0,
       flexibleSpace: Container(
-        color: context.surface,
         height: totalHeight,
         child: Padding(
           padding: EdgeInsets.only(

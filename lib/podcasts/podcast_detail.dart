@@ -181,7 +181,9 @@ class _PodcastDetailState extends State<PodcastDetail> {
                     }
                   },
                   child: Scaffold(
-                    backgroundColor: context.surface,
+                    backgroundColor: context.realDark
+                        ? context.surface
+                        : cardColorScheme.colorScheme.surface,
                     body: SafeArea(
                       child: Stack(
                         children: <Widget>[
