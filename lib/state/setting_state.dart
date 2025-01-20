@@ -526,7 +526,8 @@ class SettingState extends ChangeNotifier {
       }
       _locale = Locale(systemLanCode);
     } else {
-      _locale = Locale(localeString.first, localeString[1]);
+      _locale = Locale(localeString.first,
+          localeString.length == 1 ? null : localeString[1]);
     }
     await S.load(_locale!);
   }

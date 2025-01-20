@@ -3,6 +3,7 @@ import 'dart:developer';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:rxdart/rxdart.dart';
@@ -289,11 +290,10 @@ class AudioPlayerNotifier extends ChangeNotifier {
 
   /// Audio service config
   AudioServiceConfig get _config => AudioServiceConfig(
-        androidResumeOnClick: false,
+        androidResumeOnClick: true,
         androidNotificationChannelName: 'Tsacdop',
         androidNotificationIcon: 'drawable/ic_notification',
-        androidNotificationOngoing: false,
-        // androidEnableQueue: true,
+        androidNotificationOngoing: true,
         androidStopForegroundOnPause: true,
         preloadArtwork: false,
         fastForwardInterval: Duration(seconds: _fastForwardSeconds!),
@@ -1483,14 +1483,13 @@ class CustomAudioHandler extends BaseAudioHandler
     // Transmit events received from player
     playbackState.add(PlaybackState(
       androidCompactActionIndices: [0, 1, 2],
+      // This is ignored on A13 / SDK33 and middle ones are shown.
       systemActions: {
         MediaAction.seek,
         MediaAction.seekForward,
         MediaAction.seekBackward,
         MediaAction.fastForward,
         MediaAction.rewind,
-        MediaAction.skipToNext,
-        MediaAction.skipToPrevious
       },
     ));
     _playbackEventSubscription = _player.playbackEventStream.listen(
@@ -1501,8 +1500,7 @@ class CustomAudioHandler extends BaseAudioHandler
 
         playbackState.add(
           playbackState.value.copyWith(
-            controls: _getControls(
-                _layoutIndex), // If you press the notification play/pause button rapidly it can get stuck in pause even though this is set correctly. Maybe there needs to be a rate limit for that
+            controls: await _getControls(_layoutIndex),
             processingState: {
               ProcessingState.idle: AudioProcessingState.idle,
               ProcessingState.loading: AudioProcessingState.loading,
@@ -1641,6 +1639,7 @@ class CustomAudioHandler extends BaseAudioHandler
 
   @override
   Future<void> stop() async {
+    await pause();
     customEvent.add({'playerRunning': false});
     await super.stop();
   }
@@ -1719,7 +1718,7 @@ class CustomAudioHandler extends BaseAudioHandler
   Future<void> combinedSeek({final Duration? position, int? index}) async {
     if ((position != null && position != _position) ||
         (index != null && index != _index)) {
-      customEvent.add({'lastEpisodePosition': _position});
+      customEvent.add({'lastEpisodePosition': _position.inMilliseconds});
       await _player.seek(position, index: index);
     }
   }
@@ -1751,10 +1750,12 @@ class CustomAudioHandler extends BaseAudioHandler
     }
   }
 
+  @override
   Future<void> fastForward() async {
     _seekRelative(AudioService.config.fastForwardInterval);
   }
 
+  @override
   Future<void> rewind() async {
     _seekRelative(-AudioService.config.rewindInterval);
   }
@@ -1827,37 +1828,63 @@ class CustomAudioHandler extends BaseAudioHandler
     await _loudnessEnhancer.setTargetGain(gain / 2000);
   }
 
-  List<MediaControl> _getControls(int? index) {
-    switch (index) {
-      case 0:
-        return [
-          playing ? pauseControl : playControl,
-          forwardControl,
-          skipToNextControl,
-          stopControl
-        ];
-      case 1:
-        return [
-          playing ? pauseControl : playControl,
-          rewindControl,
-          skipToNextControl,
-          stopControl
-        ];
-      case 2:
-        return [
-          rewindControl,
-          playing ? pauseControl : playControl,
-          forwardControl,
-          stopControl
-        ];
-
-      default:
-        return [
-          playing ? pauseControl : playControl,
-          forwardControl,
-          skipToNextControl,
-          stopControl
-        ];
+  /// Due to android 13 (sdk 33) restrictions play/pause button is always in the middle
+  /// and its icon can't be changed. If included in PlaybackState systemActions or here,
+  /// skipToPrevious and skipToNext are immediately to its left and right
+  /// respectively, and their icons can't be changed. If they're not included,
+  /// custom buttons are shown in their place. Additionally 2 custom buttons
+  /// can be shown on leftmost and rightmost positions in extended notification.
+  ///
+  /// The list returned from this function determines the custom buttons.
+  /// Play/pause, skipToPrevious, skipToNext here are placed as if in systemActions.
+  /// Other buttons are placed in the lowest unoccuppied position:
+  /// | 2 | 0 | play | 1 | 3 |
+  ///
+  /// On SDK 33 and above the function returns a different list to accomodate this.
+  Future<List<MediaControl>> _getControls(int? index) async {
+    final androidInfo = await DeviceInfoPlugin().androidInfo;
+    if (androidInfo.version.sdkInt < 33) {
+      switch (index) {
+        case 0:
+          return [
+            playing ? pauseControl : playControl,
+            forwardControl,
+            skipToNextControl,
+            stopControl
+          ];
+        case 1:
+          return [
+            playing ? pauseControl : playControl,
+            rewindControl,
+            skipToNextControl,
+            stopControl
+          ];
+        case 2:
+          return [
+            rewindControl,
+            playing ? pauseControl : playControl,
+            forwardControl,
+            stopControl
+          ];
+        default:
+          return [
+            playing ? pauseControl : playControl,
+            forwardControl,
+            skipToNextControl,
+            stopControl
+          ];
+      }
+    } else {
+      switch (index) {
+        case 0:
+          return [skipToNextControl, stopControl, forwardControl];
+        case 1:
+          return [skipToNextControl, rewindControl, stopControl];
+        case 2:
+          return [rewindControl, forwardControl, stopControl];
+        default:
+          return [skipToNextControl, stopControl, forwardControl];
+      }
     }
   }
 
