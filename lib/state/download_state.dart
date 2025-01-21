@@ -17,12 +17,14 @@ import '../type/episode_task.dart';
 import '../type/episodebrief.dart';
 import 'episode_state.dart';
 
+@pragma('vm:entry-point')
 void downloadCallback(String id, int status, int progress) {
   developer.log('Homepage callback task in $id  status ($status) $progress');
   final send = IsolateNameServer.lookupPortByName('downloader_send_port')!;
   send.send([id, status, progress]);
 }
 
+@pragma('vm:entry-point')
 void autoDownloadCallback(String id, int status, int progress) {
   developer
       .log('Autodownload callback task in $id  status ($status) $progress');
