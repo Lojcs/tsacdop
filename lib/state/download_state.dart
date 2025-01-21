@@ -48,24 +48,21 @@ class AutoDownloader {
       bindBackgroundIsolate();
       return;
     }
-    _port.listen((dynamic data) {
+    _port.listen((dynamic data) async {
       String id = data[0];
       int status = data[1];
       int progress = data[2];
+      EpisodeTask episodeTask =
+          _episodeTasks.firstWhere((task) => task.taskId == id);
 
-      for (var episodeTask in _episodeTasks) {
-        if (episodeTask.taskId == id) {
-          episodeTask.status = DownloadTaskStatus.fromInt(status);
-          episodeTask.progress = progress;
-          if (status == DownloadTaskStatus.complete) {
-            _saveMediaId(episodeTask);
-          } else if (status == DownloadTaskStatus.failed) {
-            _episodeTasks.removeWhere((element) =>
-                element.episode!.enclosureUrl ==
-                episodeTask.episode!.enclosureUrl);
-            if (_episodeTasks.length == 0) _unbindBackgroundIsolate();
-          }
-        }
+      episodeTask.status = DownloadTaskStatus.fromInt(status);
+      episodeTask.progress = progress;
+      if (episodeTask.status == DownloadTaskStatus.complete) {
+        await _saveMediaId(episodeTask);
+      } else if (status == DownloadTaskStatus.failed) {
+        _episodeTasks.removeWhere((element) =>
+            element.episode!.enclosureUrl == episodeTask.episode!.enclosureUrl);
+        if (_episodeTasks.length == 0) _unbindBackgroundIsolate();
       }
     });
   }
@@ -73,13 +70,6 @@ class AutoDownloader {
   void _unbindBackgroundIsolate() {
     IsolateNameServer.removePortNameMapping('auto_downloader_send_port');
     _completer.complete();
-  }
-
-  Future<Directory> _getDownloadDirectory() async {
-    final storage = KeyValueStorage(downloadPositionKey);
-    final index = await storage.getInt();
-    final externalDirs = await getExternalStorageDirectories();
-    return externalDirs![index];
   }
 
   Future _saveMediaId(EpisodeTask episodeTask) async {
@@ -100,31 +90,8 @@ class AutoDownloader {
   Future startTask(List<EpisodeBrief> episodes,
       {bool showNotification = false}) async {
     for (var episode in episodes) {
-      final dir = await _getDownloadDirectory();
-      var localPath = path.join(dir.path, episode.podcastTitle);
-      final saveDir = Directory(localPath);
-      var hasExisted = await saveDir.exists();
-      if (!hasExisted) {
-        saveDir.create();
-      }
-      var now = DateTime.now();
-      var datePlus = now.year.toString() +
-          now.month.toString() +
-          now.day.toString() +
-          now.second.toString();
-      var fileName =
-          '${episode.title.replaceAll('/', '')}$datePlus.${episode.enclosureUrl.split('/').last.split('.').last}';
-      if (fileName.length > 100) {
-        fileName = fileName.substring(fileName.length - 100);
-      }
-      var taskId = await FlutterDownloader.enqueue(
-        fileName: fileName,
-        url: episode.enclosureUrl,
-        savedDir: localPath,
-        showNotification: showNotification,
-        openFileFromNotification: false,
-      );
-      _episodeTasks.add(EpisodeTask(episode, taskId));
+      await taskStarter(episode, _episodeTasks,
+          showNotification: showNotification);
     }
     await _completer.future;
     return;
@@ -137,6 +104,9 @@ class DownloadState extends ChangeNotifier {
   late final EpisodeState _episodeState;
   List<EpisodeTask> _episodeTasks = [];
   List<EpisodeTask> get episodeTasks => _episodeTasks;
+
+  /// Flips to indicate a download has finished.
+  bool downloadFinished = false;
 
   DownloadState(BuildContext context) {
     _episodeState = Provider.of<EpisodeState>(context, listen: false);
@@ -211,13 +181,6 @@ class DownloadState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<Directory> _getDownloadDirectory() async {
-    final storage = KeyValueStorage(downloadPositionKey);
-    final index = await storage.getInt();
-    final externalDirs = await getExternalStorageDirectories();
-    return externalDirs![index];
-  }
-
   void _bindBackgroundIsolate() {
     final _port = ReceivePort();
     final isSuccess = IsolateNameServer.registerPortWithName(
@@ -237,8 +200,9 @@ class DownloadState extends ChangeNotifier {
         if (episodeTask.taskId == id) {
           episodeTask.status = DownloadTaskStatus.fromInt(status);
           episodeTask.progress = progress;
-          if (status == DownloadTaskStatus.complete) {
+          if (episodeTask.status == DownloadTaskStatus.complete) {
             _saveMediaId(episodeTask).then((value) {
+              downloadFinished = !downloadFinished;
               notifyListeners();
             });
           } else {
@@ -295,38 +259,12 @@ class DownloadState extends ChangeNotifier {
   }
 
   Future startTask(EpisodeBrief episode, {bool showNotification = true}) async {
-    var isDownloaded = await _dbHelper.isDownloaded(episode.enclosureUrl);
-    if (!isDownloaded) {
-      final dir = await _getDownloadDirectory();
-      var localPath =
-          path.join(dir.path, episode.podcastTitle.replaceAll('/', ''));
-      final saveDir = Directory(localPath);
-      var hasExisted = await saveDir.exists();
-      if (!hasExisted) {
-        await saveDir.create();
-      }
-      var now = DateTime.now();
-      var datePlus = now.year.toString() +
-          now.month.toString() +
-          now.day.toString() +
-          now.second.toString();
-      var fileName =
-          '${episode.title.replaceAll('/', '')}$datePlus.${episode.enclosureUrl.split('/').last.split('.').last}';
-      if (fileName.length > 100) {
-        fileName = fileName.substring(fileName.length - 100);
-      }
-      var taskId = await FlutterDownloader.enqueue(
-        fileName: fileName,
-        url: episode.enclosureUrl,
-        savedDir: localPath,
-        showNotification: showNotification,
-        openFileFromNotification: false,
-      );
-      _episodeTasks.add(EpisodeTask(
-          await episode.copyWithFromDB(newFields: [EpisodeField.isDownloaded]),
-          taskId));
-      notifyListeners();
-    }
+    episode =
+        await episode.copyWithFromDB(newFields: [EpisodeField.isDownloaded]);
+
+    taskStarter(episode, _episodeTasks, showNotification: showNotification);
+
+    notifyListeners();
   }
 
   Future pauseTask(EpisodeBrief? episode) async {
@@ -397,7 +335,6 @@ class DownloadState extends ChangeNotifier {
       var episodes = await _dbHelper.getEpisodes(
           rangeParameters: [Sorter.downloadDate],
           rangeDelimiters: [Tuple2(-1, deadline)],
-          filterPlayed: false,
           filterDownloaded: true);
       episodes.addAll(await _dbHelper.getEpisodes(
           filterPlayed: true, filterDownloaded: true));
@@ -414,5 +351,49 @@ class DownloadState extends ChangeNotifier {
             taskId: task.taskId, shouldDeleteContent: true);
       }
     }
+  }
+}
+
+Future<Directory> _getDownloadDirectory() async {
+  final storage = KeyValueStorage(downloadPositionKey);
+  final index = await storage.getInt();
+  final externalDirs = await getExternalStorageDirectories();
+  return externalDirs![index];
+}
+
+Future<void> taskStarter(EpisodeBrief episode, List<EpisodeTask> episodeTasks,
+    {bool showNotification = false}) async {
+  if (!episode.isDownloaded!) {
+    final dir = await _getDownloadDirectory();
+    var localPath =
+        path.join(dir.path, episode.podcastTitle.replaceAll('/', ''));
+    final saveDir = Directory(localPath);
+    var hasExisted = await saveDir.exists();
+    if (!hasExisted) {
+      await saveDir.create();
+    }
+    var now = DateTime.now();
+    var datePlus = now.year.toString() +
+        now.month.toString() +
+        now.day.toString() +
+        now.second.toString();
+    var fileName =
+        '${episode.title.replaceAll('/', '')}$datePlus.${episode.enclosureUrl.split('/').last.split('.').last}';
+    // // TODO: This includes query parameters (.mp3?id=1234) in the extension. Should use the following instead.
+    // // Also, this is collision prone if two episodes with the same name are downloaded at the same second, like from a multiselect batch action.
+    // // Should consider that case.
+    // var fileName =
+    //     '${episode.title.replaceAll('/', '')}$datePlus.${episode.enclosureUrl.split('/').last.split('.').last.split('?').first}';
+    if (fileName.length > 100) {
+      fileName = fileName.substring(fileName.length - 100);
+    }
+    var taskId = await FlutterDownloader.enqueue(
+      fileName: fileName,
+      url: episode.enclosureUrl,
+      savedDir: localPath,
+      showNotification: showNotification,
+      openFileFromNotification: false,
+    );
+    episodeTasks.add(EpisodeTask(episode, taskId));
   }
 }

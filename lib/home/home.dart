@@ -15,6 +15,7 @@ import 'package:tuple/tuple.dart';
 
 import '../playlists/playlist_home.dart';
 import '../state/audio_state.dart';
+import '../state/download_state.dart';
 import '../state/setting_state.dart';
 import '../type/episodebrief.dart';
 import '../util/extension_helper.dart';
@@ -838,6 +839,11 @@ class _MyDownloadState extends State<_MyDownload>
   bool _scroll = false;
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     super.build(context);
     final s = context.s;
@@ -900,7 +906,6 @@ class _MyDownloadState extends State<_MyDownload>
                 );
               },
             ),
-            DownloadList(),
             SliverAppBar(
               pinned: true,
               leading: Center(),
@@ -913,30 +918,42 @@ class _MyDownloadState extends State<_MyDownload>
                     )
                   : Center(),
             ),
-            _episodes.length != 0
-                ? EpisodeGrid(
-                    episodes: _episodes,
-                    layout: _layout ?? EpisodeGridLayout.large,
-                    openPodcast: true,
-                    initNum: 0,
-                  )
-                : SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 110),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Icon(LineIcons.download,
-                              size: 80, color: Colors.grey[500]),
-                          Padding(padding: EdgeInsets.symmetric(vertical: 10)),
-                          Text(
-                            s.noEpisodeDownload,
-                            style: TextStyle(color: Colors.grey[500]),
-                          )
-                        ],
+            DownloadList(),
+            Selector<DownloadState, bool>(
+              selector: (_, downloadState) => downloadState.downloadFinished,
+              builder: (context, value, _) => FutureBuilder(
+                future: Future.microtask(() async {
+                  _episodes = await _getEpisodes(_top);
+                  Provider.of<SelectionController>(context, listen: false)
+                      .setSelectableEpisodes(_episodes, compatible: false);
+                }),
+                builder: (context, snapshot) => _episodes.length != 0
+                    ? EpisodeGrid(
+                        episodes: _episodes,
+                        layout: _layout ?? EpisodeGridLayout.large,
+                        openPodcast: true,
+                        initNum: 0,
+                      )
+                    : SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 110),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Icon(LineIcons.download,
+                                  size: 80, color: Colors.grey[500]),
+                              Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 10)),
+                              Text(
+                                s.noEpisodeDownload,
+                                style: TextStyle(color: Colors.grey[500]),
+                              )
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
+              ),
+            ),
           ],
         ),
       ),

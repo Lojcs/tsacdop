@@ -1294,7 +1294,6 @@ class AudioPlayerNotifier extends ChangeNotifier {
   }
 
   Future<void> seekTo(int position) async {
-    print(_audioPosition);
     _undoButtonPositionsStack.add(_audioPosition);
     _audioPosition = position;
     _lastSeekPosition = position;

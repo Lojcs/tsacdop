@@ -41,7 +41,7 @@ Future<void> requestDownload(List<EpisodeBrief> episodes, BuildContext context,
       .getBool(defaultValue: true, reverse: true);
   // We don't need storage permission to download to app storage
   final result = await Connectivity().checkConnectivity();
-  final usingData = result == ConnectivityResult.mobile;
+  final usingData = !result.contains(ConnectivityResult.wifi);
   var useData = false;
   final s = context.s;
   if (downloadUsingData && usingData) {

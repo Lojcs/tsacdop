@@ -121,7 +121,8 @@ class _PodcastDetailState extends State<PodcastDetail> {
         final result = await Connectivity().checkConnectivity();
         final autoDownloadStorage = KeyValueStorage(autoDownloadNetworkKey);
         final autoDownloadNetwork = await autoDownloadStorage.getInt();
-        if (autoDownloadNetwork == 1 || result == ConnectivityResult.wifi) {
+        if (autoDownloadNetwork == 1 ||
+            result.contains(ConnectivityResult.wifi)) {
           var episodes = await _dbHelper.getEpisodes(
               feedIds: [podcastLocal.id],
               filterNew: true,

@@ -1911,6 +1911,12 @@ class DBHelper {
       } else {
         await episodeState.unsetDownloaded([episode]);
       }
+    } else {
+      if (episode.enclosureUrl != mediaId) {
+        await setDownloaded(episode.id, taskId!);
+      } else {
+        await unsetDownloaded([episode.id]);
+      }
     }
     return count;
   }

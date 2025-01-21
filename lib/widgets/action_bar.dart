@@ -214,6 +214,7 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
     _buttonRefreshController.dispose();
     _buttonRemoveNewMarkController.dispose();
     _sharedState.dispose();
+    _sharedState.disposed = true;
     super.dispose();
   }
 
@@ -545,6 +546,12 @@ class _ActionBarSharedState extends ChangeNotifier {
         _layout = layout {
     if (expandSecondRow) switchSecondRowController.forward();
     Future.microtask(() => onGetEpisodesChanged(getGetEpisodes()));
+  }
+
+  bool _disposed = false;
+  bool get disposed => _disposed;
+  set disposed(bool a) {
+    _disposed = true;
   }
 
   late final PodcastGroup groupAll =
@@ -1322,27 +1329,34 @@ class ActionBarButtonRefresh extends ActionBarWidget {
       onPressed: (value) async {
         if (sharedState.buttonRefreshController.value == 0) {
           final refreshWorker = context.read<RefreshWorker>();
-          Future refreshFuture;
           if (sharedState.podcast != sharedState.podcastAll) {
-            refreshFuture = refreshWorker.start([sharedState.podcast.id]);
+            refreshWorker.start([sharedState.podcast.id]);
           } else if (sharedState.group != sharedState.podcastAll) {
-            refreshFuture = refreshWorker.start(sharedState.group.podcastList);
+            refreshWorker.start(sharedState.group.podcastList);
           } else {
-            refreshFuture = refreshWorker.start([]);
+            refreshWorker.start([]);
           }
           sharedState.buttonRefreshController.forward();
           Fluttertoast.showToast(
             msg: context.s.refreshStarted,
             gravity: ToastGravity.BOTTOM,
           );
-          await refreshFuture;
-          sharedState.buttonRefreshController.reverse();
-          // Fluttertoast.cancel();
-          // Fluttertoast.showToast(
-          //   msg: context.s.refreshFinished,
-          //   gravity: ToastGravity.BOTTOM,
-          // ); // TODO: Toast on refresh finish
-          sharedState.onGetEpisodesChanged(sharedState.getGetEpisodes());
+          String refreshFinished = context.s.refreshFinished;
+          refreshWorker.addListener(() {
+            if (refreshWorker.complete) {
+              Fluttertoast.cancel();
+              Fluttertoast.showToast(
+                msg: refreshFinished,
+                gravity: ToastGravity.BOTTOM,
+              );
+              if (!sharedState.disposed) {
+                sharedState.buttonRefreshController.reverse();
+                // Calling this in the listener messes up provider.
+                Future.microtask(() => sharedState
+                    .onGetEpisodesChanged(sharedState.getGetEpisodes()));
+              }
+            }
+          });
         }
       },
       tooltip: context.s.refresh,

@@ -128,13 +128,17 @@ Future<void> podcastSync({List<PodcastLocal>? podcasts}) async {
   final autoDownloadStorage = KeyValueStorage(autoDownloadNetworkKey);
   final autoDownloadNetwork = await autoDownloadStorage.getInt();
   final result = await Connectivity().checkConnectivity();
-  if (autoDownloadNetwork == 1 || result == ConnectivityResult.wifi) {
+  if (autoDownloadNetwork == 1 || result.contains(ConnectivityResult.wifi)) {
     final episodes = await dbHelper.getEpisodes(
-        filterNew: true, filterDownloaded: false, filterAutoDownload: true);
+        optionalFields: [EpisodeField.isDownloaded],
+        filterNew: true,
+        filterDownloaded: false,
+        filterAutoDownload: true);
     // For safety
     if (episodes.length < 100 && episodes.length > 0) {
       downloader.bindBackgroundIsolate();
       await downloader.startTask(episodes);
+      // This doesn't seem to work unless it's awaited.
     }
   }
   await lastWorkStorage.saveInt(1);
