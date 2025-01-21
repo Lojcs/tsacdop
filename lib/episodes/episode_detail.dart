@@ -177,6 +177,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                             controller: _controller,
                             headerSliverBuilder: (context, innerBoxScrolled) {
                               final titleLineTest = TextPainter(
+                                  maxLines: 3,
                                   text: TextSpan(
                                     text: _episodeItem.title,
                                     style: Theme.of(context)
@@ -205,16 +206,8 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                       return FlexibleSpaceBar(
                                         collapseMode: CollapseMode.pin,
                                         titlePadding: EdgeInsets.only(
-                                          left: 55 +
-                                              0 *
-                                                  (1 -
-                                                      ((expandRatio - 0.8) * 5)
-                                                          .clamp(0, 1)),
-                                          right: 50 +
-                                              0 *
-                                                  (1 -
-                                                      ((expandRatio - 0.8) * 5)
-                                                          .clamp(0, 1)),
+                                          left: 45,
+                                          right: 45,
                                           top: 13,
                                           bottom: topHeight -
                                               (40 +
@@ -263,6 +256,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                           ),
                                         ),
                                         title: Row(
+                                          mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Padding(
                                               padding: EdgeInsets.only(top: 2),
@@ -274,23 +268,26 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                                         .headlineSmall),
                                               ),
                                             ),
-                                            Tooltip(
-                                              message:
+                                            Expanded(
+                                              child: Tooltip(
+                                                message:
+                                                    _episodeItem.podcastTitle,
+                                                child: Text(
                                                   _episodeItem.podcastTitle,
-                                              child: Text(
-                                                _episodeItem.podcastTitle,
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: context
-                                                    .textTheme.headlineSmall!
-                                                    .copyWith(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: _episodeItem
-                                                      .colorScheme(context)
-                                                      .onSecondaryContainer,
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: context
+                                                      .textTheme.headlineSmall!
+                                                      .copyWith(
+                                                    fontWeight: FontWeight.bold,
+                                                    color: _episodeItem
+                                                        .colorScheme(context)
+                                                        .onSecondaryContainer,
+                                                  ),
                                                 ),
                                               ),
-                                            ),
+                                            )
                                           ],
                                         ),
                                       );
@@ -320,31 +317,27 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                   expandedHeight: titleHeight,
                                   backgroundColor: color,
                                   scrolledUnderElevation: 0,
-                                  flexibleSpace: LayoutBuilder(
-                                    builder: (context, constraints) {
-                                      return Container(
-                                        height: titleHeight,
-                                        padding: EdgeInsets.only(
-                                            left: 30, right: 30),
-                                        child: Tooltip(
-                                          message: _episodeItem.title,
-                                          child: Text(
-                                            _episodeItem.title,
-                                            maxLines: 3,
-                                            overflow: TextOverflow.ellipsis,
-                                            textAlign: TextAlign.left,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .headlineMedium!
-                                                .copyWith(
-                                                  color: _episodeItem
-                                                      .colorScheme(context)
-                                                      .onSecondaryContainer,
-                                                ),
-                                          ),
-                                        ),
-                                      );
-                                    },
+                                  flexibleSpace: Container(
+                                    height: titleHeight,
+                                    padding:
+                                        EdgeInsets.only(left: 30, right: 30),
+                                    child: Tooltip(
+                                      message: _episodeItem.title,
+                                      child: Text(
+                                        _episodeItem.title,
+                                        maxLines: 3,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.left,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .headlineMedium!
+                                            .copyWith(
+                                              color: _episodeItem
+                                                  .colorScheme(context)
+                                                  .onSecondaryContainer,
+                                            ),
+                                      ),
+                                    ),
                                   ),
                                 ),
                                 SliverAppBar(

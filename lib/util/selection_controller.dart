@@ -44,7 +44,7 @@ class SelectionController extends ChangeNotifier {
       {bool compatible = false}) {
     if (episodes != _selectableEpisodes) {
       if (compatible) {
-        if (selectionTentative) {
+        if (!hasAllSelectableEpisodes) {
           _selectableEpisodes =
               episodes.toList(); // Prevent spooky action at a distance
         }

@@ -1332,7 +1332,7 @@ class DBHelper {
   }
 
   Future<int> updatePodcastRss(PodcastLocal podcastLocal,
-      {int? removeMark = 0}) async {
+      {int? keepNewMark = 0}) async {
     final options = BaseOptions(
       connectTimeout: Duration(seconds: 20),
       receiveTimeout: Duration(seconds: 20),
@@ -1353,10 +1353,15 @@ class DBHelper {
             )
             .toList();
         var count = urls.length;
-        if (removeMark == 0) {
+        if (keepNewMark == 0) {
           await dbClient.rawUpdate(
-              "UPDATE Episodes SET is_new = 0 WHERE feed_id = ?",
-              [podcastLocal.id]);
+              "UPDATE Episodes SET is_new = 0 WHERE feed_id = ? AND milliseconds < ?",
+              [
+                podcastLocal.id,
+                DateTime.now()
+                    .subtract(Duration(days: 1))
+                    .millisecondsSinceEpoch
+              ]);
         }
 
         for (var item in feed.items!) {

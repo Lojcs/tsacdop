@@ -479,7 +479,7 @@ class SettingState extends ChangeNotifier {
 
   Future _getUseWallpaperTheme() async {
     _useWallpaperTheme =
-        await _useWallpaperThemeStorage.getBool(defaultValue: true);
+        await _useWallpaperThemeStorage.getBool(defaultValue: false);
   }
 
   Future _getOpenPlaylistDefault() async {

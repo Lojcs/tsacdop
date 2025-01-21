@@ -1643,12 +1643,13 @@ class _ControlPanelState extends State<ControlPanel>
                                                 context,
                                                 FadeRoute(
                                                     page: FutureBuilder(
-                                                        // TODO: Check which fields are actually needed.
                                                         future: data.item1!
                                                             .copyWithFromDB(
                                                                 newFields: [
                                                               EpisodeField
                                                                   .description,
+                                                              EpisodeField
+                                                                  .number,
                                                               EpisodeField
                                                                   .enclosureDuration,
                                                               EpisodeField

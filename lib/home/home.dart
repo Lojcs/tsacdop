@@ -407,77 +407,71 @@ class __PlaylistButtonState extends State<_PlaylistButton> {
                 Selector<AudioPlayerNotifier, Tuple3<bool, EpisodeBrief?, int>>(
               selector: (_, audio) => Tuple3(
                   audio.playerRunning, audio.episode, audio.historyPosition),
-              builder: (_, data, __) => !_loadPlay
-                  ? SizedBox(
-                      height: 8.0,
-                    )
-                  : data.item1 || data.item2 == null
-                      ? SizedBox(
-                          height: 8.0,
-                        )
-                      : InkWell(
-                          borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(10.0),
-                              topRight: Radius.circular(10.0)),
-                          onTap: () async {
-                            await audio.playFromLastPosition();
-                            await Navigator.maybePop<int>(context);
-                          },
-                          child: Column(
+              builder: (_, data, __) => !_loadPlay ||
+                      data.item1 ||
+                      data.item2 == null
+                  ? Center()
+                  : InkWell(
+                      borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(10.0),
+                          topRight: Radius.circular(10.0)),
+                      onTap: () async {
+                        await audio.playFromLastPosition();
+                        await Navigator.maybePop<int>(context);
+                      },
+                      child: Column(
+                        children: <Widget>[
+                          Padding(
+                            padding: EdgeInsets.symmetric(vertical: 5),
+                          ),
+                          Stack(
+                            alignment: Alignment.center,
                             children: <Widget>[
-                              Padding(
-                                padding: EdgeInsets.symmetric(vertical: 5),
-                              ),
-                              Stack(
-                                alignment: Alignment.center,
-                                children: <Widget>[
-                                  CircleAvatar(
-                                      radius: 20,
-                                      backgroundImage: data.item2!.avatarImage),
-                                  Container(
-                                    height: 40.0,
-                                    width: 40.0,
-                                    decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Colors.black12),
-                                    child: Icon(
-                                      Icons.play_arrow,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Padding(
-                                padding: EdgeInsets.symmetric(vertical: 2),
-                              ),
-                              SizedBox(
-                                height: 77,
-                                width: 140,
-                                child: Column(
-                                  children: <Widget>[
-                                    Text(
-                                      (data.item3 ~/ 1000).toTime,
-                                      style:
-                                          TextStyle(color: context.textColor),
-                                    ),
-                                    Text(
-                                      data.item2!.title,
-                                      maxLines: 2,
-                                      textAlign: TextAlign.center,
-                                      overflow: TextOverflow.ellipsis,
-                                      style:
-                                          TextStyle(color: context.textColor),
-                                      // style: TextStyle(color: Colors.white),
-                                    ),
-                                  ],
+                              CircleAvatar(
+                                  radius: 20,
+                                  backgroundImage: data.item2!.avatarImage),
+                              Container(
+                                height: 40.0,
+                                width: 40.0,
+                                decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.black12),
+                                child: Icon(
+                                  Icons.play_arrow,
+                                  color: Colors.white,
                                 ),
-                              ),
-                              Divider(
-                                height: 1,
                               ),
                             ],
                           ),
-                        ),
+                          Padding(
+                            padding: EdgeInsets.symmetric(vertical: 2),
+                          ),
+                          SizedBox(
+                            height: 77,
+                            width: 140,
+                            child: Column(
+                              children: <Widget>[
+                                Text(
+                                  (data.item3 ~/ 1000).toTime,
+                                  style: TextStyle(color: context.textColor),
+                                ),
+                                Text(
+                                  data.item2!.title,
+                                  maxLines: 2,
+                                  textAlign: TextAlign.center,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(color: context.textColor),
+                                  // style: TextStyle(color: Colors.white),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Divider(
+                            height: 1,
+                          ),
+                        ],
+                      ),
+                    ),
             ),
           ),
           PopupMenuItem(

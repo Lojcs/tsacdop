@@ -119,7 +119,7 @@ Future<void> podcastSync({List<PodcastLocal>? podcasts}) async {
   final lastWorkStorage = KeyValueStorage(lastWorkKey);
   final lastWork = await lastWorkStorage.getInt();
   for (var podcastLocal in podcastList) {
-    await dbHelper.updatePodcastRss(podcastLocal, removeMark: lastWork);
+    await dbHelper.updatePodcastRss(podcastLocal, keepNewMark: lastWork);
     developer.log('Refresh ${podcastLocal.title}');
   }
   await FlutterDownloader.initialize();

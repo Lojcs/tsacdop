@@ -135,10 +135,10 @@ class OpenContainerWrapper extends StatelessWidget {
         flightWidgetEndSize: 30,
         flightWidgetBeginOffsetX: layout == EpisodeGridLayout.small ? 6 : 8,
         flightWidgetBeginOffsetY: layout == EpisodeGridLayout.small
-            ? 6
+            ? 7
             : layout == EpisodeGridLayout.medium
                 ? 8
-                : 14,
+                : 15,
         flightWidgetEndOffsetX: 10,
         flightWidgetEndOffsetY: data.item1
             ? context.height -
