@@ -104,7 +104,7 @@ class _DownloadListState extends State<DownloadList> {
                                   EpisodeField.isLiked,
                                   EpisodeField.isNew,
                                   EpisodeField.isPlayed,
-                                  EpisodeField.versionInfo
+                                  EpisodeField.isDisplayVersion
                                 ]),
                                 builder: ((context, snapshot) =>
                                     snapshot.hasData

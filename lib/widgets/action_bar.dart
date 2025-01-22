@@ -130,7 +130,7 @@ class ActionBar extends StatefulWidget {
   /// These are: [EpisodeField.description], [EpisodeField.number], [EpisodeField.enclosureDuration]
   /// [EpisodeField.enclosureSize], [EpisodeField.isDownloaded], [EpisodeField.episodeImage]
   /// [EpisodeField.podcastImage], [EpisodeField.primaryColor], [EpisodeField.isLiked]
-  /// [EpisodeField.isNew], [EpisodeField.isPlayed], [EpisodeField.versionInfo]
+  /// [EpisodeField.isNew], [EpisodeField.isPlayed], [EpisodeField.isDisplayVersion]
   final List<EpisodeField> extraFields;
 
   /// Default sort order
@@ -605,13 +605,13 @@ class _ActionBarSharedState extends ChangeNotifier {
                 EpisodeField.isLiked,
                 EpisodeField.isNew,
                 EpisodeField.isPlayed,
-                EpisodeField.versionInfo
+                EpisodeField.isDisplayVersion
               ] +
               extraFields,
           sortBy: sortBy,
           sortOrder: sortOrder,
           limit: count,
-          filterVersions: 1, // TODO: Make version button
+          filterDisplayVersion: true, // TODO: Make version button
           filterNew: filterNew,
           filterLiked: filterLiked,
           filterPlayed: filterPlayed,

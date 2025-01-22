@@ -1667,7 +1667,7 @@ class _ControlPanelState extends State<ControlPanel>
                                                               EpisodeField
                                                                   .isPlayed,
                                                               EpisodeField
-                                                                  .versionInfo
+                                                                  .isDisplayVersion
                                                             ]),
                                                         builder: ((context,
                                                                 snapshot) =>

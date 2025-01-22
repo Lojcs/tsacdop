@@ -163,13 +163,20 @@ class EpisodeState extends ChangeNotifier {
     }
   }
 
+  /// Sets the display version for all non downloaded versions of the episode
   Future<void> setDisplayVersion(EpisodeBrief episode) async {
     await _dbHelper.setDisplayVersion(episode);
+    bool changeHappened = false;
     changedIds.clear();
-    if (episodeChangeMap.containsKey(episode.id)) {
-      episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
+    for (var version in episode.versions) {
+      if (episodeChangeMap.containsKey(version.id)) {
+        episodeChangeMap[version.id] = !episodeChangeMap[version.id]!;
+        changedIds.add(version.id);
+        changeHappened = true;
+      }
+    }
+    if (changeHappened) {
       globalChange = !globalChange;
-      changedIds.add(episode.id);
       notifyListeners();
     }
   }

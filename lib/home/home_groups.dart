@@ -553,7 +553,7 @@ class _PodcastPreviewState extends State<PodcastPreview> {
           EpisodeField.isLiked,
           EpisodeField.isNew,
           EpisodeField.isPlayed,
-          EpisodeField.versionInfo
+          EpisodeField.isDisplayVersion
         ],
         sortBy: Sorter.pubDate,
         sortOrder: SortOrder.DESC,

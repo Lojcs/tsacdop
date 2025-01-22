@@ -371,39 +371,29 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                                       20, 5, 20, 5),
                                               child: Row(
                                                 children: [
-                                                  if (_episodeItem
-                                                          .versionInfo ==
-                                                      VersionInfo.NONE)
-                                                    _versionDateSelector(
-                                                        [_episodeItem])
-                                                  else
-                                                    FutureBuilder<EpisodeBrief>(
-                                                      // TODO: Make ui responsive.
-                                                      future:
-                                                          _getEpisodeVersions(),
-                                                      builder:
-                                                          (context, snapshot) {
-                                                        if (snapshot.hasData) {
-                                                          List<EpisodeBrief?>
-                                                              versions =
-                                                              snapshot
-                                                                  .data!
-                                                                  .versions!
-                                                                  .values
-                                                                  .toList();
-                                                          versions.sort(
-                                                              (a, b) => b!
-                                                                  .pubDate
-                                                                  .compareTo(a!
-                                                                      .pubDate));
-                                                          return _versionDateSelector(
-                                                              versions);
-                                                        } else {
-                                                          return _versionDateSelector(
-                                                              [_episodeItem]);
-                                                        }
-                                                      },
-                                                    ),
+                                                  FutureBuilder<EpisodeBrief>(
+                                                    // TODO: Make ui responsive.
+                                                    future:
+                                                        _getEpisodeVersions(),
+                                                    builder:
+                                                        (context, snapshot) {
+                                                      if (snapshot.hasData) {
+                                                        List<EpisodeBrief?>
+                                                            versions = snapshot
+                                                                .data!.versions
+                                                                .toList();
+                                                        versions.sort((a, b) =>
+                                                            b!.pubDate
+                                                                .compareTo(a!
+                                                                    .pubDate));
+                                                        return _versionDateSelector(
+                                                            versions);
+                                                      } else {
+                                                        return _versionDateSelector(
+                                                            [_episodeItem]);
+                                                      }
+                                                    },
+                                                  ),
                                                   SizedBox(width: 10),
                                                   if (_episodeItem.isExplicit ==
                                                       true)
@@ -633,28 +623,23 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
   }
 
   Future<EpisodeBrief> _getEpisodeVersions() async {
-    if (_episodeItem.versions == null ||
-        _episodeItem.versions!.containsValue(null)) {
-      EpisodeBrief episode = await _dbHelper.populateEpisodeVersions(
-          _episodeItem); // Not using copyWithFromDB since we need the original.
-      _episodeItem = episode;
+    if (_episodeItem.versions.isEmpty) {
+      _episodeItem =
+          await _episodeItem.copyWithFromDB(newFields: [EpisodeField.versions]);
     }
     return _episodeItem;
   }
 
   Future<void> _setEpisodeDisplayVersion(EpisodeBrief episode) async {
     await _episodeState.setDisplayVersion(episode);
-    Map<int, EpisodeBrief?>? versions = episode.versions!;
-    for (int version in versions.keys) {
-      if (versions[version]!.versionInfo == VersionInfo.FHAS ||
-          versions[version]!.versionInfo == VersionInfo.HAS) {
-        versions[versions[version]!.id] =
-            versions[version]!.copyWith(versionInfo: VersionInfo.IS);
+    // Being economical here, changing it directly instead of fetching from database
+    for (EpisodeBrief version in episode.versions) {
+      if (!version.isDownloaded! && version.isDisplayVersion!) {
+        episode.versions.remove(version);
+        episode.versions.add(version.copyWith(isDisplayVersion: false));
       }
     }
-    episode =
-        episode.copyWith(versionInfo: VersionInfo.FHAS, versions: versions);
-    episode.versions![episode.id] = episode;
+    episode.copyWith(isDisplayVersion: true);
   }
 
   Widget _versionDateSelector(List<EpisodeBrief?> versions) => Row(
@@ -663,7 +648,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
             padding: EdgeInsets.symmetric(horizontal: 4),
             child: buttonOnMenu(
               context,
-              child: (_episodeItem.versionInfo != VersionInfo.IS)
+              child: (_episodeItem.isDisplayVersion!)
                   ? Icon(
                       Icons.radio_button_on,
                       size: 24,
@@ -674,7 +659,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                       size: 24,
                     ),
               onTap: () {
-                if (_episodeItem.versionInfo == VersionInfo.IS) {
+                if (!_episodeItem.isDisplayVersion!) {
                   _setEpisodeDisplayVersion(_episodeItem);
                 }
               },
@@ -715,7 +700,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                               " " +
                               ((_episodeItem.pubDate ~/ 1000) % 1440).toTime,
                           style: TextStyle(
-                            fontWeight: e.versionInfo != VersionInfo.IS
+                            fontWeight: e.isDisplayVersion!
                                 ? FontWeight.bold
                                 : FontWeight.normal,
                           ),
