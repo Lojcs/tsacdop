@@ -57,8 +57,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
     context.statusBarColor = color;
     context.navBarColor = color;
     return Selector<EpisodeState, bool?>(
-      selector: (_, episodeState) =>
-          episodeState.episodeChangeMap[_episodeItem.id],
+      selector: (_, episodeState) => episodeState.globalChange,
       builder: (_, __, ___) => FutureBuilder<EpisodeBrief>(
         future: _episodeItem.copyWithFromDB(newFields: [
           EpisodeField.episodeImage,

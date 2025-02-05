@@ -151,9 +151,9 @@ class DBHelper {
     await db.execute(
         """CREATE TRIGGER episode_version_undownloaded_trigger AFTER UPDATE OF downloaded ON Episodes
         WHEN (NEW.downloaded = 'ND') BEGIN
-        UPDATE Episodes SET display_version_id = IFNULL((SELECT id FROM Episodes
-        WHERE (feed_id = NEW.feed_id AND title = NEW.title AND downloaded != 'ND')
-        ORDER BY download_date DESC LIMIT 1), NEW.id) WHERE display_version_id = NEW.display_version_id;
+        UPDATE Episodes SET display_version_id = (SELECT id FROM Episodes
+        WHERE (feed_id = NEW.feed_id AND title = NEW.title AND display_version_id = id)
+        ORDER BY download_date DESC LIMIT 1) WHERE display_version_id = NEW.display_version_id;
         END
         """); // Change display version of undownloaded episodes to the newest downloaded version (if exists) on episode download removal.
     // await db.execute(
@@ -285,9 +285,9 @@ class DBHelper {
     await db.execute(
         """CREATE TRIGGER episode_version_undownloaded_trigger AFTER UPDATE OF downloaded ON Episodes
         WHEN (NEW.downloaded = 'ND') BEGIN
-        UPDATE Episodes SET display_version_id = IFNULL((SELECT id FROM Episodes
-        WHERE (feed_id = NEW.feed_id AND title = NEW.title AND downloaded != 'ND')
-        ORDER BY download_date DESC LIMIT 1), NEW.id) WHERE display_version_id = NEW.display_version_id;
+        UPDATE Episodes SET display_version_id = (SELECT id FROM Episodes
+        WHERE (feed_id = NEW.feed_id AND title = NEW.title AND display_version_id = id)
+        ORDER BY download_date DESC LIMIT 1) WHERE display_version_id = NEW.display_version_id;
         END
         """); // Change display version of undownloaded episodes to the newest downloaded version (if exists) on episode download removal.
     List<Map> podcasts = await db.rawQuery("SELECT id FROM PodcastLocal");
@@ -902,7 +902,8 @@ class DBHelper {
   /// Populates the EpisodeBrief.versions set. Expects the set to be not null.
   /// Doesn't populate if it is not empty.
   /// Versions have all the fields that the original episode has.
-  Future<EpisodeBrief> populateEpisodeVersions(EpisodeBrief episode) async {
+  Future<EpisodeBrief> populateEpisodeVersions(
+      EpisodeBrief episode, EpisodeState? episodeState) async {
     var dbClient = await database;
     if (episode.versions!.isNotEmpty) return episode;
     List<Map> results = await dbClient.rawQuery(
@@ -917,8 +918,10 @@ class DBHelper {
     otherVersionIds.remove(episode.id);
     List<EpisodeField> fields = episode.fields.toList()
       ..remove(EpisodeField.versions);
-    List<EpisodeBrief> versions =
-        await getEpisodes(episodeIds: otherVersionIds, optionalFields: fields);
+    List<EpisodeBrief> versions = await getEpisodes(
+        episodeIds: otherVersionIds,
+        optionalFields: fields,
+        episodeState: episodeState);
     versions = versions.map((e) => e.copyWith(versions: {})).toList();
     versions.add(episode);
     for (EpisodeBrief version1 in versions) {
@@ -1462,7 +1465,8 @@ class DBHelper {
               i['milliseconds']
             ],
             fields);
-        if (populateVersions) episode = await populateEpisodeVersions(episode);
+        if (populateVersions)
+          episode = await populateEpisodeVersions(episode, episodeState);
         episodes.add(episode);
         if (episodeState != null) {
           episodeState.addEpisode(episode);
