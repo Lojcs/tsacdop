@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer' as developer;
 
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -23,15 +24,10 @@ import '../widgets/custom_widget.dart';
 
 class EpisodeDetail extends StatefulWidget {
   final EpisodeBrief episodeItem;
-  final String heroTag;
   final bool hide;
   final VoidCallback? onClosed;
   EpisodeDetail(
-      {required this.episodeItem,
-      this.heroTag = '',
-      this.hide = false,
-      this.onClosed,
-      Key? key})
+      {required this.episodeItem, this.hide = false, this.onClosed, Key? key})
       : super(key: key);
 
   @override
@@ -39,82 +35,12 @@ class EpisodeDetail extends StatefulWidget {
 }
 
 class _EpisodeDetailState extends State<EpisodeDetail> {
-  final _dbHelper = DBHelper();
   final textstyle = TextStyle(fontSize: 15.0, color: Colors.black);
   final GlobalKey<AudioPanelState> _playerKey = GlobalKey<AudioPanelState>();
   double? downloadProgress;
 
-  /// Show page title.
-  late bool _showTitle;
-  late bool _showMenu;
-  late EpisodeBrief _episodeItem;
+  late EpisodeBrief _episodeItem = widget.episodeItem;
   String? path;
-
-  bool lateInitCoplete = false;
-  late final EpisodeState _episodeState;
-  late final double _titleBarMinHeight;
-  late final double _titleBarMaxHeight;
-  late final double _imageTopOffset;
-  late final ScrollController _controller;
-
-  Future<PlayHistory> _getPosition(EpisodeBrief episode) async {
-    return await _dbHelper.getPosition(episode);
-  }
-
-  _scrollListener() {
-    if (_controller.position.userScrollDirection == ScrollDirection.reverse) {
-      if (_showMenu && mounted) {
-        setState(() {
-          _showMenu = false;
-        });
-      }
-    }
-    if (_controller.position.userScrollDirection == ScrollDirection.forward) {
-      if (!_showMenu && mounted) {
-        setState(() {
-          _showMenu = true;
-        });
-      }
-    }
-    if (_controller.offset > context.textTheme.headlineSmall!.fontSize!) {
-      if (!_showTitle) setState(() => _showTitle = true);
-    } else if (_showTitle) setState(() => _showTitle = false);
-    if (_controller.position.userScrollDirection ==
-            ScrollDirection.reverse && // TODO: Polish
-        _controller.offset <
-            _titleBarMaxHeight + _titleBarMinHeight - _imageTopOffset &&
-        _controller.offset > _titleBarMinHeight - 30) {
-      _controller.animateTo(_titleBarMaxHeight,
-          duration: Duration(milliseconds: 250), curve: Curves.easeOutCubic);
-    }
-    if (_controller.position.userScrollDirection == ScrollDirection.forward &&
-        _controller.offset <
-            _titleBarMaxHeight + _titleBarMinHeight - _imageTopOffset &&
-        _controller.offset > _titleBarMinHeight - 30) {
-      _controller.animateTo(0,
-          duration: Duration(milliseconds: 250), curve: Curves.easeOutCubic);
-    }
-  }
-
-  _lateInit() {
-    if (!lateInitCoplete) {
-      _episodeState = Provider.of<EpisodeState>(context, listen: false);
-      lateInitCoplete = true;
-      _titleBarMaxHeight = context.width - 30;
-      _titleBarMinHeight = 56;
-      _imageTopOffset = 120;
-      _controller = ScrollController(initialScrollOffset: _titleBarMaxHeight);
-      _controller.addListener(_scrollListener);
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _showMenu = true;
-    _showTitle = false;
-    _episodeItem = widget.episodeItem;
-  }
 
   @override
   void deactivate() {
@@ -125,27 +51,20 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
   }
 
   @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    _lateInit();
     final Color color =
         context.realDark ? context.surface : _episodeItem.cardColor(context);
     context.statusBarColor = color;
     context.navBarColor = color;
-    final s = context.s;
-    final audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
     return Selector<EpisodeState, bool?>(
       selector: (_, episodeState) =>
           episodeState.episodeChangeMap[_episodeItem.id],
       builder: (_, __, ___) => FutureBuilder<EpisodeBrief>(
-        future: _episodeItem.copyWithFromDB(
-            newFields: [EpisodeField.episodeImage, EpisodeField.podcastImage],
-            update: true),
+        future: _episodeItem.copyWithFromDB(newFields: [
+          EpisodeField.episodeImage,
+          EpisodeField.podcastImage,
+          EpisodeField.versions,
+        ], update: true),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             _episodeItem = snapshot.data!;
@@ -168,451 +87,8 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                       ? context.surface
                       : widget.episodeItem.colorScheme(context).surface,
                   body: SafeArea(
-                    child: Stack(
-                      children: <Widget>[
-                        StretchingOverscrollIndicator(
-                          axisDirection: AxisDirection.down,
-                          child: NestedScrollView(
-                            scrollDirection: Axis.vertical,
-                            controller: _controller,
-                            headerSliverBuilder: (context, innerBoxScrolled) {
-                              final titleLineTest = TextPainter(
-                                  maxLines: 3,
-                                  text: TextSpan(
-                                    text: _episodeItem.title,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .headlineMedium,
-                                  ),
-                                  textDirection: TextDirection.ltr);
-                              titleLineTest.layout(
-                                  maxWidth: context.width - 60);
-
-                              double titleHeight =
-                                  titleLineTest.computeLineMetrics().length *
-                                          30 +
-                                      15;
-                              return <Widget>[
-                                SliverAppBar(
-                                  flexibleSpace: LayoutBuilder(
-                                    builder: (context, constraints) {
-                                      double topHeight =
-                                          constraints.biggest.height;
-                                      double expandRatio =
-                                          ((topHeight - _titleBarMinHeight) /
-                                                  (-30 + context.width))
-                                              .clamp(0, 1);
-                                      // print(_episodeItem.episodeImage);
-                                      return FlexibleSpaceBar(
-                                        collapseMode: CollapseMode.pin,
-                                        titlePadding: EdgeInsets.only(
-                                          left: 45,
-                                          right: 45,
-                                          top: 13,
-                                          bottom: topHeight -
-                                              (40 +
-                                                  (topHeight -
-                                                          _titleBarMinHeight)
-                                                      .clamp(
-                                                          0,
-                                                          _imageTopOffset -
-                                                              _titleBarMinHeight)),
-                                        ),
-                                        expandedTitleScale: 1.1,
-                                        background: Container(
-                                          // alignment:
-                                          //     Alignment.bottomCenter,
-                                          padding: EdgeInsets.only(
-                                            left: 60,
-                                            right: 60,
-                                            top: _imageTopOffset +
-                                                context.width -
-                                                30 -
-                                                expandRatio *
-                                                    (context.width - 30),
-                                            bottom: 0,
-                                          ),
-                                          child: Container(
-                                            clipBehavior: Clip.hardEdge,
-                                            height: (context.width - 120) *
-                                                ((expandRatio - 0.4)
-                                                        .clamp(0, 0.6) +
-                                                    0.4),
-                                            width: (context.width - 120) *
-                                                ((expandRatio - 0.4)
-                                                        .clamp(0, 0.6) +
-                                                    0.4),
-                                            decoration: BoxDecoration(
-                                              color: color,
-                                              // border: Border.all(
-                                              //     color: Colors.white,
-                                              //     width: 2),
-                                            ),
-                                            child: Image(
-                                                alignment: Alignment.topCenter,
-                                                fit: BoxFit.fitWidth,
-                                                image: _episodeItem
-                                                    .episodeOrPodcastImageProvider),
-                                          ),
-                                        ),
-                                        title: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Padding(
-                                              padding: EdgeInsets.only(top: 2),
-                                              child: Text(
-                                                _episodeItem.number.toString() +
-                                                    " | ",
-                                                style: GoogleFonts.teko(
-                                                    textStyle: context.textTheme
-                                                        .headlineSmall),
-                                              ),
-                                            ),
-                                            Expanded(
-                                              child: Tooltip(
-                                                message:
-                                                    _episodeItem.podcastTitle,
-                                                child: Text(
-                                                  _episodeItem.podcastTitle,
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  style: context
-                                                      .textTheme.headlineSmall!
-                                                      .copyWith(
-                                                    fontWeight: FontWeight.bold,
-                                                    color: _episodeItem
-                                                        .colorScheme(context)
-                                                        .onSecondaryContainer,
-                                                  ),
-                                                ),
-                                              ),
-                                            )
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                  backgroundColor: color,
-                                  collapsedHeight: _titleBarMinHeight,
-                                  toolbarHeight: _titleBarMinHeight,
-                                  expandedHeight:
-                                      _titleBarMinHeight + _titleBarMaxHeight,
-                                  pinned: true,
-                                  // floating: true,
-                                  scrolledUnderElevation: 0,
-                                  leading: CustomBackButton(
-                                    color: _episodeItem
-                                        .colorScheme(context)
-                                        .onSecondaryContainer,
-                                  ),
-                                  elevation: 0,
-                                ),
-                                // Infobar
-                                SliverAppBar(
-                                  pinned: true,
-                                  leading: Center(),
-                                  toolbarHeight: titleHeight,
-                                  collapsedHeight: titleHeight,
-                                  expandedHeight: titleHeight,
-                                  backgroundColor: color,
-                                  scrolledUnderElevation: 0,
-                                  flexibleSpace: Container(
-                                    height: titleHeight,
-                                    padding:
-                                        EdgeInsets.only(left: 30, right: 30),
-                                    child: Tooltip(
-                                      message: _episodeItem.title,
-                                      child: Text(
-                                        _episodeItem.title,
-                                        maxLines: 3,
-                                        overflow: TextOverflow.ellipsis,
-                                        textAlign: TextAlign.left,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .headlineMedium!
-                                            .copyWith(
-                                              color: _episodeItem
-                                                  .colorScheme(context)
-                                                  .onSecondaryContainer,
-                                            ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                SliverAppBar(
-                                  // pinned: true,
-                                  floating: true,
-                                  leading: Center(),
-                                  toolbarHeight: 100,
-                                  collapsedHeight: 100,
-                                  expandedHeight: 100,
-                                  backgroundColor: color,
-                                  scrolledUnderElevation: 0,
-                                  flexibleSpace: LayoutBuilder(
-                                    builder: (context, constraints) {
-                                      return Container(
-                                        height: 100,
-                                        padding: EdgeInsets.only(
-                                            left: 10, right: 10),
-                                        alignment: Alignment.centerLeft,
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.start,
-                                          // mainAxisSize:
-                                          //     MainAxisSize
-                                          //         .max,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: <Widget>[
-                                            Padding(
-                                              padding:
-                                                  const EdgeInsets.fromLTRB(
-                                                      20, 5, 20, 5),
-                                              child: Row(
-                                                children: [
-                                                  FutureBuilder<EpisodeBrief>(
-                                                    // TODO: Make ui responsive.
-                                                    future:
-                                                        _getEpisodeVersions(),
-                                                    builder:
-                                                        (context, snapshot) {
-                                                      if (snapshot.hasData) {
-                                                        List<EpisodeBrief?>
-                                                            versions = snapshot
-                                                                .data!.versions
-                                                                .toList();
-                                                        versions.sort((a, b) =>
-                                                            b!.pubDate
-                                                                .compareTo(a!
-                                                                    .pubDate));
-                                                        return _versionDateSelector(
-                                                            versions);
-                                                      } else {
-                                                        return _versionDateSelector(
-                                                            [_episodeItem]);
-                                                      }
-                                                    },
-                                                  ),
-                                                  SizedBox(width: 10),
-                                                  if (_episodeItem.isExplicit ==
-                                                      true)
-                                                    Text(
-                                                      'E',
-                                                      style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          color: context.error),
-                                                    )
-                                                ],
-                                              ),
-                                            ),
-                                            Padding(
-                                              padding: EdgeInsets.symmetric(
-                                                  horizontal: 20, vertical: 5),
-                                              child: Row(
-                                                children: <Widget>[
-                                                  if (_episodeItem
-                                                          .enclosureDuration !=
-                                                      0)
-                                                    Container(
-                                                        decoration: BoxDecoration(
-                                                            color: context
-                                                                .secondary,
-                                                            borderRadius: context
-                                                                .radiusHuge),
-                                                        height: 40.0,
-                                                        margin: EdgeInsets.only(
-                                                            right: 12.0),
-                                                        padding: EdgeInsets
-                                                            .symmetric(
-                                                                horizontal:
-                                                                    10.0),
-                                                        alignment:
-                                                            Alignment.center,
-                                                        child: Text(
-                                                          s.minsCount(
-                                                            _episodeItem
-                                                                    .enclosureDuration! ~/
-                                                                60,
-                                                          ),
-                                                          style: TextStyle(
-                                                              color: context
-                                                                  .surface),
-                                                        )),
-                                                  if (_episodeItem
-                                                              .enclosureSize !=
-                                                          null &&
-                                                      _episodeItem
-                                                              .enclosureSize !=
-                                                          0)
-                                                    Container(
-                                                      decoration: BoxDecoration(
-                                                          color:
-                                                              context.tertiary,
-                                                          borderRadius: context
-                                                              .radiusHuge),
-                                                      height: 40.0,
-                                                      margin: EdgeInsets.only(
-                                                          right: 12.0),
-                                                      padding:
-                                                          EdgeInsets.symmetric(
-                                                              horizontal: 10.0),
-                                                      alignment:
-                                                          Alignment.center,
-                                                      child: Text(
-                                                        '${_episodeItem.enclosureSize! ~/ 1000000}MB',
-                                                        style: TextStyle(
-                                                            color: context
-                                                                .surface),
-                                                      ),
-                                                    ),
-                                                  FutureBuilder<PlayHistory>(
-                                                    future: _getPosition(
-                                                        _episodeItem),
-                                                    builder:
-                                                        (context, snapshot) {
-                                                      if (snapshot.hasError) {
-                                                        developer.log(snapshot
-                                                            .error as String);
-                                                      }
-                                                      if (snapshot.hasData &&
-                                                          snapshot.data!
-                                                                  .seekValue! <
-                                                              0.9 &&
-                                                          snapshot.data!
-                                                                  .seconds! >
-                                                              10) {
-                                                        return Container(
-                                                          height: 40,
-                                                          padding: EdgeInsets
-                                                              .symmetric(
-                                                                  horizontal:
-                                                                      0),
-                                                          child: OutlinedButton(
-                                                            style:
-                                                                OutlinedButton
-                                                                    .styleFrom(
-                                                              shape:
-                                                                  RoundedRectangleBorder(
-                                                                borderRadius:
-                                                                    context
-                                                                        .radiusHuge,
-                                                              ),
-                                                              side: BorderSide(
-                                                                color: _episodeItem
-                                                                    .colorScheme(
-                                                                        context)
-                                                                    .onSecondaryContainer,
-                                                              ),
-                                                            ),
-                                                            onPressed: () => audio
-                                                                .loadEpisodeToQueue(
-                                                                    _episodeItem,
-                                                                    startPosition:
-                                                                        (snapshot.data!.seconds! *
-                                                                                1000)
-                                                                            .toInt()),
-                                                            child: Row(
-                                                              children: [
-                                                                SizedBox(
-                                                                  width: 20,
-                                                                  height: 20,
-                                                                  child:
-                                                                      CustomPaint(
-                                                                    painter: ListenedPainter(
-                                                                        context
-                                                                            .textColor,
-                                                                        stroke:
-                                                                            2.0),
-                                                                  ),
-                                                                ),
-                                                                SizedBox(
-                                                                    width: 5),
-                                                                Text(
-                                                                  snapshot
-                                                                      .data!
-                                                                      .seconds!
-                                                                      .toTime,
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ),
-                                                        );
-                                                      } else {
-                                                        return Center();
-                                                      }
-                                                    },
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ];
-                            },
-                            body: SingleChildScrollView(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  ShowNote(episode: _episodeItem),
-                                  Selector<AudioPlayerNotifier,
-                                          Tuple2<bool, PlayerHeight>>(
-                                      selector: (_, audio) => Tuple2(
-                                          audio.playerRunning,
-                                          audio.playerHeight!),
-                                      builder: (_, data, __) {
-                                        final height =
-                                            kMinPlayerHeight[data.item2.index];
-                                        return SizedBox(
-                                          height: data.item1 ? height : 0,
-                                        );
-                                      }),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        Selector<AudioPlayerNotifier,
-                            Tuple2<bool, PlayerHeight>>(
-                          selector: (_, audio) =>
-                              Tuple2(audio.playerRunning, audio.playerHeight!),
-                          builder: (_, data, __) {
-                            return Container(
-                              alignment: Alignment.bottomCenter,
-                              padding: EdgeInsets.only(
-                                  bottom: data.item1
-                                      ? kMinPlayerHeight[data.item2.index]
-                                      : 0),
-                              child: AnimatedContainer(
-                                duration: Duration(milliseconds: 300),
-                                height: _showMenu ? 50 : 0,
-                                child: SingleChildScrollView(
-                                  scrollDirection: Axis.vertical,
-                                  child: EpisodeActionBar(
-                                      episodeItem: _episodeItem,
-                                      heroTag: widget.heroTag,
-                                      hide: widget.hide),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                        Selector<AudioPlayerNotifier, EpisodeBrief?>(
-                          selector: (_, audio) => audio.episode,
-                          builder: (_, data, __) => Container(
-                            child: PlayerWidget(
-                                playerKey: _playerKey,
-                                isPlayingPage: data == _episodeItem),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                      child: _EpisodeDetailInner(
+                          _episodeItem, color, widget.hide)),
                 ),
               ),
             ),
@@ -621,25 +97,462 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
       ),
     );
   }
+}
 
-  Future<EpisodeBrief> _getEpisodeVersions() async {
-    if (_episodeItem.versions.isEmpty) {
-      _episodeItem =
-          await _episodeItem.copyWithFromDB(newFields: [EpisodeField.versions]);
-    }
-    return _episodeItem;
-  }
+class _EpisodeDetailInner extends StatefulWidget {
+  final EpisodeBrief episodeItem;
+  final Color color;
+  final bool hide;
 
-  Future<void> _setEpisodeDisplayVersion(EpisodeBrief episode) async {
-    await _episodeState.setDisplayVersion(episode);
-    // Being economical here, changing it directly instead of fetching from database
-    for (EpisodeBrief version in episode.versions) {
-      if (!version.isDownloaded! && version.isDisplayVersion!) {
-        episode.versions.remove(version);
-        episode.versions.add(version.copyWith(isDisplayVersion: false));
+  _EpisodeDetailInner(this.episodeItem, this.color, this.hide);
+
+  @override
+  __EpisodeDetailInnerState createState() => __EpisodeDetailInnerState();
+}
+
+class __EpisodeDetailInnerState extends State<_EpisodeDetailInner> {
+  final _dbHelper = DBHelper();
+
+  late EpisodeBrief _episodeItem = widget.episodeItem;
+
+  late final ScrollController _controller;
+
+  late bool _showMenu = true;
+  late final double _titleBarMinHeight;
+  late final double _titleBarMaxHeight;
+  late final double _imageTopOffset;
+
+  bool lateInitComplete = false;
+
+  bool forceDisplayVersionIndicator = false;
+
+  _scrollListener() {
+    if (_controller.position.userScrollDirection == ScrollDirection.reverse) {
+      if (_showMenu && mounted) {
+        setState(() {
+          _showMenu = false;
+        });
       }
     }
-    episode.copyWith(isDisplayVersion: true);
+    if (_controller.position.userScrollDirection == ScrollDirection.forward) {
+      if (!_showMenu && mounted) {
+        setState(() {
+          _showMenu = true;
+        });
+      }
+    }
+    if (_controller.position.userScrollDirection ==
+            ScrollDirection.reverse && // TODO: Polish
+        _controller.offset <
+            _titleBarMaxHeight + _titleBarMinHeight - _imageTopOffset &&
+        _controller.offset > _titleBarMinHeight - 30) {
+      _controller.animateTo(_titleBarMaxHeight,
+          duration: Duration(milliseconds: 250), curve: Curves.easeOutCubic);
+    }
+    if (_controller.position.userScrollDirection == ScrollDirection.forward &&
+        _controller.offset <
+            _titleBarMaxHeight + _titleBarMinHeight - _imageTopOffset &&
+        _controller.offset > _titleBarMinHeight - 30) {
+      _controller.animateTo(0,
+          duration: Duration(milliseconds: 250), curve: Curves.easeOutCubic);
+    }
+  }
+
+  _lateInit() {
+    if (!lateInitComplete) {
+      _titleBarMaxHeight = context.width - 30;
+      _titleBarMinHeight = 56;
+      _imageTopOffset = 120;
+      _controller = ScrollController(initialScrollOffset: _titleBarMaxHeight);
+      _controller.addListener(_scrollListener);
+      lateInitComplete = true;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(_EpisodeDetailInner oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.episodeItem.versions != null) {
+      for (EpisodeBrief version in widget.episodeItem.versions!) {
+        if (_episodeItem == version) {
+          _episodeItem = version;
+        }
+      }
+      if (_episodeItem.isDisplayVersion!) {
+        forceDisplayVersionIndicator = false;
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _lateInit();
+    return Stack(
+      children: <Widget>[
+        StretchingOverscrollIndicator(
+          axisDirection: AxisDirection.down,
+          child: NestedScrollView(
+            scrollDirection: Axis.vertical,
+            controller: _controller,
+            headerSliverBuilder: (context, innerBoxScrolled) {
+              final titleLineTest = TextPainter(
+                  maxLines: 3,
+                  text: TextSpan(
+                    text: _episodeItem.title,
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
+                  textDirection: TextDirection.ltr);
+              titleLineTest.layout(maxWidth: context.width - 60);
+
+              double titleHeight =
+                  titleLineTest.computeLineMetrics().length * 30 + 15;
+              return <Widget>[
+                SliverAppBar(
+                  flexibleSpace: LayoutBuilder(
+                    builder: (context, constraints) {
+                      double topHeight = constraints.biggest.height;
+                      double expandRatio = ((topHeight - _titleBarMinHeight) /
+                              (-30 + context.width))
+                          .clamp(0, 1);
+                      // print(_episodeItem.episodeImage);
+                      return FlexibleSpaceBar(
+                        collapseMode: CollapseMode.pin,
+                        titlePadding: EdgeInsets.only(
+                          left: 45,
+                          right: 45,
+                          top: 13,
+                          bottom: topHeight -
+                              (40 +
+                                  (topHeight - _titleBarMinHeight).clamp(
+                                      0, _imageTopOffset - _titleBarMinHeight)),
+                        ),
+                        expandedTitleScale: 1.1,
+                        background: Container(
+                          // alignment:
+                          //     Alignment.bottomCenter,
+                          padding: EdgeInsets.only(
+                            left: 60,
+                            right: 60,
+                            top: _imageTopOffset +
+                                context.width -
+                                30 -
+                                expandRatio * (context.width - 30),
+                            bottom: 0,
+                          ),
+                          child: Container(
+                            clipBehavior: Clip.hardEdge,
+                            height: (context.width - 120) *
+                                ((expandRatio - 0.4).clamp(0, 0.6) + 0.4),
+                            width: (context.width - 120) *
+                                ((expandRatio - 0.4).clamp(0, 0.6) + 0.4),
+                            decoration: BoxDecoration(
+                              color: widget.color,
+                              // border: Border.all(
+                              //     color: Colors.white,
+                              //     width: 2),
+                            ),
+                            child: Image(
+                                alignment: Alignment.topCenter,
+                                fit: BoxFit.fitWidth,
+                                image:
+                                    _episodeItem.episodeOrPodcastImageProvider),
+                          ),
+                        ),
+                        title: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.only(top: 2),
+                              child: Text(
+                                _episodeItem.number.toString() + " | ",
+                                style: GoogleFonts.teko(
+                                    textStyle: context.textTheme.headlineSmall),
+                              ),
+                            ),
+                            Expanded(
+                              child: Tooltip(
+                                message: _episodeItem.podcastTitle,
+                                child: Text(
+                                  _episodeItem.podcastTitle,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style:
+                                      context.textTheme.headlineSmall!.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: _episodeItem
+                                        .colorScheme(context)
+                                        .onSecondaryContainer,
+                                  ),
+                                ),
+                              ),
+                            )
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                  backgroundColor: widget.color,
+                  collapsedHeight: _titleBarMinHeight,
+                  toolbarHeight: _titleBarMinHeight,
+                  expandedHeight: _titleBarMinHeight + _titleBarMaxHeight,
+                  pinned: true,
+                  // floating: true,
+                  scrolledUnderElevation: 0,
+                  leading: CustomBackButton(
+                    color:
+                        _episodeItem.colorScheme(context).onSecondaryContainer,
+                  ),
+                  elevation: 0,
+                ),
+                // Infobar
+                SliverAppBar(
+                  pinned: true,
+                  leading: Center(),
+                  toolbarHeight: titleHeight,
+                  collapsedHeight: titleHeight,
+                  expandedHeight: titleHeight,
+                  backgroundColor: widget.color,
+                  scrolledUnderElevation: 0,
+                  flexibleSpace: Container(
+                    height: titleHeight,
+                    padding: EdgeInsets.only(left: 30, right: 30),
+                    child: Tooltip(
+                      message: _episodeItem.title,
+                      child: Text(
+                        _episodeItem.title,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.left,
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineMedium!
+                            .copyWith(
+                              color: _episodeItem
+                                  .colorScheme(context)
+                                  .onSecondaryContainer,
+                            ),
+                      ),
+                    ),
+                  ),
+                ),
+                SliverAppBar(
+                  // pinned: true,
+                  floating: true,
+                  leading: Center(),
+                  toolbarHeight: 100,
+                  collapsedHeight: 100,
+                  expandedHeight: 100,
+                  backgroundColor: widget.color,
+                  scrolledUnderElevation: 0,
+                  flexibleSpace: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return Container(
+                        height: 100,
+                        padding: EdgeInsets.only(left: 10, right: 10),
+                        alignment: Alignment.centerLeft,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          // mainAxisSize:
+                          //     MainAxisSize
+                          //         .max,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+                              child: Row(
+                                children: [
+                                  Builder(
+                                    builder: (context) {
+                                      if (_episodeItem.versions != null) {
+                                        List<EpisodeBrief?> versions =
+                                            _episodeItem.versions!.toList();
+                                        versions.sort((a, b) =>
+                                            b!.pubDate.compareTo(a!.pubDate));
+                                        return _versionDateSelector(versions);
+                                      } else {
+                                        return _versionDateSelector(
+                                            [_episodeItem]);
+                                      }
+                                    },
+                                  ),
+                                  SizedBox(width: 10),
+                                  if (_episodeItem.isExplicit == true)
+                                    Text(
+                                      'E',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: context.error),
+                                    )
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 5),
+                              child: Row(
+                                children: <Widget>[
+                                  if (_episodeItem.enclosureDuration != 0)
+                                    Container(
+                                        decoration: BoxDecoration(
+                                            color: context.secondary,
+                                            borderRadius: context.radiusHuge),
+                                        height: 40.0,
+                                        margin: EdgeInsets.only(right: 12.0),
+                                        padding: EdgeInsets.symmetric(
+                                            horizontal: 10.0),
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          context.s.minsCount(
+                                            _episodeItem.enclosureDuration! ~/
+                                                60,
+                                          ),
+                                          style:
+                                              TextStyle(color: context.surface),
+                                        )),
+                                  if (_episodeItem.enclosureSize != null &&
+                                      _episodeItem.enclosureSize != 0)
+                                    Container(
+                                      decoration: BoxDecoration(
+                                          color: context.tertiary,
+                                          borderRadius: context.radiusHuge),
+                                      height: 40.0,
+                                      margin: EdgeInsets.only(right: 12.0),
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 10.0),
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        '${_episodeItem.enclosureSize! ~/ 1000000}MB',
+                                        style:
+                                            TextStyle(color: context.surface),
+                                      ),
+                                    ),
+                                  FutureBuilder<PlayHistory>(
+                                    future: _dbHelper.getPosition(_episodeItem),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.hasError) {
+                                        developer.log(snapshot.error as String);
+                                      }
+                                      if (snapshot.hasData &&
+                                          snapshot.data!.seekValue! < 0.9 &&
+                                          snapshot.data!.seconds! > 10) {
+                                        return Container(
+                                          height: 40,
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 0),
+                                          child: OutlinedButton(
+                                            style: OutlinedButton.styleFrom(
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    context.radiusHuge,
+                                              ),
+                                              side: BorderSide(
+                                                color: _episodeItem
+                                                    .colorScheme(context)
+                                                    .onSecondaryContainer,
+                                              ),
+                                            ),
+                                            onPressed: () => Provider.of<
+                                                        AudioPlayerNotifier>(
+                                                    context,
+                                                    listen: false)
+                                                .loadEpisodeToQueue(
+                                                    _episodeItem,
+                                                    startPosition: (snapshot
+                                                                .data!
+                                                                .seconds! *
+                                                            1000)
+                                                        .toInt()),
+                                            child: Row(
+                                              children: [
+                                                SizedBox(
+                                                  width: 20,
+                                                  height: 20,
+                                                  child: CustomPaint(
+                                                    painter: ListenedPainter(
+                                                        context.textColor,
+                                                        stroke: 2.0),
+                                                  ),
+                                                ),
+                                                SizedBox(width: 5),
+                                                Text(
+                                                  snapshot
+                                                      .data!.seconds!.toTime,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      } else {
+                                        return Center();
+                                      }
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ];
+            },
+            body: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ShowNote(episode: _episodeItem),
+                  Selector<AudioPlayerNotifier, Tuple2<bool, PlayerHeight>>(
+                      selector: (_, audio) =>
+                          Tuple2(audio.playerRunning, audio.playerHeight!),
+                      builder: (_, data, __) {
+                        final height = kMinPlayerHeight[data.item2.index];
+                        return SizedBox(
+                          height: data.item1 ? height : 0,
+                        );
+                      }),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Selector<AudioPlayerNotifier, Tuple2<bool, PlayerHeight>>(
+          selector: (_, audio) =>
+              Tuple2(audio.playerRunning, audio.playerHeight!),
+          builder: (_, data, __) {
+            return Container(
+              alignment: Alignment.bottomCenter,
+              padding: EdgeInsets.only(
+                  bottom: data.item1 ? kMinPlayerHeight[data.item2.index] : 0),
+              child: AnimatedContainer(
+                duration: Duration(milliseconds: 300),
+                height: _showMenu ? 50 : 0,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.vertical,
+                  child: EpisodeActionBar(
+                      episodeItem: _episodeItem, hide: widget.hide),
+                ),
+              ),
+            );
+          },
+        ),
+        Selector<AudioPlayerNotifier, EpisodeBrief?>(
+          selector: (_, audio) => audio.episode,
+          builder: (_, data, __) => Container(
+            child: PlayerWidget(
+                playerKey: GlobalKey<AudioPanelState>(),
+                isPlayingPage: data == _episodeItem),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _versionDateSelector(List<EpisodeBrief?> versions) => Row(
@@ -648,7 +561,8 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
             padding: EdgeInsets.symmetric(horizontal: 4),
             child: buttonOnMenu(
               context,
-              child: (_episodeItem.isDisplayVersion!)
+              child: (forceDisplayVersionIndicator ||
+                      _episodeItem.isDisplayVersion!)
                   ? Icon(
                       Icons.radio_button_on,
                       size: 24,
@@ -713,6 +627,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                 : (EpisodeBrief? episode) {
                     if (mounted && episode != null) {
                       setState(() {
+                        forceDisplayVersionIndicator = false;
                         _episodeItem = episode;
                       });
                     }
@@ -720,4 +635,9 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
           ),
         ],
       );
+  Future<void> _setEpisodeDisplayVersion(EpisodeBrief episode) async {
+    await Provider.of<EpisodeState>(context, listen: false)
+        .setDisplayVersion(episode);
+    forceDisplayVersionIndicator = true;
+  }
 }

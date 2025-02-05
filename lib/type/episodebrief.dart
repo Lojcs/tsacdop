@@ -32,7 +32,7 @@ class EpisodeBrief extends Equatable {
   final bool? isNew;
   final bool? isPlayed;
   final bool? isDisplayVersion;
-  final Set<EpisodeBrief> versions;
+  final Set<EpisodeBrief>? versions;
   final int skipSecondsStart;
   final int skipSecondsEnd;
   final String? chapterLink;
@@ -54,7 +54,7 @@ class EpisodeBrief extends Equatable {
       this.isNew,
       this.isPlayed,
       this.isDisplayVersion,
-      this.versions = const {},
+      this.versions,
       this.skipSecondsStart = 0,
       this.skipSecondsEnd = 0,
       this.chapterLink});
@@ -228,7 +228,7 @@ class EpisodeBrief extends Equatable {
     for (EpisodeField field in EpisodeField.values) {
       if (_getFieldValue(field) != null) fieldList.add(field);
     }
-    if (versions.length != 0) {
+    if (versions != null) {
       fieldList.add(EpisodeField.versions);
     }
     return fieldList;
@@ -361,8 +361,8 @@ class EpisodeBrief extends Equatable {
       for (EpisodeField field in oldFields) {
         oldFieldsSymbolMap[_fieldsMap[field]![0]] = _fieldsMap[field]![1];
       }
-      newEpisode = (await dbHelper
-              .getEpisodes(episodeIds: [id], optionalFields: newFields))
+      newEpisode = (await dbHelper.getEpisodes(
+              episodeIds: [id], optionalFields: newFields..addAll(oldFields)))
           .first;
       newEpisode = Function.apply(newEpisode.copyWith, [], oldFieldsSymbolMap);
     }

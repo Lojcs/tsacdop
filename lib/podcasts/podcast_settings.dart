@@ -12,14 +12,12 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:webfeed/webfeed.dart';
 
-import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/podcast_group.dart';
 import '../type/play_histroy.dart';
 import '../type/podcastlocal.dart';
 import '../util/extension_helper.dart';
 import '../util/helpers.dart';
-import '../widgets/custom_dropdown.dart';
 import '../widgets/custom_widget.dart';
 import '../widgets/duraiton_picker.dart';
 
@@ -147,71 +145,6 @@ class _PodcastSettingState extends State<PodcastSetting> {
                 ),
               );
             }),
-        FutureBuilder<VersionPolicy>(
-          future: _getVersionPolicy(widget.podcastLocal!.id),
-          builder: (context, snapshot) {
-            return Column(
-              children: <Widget>[
-                ListTile(
-                    title: Row(
-                      children: [
-                        Icon(Icons.onetwothree_outlined, size: 18),
-                        SizedBox(width: 20),
-                        Text(s.settingsEpisodeVersioning, style: textStyle),
-                      ],
-                    ),
-                    dense: true),
-                Container(
-                  child: MyDropdownButton(
-                    hint: FutureBuilder<String>(
-                      future: _getVersionPolicyText(VersionPolicy.Default),
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          return Text(
-                            snapshot.data!,
-                            style: textStyle,
-                          );
-                        } else {
-                          return Center();
-                        }
-                      },
-                    ),
-                    underline: Center(),
-                    dropdownColor:
-                        colorScheme.primary.toStrongBackround(context),
-                    displayItemCount: 4,
-                    value: snapshot.data,
-                    onChanged: (VersionPolicy policy) async {
-                      _setVersionPolicy(widget.podcastLocal!.id, policy);
-                    },
-                    items: <VersionPolicy>[
-                      VersionPolicy.Default,
-                      VersionPolicy.New,
-                      VersionPolicy.Old,
-                      VersionPolicy.NewIfNoDownloaded
-                    ].map<DropdownMenuItem<VersionPolicy>>((e) {
-                      return DropdownMenuItem<VersionPolicy>(
-                          value: e,
-                          child: FutureBuilder<String>(
-                            future: _getVersionPolicyText(e),
-                            builder: (context, snapshot) {
-                              if (snapshot.hasData) {
-                                return Text(
-                                  snapshot.data!,
-                                  style: textStyle,
-                                );
-                              } else {
-                                return Center();
-                              }
-                            },
-                          ));
-                    }).toList(),
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
         FutureBuilder<int?>(
           future: _getSkipSecondStart(widget.podcastLocal!.id),
           initialData: 0,
@@ -451,12 +384,6 @@ class _PodcastSettingState extends State<PodcastSetting> {
     if (mounted) setState(() {});
   }
 
-  Future<void> _setVersionPolicy(
-      String? id, VersionPolicy versionPolicy) async {
-    await _dbHelper.saveVersionPolicy(id, versionPolicy);
-    if (mounted) setState(() {});
-  }
-
   Future<void> _saveSkipSecondsStart(int seconds) async {
     await _dbHelper.saveSkipSecondsStart(widget.podcastLocal!.id, seconds);
   }
@@ -475,10 +402,6 @@ class _PodcastSettingState extends State<PodcastSetting> {
 
   Future<bool> _getHideNewMark(String? id) async {
     return await _dbHelper.getHideNewMark(id);
-  }
-
-  Future<VersionPolicy> _getVersionPolicy(String? id) async {
-    return await _dbHelper.getPodcastVersionPolicy(id);
   }
 
   Future<int?> _getSkipSecondStart(String? id) async {
@@ -588,22 +511,6 @@ class _PodcastSettingState extends State<PodcastSetting> {
         return Icon(Icons.refresh, color: Colors.red);
       default:
         return Center();
-    }
-  }
-
-  Future<String> _getVersionPolicyText(VersionPolicy versionPolicy) async {
-    final s = context.s;
-    switch (versionPolicy) {
-      case VersionPolicy.New:
-        return s.episodeVersioningNew;
-      case VersionPolicy.Old:
-        return s.episodeVersioningOld;
-      case VersionPolicy.NewIfNoDownloaded:
-        return s.episodeVersioningNewIfNotDownloaded;
-      case VersionPolicy.Default:
-        var storage = KeyValueStorage(versionPolicyKey);
-        var globalVersionPolicy = await storage.getString(defaultValue: "DON");
-        return "${s.capitalDefault} (${await _getVersionPolicyText(versionPolicyFromString(globalVersionPolicy))})";
     }
   }
 }

@@ -2386,36 +2386,6 @@ class S {
     );
   }
 
-  /// `Episode Management`
-  String get settingsEpisodeManagement {
-    return Intl.message(
-      'Episode Management',
-      name: 'settingsEpisodeManagement',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Default Episode Version`
-  String get settingsEpisodeVersioning {
-    return Intl.message(
-      'Default Episode Version',
-      name: 'settingsEpisodeVersioning',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Which version of an episode is displayed/downloaded by default. Can be overridden in podcast settings.`
-  String get settingsEpisodeVersioningDes {
-    return Intl.message(
-      'Which version of an episode is displayed/downloaded by default. Can be overridden in podcast settings.',
-      name: 'settingsEpisodeVersioningDes',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Export and import app settings`
   String get settingsExportDes {
     return Intl.message(

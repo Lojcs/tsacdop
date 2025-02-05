@@ -114,8 +114,8 @@ class DBHelper {
         duration INTEGER DEFAULT 0, explicit INTEGER DEFAULT 0,
         liked INTEGER DEFAULT 0, liked_date INTEGER DEFAULT 0, downloaded TEXT DEFAULT 'ND', 
         download_date INTEGER DEFAULT 0, media_id TEXT, is_new INTEGER DEFAULT 0, 
-        chapter_link TEXT DEFAULT '', hosts TEXT DEFAULT '', episode_image TEXT DEFAULT '', number INTEGER DEFAULT -1
-        display_version_id INTEGER DEFAULT -1)""");
+        chapter_link TEXT DEFAULT '', hosts TEXT DEFAULT '', episode_image TEXT DEFAULT '',
+        number INTEGER DEFAULT -1, display_version_id INTEGER DEFAULT -1)""");
     await db.execute(
         """CREATE TABLE PlayHistory(id INTEGER PRIMARY KEY, title TEXT, enclosure_url TEXT,
         seconds REAL, seek_value REAL, add_date INTEGER, listen_time INTEGER DEFAULT 0)""");
@@ -130,7 +130,7 @@ class DBHelper {
         """CREATE TRIGGER episode_number_trigger AFTER INSERT ON Episodes
         WHEN (NEW.number = -1) BEGIN
         UPDATE Episodes SET number = 1 + IFNULL((SELECT MAX(number) FROM Episodes
-        WHERE feed_id = NEW.feed_id), 0) WHERE id = NEW.id
+        WHERE feed_id = NEW.feed_id), 0) WHERE id = NEW.id;
         END
         """); // New episode gets the highest number
     await db.execute(
@@ -138,22 +138,22 @@ class DBHelper {
         WHEN (NEW.display_version_id = -1) BEGIN
         UPDATE Episodes SET display_version_id = IFNULL((SELECT display_version_id FROM Episodes
         WHERE (feed_id = NEW.feed_id AND title = NEW.title AND downloaded = 'ND')
-        ORDER BY download_date DESC LIMIT 1), NEW.id) WHERE id = NEW.id
+        ORDER BY download_date DESC LIMIT 1), NEW.id) WHERE id = NEW.id;
         END
         """); // Preserve existing display version(s) on new version insertion.
     await db.execute(
         """CREATE TRIGGER episode_version_downloaded_trigger AFTER UPDATE OF downloaded ON Episodes
-        WHEN (NEW.downloaded != 'ND' AND NEW.display_version_id != NEW.id)
+        WHEN (NEW.downloaded != 'ND' AND NEW.display_version_id != NEW.id) BEGIN
         UPDATE Episodes SET display_version_id = NEW.id
-        WHERE (display_version_id = NEW.display_version_id AND (downloaded == 'ND' OR id == NEW.id))
+        WHERE (display_version_id = NEW.display_version_id AND (downloaded == 'ND' OR id == NEW.id));
         END
         """); // Change display version of undownloaded episodes to the newly downloaded version on episode download. Other downloaded versions remain as display versions.
     await db.execute(
         """CREATE TRIGGER episode_version_undownloaded_trigger AFTER UPDATE OF downloaded ON Episodes
-        WHEN (NEW.downloaded = 'ND')
+        WHEN (NEW.downloaded = 'ND') BEGIN
         UPDATE Episodes SET display_version_id = IFNULL((SELECT id FROM Episodes
         WHERE (feed_id = NEW.feed_id AND title = NEW.title AND downloaded != 'ND')
-        ORDER BY download_date DESC LIMIT 1), NEW.id) WHERE display_version_id = NEW.display_version_id
+        ORDER BY download_date DESC LIMIT 1), NEW.id) WHERE display_version_id = NEW.display_version_id;
         END
         """); // Change display version of undownloaded episodes to the newest downloaded version (if exists) on episode download removal.
     // await db.execute(
@@ -264,7 +264,7 @@ class DBHelper {
         """CREATE TRIGGER episode_number_trigger AFTER INSERT ON Episodes
         WHEN (NEW.number = -1) BEGIN
         UPDATE Episodes SET number = 1 + IFNULL((SELECT MAX(number) FROM Episodes
-        WHERE feed_id = NEW.feed_id), 0) WHERE id = NEW.id
+        WHERE feed_id = NEW.feed_id), 0) WHERE id = NEW.id;
         END
         """); // New episode gets the highest number
     await db.execute(
@@ -272,22 +272,22 @@ class DBHelper {
         WHEN (NEW.display_version_id = -1) BEGIN
         UPDATE Episodes SET display_version_id = IFNULL((SELECT display_version_id FROM Episodes
         WHERE (feed_id = NEW.feed_id AND title = NEW.title AND downloaded = 'ND')
-        ORDER BY download_date DESC LIMIT 1), NEW.id) WHERE id = NEW.id
+        ORDER BY download_date DESC LIMIT 1), NEW.id) WHERE id = NEW.id;
         END
         """); // Preserve existing display version(s) on new version insertion.
     await db.execute(
         """CREATE TRIGGER episode_version_downloaded_trigger AFTER UPDATE OF downloaded ON Episodes
-        WHEN (NEW.downloaded != 'ND' AND NEW.display_version_id != NEW.id)
+        WHEN (NEW.downloaded != 'ND' AND NEW.display_version_id != NEW.id) BEGIN
         UPDATE Episodes SET display_version_id = NEW.id
-        WHERE (display_version_id = NEW.display_version_id AND (downloaded == 'ND' OR id == NEW.id))
+        WHERE (display_version_id = NEW.display_version_id AND (downloaded == 'ND' OR id == NEW.id));
         END
         """); // Change display version of undownloaded episodes to the newly downloaded version on episode download. Other downloaded versions remain as display versions.
     await db.execute(
         """CREATE TRIGGER episode_version_undownloaded_trigger AFTER UPDATE OF downloaded ON Episodes
-        WHEN (NEW.downloaded = 'ND')
+        WHEN (NEW.downloaded = 'ND') BEGIN
         UPDATE Episodes SET display_version_id = IFNULL((SELECT id FROM Episodes
         WHERE (feed_id = NEW.feed_id AND title = NEW.title AND downloaded != 'ND')
-        ORDER BY download_date DESC LIMIT 1), NEW.id) WHERE display_version_id = NEW.display_version_id
+        ORDER BY download_date DESC LIMIT 1), NEW.id) WHERE display_version_id = NEW.display_version_id;
         END
         """); // Change display version of undownloaded episodes to the newest downloaded version (if exists) on episode download removal.
     List<Map> podcasts = await db.rawQuery("SELECT id FROM PodcastLocal");
@@ -881,11 +881,11 @@ class DBHelper {
         "UPDATE Episodes SET display_version_id = id WHERE (feed_id = ? AND downloaded != 'ND')",
         [feedId]);
     await dbClient.rawUpdate(
-        """UPDATE Episodes e SET e.display_version_id = IFNULL((SELECT id FROM Episodes
-        WHERE (feed_id = e.feed_id AND title = e.title AND downloaded != 'ND')
-        ORDER BY download_date DESC LIMIT 1), (SELECT id FROM Episodes
-        WHERE (feed_id = e.feed_id AND title = e.title)
-        ORDER BY milliseconds DESC LIMIT 1))
+        """UPDATE Episodes SET display_version_id = IFNULL((SELECT e.id FROM Episodes e
+        WHERE (e.feed_id = Episodes.feed_id AND e.title = Episodes.title AND e.downloaded != 'ND')
+        ORDER BY e.download_date DESC LIMIT 1), (SELECT e.id FROM Episodes e
+        WHERE (e.feed_id = Episodes.feed_id AND e.title = Episodes.title)
+        ORDER BY e.milliseconds DESC LIMIT 1))
         WHERE (feed_id = ? AND downloaded = 'ND')""", [feedId]);
   }
 
@@ -894,34 +894,39 @@ class DBHelper {
   Future<void> setDisplayVersion(EpisodeBrief episode,
       {bool reset = false}) async {
     var dbClient = await database;
-    await dbClient.rawUpdate(
-        """UPDATE Episodes e SET e.display_version_id = ? WHERE (feed_id = ? AND downloaded = 'ND')""",
-        [episode.id, episode.podcastId]);
+    await dbClient.rawUpdate("""UPDATE Episodes SET display_version_id = ?
+        WHERE (feed_id = ? AND downloaded = 'ND' AND title = ?)""",
+        [episode.id, episode.podcastId, episode.title]);
   }
 
-  /// Populates the EpisodeBrief.versions map in-place. Doesn't populate if it is not empty.
+  /// Populates the EpisodeBrief.versions set. Expects the set to be not null.
+  /// Doesn't populate if it is not empty.
   /// Versions have all the fields that the original episode has.
-  Future<void> populateEpisodeVersions(EpisodeBrief episode) async {
+  Future<EpisodeBrief> populateEpisodeVersions(EpisodeBrief episode) async {
     var dbClient = await database;
-    if (episode.versions.isEmpty) return;
+    if (episode.versions!.isNotEmpty) return episode;
     List<Map> results = await dbClient.rawQuery(
-        "SELECT id FROM Episodes WHERE (feed_id = ?, title = ?)",
+        "SELECT id FROM Episodes WHERE (feed_id = ? AND title = ?)",
         [episode.podcastId, episode.title]);
     if (results.length == 1) {
-      episode.versions.add(episode);
-      return;
+      episode.versions!.add(episode);
+      return episode;
     }
     List<int> otherVersionIds =
         results.map<int>((result) => result['id']).toList();
     otherVersionIds.remove(episode.id);
-    List<EpisodeBrief> versions = await getEpisodes(
-        episodeIds: otherVersionIds, optionalFields: episode.fields);
+    List<EpisodeField> fields = episode.fields.toList()
+      ..remove(EpisodeField.versions);
+    List<EpisodeBrief> versions =
+        await getEpisodes(episodeIds: otherVersionIds, optionalFields: fields);
+    versions = versions.map((e) => e.copyWith(versions: {})).toList();
     versions.add(episode);
     for (EpisodeBrief version1 in versions) {
       for (EpisodeBrief version2 in versions) {
-        version1.versions.add(version2);
+        version1.versions!.add(version2);
       }
     }
+    return episode;
   }
 
   /// Parses and saves episodes in an [RssFeed]. Set [update] for existing feeds.
@@ -994,9 +999,9 @@ class DBHelper {
                 0 // To disable the triggers
               ]);
         }
-        batchOp.commit();
+        await batchOp.commit();
         developer.log("Versioning ${feed.title}");
-        _rescanPodcastEpisodesVersions(dbClient, feedId);
+        await _rescanPodcastEpisodesVersions(txn, feedId);
         int count = Sqflite.firstIntValue(await txn.rawQuery(
                 'SELECT COUNT(*) FROM Episodes WHERE feed_id = ?', [feedId])) ??
             0;
@@ -1032,7 +1037,7 @@ class DBHelper {
                 episode.episodeImage,
               ]);
         }
-        batchOp.commit();
+        await batchOp.commit();
         int newCount = Sqflite.firstIntValue(await txn.rawQuery(
                 'SELECT COUNT(*) FROM Episodes WHERE feed_id = ?', [feedId])) ??
             0;
@@ -1119,13 +1124,13 @@ class DBHelper {
   Future<void> deleteLocalEpisodes(List<String> files) async {
     var dbClient = await database;
     var s = files.map<String>((e) => "'$e'").toList();
-    dbClient.transaction((txn) async {
+    await dbClient.transaction((txn) async {
       Batch batchOp = txn.batch();
       for (String episode in s) {
         batchOp.rawDelete(
             'DELETE FROM Episodes WHERE enclosure_url = ?', [episode]);
       }
-      batchOp.commit();
+      await batchOp.commit();
     });
   }
 
@@ -1431,6 +1436,7 @@ class DBHelper {
                     i['display_version_id'] == i['id'];
                 break;
               case EpisodeField.versions:
+                fields[const Symbol("versions")] = Set<EpisodeBrief>();
                 populateVersions = true;
                 break;
               case EpisodeField.skipSecondsStart:
@@ -1456,7 +1462,7 @@ class DBHelper {
               i['milliseconds']
             ],
             fields);
-        if (populateVersions) await populateEpisodeVersions(episode);
+        if (populateVersions) episode = await populateEpisodeVersions(episode);
         episodes.add(episode);
         if (episodeState != null) {
           episodeState.addEpisode(episode);

@@ -1675,9 +1675,7 @@ class _ControlPanelState extends State<ControlPanel>
                                                                 ? EpisodeDetail(
                                                                     episodeItem:
                                                                         snapshot.data
-                                                                            as EpisodeBrief,
-                                                                    heroTag:
-                                                                        'playpanel')
+                                                                            as EpisodeBrief)
                                                                 : Center()))));
                                           }
                                         },

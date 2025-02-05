@@ -13,10 +13,8 @@ import '../util/helpers.dart';
 
 class EpisodeActionBar extends StatefulWidget {
   final EpisodeBrief episodeItem;
-  final String? heroTag;
   final bool? hide;
-  EpisodeActionBar(
-      {required this.episodeItem, this.heroTag, this.hide, Key? key})
+  EpisodeActionBar({required this.episodeItem, this.hide, Key? key})
       : super(key: key);
   @override
   EpisodeActionBarState createState() => EpisodeActionBarState();
@@ -46,20 +44,16 @@ class EpisodeActionBarState extends State<EpisodeActionBar> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  Hero(
-                    tag: widget.episodeItem.enclosureUrl + widget.heroTag!,
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10.0),
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 10.0),
-                      child: Container(
-                        height: 30.0,
-                        width: 30.0,
-                        child: widget.hide!
-                            ? Center()
-                            : CircleAvatar(
-                                radius: 15,
-                                backgroundImage:
-                                    widget.episodeItem.avatarImage),
-                      ),
+                      height: 30.0,
+                      width: 30.0,
+                      child: widget.hide!
+                          ? Center()
+                          : CircleAvatar(
+                              radius: 15,
+                              backgroundImage: widget.episodeItem.avatarImage),
                     ),
                   ),
                   (widget.episodeItem.isLiked!)
