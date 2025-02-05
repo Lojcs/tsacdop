@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:linkify/linkify.dart';
@@ -17,7 +18,7 @@ class ShowNote extends StatelessWidget {
     final audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
     final s = context.s;
     return FutureBuilder<String?>(
-      future: _getSDescription(episode.enclosureUrl),
+      future: _getSDescription(),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           var description = snapshot.data!;
@@ -39,29 +40,31 @@ class ShowNote extends StatelessWidget {
                 }
                 return Selector<SettingState, TextStyle>(
                   selector: (_, settings) => settings.showNoteFontStyle,
-                  builder: (_, data, __) => Html(
-                    style: {
-                      'html': Style.fromTextStyle(data.copyWith(fontSize: 14))
-                          .copyWith(
-                        padding: HtmlPaddings.symmetric(horizontal: 12),
-                        color: episode.colorScheme(context).onSurface,
-                      ),
-                      'a': Style(
-                        color: context.accentColor,
-                        textDecoration: TextDecoration.none,
-                      ),
-                    },
-                    data: description,
-                    onLinkTap: (url, _, __) {
-                      if (url!.substring(0, 3) == '#t=') {
-                        final seconds = _getTimeStamp(url);
-                        if (playEpisode == episode) {
-                          audio.seekTo(seconds! * 1000);
+                  builder: (_, data, __) => SelectionArea(
+                    child: Html(
+                      style: {
+                        'html': Style.fromTextStyle(data.copyWith(fontSize: 14))
+                            .copyWith(
+                          padding: HtmlPaddings.symmetric(horizontal: 12),
+                          color: episode.colorScheme(context).onSurface,
+                        ),
+                        'a': Style(
+                          color: context.accentColor,
+                          textDecoration: TextDecoration.none,
+                        ),
+                      },
+                      data: description,
+                      onLinkTap: (url, _, __) {
+                        if (url!.substring(0, 3) == '#t=') {
+                          final seconds = _getTimeStamp(url);
+                          if (playEpisode == episode) {
+                            audio.seekTo(seconds! * 1000);
+                          }
+                        } else {
+                          url.launchUrl;
                         }
-                      } else {
-                        url.launchUrl;
-                      }
-                    },
+                      },
+                    ),
                   ),
                 );
               },
@@ -107,10 +110,10 @@ class ShowNote extends StatelessWidget {
     return seconds;
   }
 
-  Future<String> _getSDescription(String url) async {
+  Future<String> _getSDescription() async {
     final dbHelper = DBHelper();
     String description;
-    description = (await dbHelper.getDescription(url))!
+    description = episode.description!
         .replaceAll(RegExp(r'\s?<p>(<br>)?</p>\s?'), '')
         .replaceAll('\r', '')
         .trim();
@@ -129,7 +132,8 @@ class ShowNote extends StatelessWidget {
               '<a rel="nofollow" href = "mailto:$address">$address</a>');
         }
       }
-      await dbHelper.saveEpisodeDes(url, description: description);
+      await dbHelper.saveEpisodeDes(episode.enclosureUrl,
+          description: description);
     }
     return description;
   }

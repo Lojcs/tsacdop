@@ -163,7 +163,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
           return AnnotatedRegion<SystemUiOverlayStyle>(
             value: (playerRunning
                 ? context.overlay.copyWith(
-                    systemNavigationBarColor: context.accentBackground)
+                    systemNavigationBarColor: context.cardColorSchemeCard)
                 : context.overlay),
             child: Selector<SelectionController, bool>(
               selector: (_, selectionController) =>

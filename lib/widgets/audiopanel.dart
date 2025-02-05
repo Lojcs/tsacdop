@@ -40,6 +40,7 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
 
   @override
   void initState() {
+    super.initState();
     size = widget.minHeight;
     _controller =
         AnimationController(vsync: this, duration: Duration(milliseconds: 175))
@@ -61,7 +62,6 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
       _animation = Tween<double>(begin: size, end: size).animate(_controller);
     }
     _slideDirection = SlideDirection.up;
-    super.initState();
   }
 
   @override

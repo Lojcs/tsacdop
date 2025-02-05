@@ -101,15 +101,13 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     final s = context.s;
     return Selector<AudioPlayerNotifier, bool>(
         selector: (_, audio) => audio.playerRunning,
-        builder: (_, data, __) {
+        builder: (_, playerRunning, __) {
           context.originalPadding = MediaQuery.of(context).padding;
           return AnnotatedRegion<SystemUiOverlayStyle>(
-            value: SystemUiOverlayStyle(
-                systemNavigationBarIconBrightness: context.iconBrightness,
-                statusBarIconBrightness: context.iconBrightness,
-                systemNavigationBarColor:
-                    data ? context.accentBackground : context.surface,
-                statusBarColor: context.surface),
+            value: playerRunning
+                ? context.overlay.copyWith(
+                    systemNavigationBarColor: context.cardColorSchemeCard)
+                : context.overlay,
             child: PopScope(
               canPop: settings.openPlaylistDefault! &&
                   !(_playerKey.currentState != null &&
@@ -132,7 +130,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                 key: _scaffoldKey,
                 backgroundColor: context.surface,
                 body: SafeArea(
-                  bottom: data,
+                  bottom: playerRunning,
                   child: Stack(children: <Widget>[
                     ExtendedNestedScrollView(
                       pinnedHeaderSliverHeightBuilder: () => 50,
@@ -587,6 +585,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
       child: ScrollConfiguration(
         behavior: NoGrowBehavior(),
         child: CustomScrollView(
+          physics: PageScrollPhysics(),
           key: PageStorageKey<String>('update'),
           slivers: <Widget>[
             FutureBuilder<Tuple2<EpisodeGridLayout, bool?>>(

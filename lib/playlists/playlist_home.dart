@@ -75,12 +75,7 @@ class _PlaylistHomeState extends State<PlaylistHome> {
   Widget build(BuildContext context) {
     final s = context.s;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
-        systemNavigationBarIconBrightness:
-            Theme.of(context).colorScheme.brightness,
-        statusBarIconBrightness: Theme.of(context).colorScheme.brightness,
-        systemNavigationBarColor: Theme.of(context).primaryColor,
-      ),
+      value: context.overlay,
       child: PopScope(
         canPop: !context.read<SettingState>().openPlaylistDefault!,
         onPopInvokedWithResult: (didPop, _) {
