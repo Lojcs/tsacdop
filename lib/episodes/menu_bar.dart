@@ -116,17 +116,21 @@ class EpisodeActionBarState extends State<EpisodeActionBar> {
                   _buttonOnMenu(
                     child: Padding(
                       padding: EdgeInsets.symmetric(vertical: 12),
-                      child: CustomPaint(
-                        size: Size(25, 20),
-                        painter: ListenedAllPainter(
-                            widget.episodeItem.isPlayed!
-                                ? context.accentColor
-                                : Colors.grey[
-                                    context.brightness == Brightness.light
-                                        ? 700
-                                        : 500],
-                            stroke: 2.0),
-                      ),
+                      child: widget.episodeItem.isPlayed!
+                          ? CustomPaint(
+                              size: Size(25, 20),
+                              painter: ListenedAllPainter(context.accentColor,
+                                  stroke: 2.0),
+                            )
+                          : CustomPaint(
+                              size: Size(25, 20),
+                              painter: MarkListenedPainter(
+                                  Colors.grey[
+                                      context.brightness == Brightness.light
+                                          ? 700
+                                          : 500]!,
+                                  stroke: 2.0),
+                            ),
                     ),
                     onTap: () {
                       widget.episodeItem.isPlayed!

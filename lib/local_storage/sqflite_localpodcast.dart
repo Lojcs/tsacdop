@@ -621,7 +621,7 @@ class DBHelper {
       var dbClient = await database;
       final milliseconds = DateTime.now().millisecondsSinceEpoch;
       var recent = await getPlayHistory(1);
-      if (recent.isNotEmpty && recent.first.title == history.title) {
+      if (recent.isNotEmpty && recent.first.url == history.url) {
         await dbClient.rawDelete("DELETE FROM PlayHistory WHERE add_date = ?",
             [recent.first.playdate!.millisecondsSinceEpoch]);
       }
@@ -1017,14 +1017,15 @@ class DBHelper {
         return countUpdate;
       });
     } else {
-      developer.log("Saving ${feed.title}");
+      developer.log("Updating ${feed.title}");
+      final hideNewMark = await getHideNewMark(feedId);
       return await dbClient.transaction<int>((txn) async {
         Batch batchOp = txn.batch();
         for (var episode in episodes) {
           batchOp.rawInsert(
               """INSERT OR IGNORE INTO Episodes(title, enclosure_url, enclosure_length, pubDate, 
                 description, feed_id, milliseconds, duration, explicit, media_id, chapter_link,
-                episode_image) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                episode_image, is_new) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
               [
                 episode.title,
                 episode.enclosureUrl,
@@ -1038,6 +1039,7 @@ class DBHelper {
                 episode.enclosureUrl,
                 episode.chapterLink,
                 episode.episodeImage,
+                hideNewMark ? 0 : 1
               ]);
         }
         await batchOp.commit();
@@ -1049,7 +1051,7 @@ class DBHelper {
                 [feedId])) ??
             0;
 
-        await dbClient.rawUpdate(
+        await txn.rawUpdate(
             """UPDATE PodcastLocal SET update_count = ?, episode_count = ? WHERE id = ?""",
             [newCount - oldCount, newCount, feedId]);
         return newCount - oldCount;
@@ -1066,22 +1068,11 @@ class DBHelper {
       connectTimeout: Duration(seconds: 20),
       receiveTimeout: Duration(seconds: 20),
     );
-    final hideNewMark = await getHideNewMark(podcastLocal.id);
     try {
       var response = await Dio(options).get(podcastLocal.rssUrl);
       if (response.statusCode == 200) {
         var feed = RssFeed.parse(response.data);
-        String? url, description;
-
         var dbClient = await database;
-        List<String> urls = (await dbClient.rawQuery(
-                'SELECT enclosure_url FROM Episodes WHERE feed_id = ?',
-                [podcastLocal.id]))
-            .map(
-              (e) => e['enclosure_url'] as String,
-            )
-            .toList();
-        var count = urls.length;
         if (keepNewMark == 0) {
           await dbClient.rawUpdate(
               "UPDATE Episodes SET is_new = 0 WHERE feed_id = ? AND milliseconds < ?",

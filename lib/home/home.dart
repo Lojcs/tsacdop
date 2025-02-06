@@ -13,6 +13,7 @@ import 'package:tsacdop/util/selection_controller.dart';
 import 'package:tsacdop/widgets/action_bar.dart';
 import 'package:tuple/tuple.dart';
 
+import '../local_storage/sqflite_localpodcast.dart';
 import '../playlists/playlist_home.dart';
 import '../state/audio_state.dart';
 import '../state/download_state.dart';
@@ -585,7 +586,6 @@ class _RecentUpdateState extends State<_RecentUpdate>
       child: ScrollConfiguration(
         behavior: NoGrowBehavior(),
         child: CustomScrollView(
-          physics: PageScrollPhysics(),
           key: PageStorageKey<String>('update'),
           slivers: <Widget>[
             FutureBuilder<Tuple2<EpisodeGridLayout, bool?>>(
@@ -627,6 +627,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
                     ActionBarButtonRefresh(1, 6),
                   ],
                   filterPlayed: false,
+                  filterDisplayVersion: true,
                   layout: _layout ?? EpisodeGridLayout.large,
                 );
               },
@@ -760,6 +761,13 @@ class _MyFavoriteState extends State<_MyFavorite>
                     ActionBarSwitchLayout(0, 5),
                     ActionBarSwitchSelectMode(0, 6),
                   ],
+                  sortByItems: const [
+                    Sorter.likedDate,
+                    Sorter.pubDate,
+                    Sorter.enclosureSize,
+                    Sorter.enclosureDuration
+                  ],
+                  sortBy: Sorter.likedDate,
                   filterLiked: true,
                   layout: _layout ?? EpisodeGridLayout.large,
                 );
@@ -900,6 +908,13 @@ class _MyDownloadState extends State<_MyDownload>
                     ActionBarSwitchLayout(0, 6),
                     ActionBarSwitchSelectMode(0, 7),
                   ],
+                  sortByItems: const [
+                    Sorter.downloadDate,
+                    Sorter.pubDate,
+                    Sorter.enclosureSize,
+                    Sorter.enclosureDuration
+                  ],
+                  sortBy: Sorter.downloadDate,
                   filterDownloaded: true,
                   layout: _layout ?? EpisodeGridLayout.large,
                 );

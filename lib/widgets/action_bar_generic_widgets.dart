@@ -553,8 +553,11 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
                 (!widget.connectRight
                     ? context.actionBarIconPadding.right / 2
                     : 0));
-        if (expands)
+        if (expands) {
           _expand = widget.expansionController!.addItem(expandableItem);
+        } else {
+          widget.expansionController!.addWidth(width);
+        }
       }
     }
     var borderRadiusTween = BorderRadiusTween(

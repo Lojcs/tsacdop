@@ -148,6 +148,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "deselectAll": MessageLookupByLibrary.simpleMessage("Deselect All"),
         "developer": MessageLookupByLibrary.simpleMessage("Developer"),
         "dismiss": MessageLookupByLibrary.simpleMessage("Dismiss"),
+        "displayVersion":
+            MessageLookupByLibrary.simpleMessage("Display Version"),
         "done": MessageLookupByLibrary.simpleMessage("Done"),
         "download": MessageLookupByLibrary.simpleMessage("Download"),
         "downloadDate": MessageLookupByLibrary.simpleMessage("Download Date"),

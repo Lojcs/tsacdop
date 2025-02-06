@@ -94,6 +94,10 @@
   },
   "dismiss": "Dismiss",
   "@dismiss": {},
+  "displayVersion": "Display Version",
+  "@displayVersion": {
+    "description": "The version of an episode displayed by default. Used with filterType."
+  },
   "done": "Done",
   "@done": {},
   "download": "Download",

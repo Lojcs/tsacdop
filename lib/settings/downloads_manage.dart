@@ -247,7 +247,13 @@ class _DownloadsManageState extends State<DownloadsManage> {
                       ActionBarFilterLiked(0, 3),
                       ActionBarFilterPlayed(0, 4),
                     ],
-                    sortBy: Sorter.enclosureSize,
+                    sortByItems: const [
+                      Sorter.downloadDate,
+                      Sorter.enclosureSize,
+                      Sorter.enclosureDuration,
+                      Sorter.pubDate
+                    ],
+                    sortBy: Sorter.downloadDate,
                     filterDownloaded: true,
                     extraFields: [EpisodeField.downloadDate],
                   ),

@@ -415,6 +415,17 @@ class S {
     );
   }
 
+  /// `Display Version`
+  String get displayVersion {
+    return Intl.message(
+      'Display Version',
+      name: 'displayVersion',
+      desc:
+          'The version of an episode displayed by default. Used with filterType.',
+      args: [],
+    );
+  }
+
   /// `Done`
   String get done {
     return Intl.message(
