@@ -1117,12 +1117,13 @@ class DBHelper {
 
   Future<void> deleteLocalEpisodes(List<String> files) async {
     var dbClient = await database;
-    var s = files.map<String>((e) => "'$e'").toList();
+    var s = files.map<String>((e) => "$e").toList();
     await dbClient.transaction((txn) async {
       Batch batchOp = txn.batch();
       for (String episode in s) {
         batchOp.rawDelete(
-            'DELETE FROM Episodes WHERE enclosure_url = ?', [episode]);
+            'DELETE FROM Episodes WHERE enclosure_url = ? AND feed_id = ?',
+            [episode, localFolderId]);
       }
       await batchOp.commit();
     });
@@ -1492,7 +1493,6 @@ class DBHelper {
           "UPDATE Episodes SET is_new = 0 WHERE id IN (${(", ?" * ids.length).substring(2)})",
           [...ids]);
     });
-    developer.log('remove episode mark $ids');
   }
 
   Future setLiked(List<int> ids) async {

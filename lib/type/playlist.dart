@@ -158,7 +158,7 @@ class Playlist extends Equatable {
       case EpisodeCollision.Ignore:
         break;
     }
-    if (index == episodeUrlList.length) {
+    if (index >= episodeUrlList.length) {
       episodes.addAll(newEpisodes);
       episodeUrlList
           .addAll([for (var episode in newEpisodes) episode.enclosureUrl]);
@@ -169,27 +169,16 @@ class Playlist extends Equatable {
     }
   }
 
-  /// Removes [delEpisodes] from the playlist.
-  /// Don't directly use on playlists that might be live. Use [AudioState.removeFromPlaylist] instead.
-  void removeEpisodes(List<EpisodeBrief> delEpisodes, {bool delLocal = true}) {
-    List<String> delUrls = [
-      for (var episode in delEpisodes) episode.enclosureUrl
-    ];
-    episodes.removeWhere((episode) => delEpisodes.contains(episode));
-    episodeUrlList.removeWhere((url) => delUrls.contains(url));
+  /// Removes [number] episodes at [index] from playlist.
+  /// Don't directly use on playlists that might be live. Use [AudioState.removeFromPlaylistAt] instead.
+  void removeEpisodesAt(int index, {int number = 1, bool delLocal = true}) {
+    int end = index + number;
+    List<String> delUrls = episodeUrlList.getRange(index, end).toList();
+    episodeUrlList.removeRange(index, end);
+    episodes.removeRange(index, end);
     if (isLocal! && delLocal) {
       _dbHelper.deleteLocalEpisodes(delUrls);
     }
-  }
-
-  /// Removes [number] episodes at [index] from playlist.
-  /// Don't directly use on playlists that might be live. Use [AudioState.removeFromPlaylistAt] instead.
-  void removeEpisodesAt(int index, {int number = 1}) {
-    int end = index + number;
-    List<String> delEpisodes = episodeUrlList.getRange(index, end).toList();
-    _dbHelper.deleteLocalEpisodes(delEpisodes);
-    episodeUrlList.removeRange(index, end);
-    episodes.removeRange(index, end);
   }
 
   /// Moves episode at [oldIndex] to [newIndex].

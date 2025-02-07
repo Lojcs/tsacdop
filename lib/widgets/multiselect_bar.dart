@@ -513,8 +513,8 @@ class __NewPlaylistState extends State<_NewPlaylist> {
               } else {
                 final episodesList =
                     widget.episodes.map((e) => e.enclosureUrl).toList();
-                final playlist = Playlist(_playlistName,
-                    episodeUrlList: episodesList, episodes: widget.episodes);
+                final playlist =
+                    Playlist(_playlistName, episodeUrlList: episodesList);
                 context.read<AudioPlayerNotifier>().addPlaylist(playlist);
                 Navigator.of(context).pop();
               }
@@ -576,8 +576,9 @@ class _PlaylistList extends StatelessWidget {
         top: context.actionBarIconPadding.top / 2,
         bottom: context.actionBarIconPadding.bottom / 2,
       ),
-      child: Selector<AudioPlayerNotifier, List<Playlist>>(
-        selector: (_, audio) => audio.playlists,
+      child: Selector<AudioPlayerNotifier, Tuple2<List<Playlist>, int>>(
+        selector: (_, audio) => Tuple2(audio.playlists,
+            audio.playlists.length), // Length is needed for selector
         builder: (_, data, child) {
           return Align(
             alignment: Alignment.centerLeft,
@@ -586,7 +587,7 @@ class _PlaylistList extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  for (var p in data)
+                  for (var p in data.item1)
                     if (p.name == 'Queue')
                       _buttonOnMenu(
                         child: Row(
