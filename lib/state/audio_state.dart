@@ -1909,7 +1909,7 @@ class CustomAudioHandler extends BaseAudioHandler
         case 0:
           return [skipToNextControl, stopControl, forwardControl];
         case 1:
-          return [skipToNextControl, rewindControl, stopControl];
+          return [skipToNextControl, stopControl, rewindControl];
         case 2:
           return [rewindControl, forwardControl, stopControl];
         default:
