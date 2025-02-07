@@ -137,7 +137,7 @@ class DBHelper {
         """CREATE TRIGGER episode_version_trigger AFTER INSERT ON Episodes 
         WHEN (NEW.display_version_id = -1) BEGIN
         UPDATE Episodes SET display_version_id = IFNULL((SELECT display_version_id FROM Episodes
-        WHERE (feed_id = NEW.feed_id AND title = NEW.title AND downloaded = 'ND')
+        WHERE (feed_id = NEW.feed_id AND title = NEW.title AND downloaded = 'ND' AND NEW.id != id)
         ORDER BY download_date DESC LIMIT 1), NEW.id) WHERE id = NEW.id;
         END
         """); // Preserve existing display version(s) on new version insertion.
@@ -145,7 +145,7 @@ class DBHelper {
         """CREATE TRIGGER episode_version_downloaded_trigger AFTER UPDATE OF downloaded ON Episodes
         WHEN (NEW.downloaded != 'ND' AND NEW.display_version_id != NEW.id) BEGIN
         UPDATE Episodes SET display_version_id = NEW.id
-        WHERE (display_version_id = NEW.display_version_id AND (downloaded == 'ND' OR id == NEW.id));
+        WHERE (display_version_id = NEW.display_version_id AND (downloaded = 'ND' OR id = NEW.id));
         END
         """); // Change display version of undownloaded episodes to the newly downloaded version on episode download. Other downloaded versions remain as display versions.
     await db.execute(
@@ -271,7 +271,7 @@ class DBHelper {
         """CREATE TRIGGER episode_version_trigger AFTER INSERT ON Episodes 
         WHEN (NEW.display_version_id = -1) BEGIN
         UPDATE Episodes SET display_version_id = IFNULL((SELECT display_version_id FROM Episodes
-        WHERE (feed_id = NEW.feed_id AND title = NEW.title AND downloaded = 'ND')
+        WHERE (feed_id = NEW.feed_id AND title = NEW.title AND downloaded = 'ND' AND NEW.id != id)
         ORDER BY download_date DESC LIMIT 1), NEW.id) WHERE id = NEW.id;
         END
         """); // Preserve existing display version(s) on new version insertion.
@@ -279,7 +279,7 @@ class DBHelper {
         """CREATE TRIGGER episode_version_downloaded_trigger AFTER UPDATE OF downloaded ON Episodes
         WHEN (NEW.downloaded != 'ND' AND NEW.display_version_id != NEW.id) BEGIN
         UPDATE Episodes SET display_version_id = NEW.id
-        WHERE (display_version_id = NEW.display_version_id AND (downloaded == 'ND' OR id == NEW.id));
+        WHERE (display_version_id = NEW.display_version_id AND (downloaded = 'ND' OR id = NEW.id));
         END
         """); // Change display version of undownloaded episodes to the newly downloaded version on episode download. Other downloaded versions remain as display versions.
     await db.execute(

@@ -1502,49 +1502,53 @@ class _ControlPanelState extends State<ControlPanel>
                         builder: (_, title, __) {
                           return Container(
                             padding: EdgeInsets.only(left: 50, right: 50),
-                            child: LayoutBuilder(
-                              builder: (context, size) {
-                                final span = TextSpan(
-                                    text: title,
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 20));
-                                final tp = TextPainter(
-                                    text: span,
-                                    maxLines: 1,
-                                    textDirection: TextDirection.ltr);
-                                tp.layout(
-                                    maxWidth: size.maxWidth -
-                                        4); //Without -3 edge values don't behave right. -4 to be safe
-                                if (tp.didExceedMaxLines) {
-                                  return Marquee(
-                                    text: title!,
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 20),
-                                    scrollAxis: Axis.horizontal,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    blankSpace: 30.0,
-                                    velocity: 50.0,
-                                    pauseAfterRound: Duration.zero,
-                                    startPadding: 0,
-                                    accelerationDuration:
-                                        Duration(milliseconds: 100),
-                                    accelerationCurve: Curves.linear,
-                                    decelerationDuration:
-                                        Duration(milliseconds: 100),
-                                    decelerationCurve: Curves.linear,
-                                  );
-                                } else {
-                                  return Text(
-                                    title!,
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 20),
-                                  );
-                                }
-                              },
+                            child: NotificationListener<ScrollNotification>(
+                              onNotification: (notification) => true,
+                              child: LayoutBuilder(
+                                builder: (context, size) {
+                                  final span = TextSpan(
+                                      text: title,
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 20)
+                                        ..merge(DefaultTextStyle.of(context)
+                                            .style));
+                                  final tp = TextPainter(
+                                      text: span,
+                                      maxLines: 1,
+                                      textDirection: TextDirection.ltr);
+                                  tp.layout(maxWidth: size.maxWidth);
+                                  if (tp.didExceedMaxLines) {
+                                    return Marquee(
+                                      text: title!,
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 20),
+                                      scrollAxis: Axis.horizontal,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      blankSpace: 30.0,
+                                      velocity: 50.0,
+                                      pauseAfterRound: Duration.zero,
+                                      startPadding: 0,
+                                      accelerationDuration:
+                                          Duration(milliseconds: 100),
+                                      accelerationCurve: Curves.linear,
+                                      decelerationDuration:
+                                          Duration(milliseconds: 100),
+                                      decelerationCurve: Curves.linear,
+                                    );
+                                  } else {
+                                    return Text(
+                                      title!,
+                                      maxLines: 1,
+                                      style: context.textTheme.titleLarge!
+                                          .copyWith(
+                                              fontWeight: FontWeight.bold),
+                                    );
+                                  }
+                                },
+                              ),
                             ),
                           );
                         },
@@ -1588,17 +1592,19 @@ class _ControlPanelState extends State<ControlPanel>
                                   ),
                                   clipBehavior: Clip.antiAlias,
                                   child: Container(
-                                    decoration: BoxDecoration(
-                                      color: context.cardColorSchemeSaturated,
-                                      borderRadius: context.radiusMedium,
-                                      border: Border.all(
-                                        width: 1,
-                                        color: context.realDark
-                                            ? Color.lerp(context.accentColor,
-                                                Colors.black, 0.5)!
-                                            : Colors.transparent,
-                                      ),
-                                    ),
+                                    color: context.cardColorSchemeSaturated,
+                                    foregroundDecoration: context.realDark
+                                        ? BoxDecoration(
+                                            borderRadius: context.radiusMedium,
+                                            border: Border.all(
+                                              width: 1,
+                                              color: Color.lerp(
+                                                  context.accentColor,
+                                                  Colors.black,
+                                                  0.5)!,
+                                            ),
+                                          )
+                                        : null,
                                     child: e,
                                   ),
                                 ),

@@ -113,7 +113,7 @@ class ShowNote extends StatelessWidget {
   Future<String> _getSDescription() async {
     final dbHelper = DBHelper();
     String description;
-    description = episode.description!
+    description = (await dbHelper.getDescription(episode.enclosureUrl))!
         .replaceAll(RegExp(r'\s?<p>(<br>)?</p>\s?'), '')
         .replaceAll('\r', '')
         .trim();
