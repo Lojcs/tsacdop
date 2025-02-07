@@ -543,7 +543,8 @@ class _RecentUpdateState extends State<_RecentUpdate>
   List<EpisodeBrief> _episodes = [];
 
   /// Function to get episodes
-  Future<List<EpisodeBrief>> Function(int count) _getEpisodes = (int _) async {
+  Future<List<EpisodeBrief>> Function(int count, {int offset}) _getEpisodes =
+      (int _, {int offset = 0}) async {
     return <EpisodeBrief>[];
   };
 
@@ -570,8 +571,8 @@ class _RecentUpdateState extends State<_RecentUpdate>
           if (!_loadMore) {
             Future.microtask(() async {
               if (mounted) setState(() => _loadMore = true);
+              _episodes.addAll(await _getEpisodes(36, offset: _top));
               _top = _top + 36;
-              _episodes = await _getEpisodes(_top);
               Provider.of<SelectionController>(context, listen: false)
                   .setSelectableEpisodes(_episodes, compatible: true);
               if (mounted) setState(() => _loadMore = false);
@@ -689,7 +690,8 @@ class _MyFavoriteState extends State<_MyFavorite>
   List<EpisodeBrief> _episodes = [];
 
   /// Function to get episodes
-  Future<List<EpisodeBrief>> Function(int count) _getEpisodes = (int _) async {
+  Future<List<EpisodeBrief>> Function(int count, {int offset}) _getEpisodes =
+      (int _, {int offset = 0}) async {
     return <EpisodeBrief>[];
   };
 
@@ -716,8 +718,8 @@ class _MyFavoriteState extends State<_MyFavorite>
           if (!_loadMore) {
             Future.microtask(() async {
               if (mounted) setState(() => _loadMore = true);
+              _episodes.addAll(await _getEpisodes(36, offset: _top));
               _top = _top + 36;
-              _episodes = await _getEpisodes(_top);
               Provider.of<SelectionController>(context, listen: false)
                   .setSelectableEpisodes(_episodes, compatible: true);
               if (mounted) setState(() => _loadMore = false);
@@ -830,7 +832,8 @@ class _MyDownloadState extends State<_MyDownload>
   List<EpisodeBrief> _episodes = [];
 
   /// Function to get episodes
-  Future<List<EpisodeBrief>> Function(int count) _getEpisodes = (int _) async {
+  Future<List<EpisodeBrief>> Function(int count, {int offset}) _getEpisodes =
+      (int _, {int offset = 0}) async {
     return <EpisodeBrief>[];
   };
 
@@ -862,8 +865,8 @@ class _MyDownloadState extends State<_MyDownload>
           if (!_loadMore) {
             Future.microtask(() async {
               if (mounted) setState(() => _loadMore = true);
+              _episodes.addAll(await _getEpisodes(36, offset: _top));
               _top = _top + 36;
-              _episodes = await _getEpisodes(_top);
               Provider.of<SelectionController>(context, listen: false)
                   .setSelectableEpisodes(_episodes, compatible: true);
               if (mounted) setState(() => _loadMore = false);

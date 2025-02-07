@@ -227,7 +227,8 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
   List<EpisodeBrief> _episodes = [];
 
   /// Function to get episodes
-  Future<List<EpisodeBrief>> Function(int count) _getEpisodes = (int _) async {
+  Future<List<EpisodeBrief>> Function(int count, {int offset}) _getEpisodes =
+      (int _, {int offset = 0}) async {
     return <EpisodeBrief>[];
   };
 
@@ -275,8 +276,8 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
                 _episodes.length == _top) {
               if (!_loadMore) {
                 if (mounted) setState(() => _loadMore = true);
+                _episodes.addAll(await _getEpisodes(36, offset: _top));
                 _top = _top + 36;
-                _episodes = await _getEpisodes(_top);
                 widget.selectionController
                     .setSelectableEpisodes(_episodes, compatible: true);
                 if (mounted) setState(() => _loadMore = false);

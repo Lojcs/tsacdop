@@ -47,7 +47,8 @@ Set<Type> _controlWidgets = {
 /// Select mode switch works when [SelectionController] if provided with a [ChangeNotifierProvider]
 class ActionBar extends StatefulWidget {
   /// Callback to return the episode list based on filters
-  final ValueSetter<Future<List<EpisodeBrief>> Function(int count)>
+  final ValueSetter<
+          Future<List<EpisodeBrief>> Function(int count, {int offset})>
       onGetEpisodesChanged;
 
   /// Callback to return the layout status
@@ -391,7 +392,8 @@ class __ActionBarOuterState extends State<_ActionBarOuter>
 
 class _ActionBarSharedState extends ChangeNotifier {
   final BuildContext context;
-  final ValueSetter<Future<List<EpisodeBrief>> Function(int count)>
+  final ValueSetter<
+          Future<List<EpisodeBrief>> Function(int count, {int offset})>
       onGetEpisodesChanged;
   final ValueChanged<EpisodeGridLayout>? onLayoutChanged;
 
@@ -562,9 +564,10 @@ class _ActionBarSharedState extends ChangeNotifier {
   double maxWidth() =>
       context.width - (16 + context.actionBarIconPadding.horizontal / 2);
 
-  Future<List<EpisodeBrief>> Function(int count) getGetEpisodes() {
+  Future<List<EpisodeBrief>> Function(int count, {int offset})
+      getGetEpisodes() {
     DBHelper dbHelper = DBHelper();
-    return (int count) async {
+    return (int count, {int offset = -1}) async {
       episodes = await dbHelper.getEpisodes(
           feedIds: podcast != podcastAll
               ? group.podcastList.isEmpty ||
@@ -591,6 +594,7 @@ class _ActionBarSharedState extends ChangeNotifier {
           sortBy: sortBy,
           sortOrder: sortOrder,
           limit: count,
+          offset: offset,
           filterNew: filterNew,
           filterLiked: filterLiked,
           filterPlayed: filterPlayed,

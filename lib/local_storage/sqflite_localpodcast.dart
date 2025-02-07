@@ -1149,6 +1149,7 @@ class DBHelper {
       List<Sorter>? rangeParameters,
       List<Tuple2<int, int>>? rangeDelimiters,
       int limit = -1,
+      int offset = -1,
       bool? filterNew,
       bool? filterLiked,
       bool? filterPlayed,
@@ -1369,6 +1370,9 @@ class DBHelper {
     }
     if (limit != -1) {
       query.add(" LIMIT ${limit.toString()}");
+      if (offset != -1) {
+        query.add(" OFFSET ${offset.toString()}");
+      }
     }
 
     bool populateVersions = false;
