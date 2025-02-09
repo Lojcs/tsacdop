@@ -26,7 +26,7 @@ class DiscoveryPageState extends State<DiscoveryPage> {
   Genre? get selectedGenre => _selectedGenre;
   final List<OnlinePodcast> _podcastList = [];
   Future? _searchTopPodcast;
-  Future? _getIfHideDiscovery;
+  Future<bool>? _getIfHideDiscovery;
 
   @override
   void initState() {
@@ -38,7 +38,7 @@ class DiscoveryPageState extends State<DiscoveryPage> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<bool>(
-      future: _getIfHideDiscovery!.then((value) => value as bool),
+      future: _getIfHideDiscovery,
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return Center();
@@ -352,7 +352,7 @@ class DiscoveryPageState extends State<DiscoveryPage> {
     );
   }
 
-  Future<List<String?>?> _getSearchHistory() {
+  Future<List<String>> _getSearchHistory() {
     final storage = KeyValueStorage(searchHistoryKey);
     final history = storage.getStringList();
     return history;

@@ -71,7 +71,7 @@ class MyHomePageDelegate extends SearchDelegate<int?> {
         searchState.clearGenre();
       } else {
         searchState.clearList();
-        super.close(context, result);
+        // super.close(context, result);
       }
     }
   }
@@ -100,6 +100,7 @@ class MyHomePageDelegate extends SearchDelegate<int?> {
         ),
         onPressed: () {
           close(context, 1);
+          super.close(context, 1);
         },
       ),
     );
@@ -872,7 +873,7 @@ class _SearchResultDetailState extends State<SearchResultDetail>
   int? _nextEpisdoeDate = DateTime.now().millisecondsSinceEpoch;
 
   /// Search result.
-  final List<OnlineEpisode?> _episodeList = [];
+  final List<OnlineEpisode> _episodeList = [];
 
   late Future _searchFuture;
 
@@ -906,7 +907,7 @@ class _SearchResultDetailState extends State<SearchResultDetail>
     super.dispose();
   }
 
-  Future<List<OnlineEpisode?>> _getListenNotesEpisodes(
+  Future<List<OnlineEpisode>> _getListenNotesEpisodes(
       {String? id, int? nextEpisodeDate}) async {
     var searchEngine = ListenNotesSearch();
     var searchResult = await (searchEngine.fetchEpisode(
@@ -918,7 +919,7 @@ class _SearchResultDetailState extends State<SearchResultDetail>
     return _episodeList;
   }
 
-  Future<List<OnlineEpisode?>> _getIndexEpisodes({String? id}) async {
+  Future<List<OnlineEpisode>> _getIndexEpisodes({String? id}) async {
     var searchEngine = PodcastsIndexSearch();
     var searchResult = await searchEngine.fetchEpisode(rssUrl: id);
     var episodes = searchResult.items!.cast();
@@ -997,7 +998,7 @@ class _SearchResultDetailState extends State<SearchResultDetail>
 
   Widget _episodesList() {
     return FutureBuilder<List<OnlineEpisode>>(
-        future: _searchFuture.then((value) => value as List<OnlineEpisode>),
+        future: _searchFuture.then((value) => value!),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             var content = snapshot.data!;
