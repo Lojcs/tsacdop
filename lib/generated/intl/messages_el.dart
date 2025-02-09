@@ -205,7 +205,6 @@ class MessageLookup extends MessageLookupByLibrary {
             "Συγχαρητήρια! Έχετε συνδέσει το gpodder.net λογαριασμό σας με επιτυχία. Το Tsacdop θα συγχρονίσει αυτόματα τις εγγραφές στη συσκευή σας με το gpodder.net λογαριασμό σας."),
         "groupExisted":
             MessageLookupByLibrary.simpleMessage("Η ομάδα υπάρχει ήδη"),
-        "groupFilter": MessageLookupByLibrary.simpleMessage("Φίλτρο ομάδων"),
         "groupRemoveConfirm": MessageLookupByLibrary.simpleMessage(
             "Είσαι σίγουρος/η πως θες να διαγράψεις αυτή την ομάδα; Τα Podcast θα μεταφερθούν στην Αρχική ομάδα."),
         "groups": m6,

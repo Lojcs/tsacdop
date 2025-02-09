@@ -12,23 +12,24 @@ const kHalfPi = math.pi / 2;
 
 //Layout change indicator
 class LayoutPainter extends CustomPainter {
-  double? scale;
+  double scale;
   Color? color;
-  LayoutPainter(this.scale, this.color);
+  double stroke;
+  LayoutPainter(this.scale, this.color, {this.stroke = 1});
   @override
   void paint(Canvas canvas, Size size) {
     var _paint = Paint()
       ..color = color!
-      ..strokeWidth = 1.0
+      ..strokeWidth = stroke
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
-    canvas.drawRect(Rect.fromLTRB(0, 0, 10 + 5 * scale!, 10), _paint);
-    if (scale! < 4) {
+    canvas.drawRect(Rect.fromLTRB(0, 0, 10 + 5 * scale, 10), _paint);
+    if (scale < 4) {
       canvas.drawRect(
-          Rect.fromLTRB(10 + 5 * scale!, 0, 20 + 10 * scale!, 10), _paint);
+          Rect.fromLTRB(10 + 5 * scale, 0, 20 + 10 * scale, 10), _paint);
       canvas.drawRect(
-          Rect.fromLTRB(20 + 5 * scale!, 0, 30, 10 - 10 * scale!), _paint);
+          Rect.fromLTRB(20 + 5 * scale, 0, 30, 10 - 10 * scale), _paint);
     }
   }
 
@@ -65,7 +66,7 @@ class MultiSelectPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(MultiSelectPainter oldDelegate) {
-    return false;
+    return oldDelegate.color != color;
   }
 }
 
@@ -142,7 +143,8 @@ class StarSky extends CustomPainter {
       path.close();
 
       canvas.drawPath(path, _fullPaint);
-      canvas.drawShadow(path.shift(Offset(0, -6)), Colors.white, 10, true);
+      // canvas.drawShadow(path.shift(Offset(0, -6)), Colors.white, 10, true);
+      // This line freezes the ui with no exceptions raised
     }
 
     for (var center in pisces) {
@@ -160,6 +162,99 @@ class StarSky extends CustomPainter {
   @override
   bool shouldRepaint(StarSky oldDelegate) {
     return false;
+  }
+}
+
+class BiStateIndicator extends StatefulWidget {
+  final bool state;
+  final Widget child;
+  BiStateIndicator({required this.state, required this.child, Key? key})
+      : super(key: key);
+  @override
+  _BiStateIndicatorState createState() => _BiStateIndicatorState();
+}
+
+class _BiStateIndicatorState extends State<BiStateIndicator>
+    with TickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation animation;
+  @override
+  void initState() {
+    super.initState();
+    _controller =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 300))
+          ..addListener(() {
+            if (mounted) {
+              setState(() {});
+            }
+          });
+    animation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutQuad,
+      reverseCurve: Curves.easeInQuad,
+    );
+    if (widget.state) _controller.forward();
+  }
+
+  @override
+  void didUpdateWidget(BiStateIndicator oldWidget) {
+    if (oldWidget.state != widget.state) {
+      if (widget.state) {
+        _controller.forward();
+      } else {
+        _controller.reverse();
+      }
+    }
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+        child: widget.child,
+        foregroundPainter: BiStateIndicatorPainter(
+            fraction: animation.value,
+            color: context.textColor,
+            backgroundColor: context.accentColor));
+  }
+}
+
+class BiStateIndicatorPainter extends CustomPainter {
+  Color? color;
+  Color? backgroundColor;
+  double? fraction;
+  double stroke;
+  BiStateIndicatorPainter({
+    this.color,
+    this.stroke = 1.0,
+    this.backgroundColor,
+    this.fraction,
+  });
+  @override
+  void paint(Canvas canvas, Size size) {
+    var _linePaint = Paint()
+      ..color = backgroundColor!
+      ..strokeWidth = stroke * 2
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+    if (fraction! > 0) {
+      canvas.drawLine(
+          Offset(size.width, size.height) / 5,
+          Offset(size.width, size.height) / 5 +
+              Offset(size.width, size.height) * 3 / 5 * fraction!,
+          _linePaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(BiStateIndicatorPainter oldDelegate) {
+    return oldDelegate.fraction != fraction;
   }
 }
 
@@ -192,7 +287,7 @@ class ListenedPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(ListenedPainter oldDelegate) {
-    return false;
+    return oldDelegate._color != _color;
   }
 }
 
@@ -413,13 +508,14 @@ class AddToPlaylistPainter extends CustomPainter {
 class RemoveNewFlagPainter extends CustomPainter {
   final Color? color;
   final Color textColor;
-  RemoveNewFlagPainter(this.color, this.textColor);
+  final double stroke;
+  RemoveNewFlagPainter(this.color, this.textColor, {this.stroke = 1});
 
   @override
   void paint(Canvas canvas, Size size) {
     var _paint = Paint()
       ..color = color!
-      ..strokeWidth = 1
+      ..strokeWidth = stroke
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
@@ -439,7 +535,10 @@ class RemoveNewFlagPainter extends CustomPainter {
         text: TextSpan(
           text: 'N',
           style: TextStyle(
-              fontStyle: FontStyle.italic, color: textColor, fontSize: 10),
+              fontStyle: FontStyle.italic,
+              color: textColor,
+              fontSize: 10,
+              fontWeight: stroke >= 2 ? FontWeight.bold : FontWeight.normal),
         ))
       ..layout();
     textPainter.paint(canvas, Offset(size.width * 4 / 7, size.height * 3 / 5));
@@ -447,7 +546,8 @@ class RemoveNewFlagPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(RemoveNewFlagPainter oldDelegate) => false;
+  bool shouldRepaint(RemoveNewFlagPainter oldDelegate) =>
+      oldDelegate.color != color;
 
   @override
   bool shouldRebuildSemantics(RemoveNewFlagPainter oldDelegate) => false;
@@ -864,7 +964,7 @@ class _HeartSetState extends State<HeartSet>
       width: widget.width,
       alignment: Alignment(0.5, 1 - _value),
       child: Icon(Icons.favorite,
-          color: Colors.blue.withOpacity(0.7), size: 20 * _value),
+          color: Colors.blue.withValues(alpha: 0.7), size: 20 * _value),
     );
   }
 }
@@ -923,7 +1023,7 @@ class _HeartOpenState extends State<HeartOpen>
       bottom: widget.height! * _value * scale,
       child: Icon(Icons.favorite,
           color: _value > 0.5
-              ? Colors.red.withOpacity(2 - _value * 2)
+              ? Colors.red.withValues(alpha: 2 - _value * 2)
               : Colors.red,
           size: 20 * _value * scale),
     );
@@ -941,7 +1041,7 @@ class _HeartOpenState extends State<HeartOpen>
           width: widget.width,
           alignment: Alignment(0.5, 1 - _value),
           child: Icon(Icons.favorite,
-              color: Colors.blue.withOpacity(0.7), size: 20 * _value),
+              color: Colors.blue.withValues(alpha: 0.7), size: 20 * _value),
         ),
         ..._index.map<Widget>(_position).toList(),
       ],
@@ -1021,8 +1121,8 @@ class DownloadPainter extends CustomPainter {
     var height = size.height;
     var center = Offset(size.width / 2, size.height / 2);
     if (pauseProgress == 0 && progress < 1) {
-      canvas.drawLine(
-          Offset(width / 2, 4), Offset(width / 2, height * 4 / 5), _paint);
+      canvas.drawLine(Offset(width / 2, height / 8),
+          Offset(width / 2, height * 4 / 5), _paint);
       canvas.drawLine(Offset(width / 4, height / 2),
           Offset(width / 2, height * 4 / 5), _paint);
       canvas.drawLine(Offset(width * 3 / 4, height / 2),
@@ -1030,8 +1130,8 @@ class DownloadPainter extends CustomPainter {
     }
 
     if (fraction == 0) {
-      canvas.drawLine(
-          Offset(width / 5, height), Offset(width * 4 / 5, height), _paint);
+      canvas.drawLine(Offset(width / 5, height * 9 / 10),
+          Offset(width * 4 / 5, height * 9 / 10), _paint);
     } else if (progress < 1) {
       canvas.drawArc(Rect.fromCircle(center: center, radius: width / 2),
           math.pi / 2, math.pi * fraction!, false, _circlePaint);
@@ -1071,7 +1171,8 @@ class DownloadPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(DownloadPainter oldDelegate) {
-    return oldDelegate.fraction != fraction ||
+    return oldDelegate.color != color ||
+        oldDelegate.fraction != fraction ||
         oldDelegate.progress != progress ||
         oldDelegate.pauseProgress != pauseProgress;
   }
@@ -1080,22 +1181,22 @@ class DownloadPainter extends CustomPainter {
 /// Layout icon button.
 class LayoutButton extends StatelessWidget {
   const LayoutButton({this.layout, this.onPressed, Key? key}) : super(key: key);
-  final Layout? layout;
-  final ValueChanged<Layout>? onPressed;
+  final EpisodeGridLayout? layout;
+  final ValueChanged<EpisodeGridLayout>? onPressed;
   @override
   Widget build(BuildContext context) {
     return IconButton(
       padding: EdgeInsets.zero,
       onPressed: () {
-        if (layout == Layout.small) {
-          onPressed!(Layout.large);
-        } else if (layout == Layout.medium) {
-          onPressed!(Layout.small);
+        if (layout == EpisodeGridLayout.small) {
+          onPressed!(EpisodeGridLayout.large);
+        } else if (layout == EpisodeGridLayout.medium) {
+          onPressed!(EpisodeGridLayout.small);
         } else {
-          onPressed!(Layout.medium);
+          onPressed!(EpisodeGridLayout.medium);
         }
       },
-      icon: layout == Layout.small
+      icon: layout == EpisodeGridLayout.small
           ? SizedBox(
               height: 10,
               width: 30,
@@ -1103,7 +1204,7 @@ class LayoutButton extends StatelessWidget {
                 painter: LayoutPainter(0, context.textColor),
               ),
             )
-          : layout == Layout.medium
+          : layout == EpisodeGridLayout.medium
               ? SizedBox(
                   height: 10,
                   width: 30,
@@ -1258,12 +1359,14 @@ class TabIndicator extends CustomPainter {
 
 /// Custom back button
 class CustomBackButton extends StatelessWidget {
-  const CustomBackButton({Key? key}) : super(key: key);
+  final Color? color;
+  const CustomBackButton({this.color, super.key});
   @override
   Widget build(BuildContext context) {
     return IconButton(
       splashRadius: 20,
       icon: const BackButtonIcon(),
+      color: color,
       tooltip: context.s.back,
       onPressed: () {
         Navigator.maybePop(context);
@@ -1357,7 +1460,7 @@ class _SleepTimerPickerState extends State<SleepTimerPicker> {
               },
               child: Container(
                 decoration: BoxDecoration(
-                    color: context.accentBackgroundSoft,
+                    color: context.cardColorSchemeCard,
                     borderRadius: BorderRadius.circular(10)),
                 padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 child: Text(hour.toString().padLeft(2, '0'), style: textStyle),
@@ -1389,7 +1492,7 @@ class _SleepTimerPickerState extends State<SleepTimerPicker> {
               },
               child: Container(
                 decoration: BoxDecoration(
-                    color: context.accentBackgroundSoft,
+                    color: context.cardColorSchemeCard,
                     borderRadius: BorderRadius.circular(10)),
                 padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 child:
@@ -1402,9 +1505,9 @@ class _SleepTimerPickerState extends State<SleepTimerPicker> {
 }
 
 class UpDownIndicator extends StatefulWidget {
-  final bool? status;
+  final bool status;
   final Color color;
-  UpDownIndicator({this.status, this.color = Colors.white, Key? key})
+  UpDownIndicator({this.status = false, this.color = Colors.white, Key? key})
       : super(key: key);
 
   @override
@@ -1413,41 +1516,54 @@ class UpDownIndicator extends StatefulWidget {
 
 class _UpDownIndicatorState extends State<UpDownIndicator>
     with SingleTickerProviderStateMixin {
-  late double _value;
-  late AnimationController _controller;
-  late Animation _animation;
+  late AnimationController controller;
+  late Animation<double> turnAnimation =
+      Tween<double>(begin: unfinishedBegin ?? 0, end: unfinishedEnd ?? 0.5)
+          .animate(controller);
+
+  double? unfinishedBegin;
+  double? unfinishedEnd;
+
   @override
   void initState() {
     super.initState();
-    _value = 0;
-    _controller =
+    controller =
         AnimationController(vsync: this, duration: Duration(milliseconds: 300));
-    _animation = Tween<double>(begin: 0.0, end: 1.0).animate(_controller)
-      ..addListener(() {
-        setState(() {
-          _value = _animation.value;
-        });
-      });
   }
 
   @override
   void didUpdateWidget(covariant UpDownIndicator oldWidget) {
     if (widget.status != oldWidget.status) {
-      widget.status! ? _controller.forward() : _controller.reverse();
+      if (widget.status) {
+        if (controller.isAnimating) {
+          unfinishedEnd = controller.value;
+        } else {
+          unfinishedEnd = null;
+        }
+        controller.forward();
+      } else {
+        if (controller.isAnimating) {
+          unfinishedBegin = controller.value;
+        } else {
+          unfinishedBegin = null;
+        }
+        controller.reverse();
+      }
+      widget.status ? controller.forward() : controller.reverse();
     }
     super.didUpdateWidget(oldWidget);
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Transform.rotate(
-      angle: widget.status! ? math.pi * _value : -math.pi * _value,
+    return RotationTransition(
+      turns: turnAnimation,
       child: Icon(
         Icons.keyboard_arrow_down,
         color: widget.color,

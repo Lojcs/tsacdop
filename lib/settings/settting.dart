@@ -73,7 +73,7 @@ class _SettingsState extends State<Settings> {
       value: context.overlay,
       child: SafeArea(
         child: Scaffold(
-          backgroundColor: context.background,
+          backgroundColor: context.surface,
           appBar: AppBar(
             title: Text(
               s.settings,
@@ -82,7 +82,7 @@ class _SettingsState extends State<Settings> {
             leading: CustomBackButton(),
             elevation: _showTitle ? 1 : 0,
             scrolledUnderElevation: 0,
-            backgroundColor: context.background,
+            backgroundColor: context.surface,
           ),
           body: SingleChildScrollView(
             scrollDirection: Axis.vertical,
@@ -96,9 +96,11 @@ class _SettingsState extends State<Settings> {
                   height: 30.0,
                   padding: EdgeInsets.symmetric(horizontal: 70),
                   alignment: Alignment.centerLeft,
-                  child: Text(s.settingsPrefrence,
-                      style: context.textTheme.bodyLarge!
-                          .copyWith(color: context.accentColor)),
+                  child: Text(
+                    s.settingsPrefrence,
+                    style: context.textTheme.titleMedium!
+                        .copyWith(color: context.accentColor),
+                  ),
                 ),
                 ListTile(
                   onTap: () => Navigator.push(context,
@@ -180,7 +182,6 @@ class _SettingsState extends State<Settings> {
                   title: Text(s.settingsBackup),
                   subtitle: Text(s.settingsBackupDes),
                 ),
-                Divider(height: 1),
                 Padding(
                   padding: EdgeInsets.all(10.0),
                 ),
@@ -188,11 +189,11 @@ class _SettingsState extends State<Settings> {
                   height: 30.0,
                   padding: EdgeInsets.symmetric(horizontal: 70),
                   alignment: Alignment.centerLeft,
-                  child: Text(s.settingsInfo,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyLarge!
-                          .copyWith(color: Theme.of(context).colorScheme.secondary)),
+                  child: Text(
+                    s.settingsInfo,
+                    style: context.textTheme.titleMedium!
+                        .copyWith(color: context.accentColor),
+                  ),
                 ),
                 ListTile(
                   onTap: () => Navigator.push(context,
@@ -230,7 +231,7 @@ class _SettingsState extends State<Settings> {
                   subtitle: Text(s.settingsFeedbackDes),
                 ),
                 Divider(
-                  height: 2,
+                  height: 1,
                 ),
                 ListTile(
                   onTap: () {

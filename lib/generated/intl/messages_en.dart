@@ -35,6 +35,8 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m4(count) =>
       "${Intl.plural(count, zero: '', one: 'Episode', other: 'Episodes')}";
 
+  static String m32(type) => "${type} Filter";
+
   static String m5(time) => "From ${time}";
 
   static String m6(count) =>
@@ -50,7 +52,7 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m10(service) => "Integrate with ${service}";
 
-  static String m32(filePath) => "Local episode at ${filePath}";
+  static String m33(filePath) => "Local episode at ${filePath}";
 
   static String m11(userName) => "Logged in as ${userName}";
 
@@ -110,9 +112,12 @@ class MessageLookup extends MessageLookupByLibrary {
             "Add new episodes to playlist"),
         "addSomeGroups":
             MessageLookupByLibrary.simpleMessage("Add some groups"),
+        "after": MessageLookupByLibrary.simpleMessage("After"),
         "all": MessageLookupByLibrary.simpleMessage("All"),
         "autoDownload": MessageLookupByLibrary.simpleMessage("Auto download"),
         "back": MessageLookupByLibrary.simpleMessage("Back"),
+        "before": MessageLookupByLibrary.simpleMessage("Before"),
+        "between": MessageLookupByLibrary.simpleMessage("Between"),
         "boostVolume": MessageLookupByLibrary.simpleMessage("Boost volume"),
         "buffering": MessageLookupByLibrary.simpleMessage("Buffering"),
         "cancel": MessageLookupByLibrary.simpleMessage("CANCEL"),
@@ -140,14 +145,19 @@ class MessageLookup extends MessageLookupByLibrary {
         "defaultSearchEngineDes": MessageLookupByLibrary.simpleMessage(
             "Choose the default podcast search engine"),
         "delete": MessageLookupByLibrary.simpleMessage("Delete"),
+        "deselectAll": MessageLookupByLibrary.simpleMessage("Deselect All"),
         "developer": MessageLookupByLibrary.simpleMessage("Developer"),
         "dismiss": MessageLookupByLibrary.simpleMessage("Dismiss"),
+        "displayVersion":
+            MessageLookupByLibrary.simpleMessage("Display Version"),
         "done": MessageLookupByLibrary.simpleMessage("Done"),
         "download": MessageLookupByLibrary.simpleMessage("Download"),
+        "downloadDate": MessageLookupByLibrary.simpleMessage("Download Date"),
         "downloadRemovedToast":
             MessageLookupByLibrary.simpleMessage("Download removed"),
         "downloadStart": MessageLookupByLibrary.simpleMessage("Downloading"),
         "downloaded": MessageLookupByLibrary.simpleMessage("Downloaded"),
+        "duration": MessageLookupByLibrary.simpleMessage("Duration"),
         "editGroupName":
             MessageLookupByLibrary.simpleMessage("Edit group name"),
         "endOfEpisode": MessageLookupByLibrary.simpleMessage("End of Episode"),
@@ -201,6 +211,7 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Rate on Play Store"),
         "feedbackTelegram": MessageLookupByLibrary.simpleMessage("Join group"),
         "filter": MessageLookupByLibrary.simpleMessage("Filter"),
+        "filterType": m32,
         "fontStyle": MessageLookupByLibrary.simpleMessage("Font style"),
         "fonts": MessageLookupByLibrary.simpleMessage("Fonts"),
         "from": m5,
@@ -209,7 +220,6 @@ class MessageLookup extends MessageLookupByLibrary {
             "Congratulations! You  have linked gpodder.net account successfully. Tsacdop will automatically sync subscriptions on your device with your gpodder.net account."),
         "groupExisted":
             MessageLookupByLibrary.simpleMessage("Group already exists"),
-        "groupFilter": MessageLookupByLibrary.simpleMessage("Group filter"),
         "groupRemoveConfirm": MessageLookupByLibrary.simpleMessage(
             "Are you sure you want to delete this group? Podcasts will be moved to the Home group."),
         "groups": m6,
@@ -250,7 +260,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "listen": MessageLookupByLibrary.simpleMessage("Listen"),
         "listened": MessageLookupByLibrary.simpleMessage("Listened"),
         "loadMore": MessageLookupByLibrary.simpleMessage("Load more"),
-        "localEpisodeDescription": m32,
+        "localEpisodeDescription": m33,
         "loggedInAs": m11,
         "login": MessageLookupByLibrary.simpleMessage("Login"),
         "loginFailed": MessageLookupByLibrary.simpleMessage("Login failed"),
@@ -271,12 +281,14 @@ class MessageLookup extends MessageLookupByLibrary {
         "menuVisitSite": MessageLookupByLibrary.simpleMessage("Visit Site"),
         "minsAgo": m12,
         "minsCount": m13,
+        "moreOptions": MessageLookupByLibrary.simpleMessage("More Options"),
         "network": MessageLookupByLibrary.simpleMessage("Network"),
         "networkErrorDNS":
             MessageLookupByLibrary.simpleMessage("Network error (DNS issue)"),
         "neverAutoUpdate":
             MessageLookupByLibrary.simpleMessage("Turn off auto update"),
         "newGroup": MessageLookupByLibrary.simpleMessage("Create new group"),
+        "newPlain": MessageLookupByLibrary.simpleMessage("New"),
         "newestFirst": MessageLookupByLibrary.simpleMessage("Newest first"),
         "next": MessageLookupByLibrary.simpleMessage("Next"),
         "noEpisodeDownload":
@@ -333,6 +345,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "popupMenuPlayDes":
             MessageLookupByLibrary.simpleMessage("Play the episode"),
         "privacyPolicy": MessageLookupByLibrary.simpleMessage("Privacy Policy"),
+        "publishDate": MessageLookupByLibrary.simpleMessage("Publish Date"),
         "published": m22,
         "publishedDaily":
             MessageLookupByLibrary.simpleMessage("Published daily"),
@@ -343,11 +356,14 @@ class MessageLookup extends MessageLookupByLibrary {
         "publishedYearly":
             MessageLookupByLibrary.simpleMessage("Published yearly"),
         "queue": MessageLookupByLibrary.simpleMessage("Queue"),
+        "random": MessageLookupByLibrary.simpleMessage("Random"),
         "recoverSubscribe":
             MessageLookupByLibrary.simpleMessage("Recover subscribe"),
         "refresh": MessageLookupByLibrary.simpleMessage("Refresh"),
         "refreshArtwork":
             MessageLookupByLibrary.simpleMessage("Update artwork"),
+        "refreshFinished":
+            MessageLookupByLibrary.simpleMessage("Refresh Finished"),
         "refreshStarted": MessageLookupByLibrary.simpleMessage("Refreshing"),
         "remove": MessageLookupByLibrary.simpleMessage("Remove"),
         "removeConfirm":
@@ -371,6 +387,7 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Search for podcasts"),
         "secCount": m24,
         "secondsAgo": m25,
+        "selectMode": MessageLookupByLibrary.simpleMessage("Selection Mode"),
         "selected": m26,
         "settingStorage": MessageLookupByLibrary.simpleMessage("Storage"),
         "settings": MessageLookupByLibrary.simpleMessage("Settings"),
@@ -420,12 +437,6 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Enable synchronisation"),
         "settingsEnableSyncingDes": MessageLookupByLibrary.simpleMessage(
             "Refresh all podcasts in the background to get latest episodes"),
-        "settingsEpisodeManagement":
-            MessageLookupByLibrary.simpleMessage("Episode Management"),
-        "settingsEpisodeVersioning":
-            MessageLookupByLibrary.simpleMessage("Default Episode Version"),
-        "settingsEpisodeVersioningDes": MessageLookupByLibrary.simpleMessage(
-            "Which version of an episode is displayed/downloaded by default. Can be overridden in podcast settings."),
         "settingsExportDes": MessageLookupByLibrary.simpleMessage(
             "Export and import app settings"),
         "settingsFastForwardSec":
@@ -522,6 +533,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "skipSilence": MessageLookupByLibrary.simpleMessage("Skip silence"),
         "skipToNext": MessageLookupByLibrary.simpleMessage("Skip to next"),
         "sleepTimer": MessageLookupByLibrary.simpleMessage("Sleep timer"),
+        "sortBy": MessageLookupByLibrary.simpleMessage("Sort By"),
+        "sortOrder": MessageLookupByLibrary.simpleMessage("Sort Order"),
         "status": MessageLookupByLibrary.simpleMessage("Status"),
         "statusAuthError":
             MessageLookupByLibrary.simpleMessage("Authentication error"),

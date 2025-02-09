@@ -14,8 +14,16 @@ class EpisodeState extends ChangeNotifier {
       Provider.of<AudioPlayerNotifier>(_context!, listen: false);
   set context(BuildContext context) => _context = context;
 
+  /// episode id : bool. Bool flips when episode property changes, indicating the need for refetching from database.
   Map<int, bool> episodeChangeMap = {};
   // using Id here to reduce memory footprint.
+
+  /// Indicates something changed
+  bool globalChange = false;
+
+  /// Ids changed in last update
+  List<int> changedIds = [];
+
   EpisodeState();
 
   /// Call this when you want to listen to an episode's field changes.
@@ -30,71 +38,147 @@ class EpisodeState extends ChangeNotifier {
     episodeChangeMap.remove(episode.id);
   }
 
-  Future<void> setLiked(EpisodeBrief episode) async {
-    await _dbHelper.setLiked(episode.enclosureUrl);
-    if (episodeChangeMap.containsKey(episode.id)) {
-      episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
+  Future<void> setLiked(List<EpisodeBrief> episodes) async {
+    await _dbHelper.setLiked(episodes.map((e) => e.id).toList());
+    bool changeHappened = false;
+    changedIds.clear();
+    for (var episode in episodes) {
+      if (episodeChangeMap.containsKey(episode.id)) {
+        episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
+        changedIds.add(episode.id);
+        changeHappened = true;
+      }
+    }
+    if (changeHappened) {
+      globalChange = !globalChange;
       notifyListeners();
     }
   }
 
-  Future<void> unsetLiked(EpisodeBrief episode) async {
-    await _dbHelper.setUnliked(episode.enclosureUrl);
-    if (episodeChangeMap.containsKey(episode.id)) {
-      episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
+  Future<void> unsetLiked(List<EpisodeBrief> episodes) async {
+    await _dbHelper.setUnliked(episodes.map((e) => e.id).toList());
+    bool changeHappened = false;
+    changedIds.clear();
+    for (var episode in episodes) {
+      if (episodeChangeMap.containsKey(episode.id)) {
+        episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
+        changedIds.add(episode.id);
+        changeHappened = true;
+      }
+    }
+    if (changeHappened) {
+      globalChange = !globalChange;
       notifyListeners();
     }
   }
 
-  Future<void> unsetNew(EpisodeBrief episode) async {
-    await _dbHelper.removeEpisodeNewMark(episode.enclosureUrl);
-    if (episodeChangeMap.containsKey(episode.id)) {
-      episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
+  Future<void> unsetNew(List<EpisodeBrief> episodes) async {
+    await _dbHelper.removeEpisodesNewMark(episodes.map((e) => e.id).toList());
+    bool changeHappened = false;
+    changedIds.clear();
+    for (var episode in episodes) {
+      if (episodeChangeMap.containsKey(episode.id)) {
+        episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
+        changedIds.add(episode.id);
+        changeHappened = true;
+      }
+    }
+    if (changeHappened) {
+      globalChange = !globalChange;
       notifyListeners();
     }
   }
 
-  Future<void> setListened(EpisodeBrief episode,
+  Future<void> setListened(List<EpisodeBrief> episodes,
       {double seekValue = 1, int seconds = 0}) async {
-    final history =
-        PlayHistory(episode.title, episode.enclosureUrl, seconds, seekValue);
-    await _dbHelper.saveHistory(history);
-    if (episodeChangeMap.containsKey(episode.id)) {
-      episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
+    bool changeHappened = false;
+    changedIds.clear();
+    for (var episode in episodes) {
+      final history =
+          PlayHistory(episode.title, episode.enclosureUrl, seconds, seekValue);
+      await _dbHelper.saveHistory(history);
+      if (episodeChangeMap.containsKey(episode.id)) {
+        episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
+        changedIds.add(episode.id);
+        changeHappened = true;
+      }
+    }
+    if (changeHappened) {
+      globalChange = !globalChange;
       notifyListeners();
     }
   }
 
-  Future<void> unsetListened(EpisodeBrief episode) async {
-    await _dbHelper.markNotListened(episode.enclosureUrl);
-    if (episodeChangeMap.containsKey(episode.id)) {
-      episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
+  Future<void> unsetListened(List<EpisodeBrief> episodes) async {
+    await _dbHelper
+        .markNotListened(episodes.map((e) => e.enclosureUrl).toList());
+    bool changeHappened = false;
+    changedIds.clear();
+    for (var episode in episodes) {
+      if (episodeChangeMap.containsKey(episode.id)) {
+        episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
+        changedIds.add(episode.id);
+        changeHappened = true;
+      }
+    }
+    if (changeHappened) {
+      globalChange = !globalChange;
       notifyListeners();
     }
   }
 
-  Future<void> setDownloaded(EpisodeBrief episode, String taskId) async {
-    await _dbHelper.setDownloaded(episode.enclosureUrl, taskId);
-    await _audio.updateEpisodeMediaID(episode);
-    if (episodeChangeMap.containsKey(episode.id)) {
-      episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
+  Future<void> setDownloaded(List<EpisodeBrief> episodes, String taskId) async {
+    bool changeHappened = false;
+    changedIds.clear();
+    for (var episode in episodes) {
+      await _dbHelper.setDownloaded(episode.id, taskId);
+      await _audio.updateEpisodeMediaID(episode);
+      if (episodeChangeMap.containsKey(episode.id)) {
+        episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
+        changedIds.add(episode.id);
+        changeHappened = true;
+      }
+    }
+    if (changeHappened) {
+      globalChange = !globalChange;
       notifyListeners();
     }
   }
 
-  Future<void> unsetDownloaded(EpisodeBrief episode) async {
-    await _dbHelper.unsetDownloaded(episode.enclosureUrl);
-    await _audio.updateEpisodeMediaID(episode);
-    if (episodeChangeMap.containsKey(episode.id)) {
-      episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
+  Future<void> unsetDownloaded(List<EpisodeBrief> episodes) async {
+    await _dbHelper.unsetDownloaded(episodes.map((e) => e.id).toList());
+    bool changeHappened = false;
+    changedIds.clear();
+    for (var episode in episodes) {
+      await _audio.updateEpisodeMediaID(episode);
+      if (episodeChangeMap.containsKey(episode.id)) {
+        episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
+        changedIds.add(episode.id);
+        changeHappened = true;
+      }
+    }
+    if (changeHappened) {
+      globalChange = !globalChange;
       notifyListeners();
     }
   }
 
+  /// Sets the display version for all non downloaded versions of the episode
   Future<void> setDisplayVersion(EpisodeBrief episode) async {
     await _dbHelper.setDisplayVersion(episode);
-    if (episodeChangeMap.containsKey(episode.id)) {
-      episodeChangeMap[episode.id] = !episodeChangeMap[episode.id]!;
+    bool changeHappened = false;
+    changedIds.clear();
+    episode = await episode
+        .copyWithFromDB(newFields: [EpisodeField.versions], keepExisting: true);
+    for (var version in episode.versions!) {
+      if (episodeChangeMap.containsKey(version.id)) {
+        episodeChangeMap[version.id] = !episodeChangeMap[version.id]!;
+        changedIds.add(version.id);
+        changeHappened = true;
+      }
+    }
+    if (changeHappened) {
+      globalChange = !globalChange;
       notifyListeners();
     }
   }

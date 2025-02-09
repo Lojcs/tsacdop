@@ -106,6 +106,17 @@ class S {
     );
   }
 
+  /// `After`
+  String get after {
+    return Intl.message(
+      'After',
+      name: 'after',
+      desc:
+          'Used in a button to select episodes after the selected one(s) on a list. Not used for time',
+      args: [],
+    );
+  }
+
   /// `All`
   String get all {
     return Intl.message(
@@ -132,6 +143,28 @@ class S {
       'Back',
       name: 'back',
       desc: '',
+      args: [],
+    );
+  }
+
+  /// `Before`
+  String get before {
+    return Intl.message(
+      'Before',
+      name: 'before',
+      desc:
+          'Used in a button to select episodes before the selected one(s) on a list. Not used for time',
+      args: [],
+    );
+  }
+
+  /// `Between`
+  String get between {
+    return Intl.message(
+      'Between',
+      name: 'between',
+      desc:
+          'Used in a button to select episodes between the selected one(s) on a list',
       args: [],
     );
   }
@@ -352,6 +385,16 @@ class S {
     );
   }
 
+  /// `Deselect All`
+  String get deselectAll {
+    return Intl.message(
+      'Deselect All',
+      name: 'deselectAll',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Developer`
   String get developer {
     return Intl.message(
@@ -372,6 +415,17 @@ class S {
     );
   }
 
+  /// `Display Version`
+  String get displayVersion {
+    return Intl.message(
+      'Display Version',
+      name: 'displayVersion',
+      desc:
+          'The version of an episode displayed by default. Used with filterType.',
+      args: [],
+    );
+  }
+
   /// `Done`
   String get done {
     return Intl.message(
@@ -388,6 +442,16 @@ class S {
       'Download',
       name: 'download',
       desc: '',
+      args: [],
+    );
+  }
+
+  /// `Download Date`
+  String get downloadDate {
+    return Intl.message(
+      'Download Date',
+      name: 'downloadDate',
+      desc: 'Download Date sort order',
       args: [],
     );
   }
@@ -418,6 +482,16 @@ class S {
       'Downloading',
       name: 'downloadStart',
       desc: 'Toast of downloading',
+      args: [],
+    );
+  }
+
+  /// `Duration`
+  String get duration {
+    return Intl.message(
+      'Duration',
+      name: 'duration',
+      desc: 'Duration sort order',
       args: [],
     );
   }
@@ -735,6 +809,17 @@ class S {
     );
   }
 
+  /// `{type} Filter`
+  String filterType(Object type) {
+    return Intl.message(
+      '$type Filter',
+      name: 'filterType',
+      desc:
+          'To use with different episode filter types. Ex: {Downloaded} Filter, {Played} Filter, {Group} Filter...',
+      args: [type],
+    );
+  }
+
   /// `Fonts`
   String get fonts {
     return Intl.message(
@@ -792,16 +877,6 @@ class S {
       name: 'groupExisted',
       desc:
           'Group name validate in add group dialog. User can\'t add group with same name.',
-      args: [],
-    );
-  }
-
-  /// `Group filter`
-  String get groupFilter {
-    return Intl.message(
-      'Group filter',
-      name: 'groupFilter',
-      desc: '',
       args: [],
     );
   }
@@ -1301,6 +1376,16 @@ class S {
     );
   }
 
+  /// `More Options`
+  String get moreOptions {
+    return Intl.message(
+      'More Options',
+      name: 'moreOptions',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Network`
   String get network {
     return Intl.message(
@@ -1327,6 +1412,16 @@ class S {
       'Turn off auto update',
       name: 'neverAutoUpdate',
       desc: 'Never auto  update in podcast settings.',
+      args: [],
+    );
+  }
+
+  /// `New`
+  String get newPlain {
+    return Intl.message(
+      'New',
+      name: 'newPlain',
+      desc: 'Word to describe a new episode (and use in filterType)',
       args: [],
     );
   }
@@ -1744,6 +1839,16 @@ class S {
     );
   }
 
+  /// `Publish Date`
+  String get publishDate {
+    return Intl.message(
+      'Publish Date',
+      name: 'publishDate',
+      desc: 'Publish Date sort order',
+      args: [],
+    );
+  }
+
   /// `Published at {date}`
   String published(Object date) {
     return Intl.message(
@@ -1804,6 +1909,16 @@ class S {
     );
   }
 
+  /// `Random`
+  String get random {
+    return Intl.message(
+      'Random',
+      name: 'random',
+      desc: 'Random sort order',
+      args: [],
+    );
+  }
+
   /// `Recover subscribe`
   String get recoverSubscribe {
     return Intl.message(
@@ -1831,6 +1946,16 @@ class S {
       'Update artwork',
       name: 'refreshArtwork',
       desc: '',
+      args: [],
+    );
+  }
+
+  /// `Refresh Finished`
+  String get refreshFinished {
+    return Intl.message(
+      'Refresh Finished',
+      name: 'refreshFinished',
+      desc: 'Toast for refresh finish',
       args: [],
     );
   }
@@ -2008,6 +2133,16 @@ class S {
       name: 'selected',
       desc: '',
       args: [count],
+    );
+  }
+
+  /// `Selection Mode`
+  String get selectMode {
+    return Intl.message(
+      'Selection Mode',
+      name: 'selectMode',
+      desc: '',
+      args: [],
     );
   }
 
@@ -2257,36 +2392,6 @@ class S {
     return Intl.message(
       'Refresh all podcasts in the background to get latest episodes',
       name: 'settingsEnableSyncingDes',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Episode Management`
-  String get settingsEpisodeManagement {
-    return Intl.message(
-      'Episode Management',
-      name: 'settingsEpisodeManagement',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Default Episode Version`
-  String get settingsEpisodeVersioning {
-    return Intl.message(
-      'Default Episode Version',
-      name: 'settingsEpisodeVersioning',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Which version of an episode is displayed/downloaded by default. Can be overridden in podcast settings.`
-  String get settingsEpisodeVersioningDes {
-    return Intl.message(
-      'Which version of an episode is displayed/downloaded by default. Can be overridden in podcast settings.',
-      name: 'settingsEpisodeVersioningDes',
       desc: '',
       args: [],
     );
@@ -2867,6 +2972,26 @@ class S {
     return Intl.message(
       'Sleep timer',
       name: 'sleepTimer',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sort By`
+  String get sortBy {
+    return Intl.message(
+      'Sort By',
+      name: 'sortBy',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sort Order`
+  String get sortOrder {
+    return Intl.message(
+      'Sort Order',
+      name: 'sortOrder',
       desc: '',
       args: [],
     );

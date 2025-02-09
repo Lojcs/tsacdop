@@ -14,7 +14,7 @@ class ThemeSetting extends StatelessWidget {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: context.overlay,
       child: Scaffold(
-        backgroundColor: context.background,
+        backgroundColor: context.surface,
         appBar: AppBar(
           title: Text(
             s.settingsAppearance,
@@ -23,7 +23,7 @@ class ThemeSetting extends StatelessWidget {
           leading: CustomBackButton(),
           elevation: 0,
           scrolledUnderElevation: 0,
-          backgroundColor: context.background,
+          backgroundColor: context.surface,
         ),
         body: Column(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -283,13 +283,14 @@ class __ColorPickerState extends State<_ColorPicker>
         children: <Widget>[
           Container(
             height: 40,
-            color: Theme.of(context).dialogBackgroundColor,
             child: TabBar(
               labelPadding: EdgeInsets.symmetric(horizontal: 10),
               controller: _controller,
               indicatorColor: Colors.transparent,
               indicatorSize: TabBarIndicatorSize.tab,
               isScrollable: true,
+              dividerHeight: 0,
+              tabAlignment: TabAlignment.start,
               tabs: Colors.primaries
                   .map<Widget>((color) => Tab(
                         child: Container(
@@ -311,7 +312,6 @@ class __ColorPickerState extends State<_ColorPicker>
           Expanded(
             child: TabBarView(
               physics: const ClampingScrollPhysics(),
-              key: UniqueKey(),
               controller: _controller,
               children: Colors.primaries
                   .map<Widget>(

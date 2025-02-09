@@ -14,7 +14,7 @@ class PodcastLocal extends Equatable {
   final String? primaryColor;
   final String id;
   final String? imagePath;
-  final String? provider;
+  final String provider;
   final String? link;
 
   final String description;
@@ -28,7 +28,7 @@ class PodcastLocal extends Equatable {
 
   //set setEpisodeCount(i) => episodeCount = i;
 
-  PodcastLocal(
+  const PodcastLocal(
     this.title,
     this.imageUrl,
     this.rssUrl,

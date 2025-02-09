@@ -29,6 +29,9 @@ import 'pocast_discovery.dart';
 
 class MyHomePageDelegate extends SearchDelegate<int?> {
   final String? searchFieldLabel;
+
+  bool _closing = false;
+
   MyHomePageDelegate({this.searchFieldLabel})
       : super(
           searchFieldLabel: searchFieldLabel,
@@ -58,6 +61,7 @@ class MyHomePageDelegate extends SearchDelegate<int?> {
 
   @override
   void close(BuildContext context, int? result) {
+    _closing = true;
     final searchState = context.read<SearchState>();
     final selectedPodcast = searchState.selectedPodcast;
     if (selectedPodcast != null) {
@@ -81,8 +85,12 @@ class MyHomePageDelegate extends SearchDelegate<int?> {
   @override
   Widget buildLeading(BuildContext context) {
     return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (_, __) => close(context, null),
+      canPop: !_closing,
+      onPopInvokedWithResult: (_, __) {
+        if (!_closing) {
+          close(context, null);
+        }
+      },
       child: IconButton(
         tooltip: context.s.back,
         splashRadius: 20,
@@ -337,7 +345,7 @@ class _RssResultState extends State<RssResult> {
                         child: TextButton(
                           style: TextButton.styleFrom(
                             disabledForegroundColor:
-                                context.accentColor.withOpacity(0.5),
+                                context.accentColor.withValues(alpha: 0.5),
                           ),
                           child: Text(context.s.loadMore),
                           onPressed: () => setState(
@@ -549,7 +557,7 @@ class __ListenNotesSearchState extends State<_ListenNotesSearch> {
                       style: TextButton.styleFrom(
                         side: BorderSide(color: context.accentColor),
                         disabledForegroundColor:
-                            context.accentColor.withOpacity(0.5),
+                            context.accentColor.withValues(alpha: 0.5),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(100),
                         ),
@@ -717,7 +725,7 @@ class __PodcastIndexSearchState extends State<_PodcastIndexSearch> {
                       style: TextButton.styleFrom(
                         side: BorderSide(color: context.accentColor),
                         disabledForegroundColor:
-                            context.accentColor.withOpacity(0.5),
+                            context.accentColor.withValues(alpha: 0.5),
                       ),
                       child: _loading
                           ? SizedBox(
@@ -1008,7 +1016,7 @@ class _SearchResultDetailState extends State<SearchResultDetail>
                           style: TextButton.styleFrom(
                             side: BorderSide(color: context.accentColor),
                             disabledForegroundColor:
-                                context.accentColor.withOpacity(0.5),
+                                context.accentColor.withValues(alpha: 0.5),
                           ),
                           child: _loading
                               ? SizedBox(
@@ -1063,7 +1071,7 @@ class _SearchResultDetailState extends State<SearchResultDetail>
                               foregroundColor: WidgetStateProperty.all<Color>(
                                   context.accentColor),
                               overlayColor: WidgetStateProperty.all<Color>(
-                                  context.background.withAlpha(72)),
+                                  context.surface.withAlpha(72)),
                               padding:
                                   WidgetStateProperty.all<EdgeInsetsGeometry>(
                                       EdgeInsets.symmetric(horizontal: 2))),
@@ -1100,7 +1108,7 @@ class _SearchResultDetailState extends State<SearchResultDetail>
               offset: Offset(0, -0.5),
               blurRadius: 1,
               color: Theme.of(context).brightness == Brightness.light
-                  ? Colors.grey[400]!.withOpacity(0.5)
+                  ? Colors.grey[400]!.withValues(alpha: 0.5)
                   : Colors.grey[800]!,
             ),
           ],
@@ -1222,7 +1230,7 @@ class _SearchResultDetailState extends State<SearchResultDetail>
                 ),
               Expanded(
                 child: Container(
-                  color: context.background,
+                  color: context.surface,
                   child: TabBarView(children: [
                     ListView(
                       physics: _animation.value != widget.maxHeight
@@ -1280,7 +1288,7 @@ class SubscribeButton extends StatelessWidget {
                           borderRadius: BorderRadius.circular(100.0),
                           side: BorderSide(color: context.accentColor)),
                       disabledForegroundColor:
-                          context.accentColor.withOpacity(0.5),
+                          context.accentColor.withValues(alpha: 0.5),
                     ),
                     child: Text(s.subscribe,
                         style: TextStyle(color: context.accentColor)),
@@ -1297,7 +1305,8 @@ class SubscribeButton extends StatelessWidget {
                 height: 32,
                 child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: context.accentColor.withOpacity(0.5),
+                      foregroundColor:
+                          context.accentColor.withValues(alpha: 0.5),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(100.0),
                           side: BorderSide(color: Colors.grey[500]!)),
@@ -1335,7 +1344,7 @@ class PodcastSlideup extends StatelessWidget {
               child: GestureDetector(
                 onTap: searchState.clearSelect,
                 child: Container(
-                  color: context.background.withOpacity(0.9),
+                  color: context.surface.withValues(alpha: 0.9),
                 ),
               ),
             ),

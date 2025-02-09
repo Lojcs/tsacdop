@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
+import 'package:tsacdop/util/extension_helper.dart';
 
 const Duration _kMenuDuration = Duration(milliseconds: 300);
 const double _kMenuCloseIntervalEnd = 2.0 / 3.0;
@@ -53,31 +54,56 @@ class _RenderMenuItem extends RenderShiftedBox {
 class _PopupMenu<T> extends StatelessWidget {
   const _PopupMenu({
     Key? key,
-    this.route,
+    required this.route,
     this.semanticLabel,
+    this.constraints,
+    this.padding,
+    this.visibleItemCount,
+    this.itemExtent,
+    this.animateOpacity = true,
+    this.animateHeight = true,
+    this.animateWidth = true,
   }) : super(key: key);
 
-  final _PopupMenuRoute<T>? route;
+  final _PopupMenuRoute<T> route;
   final String? semanticLabel;
+  final BoxConstraints? constraints;
+  final EdgeInsetsGeometry? padding;
+  final int? visibleItemCount;
+  final double? itemExtent;
+  final bool animateOpacity;
+  final bool animateHeight;
+  final bool animateWidth;
 
   @override
   Widget build(BuildContext context) {
+    final itemCount;
+    final adjustedConstraints;
+    if (visibleItemCount != null) {
+      itemCount = visibleItemCount!.clamp(0, route.items.length);
+      final fullHeight =
+          itemCount * itemExtent! + (padding != null ? padding!.vertical : 0);
+      adjustedConstraints = constraints?.tighten(height: fullHeight);
+    } else {
+      itemCount = route.items.length;
+      adjustedConstraints = constraints;
+    }
     final unit = 1.0 /
-        (route!.items.length +
+        (itemCount +
             1.5); // 1.0 for the width and 0.5 for the last item's fade.
     final children = <Widget>[];
     final popupMenuTheme = PopupMenuTheme.of(context);
 
-    for (var i = 0; i < route!.items.length; i += 1) {
+    for (var i = 0; i < itemCount; i += 1) {
       final start = (i + 1) * unit;
       final end = (start + 1.5 * unit).clamp(0.0, 1.0);
       final opacity = CurvedAnimation(
-        parent: route!.animation!,
+        parent: route.animation!,
         curve: Interval(start, end),
       );
-      Widget item = route!.items[i];
-      if (route!.initialValue != null &&
-          route!.items[i].represents(route!.initialValue)) {
+      Widget item = route.items[i];
+      if (route.initialValue != null &&
+          route.items[i].represents(route.initialValue)) {
         item = Container(
           color: Theme.of(context).highlightColor,
           child: item,
@@ -86,7 +112,7 @@ class _PopupMenu<T> extends StatelessWidget {
       children.add(
         _MenuItem(
           onLayout: (size) {
-            route!.itemSizes[i] = size;
+            route.itemSizes[i] = size;
           },
           child: FadeTransition(
             opacity: opacity,
@@ -95,45 +121,76 @@ class _PopupMenu<T> extends StatelessWidget {
         ),
       );
     }
+    for (var i = itemCount; i < route.items.length; i += 1) {
+      Widget item = route.items[i];
+      if (route.initialValue != null &&
+          route.items[i].represents(route.initialValue)) {
+        item = Container(
+          color: Theme.of(context).highlightColor,
+          child: item,
+        );
+      }
+      children.add(
+        _MenuItem(
+          onLayout: (size) {
+            route.itemSizes[i] = size;
+          },
+          child: item,
+        ),
+      );
+    }
 
     final opacity = CurveTween(curve: const Interval(0.0, 1.0 / 3.0));
     final width = CurveTween(curve: Interval(0.0, unit));
-    final height = CurveTween(curve: Interval(0.0, unit * route!.items.length));
+    final height = CurveTween(curve: Interval(0.0, 1 - 1.5 * unit));
 
     final Widget child = ConstrainedBox(
-      constraints: const BoxConstraints(
-        minWidth: _kMenuMinWidth,
-        maxWidth: _kMenuMaxWidth,
-      ),
-      child: IntrinsicWidth(
-        stepWidth: _kMenuWidthStep,
-        child: Semantics(
-          scopesRoute: true,
-          namesRoute: true,
-          explicitChildNodes: true,
-          label: semanticLabel,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.only(bottom: _kMenuVerticalPadding),
-            child: ListBody(children: children),
-          ),
-        ),
-      ),
-    );
+        constraints: adjustedConstraints ??
+            const BoxConstraints(
+              minWidth: _kMenuMinWidth,
+              maxWidth: _kMenuMaxWidth,
+            ),
+        child: Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            IntrinsicWidth(
+              stepWidth: _kMenuWidthStep,
+              child: Semantics(
+                scopesRoute: true,
+                namesRoute: true,
+                explicitChildNodes: true,
+                label: semanticLabel,
+                child: SingleChildScrollView(
+                  padding: padding,
+                  child: ListBody(children: children),
+                ),
+              ),
+            ),
+            if (visibleItemCount != null &&
+                visibleItemCount! < route.items.length)
+              Icon(
+                Icons.arrow_drop_down,
+                color: context.textColor.withValues(alpha: 0.4),
+              )
+          ],
+        ));
 
     return AnimatedBuilder(
-      animation: route!.animation!,
+      animation: route.animation!,
       builder: (context, child) {
         return Opacity(
-          opacity: opacity.evaluate(route!.animation!),
+          opacity: animateOpacity ? opacity.evaluate(route.animation!) : 1,
           child: Material(
-            shape: route!.shape ?? popupMenuTheme.shape,
-            color: route!.color ?? popupMenuTheme.color,
+            shape: route.shape ?? popupMenuTheme.shape,
+            clipBehavior: Clip.hardEdge,
+            color: route.color ?? popupMenuTheme.color,
             type: MaterialType.card,
-            elevation: route!.elevation ?? popupMenuTheme.elevation ?? 8.0,
+            elevation: route.elevation ?? popupMenuTheme.elevation ?? 8.0,
             child: Align(
               alignment: AlignmentDirectional.topEnd,
-              widthFactor: width.evaluate(route!.animation!),
-              heightFactor: height.evaluate(route!.animation!),
+              widthFactor: animateWidth ? width.evaluate(route.animation!) : 1,
+              heightFactor:
+                  animateHeight ? height.evaluate(route.animation!) : 1,
               child: child,
             ),
           ),
@@ -235,6 +292,13 @@ class _PopupMenuRoute<T> extends PopupRoute<T> {
     this.color,
     this.showMenuContext,
     this.captureInheritedThemes,
+    this.constraints,
+    this.padding,
+    this.visibleItemCount,
+    this.itemExtent,
+    this.animateOpacity = true,
+    this.animateHeight = true,
+    this.animateWidth = true,
   }) : itemSizes = List<Size?>.filled(items.length, null, growable: false);
 
   final RelativeRect? position;
@@ -249,13 +313,20 @@ class _PopupMenuRoute<T> extends PopupRoute<T> {
   final PopupMenuThemeData? popupMenuTheme;
   final BuildContext? showMenuContext;
   final bool? captureInheritedThemes;
+  final BoxConstraints? constraints;
+  final EdgeInsetsGeometry? padding;
+  final int? visibleItemCount;
+  final double? itemExtent;
+  final bool animateOpacity;
+  final bool animateHeight;
+  final bool animateWidth;
 
   @override
   Animation<double> createAnimation() {
     return CurvedAnimation(
       parent: super.createAnimation(),
       curve: Curves.linear,
-      reverseCurve: const Interval(0.0, _kMenuCloseIntervalEnd),
+      reverseCurve: const Interval(1 / 3, 1),
     );
   }
 
@@ -283,7 +354,17 @@ class _PopupMenuRoute<T> extends PopupRoute<T> {
       }
     }
 
-    Widget menu = _PopupMenu<T>(route: this, semanticLabel: semanticLabel);
+    Widget menu = _PopupMenu<T>(
+      route: this,
+      semanticLabel: semanticLabel,
+      constraints: constraints,
+      padding: padding,
+      visibleItemCount: visibleItemCount,
+      itemExtent: itemExtent,
+      animateOpacity: animateOpacity,
+      animateHeight: animateHeight,
+      animateWidth: animateWidth,
+    );
     if (captureInheritedThemes!) {
       menu = InheritedTheme.captureAll(showMenuContext!, menu);
     } else {
@@ -324,6 +405,13 @@ Future<T?> _showMenu<T>({
   Color? color,
   bool captureInheritedThemes = true,
   bool useRootNavigator = false,
+  BoxConstraints? constraints,
+  EdgeInsetsGeometry? padding,
+  int? visibleItemCount,
+  double? itemExtent,
+  bool animateOpacity = true,
+  bool animateHeight = true,
+  bool animateWidth = true,
 }) {
   assert(items.isNotEmpty);
   assert(debugCheckHasMaterialLocalizations(context));
@@ -355,6 +443,13 @@ Future<T?> _showMenu<T>({
     color: color,
     showMenuContext: context,
     captureInheritedThemes: captureInheritedThemes,
+    constraints: constraints,
+    padding: padding,
+    visibleItemCount: visibleItemCount,
+    itemExtent: itemExtent,
+    animateOpacity: animateOpacity,
+    animateHeight: animateHeight,
+    animateWidth: animateWidth,
   ));
 }
 
@@ -368,18 +463,29 @@ class MyPopupMenuButton<T> extends StatefulWidget {
     this.initialValue,
     this.onSelected,
     this.onCanceled,
+    this.beforeOpened,
+    this.afterClosed,
     this.tooltip,
     this.elevation,
     this.padding = const EdgeInsets.all(8.0),
     this.child,
+    this.splashRadius,
     this.icon,
     this.offset = Offset.zero,
     this.enabled = true,
     this.shape,
     this.color,
+    this.enableFeedback,
+    this.constraints,
+    this.position = PopupMenuPosition.over,
+    this.menuPadding = const EdgeInsets.symmetric(vertical: 8),
+    this.visibleItemCount,
+    this.itemExtent,
     this.captureInheritedThemes = true,
   })  : assert(!(child != null && icon != null),
             'You can only pass [child] or [icon], not both.'),
+        assert(visibleItemCount == null || itemExtent != null,
+            '[itemExtent] is required if [visibleItemCount] is set.'),
         super(key: key);
 
   final PopupMenuItemBuilder<T> itemBuilder;
@@ -389,11 +495,17 @@ class MyPopupMenuButton<T> extends StatefulWidget {
 
   final PopupMenuCanceled? onCanceled;
 
+  final Future<void> Function()? beforeOpened;
+
+  final Future<void> Function()? afterClosed;
+
   final String? tooltip;
 
   final double? elevation;
 
   final EdgeInsetsGeometry padding;
+
+  final double? splashRadius;
 
   final Widget? child;
 
@@ -405,6 +517,18 @@ class MyPopupMenuButton<T> extends StatefulWidget {
 
   final Color? color;
 
+  final bool? enableFeedback;
+
+  final BoxConstraints? constraints;
+
+  final PopupMenuPosition position;
+
+  final EdgeInsetsGeometry menuPadding;
+
+  final int? visibleItemCount;
+
+  final double? itemExtent;
+
   final bool captureInheritedThemes;
 
   @override
@@ -412,14 +536,26 @@ class MyPopupMenuButton<T> extends StatefulWidget {
 }
 
 class MyPopupMenuButtonState<T> extends State<MyPopupMenuButton<T>> {
-  void showButtonMenu() {
+  void showButtonMenu() async {
+    await widget.beforeOpened?.call();
     final popupMenuTheme = PopupMenuTheme.of(context);
     final button = context.findRenderObject() as RenderBox;
     final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
-    final position = RelativeRect.fromRect(
+    final Offset offset;
+    switch (widget.position) {
+      case PopupMenuPosition.over:
+        offset = widget.offset;
+        break;
+      case PopupMenuPosition.under:
+        offset =
+            Offset(0.0, button.size.height - (widget.padding.vertical / 2)) +
+                widget.offset;
+        break;
+    }
+    final RelativeRect position = RelativeRect.fromRect(
       Rect.fromPoints(
-        button.localToGlobal(widget.offset, ancestor: overlay),
-        button.localToGlobal(button.size.bottomRight(Offset.zero),
+        button.localToGlobal(offset, ancestor: overlay),
+        button.localToGlobal(button.size.bottomRight(Offset.zero) + offset,
             ancestor: overlay),
       ),
       Offset.zero & overlay.size,
@@ -435,14 +571,21 @@ class MyPopupMenuButtonState<T> extends State<MyPopupMenuButton<T>> {
         position: position,
         shape: widget.shape ?? popupMenuTheme.shape,
         color: widget.color ?? popupMenuTheme.color,
+        constraints: widget.constraints,
+        padding: widget.menuPadding,
+        visibleItemCount: widget.visibleItemCount,
+        itemExtent: widget.itemExtent,
         captureInheritedThemes: widget.captureInheritedThemes,
-      ).then<void>((newValue) {
+        animateWidth: widget.position == PopupMenuPosition.over,
+      ).then<void>((newValue) async {
         if (!mounted) return null;
         if (newValue == null) {
           if (widget.onCanceled != null) widget.onCanceled!();
-          return null;
+        } else {
+          if (widget.onSelected != null) widget.onSelected!(newValue);
         }
-        if (widget.onSelected != null) widget.onSelected!(newValue);
+        await widget.afterClosed?.call();
+        return null;
       });
     }
   }
@@ -462,6 +605,9 @@ class MyPopupMenuButtonState<T> extends State<MyPopupMenuButton<T>> {
 
   @override
   Widget build(BuildContext context) {
+    final bool enableFeedback = widget.enableFeedback ??
+        PopupMenuTheme.of(context).enableFeedback ??
+        true;
     assert(debugCheckHasMaterialLocalizations(context));
 
     if (widget.child != null) {
@@ -471,6 +617,8 @@ class MyPopupMenuButtonState<T> extends State<MyPopupMenuButton<T>> {
         child: InkWell(
           onTap: widget.enabled ? showButtonMenu : null,
           canRequestFocus: widget.enabled,
+          radius: widget.splashRadius,
+          enableFeedback: enableFeedback,
           child: widget.child,
         ),
       );
@@ -479,9 +627,11 @@ class MyPopupMenuButtonState<T> extends State<MyPopupMenuButton<T>> {
     return IconButton(
       icon: widget.icon ?? _getIcon(Theme.of(context).platform)!,
       padding: widget.padding,
+      splashRadius: widget.splashRadius,
       tooltip:
           widget.tooltip ?? MaterialLocalizations.of(context).showMenuTooltip,
       onPressed: widget.enabled ? showButtonMenu : null,
+      enableFeedback: enableFeedback,
     );
   }
 }

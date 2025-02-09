@@ -251,7 +251,8 @@ class DiscoveryPageState extends State<DiscoveryPage> {
                   height: 32,
                   child: OutlinedButton(
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: context.accentColor.withOpacity(0.5),
+                        foregroundColor:
+                            context.accentColor.withValues(alpha: 0.5),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(100.0),
                             side: BorderSide(color: Colors.grey[500]!)),
@@ -307,9 +308,9 @@ class DiscoveryPageState extends State<DiscoveryPage> {
     return Container(
       decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          color: context.background,
-          border:
-              Border.all(color: context.textColor.withOpacity(0.1), width: 1)),
+          color: context.surface,
+          border: Border.all(
+              color: context.textColor.withValues(alpha: 0.1), width: 1)),
       width: 140,
       margin: EdgeInsets.fromLTRB(20, 10, 0, 10),
       child: Material(

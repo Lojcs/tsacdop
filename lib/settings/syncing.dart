@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:tsacdop/local_storage/sqflite_localpodcast.dart';
 import 'package:tuple/tuple.dart';
 
 import '../state/setting_state.dart';
@@ -24,7 +23,7 @@ class _SyncingSettingState extends State<SyncingSetting> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: context.overlay,
       child: Scaffold(
-        backgroundColor: context.background,
+        backgroundColor: context.surface,
         appBar: AppBar(
           title: Text(
             s.settingsSyncing,
@@ -33,12 +32,12 @@ class _SyncingSettingState extends State<SyncingSetting> {
           leading: CustomBackButton(),
           elevation: 0,
           scrolledUnderElevation: 0,
-          backgroundColor: context.background,
+          backgroundColor: context.surface,
         ),
         body: SingleChildScrollView(
-          child: Selector<SettingState, Tuple3<bool?, int?, VersionPolicy?>>(
-            selector: (_, settings) => Tuple3(settings.autoUpdate,
-                settings.updateInterval, settings.versionPolicy),
+          child: Selector<SettingState, Tuple2<bool?, int?>>(
+            selector: (_, settings) =>
+                Tuple2(settings.autoUpdate, settings.updateInterval),
             builder: (_, data, __) => Column(
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -100,61 +99,11 @@ class _SyncingSettingState extends State<SyncingSetting> {
                             value: e, child: Text(s.hoursCount(e)));
                       }).toList()),
                 ),
-                Divider(height: 1),
-                Padding(
-                  padding: EdgeInsets.all(10.0),
-                ),
-                Container(
-                  height: 30.0,
-                  padding: EdgeInsets.symmetric(horizontal: 70),
-                  alignment: Alignment.centerLeft,
-                  child: Text(s.settingsEpisodeManagement,
-                      style: context.textTheme.bodyLarge!
-                          .copyWith(color: context.accentColor)),
-                ),
-                ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 70),
-                    title: Text(s.settingsEpisodeVersioning),
-                    subtitle: Text(s.settingsEpisodeVersioningDes)),
-                Container(
-                    padding: EdgeInsets.symmetric(horizontal: 70),
-                    child: MyDropdownButton(
-                        hint: Text(_getVersionPolicyString(data.item3!)),
-                        underline: Center(),
-                        elevation: 1,
-                        displayItemCount: 3,
-                        value: data.item3,
-                        onChanged: (VersionPolicy versionPolicy) async {
-                          settings.versionPolicy = versionPolicy;
-                        },
-                        items: <VersionPolicy>[
-                          VersionPolicy.New,
-                          VersionPolicy.Old,
-                          VersionPolicy.NewIfNoDownloaded
-                        ].map<DropdownMenuItem<VersionPolicy>>((e) {
-                          return DropdownMenuItem<VersionPolicy>(
-                              value: e,
-                              child: Text(_getVersionPolicyString(e)));
-                        }).toList())),
               ],
             ),
           ),
         ),
       ),
     );
-  }
-
-  String _getVersionPolicyString(VersionPolicy? versionPolicy) {
-    final s = context.s;
-    switch (versionPolicy) {
-      case VersionPolicy.New:
-        return s.episodeVersioningNew;
-      case VersionPolicy.Old:
-        return s.episodeVersioningOld;
-      case VersionPolicy.NewIfNoDownloaded:
-        return s.episodeVersioningNewIfNotDownloaded;
-      default:
-        return '';
-    }
   }
 }

@@ -186,7 +186,6 @@ class MessageLookup extends MessageLookupByLibrary {
         "gpodderLoginDes": MessageLookupByLibrary.simpleMessage(
             "恭喜！您已经成功绑定 gpodder.net 账号，Tsacdop 将会自动同步您的订阅到 gpodder.net 账户。"),
         "groupExisted": MessageLookupByLibrary.simpleMessage("组名已使用"),
-        "groupFilter": MessageLookupByLibrary.simpleMessage("分组"),
         "groupRemoveConfirm":
             MessageLookupByLibrary.simpleMessage("您确认要移除该分组吗？播客将被移动到 Home 分组。"),
         "groups": m6,

@@ -7,6 +7,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:tsacdop/class/settingstate.dart';
+import 'package:tsacdop/type/theme_data.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import '../generated/l10n.dart';
 
@@ -16,7 +17,7 @@ extension ContextExtension on BuildContext {
   Color get primaryColor => Theme.of(this).colorScheme.onPrimary;
   Color get priamryContainer => Theme.of(this).colorScheme.primaryContainer;
   Color get onPrimary => Theme.of(this).colorScheme.onPrimary;
-  Color get background => Theme.of(this).colorScheme.surface;
+  Color get surface => Theme.of(this).colorScheme.surface;
   Color get tertiary => colorScheme.tertiary;
   Color get tertiaryContainer => colorScheme.tertiaryContainer;
   Color get onTertiary => colorScheme.onTertiary;
@@ -27,7 +28,6 @@ extension ContextExtension on BuildContext {
   Color get primaryColorDark => Theme.of(this).primaryColorDark;
   Color get textColor => textTheme.bodyLarge!.color!;
   Color get dialogBackgroundColor => Theme.of(this).dialogBackgroundColor;
-  Color get accentBackgroundSoft => accentColor.toSoftBackround(this);
   Color get accentBackgroundWeak => accentColor.toWeakBackround(this);
   Color get accentBackground => accentColor.toStrongBackround(this);
   Color get accentBackgroundHighlight => accentColor.toHighlightBackround(this);
@@ -38,15 +38,30 @@ extension ContextExtension on BuildContext {
   double get height => MediaQuery.of(this).size.height;
   double get paddingTop => MediaQuery.of(this).padding.top;
   TextTheme get textTheme => Theme.of(this).textTheme;
-  List<BoxShadow> get boxShadowSmall => realDark
-      ? [BoxShadow(blurRadius: 4, spreadRadius: -1, color: shadowColor)]
-      : [BoxShadow(blurRadius: 4, spreadRadius: -2, color: shadowColor)];
-  List<BoxShadow> get boxShadowMedium => realDark
-      ? [BoxShadow(blurRadius: 4, spreadRadius: 0, color: shadowColor)]
-      : [BoxShadow(blurRadius: 3, spreadRadius: -1, color: shadowColor)];
-  List<BoxShadow> get boxShadowLarge => realDark
-      ? [BoxShadow(blurRadius: 6, spreadRadius: 0.5, color: shadowColor)]
-      : [BoxShadow(blurRadius: 4, spreadRadius: -1, color: shadowColor)];
+  List<BoxShadow> boxShadowSmall({Color? color}) => realDark
+      ? [
+          BoxShadow(
+              blurRadius: 4, spreadRadius: -1, color: color ?? shadowColor)
+        ]
+      : [
+          BoxShadow(
+              blurRadius: 4, spreadRadius: -2, color: color ?? shadowColor)
+        ];
+  List<BoxShadow> boxShadowMedium({Color? color}) => realDark
+      ? [BoxShadow(blurRadius: 4, spreadRadius: 0, color: color ?? shadowColor)]
+      : [
+          BoxShadow(
+              blurRadius: 3, spreadRadius: -1, color: color ?? shadowColor)
+        ];
+  List<BoxShadow> boxShadowLarge({Color? color}) => realDark
+      ? [
+          BoxShadow(
+              blurRadius: 6, spreadRadius: 0.5, color: color ?? shadowColor)
+        ]
+      : [
+          BoxShadow(
+              blurRadius: 4, spreadRadius: -1, color: color ?? shadowColor)
+        ];
   SystemUiOverlayStyle get overlay => SystemUiOverlayStyle(
         statusBarColor: statusBarColor,
         statusBarIconBrightness: iconBrightness,
@@ -74,7 +89,7 @@ extension ContextExtension on BuildContext {
   /// Returns the last item from the statusBarColor stack. Useful for keeping track of the current
   Color get statusBarColor =>
       Provider.of<SettingState>(this, listen: false).statusBarColor.isEmpty
-          ? background
+          ? surface
           : Provider.of<SettingState>(this, listen: false).statusBarColor.last;
 
   /// Adds the color to the statusBarColor stack if it's not already the last item. Pass null when exiting the page to pop the last item.
@@ -95,7 +110,7 @@ extension ContextExtension on BuildContext {
   /// Returns the last item from the statusBarColor stack. Useful for keeping track of the current
   Color get navBarColor =>
       Provider.of<SettingState>(this, listen: false).navBarColor.isEmpty
-          ? background
+          ? surface
           : Provider.of<SettingState>(this, listen: false).navBarColor.last;
 
   /// Adds the color to the statusBarColor stack if it's not already the last item. Pass null when exiting the page to pop the last item.
@@ -116,6 +131,27 @@ extension ContextExtension on BuildContext {
   BorderRadius get radiusMedium => BorderRadius.circular(16);
   BorderRadius get radiusLarge => BorderRadius.circular(20);
   BorderRadius get radiusHuge => BorderRadius.circular(100);
+
+  CardColorScheme get cardColorScheme =>
+      Theme.of(this).extension<CardColorScheme>()!;
+  Color get cardColorSchemeCard => realDark ? surface : cardColorScheme.card;
+  Color get cardColorSchemeSelected =>
+      realDark ? surface : cardColorScheme.selected;
+  Color get cardColorSchemeSaturated =>
+      realDark ? surface : cardColorScheme.saturated;
+  Color get cardColorSchemeFaded => realDark ? surface : cardColorScheme.faded;
+  Color get cardColorSchemeShadow =>
+      realDark ? surface : cardColorScheme.shadow;
+
+  ActionBarTheme get actionBarTheme =>
+      Theme.of(this).extension<ActionBarTheme>()!;
+  Color get actionBarIconColor => actionBarTheme.iconColor!;
+  double get actionBarIconSize => actionBarTheme.size!;
+  double get actionBarButtonSizeVertical => actionBarTheme.buttonSizeVertical!;
+  double get actionBarButtonSizeHorizontal =>
+      actionBarTheme.buttonSizeHorizontal!;
+  Radius get actionBarIconRadius => actionBarTheme.radius!;
+  EdgeInsets get actionBarIconPadding => actionBarTheme.padding!;
 }
 
 extension IntExtension on int {
@@ -202,20 +238,12 @@ extension StringExtension on String {
 }
 
 extension ColorExtension on Color {
-  /// Blend the color with background, soft look
-  Color toSoftBackround(BuildContext context) {
-    return context.realDark
-        ? context.background
-        : Color.lerp(context.background, this,
-            context.brightness == Brightness.light ? 0.4 : 0.2)!;
-  }
-
   /// Blend the color with background, less accent
   Color toWeakBackround(BuildContext context) {
     return context.realDark
-        ? context.background
+        ? context.surface
         : Color.lerp(
-            context.background,
+            context.surface,
             ColorScheme.fromSeed(
               seedColor: this,
               brightness: context.brightness,
@@ -226,7 +254,7 @@ extension ColorExtension on Color {
   /// Blend the color with background, mid accent
   Color toStrongBackround(BuildContext context) {
     return context.realDark
-        ? context.background
+        ? context.surface
         : Color.lerp(
             ColorScheme.fromSeed(
               seedColor: this,
@@ -240,7 +268,7 @@ extension ColorExtension on Color {
   Color toHighlightBackround(BuildContext context, {Brightness? brightness}) {
     brightness = brightness ?? context.brightness;
     return context.realDark
-        ? context.background
+        ? context.surface
         : Color.lerp(
             ColorScheme.fromSeed(
               seedColor: this,

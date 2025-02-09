@@ -40,6 +40,8 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
             tween: Tween<double>(begin: -value, end: 0), weight: 1 / 5)
       ]);
 
+  int? updateCount;
+
   @override
   void initState() {
     super.initState();
@@ -218,7 +220,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                           : Text(s.noPodcastGroup,
                               style: TextStyle(
                                   color: context.textTheme.bodyMedium!.color!
-                                      .withOpacity(0.5)))),
+                                      .withValues(alpha: 0.5)))),
                 ),
               ],
             ),
@@ -345,6 +347,8 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                         indicator: CircleTabIndicator(
                             color: context.accentColor, radius: 3),
                         isScrollable: true,
+                        dividerHeight: 0,
+                        tabAlignment: TabAlignment.start,
                         tabs: groups[_groupIndex]!.podcasts.map<Widget>(
                           (podcastLocal) {
                             final color = podcastLocal.backgroudColor(context);
@@ -356,9 +360,12 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                                   maxHeight: 50,
                                   maxWidth: 50,
                                   child: CircleAvatar(
-                                      backgroundColor: color.withOpacity(0.5),
-                                      backgroundImage: podcastLocal.avatarImage,
-                                      child: _updateIndicator(podcastLocal)),
+                                    backgroundColor:
+                                        color.withValues(alpha: 0.5),
+                                    backgroundImage: podcastLocal.avatarImage,
+                                    child: _updateIndicator(
+                                        podcastLocal), // TODO: This doesn't update currently
+                                  ),
                                 ),
                               ),
                             );
@@ -417,7 +424,10 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
 
   Future<int?> _getPodcastUpdateCounts(String? id) async {
     final dbHelper = DBHelper();
-    return await dbHelper.getPodcastUpdateCounts(id);
+    if (updateCount == null) {
+      updateCount = await dbHelper.getPodcastUpdateCounts(id);
+    }
+    return updateCount;
   }
 
   Widget _circleContainer(BuildContext context) => Container(
@@ -441,7 +451,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                     width: 10,
                     decoration: BoxDecoration(
                         color: Colors.red,
-                        border: Border.all(color: context.background, width: 2),
+                        border: Border.all(color: context.surface, width: 2),
                         shape: BoxShape.circle),
                   ),
                 )
@@ -460,12 +470,11 @@ class PodcastPreview extends StatefulWidget {
 }
 
 class _PodcastPreviewState extends State<PodcastPreview> {
-  Future? _getRssItem;
+  List<EpisodeBrief> episodePreview = [];
 
   @override
   void initState() {
     super.initState();
-    _getRssItem = _getRssItemTop(widget.podcastLocal!);
   }
 
   @override
@@ -478,10 +487,8 @@ class _PodcastPreviewState extends State<PodcastPreview> {
             selector: (_, refreshWorker, groupWorker) =>
                 tuple.Tuple2(refreshWorker.created, groupWorker.created),
             builder: (_, data, __) {
-              _getRssItem = _getRssItemTop(widget.podcastLocal!);
               return FutureBuilder<List<EpisodeBrief>>(
-                future:
-                    _getRssItem!.then((value) => value as List<EpisodeBrief>),
+                future: _getPodcastPreview(widget.podcastLocal!),
                 builder: (context, snapshot) {
                   return (snapshot.hasData)
                       ? ShowEpisode(
@@ -529,14 +536,15 @@ class _PodcastPreviewState extends State<PodcastPreview> {
     );
   }
 
-  Future<List<EpisodeBrief>> _getRssItemTop(PodcastLocal podcastLocal) async {
-    final dbHelper = DBHelper();
-    final episodes = await dbHelper.getEpisodes(
-        feedIds: [
-          podcastLocal.id
-        ],
+  Future<List<EpisodeBrief>> _getPodcastPreview(
+      PodcastLocal podcastLocal) async {
+    if (episodePreview.isEmpty) {
+      final dbHelper = DBHelper();
+      episodePreview = await dbHelper.getEpisodes(
+        feedIds: [podcastLocal.id],
         optionalFields: [
           EpisodeField.description,
+          EpisodeField.number,
           EpisodeField.enclosureDuration,
           EpisodeField.enclosureSize,
           EpisodeField.isDownloaded,
@@ -546,13 +554,15 @@ class _PodcastPreviewState extends State<PodcastPreview> {
           EpisodeField.isLiked,
           EpisodeField.isNew,
           EpisodeField.isPlayed,
-          EpisodeField.versionInfo
+          EpisodeField.isDisplayVersion
         ],
         sortBy: Sorter.pubDate,
         sortOrder: SortOrder.DESC,
         limit: 2,
-        episodeState: Provider.of<EpisodeState>(context, listen: false));
-    return episodes;
+        episodeState: Provider.of<EpisodeState>(context, listen: false),
+      );
+    }
+    return episodePreview;
   }
 }
 
@@ -579,8 +589,12 @@ class ShowEpisode extends StatelessWidget {
             delegate: SliverChildBuilderDelegate(
               (context, index) {
                 return InteractiveEpisodeCard(
-                    context, episodes![index], Layout.medium,
-                    preferEpisodeImage: false);
+                  context,
+                  episodes![index],
+                  EpisodeGridLayout.medium,
+                  preferEpisodeImage: false,
+                  showNumber: true,
+                );
               },
               childCount: math.min(episodes!.length, 2),
             ),

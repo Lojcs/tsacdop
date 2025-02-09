@@ -95,18 +95,18 @@ class _PopupMenuSettingState extends State<PopupMenuSetting> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: context.overlay,
       child: Scaffold(
-          backgroundColor: context.background,
+          backgroundColor: context.surface,
           appBar: AppBar(
             elevation: 0,
             scrolledUnderElevation: 0,
             leading: CustomBackButton(),
-            backgroundColor: context.background,
+            backgroundColor: context.surface,
           ),
           body: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Container(
-                  color: context.background,
+                  color: context.surface,
                   height: 200,
                   // color: Colors.red,
                   child: FlareActor(

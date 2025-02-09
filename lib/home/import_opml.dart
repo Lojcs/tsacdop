@@ -35,9 +35,9 @@ class Import extends StatelessWidget {
     final result = await Connectivity().checkConnectivity();
     final autoDownloadStorage = KeyValueStorage(autoDownloadNetworkKey);
     final autoDownloadNetwork = await autoDownloadStorage.getInt();
-    if (autoDownloadNetwork == 1 || result == ConnectivityResult.wifi) {
+    if (autoDownloadNetwork == 1 || result.contains(ConnectivityResult.wifi)) {
       final episodes = await dbHelper.getEpisodes(
-          filterNew: -1, filterDownloaded: 1, filterAutoDownload: -1);
+          filterNew: true, filterDownloaded: false, filterAutoDownload: true);
       // For safety
       if (episodes.length < 100 && episodes.length > 0) {
         for (var episode in episodes) {

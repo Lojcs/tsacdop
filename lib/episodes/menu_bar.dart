@@ -13,10 +13,8 @@ import '../util/helpers.dart';
 
 class EpisodeActionBar extends StatefulWidget {
   final EpisodeBrief episodeItem;
-  final String? heroTag;
   final bool? hide;
-  EpisodeActionBar(
-      {required this.episodeItem, this.heroTag, this.hide, Key? key})
+  EpisodeActionBar({required this.episodeItem, this.hide, Key? key})
       : super(key: key);
   @override
   EpisodeActionBarState createState() => EpisodeActionBarState();
@@ -32,7 +30,7 @@ class EpisodeActionBarState extends State<EpisodeActionBar> {
       height: 50.0,
       decoration: BoxDecoration(
         color: context.realDark
-            ? context.background
+            ? context.surface
             : widget.episodeItem.cardColor(context),
       ),
       child: Row(
@@ -46,20 +44,16 @@ class EpisodeActionBarState extends State<EpisodeActionBar> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  Hero(
-                    tag: widget.episodeItem.enclosureUrl + widget.heroTag!,
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10.0),
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 10.0),
-                      child: Container(
-                        height: 30.0,
-                        width: 30.0,
-                        child: widget.hide!
-                            ? Center()
-                            : CircleAvatar(
-                                radius: 15,
-                                backgroundImage:
-                                    widget.episodeItem.avatarImage),
-                      ),
+                      height: 30.0,
+                      width: 30.0,
+                      child: widget.hide!
+                          ? Center()
+                          : CircleAvatar(
+                              radius: 15,
+                              backgroundImage: widget.episodeItem.avatarImage),
                     ),
                   ),
                   (widget.episodeItem.isLiked!)
@@ -69,7 +63,7 @@ class EpisodeActionBarState extends State<EpisodeActionBar> {
                             color: Colors.red,
                           ),
                           onTap: () =>
-                              episodeState.unsetLiked(widget.episodeItem))
+                              episodeState.unsetLiked([widget.episodeItem]))
                       : _buttonOnMenu(
                           child: Icon(
                             Icons.favorite_border,
@@ -79,7 +73,7 @@ class EpisodeActionBarState extends State<EpisodeActionBar> {
                                     : 500],
                           ),
                           onTap: () async {
-                            episodeState.setLiked(widget.episodeItem);
+                            episodeState.setLiked([widget.episodeItem]);
                             OverlayEntry _overlayEntry;
                             _overlayEntry =
                                 createOverlayEntry(context, leftOffset: 50);
@@ -122,22 +116,26 @@ class EpisodeActionBarState extends State<EpisodeActionBar> {
                   _buttonOnMenu(
                     child: Padding(
                       padding: EdgeInsets.symmetric(vertical: 12),
-                      child: CustomPaint(
-                        size: Size(25, 20),
-                        painter: ListenedAllPainter(
-                            widget.episodeItem.isPlayed!
-                                ? context.accentColor
-                                : Colors.grey[
-                                    context.brightness == Brightness.light
-                                        ? 700
-                                        : 500],
-                            stroke: 2.0),
-                      ),
+                      child: widget.episodeItem.isPlayed!
+                          ? CustomPaint(
+                              size: Size(25, 20),
+                              painter: ListenedAllPainter(context.accentColor,
+                                  stroke: 2.0),
+                            )
+                          : CustomPaint(
+                              size: Size(25, 20),
+                              painter: MarkListenedPainter(
+                                  Colors.grey[
+                                      context.brightness == Brightness.light
+                                          ? 700
+                                          : 500]!,
+                                  stroke: 2.0),
+                            ),
                     ),
                     onTap: () {
                       widget.episodeItem.isPlayed!
-                          ? episodeState.unsetListened(widget.episodeItem)
-                          : episodeState.setListened(widget.episodeItem);
+                          ? episodeState.unsetListened([widget.episodeItem])
+                          : episodeState.setListened([widget.episodeItem]);
                       Fluttertoast.showToast(
                         msg: widget.episodeItem.isPlayed!
                             ? s.markNotListened

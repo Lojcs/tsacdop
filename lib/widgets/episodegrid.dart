@@ -1,52 +1,40 @@
 import 'package:auto_animated/auto_animated.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tsacdop/util/selection_controller.dart';
 import 'package:tuple/tuple.dart';
 
 import '../episodes/episode_detail.dart';
 import '../home/audioplayer.dart';
-import '../local_storage/sqflite_localpodcast.dart';
 import '../state/audio_state.dart';
 import '../type/episodebrief.dart';
-import '../type/podcastlocal.dart';
 import '../util/extension_helper.dart';
 import '../util/open_container.dart';
 import 'episode_card.dart';
 
-enum Layout { small, medium, large }
+enum EpisodeGridLayout { small, medium, large }
 
-// ignore: must_be_immutable
 class EpisodeGrid extends StatelessWidget {
-  final List<EpisodeBrief>? episodes;
+  final List<EpisodeBrief> episodes;
   final bool showFavorite;
   final bool showDownload;
   final bool preferEpisodeImage;
-  final int? episodeCount;
-  final Layout? layout;
-  final SortOrder? sortOrder;
-  final bool? multiSelect;
-  final ValueChanged<List<EpisodeBrief>?>? onSelect;
+  final EpisodeGridLayout layout;
   final bool openPodcast;
-  List<EpisodeBrief> selectedList;
 
   /// Count of animation items.
   final int initNum;
 
-  EpisodeGrid(
-      {Key? key,
-      required this.episodes,
-      this.initNum = 12,
-      this.showDownload = false,
-      this.showFavorite = false,
-      this.preferEpisodeImage = false,
-      this.episodeCount,
-      this.layout = Layout.small,
-      this.sortOrder,
-      this.openPodcast = false,
-      this.multiSelect = false,
-      this.onSelect,
-      this.selectedList = const <EpisodeBrief>[]})
-      : super(key: key);
+  const EpisodeGrid({
+    Key? key,
+    required this.episodes,
+    this.initNum = 12,
+    this.showDownload = false,
+    this.showFavorite = false,
+    this.preferEpisodeImage = false,
+    this.layout = EpisodeGridLayout.small,
+    this.openPodcast = false,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -56,58 +44,61 @@ class EpisodeGrid extends StatelessWidget {
       showItemDuration: Duration(milliseconds: 50),
     );
     final scrollController = ScrollController();
-    return SliverPadding(
-      padding:
-          const EdgeInsets.only(top: 5.0, bottom: 5.0, left: 10.0, right: 10.0),
-      sliver: LiveSliverGrid.options(
-        controller: scrollController,
-        options: options,
-        itemCount: episodes!.length,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          childAspectRatio: layout == Layout.small
-              ? 1
-              : layout == Layout.medium
-                  ? 1.5
-                  : 4,
-          crossAxisCount: layout == Layout.small
-              ? 3
-              : layout == Layout.medium
-                  ? 2
-                  : 1,
-          mainAxisSpacing: 10.0,
-          crossAxisSpacing: 10.0,
+    late final SelectionController? selectionController =
+        Provider.of<SelectionController?>(context);
+    if (episodes.isNotEmpty) {
+      return SliverPadding(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        sliver: Selector<SelectionController?, Tuple2<Set<int>?, bool>>(
+          selector: (_, selectionController) => Tuple2(
+              selectionController?.selectedIndicies,
+              selectionController?.selectMode ?? false),
+          builder: (_, data, __) => LiveSliverGrid.options(
+            controller: scrollController,
+            options: options,
+            itemCount: episodes.length,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              childAspectRatio: layout == EpisodeGridLayout.small
+                  ? 1
+                  : layout == EpisodeGridLayout.medium
+                      ? 1.5
+                      : 4,
+              crossAxisCount: layout == EpisodeGridLayout.small
+                  ? 3
+                  : layout == EpisodeGridLayout.medium
+                      ? 2
+                      : 1,
+              mainAxisSpacing: 10.0,
+              crossAxisSpacing: 10.0,
+            ),
+            itemBuilder: (context, index, animation) {
+              bool selected = data.item1?.contains(index) ?? false;
+              return FadeTransition(
+                opacity: Tween<double>(begin: index < initNum ? 0 : 1, end: 1)
+                    .animate(animation),
+                child: InteractiveEpisodeCard(
+                  context,
+                  episodes[index],
+                  layout,
+                  openPodcast: openPodcast,
+                  preferEpisodeImage: preferEpisodeImage,
+                  showNumber: true,
+                  selectMode: data.item2,
+                  onSelect: selectionController != null
+                      ? () {
+                          selectionController.select(index);
+                        }
+                      : null,
+                  selected: selected,
+                ),
+              );
+            },
+          ),
         ),
-        itemBuilder: (context, index, animation) {
-          scrollController.addListener(() {});
-
-          return FadeTransition(
-              opacity: Tween<double>(begin: index < initNum ? 0 : 1, end: 1)
-                  .animate(animation),
-              child: InteractiveEpisodeCard(
-                context,
-                episodes![index],
-                layout!,
-                openPodcast: openPodcast,
-                preferEpisodeImage: preferEpisodeImage,
-                numberText: episodeCount != null
-                    ? (sortOrder == SortOrder.ASC
-                        ? (index + 1).toString()
-                        : (episodeCount! - index).toString())
-                    : null,
-                selectMode: multiSelect!,
-                onSelect: () {
-                  if (!selectedList.contains(episodes![index])) {
-                    selectedList.add(episodes![index]);
-                  } else {
-                    selectedList.remove(episodes![index]);
-                  }
-                  onSelect!(selectedList);
-                },
-                selected: selectedList.contains(episodes![index]),
-              ));
-        },
-      ),
-    );
+      );
+    } else {
+      return SliverToBoxAdapter();
+    }
   }
 }
 
@@ -126,7 +117,7 @@ class OpenContainerWrapper extends StatelessWidget {
   final bool? playerRunning;
   final double? avatarSize;
   final bool preferEpisodeImage;
-  final Layout layout;
+  final EpisodeGridLayout layout;
   final VoidCallback? onClosed;
 
   @override
@@ -142,12 +133,12 @@ class OpenContainerWrapper extends StatelessWidget {
                 : episode.podcastImageProvider),
         flightWidgetBeginSize: avatarSize,
         flightWidgetEndSize: 30,
-        flightWidgetBeginOffsetX: layout == Layout.small ? 6 : 8,
-        flightWidgetBeginOffsetY: layout == Layout.small
-            ? 6
-            : layout == Layout.medium
+        flightWidgetBeginOffsetX: layout == EpisodeGridLayout.small ? 6 : 8,
+        flightWidgetBeginOffsetY: layout == EpisodeGridLayout.small
+            ? 7
+            : layout == EpisodeGridLayout.medium
                 ? 8
-                : 14,
+                : 15,
         flightWidgetEndOffsetX: 10,
         flightWidgetEndOffsetY: data.item1
             ? context.height -
@@ -160,15 +151,15 @@ class OpenContainerWrapper extends StatelessWidget {
         endColor: Theme.of(context).primaryColor,
         closedColor: Theme.of(context).brightness == Brightness.light
             ? context.primaryColor
-            : context.background,
-        openColor: context.background,
+            : context.surface,
+        openColor: context.surface,
         openElevation: 0,
         closedElevation: 0,
         openShape: RoundedRectangleBorder(borderRadius: context.radiusSmall),
         closedShape: RoundedRectangleBorder(
-            borderRadius: layout == Layout.small
+            borderRadius: layout == EpisodeGridLayout.small
                 ? context.radiusSmall
-                : layout == Layout.medium
+                : layout == EpisodeGridLayout.medium
                     ? context.radiusMedium
                     : context.radiusLarge),
         transitionType: ContainerTransitionType.fadeThrough,

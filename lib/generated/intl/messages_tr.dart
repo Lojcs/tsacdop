@@ -204,8 +204,6 @@ class MessageLookup extends MessageLookupByLibrary {
             "Tebrikler! Gpodder.net hesabınızla bağlantı kuruldu.Tsacdop aboneliklerinizi gpodder.net  hesabınızla otomatik olarak eşitleyecek."),
         "groupExisted":
             MessageLookupByLibrary.simpleMessage("Liste zaten mevcut"),
-        "groupFilter":
-            MessageLookupByLibrary.simpleMessage("Listeleye göre filtrele"),
         "groupRemoveConfirm": MessageLookupByLibrary.simpleMessage(
             "Bu listeyi silmek istediğine emin misin? Podcastler Başlangıç sayfasına aktarılacaktır."),
         "groups": m6,

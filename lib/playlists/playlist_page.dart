@@ -32,9 +32,9 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
   Widget build(BuildContext context) {
     final s = context.s;
     return Scaffold(
-      backgroundColor: context.background,
+      backgroundColor: context.surface,
       appBar: AppBar(
-        backgroundColor: context.background,
+        backgroundColor: context.surface,
         scrolledUnderElevation: 0,
         leading: IconButton(
           splashRadius: 20,
@@ -269,7 +269,7 @@ class __PlaylistItemState extends State<_PlaylistItem>
                       ..rotateY(math.pi * _fraction!),
                     child: _fraction! < 0.5
                         ? CircleAvatar(
-                            backgroundColor: c.withOpacity(0.5),
+                            backgroundColor: c.withValues(alpha: 0.5),
                             backgroundImage:
                                 episode.episodeOrPodcastImageProvider)
                         : CircleAvatar(

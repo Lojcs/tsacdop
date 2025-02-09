@@ -81,7 +81,7 @@ class _MiniPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
     final s = context.s;
-    final bgColor = context.accentBackgroundSoft;
+    final bgColor = context.cardColorSchemeCard;
     return Container(
       color: bgColor,
       height: 60,
@@ -283,7 +283,8 @@ class LastPosition extends StatelessWidget {
                     ],
                   ),
                   style: TextButton.styleFrom(
-                    foregroundColor: data ? context.accentColor : null, shape: RoundedRectangleBorder(
+                    foregroundColor: data ? context.accentColor : null,
+                    shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(100.0),
                       side: BorderSide(
                         color: data
@@ -291,7 +292,7 @@ class LastPosition extends StatelessWidget {
                             : Theme.of(context)
                                 .colorScheme
                                 .onSurface
-                                .withOpacity(0.12),
+                                .withValues(alpha: 0.12),
                       ),
                     ),
                   ),
@@ -320,7 +321,8 @@ class LastPosition extends StatelessWidget {
                         ],
                       ),
                       style: TextButton.styleFrom(
-                        foregroundColor: data ? context.accentColor : null, shape: RoundedRectangleBorder(
+                        foregroundColor: data ? context.accentColor : null,
+                        shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(100.0),
                             side: BorderSide(
                                 color: data
@@ -328,7 +330,7 @@ class LastPosition extends StatelessWidget {
                                     : Theme.of(context)
                                         .colorScheme
                                         .onSurface
-                                        .withOpacity(0.12))),
+                                        .withValues(alpha: 0.12))),
                         padding: EdgeInsets.symmetric(horizontal: 10),
                       ),
                       onPressed: () =>
@@ -346,7 +348,7 @@ class LastPosition extends StatelessWidget {
                                       color: Theme.of(context)
                                           .colorScheme
                                           .onSurface
-                                          .withOpacity(0.12))),
+                                          .withValues(alpha: 0.12))),
                             ),
                             // highlightedBorderColor: Colors.green[700],
                             onPressed: audio.undoSeek,
@@ -403,166 +405,157 @@ class _PlaylistWidgetState extends State<PlaylistWidget> {
   @override
   Widget build(BuildContext context) {
     var audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
-    return Container(
-      alignment: Alignment.topLeft,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: context.accentBackgroundHighlight,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Selector<AudioPlayerNotifier,
-          Tuple4<Playlist, EpisodeBrief?, int?, bool>>(
-        selector: (_, audio) => Tuple4(
-            audio.playlist, audio.episode, audio.episodeIndex, audio.playing),
-        // Both of are needed since the widget should rebuild on reorder and playlist is mutable.
-        builder: (_, data, __) {
-          var episodes = data.item1.episodes;
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
-              Expanded(
-                child: ListView.builder(
-                  padding: EdgeInsets.zero,
-                  itemCount: episodes.length,
-                  itemBuilder: (context, index) {
-                    final isPlaying = index == data.item3;
-                    return Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () async {
-                          if (!isPlaying) {
-                            audio.loadEpisodeFromCurrentPlaylist(index);
-                          }
-                        },
-                        child: Container(
-                          color: isPlaying
-                              ? context.accentColor
-                              : Colors.transparent,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              Padding(
-                                padding: EdgeInsets.all(10.0),
-                                child: CircleAvatar(
-                                    radius: 15,
-                                    backgroundImage: episodes[index]
-                                        .episodeOrPodcastImageProvider),
+    return Selector<AudioPlayerNotifier,
+        Tuple4<Playlist, EpisodeBrief?, int?, bool>>(
+      selector: (_, audio) => Tuple4(
+          audio.playlist, audio.episode, audio.episodeIndex, audio.playing),
+      // Both of are needed since the widget should rebuild on reorder and playlist is mutable.
+      builder: (_, data, __) {
+        var episodes = data.item1.episodes;
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: <Widget>[
+            Expanded(
+              child: ListView.builder(
+                padding: EdgeInsets.zero,
+                itemCount: episodes.length,
+                itemBuilder: (context, index) {
+                  final isPlaying = index == data.item3;
+                  return Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () async {
+                        if (!isPlaying) {
+                          audio.loadEpisodeFromCurrentPlaylist(index);
+                        }
+                      },
+                      child: Container(
+                        color: isPlaying
+                            ? context.accentColor
+                            : Colors.transparent,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            Padding(
+                              padding: EdgeInsets.all(10.0),
+                              child: CircleAvatar(
+                                  radius: 15,
+                                  backgroundImage: episodes[index]
+                                      .episodeOrPodcastImageProvider),
+                            ),
+                            Expanded(
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  episodes[index].title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
-                              Expanded(
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    episodes[index].title,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                            ),
+                            if (isPlaying)
+                              Container(
+                                  height: 20,
+                                  width: 20,
+                                  margin: EdgeInsets.symmetric(horizontal: 10),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
                                   ),
-                                ),
-                              ),
-                              if (isPlaying)
-                                Container(
-                                    height: 20,
-                                    width: 20,
-                                    margin:
-                                        EdgeInsets.symmetric(horizontal: 10),
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: WaveLoader(
-                                        animate: data.item4,
-                                        color: context.accentBackground)),
-                            ],
+                                  child: WaveLoader(
+                                      animate: data.item4,
+                                      color: context.cardColorSchemeSaturated)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            SizedBox(
+              height: 60.0,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: <Widget>[
+                    Text(
+                      data.item1.name == 'Queue'
+                          ? context.s.queue
+                          : '${context.s.homeMenuPlaylist}${'-${data.item1.name}'}',
+                      overflow: TextOverflow.fade,
+                      style: TextStyle(
+                          color: context.accentColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16),
+                    ),
+                    Spacer(),
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(100),
+                        boxShadow: context.boxShadowSmall(),
+                        color: context.cardColorSchemeCard,
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.all(Radius.circular(15)),
+                          onTap: () {
+                            audio.skipToNext();
+                            // miniPlaylistKey.currentState.removeItem(
+                            //     0, (context, animation) => Container());
+                            // miniPlaylistKey.currentState.insertItem(0);
+                          },
+                          child: SizedBox(
+                            height: 30,
+                            width: 60,
+                            child: Icon(
+                              Icons.skip_next,
+                              size: 30,
+                            ),
                           ),
                         ),
                       ),
-                    );
-                  },
-                ),
-              ),
-              SizedBox(
-                height: 60.0,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    children: <Widget>[
-                      Text(
-                        data.item1.name == 'Queue'
-                            ? context.s.queue
-                            : '${context.s.homeMenuPlaylist}${'-${data.item1.name}'}',
-                        overflow: TextOverflow.fade,
-                        style: TextStyle(
-                            color: context.accentColor,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16),
+                    ),
+                    SizedBox(width: 20),
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(100),
+                        boxShadow: context.boxShadowSmall(),
+                        color: context.cardColorSchemeCard,
                       ),
-                      Spacer(),
-                      Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(100),
-                          boxShadow: context.boxShadowSmall,
-                          color: context.accentBackgroundSoft,
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.all(Radius.circular(15)),
-                            onTap: () {
-                              audio.skipToNext();
-                              // miniPlaylistKey.currentState.removeItem(
-                              //     0, (context, animation) => Container());
-                              // miniPlaylistKey.currentState.insertItem(0);
-                            },
-                            child: SizedBox(
-                              height: 30,
-                              width: 60,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(15.0),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              SlideLeftRoute(page: PlaylistHome()),
+                            );
+                          },
+                          child: SizedBox(
+                            height: 30.0,
+                            width: 30.0,
+                            child: Transform.rotate(
+                              angle: math.pi,
                               child: Icon(
-                                Icons.skip_next,
-                                size: 30,
+                                LineIcons.database,
+                                size: 20.0,
                               ),
                             ),
                           ),
                         ),
                       ),
-                      SizedBox(width: 20),
-                      Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(100),
-                          boxShadow: context.boxShadowSmall,
-                          color: context.accentBackgroundSoft,
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(15.0),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                SlideLeftRoute(page: PlaylistHome()),
-                              );
-                            },
-                            child: SizedBox(
-                              height: 30.0,
-                              width: 30.0,
-                              child: Transform.rotate(
-                                angle: math.pi,
-                                child: Icon(
-                                  LineIcons.database,
-                                  size: 20.0,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          );
-        },
-      ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -596,16 +589,13 @@ class SleepModeState extends State<SleepMode>
         AnimationController(vsync: this, duration: Duration(milliseconds: 400));
     _animation = Tween<double>(begin: 0.0, end: 1.0).animate(_controller)
       ..addListener(() {
-        if (mounted) {
-          setState(() {});
-        }
+        if (mounted) setState(() {});
       });
 
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         Provider.of<AudioPlayerNotifier>(context, listen: false)
-          ..sleepTimer(_minSelected)
-          ..switchValue = 1;
+          ..sleepTimer(_minSelected);
       }
     });
   }
@@ -619,11 +609,9 @@ class SleepModeState extends State<SleepMode>
   @override
   Widget build(BuildContext context) {
     final s = context.s;
-    final _colorTweenBackground = ColorTween(
-        begin: context.accentBackgroundHighlight,
-        end: context.accentBackground);
     final _colorTween = ColorTween(
-        begin: context.accentBackgroundSoft, end: context.accentBackground);
+        begin: context.cardColorSchemeCard,
+        end: context.cardColorSchemeSaturated);
     var audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
     return Selector<AudioPlayerNotifier, Tuple3<int, double, SleepTimerMode>>(
       selector: (_, audio) =>
@@ -635,239 +623,234 @@ class SleepModeState extends State<SleepMode>
             data.item2 == 1 ? 1.0 : math.max(_animation.value * 2 - 1, 0.0);
         return LayoutBuilder(builder: (context, constraints) {
           var width = constraints.maxWidth;
-          return Container(
-            decoration: BoxDecoration(
-                color: _colorTweenBackground.transform(move),
-                borderRadius: BorderRadius.circular(10)),
-            child: Stack(
-              children: <Widget>[
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    SizedBox(
-                      height: 10,
-                    ),
-                    Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 20),
-                        child: move == 1
-                            ? Center()
-                            : _openClock
-                                ? SleepTimerPicker(
-                                    onChange: (duration) {
-                                      setState(() {
-                                        _minSelected = duration.inMinutes;
-                                      });
-                                    },
-                                  )
-                                : Wrap(
-                                    direction: Axis.horizontal,
-                                    children: kMinsToSelect
-                                        .map((e) => InkWell(
-                                              onTap: () => setState(
-                                                  () => _minSelected = e),
-                                              child: Container(
-                                                margin: EdgeInsets.all(10.0),
-                                                decoration: BoxDecoration(
-                                                  color: (e == _minSelected)
-                                                      ? context.accentColor
-                                                      : context
-                                                          .accentBackgroundSoft,
-                                                  shape: BoxShape.circle,
-                                                  boxShadow:
-                                                      context.boxShadowSmall,
-                                                ),
-                                                alignment: Alignment.center,
-                                                height: 30,
-                                                width: 30,
-                                                child: Text(e.toString(),
-                                                    style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color:
-                                                            (e == _minSelected)
-                                                                ? Colors.white
-                                                                : null)),
-                                              ),
-                                            ))
-                                        .toList(),
-                                  ),
-                      ),
-                    ),
-                    Stack(
-                      children: <Widget>[
-                        SizedBox(
-                          height: 100,
-                          width: width,
-                        ),
-                        Positioned(
-                          left: data.item3 == SleepTimerMode.timer
-                              ? -width * (move) / 4
-                              : width * (move) / 4,
-                          child: SizedBox(
-                            height: 100,
-                            width: width,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: <Widget>[
-                                Container(
-                                  alignment: Alignment.center,
-                                  height: 40,
-                                  width: 120,
-                                  decoration: BoxDecoration(
-                                    color: _colorTween.transform(move),
-                                    borderRadius: BorderRadius.circular(20),
-                                    boxShadow: context.boxShadowSmall,
-                                  ),
-                                  child: Material(
-                                    color: Colors.transparent,
-                                    child: InkWell(
-                                      onTap: () {
-                                        audio.setSleepTimerMode =
-                                            SleepTimerMode.endOfEpisode;
-                                        if (fraction == 0) {
-                                          _controller.forward();
-                                        } else if (fraction == 1) {
-                                          _controller.reverse();
-                                          audio.cancelTimer();
-                                        }
-                                      },
-                                      borderRadius: BorderRadius.circular(20),
-                                      child: SizedBox(
-                                        height: 40,
-                                        width: 120,
-                                        child: Center(
-                                          child: Text(
-                                            s.endOfEpisode,
-                                            style: TextStyle(
-                                                color: (move > 0
-                                                    ? Colors.white
-                                                    : null)),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Container(
-                                  height: 100 * (1 - fraction),
-                                  width: 1,
-                                  color: context.accentBackgroundSoft,
-                                ),
-                                Container(
-                                  height: 40,
-                                  width: 120,
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(
-                                    color: _colorTween.transform(move),
-                                    borderRadius: BorderRadius.circular(20),
-                                    boxShadow: context.boxShadowSmall,
-                                  ),
-                                  child: Material(
-                                    color: Colors.transparent,
-                                    child: InkWell(
-                                      onTap: () {
-                                        audio.setSleepTimerMode =
-                                            SleepTimerMode.timer;
-                                        if (fraction == 0) {
-                                          _controller.forward();
-                                        } else if (fraction == 1) {
-                                          _controller.reverse();
-                                          audio.cancelTimer();
-                                        }
-                                      },
-                                      borderRadius: BorderRadius.circular(20),
-                                      child: SizedBox(
-                                        height: 40,
-                                        width: 120,
-                                        child: Center(
-                                          child: Text(
-                                            data.item2 == 1
-                                                ? data.item1.toTime
-                                                : (_minSelected! * 60).toTime,
-                                            style: TextStyle(
-                                                color: (move > 0
-                                                    ? Colors.white
-                                                    : null)),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                )
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(
-                      height: 60.0,
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.0),
-                        child: Row(
-                          children: [
-                            Text(context.s.sleepTimer,
-                                style: TextStyle(
-                                    color: context.accentColor,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16)),
-                            Spacer(),
-                            Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(100),
-                                color: context.accentBackgroundSoft,
-                                boxShadow: context.boxShadowSmall,
-                              ),
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(15.0),
-                                  onTap: () {
+          return Stack(
+            children: <Widget>[
+              Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  SizedBox(
+                    height: 10,
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: move == 1
+                          ? Center()
+                          : _openClock
+                              ? SleepTimerPicker(
+                                  onChange: (duration) {
                                     setState(() {
-                                      _openClock = !_openClock;
+                                      _minSelected = duration.inMinutes;
                                     });
                                   },
-                                  child: SizedBox(
-                                    height: 30.0,
-                                    width: 30.0,
-                                    child: Icon(
-                                      _openClock
-                                          ? LineIcons.stopwatch
-                                          : LineIcons.clock,
-                                      size: 20.0,
+                                )
+                              : Wrap(
+                                  direction: Axis.horizontal,
+                                  children: kMinsToSelect
+                                      .map((e) => InkWell(
+                                            onTap: () => setState(
+                                                () => _minSelected = e),
+                                            child: Container(
+                                              margin: EdgeInsets.all(10.0),
+                                              decoration: BoxDecoration(
+                                                color: (e == _minSelected)
+                                                    ? context
+                                                        .cardColorSchemeSelected
+                                                    : context
+                                                        .cardColorSchemeCard,
+                                                shape: BoxShape.circle,
+                                                boxShadow:
+                                                    context.boxShadowSmall(),
+                                              ),
+                                              alignment: Alignment.center,
+                                              height: 30,
+                                              width: 30,
+                                              child: Text(e.toString(),
+                                                  style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: (e == _minSelected)
+                                                          ? Colors.white
+                                                          : null)),
+                                            ),
+                                          ))
+                                      .toList(),
+                                ),
+                    ),
+                  ),
+                  Stack(
+                    children: <Widget>[
+                      SizedBox(
+                        height: 100,
+                        width: width,
+                      ),
+                      Positioned(
+                        left: data.item3 == SleepTimerMode.timer
+                            ? -width * (move) / 4
+                            : width * (move) / 4,
+                        child: SizedBox(
+                          height: 100,
+                          width: width,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: <Widget>[
+                              Container(
+                                alignment: Alignment.center,
+                                height: 40,
+                                width: 120,
+                                decoration: BoxDecoration(
+                                  color: _colorTween.transform(move),
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: context.boxShadowSmall(),
+                                ),
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () {
+                                      audio.setSleepTimerMode =
+                                          SleepTimerMode.endOfEpisode;
+                                      if (fraction == 0) {
+                                        _controller.forward();
+                                      } else if (fraction == 1) {
+                                        _controller.reverse();
+                                        audio.cancelTimer();
+                                      }
+                                    },
+                                    borderRadius: BorderRadius.circular(20),
+                                    child: SizedBox(
+                                      height: 40,
+                                      width: 120,
+                                      child: Center(
+                                        child: Text(
+                                          s.endOfEpisode,
+                                          style: TextStyle(
+                                              color: (move > 0
+                                                  ? Colors.white
+                                                  : null)),
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
+                              Container(
+                                height: 100 * (1 - fraction),
+                                width: 1,
+                                color: context.cardColorSchemeCard,
+                              ),
+                              Container(
+                                height: 40,
+                                width: 120,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: _colorTween.transform(move),
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: context.boxShadowSmall(),
+                                ),
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () {
+                                      audio.setSleepTimerMode =
+                                          SleepTimerMode.timer;
+                                      if (fraction == 0) {
+                                        _controller.forward();
+                                      } else if (fraction == 1) {
+                                        _controller.reverse();
+                                        audio.cancelTimer();
+                                      }
+                                    },
+                                    borderRadius: BorderRadius.circular(20),
+                                    child: SizedBox(
+                                      height: 40,
+                                      width: 120,
+                                      child: Center(
+                                        child: Text(
+                                          data.item2 == 1
+                                              ? data.item1.toTime
+                                              : (_minSelected! * 60).toTime,
+                                          style: TextStyle(
+                                              color: (move > 0
+                                                  ? Colors.white
+                                                  : null)),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              )
+                            ],
+                          ),
                         ),
                       ),
-                    )
-                  ],
-                ),
-                if (move > 0)
-                  Positioned(
-                    bottom: 120,
-                    left: width / 2 - 100,
-                    width: 200,
-                    child: Center(
-                      child: Transform.translate(
-                        offset: Offset(0, -50 * move),
-                        child: Text(s.goodNight,
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 20,
-                                color: Colors.white.withOpacity(move))),
+                    ],
+                  ),
+                  SizedBox(
+                    height: 60.0,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20.0),
+                      child: Row(
+                        children: [
+                          Text(context.s.sleepTimer,
+                              style: TextStyle(
+                                  color: context.accentColor,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16)),
+                          Spacer(),
+                          Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(100),
+                              color: context.cardColorSchemeCard,
+                              boxShadow: context.boxShadowSmall(),
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(15.0),
+                                onTap: () {
+                                  setState(() {
+                                    _openClock = !_openClock;
+                                  });
+                                },
+                                child: SizedBox(
+                                  height: 30.0,
+                                  width: 30.0,
+                                  child: Icon(
+                                    _openClock
+                                        ? LineIcons.stopwatch
+                                        : LineIcons.clock,
+                                    size: 20.0,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
+                  )
+                ],
+              ),
+              if (move > 0)
+                Positioned(
+                  bottom: 120,
+                  left: width / 2 - 100,
+                  width: 200,
+                  child: Center(
+                    child: Transform.translate(
+                      offset: Offset(0, -50 * move),
+                      child: Text(s.goodNight,
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                              color: Colors.white.withValues(alpha: move))),
+                    ),
                   ),
-                if (data.item2 == 1) CustomPaint(painter: StarSky()),
-                if (data.item2 == 1) MeteorLoader()
-              ],
-            ),
+                ),
+              if (data.item2 == 1) CustomPaint(painter: StarSky()),
+              if (data.item2 == 1) MeteorLoader()
+            ],
           );
         });
       },
@@ -974,7 +957,7 @@ class _ChaptersWidgetState extends State<ChaptersWidget> {
                               foregroundColor: WidgetStateProperty.all<Color>(
                                   context.accentColor),
                               overlayColor: WidgetStateProperty.all<Color>(
-                                  context.primaryColor.withOpacity(0.3)),
+                                  context.primaryColor.withValues(alpha: 0.3)),
                             ),
                             onPressed: () => chapters.url!.launchUrl,
                             child: Text('Visit')),
@@ -997,130 +980,116 @@ class _ChaptersWidgetState extends State<ChaptersWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        alignment: Alignment.topLeft,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: context.accentBackgroundHighlight,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Selector<AudioPlayerNotifier, EpisodeBrief?>(
-          selector: (_, audio) => audio.episode,
-          builder: (_, episode, __) => Scrollbar(
-            child: Column(
-              children: [
-                Expanded(
-                  child: _showChapter
-                      ? FutureBuilder<List<Chapters>?>(
-                          future: _getChapters(episode!),
-                          builder: (context, snapshot) {
-                            if (snapshot.hasData) {
-                              final data = snapshot.data!;
-                              return ListView.builder(
-                                  itemCount: data.length,
-                                  padding: EdgeInsets.zero,
-                                  itemBuilder: (context, index) {
-                                    return _chapterDetailWidget(data[index]);
-                                  });
-                            }
-                            return Center(
-                              child: SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: Platform.isIOS
-                                    ? CupertinoActivityIndicator()
-                                    : CircularProgressIndicator(),
-                              ),
-                            );
-                          },
-                        )
-                      : ListView(
-                          padding: EdgeInsets.zero,
-                          children: <Widget>[
-                            if (episode!.episodeImage != '' &&
-                                episode.enclosureUrl.substring(0, 4) != "file")
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(10.0),
-                                child: CachedNetworkImage(
-                                    width: 100,
-                                    fit: BoxFit.fitWidth,
-                                    alignment: Alignment.center,
-                                    imageUrl: episode.episodeImage!,
-                                    placeholderFadeInDuration: Duration.zero,
-                                    progressIndicatorBuilder: (context, url,
-                                            downloadProgress) =>
-                                        Container(
-                                          height: 50,
-                                          width: 50,
-                                          alignment: Alignment.center,
-                                          child: SizedBox(
-                                            width: 20,
-                                            height: 2,
-                                            child: LinearProgressIndicator(
-                                                value:
-                                                    downloadProgress.progress),
-                                          ),
-                                        ),
-                                    errorWidget: (context, url, error) =>
-                                        Center()),
-                              ),
-                            ShowNote(episode: episode)
-                          ],
-                        ),
-                ),
-                SizedBox(
-                  height: 60.0,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      children: <Widget>[
-                        Text(
-                          context.s.homeToprightMenuAbout,
-                          overflow: TextOverflow.fade,
-                          style: TextStyle(
-                              color: context.accentColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16),
-                        ),
-                        Spacer(),
-                        SizedBox(width: 20),
-                        if (episode.chapterLink != '')
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(100),
-                              boxShadow: context.boxShadowSmall,
-                              color: context.accentBackgroundSoft,
-                            ),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(15.0),
-                                onTap: () {
-                                  setState(() {
-                                    _showChapter = !_showChapter;
-                                  });
-                                },
-                                child: SizedBox(
-                                    height: 30.0,
-                                    width: 30.0,
-                                    child: !_showChapter
-                                        ? Icon(Icons.bookmark_border_outlined,
-                                            size: 18)
-                                        : Icon(
-                                            Icons.chrome_reader_mode_outlined,
-                                            size: 18)),
-                              ),
-                            ),
+    return Selector<AudioPlayerNotifier, EpisodeBrief?>(
+      selector: (_, audio) => audio.episode,
+      builder: (_, episode, __) => Scrollbar(
+        child: Column(
+          children: [
+            Expanded(
+              child: _showChapter
+                  ? FutureBuilder<List<Chapters>?>(
+                      future: _getChapters(episode!),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          final data = snapshot.data!;
+                          return ListView.builder(
+                              itemCount: data.length,
+                              padding: EdgeInsets.zero,
+                              itemBuilder: (context, index) {
+                                return _chapterDetailWidget(data[index]);
+                              });
+                        }
+                        return Center(
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: Platform.isIOS
+                                ? CupertinoActivityIndicator()
+                                : CircularProgressIndicator(),
                           ),
+                        );
+                      },
+                    )
+                  : ListView(
+                      padding: EdgeInsets.zero,
+                      children: <Widget>[
+                        if (episode!.episodeImage != '' &&
+                            episode.enclosureUrl.substring(0, 4) != "file")
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10.0),
+                            child: CachedNetworkImage(
+                                width: 100,
+                                fit: BoxFit.fitWidth,
+                                alignment: Alignment.center,
+                                imageUrl: episode.episodeImage!,
+                                placeholderFadeInDuration: Duration.zero,
+                                progressIndicatorBuilder: (context, url,
+                                        downloadProgress) =>
+                                    Container(
+                                      height: 50,
+                                      width: 50,
+                                      alignment: Alignment.center,
+                                      child: SizedBox(
+                                        width: 20,
+                                        height: 2,
+                                        child: LinearProgressIndicator(
+                                            value: downloadProgress.progress),
+                                      ),
+                                    ),
+                                errorWidget: (context, url, error) => Center()),
+                          ),
+                        ShowNote(episode: episode)
                       ],
                     ),
-                  ),
-                ),
-              ],
             ),
-          ),
+            SizedBox(
+              height: 60.0,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: <Widget>[
+                    Text(
+                      context.s.homeToprightMenuAbout,
+                      overflow: TextOverflow.fade,
+                      style: TextStyle(
+                          color: context.accentColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16),
+                    ),
+                    Spacer(),
+                    SizedBox(width: 20),
+                    if (episode.chapterLink != '')
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(100),
+                          boxShadow: context.boxShadowSmall(),
+                          color: context.cardColorSchemeCard,
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(15.0),
+                            onTap: () {
+                              setState(() {
+                                _showChapter = !_showChapter;
+                              });
+                            },
+                            child: SizedBox(
+                                height: 30.0,
+                                width: 30.0,
+                                child: !_showChapter
+                                    ? Icon(Icons.bookmark_border_outlined,
+                                        size: 18)
+                                    : Icon(Icons.chrome_reader_mode_outlined,
+                                        size: 18)),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -1209,6 +1178,8 @@ class _ControlPanelState extends State<ControlPanel>
     with TickerProviderStateMixin {
   double _setSpeed = 0;
   late AnimationController _controller;
+  late AnimationController _playPauseController;
+  late Animation<double> _playPauseAnimation;
   late AnimationController _rewindController;
   late AnimationController _fastForwardController;
   late Animation<double> _animation;
@@ -1222,6 +1193,7 @@ class _ControlPanelState extends State<ControlPanel>
 
   @override
   void initState() {
+    super.initState();
     _tabController = TabController(vsync: this, length: 3)
       ..addListener(() {
         setState(() => _tabIndex = _tabController!.index);
@@ -1234,6 +1206,13 @@ class _ControlPanelState extends State<ControlPanel>
           setState(() => _setSpeed = _animation.value);
         }
       });
+    _playPauseController =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 300))
+          ..addListener(() {
+            if (mounted) {
+              setState(() {});
+            }
+          });
     _rewindController =
         AnimationController(vsync: this, duration: Duration(milliseconds: 400))
           ..addListener(() {
@@ -1248,16 +1227,30 @@ class _ControlPanelState extends State<ControlPanel>
               setState(() {});
             }
           });
-    super.initState();
+    _playPauseAnimation = CurvedAnimation(
+      parent: _playPauseController,
+      curve: Curves.easeOutBack,
+      reverseCurve: Curves.easeInBack,
+    );
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _playPauseController.dispose();
     _rewindController.dispose();
     _fastForwardController.dispose();
     _tabController!.dispose();
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(ControlPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
+    if (audio.playing && _playPauseController.value == 0) {
+      _playPauseController.value = 1;
+    }
   }
 
   @override
@@ -1267,7 +1260,7 @@ class _ControlPanelState extends State<ControlPanel>
       builder: (context, constraints) {
         final height = constraints.maxHeight;
         return Container(
-          color: context.accentBackgroundSoft,
+          color: context.cardColorSchemeCard,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -1307,10 +1300,10 @@ class _ControlPanelState extends State<ControlPanel>
                                 RoundSliderOverlayShape(overlayRadius: 4.0),
                           ),
                           child: Slider(
-                              value: data.item1,
-                              onChanged: (val) {
-                                audio.sliderSeek(val);
-                              }),
+                            value: data.item1,
+                            onChanged: audio.sliderVisualSeek,
+                            onChangeEnd: audio.sliderSeek,
+                          ),
                         ),
                       ),
                       Container(
@@ -1403,31 +1396,58 @@ class _ControlPanelState extends State<ControlPanel>
                               ],
                             ),
                           ),
-                          Container(
-                            margin: EdgeInsets.symmetric(horizontal: 30),
-                            height: 60,
-                            width: 60,
-                            decoration: BoxDecoration(
-                              color: context.accentBackground,
-                              borderRadius: BorderRadius.circular(30),
-                              boxShadow: context.boxShadowLarge,
-                            ),
-                            child: TextButton(
-                              onPressed: playing
-                                  ? () {
-                                      audio.pauseAduio();
-                                    }
-                                  : () {
-                                      audio.resumeAudio();
-                                    },
-                              child: Icon(
-                                playing
-                                    ? Icons.pause_rounded
-                                    : Icons.play_arrow_rounded,
-                                size: 40,
-                                color: context.accentColor,
+                          Stack(
+                            children: [
+                              Container(
+                                margin: EdgeInsets.symmetric(horizontal: 35),
+                                height: 70,
+                                width: 70,
+                                decoration: BoxDecoration(
+                                  color: context.realDark
+                                      ? null
+                                      : context.cardColorSchemeSaturated,
+                                  borderRadius: BorderRadius.circular(30),
+                                  boxShadow: context.boxShadowMedium(),
+                                  border: Border.all(
+                                    width: 1,
+                                    color: context.realDark
+                                        ? Color.lerp(context.accentColor,
+                                            Colors.black, 0.5)!
+                                        : Colors.transparent,
+                                  ),
+                                ),
                               ),
-                            ),
+                              Container(
+                                margin: EdgeInsets.symmetric(horizontal: 35),
+                                height: 70,
+                                width: 70,
+                                child: Material(
+                                  color: Colors.transparent,
+                                  borderRadius: BorderRadius.circular(30),
+                                  clipBehavior: Clip.hardEdge,
+                                  child: InkWell(
+                                    splashColor:
+                                        context.colorScheme.secondaryContainer,
+                                    onTap: playing
+                                        ? () {
+                                            audio.pauseAduio();
+                                            _playPauseController.reverse();
+                                          }
+                                        : () {
+                                            audio.resumeAudio();
+                                            _playPauseController.forward();
+                                          },
+                                    child: Icon(
+                                      playing
+                                          ? Icons.pause_rounded
+                                          : Icons.play_arrow_rounded,
+                                      size: 40 + 6,
+                                      color: context.accentColor,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            ],
                           ),
                           TextButton(
                             style: ButtonStyle(
@@ -1482,49 +1502,53 @@ class _ControlPanelState extends State<ControlPanel>
                         builder: (_, title, __) {
                           return Container(
                             padding: EdgeInsets.only(left: 50, right: 50),
-                            child: LayoutBuilder(
-                              builder: (context, size) {
-                                final span = TextSpan(
-                                    text: title,
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 20));
-                                final tp = TextPainter(
-                                    text: span,
-                                    maxLines: 1,
-                                    textDirection: TextDirection.ltr);
-                                tp.layout(
-                                    maxWidth: size.maxWidth -
-                                        4); //Without -3 edge values don't behave right. -4 to be safe
-                                if (tp.didExceedMaxLines) {
-                                  return Marquee(
-                                    text: title!,
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 20),
-                                    scrollAxis: Axis.horizontal,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    blankSpace: 30.0,
-                                    velocity: 50.0,
-                                    pauseAfterRound: Duration.zero,
-                                    startPadding: 0,
-                                    accelerationDuration:
-                                        Duration(milliseconds: 100),
-                                    accelerationCurve: Curves.linear,
-                                    decelerationDuration:
-                                        Duration(milliseconds: 100),
-                                    decelerationCurve: Curves.linear,
-                                  );
-                                } else {
-                                  return Text(
-                                    title!,
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 20),
-                                  );
-                                }
-                              },
+                            child: NotificationListener<ScrollNotification>(
+                              onNotification: (notification) => true,
+                              child: LayoutBuilder(
+                                builder: (context, size) {
+                                  final span = TextSpan(
+                                      text: title,
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 20)
+                                        ..merge(DefaultTextStyle.of(context)
+                                            .style));
+                                  final tp = TextPainter(
+                                      text: span,
+                                      maxLines: 1,
+                                      textDirection: TextDirection.ltr);
+                                  tp.layout(maxWidth: size.maxWidth);
+                                  if (tp.didExceedMaxLines) {
+                                    return Marquee(
+                                      text: title!,
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 20),
+                                      scrollAxis: Axis.horizontal,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      blankSpace: 30.0,
+                                      velocity: 50.0,
+                                      pauseAfterRound: Duration.zero,
+                                      startPadding: 0,
+                                      accelerationDuration:
+                                          Duration(milliseconds: 100),
+                                      accelerationCurve: Curves.linear,
+                                      decelerationDuration:
+                                          Duration(milliseconds: 100),
+                                      decelerationCurve: Curves.linear,
+                                    );
+                                  } else {
+                                    return Text(
+                                      title!,
+                                      maxLines: 1,
+                                      style: context.textTheme.titleLarge!
+                                          .copyWith(
+                                              fontWeight: FontWeight.bold),
+                                    );
+                                  }
+                                },
+                              ),
                             ),
                           );
                         },
@@ -1563,11 +1587,26 @@ class _ControlPanelState extends State<ControlPanel>
                                   margin: const EdgeInsets.symmetric(
                                       vertical: 5, horizontal: 20.0),
                                   decoration: BoxDecoration(
-                                    borderRadius: context.radiusLarge,
-                                    boxShadow: context.boxShadowMedium,
+                                    borderRadius: context.radiusMedium,
+                                    boxShadow: context.boxShadowMedium(),
                                   ),
                                   clipBehavior: Clip.antiAlias,
-                                  child: e,
+                                  child: Container(
+                                    color: context.cardColorSchemeSaturated,
+                                    foregroundDecoration: context.realDark
+                                        ? BoxDecoration(
+                                            borderRadius: context.radiusMedium,
+                                            border: Border.all(
+                                              width: 1,
+                                              color: Color.lerp(
+                                                  context.accentColor,
+                                                  Colors.black,
+                                                  0.5)!,
+                                            ),
+                                          )
+                                        : null,
+                                    child: e,
+                                  ),
                                 ),
                               )
                               .toList(),
@@ -1610,12 +1649,13 @@ class _ControlPanelState extends State<ControlPanel>
                                                 context,
                                                 FadeRoute(
                                                     page: FutureBuilder(
-                                                        // TODO: Check which fields are actually needed.
                                                         future: data.item1!
                                                             .copyWithFromDB(
                                                                 newFields: [
                                                               EpisodeField
                                                                   .description,
+                                                              EpisodeField
+                                                                  .number,
                                                               EpisodeField
                                                                   .enclosureDuration,
                                                               EpisodeField
@@ -1633,7 +1673,7 @@ class _ControlPanelState extends State<ControlPanel>
                                                               EpisodeField
                                                                   .isPlayed,
                                                               EpisodeField
-                                                                  .versionInfo
+                                                                  .isDisplayVersion
                                                             ]),
                                                         builder: ((context,
                                                                 snapshot) =>
@@ -1641,9 +1681,7 @@ class _ControlPanelState extends State<ControlPanel>
                                                                 ? EpisodeDetail(
                                                                     episodeItem:
                                                                         snapshot.data
-                                                                            as EpisodeBrief,
-                                                                    heroTag:
-                                                                        'playpanel')
+                                                                            as EpisodeBrief)
                                                                 : Center()))));
                                           }
                                         },
@@ -1702,11 +1740,11 @@ class _ControlPanelState extends State<ControlPanel>
                                                                 ? context
                                                                     .accentColor
                                                                 : context
-                                                                    .accentBackground,
+                                                                    .cardColorSchemeSaturated,
                                                             shape:
                                                                 BoxShape.circle,
                                                             boxShadow: context
-                                                                .boxShadowSmall,
+                                                                .boxShadowSmall(),
                                                           ),
                                                           alignment:
                                                               Alignment.center,
@@ -1800,9 +1838,12 @@ class _ControlPanelState extends State<ControlPanel>
                           child: TabBar(
                             controller: _tabController,
                             indicatorSize: TabBarIndicatorSize.label,
+                            isScrollable: true,
                             labelColor: context.accentColor,
                             unselectedLabelColor: context.textColor,
                             indicator: BoxDecoration(),
+                            dividerHeight: 0,
+                            tabAlignment: TabAlignment.start,
                             tabs: [
                               SizedBox(
                                   height: 20,

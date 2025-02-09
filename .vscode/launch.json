@@ -5,9 +5,19 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Flutter",
+            "name": "Flutter debug",
             "request": "launch",
             "type": "dart",
+            "args": [
+                "--flavor",
+                "play"
+            ]
+        },
+        {
+            "name": "Flutter profile",
+            "type": "dart",
+            "request": "launch",
+            "flutterMode": "profile",
             "args": [
                 "--flavor",
                 "play"

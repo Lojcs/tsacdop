@@ -18,12 +18,24 @@
   "@addSomeGroups": {
     "description": "Please add new groups"
   },
+  "after": "After",
+  "@after": {
+    "description": "Used in a button to select episodes after the selected one(s) on a list. Not used for time"
+  },
   "all": "All",
   "@all": {},
   "autoDownload": "Auto download",
   "@autoDownload": {},
   "back": "Back",
   "@back": {},
+  "before": "Before",
+  "@before": {
+    "description": "Used in a button to select episodes before the selected one(s) on a list. Not used for time"
+  },
+  "between": "Between",
+  "@between": {
+    "description": "Used in a button to select episodes between the selected one(s) on a list"
+  },
   "boostVolume": "Boost volume",
   "@boostVolume": {
     "description": "Boost volume in player widget."
@@ -74,16 +86,26 @@
   },
   "delete": "Delete",
   "@delete": {},
+  "deselectAll": "Deselect All",
+  "@deselectAll": {},
   "developer": "Developer",
   "@developer": {
     "description": "Can also translate to About me"
   },
   "dismiss": "Dismiss",
   "@dismiss": {},
+  "displayVersion": "Display Version",
+  "@displayVersion": {
+    "description": "The version of an episode displayed by default. Used with filterType."
+  },
   "done": "Done",
   "@done": {},
   "download": "Download",
   "@download": {},
+  "downloadDate": "Download Date",
+  "@downloadDate": {
+    "description": "Download Date sort order"
+  },
   "downloaded": "Downloaded",
   "@downloaded": {},
   "downloadRemovedToast": "Download removed",
@@ -91,6 +113,10 @@
   "downloadStart": "Downloading",
   "@downloadStart": {
     "description": "Toast of downloading"
+  },
+  "duration": "Duration",
+  "@duration": {
+    "description": "Duration sort order"
   },
   "editGroupName": "Edit group name",
   "@editGroupName": {},
@@ -156,6 +182,13 @@
   "@feedbackTelegram": {},
   "filter": "Filter",
   "@filter": {},
+  "filterType": "{type} Filter",
+  "@filterType": {
+    "description": "To use with different episode filter types. Ex: {Downloaded} Filter, {Played} Filter, {Group} Filter...",
+    "placeholders": {
+      "type": {}
+    }
+  },
   "fonts": "Fonts",
   "@fonts": {},
   "fontStyle": "Font style",
@@ -174,8 +207,6 @@
   "@groupExisted": {
     "description": "Group name validate in add group dialog. User can't add group with same name."
   },
-  "groupFilter": "Group filter",
-  "@groupFilter": {},
   "groupRemoveConfirm": "Are you sure you want to delete this group? Podcasts will be moved to the Home group.",
   "@groupRemoveConfirm": {},
   "groups": "{count, plural, zero{Group} one{Group} other{Groups}}",
@@ -302,6 +333,8 @@
   "@minsAgo": {},
   "minsCount": "{count, plural, zero{0 min} one{{count} min} other{{count} mins}}",
   "@minsCount": {},
+  "moreOptions": "More Options",
+  "@moreOptions": {},
   "network": "Network",
   "@network": {},
   "networkErrorDNS": "Network error (DNS issue)",
@@ -311,6 +344,10 @@
   "neverAutoUpdate": "Turn off auto update",
   "@neverAutoUpdate": {
     "description": "Never auto  update in podcast settings."
+  },
+  "newPlain": "New",
+  "@newPlain": {
+    "description": "Word to describe a new episode (and use in filterType)"
   },
   "newestFirst": "Newest first",
   "@newestFirst": {},
@@ -430,6 +467,10 @@
   "@popupMenuPlayDes": {},
   "privacyPolicy": "Privacy Policy",
   "@privacyPolicy": {},
+  "publishDate": "Publish Date",
+  "@publishDate": {
+    "description": "Publish Date sort order"
+  },
   "published": "Published at {date}",
   "@published": {
     "placeholders": {
@@ -450,6 +491,10 @@
   "@queue": {
     "description": "Queue"
   },
+  "random": "Random",
+  "@random": {
+    "description": "Random sort order"
+  },
   "recoverSubscribe": "Recover subscribe",
   "@recoverSubscribe": {
     "description": "User can recover subscribe podcast after remove it in subscribe history page."
@@ -460,6 +505,10 @@
   },
   "refreshArtwork": "Update artwork",
   "@refreshArtwork": {},
+  "refreshFinished": "Refresh Finished",
+  "@refreshFinished": {
+    "description": "Toast for refresh finish"
+  },
   "refreshStarted": "Refreshing",
   "@refreshStarted": {
     "description": "Toast for refresh"
@@ -513,6 +562,8 @@
       "count": {}
     }
   },
+  "selectMode": "Selection Mode",
+  "@selectMode": {},
   "settings": "Settings",
   "@settings": {},
   "settingsAccentColor": "Accent color",
@@ -567,12 +618,6 @@
   "@settingsEnableSyncing": {},
   "settingsEnableSyncingDes": "Refresh all podcasts in the background to get latest episodes",
   "@settingsEnableSyncingDes": {},
-  "settingsEpisodeManagement": "Episode Management",
-  "@settingsEpisodeManagement": {},
-  "settingsEpisodeVersioning": "Default Episode Version",
-  "@settingsEpisodeVersioning": {},
-  "settingsEpisodeVersioningDes": "Which version of an episode is displayed/downloaded by default. Can be overridden in podcast settings.",
-  "@settingsEpisodeVersioningDes": {},
   "settingsExportDes": "Export and import app settings",
   "@settingsExportDes": {},
   "settingsFastForwardSec": "Fast forward seconds",
@@ -697,6 +742,10 @@
   "@skipToNext": {},
   "sleepTimer": "Sleep timer",
   "@sleepTimer": {},
+  "sortBy": "Sort By",
+  "@sortBy": {},
+  "sortOrder": "Sort Order",
+  "@sortOrder": {},
   "status": "Status",
   "@status": {
     "description": "gpodder.net status"

@@ -32,9 +32,9 @@ class AboutApp extends StatelessWidget {
       value: context.overlay,
       child: SafeArea(
         child: Scaffold(
-          backgroundColor: context.background,
+          backgroundColor: context.surface,
           appBar: AppBar(
-            backgroundColor: context.background,
+            backgroundColor: context.surface,
             title: Text(
               s.homeToprightMenuAbout,
               style: context.textTheme.titleLarge,
@@ -80,7 +80,8 @@ class AboutApp extends StatelessWidget {
                         onPressed: () =>
                             'https://tsacdop.stonegate.me/#/privacy'.launchUrl,
                         style: TextButton.styleFrom(
-                            foregroundColor: context.accentColor, textStyle: TextStyle(fontWeight: FontWeight.bold)),
+                            foregroundColor: context.accentColor,
+                            textStyle: TextStyle(fontWeight: FontWeight.bold)),
                         child: Text(
                           s.privacyPolicy,
                         ),
@@ -97,7 +98,8 @@ class AboutApp extends StatelessWidget {
                             'https://tsacdop.stonegate.me/#/changelog'
                                 .launchUrl,
                         style: TextButton.styleFrom(
-                            foregroundColor: context.accentColor, textStyle: TextStyle(fontWeight: FontWeight.bold)),
+                            foregroundColor: context.accentColor,
+                            textStyle: TextStyle(fontWeight: FontWeight.bold)),
                         child: Text(s.changelog,
                             style: TextStyle(color: context.accentColor)),
                       ),

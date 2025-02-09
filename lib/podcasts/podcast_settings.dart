@@ -9,18 +9,15 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image/image.dart' as img;
 import 'package:line_icons/line_icons.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:webfeed/webfeed.dart';
 
-import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/podcast_group.dart';
 import '../type/play_histroy.dart';
 import '../type/podcastlocal.dart';
 import '../util/extension_helper.dart';
 import '../util/helpers.dart';
-import '../widgets/custom_dropdown.dart';
 import '../widgets/custom_widget.dart';
 import '../widgets/duraiton_picker.dart';
 
@@ -148,71 +145,6 @@ class _PodcastSettingState extends State<PodcastSetting> {
                 ),
               );
             }),
-        FutureBuilder<VersionPolicy>(
-          future: _getVersionPolicy(widget.podcastLocal!.id),
-          builder: (context, snapshot) {
-            return Column(
-              children: <Widget>[
-                ListTile(
-                    title: Row(
-                      children: [
-                        Icon(Icons.onetwothree_outlined, size: 18),
-                        SizedBox(width: 20),
-                        Text(s.settingsEpisodeVersioning, style: textStyle),
-                      ],
-                    ),
-                    dense: true),
-                Container(
-                  child: MyDropdownButton(
-                    hint: FutureBuilder<String>(
-                      future: _getVersionPolicyText(VersionPolicy.Default),
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          return Text(
-                            snapshot.data!,
-                            style: textStyle,
-                          );
-                        } else {
-                          return Center();
-                        }
-                      },
-                    ),
-                    underline: Center(),
-                    dropdownColor:
-                        colorScheme.primary.toStrongBackround(context),
-                    displayItemCount: 4,
-                    value: snapshot.data,
-                    onChanged: (VersionPolicy policy) async {
-                      _setVersionPolicy(widget.podcastLocal!.id, policy);
-                    },
-                    items: <VersionPolicy>[
-                      VersionPolicy.Default,
-                      VersionPolicy.New,
-                      VersionPolicy.Old,
-                      VersionPolicy.NewIfNoDownloaded
-                    ].map<DropdownMenuItem<VersionPolicy>>((e) {
-                      return DropdownMenuItem<VersionPolicy>(
-                          value: e,
-                          child: FutureBuilder<String>(
-                            future: _getVersionPolicyText(e),
-                            builder: (context, snapshot) {
-                              if (snapshot.hasData) {
-                                return Text(
-                                  snapshot.data!,
-                                  style: textStyle,
-                                );
-                              } else {
-                                return Center();
-                              }
-                            },
-                          ));
-                    }).toList(),
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
         FutureBuilder<int?>(
           future: _getSkipSecondStart(widget.podcastLocal!.id),
           initialData: 0,
@@ -437,10 +369,8 @@ class _PodcastSettingState extends State<PodcastSetting> {
   }
 
   Future<void> _setAutoDownload(bool boo) async {
-    var permission = await _checkPermmison();
-    if (permission) {
-      await _dbHelper.saveAutoDownload(widget.podcastLocal!.id, boo: boo);
-    }
+    // We don't need storage permission to download to app storage
+    await _dbHelper.saveAutoDownload(widget.podcastLocal!.id, boo: boo);
     if (mounted) setState(() {});
   }
 
@@ -451,12 +381,6 @@ class _PodcastSettingState extends State<PodcastSetting> {
 
   Future<void> _setHideNewMark(bool boo) async {
     await _dbHelper.saveHideNewMark(widget.podcastLocal!.id, boo: boo);
-    if (mounted) setState(() {});
-  }
-
-  Future<void> _setVersionPolicy(
-      String? id, VersionPolicy versionPolicy) async {
-    await _dbHelper.saveVersionPolicy(id, versionPolicy);
     if (mounted) setState(() {});
   }
 
@@ -480,10 +404,6 @@ class _PodcastSettingState extends State<PodcastSetting> {
     return await _dbHelper.getHideNewMark(id);
   }
 
-  Future<VersionPolicy> _getVersionPolicy(String? id) async {
-    return await _dbHelper.getPodcastVersionPolicy(id);
-  }
-
   Future<int?> _getSkipSecondStart(String? id) async {
     return await _dbHelper.getSkipSecondsStart(id);
   }
@@ -497,7 +417,7 @@ class _PodcastSettingState extends State<PodcastSetting> {
       _markStatus = MarkStatus.start;
     });
     final episodes =
-        await _dbHelper.getEpisodes(feedIds: [podcastId!], filterPlayed: 1);
+        await _dbHelper.getEpisodes(feedIds: [podcastId!], filterPlayed: false);
     for (var episode in episodes) {
       final history = PlayHistory(episode.title, episode.enclosureUrl, 0, 1);
       await _dbHelper.saveHistory(history);
@@ -579,20 +499,6 @@ class _PodcastSettingState extends State<PodcastSetting> {
     }
   }
 
-  Future<bool> _checkPermmison() async {
-    var permission = await Permission.storage.status;
-    if (permission != PermissionStatus.granted) {
-      var permissions = await [Permission.storage].request();
-      if (permissions[Permission.storage] == PermissionStatus.granted) {
-        return true;
-      } else {
-        return false;
-      }
-    } else {
-      return true;
-    }
-  }
-
   Widget _getRefreshStatusIcon(RefreshCoverStatus status, {Color? color}) {
     switch (status) {
       case RefreshCoverStatus.none:
@@ -603,24 +509,6 @@ class _PodcastSettingState extends State<PodcastSetting> {
         return Icon(Icons.done);
       case RefreshCoverStatus.error:
         return Icon(Icons.refresh, color: Colors.red);
-      default:
-        return Center();
-    }
-  }
-
-  Future<String> _getVersionPolicyText(VersionPolicy versionPolicy) async {
-    final s = context.s;
-    switch (versionPolicy) {
-      case VersionPolicy.New:
-        return s.episodeVersioningNew;
-      case VersionPolicy.Old:
-        return s.episodeVersioningOld;
-      case VersionPolicy.NewIfNoDownloaded:
-        return s.episodeVersioningNewIfNotDownloaded;
-      case VersionPolicy.Default:
-        var storage = KeyValueStorage(versionPolicyKey);
-        var globalVersionPolicy = await storage.getString(defaultValue: "DON");
-        return "${s.capitalDefault} (${await _getVersionPolicyText(versionPolicyFromString(globalVersionPolicy))})";
     }
   }
 }

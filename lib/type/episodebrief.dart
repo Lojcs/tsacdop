@@ -6,6 +6,7 @@ import 'package:equatable/equatable.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:tsacdop/local_storage/sqflite_localpodcast.dart';
+import 'package:tsacdop/type/theme_data.dart';
 import '../util/extension_helper.dart';
 
 class EpisodeBrief extends Equatable {
@@ -17,6 +18,7 @@ class EpisodeBrief extends Equatable {
   final int pubDate;
 
   final String? description;
+  final int? number;
   final int? enclosureDuration;
   final int? enclosureSize;
   final bool? isDownloaded;
@@ -24,13 +26,13 @@ class EpisodeBrief extends Equatable {
   final String? mediaId;
   final String? episodeImage;
   final String? podcastImage;
-  final String? primaryColor;
+  final Color? primaryColor;
   final bool? isExplicit;
   final bool? isLiked;
   final bool? isNew;
   final bool? isPlayed;
-  final VersionInfo? versionInfo;
-  final Map<int, EpisodeBrief?>? versions;
+  final bool? isDisplayVersion;
+  final Set<EpisodeBrief>? versions;
   final int skipSecondsStart;
   final int skipSecondsEnd;
   final String? chapterLink;
@@ -38,6 +40,7 @@ class EpisodeBrief extends Equatable {
   EpisodeBrief(this.id, this.title, this.enclosureUrl, this.podcastId,
       this.podcastTitle, this.pubDate,
       {this.description,
+      this.number,
       this.enclosureDuration,
       this.enclosureSize,
       this.isDownloaded,
@@ -50,8 +53,8 @@ class EpisodeBrief extends Equatable {
       this.isLiked,
       this.isNew,
       this.isPlayed,
-      this.versionInfo,
-      this.versions, // Could auto polpulate maybe
+      this.isDisplayVersion,
+      this.versions,
       this.skipSecondsStart = 0,
       this.skipSecondsEnd = 0,
       this.chapterLink});
@@ -87,7 +90,7 @@ class EpisodeBrief extends Equatable {
     return AssetImage('assets/avatar_backup.png');
   }
 
-  late final ImageProvider episodeImageProvider = ((episodeImage != null)
+  late final ImageProvider _episodeImageProvider = ((episodeImage != null)
       ? (File(episodeImage!).existsSync())
           ? FileImage(File(episodeImage!))
           : (episodeImage != '')
@@ -101,32 +104,74 @@ class EpisodeBrief extends Equatable {
           : const AssetImage('assets/avatar_backup.png')
       : const AssetImage('assets/avatar_backup.png')) as ImageProvider;
 
-  late final ImageProvider
-      episodeOrPodcastImageProvider = // TODO: Control internet usage
-      episodeImageProvider != const AssetImage('assets/avatar_backup.png')
-          ? episodeImageProvider
-          : podcastImageProvider;
+  // late final ImageProvider
+  //     episodeOrPodcastImageProvider = // TODO: Control internet usage
+  //     _episodeImageProvider != const AssetImage('assets/avatar_backup.png')
+  //         ? _episodeImageProvider
+  //         : podcastImageProvider;
+
+  // Until episode image caching is implemented don't use episode images
+  late final ImageProvider episodeOrPodcastImageProvider = podcastImageProvider;
 
   Color backgroudColor(BuildContext context) {
-    return getColorScheme(context).onSecondaryContainer;
+    return colorScheme(context).onSecondaryContainer;
   }
 
+  /// Convenience method to get the card color for current theme
   Color cardColor(BuildContext context) {
-    return getColorScheme(context).secondaryContainer;
+    return context.realDark
+        ? context.surface
+        : context.brightness == Brightness.light
+            ? cardColorSchemeLight.card
+            : cardColorSchemeDark.card;
+  }
+
+  /// Convenience method to get the selected card color for current theme
+  Color selectedCardColor(BuildContext context) {
+    return context.realDark
+        ? context.surface
+        : context.brightness == Brightness.light
+            ? cardColorSchemeLight.selected
+            : cardColorSchemeDark.selected;
+  }
+
+  /// Convenience method to get the card shadow color for current theme
+  Color cardShadowColor(BuildContext context) {
+    return context.brightness == Brightness.light
+        ? cardColorSchemeLight.shadow
+        : cardColorSchemeDark.shadow;
+  }
+
+  /// Convenience method to get the card progress indicator color for current theme
+  Color progressIndicatorColor(BuildContext context) {
+    return context.realDark
+        ? context.surface
+        : context.brightness == Brightness.light
+            ? cardColorSchemeLight.faded
+            : cardColorSchemeDark.faded;
   }
 
   late final ColorScheme colorSchemeLight = ColorScheme.fromSeed(
-    seedColor: primaryColor!.toColor(),
+    seedColor: primaryColor!,
     brightness: Brightness.light,
   );
   late final ColorScheme colorSchemeDark = ColorScheme.fromSeed(
-    seedColor: primaryColor!.toColor(),
+    seedColor: primaryColor!,
     brightness: Brightness.dark,
   );
+  late final CardColorScheme cardColorSchemeLight =
+      CardColorScheme(colorSchemeLight);
+  late final CardColorScheme cardColorSchemeDark =
+      CardColorScheme(colorSchemeDark);
+
+  late final Color realDarkBorderColor =
+      Color.lerp(colorSchemeDark.primary, Colors.black, 0.5)!;
+  late final Color realDarkBorderColorSelected =
+      Color.lerp(colorSchemeDark.primary, Colors.white, 0.5)!;
 
   /// Gets the episode color sceme for the provided [context].brightness.
   /// Caches its results so can be used freely.
-  ColorScheme getColorScheme(BuildContext context) {
+  ColorScheme colorScheme(BuildContext context) {
     return context.brightness == Brightness.light
         ? colorSchemeLight
         : colorSchemeDark;
@@ -139,6 +184,8 @@ class EpisodeBrief extends Equatable {
     switch (episodeField) {
       case EpisodeField.description:
         return description;
+      case EpisodeField.number:
+        return number;
       case EpisodeField.enclosureDuration:
         return enclosureDuration;
       case EpisodeField.enclosureSize:
@@ -163,11 +210,9 @@ class EpisodeBrief extends Equatable {
         return isNew;
       case EpisodeField.isPlayed:
         return isPlayed;
-      case EpisodeField.versionInfo:
-        return versionInfo;
+      case EpisodeField.isDisplayVersion:
+        return isDisplayVersion;
       case EpisodeField.versions:
-        return versions;
-      case EpisodeField.versionsPopulated:
         return null;
       case EpisodeField.skipSecondsStart:
         return skipSecondsStart;
@@ -184,11 +229,7 @@ class EpisodeBrief extends Equatable {
       if (_getFieldValue(field) != null) fieldList.add(field);
     }
     if (versions != null) {
-      if (versions!.length == 0) {
-        fieldList.add(EpisodeField.versionsPopulated);
-      } else if (versions!.values.first != null) {
-        fieldList.add(EpisodeField.versionsPopulated);
-      }
+      fieldList.add(EpisodeField.versions);
     }
     return fieldList;
   }
@@ -201,6 +242,7 @@ class EpisodeBrief extends Equatable {
           String? podcastTitle,
           int? pubDate,
           String? description,
+          int? number,
           int? enclosureDuration,
           int? enclosureSize,
           bool? isDownloaded,
@@ -208,13 +250,13 @@ class EpisodeBrief extends Equatable {
           String? mediaId,
           String? episodeImage,
           String? podcastImage,
-          String? primaryColor,
+          Color? primaryColor,
           bool? isExplicit,
           bool? isLiked,
           bool? isNew,
           bool? isPlayed,
-          VersionInfo? versionInfo,
-          Map<int, EpisodeBrief?>? versions,
+          bool? isDisplayVersion,
+          Set<EpisodeBrief>? versions,
           int? skipSecondsStart,
           int? skipSecondsEnd,
           String? chapterLink}) =>
@@ -226,6 +268,7 @@ class EpisodeBrief extends Equatable {
           podcastTitle ?? this.podcastTitle,
           pubDate ?? this.pubDate,
           description: description ?? this.description,
+          number: number ?? this.number,
           enclosureDuration: enclosureDuration ?? this.enclosureDuration,
           enclosureSize: enclosureSize ?? this.enclosureSize,
           isDownloaded: isDownloaded ?? this.isDownloaded,
@@ -238,7 +281,7 @@ class EpisodeBrief extends Equatable {
           isLiked: isLiked ?? this.isLiked,
           isNew: isNew ?? this.isNew,
           isPlayed: isPlayed ?? this.isPlayed,
-          versionInfo: versionInfo ?? this.versionInfo,
+          isDisplayVersion: isDisplayVersion ?? this.isDisplayVersion,
           versions: versions ?? this.versions,
           skipSecondsStart: skipSecondsStart ?? this.skipSecondsStart,
           skipSecondsEnd: skipSecondsEnd ?? this.skipSecondsEnd,
@@ -258,6 +301,7 @@ class EpisodeBrief extends Equatable {
     Map<EpisodeField, List> _fieldsMap = {
       // I'm so sorry this is so ugly
       EpisodeField.description: [const Symbol("description"), description],
+      EpisodeField.number: [const Symbol("number"), number],
       EpisodeField.enclosureDuration: [
         const Symbol("enclosureDuration"),
         enclosureDuration
@@ -276,7 +320,10 @@ class EpisodeBrief extends Equatable {
       EpisodeField.isLiked: [const Symbol("isLiked"), isLiked],
       EpisodeField.isNew: [const Symbol("isNew"), isNew],
       EpisodeField.isPlayed: [const Symbol("isPlayed"), isPlayed],
-      EpisodeField.versionInfo: [const Symbol("versionInfo"), versionInfo],
+      EpisodeField.isDisplayVersion: [
+        const Symbol("isDisplayVersion"),
+        isDisplayVersion
+      ],
       EpisodeField.versions: [const Symbol("versions"), versions],
       EpisodeField.skipSecondsStart: [
         const Symbol("skipSecondsStart"),
@@ -307,7 +354,6 @@ class EpisodeBrief extends Equatable {
         oldFields.remove(field);
       }
     }
-    bool populateVersions = newFields.remove(EpisodeField.versionsPopulated);
     EpisodeBrief newEpisode;
     if (newFields.isEmpty) {
       newEpisode = this.copyWith();
@@ -315,13 +361,10 @@ class EpisodeBrief extends Equatable {
       for (EpisodeField field in oldFields) {
         oldFieldsSymbolMap[_fieldsMap[field]![0]] = _fieldsMap[field]![1];
       }
-      newEpisode = (await dbHelper
-              .getEpisodes(episodeIds: [id], optionalFields: newFields))
+      newEpisode = (await dbHelper.getEpisodes(
+              episodeIds: [id], optionalFields: newFields..addAll(oldFields)))
           .first;
       newEpisode = Function.apply(newEpisode.copyWith, [], oldFieldsSymbolMap);
-    }
-    if (populateVersions) {
-      newEpisode = await dbHelper.populateEpisodeVersions(newEpisode);
     }
     return newEpisode;
   }

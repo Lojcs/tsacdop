@@ -1,11 +1,15 @@
 import 'dart:developer' as developer;
 import 'dart:isolate';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_isolate/flutter_isolate.dart';
 
 import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
+import '../type/podcastlocal.dart';
+import 'download_state.dart';
 
 enum RefreshState { none, fetch, error, artwork }
 
@@ -78,6 +82,7 @@ class RefreshWorker extends ChangeNotifier {
   }
 }
 
+@pragma('vm:entry-point')
 Future<void> refreshIsolateEntryPoint(SendPort sendPort) async {
   var refreshReceivePort = ReceivePort();
   sendPort.send(refreshReceivePort.sendPort);
@@ -90,17 +95,55 @@ Future<void> refreshIsolateEntryPoint(SendPort sendPort) async {
     } else {
       podcastList = await _dbHelper.getPodcastLocal(podcasts, updateOnly: true);
     }
-    for (var podcastLocal in podcastList) {
-      sendPort.send([podcastLocal.title, 1]);
-      var updateCount = await _dbHelper.updatePodcastRss(podcastLocal);
-      developer.log('Refresh ${podcastLocal.title}$updateCount');
-    }
+    await podcastSync(podcasts: podcastList);
     sendPort.send("done");
   }
 
-  refreshReceivePort.distinct().listen((message) {
+  refreshReceivePort.distinct().listen((message) async {
     if (message is List<dynamic>) {
-      _refreshAll(message as List<String>);
+      await _refreshAll(message as List<String>);
     }
   });
+}
+
+Future<void> podcastSync({List<PodcastLocal>? podcasts}) async {
+  final dbHelper = DBHelper();
+  final podcastList;
+  if (podcasts == null || podcasts.isEmpty) {
+    podcastList = await dbHelper.getPodcastLocalAll(updateOnly: true);
+  } else {
+    podcastList = podcasts;
+  }
+  //lastWork is a indicator for if the app was opened since last backgroundwork
+  //if the app wes opend,then the old marked new episode would be marked not new.
+  final lastWorkStorage = KeyValueStorage(lastWorkKey);
+  final lastWork = await lastWorkStorage.getInt();
+  for (var podcastLocal in podcastList) {
+    await dbHelper.updatePodcastRss(podcastLocal, keepNewMark: lastWork);
+    developer.log('Refresh ${podcastLocal.title}');
+  }
+  await FlutterDownloader.initialize();
+  final downloader = AutoDownloader();
+
+  final autoDownloadStorage = KeyValueStorage(autoDownloadNetworkKey);
+  final autoDownloadNetwork = await autoDownloadStorage.getInt();
+  final result = await Connectivity().checkConnectivity();
+  if (autoDownloadNetwork == 1 || result.contains(ConnectivityResult.wifi)) {
+    final episodes = await dbHelper.getEpisodes(
+        optionalFields: [EpisodeField.isDownloaded],
+        filterNew: true,
+        filterDownloaded: false,
+        filterAutoDownload: true);
+    // For safety
+    if (episodes.length < 100 && episodes.length > 0) {
+      downloader.bindBackgroundIsolate();
+      await downloader.startTask(episodes);
+      // This doesn't seem to work unless it's awaited.
+    }
+  }
+  await lastWorkStorage.saveInt(1);
+  if (podcasts == null || podcasts.isEmpty) {
+    var refreshstorage = KeyValueStorage(refreshdateKey);
+    await refreshstorage.saveInt(DateTime.now().millisecondsSinceEpoch);
+  }
 }

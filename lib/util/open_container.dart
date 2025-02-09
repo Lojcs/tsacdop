@@ -400,20 +400,22 @@ class _OpenContainerRoute extends ModalRoute<void> {
     animation!.addStatusListener((status) {
       _lastAnimationStatus = _currentAnimationStatus;
       _currentAnimationStatus = status;
-      switch (status) {
-        case AnimationStatus.dismissed:
-          hideableKey.currentState!
-            ..placeholderSize = null
-            ..isVisible = true;
-          break;
-        case AnimationStatus.completed:
-          hideableKey.currentState!
-            ..placeholderSize = null
-            ..isVisible = false;
-          break;
-        case AnimationStatus.forward:
-        case AnimationStatus.reverse:
-          break;
+      if (hideableKey.currentState != null) {
+        switch (status) {
+          case AnimationStatus.dismissed:
+            hideableKey.currentState!
+              ..placeholderSize = null
+              ..isVisible = true;
+            break;
+          case AnimationStatus.completed:
+            hideableKey.currentState!
+              ..placeholderSize = null
+              ..isVisible = false;
+            break;
+          case AnimationStatus.forward:
+          case AnimationStatus.reverse:
+            break;
+        }
       }
     });
 
