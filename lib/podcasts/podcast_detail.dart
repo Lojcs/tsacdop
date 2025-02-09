@@ -837,6 +837,7 @@ class _AboutPodcastState extends State<AboutPodcast> {
     if (_load)
       return Linkify(
         text: _description,
+        style: context.textTheme.bodyMedium,
         onOpen: (link) {
           link.url.launchUrl;
         },

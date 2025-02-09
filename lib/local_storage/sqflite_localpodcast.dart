@@ -971,9 +971,9 @@ class DBHelper {
         );
       }
     }
+    developer.log("Sorting ${feed.title}");
+    episodes.sortBy<num>((episode) => episode.pubDate);
     if (!update) {
-      developer.log("Sorting ${feed.title}");
-      episodes.sortBy<num>((episode) => episode.pubDate);
       episodes = episodes
           .mapIndexed((i, episode) => episode.copyWith(number: i + 1))
           .toList();
