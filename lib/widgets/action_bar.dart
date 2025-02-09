@@ -163,6 +163,7 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
   late AnimationController _buttonRemoveNewMarkController;
 
   late _ActionBarSharedState _sharedState;
+
   bool initialBuild = true;
   @override
   void initState() {
