@@ -214,6 +214,10 @@ class AudioPlayerNotifier extends ChangeNotifier {
   /// Current episode position (ms).
   int _audioPosition = 0;
 
+  /// Position of the seek in progress (ms). -1 to indicate no seek in progress.
+  int get _liveSeekPosition =>
+      _liveSeekValue == -1 ? -1 : (_liveSeekValue * _audioDuration).toInt();
+
   /// Position from history (ms).
   int _historyPosition = 0;
 
@@ -226,6 +230,9 @@ class AudioPlayerNotifier extends ChangeNotifier {
   /// Seekbar value, min 0, max 1.0.
   double get _seekSliderValue =>
       _audioDuration != 0 ? (_audioPosition / _audioDuration).clamp(0, 1) : 0;
+
+  /// Value of the seek in progress. -1 to indicate no seek in progress.
+  double _liveSeekValue = -1;
 
   /// Enables auto skip based on [_historyPosition] and [EpisodeBrief.skipSecondsStart]
   bool _skipStart = true;
@@ -325,7 +332,8 @@ class AudioPlayerNotifier extends ChangeNotifier {
   int get audioDuration => _audioDuration;
 
   /// Current episode position (ms).
-  int get audioPosition => _audioPosition;
+  int get audioPosition =>
+      _liveSeekPosition != -1 ? _liveSeekPosition : _audioPosition;
 
   /// Current episode's start position (ms).
   int get historyPosition => _historyPosition;
@@ -334,7 +342,8 @@ class AudioPlayerNotifier extends ChangeNotifier {
   int get audioBufferedPosition => _audioBufferedPosition;
 
   /// Seekbar value, min 0, max 1.0.
-  double get seekSliderValue => _seekSliderValue;
+  double get seekSliderValue =>
+      _liveSeekValue != -1 ? _liveSeekValue : _seekSliderValue;
 
   /// Position to skip to when player button is pressed
   int? get undoButtonPosition =>
@@ -389,6 +398,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     _audioHandler = await AudioService.init(
         builder: () => CustomAudioHandler(cacheMax), config: _config);
     super.addListener(listener);
+    notifyListeners();
   }
 
   @override
@@ -430,8 +440,6 @@ class AudioPlayerNotifier extends ChangeNotifier {
       _playlists = [
         for (var entity in playlistEntities) Playlist.fromEntity(entity)
       ];
-      notifyListeners();
-
       // Seems unused
       await KeyValueStorage(lastWorkKey).saveInt(0);
     }
@@ -932,6 +940,13 @@ class AudioPlayerNotifier extends ChangeNotifier {
     }
     playlist.addEpisodes(episodes, index, ifExists: ifExists);
     await _savePlaylists();
+    if (playlist == _playlist &&
+        !_playerRunning &&
+        _playlist.isQueue &&
+        index == 0) {
+      loadEpisodeHistoryPosition();
+      _loadStartPosition();
+    }
     notifyListeners();
     await seekFuture;
     _playlistBeingEdited--;
@@ -1078,9 +1093,15 @@ class AudioPlayerNotifier extends ChangeNotifier {
         }
       }
     }
-
     playlist.removeEpisodesAt(index, number: number);
     await _savePlaylists();
+    if (playlist == _playlist &&
+        !_playerRunning &&
+        _playlist.isQueue &&
+        index == 0) {
+      loadEpisodeHistoryPosition();
+      _loadStartPosition();
+    }
     notifyListeners();
     await seekFuture;
     _playlistBeingEdited--;
@@ -1153,8 +1174,15 @@ class AudioPlayerNotifier extends ChangeNotifier {
         }
       }
     }
-    playlist.reorderPlaylist(oldIndex, newIndex); // This propogates correctly
+    playlist.reorderPlaylist(oldIndex, newIndex);
     await _savePlaylists();
+    if (playlist == _playlist &&
+        !_playerRunning &&
+        _playlist.isQueue &&
+        (oldIndex == 0 || newIndex == 0)) {
+      loadEpisodeHistoryPosition();
+      _loadStartPosition();
+    }
     notifyListeners();
     await seekFuture;
     _playlistBeingEdited--;
@@ -1317,7 +1345,13 @@ class AudioPlayerNotifier extends ChangeNotifier {
         position: Duration(milliseconds: position));
   }
 
+  Future<void> sliderVisualSeek(double val) async {
+    _liveSeekValue = val;
+    notifyListeners();
+  }
+
   Future<void> sliderSeek(double val) async {
+    _liveSeekValue = -1;
     await seekTo((val * _audioDuration).toInt());
   }
 
@@ -1639,14 +1673,9 @@ class CustomAudioHandler extends BaseAudioHandler
   @override
   Future<void> play() async {
     if (_playerReady) {
-      if (!playing) {
-        _player.play();
-        await super.play();
-      } else {
-        _player.play();
-        await super.play();
-        // await _seekRelative(Duration(seconds: -3));
-      }
+      _player.play();
+      await super.play();
+      await _seekRelative(Duration(seconds: -3));
     }
   }
 

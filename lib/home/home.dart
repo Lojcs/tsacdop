@@ -368,12 +368,7 @@ class __PlaylistButtonState extends State<_PlaylistButton> {
   late bool _loadPlay;
 
   Future<void> _getPlaylist() async {
-    await context.read<AudioPlayerNotifier>().initPlaylists();
-    if (mounted) {
-      setState(() {
-        _loadPlay = true;
-      });
-    }
+    if (mounted) setState(() => _loadPlay = true);
   }
 
   @override

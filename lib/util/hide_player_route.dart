@@ -48,8 +48,12 @@ class HidePlayerRoute extends ModalRoute<void> {
                       child: Align(
                         alignment: Alignment.topLeft,
                         child: Transform.translate(
-                          offset:
-                              Offset(context.width * (1 - animation.value), 0),
+                          offset: Offset(
+                              context.width *
+                                  (1 -
+                                      Curves.easeOut
+                                          .transform(animation.value)),
+                              0),
                           child: SizedBox(
                             width: context.width,
                             height: context.height -
@@ -102,5 +106,3 @@ class HidePlayerRoute extends ModalRoute<void> {
   @override
   final Duration transitionDuration;
 }
-
-mixin Tuple2 {}

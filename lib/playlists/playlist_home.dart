@@ -45,9 +45,7 @@ class _PlaylistHomeState extends State<PlaylistHome> {
 
   @override
   void initState() {
-    Future.microtask(() => context.read<AudioPlayerNotifier>().initPlaylists());
     super.initState();
-    //context.read<AudioPlayerNotifier>().initPlaylist();
     _selected = 'PlayNext';
     _body = _Queue();
   }

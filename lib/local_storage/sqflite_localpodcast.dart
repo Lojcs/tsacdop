@@ -89,7 +89,7 @@ class DBHelper {
     return _db!;
   }
 
-  initDb() async {
+  Future<Database> initDb() async {
     var documentsDirectory = await getDatabasesPath();
     var path = join(documentsDirectory, "podcasts.db");
     var theDb = await openDatabase(path,

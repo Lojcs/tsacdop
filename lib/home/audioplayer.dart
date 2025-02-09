@@ -1300,10 +1300,10 @@ class _ControlPanelState extends State<ControlPanel>
                                 RoundSliderOverlayShape(overlayRadius: 4.0),
                           ),
                           child: Slider(
-                              value: data.item1,
-                              onChanged: (val) {
-                                audio.sliderSeek(val);
-                              }),
+                            value: data.item1,
+                            onChanged: audio.sliderVisualSeek,
+                            onChangeEnd: audio.sliderSeek,
+                          ),
                         ),
                       ),
                       Container(

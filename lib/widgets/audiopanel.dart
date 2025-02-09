@@ -101,11 +101,11 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
             onNotification: (notification) {
               if (_lastScrollNotification != notification) {
                 _lastScrollNotification = notification;
-                print(notification.runtimeType);
                 if (notification is ScrollStartNotification &&
                     notification.dragDetails != null &&
                     notification.metrics.pixels ==
                         notification.metrics.minScrollExtent) {
+                  _dragStarted = true;
                   _start(notification.dragDetails!);
                 } else if (_dragStarted) {
                   if (notification is OverscrollNotification &&
@@ -122,6 +122,7 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
                       !_animation.isAnimating &&
                       _animation.value != widget.maxHeight &&
                       _animation.value != widget.midHeight) {
+                    _dragStarted = false;
                     if (notification.dragDetails != null) {
                       _end(notification.dragDetails!);
                     } else {
@@ -213,7 +214,6 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
 
   void _start(DragStartDetails event) {
     setState(() {
-      _dragStarted = true;
       _startdy = event.localPosition.dy;
       _animation = Tween<double>(begin: size, end: size).animate(_controller);
     });
@@ -229,7 +229,6 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
   }
 
   void _end(DragEndDetails event) async {
-    _dragStarted = false;
     // Minimize / maximize on fast swipe
     if ((event.primaryVelocity ?? 0) > 3000) {
       _animatePanel(

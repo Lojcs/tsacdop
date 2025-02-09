@@ -551,6 +551,8 @@ class _ActionBarSharedState extends ChangeNotifier {
   String searchTitleQuery = "";
 
   List<EpisodeBrief> episodes = [];
+  List<EpisodeBrief> get newEpisodes =>
+      episodes.where((e) => e.isNew!).toList();
 
   late ExpansionController expansionControllerFirstRow =
       ExpansionController(maxWidth: maxWidth);
@@ -1399,23 +1401,24 @@ class ActionBarButtonRemoveNewMark extends ActionBarWidget {
   const ActionBarButtonRemoveNewMark(super.rowIndex, super.index);
   @override
   Widget build(BuildContext context) {
-    DBHelper dbHelper = DBHelper();
     _ActionBarSharedState sharedState =
         Provider.of<_ActionBarSharedState>(context, listen: false);
-    return Selector<_ActionBarSharedState, List<EpisodeBrief>>(
-      selector: (_, sharedState) => sharedState.episodes,
+    return Selector<_ActionBarSharedState, Tuple2<bool, List<EpisodeBrief>>>(
+      selector: (_, sharedState) {
+        List<EpisodeBrief> newEpisodes = sharedState.newEpisodes;
+        return Tuple2(newEpisodes.isNotEmpty, newEpisodes);
+      },
       builder: (context, data, _) {
-        bool enabled = data.any((episode) => episode.isNew == true);
         return ActionBarButton(
           child: SizedBox(
             height: context.actionBarButtonSizeVertical,
             width: context.actionBarButtonSizeHorizontal,
             child: CustomPaint(
               painter: RemoveNewFlagPainter(
-                  !enabled && context.realDark
+                  !data.item1 && context.realDark
                       ? Colors.grey[800]
                       : context.actionBarIconColor,
-                  enabled
+                  data.item1
                       ? Colors.red
                       : context.realDark
                           ? Colors.grey[800]!
@@ -1428,23 +1431,16 @@ class ActionBarButtonRemoveNewMark extends ActionBarWidget {
           onPressed: (value) async {
             if (sharedState.buttonRemoveNewMarkController.value == 0) {
               sharedState.buttonRemoveNewMarkController.forward();
-              Future removeFuture;
-              if (sharedState.podcast != sharedState.podcastAll) {
-                removeFuture =
-                    dbHelper.removeGroupNewMark([sharedState.podcast.id]);
-              } else if (sharedState.group != sharedState.groupAll) {
-                removeFuture =
-                    dbHelper.removeGroupNewMark(sharedState.group.podcastList);
-              } else {
-                removeFuture = dbHelper.removeAllNewMark();
-              }
-              await Future.wait(
-                  [removeFuture, Future.delayed(Duration(seconds: 1))]);
+              await Provider.of<EpisodeState>(context, listen: false)
+                  .unsetNew(data.item2);
+              await Future.delayed(Duration(seconds: 1));
               sharedState.onGetEpisodesChanged(sharedState.getGetEpisodes());
+              sharedState.buttonRemoveNewMarkController.reverse();
+              // It's supposed to disable immediately but it doesn't so at least turn off the selection
             }
           },
           tooltip: context.s.removeNewMark,
-          enabled: enabled,
+          enabled: data.item1,
           animation: sharedState.buttonRemoveNewMarkController,
           connectLeft: index != 0 &&
               _controlWidgets

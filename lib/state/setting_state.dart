@@ -521,17 +521,9 @@ class SettingState extends ChangeNotifier {
   }
 
   Future<void> _saveAccentSetColor() async {
-    String colorString = _accentSetColor.toString().substring(10, 16);
-    // Sometimes this gets saved as somthing like `' Col``.
-    try {
-      int.parse('FF${colorString.toUpperCase()}', radix: 16);
-    } catch (e) {
-      if (e is! FormatException) throw e;
-      developer.log(
-          "Invalid saved color string: $colorString of color: ${_accentSetColor.toString()}",
-          error: e);
-      colorString = "009688"; // Teal
-    }
+    // color.toString() is different in debug mode vs release!
+    String colorString =
+        _accentSetColor!.value.toRadixString(16).substring(2, 8);
     await _accentStorage.saveString(colorString);
   }
 
