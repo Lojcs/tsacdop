@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import 'package:tsacdop/state/audio_state.dart';
 
@@ -85,11 +84,12 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
                   child: GestureDetector(
                     onTap: backToMini,
                     child: Container(
-                      color: context.surface.withOpacity(0.4 *
-                          math.min(
-                              (_animation.value - widget.minHeight) /
-                                  widget.midHeight,
-                              1)),
+                      color: context.surface.withValues(
+                          alpha: 0.4 *
+                              math.min(
+                                  (_animation.value - widget.minHeight) /
+                                      widget.midHeight,
+                                  1)),
                     ),
                   ),
                 )
@@ -156,7 +156,7 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
                               offset: Offset(0, -1),
                               blurRadius: 1,
                               color: context.brightness == Brightness.light
-                                  ? Colors.grey[400]!.withOpacity(0.5)
+                                  ? Colors.grey[400]!.withValues(alpha: 0.5)
                                   : !context.realDark
                                       ? Colors.grey[900]!
                                       : Colors.grey[800]!,
@@ -299,7 +299,7 @@ class __AudioPanelRouteState extends State<_AudioPanelRoute> {
                     offset: Offset(0, -1),
                     blurRadius: 1,
                     color: context.brightness == Brightness.light
-                        ? Colors.grey[400]!.withOpacity(0.5)
+                        ? Colors.grey[400]!.withValues(alpha: 0.5)
                         : Colors.grey[800]!,
                   ),
                 ],

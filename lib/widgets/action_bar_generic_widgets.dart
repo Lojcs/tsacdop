@@ -934,7 +934,7 @@ class _ActionBarExpandingSearchButtonState
                                     border: Border.all(
                                         width: 2,
                                         color: context.textColor
-                                            .withOpacity(0.2))),
+                                            .withValues(alpha: 0.2))),
                                 child: InkWell(
                                   child: query == ""
                                       ? Row(
@@ -944,7 +944,7 @@ class _ActionBarExpandingSearchButtonState
                                               maxLines: 1,
                                               style: TextStyle(
                                                 color: context.textColor
-                                                    .withOpacity(0.4),
+                                                    .withValues(alpha: 0.4),
                                               ),
                                             ),
                                             Spacer()

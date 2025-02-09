@@ -58,6 +58,8 @@ class _PlaylistHomeState extends State<PlaylistHome> {
       Color? color}) {
     return OutlinedButton.icon(
         style: OutlinedButton.styleFrom(
+            iconColor: color,
+            iconSize: context.actionBarIconSize,
             foregroundColor: color,
             side: BorderSide(color: context.surface),
             backgroundColor:
@@ -246,7 +248,7 @@ class _PlaylistHomeState extends State<PlaylistHome> {
                                               painter: CircleProgressIndicator(
                                                   progress,
                                                   color: context.primaryColor
-                                                      .withOpacity(0.9)),
+                                                      .withValues(alpha: 0.9)),
                                             ),
                                           );
                                         },
@@ -946,8 +948,6 @@ class __NewPlaylistState extends State<_NewPlaylist> {
         return ['Latest 10', 'Add 10 latest updated episodes to playlist'];
       case NewPlaylistOption.folder:
         return ['Local folder', 'Choose a local folder'];
-      default:
-        return ['', ''];
     }
   }
 

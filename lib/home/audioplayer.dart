@@ -292,7 +292,7 @@ class LastPosition extends StatelessWidget {
                             : Theme.of(context)
                                 .colorScheme
                                 .onSurface
-                                .withOpacity(0.12),
+                                .withValues(alpha: 0.12),
                       ),
                     ),
                   ),
@@ -330,7 +330,7 @@ class LastPosition extends StatelessWidget {
                                     : Theme.of(context)
                                         .colorScheme
                                         .onSurface
-                                        .withOpacity(0.12))),
+                                        .withValues(alpha: 0.12))),
                         padding: EdgeInsets.symmetric(horizontal: 10),
                       ),
                       onPressed: () =>
@@ -348,7 +348,7 @@ class LastPosition extends StatelessWidget {
                                       color: Theme.of(context)
                                           .colorScheme
                                           .onSurface
-                                          .withOpacity(0.12))),
+                                          .withValues(alpha: 0.12))),
                             ),
                             // highlightedBorderColor: Colors.green[700],
                             onPressed: audio.undoSeek,
@@ -844,7 +844,7 @@ class SleepModeState extends State<SleepMode>
                           style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 20,
-                              color: Colors.white.withOpacity(move))),
+                              color: Colors.white.withValues(alpha: move))),
                     ),
                   ),
                 ),
@@ -957,7 +957,7 @@ class _ChaptersWidgetState extends State<ChaptersWidget> {
                               foregroundColor: WidgetStateProperty.all<Color>(
                                   context.accentColor),
                               overlayColor: WidgetStateProperty.all<Color>(
-                                  context.primaryColor.withOpacity(0.3)),
+                                  context.primaryColor.withValues(alpha: 0.3)),
                             ),
                             onPressed: () => chapters.url!.launchUrl,
                             child: Text('Visit')),

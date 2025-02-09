@@ -64,7 +64,7 @@ class _DialPainter extends CustomPainter {
     // Draw a translucent circle for every hour
     for (var i = 0; i < multiplier; i = i + 1) {
       canvas.drawCircle(centerPoint, radius,
-          Paint()..color = accentColor.withOpacity((i == 0) ? 0.3 : 0.1));
+          Paint()..color = accentColor.withValues(alpha: (i == 0) ? 0.3 : 0.1));
     }
 
     // Draw the inner background circle
@@ -122,7 +122,7 @@ class _DialPainter extends CustomPainter {
     var elapsedPainter = Paint()
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
-      ..color = accentColor.withOpacity(0.3)
+      ..color = accentColor.withValues(alpha: 0.3)
       ..isAntiAlias = true
       ..strokeWidth = radius * 0.12;
 

@@ -189,7 +189,7 @@ class EpisodeTile extends StatelessWidget {
                     Icon(Icons.unfold_more, color: c),
                   SizedBox(width: canReorder && !havePadding ? 0 : 24),
                   CircleAvatar(
-                      backgroundColor: c.withOpacity(0.5),
+                      backgroundColor: c.withValues(alpha: 0.5),
                       backgroundImage: episode.episodeOrPodcastImageProvider),
                 ],
               ),

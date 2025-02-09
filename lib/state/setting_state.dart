@@ -11,7 +11,6 @@ import 'package:workmanager/workmanager.dart';
 
 import '../generated/l10n.dart';
 import '../local_storage/key_value_storage.dart';
-import '../local_storage/sqflite_localpodcast.dart';
 import '../type/settings_backup.dart';
 import '../type/theme_data.dart';
 
@@ -426,7 +425,7 @@ class SettingState extends ChangeNotifier {
     final colorString = await _accentStorage.getString();
     if (colorString.isNotEmpty) {
       var color = int.parse('FF${colorString.toUpperCase()}', radix: 16);
-      _accentSetColor = Color(color).withOpacity(1.0);
+      _accentSetColor = Color(color).withValues(alpha: 1.0);
     } else {
       _accentSetColor = Colors.teal[500];
       await _saveAccentSetColor();
@@ -521,9 +520,13 @@ class SettingState extends ChangeNotifier {
   }
 
   Future<void> _saveAccentSetColor() async {
-    // color.toString() is different in debug mode vs release!
-    String colorString =
-        _accentSetColor!.value.toRadixString(16).substring(2, 8);
+    // // color.toString() is different in debug mode vs release!
+    // String colorString =
+    //     _accentSetColor!.value.toRadixString(16).substring(2, 8);
+    int red = (_accentSetColor!.r * 255.0).round() & 0xff;
+    int green = (_accentSetColor!.g * 255.0).round() & 0xff;
+    int blue = (_accentSetColor!.b * 255.0).round() & 0xff;
+    String colorString = (red << 16 | green << 8 | blue).toRadixString(16);
     await _accentStorage.saveString(colorString);
   }
 

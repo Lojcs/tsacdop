@@ -158,7 +158,7 @@ class _PlayedHistoryState extends State<PlayedHistory>
                                                         .playdate!),
                                                 style: TextStyle(
                                                     color: context.textColor
-                                                        .withOpacity(0.8),
+                                                        .withValues(alpha: 0.8),
                                                     fontSize: 15,
                                                     fontStyle:
                                                         FontStyle.italic),
@@ -255,7 +255,7 @@ class _PlayedHistoryState extends State<PlayedHistory>
                                               snapshot.data![index].subDate),
                                           style: TextStyle(
                                               color: context.textColor
-                                                  .withOpacity(0.8),
+                                                  .withValues(alpha: 0.8),
                                               fontSize: 15,
                                               fontStyle: FontStyle.italic),
                                         ),

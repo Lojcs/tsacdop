@@ -98,7 +98,7 @@ class _SlideIntroState extends State<SlideIntro> {
                   bottom: 0,
                   left: 0,
                   child: Container(
-                    color: Colors.grey[100]!.withOpacity(0.5),
+                    color: Colors.grey[100]!.withValues(alpha: 0.5),
                     width: context.width,
                     padding: EdgeInsets.only(
                         left: 40, right: 20, bottom: 30, top: 20),

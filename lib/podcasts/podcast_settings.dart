@@ -509,8 +509,6 @@ class _PodcastSettingState extends State<PodcastSetting> {
         return Icon(Icons.done);
       case RefreshCoverStatus.error:
         return Icon(Icons.refresh, color: Colors.red);
-      default:
-        return Center();
     }
   }
 }

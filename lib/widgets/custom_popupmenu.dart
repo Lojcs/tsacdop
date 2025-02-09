@@ -170,7 +170,7 @@ class _PopupMenu<T> extends StatelessWidget {
                 visibleItemCount! < route.items.length)
               Icon(
                 Icons.arrow_drop_down,
-                color: context.textColor.withOpacity(0.4),
+                color: context.textColor.withValues(alpha: 0.4),
               )
           ],
         ));

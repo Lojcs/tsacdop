@@ -497,7 +497,8 @@ class __NotificationLayoutState extends State<_NotificationLayout> {
           SizedBox(height: 8),
           Text(des,
               style: TextStyle(
-                  fontSize: 12, color: context.textColor.withOpacity(0.5)),
+                  fontSize: 12,
+                  color: context.textColor.withValues(alpha: 0.5)),
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.clip),

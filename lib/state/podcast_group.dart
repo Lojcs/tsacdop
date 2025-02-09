@@ -143,7 +143,7 @@ class PodcastGroup extends Equatable {
   Color? getColor() {
     if (color != '#000000') {
       var colorInt = int.parse('FF${color!.toUpperCase()}', radix: 16);
-      return Color(colorInt).withOpacity(1.0);
+      return Color(colorInt).withValues(alpha: 1.0);
     } else {
       return Colors.blue[400];
     }

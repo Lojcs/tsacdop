@@ -345,7 +345,7 @@ class _RssResultState extends State<RssResult> {
                         child: TextButton(
                           style: TextButton.styleFrom(
                             disabledForegroundColor:
-                                context.accentColor.withOpacity(0.5),
+                                context.accentColor.withValues(alpha: 0.5),
                           ),
                           child: Text(context.s.loadMore),
                           onPressed: () => setState(
@@ -557,7 +557,7 @@ class __ListenNotesSearchState extends State<_ListenNotesSearch> {
                       style: TextButton.styleFrom(
                         side: BorderSide(color: context.accentColor),
                         disabledForegroundColor:
-                            context.accentColor.withOpacity(0.5),
+                            context.accentColor.withValues(alpha: 0.5),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(100),
                         ),
@@ -725,7 +725,7 @@ class __PodcastIndexSearchState extends State<_PodcastIndexSearch> {
                       style: TextButton.styleFrom(
                         side: BorderSide(color: context.accentColor),
                         disabledForegroundColor:
-                            context.accentColor.withOpacity(0.5),
+                            context.accentColor.withValues(alpha: 0.5),
                       ),
                       child: _loading
                           ? SizedBox(
@@ -1016,7 +1016,7 @@ class _SearchResultDetailState extends State<SearchResultDetail>
                           style: TextButton.styleFrom(
                             side: BorderSide(color: context.accentColor),
                             disabledForegroundColor:
-                                context.accentColor.withOpacity(0.5),
+                                context.accentColor.withValues(alpha: 0.5),
                           ),
                           child: _loading
                               ? SizedBox(
@@ -1108,7 +1108,7 @@ class _SearchResultDetailState extends State<SearchResultDetail>
               offset: Offset(0, -0.5),
               blurRadius: 1,
               color: Theme.of(context).brightness == Brightness.light
-                  ? Colors.grey[400]!.withOpacity(0.5)
+                  ? Colors.grey[400]!.withValues(alpha: 0.5)
                   : Colors.grey[800]!,
             ),
           ],
@@ -1288,7 +1288,7 @@ class SubscribeButton extends StatelessWidget {
                           borderRadius: BorderRadius.circular(100.0),
                           side: BorderSide(color: context.accentColor)),
                       disabledForegroundColor:
-                          context.accentColor.withOpacity(0.5),
+                          context.accentColor.withValues(alpha: 0.5),
                     ),
                     child: Text(s.subscribe,
                         style: TextStyle(color: context.accentColor)),
@@ -1305,7 +1305,8 @@ class SubscribeButton extends StatelessWidget {
                 height: 32,
                 child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: context.accentColor.withOpacity(0.5),
+                      foregroundColor:
+                          context.accentColor.withValues(alpha: 0.5),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(100.0),
                           side: BorderSide(color: Colors.grey[500]!)),
@@ -1343,7 +1344,7 @@ class PodcastSlideup extends StatelessWidget {
               child: GestureDetector(
                 onTap: searchState.clearSelect,
                 child: Container(
-                  color: context.surface.withOpacity(0.9),
+                  color: context.surface.withValues(alpha: 0.9),
                 ),
               ),
             ),

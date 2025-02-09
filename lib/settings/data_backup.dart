@@ -599,7 +599,7 @@ class __LoginGpodderState extends State<_LoginGpodder> {
                         child: CircleAvatar(
                           minRadius: 50,
                           backgroundColor:
-                              context.primaryColor.withOpacity(0.3),
+                              context.primaryColor.withValues(alpha: 0.3),
                           child: SizedBox(
                               height: 80,
                               width: 80,
@@ -900,7 +900,8 @@ class __GpodderInfoState extends State<_GpodderInfo> {
                     children: [
                       CircleAvatar(
                         minRadius: 50,
-                        backgroundColor: context.primaryColor.withOpacity(0.3),
+                        backgroundColor:
+                            context.primaryColor.withValues(alpha: 0.3),
                         child: SizedBox(
                             height: 80,
                             width: 80,

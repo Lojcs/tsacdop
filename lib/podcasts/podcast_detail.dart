@@ -711,7 +711,7 @@ class HostsList extends StatelessWidget {
                                             (context, url, downloadProgress) =>
                                                 CircleAvatar(
                                           backgroundColor: Colors.cyan[600]!
-                                              .withOpacity(0.5),
+                                              .withValues(alpha: 0.5),
                                           child: SizedBox(
                                             width: 30,
                                             height: 2,
@@ -795,7 +795,7 @@ Widget _podcastLink(BuildContext context,
           child: CircleAvatar(
             radius: 20,
             child: child,
-            backgroundColor: backgroundColor.withOpacity(0.5),
+            backgroundColor: backgroundColor.withValues(alpha: 0.5),
           ),
         ),
         SizedBox(height: 4),

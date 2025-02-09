@@ -223,8 +223,8 @@ class _HourMinuteControl extends StatelessWidget {
         WidgetStateColor.resolveWith((states) {
           return states.contains(WidgetState.selected)
               ? themeData.colorScheme.secondary
-                  .withOpacity(isDark ? 0.24 : 0.12)
-              : themeData.colorScheme.onSurface.withOpacity(0.12);
+                  .withValues(alpha: isDark ? 0.24 : 0.12)
+              : themeData.colorScheme.onSurface.withValues(alpha: 0.12);
         });
     final style = timePickerTheme.hourMinuteTextStyle ??
         themeData.textTheme.displayMedium!;
@@ -486,7 +486,7 @@ class _DayPeriodControl extends StatelessWidget {
         WidgetStateColor.resolveWith((states) {
           return states.contains(WidgetState.selected)
               ? colorScheme.primary
-              : colorScheme.onSurface.withOpacity(0.60);
+              : colorScheme.onSurface.withValues(alpha: 0.60);
         });
     final backgroundColor = timePickerTheme.dayPeriodColor ??
         WidgetStateColor.resolveWith((states) {
@@ -495,7 +495,7 @@ class _DayPeriodControl extends StatelessWidget {
           // and allows the optional elevation overlay for dark mode to be
           // visible.
           return states.contains(WidgetState.selected)
-              ? colorScheme.primary.withOpacity(isDark ? 0.24 : 0.12)
+              ? colorScheme.primary.withValues(alpha: isDark ? 0.24 : 0.12)
               : Colors.transparent;
         });
     final amSelected = selectedTime!.period == DayPeriod.am;
@@ -516,8 +516,8 @@ class _DayPeriodControl extends StatelessWidget {
         const RoundedRectangleBorder(borderRadius: _kDefaultBorderRadius);
     final borderSide = timePickerTheme.dayPeriodBorderSide ??
         BorderSide(
-          color: Color.alphaBlend(
-              colorScheme.onSurface.withOpacity(0.38), colorScheme.surface),
+          color: Color.alphaBlend(colorScheme.onSurface.withValues(alpha: 0.38),
+              colorScheme.surface),
         );
     // Apply the custom borderSide.
     shape = shape.copyWith(
@@ -1198,7 +1198,7 @@ class _DialState extends State<_Dial> with SingleTickerProviderStateMixin {
     final theme = Theme.of(context);
     final pickerTheme = TimePickerTheme.of(context);
     final backgroundColor = pickerTheme.dialBackgroundColor ??
-        themeData.colorScheme.onSurface.withOpacity(0.12);
+        themeData.colorScheme.onSurface.withValues(alpha: 0.12);
     final accentColor =
         pickerTheme.dialHandColor ?? themeData.colorScheme.secondary;
     final primaryLabelColor = WidgetStateProperty.resolveAs(
@@ -1559,7 +1559,7 @@ class _HourMinuteTextFieldState extends State<_HourMinuteTextField> {
           const InputDecoration().applyDefaults(inputDecorationTheme);
     } else {
       final unfocusedFillColor = timePickerTheme.hourMinuteColor ??
-          colorScheme.onSurface.withOpacity(0.12);
+          colorScheme.onSurface.withValues(alpha: 0.12);
       inputDecoration = InputDecoration(
         contentPadding: EdgeInsets.zero,
         filled: true,
@@ -1578,7 +1578,7 @@ class _HourMinuteTextFieldState extends State<_HourMinuteTextField> {
           borderSide: BorderSide(color: colorScheme.error, width: 2.0),
         ),
         hintStyle: widget.style!
-            .copyWith(color: colorScheme.onSurface.withOpacity(0.36)),
+            .copyWith(color: colorScheme.onSurface.withValues(alpha: 0.36)),
         // TODO(rami-a): Remove this logic once https://github.com/flutter/flutter/issues/54104 is fixed.
         errorStyle: const TextStyle(
             fontSize: 0.0,
@@ -1852,8 +1852,9 @@ class _TimePickerDialogState extends State<_TimePickerDialog> {
         const SizedBox(width: 10.0),
         IconButton(
           color: TimePickerTheme.of(context).entryModeIconColor ??
-              theme.colorScheme.onSurface.withOpacity(
-                theme.colorScheme.brightness == Brightness.dark ? 1.0 : 0.6,
+              theme.colorScheme.onSurface.withValues(
+                alpha:
+                    theme.colorScheme.brightness == Brightness.dark ? 1.0 : 0.6,
               ),
           onPressed: _handleEntryModeToggle,
           icon: Icon(_entryMode == TimePickerEntryMode.dial

@@ -269,7 +269,7 @@ class __PlaylistItemState extends State<_PlaylistItem>
                       ..rotateY(math.pi * _fraction!),
                     child: _fraction! < 0.5
                         ? CircleAvatar(
-                            backgroundColor: c.withOpacity(0.5),
+                            backgroundColor: c.withValues(alpha: 0.5),
                             backgroundImage:
                                 episode.episodeOrPodcastImageProvider)
                         : CircleAvatar(

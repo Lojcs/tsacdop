@@ -283,7 +283,6 @@ class __ColorPickerState extends State<_ColorPicker>
         children: <Widget>[
           Container(
             height: 40,
-            color: Theme.of(context).dialogBackgroundColor,
             child: TabBar(
               labelPadding: EdgeInsets.symmetric(horizontal: 10),
               controller: _controller,

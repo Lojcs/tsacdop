@@ -361,7 +361,7 @@ class _DownloadsManageState extends State<DownloadsManage> {
                             decoration: BoxDecoration(
                               borderRadius:
                                   BorderRadius.all(Radius.circular(20.0)),
-                              color: Colors.red.withOpacity(0.6),
+                              color: Colors.red.withValues(alpha: 0.6),
                             ),
                           ),
                         ),

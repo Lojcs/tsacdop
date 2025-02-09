@@ -220,7 +220,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                           : Text(s.noPodcastGroup,
                               style: TextStyle(
                                   color: context.textTheme.bodyMedium!.color!
-                                      .withOpacity(0.5)))),
+                                      .withValues(alpha: 0.5)))),
                 ),
               ],
             ),
@@ -360,7 +360,8 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                                   maxHeight: 50,
                                   maxWidth: 50,
                                   child: CircleAvatar(
-                                    backgroundColor: color.withOpacity(0.5),
+                                    backgroundColor:
+                                        color.withValues(alpha: 0.5),
                                     backgroundImage: podcastLocal.avatarImage,
                                     child: _updateIndicator(
                                         podcastLocal), // TODO: This doesn't update currently

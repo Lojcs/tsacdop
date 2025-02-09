@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:linkify/linkify.dart';
@@ -83,8 +82,8 @@ class ShowNote extends StatelessWidget {
                   Padding(padding: EdgeInsets.all(5.0)),
                   Text(s.noShownote,
                       textAlign: TextAlign.center,
-                      style:
-                          TextStyle(color: context.textColor.withOpacity(0.5))),
+                      style: TextStyle(
+                          color: context.textColor.withValues(alpha: 0.5))),
                 ],
               ),
             );

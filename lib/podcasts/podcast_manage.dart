@@ -181,8 +181,9 @@ class _PodcastManageState extends State<PodcastManage>
                             }
                           },
                           child: Container(
-                            color: context.surface.withOpacity(
-                                0.8 * math.min(_menuController.value * 2, 1.0)),
+                            color: context.surface.withValues(
+                                alpha: 0.8 *
+                                    math.min(_menuController.value * 2, 1.0)),
                           ),
                         ),
                       ),
@@ -389,7 +390,7 @@ class _PodcastManageState extends State<PodcastManage>
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey[700]!.withOpacity(0.5),
+                        color: Colors.grey[700]!.withValues(alpha: 0.5),
                         blurRadius: 1,
                         offset: Offset(1, 1),
                       ),

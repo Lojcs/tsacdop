@@ -964,7 +964,7 @@ class _HeartSetState extends State<HeartSet>
       width: widget.width,
       alignment: Alignment(0.5, 1 - _value),
       child: Icon(Icons.favorite,
-          color: Colors.blue.withOpacity(0.7), size: 20 * _value),
+          color: Colors.blue.withValues(alpha: 0.7), size: 20 * _value),
     );
   }
 }
@@ -1023,7 +1023,7 @@ class _HeartOpenState extends State<HeartOpen>
       bottom: widget.height! * _value * scale,
       child: Icon(Icons.favorite,
           color: _value > 0.5
-              ? Colors.red.withOpacity(2 - _value * 2)
+              ? Colors.red.withValues(alpha: 2 - _value * 2)
               : Colors.red,
           size: 20 * _value * scale),
     );
@@ -1041,7 +1041,7 @@ class _HeartOpenState extends State<HeartOpen>
           width: widget.width,
           alignment: Alignment(0.5, 1 - _value),
           child: Icon(Icons.favorite,
-              color: Colors.blue.withOpacity(0.7), size: 20 * _value),
+              color: Colors.blue.withValues(alpha: 0.7), size: 20 * _value),
         ),
         ..._index.map<Widget>(_position).toList(),
       ],

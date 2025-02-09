@@ -17,7 +17,6 @@ import '../state/audio_state.dart';
 import '../type/play_histroy.dart';
 import '../type/podcastlocal.dart';
 import '../util/helpers.dart';
-import '../util/pageroute.dart';
 import 'custom_widget.dart';
 import 'episodegrid.dart';
 
@@ -778,7 +777,8 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, EpisodeBrief episode,
               : context.colorScheme.primaryContainer,
           title: episode.isPlayed!
               ? Text(s.markNotListened,
-                  style: TextStyle(color: context.textColor.withOpacity(0.5)))
+                  style: TextStyle(
+                      color: context.textColor.withValues(alpha: 0.5)))
               : Text(
                   s.markListened,
                   softWrap: true,
@@ -812,7 +812,8 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, EpisodeBrief episode,
               : context.colorScheme.primaryContainer,
           title: episode.isDownloaded!
               ? Text(s.downloaded,
-                  style: TextStyle(color: context.textColor.withOpacity(0.5)))
+                  style: TextStyle(
+                      color: context.textColor.withValues(alpha: 0.5)))
               : Text(s.download),
           trailing: Icon(LineIcons.download, color: Colors.green),
           onPressed: () async {
@@ -909,7 +910,7 @@ Widget _circleImage(
         children: [
           CircleAvatar(
               radius: radius,
-              backgroundColor: color.withOpacity(0.5),
+              backgroundColor: color.withValues(alpha: 0.5),
               backgroundImage: preferEpisodeImage
                   ? episode.episodeOrPodcastImageProvider
                   : episode.podcastImageProvider),
