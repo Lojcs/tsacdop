@@ -529,13 +529,14 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
       selected = widget.selected;
     }
     Future.microtask(
-      () {
+      () async {
         if (active && !activeAnimationController.isCompleted) {
           activeAnimationController.forward();
           expand(true);
         } else if (!active &&
             !(activeAnimationController.status == AnimationStatus.reverse ||
                 activeAnimationController.value == 0)) {
+          await Future.delayed(Duration(milliseconds: 150));
           activeAnimationController.reverse();
           expand(false);
         }
@@ -553,8 +554,11 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
                 (!widget.connectRight
                     ? context.actionBarIconPadding.right / 2
                     : 0));
-        if (expands)
+        if (expands) {
           _expand = widget.expansionController!.addItem(expandableItem);
+        } else {
+          widget.expansionController!.addWidth(width);
+        }
       }
     }
     var borderRadiusTween = BorderRadiusTween(

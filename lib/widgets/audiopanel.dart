@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import 'package:tsacdop/state/audio_state.dart';
 
@@ -32,14 +33,18 @@ class AudioPanel extends StatefulWidget {
 class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
   double? size;
   late double _startdy;
+  bool _dragStarted = false;
   double _move = 0;
   late AnimationController _controller;
   late AnimationController _slowController;
   late Animation _animation;
   SlideDirection? _slideDirection;
 
+  ScrollNotification? _lastScrollNotification;
+
   @override
   void initState() {
+    super.initState();
     size = widget.minHeight;
     _controller =
         AnimationController(vsync: this, duration: Duration(milliseconds: 175))
@@ -61,7 +66,6 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
       _animation = Tween<double>(begin: size, end: size).animate(_controller);
     }
     _slideDirection = SlideDirection.up;
-    super.initState();
   }
 
   @override
@@ -73,75 +77,119 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(children: <Widget>[
-      Container(
-        child: (_animation.value > widget.minHeight + 30)
-            ? Positioned.fill(
-                child: GestureDetector(
-                  onTap: backToMini,
-                  child: Container(
-                    color: context.surface.withOpacity(0.4 *
-                        math.min(
-                            (_animation.value - widget.minHeight) /
-                                widget.midHeight,
-                            1)),
+    return Stack(
+      children: <Widget>[
+        Container(
+          child: (_animation.value > widget.minHeight + 30)
+              ? Positioned.fill(
+                  child: GestureDetector(
+                    onTap: backToMini,
+                    child: Container(
+                      color: context.surface.withOpacity(0.4 *
+                          math.min(
+                              (_animation.value - widget.minHeight) /
+                                  widget.midHeight,
+                              1)),
+                    ),
                   ),
-                ),
-              )
-            : Center(),
-      ),
-      Align(
-        alignment: Alignment.bottomCenter,
-        child: GestureDetector(
-          onVerticalDragStart: _start,
-          onVerticalDragUpdate: _update,
-          onVerticalDragEnd: _end,
-          child: Container(
-            height: _animation.value < 0 ? 0 : _animation.value,
-            child: Stack(
-              fit: StackFit.passthrough,
-              children: [
-                Opacity(
-                  opacity: 1,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(context.width / 15),
-                          topRight: Radius.circular(context.width / 15)),
-                      boxShadow: [
-                        BoxShadow(
-                          offset: Offset(0, -1),
-                          blurRadius: 1,
-                          color: context.brightness == Brightness.light
-                              ? Colors.grey[400]!.withOpacity(0.5)
-                              : !context.realDark
-                                  ? Colors.grey[900]!
-                                  : Colors.grey[800]!,
+                )
+              : Center(),
+        ),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              if (_lastScrollNotification != notification) {
+                _lastScrollNotification = notification;
+                if (notification is ScrollStartNotification &&
+                    notification.dragDetails != null &&
+                    notification.metrics.pixels ==
+                        notification.metrics.minScrollExtent) {
+                  _dragStarted = true;
+                  _start(notification.dragDetails!);
+                } else if (_dragStarted) {
+                  if (notification is OverscrollNotification &&
+                      notification.dragDetails != null) {
+                    if (!_animation.isAnimating) {
+                      _update(notification.dragDetails!);
+                    }
+                  } else if (notification is ScrollUpdateNotification &&
+                      notification.dragDetails != null) {
+                    if (!_animation.isAnimating) {
+                      _update(notification.dragDetails!);
+                    }
+                  } else if (notification is ScrollEndNotification &&
+                      !_animation.isAnimating &&
+                      _animation.value != widget.maxHeight &&
+                      _animation.value != widget.midHeight) {
+                    _dragStarted = false;
+                    if (notification.dragDetails != null) {
+                      _end(notification.dragDetails!);
+                    } else {
+                      _end(DragEndDetails(
+                          velocity: Velocity(pixelsPerSecond: Offset(0, -3001)),
+                          primaryVelocity: -3001));
+                    }
+                  }
+                }
+              }
+              return true;
+            },
+            child: GestureDetector(
+              onVerticalDragStart: _start,
+              onVerticalDragUpdate: _update,
+              onVerticalDragEnd: _end,
+              child: Container(
+                height: _animation.value < 0 ? 0 : _animation.value,
+                child: Stack(
+                  fit: StackFit.passthrough,
+                  children: [
+                    Opacity(
+                      opacity: 1,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(context.width / 15),
+                              topRight: Radius.circular(context.width / 15)),
+                          boxShadow: [
+                            BoxShadow(
+                              offset: Offset(0, -1),
+                              blurRadius: 1,
+                              color: context.brightness == Brightness.light
+                                  ? Colors.grey[400]!.withOpacity(0.5)
+                                  : !context.realDark
+                                      ? Colors.grey[900]!
+                                      : Colors.grey[800]!,
+                            ),
+                          ],
                         ),
-                      ],
+                        clipBehavior: Clip.hardEdge,
+                        child: SingleChildScrollView(
+                          physics: const NeverScrollableScrollPhysics(),
+                          child: SizedBox(
+                              height: math.max(
+                                  widget.midHeight,
+                                  math.min(
+                                      _animation.value, widget.maxHeight!)),
+                              child: widget.maxiPanel),
+                        ),
+                      ),
                     ),
-                    clipBehavior: Clip.hardEdge,
-                    child: SingleChildScrollView(
-                      physics: const NeverScrollableScrollPhysics(),
-                      child: SizedBox(
-                          height: math.max(widget.midHeight,
-                              math.min(_animation.value, widget.maxHeight!)),
-                          child: widget.maxiPanel),
-                    ),
-                  ),
+                    if (widget.minHeight + 50 > _animation.value)
+                      Opacity(
+                        opacity:
+                            ((widget.minHeight + 50 - _animation.value) / 50)
+                                .clamp(0, 1),
+                        child: widget.miniPanel,
+                      ),
+                  ],
                 ),
-                if (widget.minHeight + 50 > _animation.value)
-                  Opacity(
-                    opacity: ((widget.minHeight + 50 - _animation.value) / 50)
-                        .clamp(0, 1),
-                    child: widget.miniPanel,
-                  ),
-              ],
+              ),
             ),
           ),
         ),
-      ),
-    ]);
+      ],
+    );
   }
 
   void backToMini() {
@@ -268,4 +316,9 @@ class __AudioPanelRouteState extends State<_AudioPanelRoute> {
       ),
     );
   }
+}
+
+class AudioPanelInnerNotification extends Notification {
+  ScrollController scrollController;
+  AudioPanelInnerNotification(this.scrollController);
 }

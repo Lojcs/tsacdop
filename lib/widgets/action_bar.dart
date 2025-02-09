@@ -17,41 +17,6 @@ import '../state/refresh_podcast.dart';
 import 'custom_widget.dart';
 import 'episodegrid.dart';
 
-enum ActionBarEntry {
-  dropdownGroups,
-  dropdownPodcasts,
-  dropdownSortBy,
-  filterNew,
-  filterLiked,
-  filterPlayed,
-  filterDownloaded,
-  switchSortOrder,
-  switchLayout,
-  switchSelectMode,
-  switchSecondRow,
-  buttonRefresh,
-  buttonRemoveNewMark,
-  searchTitle,
-  spacer,
-}
-
-Set<ActionBarEntry> filterEntries = {
-  ActionBarEntry.dropdownGroups,
-  ActionBarEntry.dropdownPodcasts,
-  ActionBarEntry.filterNew,
-  ActionBarEntry.filterLiked,
-  ActionBarEntry.filterPlayed,
-  ActionBarEntry.filterDownloaded,
-  ActionBarEntry.searchTitle,
-};
-Set<ActionBarEntry> controlEntriesWithRemoveNewMark = {
-  ActionBarEntry.switchLayout,
-  ActionBarEntry.switchSelectMode,
-  ActionBarEntry.switchSecondRow,
-  ActionBarEntry.buttonRefresh,
-  ActionBarEntry.buttonRemoveNewMark,
-};
-
 Set<Type> _filterWidgets = {
   ActionBarDropdownGroups,
   ActionBarDropdownPodcasts,
@@ -59,6 +24,7 @@ Set<Type> _filterWidgets = {
   ActionBarFilterLiked,
   ActionBarFilterPlayed,
   ActionBarFilterDownloaded,
+  ActionBarFilterDisplayVersion,
   ActionBarSearchTitle
 };
 Set<Type> _sortWidgets = {
@@ -81,7 +47,8 @@ Set<Type> _controlWidgets = {
 /// Select mode switch works when [SelectionController] if provided with a [ChangeNotifierProvider]
 class ActionBar extends StatefulWidget {
   /// Callback to return the episode list based on filters
-  final ValueSetter<Future<List<EpisodeBrief>> Function(int count)>
+  final ValueSetter<
+          Future<List<EpisodeBrief>> Function(int count, {int offset})>
       onGetEpisodesChanged;
 
   /// Callback to return the layout status
@@ -126,11 +93,14 @@ class ActionBar extends StatefulWidget {
   /// Default filter downloaded
   final bool? filterDownloaded;
 
+  /// Default filter display version
+  final bool? filterDisplayVersion;
+
   /// Extra episode fields to fill. All fields needed for episode cards are already filled.
   /// These are: [EpisodeField.description], [EpisodeField.number], [EpisodeField.enclosureDuration]
   /// [EpisodeField.enclosureSize], [EpisodeField.isDownloaded], [EpisodeField.episodeImage]
   /// [EpisodeField.podcastImage], [EpisodeField.primaryColor], [EpisodeField.isLiked]
-  /// [EpisodeField.isNew], [EpisodeField.isPlayed], [EpisodeField.versionInfo]
+  /// [EpisodeField.isNew], [EpisodeField.isPlayed], [EpisodeField.isDisplayVersion]
   final List<EpisodeField> extraFields;
 
   /// Default sort order
@@ -178,6 +148,7 @@ class ActionBar extends StatefulWidget {
     this.filterLiked,
     this.filterPlayed,
     this.filterDownloaded,
+    this.filterDisplayVersion,
     this.sortOrder = SortOrder.DESC,
     this.extraFields = const [],
     this.layout = EpisodeGridLayout.large,
@@ -279,6 +250,7 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
         filterLiked: widget.filterLiked,
         filterPlayed: widget.filterPlayed,
         filterDownloaded: widget.filterDownloaded,
+        filterDisplayVersion: widget.filterDisplayVersion,
         sortOrder: widget.sortOrder,
         extraFields: widget.extraFields,
         layout: widget.layout,
@@ -420,7 +392,8 @@ class __ActionBarOuterState extends State<_ActionBarOuter>
 
 class _ActionBarSharedState extends ChangeNotifier {
   final BuildContext context;
-  final ValueSetter<Future<List<EpisodeBrief>> Function(int count)>
+  final ValueSetter<
+          Future<List<EpisodeBrief>> Function(int count, {int offset})>
       onGetEpisodesChanged;
   final ValueChanged<EpisodeGridLayout>? onLayoutChanged;
 
@@ -491,6 +464,13 @@ class _ActionBarSharedState extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool? _filterDisplayVersion;
+  bool? get filterDisplayVersion => _filterDisplayVersion;
+  set filterDisplayVersion(bool? boo) {
+    _filterDisplayVersion = boo;
+    notifyListeners();
+  }
+
   SortOrder _sortOrder;
   SortOrder get sortOrder => _sortOrder;
   set sortOrder(SortOrder sortOrder) {
@@ -526,6 +506,7 @@ class _ActionBarSharedState extends ChangeNotifier {
     required bool? filterLiked,
     required bool? filterPlayed,
     required bool? filterDownloaded,
+    required bool? filterDisplayVersion,
     required SortOrder sortOrder,
     required this.extraFields,
     required EpisodeGridLayout layout,
@@ -542,6 +523,7 @@ class _ActionBarSharedState extends ChangeNotifier {
         _filterLiked = filterLiked,
         _filterPlayed = filterPlayed,
         _filterDownloaded = filterDownloaded,
+        _filterDisplayVersion = filterDisplayVersion,
         _sortOrder = sortOrder,
         _layout = layout {
     if (expandSecondRow) switchSecondRowController.forward();
@@ -569,6 +551,8 @@ class _ActionBarSharedState extends ChangeNotifier {
   String searchTitleQuery = "";
 
   List<EpisodeBrief> episodes = [];
+  List<EpisodeBrief> get newEpisodes =>
+      episodes.where((e) => e.isNew!).toList();
 
   late ExpansionController expansionControllerFirstRow =
       ExpansionController(maxWidth: maxWidth);
@@ -582,9 +566,10 @@ class _ActionBarSharedState extends ChangeNotifier {
   double maxWidth() =>
       context.width - (16 + context.actionBarIconPadding.horizontal / 2);
 
-  Future<List<EpisodeBrief>> Function(int count) getGetEpisodes() {
+  Future<List<EpisodeBrief>> Function(int count, {int offset})
+      getGetEpisodes() {
     DBHelper dbHelper = DBHelper();
-    return (int count) async {
+    return (int count, {int offset = -1}) async {
       episodes = await dbHelper.getEpisodes(
           feedIds: podcast != podcastAll
               ? group.podcastList.isEmpty ||
@@ -605,17 +590,18 @@ class _ActionBarSharedState extends ChangeNotifier {
                 EpisodeField.isLiked,
                 EpisodeField.isNew,
                 EpisodeField.isPlayed,
-                EpisodeField.versionInfo
+                EpisodeField.isDisplayVersion
               ] +
               extraFields,
           sortBy: sortBy,
           sortOrder: sortOrder,
           limit: count,
-          filterVersions: 1, // TODO: Make version button
+          offset: offset,
           filterNew: filterNew,
           filterLiked: filterLiked,
           filterPlayed: filterPlayed,
           filterDownloaded: filterDownloaded,
+          filterDisplayVersion: filterDisplayVersion,
           episodeState: Provider.of<EpisodeState>(context, listen: false));
       return episodes;
     };
@@ -904,8 +890,10 @@ Icon _getSorterIcon(BuildContext context, Sorter sorter) {
       return Icon(Icons.data_usage, color: context.actionBarIconColor);
     case Sorter.enclosureDuration:
       return Icon(Icons.timer_outlined, color: context.actionBarIconColor);
+    // downloadDate and likedDate could have better icons
     case Sorter.downloadDate:
-      return Icon(Icons.download, color: context.actionBarIconColor);
+      return Icon(Icons.download_for_offline_outlined,
+          color: context.actionBarIconColor);
     case Sorter.likedDate:
       return Icon(Icons.favorite_border, color: context.actionBarIconColor);
     case Sorter.random:
@@ -1055,6 +1043,44 @@ class ActionBarFilterDownloaded extends ActionBarWidget {
             sharedState.onGetEpisodesChanged(sharedState.getGetEpisodes());
           },
           tooltip: context.s.filterType(context.s.downloaded),
+          connectLeft: index != 0 &&
+              _filterWidgets
+                  .contains(sharedState.rows[rowIndex][index - 1].runtimeType),
+          connectRight: index != sharedState.rows[rowIndex].length - 1 &&
+              _filterWidgets
+                  .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+        );
+      },
+    );
+  }
+}
+
+class ActionBarFilterDisplayVersion extends ActionBarWidget {
+  const ActionBarFilterDisplayVersion(super.rowIndex, super.index);
+  @override
+  Widget build(BuildContext context) {
+    _ActionBarSharedState sharedState =
+        Provider.of<_ActionBarSharedState>(context, listen: false);
+    return Selector<_ActionBarSharedState, bool?>(
+      selector: (_, sharedState) => sharedState.filterDisplayVersion,
+      builder: (context, data, _) {
+        return ActionBarButton(
+          child: SizedBox(
+            height: context.actionBarButtonSizeVertical,
+            width: context.actionBarButtonSizeHorizontal,
+            child: Icon(
+              Icons.difference_outlined,
+              color: context.actionBarIconColor,
+            ),
+          ),
+          expansionController: sharedState.expansionControllers[rowIndex],
+          state: data,
+          buttonType: ActionBarButtonType.noneOnOff,
+          onPressed: (value) {
+            sharedState.filterDisplayVersion = value;
+            sharedState.onGetEpisodesChanged(sharedState.getGetEpisodes());
+          },
+          tooltip: context.s.filterType(context.s.displayVersion),
           connectLeft: index != 0 &&
               _filterWidgets
                   .contains(sharedState.rows[rowIndex][index - 1].runtimeType),
@@ -1375,23 +1401,24 @@ class ActionBarButtonRemoveNewMark extends ActionBarWidget {
   const ActionBarButtonRemoveNewMark(super.rowIndex, super.index);
   @override
   Widget build(BuildContext context) {
-    DBHelper dbHelper = DBHelper();
     _ActionBarSharedState sharedState =
         Provider.of<_ActionBarSharedState>(context, listen: false);
-    return Selector<_ActionBarSharedState, List<EpisodeBrief>>(
-      selector: (_, sharedState) => sharedState.episodes,
+    return Selector<_ActionBarSharedState, Tuple2<bool, List<EpisodeBrief>>>(
+      selector: (_, sharedState) {
+        List<EpisodeBrief> newEpisodes = sharedState.newEpisodes;
+        return Tuple2(newEpisodes.isNotEmpty, newEpisodes);
+      },
       builder: (context, data, _) {
-        bool enabled = data.any((episode) => episode.isNew == true);
         return ActionBarButton(
           child: SizedBox(
             height: context.actionBarButtonSizeVertical,
             width: context.actionBarButtonSizeHorizontal,
             child: CustomPaint(
               painter: RemoveNewFlagPainter(
-                  !enabled && context.realDark
+                  !data.item1 && context.realDark
                       ? Colors.grey[800]
                       : context.actionBarIconColor,
-                  enabled
+                  data.item1
                       ? Colors.red
                       : context.realDark
                           ? Colors.grey[800]!
@@ -1404,23 +1431,16 @@ class ActionBarButtonRemoveNewMark extends ActionBarWidget {
           onPressed: (value) async {
             if (sharedState.buttonRemoveNewMarkController.value == 0) {
               sharedState.buttonRemoveNewMarkController.forward();
-              Future removeFuture;
-              if (sharedState.podcast != sharedState.podcastAll) {
-                removeFuture =
-                    dbHelper.removeGroupNewMark([sharedState.podcast.id]);
-              } else if (sharedState.group != sharedState.groupAll) {
-                removeFuture =
-                    dbHelper.removeGroupNewMark(sharedState.group.podcastList);
-              } else {
-                removeFuture = dbHelper.removeAllNewMark();
-              }
-              await Future.wait(
-                  [removeFuture, Future.delayed(Duration(seconds: 1))]);
+              await Provider.of<EpisodeState>(context, listen: false)
+                  .unsetNew(data.item2);
+              await Future.delayed(Duration(seconds: 1));
               sharedState.onGetEpisodesChanged(sharedState.getGetEpisodes());
+              sharedState.buttonRemoveNewMarkController.reverse();
+              // It's supposed to disable immediately but it doesn't so at least turn off the selection
             }
           },
           tooltip: context.s.removeNewMark,
-          enabled: enabled,
+          enabled: data.item1,
           animation: sharedState.buttonRemoveNewMarkController,
           connectLeft: index != 0 &&
               _controlWidgets

@@ -45,9 +45,7 @@ class _PlaylistHomeState extends State<PlaylistHome> {
 
   @override
   void initState() {
-    Future.microtask(() => context.read<AudioPlayerNotifier>().initPlaylists());
     super.initState();
-    //context.read<AudioPlayerNotifier>().initPlaylist();
     _selected = 'PlayNext';
     _body = _Queue();
   }
@@ -75,12 +73,7 @@ class _PlaylistHomeState extends State<PlaylistHome> {
   Widget build(BuildContext context) {
     final s = context.s;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
-        systemNavigationBarIconBrightness:
-            Theme.of(context).colorScheme.brightness,
-        statusBarIconBrightness: Theme.of(context).colorScheme.brightness,
-        systemNavigationBarColor: Theme.of(context).primaryColor,
-      ),
+      value: context.overlay,
       child: PopScope(
         canPop: !context.read<SettingState>().openPlaylistDefault!,
         onPopInvokedWithResult: (didPop, _) {
@@ -335,12 +328,11 @@ class _Queue extends StatefulWidget {
 class __QueueState extends State<_Queue> {
   @override
   Widget build(BuildContext context) {
-    return Selector<AudioPlayerNotifier, Tuple2<bool, int?>>(
-      selector: (_, audio) => Tuple2(audio.playerRunning, audio.episodeIndex),
+    return Selector<AudioPlayerNotifier, Tuple3<bool, int?, EpisodeBrief?>>(
+      selector: (_, audio) =>
+          Tuple3(audio.playerRunning, audio.episodeIndex, audio.episode),
       builder: (_, data, __) {
-        Playlist? playlist = context
-            .read<AudioPlayerNotifier>()
-            .playlist; // No need for selector for this
+        Playlist? playlist = context.read<AudioPlayerNotifier>().playlist;
         bool running = data.item1;
         int? episodeIndex = data.item2;
         if (episodeIndex == null) {
@@ -357,7 +349,7 @@ class __QueueState extends State<_Queue> {
               await context
                   .read<AudioPlayerNotifier>()
                   .reorderPlaylist(oldIndex, newIndex, playlist: playlist);
-              setState(() {});
+              if (mounted) setState(() {});
             },
             scrollDirection: Axis.vertical,
             itemBuilder: (context, index) {
@@ -373,7 +365,7 @@ class __QueueState extends State<_Queue> {
                   playlist: playlist,
                   episode: episodes[index],
                   index: index,
-                  onRemove: () => setState(() {}),
+                  onRemove: () {},
                   key: ValueKey(episodes[index].enclosureUrl),
                 );
               }

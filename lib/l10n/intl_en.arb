@@ -94,6 +94,10 @@
   },
   "dismiss": "Dismiss",
   "@dismiss": {},
+  "displayVersion": "Display Version",
+  "@displayVersion": {
+    "description": "The version of an episode displayed by default. Used with filterType."
+  },
   "done": "Done",
   "@done": {},
   "download": "Download",
@@ -614,12 +618,6 @@
   "@settingsEnableSyncing": {},
   "settingsEnableSyncingDes": "Refresh all podcasts in the background to get latest episodes",
   "@settingsEnableSyncingDes": {},
-  "settingsEpisodeManagement": "Episode Management",
-  "@settingsEpisodeManagement": {},
-  "settingsEpisodeVersioning": "Default Episode Version",
-  "@settingsEpisodeVersioning": {},
-  "settingsEpisodeVersioningDes": "Which version of an episode is displayed/downloaded by default. Can be overridden in podcast settings.",
-  "@settingsEpisodeVersioningDes": {},
   "settingsExportDes": "Export and import app settings",
   "@settingsExportDes": {},
   "settingsFastForwardSec": "Fast forward seconds",

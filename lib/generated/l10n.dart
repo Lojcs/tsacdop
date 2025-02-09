@@ -415,6 +415,17 @@ class S {
     );
   }
 
+  /// `Display Version`
+  String get displayVersion {
+    return Intl.message(
+      'Display Version',
+      name: 'displayVersion',
+      desc:
+          'The version of an episode displayed by default. Used with filterType.',
+      args: [],
+    );
+  }
+
   /// `Done`
   String get done {
     return Intl.message(
@@ -2381,36 +2392,6 @@ class S {
     return Intl.message(
       'Refresh all podcasts in the background to get latest episodes',
       name: 'settingsEnableSyncingDes',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Episode Management`
-  String get settingsEpisodeManagement {
-    return Intl.message(
-      'Episode Management',
-      name: 'settingsEpisodeManagement',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Default Episode Version`
-  String get settingsEpisodeVersioning {
-    return Intl.message(
-      'Default Episode Version',
-      name: 'settingsEpisodeVersioning',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Which version of an episode is displayed/downloaded by default. Can be overridden in podcast settings.`
-  String get settingsEpisodeVersioningDes {
-    return Intl.message(
-      'Which version of an episode is displayed/downloaded by default. Can be overridden in podcast settings.',
-      name: 'settingsEpisodeVersioningDes',
       desc: '',
       args: [],
     );

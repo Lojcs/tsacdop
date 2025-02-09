@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:tsacdop/state/episode_state.dart';
 import 'package:tsacdop/type/episodebrief.dart';
 import 'package:tsacdop/util/extension_helper.dart';
+import 'package:tsacdop/util/hide_player_route.dart';
 import 'package:tuple/tuple.dart';
 
 import '../local_storage/key_value_storage.dart';
@@ -263,7 +264,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                                 ? context.radiusMedium
                                 : context.radiusLarge,
                       ),
-                      childLowerlay: data.item1
+                      childLowerlay: data.item1 && data.item3
                           ? Selector<AudioPlayerNotifier, double>(
                               selector: (_, audio) => audio.seekSliderValue,
                               builder: (_, seekValue, __) => _ProgressLowerlay(
@@ -924,8 +925,10 @@ Widget _circleImage(
                   if (podcast != null) {
                     Navigator.push(
                       context,
-                      SlideLeftRoute(
-                        page: PodcastDetail(podcastLocal: podcast),
+                      HidePlayerRoute(
+                        PodcastDetail(podcastLocal: podcast),
+                        PodcastDetail(podcastLocal: podcast, hide: true),
+                        duration: Duration(milliseconds: 300),
                       ),
                     );
                   }
@@ -936,144 +939,91 @@ Widget _circleImage(
       ),
     );
 
-// There's a gap between the two widgets if you look closely. I couldn't fix it
-// https://stackoverflow.com/questions/68230022/how-to-remove-space-between-widgets-in-column-or-row-in-flutter
-// ListView's initial animation is too distracting to use.
-// Custom paint perhaps?
 Widget _lengthAndSize(
-        BuildContext context, EpisodeGridLayout layout, EpisodeBrief episode,
-        {bool showPlayedAndDownloaded = false}) =>
-    Row(
-      children: [
-        if (episode.enclosureDuration != 0)
-          Stack(
-            alignment: AlignmentDirectional.centerEnd,
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.horizontal(
-                        left: Radius.circular(5),
-                        right: episode.enclosureSize == 0
-                            ? Radius.circular(5)
-                            : Radius.zero),
-                    border: Border.all(
-                        color: context.realDark
-                            ? Colors.transparent
-                            : episode.colorScheme(context).onSecondaryContainer,
-                        width: 1),
-                    color: showPlayedAndDownloaded && episode.isPlayed!
-                        ? context.realDark
-                            ? episode.colorScheme(context).secondaryContainer
-                            : episode.colorScheme(context).onSecondaryContainer
-                        : Colors.transparent),
-                alignment: Alignment.center,
-                child: Text(
-                  episode.enclosureDuration!.toTime,
-                  style: (layout == EpisodeGridLayout.large
-                          ? context.textTheme.labelMedium
-                          : context.textTheme.labelSmall)!
-                      .copyWith(
-                          color: context.realDark
-                              ? episode
-                                  .colorScheme(context)
-                                  .onSecondaryContainer
-                              : showPlayedAndDownloaded && episode.isPlayed!
-                                  ? episode
-                                      .colorScheme(context)
-                                      .secondaryContainer
-                                  : episode
-                                      .colorScheme(context)
-                                      .onSecondaryContainer),
-                ),
-              ),
-              Container(
-                  width: 1,
-                  height: (layout == EpisodeGridLayout.large
-                          ? context.textTheme.bodyMedium
-                          : context.textTheme.bodySmall)!
-                      .fontSize,
-                  color: context.realDark &&
-                          (!showPlayedAndDownloaded ||
-                              !episode.isDownloaded! && !episode.isPlayed!) &&
-                          episode.enclosureSize != 0
-                      ? episode.colorScheme(context).onSecondaryContainer
-                      : Colors.transparent)
-            ],
-          ),
-        if (episode.enclosureSize != 0)
-          Stack(alignment: AlignmentDirectional.centerStart, children: [
-            Container(
-              decoration: BoxDecoration(
+    BuildContext context, EpisodeGridLayout layout, EpisodeBrief episode,
+    {bool showPlayedAndDownloaded = false}) {
+  BorderSide side = BorderSide(
+      color: context.realDark
+          ? Colors.transparent
+          : episode.colorScheme(context).onSecondaryContainer,
+      width: 1);
+  BorderSide innerSide = BorderSide(
+      color: episode.colorScheme(context).onSecondaryContainer, width: 1);
+  Color backgroundColor = context.realDark
+      ? episode.colorScheme(context).secondaryContainer
+      : episode.colorScheme(context).onSecondaryContainer;
+  return Row(
+    children: [
+      if (episode.enclosureDuration != 0)
+        Container(
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.horizontal(
+                  left: Radius.circular(5),
+                  right: episode.enclosureSize == 0
+                      ? Radius.circular(5)
+                      : Radius.zero),
+              border: Border.fromBorderSide(side),
+              color: showPlayedAndDownloaded && episode.isPlayed!
+                  ? backgroundColor
+                  : Colors.transparent),
+          foregroundDecoration: context.realDark
+              ? BoxDecoration(
                   borderRadius: BorderRadius.horizontal(
-                      right: Radius.circular(5),
-                      left: episode.enclosureDuration == 0
+                      right: episode.enclosureSize == 0
                           ? Radius.circular(5)
                           : Radius.zero),
-                  // border: episode.enclosureDuration == 0
-                  //     ? Border.all(
-                  //         color: episode
-                  //             .getColorScheme(context)
-                  //             .onSecondaryContainer,
-                  //       )
-                  //     : Border(
-                  //         right: BorderSide(
-                  //             color: episode
-                  //                 .getColorScheme(context)
-                  //                 .onSecondaryContainer),
-                  //         top: BorderSide(
-                  //             color: episode
-                  //                 .getColorScheme(context)
-                  //                 .onSecondaryContainer),
-                  //         bottom: BorderSide(
-                  //             color: episode
-                  //                 .getColorScheme(context)
-                  //                 .onSecondaryContainer),
-                  // ),
-                  // This doesn't work currently due to flutter barf https://github.com/flutter/flutter/issues/12583
-                  // TODO: Find workaround (solid color overlay with stack doesn't work as background is transparent and might mismatch if the episode is half played)
-                  border: Border.all(
-                      color: context.realDark
-                          ? Colors.transparent
-                          : episode.colorScheme(context).onSecondaryContainer,
-                      width: 1),
-                  color: showPlayedAndDownloaded && episode.isDownloaded!
-                      ? context.realDark
-                          ? episode.colorScheme(context).secondaryContainer
-                          : episode.colorScheme(context).onSecondaryContainer
-                      : Colors.transparent),
-              alignment: Alignment.center,
-              child: Text(
-                '${episode.enclosureSize! ~/ 1000000}MB',
-                style: (layout == EpisodeGridLayout.large
-                        ? context.textTheme.labelMedium
-                        : context.textTheme.labelSmall)!
-                    .copyWith(
-                        color: context.realDark
-                            ? episode.colorScheme(context).onSecondaryContainer
-                            : showPlayedAndDownloaded && episode.isDownloaded!
-                                ? episode
-                                    .colorScheme(context)
-                                    .secondaryContainer
-                                : episode
-                                    .colorScheme(context)
-                                    .onSecondaryContainer),
-              ),
-            ),
-            Container(
-                width: 1,
-                height: (layout == EpisodeGridLayout.large
-                        ? context.textTheme.bodyMedium
-                        : context.textTheme.bodySmall)!
-                    .fontSize,
-                color: context.realDark &&
-                        (!showPlayedAndDownloaded ||
-                            !episode.isDownloaded! && !episode.isPlayed!) &&
-                        episode.enclosureDuration != 0
-                    ? episode.colorScheme(context).onSecondaryContainer
-                    : Colors.transparent)
-          ]),
-      ],
-    );
+                  border: episode.enclosureSize == 0 ||
+                          (showPlayedAndDownloaded &&
+                              (episode.isPlayed! || episode.isDownloaded!))
+                      ? null
+                      : Border(right: innerSide),
+                )
+              : null,
+          alignment: Alignment.center,
+          child: Text(
+            episode.enclosureDuration!.toTime,
+            style: (layout == EpisodeGridLayout.large
+                    ? context.textTheme.labelMedium
+                    : context.textTheme.labelSmall)!
+                .copyWith(
+                    color: showPlayedAndDownloaded &&
+                            !context.realDark &&
+                            episode.isPlayed!
+                        ? episode.colorScheme(context).secondaryContainer
+                        : episode.colorScheme(context).onSecondaryContainer),
+          ),
+        ),
+      if (episode.enclosureSize != 0)
+        Container(
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.horizontal(
+                  right: Radius.circular(5),
+                  left: episode.enclosureDuration == 0
+                      ? Radius.circular(5)
+                      : Radius.zero),
+              border: episode.enclosureDuration == 0
+                  ? Border.fromBorderSide(side)
+                  : Border(top: side, right: side, bottom: side),
+              color: showPlayedAndDownloaded && episode.isDownloaded!
+                  ? backgroundColor
+                  : Colors.transparent),
+          alignment: Alignment.center,
+          child: Text(
+            '${episode.enclosureSize! ~/ 1000000}MB',
+            style: (layout == EpisodeGridLayout.large
+                    ? context.textTheme.labelMedium
+                    : context.textTheme.labelSmall)!
+                .copyWith(
+                    color: showPlayedAndDownloaded &&
+                            !context.realDark &&
+                            episode.isDownloaded!
+                        ? episode.colorScheme(context).secondaryContainer
+                        : episode.colorScheme(context).onSecondaryContainer),
+          ),
+        ),
+    ],
+  );
+}
 
 Widget _downloadIndicator(
         BuildContext context, EpisodeGridLayout layout, bool showDownload,

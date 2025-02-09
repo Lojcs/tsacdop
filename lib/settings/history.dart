@@ -365,7 +365,7 @@ class _PlayedHistoryState extends State<PlayedHistory>
       msg: context.s.toastPodcastRecovering,
       gravity: ToastGravity.BOTTOM,
     );
-    var subscribeWorker = context.watch<GroupList>();
+    var subscribeWorker = context.read<GroupList>();
     try {
       var options = BaseOptions(
         connectTimeout: Duration(seconds: 10),

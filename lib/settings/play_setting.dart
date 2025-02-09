@@ -1,3 +1,4 @@
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -487,8 +488,8 @@ class __NotificationLayoutState extends State<_NotificationLayout> {
   }
 
   Widget _notificationIcon(Widget icon, String des) {
-    return LimitedBox(
-      maxWidth: 60,
+    return SizedBox(
+      width: 60,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -523,42 +524,94 @@ class __NotificationLayoutState extends State<_NotificationLayout> {
               ? context.accentColor.withAlpha(70)
               : Colors.transparent,
         ),
-        child: index == 0
-            ? Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _notificationIcon(
-                      Icon(Icons.pause_circle_filled), '${s.play}| ${s.pause}'),
-                  _notificationIcon(Icon(Icons.fast_forward), s.fastForward),
-                  _notificationIcon(Icon(Icons.skip_next), s.skipToNext),
-                  _notificationIcon(Icon(Icons.close), s.stop),
-                ],
-              )
-            : index == 1
-                ? Row(
+        child: FutureBuilder<AndroidDeviceInfo>(
+          future: DeviceInfoPlugin().androidInfo,
+          builder: (context, snapshot) {
+            if (snapshot.hasData && snapshot.data!.version.sdkInt < 33) {
+              switch (index) {
+                case 0:
+                  return Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      _notificationIcon(Icon(Icons.pause_circle_filled),
+                          '${s.play} ${s.pause}'),
+                      _notificationIcon(
+                          Icon(Icons.fast_forward), s.fastForward),
+                      _notificationIcon(Icon(Icons.skip_next), s.skipToNext),
+                      _notificationIcon(Icon(Icons.close), s.stop),
+                    ],
+                  );
+                case 1:
+                  return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         _notificationIcon(Icon(Icons.pause_circle_filled),
-                            '${s.play}| ${s.pause}'),
+                            '${s.play} ${s.pause}'),
                         _notificationIcon(
                             Icon(Icons.fast_rewind), s.fastRewind),
                         _notificationIcon(Icon(Icons.skip_next), s.skipToNext),
                         _notificationIcon(Icon(Icons.close), s.stop),
-                      ])
-                : Row(
+                      ]);
+                default: // case 2:
+                  return Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _notificationIcon(Icon(Icons.fast_rewind), s.fastRewind),
                       _notificationIcon(Icon(Icons.pause_circle_filled),
-                          '${s.play}| ${s.pause}'),
+                          '${s.play} ${s.pause}'),
                       _notificationIcon(
                           Icon(Icons.fast_forward), s.fastForward),
                       _notificationIcon(Icon(Icons.close), s.stop),
                     ],
-                  ),
+                  );
+              }
+            } else {
+              switch (index) {
+                case 0:
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _notificationIcon(Icon(Icons.close), s.stop),
+                      _notificationIcon(
+                          Icon(Icons.fast_forward), s.fastForward),
+                      _notificationIcon(
+                          Icon(Icons.pause), '${s.play} ${s.pause}'),
+                      _notificationIcon(Icon(Icons.skip_next), s.skipToNext),
+                    ],
+                  );
+                case 1:
+                  return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _notificationIcon(Icon(Icons.close), s.stop),
+                        _notificationIcon(
+                            Icon(Icons.fast_rewind), s.fastRewind),
+                        _notificationIcon(
+                            Icon(Icons.pause), '${s.play} ${s.pause}'),
+                        _notificationIcon(Icon(Icons.skip_next), s.skipToNext),
+                      ]);
+                default: // case 2:
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _notificationIcon(Icon(Icons.close), s.stop),
+                      _notificationIcon(Icon(Icons.fast_rewind), s.fastRewind),
+                      _notificationIcon(
+                          Icon(Icons.pause), '${s.play} ${s.pause}'),
+                      _notificationIcon(
+                          Icon(Icons.fast_forward), s.fastForward),
+                    ],
+                  );
+              }
+            }
+          },
+        ),
       ),
     );
   }

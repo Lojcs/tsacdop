@@ -148,6 +148,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "deselectAll": MessageLookupByLibrary.simpleMessage("Deselect All"),
         "developer": MessageLookupByLibrary.simpleMessage("Developer"),
         "dismiss": MessageLookupByLibrary.simpleMessage("Dismiss"),
+        "displayVersion":
+            MessageLookupByLibrary.simpleMessage("Display Version"),
         "done": MessageLookupByLibrary.simpleMessage("Done"),
         "download": MessageLookupByLibrary.simpleMessage("Download"),
         "downloadDate": MessageLookupByLibrary.simpleMessage("Download Date"),
@@ -435,12 +437,6 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Enable synchronisation"),
         "settingsEnableSyncingDes": MessageLookupByLibrary.simpleMessage(
             "Refresh all podcasts in the background to get latest episodes"),
-        "settingsEpisodeManagement":
-            MessageLookupByLibrary.simpleMessage("Episode Management"),
-        "settingsEpisodeVersioning":
-            MessageLookupByLibrary.simpleMessage("Default Episode Version"),
-        "settingsEpisodeVersioningDes": MessageLookupByLibrary.simpleMessage(
-            "Which version of an episode is displayed/downloaded by default. Can be overridden in podcast settings."),
         "settingsExportDes": MessageLookupByLibrary.simpleMessage(
             "Export and import app settings"),
         "settingsFastForwardSec":

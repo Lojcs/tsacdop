@@ -46,7 +46,6 @@ class SettingState extends ChangeNotifier {
   final _accentStorage = KeyValueStorage(accentsKey);
   final _autoupdateStorage = KeyValueStorage(autoUpdateKey);
   final _intervalStorage = KeyValueStorage(updateIntervalKey);
-  final _versionPolicyStorage = KeyValueStorage(versionPolicyKey);
   final _downloadUsingDataStorage = KeyValueStorage(downloadUsingDataKey);
   final _introStorage = KeyValueStorage(introKey);
   final _realDarkStorage = KeyValueStorage(realDarkKey);
@@ -86,7 +85,6 @@ class SettingState extends ChangeNotifier {
     super.addListener(listener);
     _getLocale();
     _getAutoUpdate();
-    _getVersionPolicy();
     _getDownloadUsingData();
     _getSleepTimerData();
     _getPlayerSeconds();
@@ -296,15 +294,6 @@ class SettingState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Global versionPolicy, default 'DON' (VersionPolicy.NewIfNoDownloaded).
-  VersionPolicy? _versionPolicy;
-  VersionPolicy? get versionPolicy => _versionPolicy;
-  set versionPolicy(VersionPolicy? str) {
-    _versionPolicy = str;
-    _saveVersionPolicy();
-    notifyListeners();
-  }
-
   /// Confirem before using data to download episode, default true(reverse).
   bool? _downloadUsingData;
   bool? get downloadUsingData => _downloadUsingData;
@@ -454,11 +443,6 @@ class SettingState extends ChangeNotifier {
     _updateInterval = _initUpdateTag;
   }
 
-  Future _getVersionPolicy() async {
-    _versionPolicy = versionPolicyFromString(
-        (await _versionPolicyStorage.getString(defaultValue: 'DON')));
-  }
-
   Future _getDownloadUsingData() async {
     _downloadUsingData = await _downloadUsingDataStorage.getBool(
         defaultValue: true, reverse: true);
@@ -537,17 +521,9 @@ class SettingState extends ChangeNotifier {
   }
 
   Future<void> _saveAccentSetColor() async {
-    String colorString = _accentSetColor.toString().substring(10, 16);
-    // Sometimes this gets saved as somthing like `' Col``.
-    try {
-      int.parse('FF${colorString.toUpperCase()}', radix: 16);
-    } catch (e) {
-      if (e is! FormatException) throw e;
-      developer.log(
-          "Invalid saved color string: $colorString of color: ${_accentSetColor.toString()}",
-          error: e);
-      colorString = "009688"; // Teal
-    }
+    // color.toString() is different in debug mode vs release!
+    String colorString =
+        _accentSetColor!.value.toRadixString(16).substring(2, 8);
     await _accentStorage.saveString(colorString);
   }
 
@@ -577,11 +553,6 @@ class SettingState extends ChangeNotifier {
 
   Future<void> _saveAutoUpdate() async {
     await _autoupdateStorage.saveBool(_autoUpdate, reverse: true);
-  }
-
-  Future<void> _saveVersionPolicy() async {
-    await _versionPolicyStorage
-        .saveString(versionPolicyToString(_versionPolicy!));
   }
 
   Future<void> _saveAutoPlay() async {
@@ -635,8 +606,6 @@ class SettingState extends ChangeNotifier {
     var autoUpdate =
         await _autoupdateStorage.getBool(defaultValue: true, reverse: true);
     var updateInterval = await _intervalStorage.getInt();
-    var versionPolicy =
-        await _versionPolicyStorage.getString(defaultValue: 'DON');
     var downloadUsingData = await _downloadUsingDataStorage.getBool(
         defaultValue: true, reverse: true);
     var cacheMax = await _cacheStorage.getInt(defaultValue: 500 * 1024 * 1024);
@@ -690,7 +659,6 @@ class SettingState extends ChangeNotifier {
         autoPlay: autoPlay,
         autoUpdate: autoUpdate,
         updateInterval: updateInterval,
-        versionPolicy: versionPolicy,
         downloadUsingData: downloadUsingData,
         cacheMax: cacheMax,
         podcastLayout: podcastLayout,
@@ -729,7 +697,6 @@ class SettingState extends ChangeNotifier {
     await _autoPlayStorage.saveBool(backup.autoPlay, reverse: true);
     await _autoupdateStorage.saveBool(backup.autoUpdate, reverse: true);
     await _intervalStorage.saveInt(backup.updateInterval);
-    await _versionPolicyStorage.saveString(backup.versionPolicy);
     await _downloadUsingDataStorage.saveBool(backup.downloadUsingData,
         reverse: true);
     await _cacheStorage.saveInt(backup.cacheMax);
@@ -780,7 +747,6 @@ class SettingState extends ChangeNotifier {
     }
     await initData();
     await _getAutoUpdate();
-    await _getVersionPolicy();
     await _getDownloadUsingData();
     await _getSleepTimerData();
     await _getShowNotesFonts();

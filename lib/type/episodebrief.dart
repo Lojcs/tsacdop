@@ -31,8 +31,8 @@ class EpisodeBrief extends Equatable {
   final bool? isLiked;
   final bool? isNew;
   final bool? isPlayed;
-  final VersionInfo? versionInfo;
-  final Map<int, EpisodeBrief?>? versions;
+  final bool? isDisplayVersion;
+  final Set<EpisodeBrief>? versions;
   final int skipSecondsStart;
   final int skipSecondsEnd;
   final String? chapterLink;
@@ -53,8 +53,8 @@ class EpisodeBrief extends Equatable {
       this.isLiked,
       this.isNew,
       this.isPlayed,
-      this.versionInfo,
-      this.versions, // Could auto polpulate maybe
+      this.isDisplayVersion,
+      this.versions,
       this.skipSecondsStart = 0,
       this.skipSecondsEnd = 0,
       this.chapterLink});
@@ -210,11 +210,9 @@ class EpisodeBrief extends Equatable {
         return isNew;
       case EpisodeField.isPlayed:
         return isPlayed;
-      case EpisodeField.versionInfo:
-        return versionInfo;
+      case EpisodeField.isDisplayVersion:
+        return isDisplayVersion;
       case EpisodeField.versions:
-        return versions;
-      case EpisodeField.versionsPopulated:
         return null;
       case EpisodeField.skipSecondsStart:
         return skipSecondsStart;
@@ -231,11 +229,7 @@ class EpisodeBrief extends Equatable {
       if (_getFieldValue(field) != null) fieldList.add(field);
     }
     if (versions != null) {
-      if (versions!.length == 0) {
-        fieldList.add(EpisodeField.versionsPopulated);
-      } else if (versions!.values.first != null) {
-        fieldList.add(EpisodeField.versionsPopulated);
-      }
+      fieldList.add(EpisodeField.versions);
     }
     return fieldList;
   }
@@ -261,8 +255,8 @@ class EpisodeBrief extends Equatable {
           bool? isLiked,
           bool? isNew,
           bool? isPlayed,
-          VersionInfo? versionInfo,
-          Map<int, EpisodeBrief?>? versions,
+          bool? isDisplayVersion,
+          Set<EpisodeBrief>? versions,
           int? skipSecondsStart,
           int? skipSecondsEnd,
           String? chapterLink}) =>
@@ -287,7 +281,7 @@ class EpisodeBrief extends Equatable {
           isLiked: isLiked ?? this.isLiked,
           isNew: isNew ?? this.isNew,
           isPlayed: isPlayed ?? this.isPlayed,
-          versionInfo: versionInfo ?? this.versionInfo,
+          isDisplayVersion: isDisplayVersion ?? this.isDisplayVersion,
           versions: versions ?? this.versions,
           skipSecondsStart: skipSecondsStart ?? this.skipSecondsStart,
           skipSecondsEnd: skipSecondsEnd ?? this.skipSecondsEnd,
@@ -326,7 +320,10 @@ class EpisodeBrief extends Equatable {
       EpisodeField.isLiked: [const Symbol("isLiked"), isLiked],
       EpisodeField.isNew: [const Symbol("isNew"), isNew],
       EpisodeField.isPlayed: [const Symbol("isPlayed"), isPlayed],
-      EpisodeField.versionInfo: [const Symbol("versionInfo"), versionInfo],
+      EpisodeField.isDisplayVersion: [
+        const Symbol("isDisplayVersion"),
+        isDisplayVersion
+      ],
       EpisodeField.versions: [const Symbol("versions"), versions],
       EpisodeField.skipSecondsStart: [
         const Symbol("skipSecondsStart"),
@@ -357,7 +354,6 @@ class EpisodeBrief extends Equatable {
         oldFields.remove(field);
       }
     }
-    bool populateVersions = newFields.remove(EpisodeField.versionsPopulated);
     EpisodeBrief newEpisode;
     if (newFields.isEmpty) {
       newEpisode = this.copyWith();
@@ -365,13 +361,10 @@ class EpisodeBrief extends Equatable {
       for (EpisodeField field in oldFields) {
         oldFieldsSymbolMap[_fieldsMap[field]![0]] = _fieldsMap[field]![1];
       }
-      newEpisode = (await dbHelper
-              .getEpisodes(episodeIds: [id], optionalFields: newFields))
+      newEpisode = (await dbHelper.getEpisodes(
+              episodeIds: [id], optionalFields: newFields..addAll(oldFields)))
           .first;
       newEpisode = Function.apply(newEpisode.copyWith, [], oldFieldsSymbolMap);
-    }
-    if (populateVersions) {
-      newEpisode = await dbHelper.populateEpisodeVersions(newEpisode);
     }
     return newEpisode;
   }

@@ -163,7 +163,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
           return AnnotatedRegion<SystemUiOverlayStyle>(
             value: (playerRunning
                 ? context.overlay.copyWith(
-                    systemNavigationBarColor: context.accentBackground)
+                    systemNavigationBarColor: context.cardColorSchemeCard)
                 : context.overlay),
             child: Selector<SelectionController, bool>(
               selector: (_, selectionController) =>
@@ -227,7 +227,8 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
   List<EpisodeBrief> _episodes = [];
 
   /// Function to get episodes
-  Future<List<EpisodeBrief>> Function(int count) _getEpisodes = (int _) async {
+  Future<List<EpisodeBrief>> Function(int count, {int offset}) _getEpisodes =
+      (int _, {int offset = 0}) async {
     return <EpisodeBrief>[];
   };
 
@@ -275,8 +276,8 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
                 _episodes.length == _top) {
               if (!_loadMore) {
                 if (mounted) setState(() => _loadMore = true);
+                _episodes.addAll(await _getEpisodes(36, offset: _top));
                 _top = _top + 36;
-                _episodes = await _getEpisodes(_top);
                 widget.selectionController
                     .setSelectableEpisodes(_episodes, compatible: true);
                 if (mounted) setState(() => _loadMore = false);
@@ -338,14 +339,16 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
                   ActionBarSwitchSecondRow(0, 8),
                 ],
                 widgetsSecondRow: const [
-                  ActionBarSearchTitle(1, 0),
-                  ActionBarSpacer(1, 1),
-                  ActionBarButtonRemoveNewMark(1, 2),
-                  ActionBarSwitchLayout(1, 3),
-                  ActionBarButtonRefresh(1, 4),
+                  ActionBarFilterDisplayVersion(1, 0),
+                  ActionBarSearchTitle(1, 1),
+                  ActionBarSpacer(1, 2),
+                  ActionBarButtonRemoveNewMark(1, 3),
+                  ActionBarSwitchLayout(1, 4),
+                  ActionBarButtonRefresh(1, 5),
                 ],
                 podcast: widget.podcastLocal,
                 filterPlayed: snapshot.data?.item2,
+                filterDisplayVersion: true,
                 layout: _layout ?? EpisodeGridLayout.large,
               );
             },

@@ -13,6 +13,7 @@ import 'package:tsacdop/util/selection_controller.dart';
 import 'package:tsacdop/widgets/action_bar.dart';
 import 'package:tuple/tuple.dart';
 
+import '../local_storage/sqflite_localpodcast.dart';
 import '../playlists/playlist_home.dart';
 import '../state/audio_state.dart';
 import '../state/download_state.dart';
@@ -101,15 +102,13 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     final s = context.s;
     return Selector<AudioPlayerNotifier, bool>(
         selector: (_, audio) => audio.playerRunning,
-        builder: (_, data, __) {
+        builder: (_, playerRunning, __) {
           context.originalPadding = MediaQuery.of(context).padding;
           return AnnotatedRegion<SystemUiOverlayStyle>(
-            value: SystemUiOverlayStyle(
-                systemNavigationBarIconBrightness: context.iconBrightness,
-                statusBarIconBrightness: context.iconBrightness,
-                systemNavigationBarColor:
-                    data ? context.accentBackground : context.surface,
-                statusBarColor: context.surface),
+            value: playerRunning
+                ? context.overlay.copyWith(
+                    systemNavigationBarColor: context.cardColorSchemeCard)
+                : context.overlay,
             child: PopScope(
               canPop: settings.openPlaylistDefault! &&
                   !(_playerKey.currentState != null &&
@@ -132,7 +131,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                 key: _scaffoldKey,
                 backgroundColor: context.surface,
                 body: SafeArea(
-                  bottom: data,
+                  bottom: playerRunning,
                   child: Stack(children: <Widget>[
                     ExtendedNestedScrollView(
                       pinnedHeaderSliverHeightBuilder: () => 50,
@@ -369,12 +368,7 @@ class __PlaylistButtonState extends State<_PlaylistButton> {
   late bool _loadPlay;
 
   Future<void> _getPlaylist() async {
-    await context.read<AudioPlayerNotifier>().initPlaylists();
-    if (mounted) {
-      setState(() {
-        _loadPlay = true;
-      });
-    }
+    if (mounted) setState(() => _loadPlay = true);
   }
 
   @override
@@ -544,7 +538,8 @@ class _RecentUpdateState extends State<_RecentUpdate>
   List<EpisodeBrief> _episodes = [];
 
   /// Function to get episodes
-  Future<List<EpisodeBrief>> Function(int count) _getEpisodes = (int _) async {
+  Future<List<EpisodeBrief>> Function(int count, {int offset}) _getEpisodes =
+      (int _, {int offset = 0}) async {
     return <EpisodeBrief>[];
   };
 
@@ -571,8 +566,8 @@ class _RecentUpdateState extends State<_RecentUpdate>
           if (!_loadMore) {
             Future.microtask(() async {
               if (mounted) setState(() => _loadMore = true);
+              _episodes.addAll(await _getEpisodes(36, offset: _top));
               _top = _top + 36;
-              _episodes = await _getEpisodes(_top);
               Provider.of<SelectionController>(context, listen: false)
                   .setSelectableEpisodes(_episodes, compatible: true);
               if (mounted) setState(() => _loadMore = false);
@@ -628,6 +623,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
                     ActionBarButtonRefresh(1, 6),
                   ],
                   filterPlayed: false,
+                  filterDisplayVersion: true,
                   layout: _layout ?? EpisodeGridLayout.large,
                 );
               },
@@ -689,7 +685,8 @@ class _MyFavoriteState extends State<_MyFavorite>
   List<EpisodeBrief> _episodes = [];
 
   /// Function to get episodes
-  Future<List<EpisodeBrief>> Function(int count) _getEpisodes = (int _) async {
+  Future<List<EpisodeBrief>> Function(int count, {int offset}) _getEpisodes =
+      (int _, {int offset = 0}) async {
     return <EpisodeBrief>[];
   };
 
@@ -716,8 +713,8 @@ class _MyFavoriteState extends State<_MyFavorite>
           if (!_loadMore) {
             Future.microtask(() async {
               if (mounted) setState(() => _loadMore = true);
+              _episodes.addAll(await _getEpisodes(36, offset: _top));
               _top = _top + 36;
-              _episodes = await _getEpisodes(_top);
               Provider.of<SelectionController>(context, listen: false)
                   .setSelectableEpisodes(_episodes, compatible: true);
               if (mounted) setState(() => _loadMore = false);
@@ -761,6 +758,13 @@ class _MyFavoriteState extends State<_MyFavorite>
                     ActionBarSwitchLayout(0, 5),
                     ActionBarSwitchSelectMode(0, 6),
                   ],
+                  sortByItems: const [
+                    Sorter.likedDate,
+                    Sorter.pubDate,
+                    Sorter.enclosureSize,
+                    Sorter.enclosureDuration
+                  ],
+                  sortBy: Sorter.likedDate,
                   filterLiked: true,
                   layout: _layout ?? EpisodeGridLayout.large,
                 );
@@ -823,7 +827,8 @@ class _MyDownloadState extends State<_MyDownload>
   List<EpisodeBrief> _episodes = [];
 
   /// Function to get episodes
-  Future<List<EpisodeBrief>> Function(int count) _getEpisodes = (int _) async {
+  Future<List<EpisodeBrief>> Function(int count, {int offset}) _getEpisodes =
+      (int _, {int offset = 0}) async {
     return <EpisodeBrief>[];
   };
 
@@ -855,8 +860,8 @@ class _MyDownloadState extends State<_MyDownload>
           if (!_loadMore) {
             Future.microtask(() async {
               if (mounted) setState(() => _loadMore = true);
+              _episodes.addAll(await _getEpisodes(36, offset: _top));
               _top = _top + 36;
-              _episodes = await _getEpisodes(_top);
               Provider.of<SelectionController>(context, listen: false)
                   .setSelectableEpisodes(_episodes, compatible: true);
               if (mounted) setState(() => _loadMore = false);
@@ -901,6 +906,13 @@ class _MyDownloadState extends State<_MyDownload>
                     ActionBarSwitchLayout(0, 6),
                     ActionBarSwitchSelectMode(0, 7),
                   ],
+                  sortByItems: const [
+                    Sorter.downloadDate,
+                    Sorter.pubDate,
+                    Sorter.enclosureSize,
+                    Sorter.enclosureDuration
+                  ],
+                  sortBy: Sorter.downloadDate,
                   filterDownloaded: true,
                   layout: _layout ?? EpisodeGridLayout.large,
                 );

@@ -6,7 +6,6 @@ class SettingsBackup {
   final bool? autoPlay;
   final bool? autoUpdate;
   final int? updateInterval;
-  final String? versionPolicy;
   final bool? downloadUsingData;
   final int? cacheMax;
   final int? podcastLayout;
@@ -44,7 +43,6 @@ class SettingsBackup {
       this.autoPlay,
       this.autoUpdate,
       this.updateInterval,
-      this.versionPolicy,
       this.downloadUsingData,
       this.cacheMax,
       this.podcastLayout,
@@ -83,7 +81,6 @@ class SettingsBackup {
       'autoPlay': autoPlay,
       'autoUpdate': autoUpdate,
       'updateInterval': updateInterval,
-      'versionPolicy': versionPolicy,
       'downloadUsingData': downloadUsingData,
       'cacheMax': cacheMax,
       'podcastLayout': podcastLayout,
@@ -126,7 +123,6 @@ class SettingsBackup {
         autoPlay: json['autoPlay'] as bool?,
         autoUpdate: json['autoUpdate'] as bool?,
         updateInterval: json['updateInterval'] as int?,
-        versionPolicy: json['versionPolicy'] as String?,
         downloadUsingData: json['downloadUsingData'] as bool?,
         cacheMax: json['cacheMax'] as int?,
         podcastLayout: json['podcastLayout'] as int?,
