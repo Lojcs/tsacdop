@@ -1,4 +1,4 @@
-package com.stonegate.tsacdop.debug
+package com.stonegate.tsacdop
 
 import androidx.annotation.NonNull;
 import io.flutter.embedding.android.FlutterActivity

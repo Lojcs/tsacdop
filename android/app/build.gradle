@@ -29,7 +29,7 @@ if (flutterVersionName == null) {
    }
 
 android {
-    namespace = "com.stonegate.tsacdop.debug"
+    namespace = "com.stonegate.tsacdop"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -52,7 +52,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.stonegate.tsacdop.debug"
+        applicationId "com.stonegate.tsacdop"
         minSdkVersion 21
         targetSdkVersion 33
         versionCode flutterVersionCode.toInteger()
