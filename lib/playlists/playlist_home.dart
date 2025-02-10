@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:color_thief_dart/color_thief_dart.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +14,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image/image.dart' as img;
 import 'package:line_icons/line_icons.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 import 'package:uuid/uuid.dart';
@@ -951,6 +953,28 @@ class __NewPlaylistState extends State<_NewPlaylist> {
     }
   }
 
+  Future<bool> _checkPermmison() async {
+    final androidInfo = await DeviceInfoPlugin().androidInfo;
+    Permission permission;
+    if (androidInfo.version.sdkInt >= 33) {
+      permission = Permission.audio;
+    } else {
+      permission = Permission.storage;
+    }
+
+    final permissionStatus = await permission.status;
+    if (permissionStatus != PermissionStatus.granted) {
+      await [permission].request();
+      if (await permission.status == PermissionStatus.granted) {
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      return true;
+    }
+  }
+
   Future<List<EpisodeBrief>> _loadLocalFolder() async {
     var episodes = <EpisodeBrief>[];
     var dirPath;
@@ -1003,7 +1027,7 @@ class __NewPlaylistState extends State<_NewPlaylist> {
   Future<EpisodeBrief> _getEpisodeFromFile(String path) async {
     final fileLength = File(path).statSync().size;
     final pubDate = DateTime.now().millisecondsSinceEpoch;
-    var primaryColor;
+    String? primaryColor;
     var imagePath;
     var metadata = await MetadataRetriever.fromFile(File(path));
     if (metadata.albumArt != null) {
@@ -1027,7 +1051,7 @@ class __NewPlaylistState extends State<_NewPlaylist> {
         mediaId: 'file://$path',
         podcastImage: '',
         episodeImage: imagePath ?? '',
-        primaryColor: primaryColor);
+        primaryColor: primaryColor?.toColor());
   }
 
   Future<String> _getColor(File file) async {
@@ -1124,7 +1148,15 @@ class __NewPlaylistState extends State<_NewPlaylist> {
                           _processing = true;
                         });
                       }
+                      if (!(await _checkPermmison())) {
+                        Navigator.of(context).pop();
+                        return;
+                      }
                       final episodes = await _loadLocalFolder();
+                      if (episodes.isEmpty) {
+                        Navigator.of(context).pop();
+                        return;
+                      }
                       playlist = Playlist(
                         _playlistName,
                         isLocal: true,

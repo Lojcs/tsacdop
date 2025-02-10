@@ -526,7 +526,8 @@ class SettingState extends ChangeNotifier {
     int red = (_accentSetColor!.r * 255.0).round() & 0xff;
     int green = (_accentSetColor!.g * 255.0).round() & 0xff;
     int blue = (_accentSetColor!.b * 255.0).round() & 0xff;
-    String colorString = (red << 16 | green << 8 | blue).toRadixString(16);
+    String colorString =
+        (red << 16 | green << 8 | blue).toRadixString(16).padLeft(6, "0");
     await _accentStorage.saveString(colorString);
   }
 

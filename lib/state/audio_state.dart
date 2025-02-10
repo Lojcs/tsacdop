@@ -540,9 +540,9 @@ class AudioPlayerNotifier extends ChangeNotifier {
       if (_startPlaylist.episodes.isEmpty) {
         await _startPlaylist.getPlaylist();
       }
+      _playlist = _startPlaylist;
+      _episodeIndex = _startEpisodeIndex;
       if (_playerRunning) {
-        _playlist = _startPlaylist;
-        _episodeIndex = _startEpisodeIndex;
         _loadStartPosition();
         _audioDuration = _startEpisode!.enclosureDuration! * 1000;
         if (samePlaylist) {
