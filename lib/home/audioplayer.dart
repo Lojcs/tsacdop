@@ -1301,8 +1301,8 @@ class _ControlPanelState extends State<ControlPanel>
                           ),
                           child: Slider(
                             value: data.item1,
-                            onChanged: audio.sliderVisualSeek,
-                            onChangeEnd: audio.sliderSeek,
+                            onChanged: audio.seekbarVisualSeek,
+                            onChangeEnd: audio.seekbarSeek,
                           ),
                         ),
                       ),
