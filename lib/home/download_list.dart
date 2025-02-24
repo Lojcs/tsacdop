@@ -96,9 +96,11 @@ class _DownloadListState extends State<DownloadList> {
                                     .episode!
                                     .copyWithFromDB(newFields: [
                                   EpisodeField.description,
+                                  EpisodeField.number,
                                   EpisodeField.enclosureDuration,
                                   EpisodeField.enclosureSize,
                                   EpisodeField.isDownloaded,
+                                  EpisodeField.episodeImage,
                                   EpisodeField.podcastImage,
                                   EpisodeField.primaryColor,
                                   EpisodeField.isLiked,
