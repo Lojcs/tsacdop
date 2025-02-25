@@ -248,8 +248,11 @@ class AudioPlayerNotifier extends ChangeNotifier {
   /// Episode last removed from queue
   EpisodeBrief? _lastEpisode;
 
-  /// Position last skipped to (ms)
-  int? _lastSeekPosition;
+  /// Indicates seek is being undone so _undoButtonPositionsStack shouldn't be modified
+  bool _undoSeekOngoing = false;
+
+  /// Timer that'll clear undo seek after 30 seconds.
+  Timer? _clearUndoSeekTimer;
 
   /// Error message.
   String? _remoteErrorMessage;
@@ -589,7 +592,6 @@ class AudioPlayerNotifier extends ChangeNotifier {
       _startEpisodeIndex = 0;
       _historyPosition = 0;
       _lastEpisode = null;
-      _lastSeekPosition = null;
       await playFromStart();
       await _audioHandler.play();
       await saveHistory(savePosition: true);
@@ -816,9 +818,15 @@ class AudioPlayerNotifier extends ChangeNotifier {
           _playerRunning = false;
           notifyListeners();
         }
-        if (event['preSeekPosition'] != null) {
+        if (event['preSeekPosition'] != null && !_undoSeekOngoing) {
+          int seekAmount = event['preSeekPosition'] - _audioPosition;
+          if (seekAmount.abs() < 30000) return;
           _undoButtonPositionsStack.add(event['preSeekPosition']);
-          _lastSeekPosition = event['preSeekPosition'];
+          if (_clearUndoSeekTimer != null) _clearUndoSeekTimer!.cancel();
+          _clearUndoSeekTimer = Timer(Duration(seconds: 30), () {
+            _undoButtonPositionsStack.clear();
+            _lastEpisode = null;
+          });
         }
         // Set seekbar position, handle skipping start and end.
         // Ignore position updates if index doesn't match current index so that history saving is consistent
@@ -847,12 +855,6 @@ class AudioPlayerNotifier extends ChangeNotifier {
               _undoButtonPositionsStack.addAll([_episode!.skipSecondsEnd, -1]);
               await seekTo(_audioDuration);
             }
-          }
-          if (_lastSeekPosition != null &&
-              _audioPosition > _lastSeekPosition! + 30000 * _currentSpeed) {
-            _undoButtonPositionsStack.clear();
-            _lastSeekPosition = null;
-            _lastEpisode = null;
           }
           // Save position every 10 seconds
           if (_audioPosition - _savedPosition > 10000 * _currentSpeed) {
@@ -1359,17 +1361,20 @@ class AudioPlayerNotifier extends ChangeNotifier {
   Future<void> undoSeek() async {
     if (_undoButtonPositionsStack.isNotEmpty) {
       if (_undoButtonPositionsStack.last == -1) {
+        _undoSeekOngoing = true;
         _undoButtonPositionsStack.removeLast();
         if (_playlist.isQueue && _lastEpisode != null) {
           await addToPlaylist([_lastEpisode!], index: 0);
         }
+        _undoSeekOngoing = false;
       }
     }
     if (_undoButtonPositionsStack.isNotEmpty) {
-      _lastSeekPosition = _undoButtonPositionsStack.last;
-      _undoButtonPositionsStack.removeLast();
+      _undoSeekOngoing = true;
       await _audioHandler.combinedSeek(
-          position: Duration(milliseconds: _lastSeekPosition!));
+          position:
+              Duration(milliseconds: _undoButtonPositionsStack.removeLast()));
+      _undoSeekOngoing = false;
     }
   }
 
@@ -1526,6 +1531,9 @@ class CustomAudioHandler extends BaseAudioHandler
   @override
   PublishSubject<Map<String, dynamic>> customEvent = PublishSubject()..add({});
 
+  SeekTarget seekTarget = SeekTarget();
+  bool seekOngoing = false;
+
   CustomAudioHandler(this._cacheMax) {
     _handleInterruption();
     initPlayer();
@@ -1578,7 +1586,8 @@ class CustomAudioHandler extends BaseAudioHandler
       },
     );
     // Stream for currentIndex (same as playbackEvent.currentIndex)
-    _currentIndexSubscription = _player.currentIndexStream.listen(
+    _currentIndexSubscription =
+        _player.currentIndexStream.whereNotNull().listen(
       (index) {
         if (queue.value.isNotEmpty && index! < queue.value.length) {
           queue.value[index].extras!["index"] = index;
@@ -1767,31 +1776,64 @@ class CustomAudioHandler extends BaseAudioHandler
     await combinedSeek(position: position);
   }
 
-  /// Naive combined seek. Use this instead of calling [AudioPlayer.seek] directly
+  /// Position and or index combined seek.
+  /// Use this instead of calling [AudioPlayer.seek] or [_innerCombinedSeek] directly.
   Future<void> combinedSeek({final Duration? position, int? index}) async {
-    if ((position != null && position != _position) ||
-        (index != null && index != _index)) {
-      customEvent.add({'preSeekPosition': _position.inMilliseconds});
-      Duration preSeekPosition = _position;
-      await _player.seek(position, index: index);
-      if (position != null) {
-        Duration errorMargin = Duration(seconds: 1);
-        while (_player.position - position > errorMargin ||
-            _player.position - position < -errorMargin) {
-          log("Seek unsucessful! Before seek: $preSeekPosition, seek target: $position, seek result: ${_player.position}. Trying again...");
-          preSeekPosition = _position;
-          errorMargin = errorMargin * 2;
-          await _player.seek(position, index: index);
-        }
+    if ((position != _position) || (index != _index)) {
+      seekTarget = SeekTarget(position: position, index: index);
+      if (!seekOngoing) {
+        seekOngoing = true;
+        _innerCombinedSeek();
+        seekOngoing = false;
       }
     }
   }
 
+  /// Position and or index combined seek.
+  /// Continuously seeks to the target specified at [seekTarget] until it is null.
+  /// Only one instance of this function needs to run.
+  /// Retries seeks that fail.
+  Future<void> _innerCombinedSeek() async {
+    Duration? position;
+    int? index;
+    Duration preSeekPosition = _position;
+    customEvent.add({'preSeekPosition': _position.inMilliseconds});
+    while (seekTarget.isValid) {
+      position = seekTarget.position;
+      index = seekTarget.index;
+      seekTarget = SeekTarget();
+      if (position != null) _position = position;
+      await _player.seek(position, index: index);
+    }
+    // Retry failed seek.
+    if (position != null) {
+      Duration errorMargin = Duration(seconds: 1);
+      while (_player.position - position > errorMargin ||
+          _player.position - position < -errorMargin) {
+        log("Seek unsucessful! Before seek: $preSeekPosition, seek target: $position, seek result: ${_player.position}. Trying again...");
+        preSeekPosition = _position;
+        errorMargin = errorMargin * 2;
+        await _player.seek(position, index: index);
+      }
+    }
+  }
+
+  /// Seeks current episode relative to the current position.
+  /// Takes ongoing seeks into account.
+  /// Clamps to the current episode's duration.
   Future<void> _seekRelative(Duration offset) async {
-    if (mediaItem.value!.duration == 0)
-      return; // TODO: Fix skipping episode by seeking beyond audio duration if duration is 0 (while loading)
-    var newPosition = _position + offset;
-    if (newPosition < Duration.zero) newPosition = Duration.zero;
+    Duration newPosition;
+    if (seekTarget.position != null) {
+      newPosition = seekTarget.position! + offset;
+    } else {
+      newPosition = _position + offset;
+    }
+    if (newPosition < Duration.zero) {
+      newPosition = Duration.zero;
+    } else if (mediaItem.value!.duration != null &&
+        newPosition >= mediaItem.value!.duration!) {
+      newPosition = mediaItem.value!.duration!;
+    }
     await combinedSeek(position: newPosition);
   }
 
@@ -1952,4 +1994,12 @@ class CustomAudioHandler extends BaseAudioHandler
         // end: Duration(seconds: item.extras!['skipSecondsEnd']), // This causes instant skipping problems
         child: AudioSource.uri(Uri.parse(item.id)));
   }
+}
+
+class SeekTarget {
+  Duration? position;
+  int? index;
+  SeekTarget({this.position, this.index});
+
+  bool get isValid => position != null || index != null;
 }
