@@ -45,11 +45,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   late TabController _controller;
   Decoration _getIndicator(BuildContext context) {
     return UnderlineTabIndicator(
-        borderSide: BorderSide(color: context.accentColor, width: 3),
-        insets: EdgeInsets.only(
-          left: 10.0,
-          right: 10.0,
-        ));
+      borderSide: BorderSide(color: context.accentColor, width: 3),
+    );
   }
 
   final _androidAppRetain = MethodChannel("android_app_retain");
@@ -224,7 +221,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                               TabBar(
                                 indicator: _getIndicator(context),
                                 isScrollable: true,
-                                indicatorSize: TabBarIndicatorSize.tab,
+                                indicatorSize: TabBarIndicatorSize.label,
                                 controller: _controller,
                                 labelStyle: context.textTheme.titleMedium,
                                 dividerHeight: 0,
