@@ -136,9 +136,11 @@ class DBHelper {
     await db.execute(
         """CREATE TRIGGER episode_version_trigger AFTER INSERT ON Episodes 
         WHEN (NEW.display_version_id = -1) BEGIN
-        UPDATE Episodes SET display_version_id = IFNULL((SELECT display_version_id FROM Episodes
+        UPDATE Episodes SET display_version_id = IFNULL(IFNULL((SELECT display_version_id FROM Episodes
         WHERE (feed_id = NEW.feed_id AND title = NEW.title AND downloaded = 'ND' AND NEW.id != id)
-        ORDER BY download_date DESC LIMIT 1), NEW.id) WHERE id = NEW.id;
+        LIMIT 1), (SELECT display_version_id FROM Episodes WHERE
+        (feed_id = NEW.feed_id AND title = NEW.title AND NEW.id != id)
+        ORDER BY download_date DESC LIMIT 1)), NEW.id) WHERE id = NEW.id;
         END
         """); // Preserve existing display version(s) on new version insertion.
     await db.execute(
@@ -270,9 +272,11 @@ class DBHelper {
     await db.execute(
         """CREATE TRIGGER episode_version_trigger AFTER INSERT ON Episodes 
         WHEN (NEW.display_version_id = -1) BEGIN
-        UPDATE Episodes SET display_version_id = IFNULL((SELECT display_version_id FROM Episodes
+        UPDATE Episodes SET display_version_id = IFNULL(IFNULL((SELECT display_version_id FROM Episodes
         WHERE (feed_id = NEW.feed_id AND title = NEW.title AND downloaded = 'ND' AND NEW.id != id)
-        ORDER BY download_date DESC LIMIT 1), NEW.id) WHERE id = NEW.id;
+        LIMIT 1), (SELECT display_version_id FROM Episodes WHERE
+        (feed_id = NEW.feed_id AND title = NEW.title AND NEW.id != id)
+        ORDER BY download_date DESC LIMIT 1)), NEW.id) WHERE id = NEW.id;
         END
         """); // Preserve existing display version(s) on new version insertion.
     await db.execute(
@@ -872,9 +876,9 @@ class DBHelper {
   /// Display versions are the versions of an episode that should be displayed by default in ui
   /// Downloaded episodes are always their own display versions.
   /// Non downloaded episodes' display versions point to (first available)
-  /// a) Manually set version
-  /// b) Newest downladed version
-  /// c) The version all other undownloaded versions point to (newest on rescan)
+  /// a) Manually set version / newsest downloaded version (whichever is newer)
+  /// b) The version all other undownloaded versions point to (newest on rescan)
+  /// c) Itself
   Future<void> _rescanPodcastEpisodesVersions(
       DatabaseExecutor dbClient, String feedId) async {
     await dbClient.rawUpdate(
