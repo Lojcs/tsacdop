@@ -819,8 +819,10 @@ class AudioPlayerNotifier extends ChangeNotifier {
           notifyListeners();
         }
         if (event['preSeekPosition'] != null && !_undoSeekOngoing) {
-          int seekAmount = event['preSeekPosition'] - _audioPosition;
-          if (seekAmount.abs() < 30000) return;
+          Duration seekAmount = Duration(
+              milliseconds: (event['preSeekPosition'] - _audioPosition).abs());
+          if (seekAmount < AudioService.config.fastForwardInterval ||
+              seekAmount < AudioService.config.rewindInterval) return;
           _undoButtonPositionsStack.add(event['preSeekPosition']);
           if (_clearUndoSeekTimer != null) _clearUndoSeekTimer!.cancel();
           _clearUndoSeekTimer = Timer(Duration(seconds: 30), () {
@@ -834,8 +836,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
           _audioPosition = event['position'].inMilliseconds;
           if (_skipStart) {
             _skipStart = false;
-            if (_historyPosition != 0 &&
-                _historyPosition / _audioDuration < 0.95 &&
+            if (_historyPosition / _audioDuration < 0.95 &&
                 _historyPosition > 10000) {
               if (_episode!.skipSecondsStart != 0 &&
                   _historyPosition > _episode!.skipSecondsStart * 1000) {
@@ -844,6 +845,9 @@ class AudioPlayerNotifier extends ChangeNotifier {
               }
               await seekTo(_historyPosition);
             } else if (_episode!.skipSecondsStart != 0) {
+              if (_historyPosition != 0) {
+                _undoButtonPositionsStack.add(_historyPosition);
+              }
               await seekTo(_episode!.skipSecondsStart * 1000);
             }
           }
