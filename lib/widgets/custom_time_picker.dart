@@ -102,7 +102,7 @@ class _TimePickerHeader extends StatelessWidget {
         controls = Column(
           children: <Widget>[
             const SizedBox(height: 16.0),
-            Container(
+            SizedBox(
               height: kMinInteractiveDimension * 2,
               child: Row(
                 children: <Widget>[
@@ -151,7 +151,7 @@ class _TimePickerHeader extends StatelessWidget {
                   orientation: orientation,
                   onChanged: onChanged,
                 ),
-              Container(
+              SizedBox(
                 height: kMinInteractiveDimension * 2,
                 child: Row(
                   children: <Widget>[
@@ -232,7 +232,7 @@ class _HourMinuteControl extends StatelessWidget {
 
     final states =
         isSelected ? <WidgetState>{WidgetState.selected} : <WidgetState>{};
-    return Container(
+    return SizedBox(
       height: _kTimePickerHeaderControlHeight,
       child: Material(
         color: WidgetStateProperty.resolveAs(backgroundColor, states),
@@ -568,7 +568,7 @@ class _DayPeriodControl extends StatelessWidget {
         result = _DayPeriodInputPadding(
           minSize: const Size(width, kMinInteractiveDimension * 2),
           orientation: orientation,
-          child: Container(
+          child: SizedBox(
             width: width,
             height: _kTimePickerHeaderControlHeight,
             child: Material(
@@ -595,7 +595,7 @@ class _DayPeriodControl extends StatelessWidget {
         result = _DayPeriodInputPadding(
           minSize: const Size(0.0, kMinInteractiveDimension),
           orientation: orientation,
-          child: Container(
+          child: SizedBox(
             height: 40.0,
             child: Material(
               clipBehavior: Clip.antiAlias,
@@ -625,11 +625,10 @@ class _DayPeriodControl extends StatelessWidget {
 /// A widget to pad the area around the [_DayPeriodControl]'s inner [Material].
 class _DayPeriodInputPadding extends SingleChildRenderObjectWidget {
   const _DayPeriodInputPadding({
-    Key? key,
-    Widget? child,
+    super.child,
     this.minSize,
     this.orientation,
-  }) : super(key: key, child: child);
+  });
 
   final Size? minSize;
   final Orientation? orientation;
@@ -1164,7 +1163,7 @@ class _DialState extends State<_Dial> with SingleTickerProviderStateMixin {
       ];
 
   List<_TappableLabel> _buildMinutes(TextTheme textTheme, Color? color) {
-    const _minuteMarkerValues = <TimeOfDay>[
+    const minuteMarkerValues = <TimeOfDay>[
       TimeOfDay(hour: 0, minute: 0),
       TimeOfDay(hour: 0, minute: 5),
       TimeOfDay(hour: 0, minute: 10),
@@ -1180,7 +1179,7 @@ class _DialState extends State<_Dial> with SingleTickerProviderStateMixin {
     ];
 
     return <_TappableLabel>[
-      for (final TimeOfDay timeOfDay in _minuteMarkerValues)
+      for (final TimeOfDay timeOfDay in minuteMarkerValues)
         _buildTappableLabel(
           textTheme,
           color,
@@ -1254,11 +1253,10 @@ class _DialState extends State<_Dial> with SingleTickerProviderStateMixin {
 
 class _TimePickerInput extends StatefulWidget {
   const _TimePickerInput({
-    Key? key,
     required this.initialSelectedTime,
     required this.helpText,
     required this.onChanged,
-  }) : super(key: key);
+  });
 
   /// The time initially selected when the dialog is shown.
   final TimeOfDay initialSelectedTime;
@@ -1496,14 +1494,13 @@ class _TimePickerInputState extends State<_TimePickerInput> {
 
 class _HourMinuteTextField extends StatefulWidget {
   const _HourMinuteTextField({
-    Key? key,
     required this.selectedTime,
     required this.isHour,
     required this.style,
     required this.validator,
     required this.onSavedSubmitted,
     this.onChanged,
-  }) : super(key: key);
+  });
 
   final TimeOfDay? selectedTime;
   final bool isHour;
@@ -1627,13 +1624,12 @@ class _TimePickerDialog extends StatefulWidget {
   ///
   /// [initialTime] must not be null.
   const _TimePickerDialog({
-    Key? key,
     required this.initialTime,
     required this.cancelText,
     required this.confirmText,
     required this.helpText,
     this.initialEntryMode = TimePickerEntryMode.dial,
-  }) : super(key: key);
+  });
 
   /// The time initially selected when the dialog is shown.
   final TimeOfDay initialTime;

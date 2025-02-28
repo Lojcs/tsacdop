@@ -15,7 +15,7 @@ import '../widgets/custom_widget.dart';
 import 'search_podcast.dart';
 
 class DiscoveryPage extends StatefulWidget {
-  DiscoveryPage({this.onTap, Key? key}) : super(key: key);
+  const DiscoveryPage({this.onTap, super.key});
   final ValueChanged<String?>? onTap;
   @override
   DiscoveryPageState createState() => DiscoveryPageState();
@@ -390,7 +390,7 @@ class DiscoveryPageState extends State<DiscoveryPage> {
 
 class _TopPodcastList extends StatefulWidget {
   final Genre? genre;
-  _TopPodcastList({this.genre, Key? key}) : super(key: key);
+  const _TopPodcastList({this.genre});
 
   @override
   __TopPodcastListState createState() => __TopPodcastListState();

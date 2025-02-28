@@ -8,7 +8,7 @@ import '../util/extension_helper.dart';
 import '../widgets/custom_widget.dart';
 
 class PopupMenuSetting extends StatefulWidget {
-  const PopupMenuSetting({Key? key}) : super(key: key);
+  const PopupMenuSetting({super.key});
 
   @override
   _PopupMenuSettingState createState() => _PopupMenuSettingState();
@@ -211,7 +211,7 @@ class _PopupMenuSettingState extends State<PopupMenuSetting> {
                               default:
                                 return Center();
                             }
-                          }).toList(),
+                          }),
                         ],
                       ),
                     );

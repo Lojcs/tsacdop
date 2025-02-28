@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
-import 'package:tsacdop/state/episode_state.dart';
+import 'state/episode_state.dart';
 import 'package:tuple/tuple.dart';
 
 import 'generated/l10n.dart';
@@ -60,6 +60,8 @@ Future main() async {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     Provider.of<SettingState>(context, listen: false).context = context;

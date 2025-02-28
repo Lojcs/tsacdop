@@ -15,7 +15,7 @@ enum Goto { home, settings }
 
 class SlideIntro extends StatefulWidget {
   final Goto? goto;
-  SlideIntro({this.goto, Key? key}) : super(key: key);
+  const SlideIntro({this.goto, super.key});
 
   @override
   _SlideIntroState createState() => _SlideIntroState();
@@ -55,18 +55,18 @@ class _SlideIntroState extends State<SlideIntro> {
     return Center(
       child: Container(
         alignment: Alignment.center,
-        child: distance < 0.2
-            ? Text(
-                (index + 1).toString(),
-                style: TextStyle(color: Color.fromRGBO(35, 204, 198, 1)),
-              )
-            : Center(),
         height: size,
         width: size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: Colors.white,
         ),
+        child: distance < 0.2
+            ? Text(
+                (index + 1).toString(),
+                style: TextStyle(color: Color.fromRGBO(35, 204, 198, 1)),
+              )
+            : Center(),
       ),
     );
   }

@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
-import 'package:tsacdop/state/podcast_group.dart';
-import 'package:tsacdop/type/episodebrief.dart';
-import 'package:tsacdop/type/podcastlocal.dart';
-import 'package:tsacdop/type/theme_data.dart';
-import 'package:tsacdop/util/extension_helper.dart';
-import 'package:tsacdop/util/selection_controller.dart';
-import 'package:tsacdop/widgets/action_bar_generic_widgets.dart';
+import '../state/podcast_group.dart';
+import '../type/episodebrief.dart';
+import '../type/podcastlocal.dart';
+import '../type/theme_data.dart';
+import '../util/extension_helper.dart';
+import '../util/selection_controller.dart';
+import 'action_bar_generic_widgets.dart';
 import 'package:tuple/tuple.dart';
 import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
@@ -110,6 +110,7 @@ class ActionBar extends StatefulWidget {
   final EpisodeGridLayout layout;
 
   const ActionBar({
+    super.key,
     required this.onGetEpisodesChanged,
     this.onLayoutChanged,
     this.widgetsFirstRow = const [
@@ -292,7 +293,7 @@ class _ActionBarOuter extends StatefulWidget {
   final Widget secondRow;
   final bool pinned;
   final Color? surface;
-  _ActionBarOuter(this.firstRow, this.secondRow,
+  const _ActionBarOuter(this.firstRow, this.secondRow,
       {required this.pinned, this.surface});
 
   @override
@@ -331,11 +332,6 @@ class __ActionBarOuterState extends State<_ActionBarOuter>
   }
 
   @override
-  void dispose() {
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return SliverAppBar(
       pinned: widget.pinned,
@@ -343,7 +339,7 @@ class __ActionBarOuterState extends State<_ActionBarOuter>
       toolbarHeight: totalHeight,
       backgroundColor: widget.surface ?? context.surface,
       scrolledUnderElevation: 0,
-      flexibleSpace: Container(
+      flexibleSpace: SizedBox(
         height: totalHeight,
         child: Padding(
           padding: EdgeInsets.only(
@@ -539,14 +535,16 @@ class _ActionBarSharedState extends ChangeNotifier {
 
   late final PodcastGroup groupAll =
       PodcastGroup(context.s.all, podcastList: [], id: "All");
-  List<PodcastGroup> get groups => [groupAll]..addAll(
-      Provider.of<GroupList>(context, listen: false).groups.nonNulls.toList());
+  List<PodcastGroup> get groups => [
+        groupAll,
+        ...Provider.of<GroupList>(context, listen: false).groups.nonNulls
+      ];
   double? maxGroupTitleWidth;
 
   late final PodcastLocal podcastAll =
       PodcastLocal(context.s.all, '', '', '', '', 'All', '', '', '', []);
   Future<List<PodcastLocal>> get podcasts async =>
-      [podcastAll]..addAll(await DBHelper().getPodcastLocalAll());
+      [podcastAll, ...await DBHelper().getPodcastLocalAll()];
   double? maxPodcastTitleWidth;
 
   String searchTitleQuery = "";
@@ -612,11 +610,11 @@ class _ActionBarSharedState extends ChangeNotifier {
 abstract class ActionBarWidget extends StatelessWidget {
   final int rowIndex;
   final int index;
-  const ActionBarWidget(this.rowIndex, this.index);
+  const ActionBarWidget(this.rowIndex, this.index, {super.key});
 }
 
 class ActionBarSpacer extends ActionBarWidget {
-  const ActionBarSpacer(super.rowIndex, super.index);
+  const ActionBarSpacer(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
     return Spacer();
@@ -624,7 +622,7 @@ class ActionBarSpacer extends ActionBarWidget {
 }
 
 class ActionBarDropdownGroups extends ActionBarWidget {
-  const ActionBarDropdownGroups(super.rowIndex, super.index);
+  const ActionBarDropdownGroups(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
     _ActionBarSharedState sharedState =
@@ -650,7 +648,6 @@ class ActionBarDropdownGroups extends ActionBarWidget {
               expandedWidth; // It's tricky to update this after the fact.
         }
         return ActionBarDropdownButton<PodcastGroup>(
-          child: Icon(Icons.all_out, color: context.actionBarIconColor),
           selected: data,
           expansionController: sharedState.expansionControllers[rowIndex],
           expandedChild: Text(
@@ -664,16 +661,16 @@ class ActionBarDropdownGroups extends ActionBarWidget {
                 (podcastGroup) => PopupMenuItem(
                   padding: context.actionBarIconPadding,
                   height: context.actionBarButtonSizeVertical,
+                  value: podcastGroup,
                   child: Tooltip(
+                    message: podcastGroup.name,
                     child: Text(
                       podcastGroup.name!,
                       style: Theme.of(context).textTheme.titleMedium,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    message: podcastGroup.name,
                   ),
-                  value: podcastGroup,
                 ),
               )
               .toList(),
@@ -690,6 +687,7 @@ class ActionBarDropdownGroups extends ActionBarWidget {
           connectRight: index != sharedState.rows[rowIndex].length - 1 &&
               _filterWidgets
                   .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+          child: Icon(Icons.all_out, color: context.actionBarIconColor),
         );
       },
     );
@@ -697,7 +695,7 @@ class ActionBarDropdownGroups extends ActionBarWidget {
 }
 
 class ActionBarDropdownPodcasts extends ActionBarWidget {
-  const ActionBarDropdownPodcasts(super.rowIndex, super.index);
+  const ActionBarDropdownPodcasts(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
     _ActionBarSharedState sharedState =
@@ -726,11 +724,10 @@ class ActionBarDropdownPodcasts extends ActionBarWidget {
                 expandedWidth; // It's tricky to update this after the fact.
 
             return ActionBarDropdownButton<PodcastLocal>(
-              child: Icon(Icons.podcasts, color: context.actionBarIconColor),
               selected: data,
               expansionController: sharedState.expansionControllers[rowIndex],
               expandedChild: Text(
-                data.title!,
+                data.title,
                 style: Theme.of(context).textTheme.titleMedium,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -740,16 +737,16 @@ class ActionBarDropdownPodcasts extends ActionBarWidget {
                     (podcast) => PopupMenuItem(
                       padding: context.actionBarIconPadding,
                       height: context.actionBarButtonSizeVertical,
+                      value: podcast,
                       child: Tooltip(
+                        message: podcast.title,
                         child: Text(
                           podcast.title!,
                           style: Theme.of(context).textTheme.titleMedium,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        message: podcast.title,
                       ),
-                      value: podcast,
                     ),
                   )
                   .toList(),
@@ -766,6 +763,7 @@ class ActionBarDropdownPodcasts extends ActionBarWidget {
               connectRight: index != sharedState.rows[rowIndex].length - 1 &&
                   _filterWidgets.contains(
                       sharedState.rows[rowIndex][index + 1].runtimeType),
+              child: Icon(Icons.podcasts, color: context.actionBarIconColor),
             );
           },
         );
@@ -775,7 +773,7 @@ class ActionBarDropdownPodcasts extends ActionBarWidget {
 }
 
 class ActionBarDropdownSortBy extends ActionBarWidget {
-  const ActionBarDropdownSortBy(super.rowIndex, super.index);
+  const ActionBarDropdownSortBy(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
     _ActionBarSharedState sharedState =
@@ -784,7 +782,6 @@ class ActionBarDropdownSortBy extends ActionBarWidget {
       selector: (_, sharedState) => sharedState.sortBy,
       builder: (context, data, _) {
         return ActionBarDropdownButton<Sorter>(
-          child: _getSorterIcon(context, sharedState.sortBy),
           selected: data,
           expansionController: sharedState.expansionControllers[rowIndex],
           itemBuilder: () => _getSortBy(context, sharedState.sortByItems),
@@ -800,6 +797,7 @@ class ActionBarDropdownSortBy extends ActionBarWidget {
           connectRight: index != sharedState.rows[rowIndex].length - 1 &&
               _sortWidgets
                   .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+          child: _getSorterIcon(context, sharedState.sortBy),
         );
       },
     );
@@ -816,66 +814,66 @@ List<PopupMenuEntry<Sorter>> _getSortBy(
         items.add(PopupMenuItem(
           padding: context.actionBarIconPadding,
           height: context.actionBarButtonSizeVertical,
-          child: Tooltip(
-            child: _getSorterIcon(context, sorter),
-            message: s.publishDate,
-          ),
           value: Sorter.pubDate,
+          child: Tooltip(
+            message: s.publishDate,
+            child: _getSorterIcon(context, sorter),
+          ),
         ));
         break;
       case Sorter.enclosureSize:
         items.add(PopupMenuItem(
           padding: context.actionBarIconPadding,
           height: context.actionBarButtonSizeVertical,
-          child: Tooltip(
-            child: _getSorterIcon(context, sorter),
-            message: s.size,
-          ),
           value: Sorter.enclosureSize,
+          child: Tooltip(
+            message: s.size,
+            child: _getSorterIcon(context, sorter),
+          ),
         ));
         break;
       case Sorter.enclosureDuration:
         items.add(PopupMenuItem(
           padding: context.actionBarIconPadding,
           height: context.actionBarButtonSizeVertical,
-          child: Tooltip(
-            child: _getSorterIcon(context, sorter),
-            message: s.duration,
-          ),
           value: Sorter.enclosureDuration,
+          child: Tooltip(
+            message: s.duration,
+            child: _getSorterIcon(context, sorter),
+          ),
         ));
         break;
       case Sorter.downloadDate:
         items.add(PopupMenuItem(
           padding: context.actionBarIconPadding,
           height: context.actionBarButtonSizeVertical,
-          child: Tooltip(
-            child: _getSorterIcon(context, sorter),
-            message: s.downloadDate,
-          ),
           value: Sorter.downloadDate,
+          child: Tooltip(
+            message: s.downloadDate,
+            child: _getSorterIcon(context, sorter),
+          ),
         ));
         break;
       case Sorter.likedDate:
         items.add(PopupMenuItem(
           padding: context.actionBarIconPadding,
           height: context.actionBarButtonSizeVertical,
-          child: Tooltip(
-            child: _getSorterIcon(context, sorter),
-            message: s.likeDate,
-          ),
           value: Sorter.likedDate,
+          child: Tooltip(
+            message: s.likeDate,
+            child: _getSorterIcon(context, sorter),
+          ),
         ));
         break;
       case Sorter.random:
         items.add(PopupMenuItem(
           padding: context.actionBarIconPadding,
           height: context.actionBarButtonSizeVertical,
-          child: Tooltip(
-            child: _getSorterIcon(context, sorter),
-            message: s.random,
-          ),
           value: Sorter.random,
+          child: Tooltip(
+            message: s.random,
+            child: _getSorterIcon(context, sorter),
+          ),
         ));
         break;
     }
@@ -903,7 +901,7 @@ Icon _getSorterIcon(BuildContext context, Sorter sorter) {
 }
 
 class ActionBarFilterNew extends ActionBarWidget {
-  const ActionBarFilterNew(super.rowIndex, super.index);
+  const ActionBarFilterNew(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
     _ActionBarSharedState sharedState =
@@ -912,14 +910,6 @@ class ActionBarFilterNew extends ActionBarWidget {
       selector: (_, sharedState) => sharedState.filterNew,
       builder: (context, data, _) {
         return ActionBarButton(
-          child: SizedBox(
-            height: context.actionBarButtonSizeVertical,
-            width: context.actionBarButtonSizeHorizontal,
-            child: Icon(
-              Icons.new_releases_outlined,
-              color: context.actionBarIconColor,
-            ),
-          ),
           expansionController: sharedState.expansionControllers[rowIndex],
           state: data,
           buttonType: ActionBarButtonType.noneOnOff,
@@ -934,6 +924,14 @@ class ActionBarFilterNew extends ActionBarWidget {
           connectRight: index != sharedState.rows[rowIndex].length - 1 &&
               _filterWidgets
                   .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+          child: SizedBox(
+            height: context.actionBarButtonSizeVertical,
+            width: context.actionBarButtonSizeHorizontal,
+            child: Icon(
+              Icons.new_releases_outlined,
+              color: context.actionBarIconColor,
+            ),
+          ),
         );
       },
     );
@@ -941,7 +939,7 @@ class ActionBarFilterNew extends ActionBarWidget {
 }
 
 class ActionBarFilterLiked extends ActionBarWidget {
-  const ActionBarFilterLiked(super.rowIndex, super.index);
+  const ActionBarFilterLiked(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
     _ActionBarSharedState sharedState =
@@ -950,12 +948,6 @@ class ActionBarFilterLiked extends ActionBarWidget {
       selector: (_, sharedState) => sharedState.filterLiked,
       builder: (context, data, _) {
         return ActionBarButton(
-          child: SizedBox(
-            height: context.actionBarButtonSizeVertical,
-            width: context.actionBarButtonSizeHorizontal,
-            child:
-                Icon(Icons.favorite_border, color: context.actionBarIconColor),
-          ),
           expansionController: sharedState.expansionControllers[rowIndex],
           state: data,
           buttonType: ActionBarButtonType.noneOnOff,
@@ -970,6 +962,12 @@ class ActionBarFilterLiked extends ActionBarWidget {
           connectRight: index != sharedState.rows[rowIndex].length - 1 &&
               _filterWidgets
                   .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+          child: SizedBox(
+            height: context.actionBarButtonSizeVertical,
+            width: context.actionBarButtonSizeHorizontal,
+            child:
+                Icon(Icons.favorite_border, color: context.actionBarIconColor),
+          ),
         );
       },
     );
@@ -977,7 +975,7 @@ class ActionBarFilterLiked extends ActionBarWidget {
 }
 
 class ActionBarFilterPlayed extends ActionBarWidget {
-  const ActionBarFilterPlayed(super.rowIndex, super.index);
+  const ActionBarFilterPlayed(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
     _ActionBarSharedState sharedState =
@@ -986,13 +984,6 @@ class ActionBarFilterPlayed extends ActionBarWidget {
       selector: (_, sharedState) => sharedState.filterPlayed,
       builder: (context, data, _) {
         return ActionBarButton(
-          child: SizedBox(
-            height: context.actionBarButtonSizeVertical,
-            width: context.actionBarButtonSizeHorizontal,
-            child: CustomPaint(
-              painter: ListenedPainter(context.actionBarIconColor, stroke: 2),
-            ),
-          ),
           expansionController: sharedState.expansionControllers[rowIndex],
           state: data,
           buttonType: ActionBarButtonType.noneOnOff,
@@ -1007,6 +998,13 @@ class ActionBarFilterPlayed extends ActionBarWidget {
           connectRight: index != sharedState.rows[rowIndex].length - 1 &&
               _filterWidgets
                   .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+          child: SizedBox(
+            height: context.actionBarButtonSizeVertical,
+            width: context.actionBarButtonSizeHorizontal,
+            child: CustomPaint(
+              painter: ListenedPainter(context.actionBarIconColor, stroke: 2),
+            ),
+          ),
         );
       },
     );
@@ -1014,7 +1012,7 @@ class ActionBarFilterPlayed extends ActionBarWidget {
 }
 
 class ActionBarFilterDownloaded extends ActionBarWidget {
-  const ActionBarFilterDownloaded(super.rowIndex, super.index);
+  const ActionBarFilterDownloaded(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
     _ActionBarSharedState sharedState =
@@ -1023,19 +1021,6 @@ class ActionBarFilterDownloaded extends ActionBarWidget {
       selector: (_, sharedState) => sharedState.filterDownloaded,
       builder: (context, data, _) {
         return ActionBarButton(
-          child: SizedBox(
-            height: context.actionBarButtonSizeVertical,
-            width: context.actionBarButtonSizeHorizontal,
-            child: CustomPaint(
-              painter: DownloadPainter(
-                color: context.actionBarIconColor,
-                fraction: 0,
-                progressColor: context.actionBarIconColor,
-                progress: 0,
-                stroke: 2,
-              ),
-            ),
-          ),
           expansionController: sharedState.expansionControllers[rowIndex],
           state: data,
           buttonType: ActionBarButtonType.noneOnOff,
@@ -1050,6 +1035,19 @@ class ActionBarFilterDownloaded extends ActionBarWidget {
           connectRight: index != sharedState.rows[rowIndex].length - 1 &&
               _filterWidgets
                   .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+          child: SizedBox(
+            height: context.actionBarButtonSizeVertical,
+            width: context.actionBarButtonSizeHorizontal,
+            child: CustomPaint(
+              painter: DownloadPainter(
+                color: context.actionBarIconColor,
+                fraction: 0,
+                progressColor: context.actionBarIconColor,
+                progress: 0,
+                stroke: 2,
+              ),
+            ),
+          ),
         );
       },
     );
@@ -1057,7 +1055,7 @@ class ActionBarFilterDownloaded extends ActionBarWidget {
 }
 
 class ActionBarFilterDisplayVersion extends ActionBarWidget {
-  const ActionBarFilterDisplayVersion(super.rowIndex, super.index);
+  const ActionBarFilterDisplayVersion(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
     _ActionBarSharedState sharedState =
@@ -1066,14 +1064,6 @@ class ActionBarFilterDisplayVersion extends ActionBarWidget {
       selector: (_, sharedState) => sharedState.filterDisplayVersion,
       builder: (context, data, _) {
         return ActionBarButton(
-          child: SizedBox(
-            height: context.actionBarButtonSizeVertical,
-            width: context.actionBarButtonSizeHorizontal,
-            child: Icon(
-              Icons.difference_outlined,
-              color: context.actionBarIconColor,
-            ),
-          ),
           expansionController: sharedState.expansionControllers[rowIndex],
           state: data,
           buttonType: ActionBarButtonType.noneOnOff,
@@ -1088,6 +1078,14 @@ class ActionBarFilterDisplayVersion extends ActionBarWidget {
           connectRight: index != sharedState.rows[rowIndex].length - 1 &&
               _filterWidgets
                   .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+          child: SizedBox(
+            height: context.actionBarButtonSizeVertical,
+            width: context.actionBarButtonSizeHorizontal,
+            child: Icon(
+              Icons.difference_outlined,
+              color: context.actionBarIconColor,
+            ),
+          ),
         );
       },
     );
@@ -1095,7 +1093,7 @@ class ActionBarFilterDisplayVersion extends ActionBarWidget {
 }
 
 class ActionBarSwitchSortOrder extends ActionBarWidget {
-  const ActionBarSwitchSortOrder(super.rowIndex, super.index);
+  const ActionBarSwitchSortOrder(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
     _ActionBarSharedState sharedState =
@@ -1105,18 +1103,6 @@ class ActionBarSwitchSortOrder extends ActionBarWidget {
           Tuple2(sharedState.sortOrder, sharedState.sortBy),
       builder: (context, data, _) {
         return ActionBarButton(
-          child: SizedBox(
-            height: context.actionBarButtonSizeVertical,
-            width: context.actionBarButtonSizeHorizontal,
-            child: Icon(
-              data.item2 == Sorter.random
-                  ? Icons.casino_outlined
-                  : data.item1 == SortOrder.ASC
-                      ? LineIcons.sortAmountUp
-                      : LineIcons.sortAmountDown,
-              color: context.actionBarIconColor,
-            ),
-          ),
           expansionController: sharedState.expansionControllers[rowIndex],
           buttonType: ActionBarButtonType.single,
           onPressed: (value) {
@@ -1137,6 +1123,18 @@ class ActionBarSwitchSortOrder extends ActionBarWidget {
           connectRight: index != sharedState.rows[rowIndex].length - 1 &&
               _sortWidgets
                   .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+          child: SizedBox(
+            height: context.actionBarButtonSizeVertical,
+            width: context.actionBarButtonSizeHorizontal,
+            child: Icon(
+              data.item2 == Sorter.random
+                  ? Icons.casino_outlined
+                  : data.item1 == SortOrder.ASC
+                      ? LineIcons.sortAmountUp
+                      : LineIcons.sortAmountDown,
+              color: context.actionBarIconColor,
+            ),
+          ),
         );
       },
     );
@@ -1144,7 +1142,7 @@ class ActionBarSwitchSortOrder extends ActionBarWidget {
 }
 
 class ActionBarSwitchLayout extends ActionBarWidget {
-  const ActionBarSwitchLayout(super.rowIndex, super.index);
+  const ActionBarSwitchLayout(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
     double height = 10;
@@ -1155,24 +1153,6 @@ class ActionBarSwitchLayout extends ActionBarWidget {
       selector: (_, sharedState) => sharedState.layout,
       builder: (context, data, _) {
         return ActionBarButton(
-          child: SizedBox(
-            height: context.actionBarButtonSizeVertical,
-            width: context.actionBarButtonSizeHorizontal,
-            child: data == EpisodeGridLayout.small
-                ? CustomPaint(
-                    painter:
-                        LayoutPainter(0, context.actionBarIconColor, stroke: 2),
-                  )
-                : data == EpisodeGridLayout.medium
-                    ? CustomPaint(
-                        painter: LayoutPainter(1, context.actionBarIconColor,
-                            stroke: 2),
-                      )
-                    : CustomPaint(
-                        painter: LayoutPainter(4, context.actionBarIconColor,
-                            stroke: 2),
-                      ),
-          ),
           expansionController: sharedState.expansionControllers[rowIndex],
           buttonType: ActionBarButtonType.single,
           onPressed: (value) {
@@ -1206,6 +1186,24 @@ class ActionBarSwitchLayout extends ActionBarWidget {
           connectRight: index != sharedState.rows[rowIndex].length - 1 &&
               _controlWidgets
                   .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+          child: SizedBox(
+            height: context.actionBarButtonSizeVertical,
+            width: context.actionBarButtonSizeHorizontal,
+            child: data == EpisodeGridLayout.small
+                ? CustomPaint(
+                    painter:
+                        LayoutPainter(0, context.actionBarIconColor, stroke: 2),
+                  )
+                : data == EpisodeGridLayout.medium
+                    ? CustomPaint(
+                        painter: LayoutPainter(1, context.actionBarIconColor,
+                            stroke: 2),
+                      )
+                    : CustomPaint(
+                        painter: LayoutPainter(4, context.actionBarIconColor,
+                            stroke: 2),
+                      ),
+          ),
         );
       },
     );
@@ -1213,7 +1211,7 @@ class ActionBarSwitchLayout extends ActionBarWidget {
 }
 
 class ActionBarSwitchSelectMode extends ActionBarWidget {
-  const ActionBarSwitchSelectMode(super.rowIndex, super.index);
+  const ActionBarSwitchSelectMode(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
     double height = 10;
@@ -1224,13 +1222,6 @@ class ActionBarSwitchSelectMode extends ActionBarWidget {
         selector: (_, selectionController) => selectionController.selectMode,
         builder: (context, data, _) {
           return ActionBarButton(
-            child: SizedBox(
-              height: context.actionBarButtonSizeVertical,
-              width: context.actionBarButtonSizeHorizontal,
-              child: CustomPaint(
-                  painter:
-                      MultiSelectPainter(color: context.actionBarIconColor)),
-            ),
             expansionController: sharedState.expansionControllers[rowIndex],
             state: data,
             buttonType: ActionBarButtonType.onOff,
@@ -1252,20 +1243,18 @@ class ActionBarSwitchSelectMode extends ActionBarWidget {
             connectRight: index != sharedState.rows[rowIndex].length - 1 &&
                 _controlWidgets.contains(
                     sharedState.rows[rowIndex][index + 1].runtimeType),
+            child: SizedBox(
+              height: context.actionBarButtonSizeVertical,
+              width: context.actionBarButtonSizeHorizontal,
+              child: CustomPaint(
+                  painter:
+                      MultiSelectPainter(color: context.actionBarIconColor)),
+            ),
           );
         },
       );
     } else {
       return ActionBarButton(
-        child: SizedBox(
-          height: context.actionBarButtonSizeVertical,
-          width: context.actionBarButtonSizeHorizontal,
-          child: CustomPaint(
-              painter: MultiSelectPainter(
-                  color: context.realDark
-                      ? Colors.grey[800]!
-                      : context.actionBarIconColor)),
-        ),
         expansionController: sharedState.expansionControllers[rowIndex],
         state: false,
         buttonType: ActionBarButtonType.onOff,
@@ -1287,13 +1276,22 @@ class ActionBarSwitchSelectMode extends ActionBarWidget {
         connectRight: index != sharedState.rows[rowIndex].length - 1 &&
             _controlWidgets
                 .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+        child: SizedBox(
+          height: context.actionBarButtonSizeVertical,
+          width: context.actionBarButtonSizeHorizontal,
+          child: CustomPaint(
+              painter: MultiSelectPainter(
+                  color: context.realDark
+                      ? Colors.grey[800]!
+                      : context.actionBarIconColor)),
+        ),
       );
     }
   }
 }
 
 class ActionBarSwitchSecondRow extends ActionBarWidget {
-  const ActionBarSwitchSecondRow(super.rowIndex, super.index);
+  const ActionBarSwitchSecondRow(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
     _ActionBarSharedState sharedState =
@@ -1302,12 +1300,6 @@ class ActionBarSwitchSecondRow extends ActionBarWidget {
       selector: (_, sharedState) => sharedState.expandSecondRow,
       builder: (context, data, _) {
         return ActionBarButton(
-          child: SizedBox(
-            height: context.actionBarButtonSizeVertical,
-            width: context.actionBarButtonSizeHorizontal,
-            child: UpDownIndicator(
-                status: data, color: context.actionBarIconColor),
-          ),
           expansionController: sharedState.expansionControllers[rowIndex],
           state: data,
           buttonType: ActionBarButtonType.onOff,
@@ -1332,6 +1324,12 @@ class ActionBarSwitchSecondRow extends ActionBarWidget {
           connectRight: index != sharedState.rows[rowIndex].length - 1 &&
               _controlWidgets
                   .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+          child: SizedBox(
+            height: context.actionBarButtonSizeVertical,
+            width: context.actionBarButtonSizeHorizontal,
+            child: UpDownIndicator(
+                status: data, color: context.actionBarIconColor),
+          ),
         );
       },
     );
@@ -1339,18 +1337,13 @@ class ActionBarSwitchSecondRow extends ActionBarWidget {
 }
 
 class ActionBarButtonRefresh extends ActionBarWidget {
-  const ActionBarButtonRefresh(super.rowIndex, super.index);
+  const ActionBarButtonRefresh(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
     _ActionBarSharedState sharedState =
         Provider.of<_ActionBarSharedState>(context, listen: false);
 
     return ActionBarButton(
-      child: SizedBox(
-        height: context.actionBarButtonSizeVertical,
-        width: context.actionBarButtonSizeHorizontal,
-        child: Icon(Icons.refresh, color: context.actionBarIconColor),
-      ),
       expansionController: sharedState.expansionControllers[rowIndex],
       buttonType: ActionBarButtonType.single,
       onPressed: (value) async {
@@ -1394,12 +1387,17 @@ class ActionBarButtonRefresh extends ActionBarWidget {
       connectRight: index != sharedState.rows[rowIndex].length - 1 &&
           _controlWidgets
               .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+      child: SizedBox(
+        height: context.actionBarButtonSizeVertical,
+        width: context.actionBarButtonSizeHorizontal,
+        child: Icon(Icons.refresh, color: context.actionBarIconColor),
+      ),
     );
   }
 }
 
 class ActionBarButtonRemoveNewMark extends ActionBarWidget {
-  const ActionBarButtonRemoveNewMark(super.rowIndex, super.index);
+  const ActionBarButtonRemoveNewMark(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
     _ActionBarSharedState sharedState =
@@ -1411,22 +1409,6 @@ class ActionBarButtonRemoveNewMark extends ActionBarWidget {
       },
       builder: (context, data, _) {
         return ActionBarButton(
-          child: SizedBox(
-            height: context.actionBarButtonSizeVertical,
-            width: context.actionBarButtonSizeHorizontal,
-            child: CustomPaint(
-              painter: RemoveNewFlagPainter(
-                  !data.item1 && context.realDark
-                      ? Colors.grey[800]
-                      : context.actionBarIconColor,
-                  data.item1
-                      ? Colors.red
-                      : context.realDark
-                          ? Colors.grey[800]!
-                          : context.actionBarIconColor,
-                  stroke: 2),
-            ),
-          ),
           expansionController: sharedState.expansionControllers[rowIndex],
           buttonType: ActionBarButtonType.single,
           onPressed: (value) async {
@@ -1449,6 +1431,22 @@ class ActionBarButtonRemoveNewMark extends ActionBarWidget {
           connectRight: index != sharedState.rows[rowIndex].length - 1 &&
               _controlWidgets
                   .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+          child: SizedBox(
+            height: context.actionBarButtonSizeVertical,
+            width: context.actionBarButtonSizeHorizontal,
+            child: CustomPaint(
+              painter: RemoveNewFlagPainter(
+                  !data.item1 && context.realDark
+                      ? Colors.grey[800]
+                      : context.actionBarIconColor,
+                  data.item1
+                      ? Colors.red
+                      : context.realDark
+                          ? Colors.grey[800]!
+                          : context.actionBarIconColor,
+                  stroke: 2),
+            ),
+          ),
         );
       },
     );
@@ -1456,7 +1454,7 @@ class ActionBarButtonRemoveNewMark extends ActionBarWidget {
 }
 
 class ActionBarSearchTitle extends ActionBarWidget {
-  const ActionBarSearchTitle(super.rowIndex, super.index);
+  const ActionBarSearchTitle(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
     _ActionBarSharedState sharedState =

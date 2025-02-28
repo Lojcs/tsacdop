@@ -48,9 +48,9 @@ class _DialPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    const _epsilon = .001;
-    const _sweep = _kTwoPi - _epsilon;
-    const _startAngle = -math.pi / 2.0;
+    const epsilon = .001;
+    const sweep = _kTwoPi - epsilon;
+    const startAngle = -math.pi / 2.0;
 
     final radius = size.shortestSide / 2.0;
     final center = Offset(size.width / 2.0, size.height / 2.0);
@@ -72,9 +72,9 @@ class _DialPainter extends CustomPainter {
         Paint()..color = Theme.of(context).canvasColor);
 
     // Get the offset point for an angle value of theta, and a distance of _radius
-    Offset getOffsetForTheta(double theta, double _radius) {
+    Offset getOffsetForTheta(double theta, double radius) {
       return center +
-          Offset(_radius * math.cos(theta), -_radius * math.sin(theta));
+          Offset(radius * math.cos(theta), -radius * math.sin(theta));
     }
 
     // Draw the handle that is used to drag and to indicate the position around the circle
@@ -131,8 +131,8 @@ class _DialPainter extends CustomPainter {
         center: centerPoint,
         radius: radius - radius * 0.12 / 2,
       ),
-      _startAngle,
-      _sweep * pctTheta,
+      startAngle,
+      sweep * pctTheta,
       false,
       elapsedPainter,
     );
@@ -388,7 +388,7 @@ class _DialState extends State<_Dial> with SingleTickerProviderStateMixin {
   List<TextPainter> _buildSeconds(TextTheme textTheme) {
     final style = textTheme.titleMedium;
 
-    const _secondsMarkerValues = <Duration>[
+    const secondsMarkerValues = <Duration>[
       Duration(seconds: 0),
       Duration(seconds: 5),
       Duration(seconds: 10),
@@ -404,7 +404,7 @@ class _DialState extends State<_Dial> with SingleTickerProviderStateMixin {
     ];
 
     final labels = <TextPainter>[];
-    for (var duration in _secondsMarkerValues) {
+    for (var duration in secondsMarkerValues) {
       var painter = TextPainter(
         text: TextSpan(style: style, text: duration.inSeconds.toString()),
         textDirection: TextDirection.ltr,
@@ -465,9 +465,7 @@ class _DurationPickerDialog extends StatefulWidget {
   /// Creates a duration picker.
   ///
   /// [initialTime] must not be null.
-  const _DurationPickerDialog(
-      {Key? key, required this.initialTime, this.snapToMins})
-      : super(key: key);
+  const _DurationPickerDialog({required this.initialTime, this.snapToMins});
 
   /// The duration initially selected when the dialog is shown.
   final Duration initialTime;
@@ -526,10 +524,10 @@ class _DurationPickerDialogState extends State<_DurationPickerDialog> {
 
     final Widget actions = OverflowBar(children: <Widget>[
       TextButton(
-          child: Text(localizations.cancelButtonLabel),
-          onPressed: _handleCancel),
+          onPressed: _handleCancel,
+          child: Text(localizations.cancelButtonLabel)),
       TextButton(
-          child: Text(localizations.okButtonLabel), onPressed: _handleOk),
+          onPressed: _handleOk, child: Text(localizations.okButtonLabel)),
     ]);
 
     final dialog =
@@ -623,15 +621,14 @@ class DurationPicker extends StatelessWidget {
 
   final Color? color;
 
-  DurationPicker(
+  const DurationPicker(
       {this.duration = const Duration(minutes: 0),
       required this.onChange,
       this.snapToMins,
       this.width,
       this.height,
       this.color,
-      Key? key})
-      : super(key: key);
+      super.key});
 
   @override
   Widget build(BuildContext context) {

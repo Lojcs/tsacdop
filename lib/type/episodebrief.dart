@@ -5,8 +5,8 @@ import 'package:equatable/equatable.dart';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
-import 'package:tsacdop/local_storage/sqflite_localpodcast.dart';
-import 'package:tsacdop/type/theme_data.dart';
+import '../local_storage/sqflite_localpodcast.dart';
+import 'theme_data.dart';
 import '../util/extension_helper.dart';
 
 class EpisodeBrief extends Equatable {
@@ -298,7 +298,7 @@ class EpisodeBrief extends Equatable {
         "If update is false newFields can't be null.");
     assert(!keepExisting || !update,
         "Can't both update and keep existing fields.");
-    Map<EpisodeField, List> _fieldsMap = {
+    Map<EpisodeField, List> fieldsMap = {
       // I'm so sorry this is so ugly
       EpisodeField.description: [const Symbol("description"), description],
       EpisodeField.number: [const Symbol("number"), number],
@@ -337,9 +337,7 @@ class EpisodeBrief extends Equatable {
     };
 
     var dbHelper = DBHelper();
-    if (newFields == null) {
-      newFields = [];
-    }
+    newFields ??= [];
     if (update) {
       newFields.addAll(this.fields);
     }
@@ -359,7 +357,7 @@ class EpisodeBrief extends Equatable {
       newEpisode = this.copyWith();
     } else {
       for (EpisodeField field in oldFields) {
-        oldFieldsSymbolMap[_fieldsMap[field]![0]] = _fieldsMap[field]![1];
+        oldFieldsSymbolMap[fieldsMap[field]![0]] = fieldsMap[field]![1];
       }
       newEpisode = (await dbHelper.getEpisodes(
               episodeIds: [id], optionalFields: newFields..addAll(oldFields)))

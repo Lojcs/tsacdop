@@ -27,6 +27,8 @@ import '../util/extension_helper.dart';
 import '../widgets/custom_widget.dart';
 
 class DataBackup extends StatefulWidget {
+  const DataBackup({super.key});
+
   @override
   _DataBackupState createState() => _DataBackupState();
 }
@@ -367,7 +369,7 @@ class _DataBackupState extends State<DataBackup> {
 }
 
 class _OpenEye extends StatefulWidget {
-  _OpenEye({Key? key}) : super(key: key);
+  const _OpenEye();
 
   @override
   __OpenEyeState createState() => __OpenEyeState();
@@ -418,7 +420,7 @@ class __OpenEyeState extends State<_OpenEye>
 enum LoginStatus { none, error, start, syncing, complete }
 
 class _LoginGpodder extends StatefulWidget {
-  _LoginGpodder({Key? key}) : super(key: key);
+  const _LoginGpodder();
 
   @override
   __LoginGpodderState createState() => __LoginGpodderState();
@@ -750,6 +752,7 @@ class __LoginGpodderState extends State<_LoginGpodder> {
 
 class PasswordField extends StatefulWidget {
   const PasswordField({
+    super.key,
     this.fieldKey,
     this.hintText,
     this.labelText,
@@ -813,7 +816,7 @@ class _PasswordFieldState extends State<PasswordField> {
 }
 
 class _GpodderInfo extends StatefulWidget {
-  _GpodderInfo({Key? key}) : super(key: key);
+  const _GpodderInfo();
 
   @override
   __GpodderInfoState createState() => __GpodderInfoState();

@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:linkify/linkify.dart';
 import 'package:provider/provider.dart';
-import 'package:tsacdop/local_storage/sqflite_localpodcast.dart';
-import 'package:tsacdop/state/audio_state.dart';
-import 'package:tsacdop/state/setting_state.dart';
-import 'package:tsacdop/type/episodebrief.dart';
-import 'package:tsacdop/util/extension_helper.dart';
+import '../local_storage/sqflite_localpodcast.dart';
+import '../state/audio_state.dart';
+import '../state/setting_state.dart';
+import '../type/episodebrief.dart';
+import '../util/extension_helper.dart';
 
 class ShowNote extends StatelessWidget {
   final EpisodeBrief episode;
-  const ShowNote({required this.episode, Key? key}) : super(key: key);
+  const ShowNote({required this.episode, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +21,7 @@ class ShowNote extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           var description = snapshot.data!;
-          if (description.length > 0) {
+          if (description.isNotEmpty) {
             return Selector<AudioPlayerNotifier, EpisodeBrief?>(
               selector: (_, audio) => audio.episode,
               builder: (_, playEpisode, __) {

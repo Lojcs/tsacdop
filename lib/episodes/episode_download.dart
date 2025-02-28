@@ -15,7 +15,7 @@ import '../widgets/custom_widget.dart';
 
 class DownloadButton extends StatefulWidget {
   final EpisodeBrief? episode;
-  DownloadButton({this.episode, Key? key}) : super(key: key);
+  const DownloadButton({this.episode, super.key});
   @override
   _DownloadButtonState createState() => _DownloadButtonState();
 }
@@ -55,26 +55,26 @@ class _DownloadButtonState extends State<DownloadButton> {
   @override
   Widget build(BuildContext context) {
     return Consumer<DownloadState>(builder: (_, downloader, __) {
-      var _task = Provider.of<DownloadState>(context, listen: false)
+      var task = Provider.of<DownloadState>(context, listen: false)
           .episodeToTask(widget.episode);
       return Row(
         // TODO: On emulator this is sometimes unresponsive as _task.status returns undefined even though the task is enqueued. Test real device.
         children: <Widget>[
-          _downloadButton(_task, context),
+          _downloadButton(task, context),
           AnimatedContainer(
               duration: Duration(seconds: 1),
               decoration: BoxDecoration(
                   color: context.accentColor,
                   borderRadius: BorderRadius.all(Radius.circular(15.0))),
               height: 20.0,
-              width: (_task.status == DownloadTaskStatus.running ||
-                      _task.status == DownloadTaskStatus.enqueued)
+              width: (task.status == DownloadTaskStatus.running ||
+                      task.status == DownloadTaskStatus.enqueued)
                   ? 50.0
                   : 0,
               alignment: Alignment.center,
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                child: Text('${math.max<int>(_task.progress!, 0)}%',
+                child: Text('${math.max<int>(task.progress!, 0)}%',
                     style: TextStyle(color: Colors.white)),
               )),
         ],

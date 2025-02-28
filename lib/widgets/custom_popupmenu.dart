@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
-import 'package:tsacdop/util/extension_helper.dart';
+import '../util/extension_helper.dart';
 
 const Duration _kMenuDuration = Duration(milliseconds: 300);
 const double _kMenuCloseIntervalEnd = 2.0 / 3.0;
@@ -13,10 +13,9 @@ const double _kMenuScreenPadding = 8.0;
 
 class _MenuItem extends SingleChildRenderObjectWidget {
   const _MenuItem({
-    Key? key,
     required this.onLayout,
-    Widget? child,
-  }) : super(key: key, child: child);
+    super.child,
+  });
 
   final ValueChanged<Size> onLayout;
 
@@ -53,7 +52,7 @@ class _RenderMenuItem extends RenderShiftedBox {
 
 class _PopupMenu<T> extends StatelessWidget {
   const _PopupMenu({
-    Key? key,
+    super.key,
     required this.route,
     this.semanticLabel,
     this.constraints,
@@ -63,7 +62,7 @@ class _PopupMenu<T> extends StatelessWidget {
     this.animateOpacity = true,
     this.animateHeight = true,
     this.animateWidth = true,
-  }) : super(key: key);
+  });
 
   final _PopupMenuRoute<T> route;
   final String? semanticLabel;
@@ -77,8 +76,8 @@ class _PopupMenu<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final itemCount;
-    final adjustedConstraints;
+    final int itemCount;
+    final BoxConstraints? adjustedConstraints;
     if (visibleItemCount != null) {
       itemCount = visibleItemCount!.clamp(0, route.items.length);
       final fullHeight =
@@ -458,7 +457,7 @@ class MyPopupMenuButton<T> extends StatefulWidget {
   ///
   /// The [itemBuilder] argument must not be null.
   const MyPopupMenuButton({
-    Key? key,
+    super.key,
     required this.itemBuilder,
     this.initialValue,
     this.onSelected,
@@ -485,8 +484,7 @@ class MyPopupMenuButton<T> extends StatefulWidget {
   })  : assert(!(child != null && icon != null),
             'You can only pass [child] or [icon], not both.'),
         assert(visibleItemCount == null || itemExtent != null,
-            '[itemExtent] is required if [visibleItemCount] is set.'),
-        super(key: key);
+            '[itemExtent] is required if [visibleItemCount] is set.');
 
   final PopupMenuItemBuilder<T> itemBuilder;
 
@@ -578,14 +576,14 @@ class MyPopupMenuButtonState<T> extends State<MyPopupMenuButton<T>> {
         captureInheritedThemes: widget.captureInheritedThemes,
         animateWidth: widget.position == PopupMenuPosition.over,
       ).then<void>((newValue) async {
-        if (!mounted) return null;
+        if (!mounted) return;
         if (newValue == null) {
           if (widget.onCanceled != null) widget.onCanceled!();
         } else {
           if (widget.onSelected != null) widget.onSelected!(newValue);
         }
         await widget.afterClosed?.call();
-        return null;
+        return;
       });
     }
   }

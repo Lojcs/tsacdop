@@ -39,9 +39,9 @@ class PodcastsBackup {
                 'outline',
                 nest: () {
                   builder.attribute('type', 'rss');
-                  builder.attribute('text', '${e.title}');
-                  builder.attribute('title', '${e.title}');
-                  builder.attribute('xmlUrl', '${e.rssUrl}');
+                  builder.attribute('text', e.title);
+                  builder.attribute('title', e.title);
+                  builder.attribute('xmlUrl', e.rssUrl);
                 },
                 isSelfClosing: true,
               );

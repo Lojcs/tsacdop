@@ -44,7 +44,7 @@ class Gpodder {
     _dio.interceptors.add(CookieManager(cookieJar));
     final basicAuth =
         'Basic ${base64Encode(utf8.encode('$username:$password'))}';
-    var status;
+    int? status;
     Response response;
     try {
       response = await _dio.post('$_baseUrl/api/2/auth/$username/login.json',
@@ -62,7 +62,7 @@ class Gpodder {
     final loginInfo = await _storage.getStringList();
     final username = loginInfo[0];
     await _initDio();
-    var status;
+    int? status;
     try {
       var response = await _dio.post(
         '$_baseUrl/api/2/auth/$username/logout.json',
@@ -155,7 +155,7 @@ class Gpodder {
     for (var podcast in podcasts) {
       subscriptions += '${podcast.rssUrl}\n';
     }
-    var status;
+    int? status;
     try {
       final response = await _dio.put(
           '$_baseUrl/subscriptions/$username/$deviceId.txt',
@@ -175,7 +175,7 @@ class Gpodder {
     final syncDataTime = DateTime.now().millisecondsSinceEpoch;
     await _dateTimeStorage.saveInt(syncDataTime);
     final timeStamp = loginInfo.length == 3 ? int.parse(loginInfo[2]) : 0;
-    var status;
+    int? status;
     Response response;
     await _initDio();
     try {
@@ -211,7 +211,7 @@ class Gpodder {
     final username = loginInfo[0];
     final deviceId = loginInfo[1];
     await _initDio();
-    var status;
+    int? status;
     Response response;
     try {
       response = await _dio.post(

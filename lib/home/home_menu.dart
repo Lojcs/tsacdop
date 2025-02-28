@@ -18,6 +18,8 @@ import '../util/extension_helper.dart';
 import 'about.dart';
 
 class PopupMenu extends StatefulWidget {
+  const PopupMenu({super.key});
+
   @override
   _PopupMenuState createState() => _PopupMenuState();
 }

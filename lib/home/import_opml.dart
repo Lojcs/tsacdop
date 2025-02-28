@@ -10,6 +10,8 @@ import '../state/refresh_podcast.dart';
 import '../util/extension_helper.dart';
 
 class Import extends StatelessWidget {
+  const Import({super.key});
+
   Widget importColumn(String text, BuildContext context) {
     return Container(
       color: context.primaryColorDark,
@@ -39,7 +41,7 @@ class Import extends StatelessWidget {
       final episodes = await dbHelper.getEpisodes(
           filterNew: true, filterDownloaded: false, filterAutoDownload: true);
       // For safety
-      if (episodes.length < 100 && episodes.length > 0) {
+      if (episodes.length < 100 && episodes.isNotEmpty) {
         for (var episode in episodes) {
           await downloader.startTask(episode, showNotification: true);
         }

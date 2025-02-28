@@ -6,9 +6,9 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:tsacdop/episodes/menu_bar.dart';
-import 'package:tsacdop/episodes/shownote.dart';
-import 'package:tsacdop/util/helpers.dart';
+import 'menu_bar.dart';
+import 'shownote.dart';
+import '../util/helpers.dart';
 import 'package:tuple/tuple.dart';
 
 import '../home/audioplayer.dart';
@@ -25,9 +25,8 @@ class EpisodeDetail extends StatefulWidget {
   final EpisodeBrief episodeItem;
   final bool hide;
   final VoidCallback? onClosed;
-  EpisodeDetail(
-      {required this.episodeItem, this.hide = false, this.onClosed, Key? key})
-      : super(key: key);
+  const EpisodeDetail(
+      {required this.episodeItem, this.hide = false, this.onClosed, super.key});
 
   @override
   _EpisodeDetailState createState() => _EpisodeDetailState();
@@ -102,7 +101,7 @@ class _EpisodeDetailInner extends StatefulWidget {
   final Color color;
   final bool hide;
 
-  _EpisodeDetailInner(this.episodeItem, this.color, this.hide);
+  const _EpisodeDetailInner(this.episodeItem, this.color, this.hide);
 
   @override
   __EpisodeDetailInnerState createState() => __EpisodeDetailInnerState();
@@ -277,7 +276,7 @@ class __EpisodeDetailInnerState extends State<_EpisodeDetailInner> {
                               Padding(
                                 padding: EdgeInsets.only(top: 2),
                                 child: Text(
-                                  _episodeItem.number.toString() + " | ",
+                                  "${_episodeItem.number} | ",
                                   style: GoogleFonts.teko(
                                       textStyle:
                                           context.textTheme.headlineSmall),
@@ -593,9 +592,8 @@ class __EpisodeDetailInnerState extends State<_EpisodeDetailInner> {
           ),
           DropdownButton(
             hint: Text(
-                context.s.published(formateDate(_episodeItem.pubDate) +
-                    " " +
-                    ((_episodeItem.pubDate ~/ 1000) % 1440).toTime),
+                context.s.published(
+                    "${formateDate(_episodeItem.pubDate)} ${((_episodeItem.pubDate ~/ 1000) % 1440).toTime}"),
                 style: TextStyle(color: context.accentColor)),
             underline: Center(),
             dropdownColor: context.accentBackground,
@@ -606,9 +604,7 @@ class __EpisodeDetailInnerState extends State<_EpisodeDetailInner> {
                 .map(
                   (e) => Text(
                     context.s.published(
-                      formateDate(e!.pubDate) +
-                          " " +
-                          ((_episodeItem.pubDate ~/ 1000) % 1440).toTime,
+                      "${formateDate(e!.pubDate)} ${((_episodeItem.pubDate ~/ 1000) % 1440).toTime}",
                     ),
                     style: TextStyle(
                       color: context.accentColor,
@@ -622,9 +618,7 @@ class __EpisodeDetailInnerState extends State<_EpisodeDetailInner> {
                     child: Row(
                       children: [
                         Text(
-                          context.s.published(formateDate(e!.pubDate)) +
-                              " " +
-                              ((_episodeItem.pubDate ~/ 1000) % 1440).toTime,
+                          "${context.s.published(formateDate(e!.pubDate))} ${((_episodeItem.pubDate ~/ 1000) % 1440).toTime}",
                           style: TextStyle(
                             fontWeight: e.isDisplayVersion!
                                 ? FontWeight.bold

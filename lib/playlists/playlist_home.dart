@@ -35,7 +35,7 @@ import '../widgets/dismissible_container.dart';
 import 'playlist_page.dart';
 
 class PlaylistHome extends StatefulWidget {
-  PlaylistHome({Key? key}) : super(key: key);
+  const PlaylistHome({super.key});
 
   @override
   _PlaylistHomeState createState() => _PlaylistHomeState();
@@ -323,7 +323,7 @@ class _PlaylistHomeState extends State<PlaylistHome> {
 }
 
 class _Queue extends StatefulWidget {
-  const _Queue({Key? key}) : super(key: key);
+  const _Queue();
 
   @override
   __QueueState createState() => __QueueState();
@@ -382,7 +382,7 @@ class __QueueState extends State<_Queue> {
 }
 
 class _History extends StatefulWidget {
-  const _History({Key? key}) : super(key: key);
+  const _History();
 
   @override
   __HistoryState createState() => __HistoryState();
@@ -647,7 +647,7 @@ class __HistoryState extends State<_History> {
 }
 
 class _Playlists extends StatefulWidget {
-  const _Playlists({Key? key}) : super(key: key);
+  const _Playlists();
 
   @override
   __PlaylistsState createState() => __PlaylistsState();
@@ -881,7 +881,7 @@ class __PlaylistsState extends State<_Playlists> {
 enum NewPlaylistOption { blank, randon10, latest10, folder }
 
 class _NewPlaylist extends StatefulWidget {
-  _NewPlaylist({Key? key}) : super(key: key);
+  const _NewPlaylist();
 
   @override
   __NewPlaylistState createState() => __NewPlaylistState();
@@ -977,7 +977,7 @@ class __NewPlaylistState extends State<_NewPlaylist> {
 
   Future<List<EpisodeBrief>> _loadLocalFolder() async {
     var episodes = <EpisodeBrief>[];
-    var dirPath;
+    String? dirPath;
     try {
       dirPath = await FilePicker.platform.getDirectoryPath();
     } catch (e) {
@@ -1028,7 +1028,7 @@ class __NewPlaylistState extends State<_NewPlaylist> {
     final fileLength = File(path).statSync().size;
     final pubDate = DateTime.now().millisecondsSinceEpoch;
     String? primaryColor;
-    var imagePath;
+    String? imagePath;
     var metadata = await MetadataRetriever.fromFile(File(path));
     if (metadata.albumArt != null) {
       final dir = await getApplicationDocumentsDirectory();

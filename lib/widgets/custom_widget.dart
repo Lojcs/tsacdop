@@ -18,18 +18,18 @@ class LayoutPainter extends CustomPainter {
   LayoutPainter(this.scale, this.color, {this.stroke = 1});
   @override
   void paint(Canvas canvas, Size size) {
-    var _paint = Paint()
+    var paint = Paint()
       ..color = color!
       ..strokeWidth = stroke
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
-    canvas.drawRect(Rect.fromLTRB(0, 0, 10 + 5 * scale, 10), _paint);
+    canvas.drawRect(Rect.fromLTRB(0, 0, 10 + 5 * scale, 10), paint);
     if (scale < 4) {
       canvas.drawRect(
-          Rect.fromLTRB(10 + 5 * scale, 0, 20 + 10 * scale, 10), _paint);
+          Rect.fromLTRB(10 + 5 * scale, 0, 20 + 10 * scale, 10), paint);
       canvas.drawRect(
-          Rect.fromLTRB(20 + 5 * scale, 0, 30, 10 - 10 * scale), _paint);
+          Rect.fromLTRB(20 + 5 * scale, 0, 30, 10 - 10 * scale), paint);
     }
   }
 
@@ -117,19 +117,19 @@ class StarSky extends CustomPainter {
       ..color = Colors.white
       ..strokeWidth = 2.0
       ..strokeCap = StrokeCap.round;
-    var _fullPaint = Paint()
+    var fullPaint = Paint()
       ..color = Colors.white
       ..strokeWidth = 1.0
       ..strokeCap = StrokeCap.butt
       ..style = PaintingStyle.fill;
-    _darwStar(Offset center, double radius) {
+    darwStar(Offset center, double radius) {
       canvas.drawCircle(center, radius, paint);
       var path = Path()
         ..addOval(Rect.fromCircle(center: center, radius: radius * 2));
       canvas.drawShadow(path.shift(Offset(0, -6)), Colors.white, 6, true);
     }
 
-    _darwBigStar(Offset center, double radius) {
+    darwBigStar(Offset center, double radius) {
       var path = Path();
       path.moveTo(center.dx - radius * 1.5, center.dy);
       path.quadraticBezierTo(center.dx - radius * 0.2, center.dy - radius * 0.2,
@@ -142,20 +142,20 @@ class StarSky extends CustomPainter {
           center.dx - radius * 1.5, center.dy);
       path.close();
 
-      canvas.drawPath(path, _fullPaint);
+      canvas.drawPath(path, fullPaint);
       // canvas.drawShadow(path.shift(Offset(0, -6)), Colors.white, 10, true);
       // This line freezes the ui with no exceptions raised
     }
 
     for (var center in pisces) {
-      _darwStar(center, 2);
+      darwStar(center, 2);
     }
     for (var center in orion) {
-      _darwStar(center, 2);
+      darwStar(center, 2);
     }
     for (var center in points) {
-      _darwBigStar(center, 4);
-      _darwStar(center, 2);
+      darwBigStar(center, 4);
+      darwStar(center, 2);
     }
   }
 
@@ -168,8 +168,7 @@ class StarSky extends CustomPainter {
 class BiStateIndicator extends StatefulWidget {
   final bool state;
   final Widget child;
-  BiStateIndicator({required this.state, required this.child, Key? key})
-      : super(key: key);
+  const BiStateIndicator({required this.state, required this.child, super.key});
   @override
   _BiStateIndicatorState createState() => _BiStateIndicatorState();
 }
@@ -217,11 +216,11 @@ class _BiStateIndicatorState extends State<BiStateIndicator>
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-        child: widget.child,
         foregroundPainter: BiStateIndicatorPainter(
             fraction: animation.value,
             color: context.textColor,
-            backgroundColor: context.accentColor));
+            backgroundColor: context.accentColor),
+        child: widget.child);
   }
 }
 
@@ -238,7 +237,7 @@ class BiStateIndicatorPainter extends CustomPainter {
   });
   @override
   void paint(Canvas canvas, Size size) {
-    var _linePaint = Paint()
+    var linePaint = Paint()
       ..color = backgroundColor!
       ..strokeWidth = stroke * 2
       ..strokeCap = StrokeCap.round
@@ -248,7 +247,7 @@ class BiStateIndicatorPainter extends CustomPainter {
           Offset(size.width, size.height) / 5,
           Offset(size.width, size.height) / 5 +
               Offset(size.width, size.height) * 3 / 5 * fraction!,
-          _linePaint);
+          linePaint);
     }
   }
 
@@ -265,24 +264,24 @@ class ListenedPainter extends CustomPainter {
   ListenedPainter(this._color, {this.stroke = 1.0});
   @override
   void paint(Canvas canvas, Size size) {
-    var _paint = Paint()
+    var paint = Paint()
       ..color = _color!
       ..strokeWidth = stroke
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
-    var _path = Path();
-    _path.moveTo(size.width / 6, size.height * 3 / 8);
-    _path.lineTo(size.width / 6, size.height * 5 / 8);
-    _path.moveTo(size.width / 3, size.height / 4);
-    _path.lineTo(size.width / 3, size.height * 3 / 4);
-    _path.moveTo(size.width / 2, size.height / 8);
-    _path.lineTo(size.width / 2, size.height * 7 / 8);
-    _path.moveTo(size.width * 5 / 6, size.height * 3 / 8);
-    _path.lineTo(size.width * 5 / 6, size.height * 5 / 8);
-    _path.moveTo(size.width * 2 / 3, size.height / 4);
-    _path.lineTo(size.width * 2 / 3, size.height * 3 / 4);
+    var path = Path();
+    path.moveTo(size.width / 6, size.height * 3 / 8);
+    path.lineTo(size.width / 6, size.height * 5 / 8);
+    path.moveTo(size.width / 3, size.height / 4);
+    path.lineTo(size.width / 3, size.height * 3 / 4);
+    path.moveTo(size.width / 2, size.height / 8);
+    path.lineTo(size.width / 2, size.height * 7 / 8);
+    path.moveTo(size.width * 5 / 6, size.height * 3 / 8);
+    path.lineTo(size.width * 5 / 6, size.height * 5 / 8);
+    path.moveTo(size.width * 2 / 3, size.height / 4);
+    path.lineTo(size.width * 2 / 3, size.height * 3 / 4);
 
-    canvas.drawPath(_path, _paint);
+    canvas.drawPath(path, paint);
   }
 
   @override
@@ -298,25 +297,25 @@ class ListenedAllPainter extends CustomPainter {
   ListenedAllPainter(this.color, {this.stroke = 1.0});
   @override
   void paint(Canvas canvas, Size size) {
-    var _paint = Paint()
+    var paint = Paint()
       ..color = color!
       ..strokeWidth = stroke
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
-    var _path = Path();
-    _path.moveTo(size.width / 6, size.height * 3 / 8);
-    _path.lineTo(size.width / 6, size.height * 5 / 8);
-    _path.moveTo(size.width / 3, size.height / 4);
-    _path.lineTo(size.width / 3, size.height * 3 / 4);
-    _path.moveTo(size.width / 2, size.height * 3 / 8);
-    _path.lineTo(size.width / 2, size.height * 5 / 8);
-    _path.moveTo(size.width * 2 / 3, size.height * 4 / 9);
-    _path.lineTo(size.width * 2 / 3, size.height * 5 / 9);
-    _path.moveTo(size.width / 2, size.height * 3 / 4);
-    _path.lineTo(size.width * 2 / 3, size.height * 7 / 8);
-    _path.lineTo(size.width * 7 / 8, size.height * 5 / 8);
+    var path = Path();
+    path.moveTo(size.width / 6, size.height * 3 / 8);
+    path.lineTo(size.width / 6, size.height * 5 / 8);
+    path.moveTo(size.width / 3, size.height / 4);
+    path.lineTo(size.width / 3, size.height * 3 / 4);
+    path.moveTo(size.width / 2, size.height * 3 / 8);
+    path.lineTo(size.width / 2, size.height * 5 / 8);
+    path.moveTo(size.width * 2 / 3, size.height * 4 / 9);
+    path.lineTo(size.width * 2 / 3, size.height * 5 / 9);
+    path.moveTo(size.width / 2, size.height * 3 / 4);
+    path.lineTo(size.width * 2 / 3, size.height * 7 / 8);
+    path.lineTo(size.width * 7 / 8, size.height * 5 / 8);
 
-    canvas.drawPath(_path, _paint);
+    canvas.drawPath(path, paint);
   }
 
   @override
@@ -332,26 +331,26 @@ class MarkListenedPainter extends CustomPainter {
   MarkListenedPainter(this.color, {this.stroke = 1.0});
   @override
   void paint(Canvas canvas, Size size) {
-    var _paint = Paint()
+    var paint = Paint()
       ..color = color
       ..strokeWidth = stroke
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
-    var _path = Path();
-    _path.moveTo(size.width / 6, size.height * 3 / 8);
-    _path.lineTo(size.width / 6, size.height * 5 / 8);
-    _path.moveTo(size.width / 3, size.height / 4);
-    _path.lineTo(size.width / 3, size.height * 3 / 4);
-    _path.moveTo(size.width / 2, size.height * 3 / 8);
-    _path.lineTo(size.width / 2, size.height * 5 / 8);
+    var path = Path();
+    path.moveTo(size.width / 6, size.height * 3 / 8);
+    path.lineTo(size.width / 6, size.height * 5 / 8);
+    path.moveTo(size.width / 3, size.height / 4);
+    path.lineTo(size.width / 3, size.height * 3 / 4);
+    path.moveTo(size.width / 2, size.height * 3 / 8);
+    path.lineTo(size.width / 2, size.height * 5 / 8);
     // _path.moveTo(size.width * 2 / 3, size.height * 4 / 9);
     // _path.lineTo(size.width * 2 / 3, size.height * 5 / 9);
-    _path.moveTo(size.width / 2, size.height * 13 / 18);
-    _path.lineTo(size.width * 5 / 6, size.height * 13 / 18);
-    _path.moveTo(size.width * 2 / 3, size.height * 5 / 9);
-    _path.lineTo(size.width * 2 / 3, size.height * 8 / 9);
+    path.moveTo(size.width / 2, size.height * 13 / 18);
+    path.lineTo(size.width * 5 / 6, size.height * 13 / 18);
+    path.moveTo(size.width * 2 / 3, size.height * 5 / 9);
+    path.lineTo(size.width * 2 / 3, size.height * 8 / 9);
 
-    canvas.drawPath(_path, _paint);
+    canvas.drawPath(path, paint);
   }
 
   @override
@@ -370,36 +369,36 @@ class HideListenedPainter extends CustomPainter {
       {this.color, this.stroke = 1.0, this.backgroundColor, this.fraction});
   @override
   void paint(Canvas canvas, Size size) {
-    var _paint = Paint()
+    var paint = Paint()
       ..color = color!
       ..strokeWidth = stroke
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
-    var _linePaint = Paint()
+    var linePaint = Paint()
       ..color = backgroundColor!
       ..strokeWidth = stroke * 2
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
-    var _path = Path();
+    var path = Path();
 
-    _path.moveTo(size.width / 6, size.height * 3 / 8);
-    _path.lineTo(size.width / 6, size.height * 5 / 8);
-    _path.moveTo(size.width / 3, size.height / 4);
-    _path.lineTo(size.width / 3, size.height * 3 / 4);
-    _path.moveTo(size.width / 2, size.height / 8);
-    _path.lineTo(size.width / 2, size.height * 7 / 8);
-    _path.moveTo(size.width * 5 / 6, size.height * 3 / 8);
-    _path.lineTo(size.width * 5 / 6, size.height * 5 / 8);
-    _path.moveTo(size.width * 2 / 3, size.height / 4);
-    _path.lineTo(size.width * 2 / 3, size.height * 3 / 4);
+    path.moveTo(size.width / 6, size.height * 3 / 8);
+    path.lineTo(size.width / 6, size.height * 5 / 8);
+    path.moveTo(size.width / 3, size.height / 4);
+    path.lineTo(size.width / 3, size.height * 3 / 4);
+    path.moveTo(size.width / 2, size.height / 8);
+    path.lineTo(size.width / 2, size.height * 7 / 8);
+    path.moveTo(size.width * 5 / 6, size.height * 3 / 8);
+    path.lineTo(size.width * 5 / 6, size.height * 5 / 8);
+    path.moveTo(size.width * 2 / 3, size.height / 4);
+    path.lineTo(size.width * 2 / 3, size.height * 3 / 4);
 
-    canvas.drawPath(_path, _paint);
+    canvas.drawPath(path, paint);
     if (fraction! > 0) {
       canvas.drawLine(
           Offset(size.width, size.height) / 5,
           Offset(size.width, size.height) / 5 +
               Offset(size.width, size.height) * 3 / 5 * fraction!,
-          _linePaint);
+          linePaint);
     }
   }
 
@@ -411,7 +410,7 @@ class HideListenedPainter extends CustomPainter {
 
 class HideListened extends StatefulWidget {
   final bool? hideListened;
-  HideListened({this.hideListened, Key? key}) : super(key: key);
+  const HideListened({this.hideListened, super.key});
   @override
   _HideListenedState createState() => _HideListenedState();
 }
@@ -472,18 +471,18 @@ class AddToPlaylistPainter extends CustomPainter {
   AddToPlaylistPainter(this.color, this.textColor);
   @override
   void paint(Canvas canvas, Size size) {
-    var _paint = Paint()
+    var paint = Paint()
       ..color = color
       ..strokeWidth = 1
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
-    var _path = Path();
-    _path.moveTo(0, size.height / 5);
-    _path.lineTo(size.width * 4 / 7, size.height / 5);
-    _path.moveTo(0, size.height / 2);
-    _path.lineTo(size.width * 4 / 7, size.height / 2);
-    _path.moveTo(0, size.height * 4 / 5);
-    _path.lineTo(size.width * 3 / 7, size.height * 4 / 5);
+    var path = Path();
+    path.moveTo(0, size.height / 5);
+    path.lineTo(size.width * 4 / 7, size.height / 5);
+    path.moveTo(0, size.height / 2);
+    path.lineTo(size.width * 4 / 7, size.height / 2);
+    path.moveTo(0, size.height * 4 / 5);
+    path.lineTo(size.width * 3 / 7, size.height * 4 / 5);
 
     var textPainter = TextPainter(
         textAlign: TextAlign.center,
@@ -495,7 +494,7 @@ class AddToPlaylistPainter extends CustomPainter {
         ))
       ..layout();
     textPainter.paint(canvas, Offset(size.width * 4 / 7, size.height * 3 / 5));
-    canvas.drawPath(_path, _paint);
+    canvas.drawPath(path, paint);
   }
 
   @override
@@ -513,21 +512,21 @@ class RemoveNewFlagPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    var _paint = Paint()
+    var paint = Paint()
       ..color = color!
       ..strokeWidth = stroke
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
-    var _path = Path();
+    var path = Path();
 
-    _path.moveTo(size.width * 3 / 5, size.height / 5);
-    _path.lineTo(size.width * 4 / 5, size.height * 2 / 5);
-    _path.lineTo(size.width * 2 / 5, size.height * 4 / 5);
-    _path.lineTo(size.width / 5, size.height * 3 / 5);
-    _path.lineTo(size.width * 3 / 5, size.height / 5);
-    _path.moveTo(size.width * 2 / 5, size.height * 2 / 5);
-    _path.lineTo(size.width * 3 / 5, size.height * 3 / 5);
+    path.moveTo(size.width * 3 / 5, size.height / 5);
+    path.lineTo(size.width * 4 / 5, size.height * 2 / 5);
+    path.lineTo(size.width * 2 / 5, size.height * 4 / 5);
+    path.lineTo(size.width / 5, size.height * 3 / 5);
+    path.lineTo(size.width * 3 / 5, size.height / 5);
+    path.moveTo(size.width * 2 / 5, size.height * 2 / 5);
+    path.lineTo(size.width * 3 / 5, size.height * 3 / 5);
 
     var textPainter = TextPainter(
         textAlign: TextAlign.center,
@@ -542,7 +541,7 @@ class RemoveNewFlagPainter extends CustomPainter {
         ))
       ..layout();
     textPainter.paint(canvas, Offset(size.width * 4 / 7, size.height * 3 / 5));
-    canvas.drawPath(_path, _paint);
+    canvas.drawPath(path, paint);
   }
 
   @override
@@ -566,35 +565,35 @@ class WavePainter extends CustomPainter {
     } else {
       _value = 1 - _fraction;
     }
-    var _path = Path();
-    var _paint = Paint()
+    var path = Path();
+    var paint = Paint()
       ..color = _color
       ..strokeWidth = 2.0
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
-    _path.moveTo(0, size.height / 2);
-    _path.lineTo(0, size.height / 2 + size.height * _value * 0.2);
-    _path.moveTo(0, size.height / 2);
-    _path.lineTo(0, size.height / 2 - size.height * _value * 0.2);
-    _path.moveTo(size.width / 4, size.height / 2);
-    _path.lineTo(size.width / 4, size.height / 2 + size.height * _value * 0.8);
-    _path.moveTo(size.width / 4, size.height / 2);
-    _path.lineTo(size.width / 4, size.height / 2 - size.height * _value * 0.8);
-    _path.moveTo(size.width / 2, size.height / 2);
-    _path.lineTo(size.width / 2, size.height / 2 + size.height * _value * 0.5);
-    _path.moveTo(size.width / 2, size.height / 2);
-    _path.lineTo(size.width / 2, size.height / 2 - size.height * _value * 0.5);
-    _path.moveTo(size.width * 3 / 4, size.height / 2);
-    _path.lineTo(
+    path.moveTo(0, size.height / 2);
+    path.lineTo(0, size.height / 2 + size.height * _value * 0.2);
+    path.moveTo(0, size.height / 2);
+    path.lineTo(0, size.height / 2 - size.height * _value * 0.2);
+    path.moveTo(size.width / 4, size.height / 2);
+    path.lineTo(size.width / 4, size.height / 2 + size.height * _value * 0.8);
+    path.moveTo(size.width / 4, size.height / 2);
+    path.lineTo(size.width / 4, size.height / 2 - size.height * _value * 0.8);
+    path.moveTo(size.width / 2, size.height / 2);
+    path.lineTo(size.width / 2, size.height / 2 + size.height * _value * 0.5);
+    path.moveTo(size.width / 2, size.height / 2);
+    path.lineTo(size.width / 2, size.height / 2 - size.height * _value * 0.5);
+    path.moveTo(size.width * 3 / 4, size.height / 2);
+    path.lineTo(
         size.width * 3 / 4, size.height / 2 + size.height * _value * 0.6);
-    _path.moveTo(size.width * 3 / 4, size.height / 2);
-    _path.lineTo(
+    path.moveTo(size.width * 3 / 4, size.height / 2);
+    path.lineTo(
         size.width * 3 / 4, size.height / 2 - size.height * _value * 0.6);
-    _path.moveTo(size.width, size.height / 2);
-    _path.lineTo(size.width, size.height / 2 + size.height * _value * 0.2);
-    _path.moveTo(size.width, size.height / 2);
-    _path.lineTo(size.width, size.height / 2 - size.height * _value * 0.2);
-    canvas.drawPath(_path, _paint);
+    path.moveTo(size.width, size.height / 2);
+    path.lineTo(size.width, size.height / 2 + size.height * _value * 0.2);
+    path.moveTo(size.width, size.height / 2);
+    path.lineTo(size.width, size.height / 2 - size.height * _value * 0.2);
+    canvas.drawPath(path, paint);
   }
 
   @override
@@ -606,7 +605,7 @@ class WavePainter extends CustomPainter {
 class WaveLoader extends StatefulWidget {
   final Color? color;
   final bool animate;
-  WaveLoader({this.color, this.animate = true, Key? key}) : super(key: key);
+  const WaveLoader({this.color, this.animate = true, super.key});
   @override
   _WaveLoaderState createState() => _WaveLoaderState();
 }
@@ -657,26 +656,26 @@ class _WaveLoaderState extends State<WaveLoader>
 class LovePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    var _path = Path();
-    var _paint = Paint()
+    var path = Path();
+    var paint = Paint()
       ..color = Colors.red
       ..strokeWidth = 2.0
       ..strokeCap = StrokeCap.round;
 
-    _path.moveTo(size.width / 2, size.height / 6);
-    _path.quadraticBezierTo(size.width / 4, 0, size.width / 8, size.height / 6);
-    _path.quadraticBezierTo(
+    path.moveTo(size.width / 2, size.height / 6);
+    path.quadraticBezierTo(size.width / 4, 0, size.width / 8, size.height / 6);
+    path.quadraticBezierTo(
         0, size.height / 3, size.width / 8, size.height * 0.55);
-    _path.quadraticBezierTo(
+    path.quadraticBezierTo(
         size.width / 4, size.height * 0.8, size.width / 2, size.height);
-    _path.quadraticBezierTo(size.width * 0.75, size.height * 0.8,
+    path.quadraticBezierTo(size.width * 0.75, size.height * 0.8,
         size.width * 7 / 8, size.height * 0.55);
-    _path.quadraticBezierTo(
+    path.quadraticBezierTo(
         size.width, size.height / 3, size.width * 7 / 8, size.height / 6);
-    _path.quadraticBezierTo(
+    path.quadraticBezierTo(
         size.width * 3 / 4, 0, size.width / 2, size.height / 6);
 
-    canvas.drawPath(_path, _paint);
+    canvas.drawPath(path, paint);
   }
 
   @override
@@ -711,6 +710,8 @@ class LinePainter extends CustomPainter {
 }
 
 class LineLoader extends StatefulWidget {
+  const LineLoader({super.key});
+
   @override
   _LineLoaderState createState() => _LineLoaderState();
 }
@@ -757,7 +758,7 @@ class _LineLoaderState extends State<LineLoader>
 
 class ImageRotate extends StatefulWidget {
   final EpisodeBrief? episodeItem;
-  ImageRotate({this.episodeItem, Key? key}) : super(key: key);
+  const ImageRotate({this.episodeItem, super.key});
   @override
   _ImageRotateState createState() => _ImageRotateState();
 }
@@ -820,6 +821,8 @@ class _ImageRotateState extends State<ImageRotate>
 }
 
 class LoveOpen extends StatefulWidget {
+  const LoveOpen({super.key});
+
   @override
   _LoveOpenState createState() => _LoveOpenState();
 }
@@ -914,7 +917,7 @@ class _LoveOpenState extends State<LoveOpen>
 class HeartSet extends StatefulWidget {
   final double? height;
   final double? width;
-  HeartSet({Key? key, this.height, this.width}) : super(key: key);
+  const HeartSet({super.key, this.height, this.width});
 
   @override
   _HeartSetState createState() => _HeartSetState();
@@ -972,7 +975,7 @@ class _HeartSetState extends State<HeartSet>
 class HeartOpen extends StatefulWidget {
   final double? height;
   final double? width;
-  HeartOpen({Key? key, this.height, this.width}) : super(key: key);
+  const HeartOpen({super.key, this.height, this.width});
 
   @override
   _HeartOpenState createState() => _HeartOpenState();
@@ -1043,7 +1046,7 @@ class _HeartOpenState extends State<HeartOpen>
           child: Icon(Icons.favorite,
               color: Colors.blue.withValues(alpha: 0.7), size: 20 * _value),
         ),
-        ..._index.map<Widget>(_position).toList(),
+        ..._index.map<Widget>(_position),
       ],
     );
   }
@@ -1051,8 +1054,8 @@ class _HeartOpenState extends State<HeartOpen>
 
 /// Icon using a painter.
 class IconPainter extends StatelessWidget {
-  const IconPainter(this.painter, {this.height = 10, this.width = 30, Key? key})
-      : super(key: key);
+  const IconPainter(this.painter,
+      {this.height = 10, this.width = 30, super.key});
   final double height;
   final double width;
   final CustomPainter painter;
@@ -1070,9 +1073,8 @@ class IconPainter extends StatelessWidget {
 
 /// A dot just a dot.
 class DotIndicator extends StatelessWidget {
-  DotIndicator({this.radius = 8, this.color, Key? key})
-      : assert(radius > 0),
-        super(key: key);
+  const DotIndicator({this.radius = 8, this.color, super.key})
+      : assert(radius > 0);
   final Color? color;
   final double radius;
 
@@ -1104,15 +1106,15 @@ class DownloadPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    var _paint = Paint()
+    var paint = Paint()
       ..color = color!
       ..strokeWidth = stroke
       ..strokeCap = StrokeCap.round;
-    var _circlePaint = Paint()
+    var circlePaint = Paint()
       ..color = color!.withAlpha(70)
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke;
-    var _progressPaint = Paint()
+    var progressPaint = Paint()
       ..color = progressColor!
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke
@@ -1122,35 +1124,35 @@ class DownloadPainter extends CustomPainter {
     var center = Offset(size.width / 2, size.height / 2);
     if (pauseProgress == 0 && progress < 1) {
       canvas.drawLine(Offset(width / 2, height / 8),
-          Offset(width / 2, height * 4 / 5), _paint);
+          Offset(width / 2, height * 4 / 5), paint);
       canvas.drawLine(Offset(width / 4, height / 2),
-          Offset(width / 2, height * 4 / 5), _paint);
+          Offset(width / 2, height * 4 / 5), paint);
       canvas.drawLine(Offset(width * 3 / 4, height / 2),
-          Offset(width / 2, height * 4 / 5), _paint);
+          Offset(width / 2, height * 4 / 5), paint);
     }
 
     if (fraction == 0) {
       canvas.drawLine(Offset(width / 5, height * 9 / 10),
-          Offset(width * 4 / 5, height * 9 / 10), _paint);
+          Offset(width * 4 / 5, height * 9 / 10), paint);
     } else if (progress < 1) {
       canvas.drawArc(Rect.fromCircle(center: center, radius: width / 2),
-          math.pi / 2, math.pi * fraction!, false, _circlePaint);
+          math.pi / 2, math.pi * fraction!, false, circlePaint);
       canvas.drawArc(Rect.fromCircle(center: center, radius: width / 2),
-          math.pi / 2, -math.pi * fraction!, false, _circlePaint);
+          math.pi / 2, -math.pi * fraction!, false, circlePaint);
     }
 
     if (progress == 1) {
       canvas.drawLine(Offset(width / 5, height * 9 / 10),
-          Offset(width * 4 / 5, height * 9 / 10), _progressPaint);
+          Offset(width * 4 / 5, height * 9 / 10), progressPaint);
       canvas.drawLine(Offset(width / 5, height * 5 / 10),
-          Offset(width * 2 / 5, height * 7 / 10), _progressPaint);
+          Offset(width * 2 / 5, height * 7 / 10), progressPaint);
       canvas.drawLine(Offset(width * 4 / 5, height * 3 / 10),
-          Offset(width * 2 / 5, height * 7 / 10), _progressPaint);
+          Offset(width * 2 / 5, height * 7 / 10), progressPaint);
     }
 
     if (fraction == 1 && progress < 1) {
       canvas.drawArc(Rect.fromCircle(center: center, radius: width / 2),
-          -math.pi / 2, math.pi * 2 * progress, false, _progressPaint);
+          -math.pi / 2, math.pi * 2 * progress, false, progressPaint);
     }
 
     if (pauseProgress > 0) {
@@ -1159,13 +1161,13 @@ class DownloadPainter extends CustomPainter {
               height / 2 - height * pauseProgress / 5),
           Offset(width / 2 - height * 3 * pauseProgress / 20,
               height * 4 / 5 - height * pauseProgress / 10),
-          _paint);
+          paint);
       canvas.drawLine(
           Offset(width * 4 / 5 - height * 3 * pauseProgress / 20,
               height / 2 - height * pauseProgress / 5),
           Offset(width / 2 + height * 3 * pauseProgress / 20,
               height * 4 / 5 - height * pauseProgress / 10),
-          _paint);
+          paint);
     }
   }
 
@@ -1180,7 +1182,7 @@ class DownloadPainter extends CustomPainter {
 
 /// Layout icon button.
 class LayoutButton extends StatelessWidget {
-  const LayoutButton({this.layout, this.onPressed, Key? key}) : super(key: key);
+  const LayoutButton({this.layout, this.onPressed, super.key});
   final EpisodeGridLayout? layout;
   final ValueChanged<EpisodeGridLayout>? onPressed;
   @override
@@ -1254,6 +1256,8 @@ class Meteor extends CustomPainter {
 
 /// Used in sleep mode widget.
 class MeteorLoader extends StatefulWidget {
+  const MeteorLoader({super.key});
+
   @override
   _MeteorLoaderState createState() => _MeteorLoaderState();
 }
@@ -1320,11 +1324,11 @@ class TabIndicator extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    var _paint = Paint()
+    var paint = Paint()
       ..color = color!
       ..strokeWidth = 3.0
       ..strokeCap = StrokeCap.round;
-    var _accentPaint = Paint()
+    var accentPaint = Paint()
       ..color = accentColor!
       ..strokeWidth = 3.0
       ..strokeCap = StrokeCap.round;
@@ -1339,15 +1343,15 @@ class TabIndicator extends CustomPainter {
     var rightEnd = startPoint +
         Offset(size.height, size.height) +
         Offset((size.width / 2 - size.height) * fraction!, 0);
-    canvas.drawLine(leftStart, leftEnd,
-        index == 0 || fraction == 0 ? _accentPaint : _paint);
+    canvas.drawLine(
+        leftStart, leftEnd, index == 0 || fraction == 0 ? accentPaint : paint);
     canvas.drawLine(rightStart, rightEnd,
-        index == 2 || fraction == 0 ? _accentPaint : _paint);
+        index == 2 || fraction == 0 ? accentPaint : paint);
     if (fraction == 1) {
       canvas.drawLine(
           Offset(size.width / 2 - indicatorSize! / 2, size.height),
           Offset(size.width / 2 + indicatorSize! / 2, size.height),
-          index == 1 || fraction == 0 ? _accentPaint : _paint);
+          index == 1 || fraction == 0 ? accentPaint : paint);
     }
   }
 
@@ -1394,7 +1398,7 @@ Widget episodeTag(String text, Color? color) {
 // Sleep time picker.
 class SleepTimerPicker extends StatefulWidget {
   final ValueChanged<Duration>? onChange;
-  SleepTimerPicker({this.onChange, Key? key}) : super(key: key);
+  const SleepTimerPicker({this.onChange, super.key});
 
   @override
   _SleepTimerPickerState createState() => _SleepTimerPickerState();
@@ -1507,8 +1511,8 @@ class _SleepTimerPickerState extends State<SleepTimerPicker> {
 class UpDownIndicator extends StatefulWidget {
   final bool status;
   final Color color;
-  UpDownIndicator({this.status = false, this.color = Colors.white, Key? key})
-      : super(key: key);
+  const UpDownIndicator(
+      {this.status = false, this.color = Colors.white, super.key});
 
   @override
   _UpDownIndicatorState createState() => _UpDownIndicatorState();

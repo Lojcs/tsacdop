@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
-import 'package:tsacdop/util/selection_controller.dart';
+import '../util/selection_controller.dart';
 import 'package:tuple/tuple.dart';
 
 import '../home/audioplayer.dart';
@@ -25,8 +25,8 @@ import 'custom_widget.dart';
 class MultiSelectPanelIntegration extends StatefulWidget {
   final bool expanded;
   const MultiSelectPanelIntegration({
+    super.key,
     this.expanded = true,
-    Key? key,
   });
 
   @override
@@ -124,8 +124,8 @@ class MultiSelectPanel extends StatefulWidget {
   final bool expanded;
   const MultiSelectPanel({
     this.expanded = true,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   _MultiSelectPanelState createState() => _MultiSelectPanelState();
@@ -145,9 +145,9 @@ class _MultiSelectPanelState extends State<MultiSelectPanel>
   EdgeInsets get iconPadding => context.actionBarIconPadding;
   Radius get iconRadius => context.actionBarIconRadius;
 
-  late Widget _selectionOptions = _SelectionOptions();
-  late Widget _playlistList = _PlaylistList();
-  late Widget _actionBar = _MultiselectActionBar(
+  late final Widget _selectionOptions = _SelectionOptions();
+  late final Widget _playlistList = _PlaylistList();
+  late final Widget _actionBar = _MultiselectActionBar(
     secondRowController: _secondRowController,
     expanded: widget.expanded,
   );
@@ -209,7 +209,7 @@ class _MultiSelectPanelState extends State<MultiSelectPanel>
 
   @override
   Widget build(BuildContext context) {
-    Widget child = Container(
+    Widget child = SizedBox(
       height: widget.expanded
           ? Tween<double>(
                       begin: 10 + iconButtonSize * 2 + iconPadding.vertical * 2,
@@ -324,8 +324,7 @@ class _SelectionOptions extends StatelessWidget {
                   selector: (context, cardColorScheme) =>
                       cardColorScheme.colorScheme.primary,
                   builder: (context, color, _) => Text(
-                    context.s
-                        .selected("${data.item1}" + (data.item3 ? "+" : "")),
+                    context.s.selected("${data.item1}${data.item3 ? "+" : ""}"),
                     style: context.textTheme.titleLarge!.copyWith(color: color),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -338,12 +337,6 @@ class _SelectionOptions extends StatelessWidget {
               selector: (context, selectionController) =>
                   selectionController.selectBefore,
               builder: (context, state, _) => ActionBarButton(
-                child: Center(
-                  child: Text(
-                    context.s.before,
-                    style: context.textTheme.titleMedium,
-                  ),
-                ),
                 expansionController: expansionController,
                 shrunkChild: Center(
                   child: Icon(
@@ -363,18 +356,18 @@ class _SelectionOptions extends StatelessWidget {
                 tooltip: context.s.before,
                 enabled: data.item2 >= 1,
                 connectRight: true,
+                child: Center(
+                  child: Text(
+                    context.s.before,
+                    style: context.textTheme.titleMedium,
+                  ),
+                ),
               ),
             ),
             Selector<SelectionController, bool>(
               selector: (context, selectionController) =>
                   selectionController.selectBetween,
               builder: (context, state, _) => ActionBarButton(
-                child: Center(
-                  child: Text(
-                    context.s.between,
-                    style: context.textTheme.titleMedium,
-                  ),
-                ),
                 expansionController: expansionController,
                 shrunkChild: Center(
                   child: Icon(
@@ -395,18 +388,18 @@ class _SelectionOptions extends StatelessWidget {
                 enabled: data.item2 >= 2,
                 connectLeft: true,
                 connectRight: true,
+                child: Center(
+                  child: Text(
+                    context.s.between,
+                    style: context.textTheme.titleMedium,
+                  ),
+                ),
               ),
             ),
             Selector<SelectionController, bool>(
               selector: (context, selectionController) =>
                   selectionController.selectAfter,
               builder: (context, state, _) => ActionBarButton(
-                child: Center(
-                  child: Text(
-                    context.s.after,
-                    style: context.textTheme.titleMedium,
-                  ),
-                ),
                 expansionController: expansionController,
                 shrunkChild: Center(
                   child: Icon(
@@ -427,18 +420,18 @@ class _SelectionOptions extends StatelessWidget {
                 enabled: data.item2 >= 1,
                 connectLeft: true,
                 connectRight: true,
+                child: Center(
+                  child: Text(
+                    context.s.after,
+                    style: context.textTheme.titleMedium,
+                  ),
+                ),
               ),
             ),
             Selector<SelectionController, bool>(
               selector: (context, selectionController) =>
                   selectionController.selectAll,
               builder: (context, state, _) => ActionBarButton(
-                child: Center(
-                  child: Text(
-                    context.s.all,
-                    style: context.textTheme.titleMedium,
-                  ),
-                ),
                 expansionController: expansionController,
                 shrunkChild: Center(
                   child: Icon(
@@ -455,6 +448,12 @@ class _SelectionOptions extends StatelessWidget {
                 shrunkWidth: context.actionBarButtonSizeHorizontal,
                 tooltip: context.s.all,
                 connectLeft: true,
+                child: Center(
+                  child: Text(
+                    context.s.all,
+                    style: context.textTheme.titleMedium,
+                  ),
+                ),
               ),
             ),
           ],
@@ -467,7 +466,7 @@ class _SelectionOptions extends StatelessWidget {
 class _NewPlaylist extends StatefulWidget {
   final List<EpisodeBrief> episodes;
   final Color? color;
-  _NewPlaylist(this.episodes, {this.color, Key? key}) : super(key: key);
+  const _NewPlaylist(this.episodes, {this.color});
 
   @override
   __NewPlaylistState createState() => __NewPlaylistState();
@@ -795,7 +794,6 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
           return Row(
             children: [
               ActionBarButton(
-                child: Icon(Icons.favorite, color: Colors.red),
                 falseChild: Icon(Icons.favorite_border,
                     color: data.item2 == 0 && context.realDark
                         ? Colors.grey[800]
@@ -818,11 +816,11 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                         msg: context.s.liked,
                         gravity: ToastGravity.BOTTOM,
                       );
-                      OverlayEntry _overlayEntry;
-                      _overlayEntry = createOverlayEntry(context);
-                      Overlay.of(context).insert(_overlayEntry);
+                      OverlayEntry overlayEntry;
+                      overlayEntry = createOverlayEntry(context);
+                      Overlay.of(context).insert(overlayEntry);
                       await Future.delayed(Duration(seconds: 2));
-                      _overlayEntry.remove();
+                      overlayEntry.remove();
                     } else {
                       await episodeState.unsetLiked(selectedEpisodes);
                       Fluttertoast.showToast(
@@ -834,16 +832,9 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                 },
                 enabled: data.item2 >= 1,
                 connectRight: true,
+                child: Icon(Icons.favorite, color: Colors.red),
               ),
               ActionBarButton(
-                child: Selector<CardColorScheme, Color>(
-                  selector: (context, cardColorScheme) =>
-                      cardColorScheme.colorScheme.primary,
-                  builder: (context, color, _) => CustomPaint(
-                    size: Size(25, 25),
-                    painter: ListenedAllPainter(color, stroke: 2.0),
-                  ),
-                ),
                 falseChild: CustomPaint(
                   size: Size(25, 25),
                   painter: MarkListenedPainter(
@@ -882,25 +873,16 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                 enabled: data.item2 >= 1,
                 connectLeft: true,
                 connectRight: true,
-              ),
-              ActionBarButton(
-                child: Center(
-                  child: SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: Selector<CardColorScheme, Color>(
-                      selector: (context, cardColorScheme) =>
-                          cardColorScheme.colorScheme.primary,
-                      builder: (context, color, _) => CustomPaint(
-                        painter: DownloadPainter(
-                            color: color,
-                            fraction: 1,
-                            progressColor: color,
-                            progress: 1),
-                      ),
-                    ),
+                child: Selector<CardColorScheme, Color>(
+                  selector: (context, cardColorScheme) =>
+                      cardColorScheme.colorScheme.primary,
+                  builder: (context, color, _) => CustomPaint(
+                    size: Size(25, 25),
+                    painter: ListenedAllPainter(color, stroke: 2.0),
                   ),
                 ),
+              ),
+              ActionBarButton(
                 falseChild: Center(
                   child: SizedBox(
                     height: 20,
@@ -958,14 +940,25 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                 enabled: data.item2 >= 1,
                 connectLeft: true,
                 connectRight: false,
+                child: Center(
+                  child: SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: Selector<CardColorScheme, Color>(
+                      selector: (context, cardColorScheme) =>
+                          cardColorScheme.colorScheme.primary,
+                      builder: (context, color, _) => CustomPaint(
+                        painter: DownloadPainter(
+                            color: color,
+                            fraction: 1,
+                            progressColor: color,
+                            progress: 1),
+                      ),
+                    ),
+                  ),
+                ),
               ),
               ActionBarButton(
-                child: Selector<CardColorScheme, Color>(
-                  selector: (context, cardColorScheme) =>
-                      cardColorScheme.colorScheme.primary,
-                  builder: (context, color, _) =>
-                      Icon(Icons.playlist_add_check, color: color),
-                ),
                 falseChild: Icon(
                   Icons.playlist_add,
                   color: data.item2 == 0 && context.realDark
@@ -1004,18 +997,24 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                 enabled: data.item2 >= 1,
                 connectLeft: false,
                 connectRight: true,
+                child: Selector<CardColorScheme, Color>(
+                  selector: (context, cardColorScheme) =>
+                      cardColorScheme.colorScheme.primary,
+                  builder: (context, color, _) =>
+                      Icon(Icons.playlist_add_check, color: color),
+                ),
               ),
               ActionBarButton(
-                child: Icon(
-                  Icons.add_box_outlined,
-                  color: context.actionBarIconColor,
-                ),
                 state: secondRow,
                 buttonType: ActionBarButtonType.onOff,
                 onPressed: (value) {
                   secondRow = value!;
                 },
                 connectLeft: true,
+                child: Icon(
+                  Icons.add_box_outlined,
+                  color: context.actionBarIconColor,
+                ),
               ),
               Spacer(),
               if (!widget.expanded)
@@ -1033,7 +1032,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                                 cardColorScheme.colorScheme.primary),
                         builder: (context, data, _) => Text(
                           context.s.selected(
-                              "${data.item1}" + (data.item2 ? "+" : "")),
+                              "${data.item1}${data.item2 ? "+" : ""}"),
                           style: context.textTheme.titleLarge!
                               .copyWith(color: data.item3),
                         ),
@@ -1042,14 +1041,6 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                   ),
                 ),
               ActionBarButton(
-                child: Center(
-                  child: Icon(
-                    Icons.check_box_outline_blank,
-                    color: data.item2 == 0 && context.realDark
-                        ? Colors.grey[800]
-                        : context.actionBarIconColor,
-                  ),
-                ),
                 buttonType: ActionBarButtonType.single,
                 onPressed: (value) {
                   Provider.of<SelectionController>(context, listen: false)
@@ -1058,14 +1049,22 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                 tooltip: context.s.deselectAll,
                 enabled: data.item2 >= 1,
                 connectRight: true,
+                child: Center(
+                  child: Icon(
+                    Icons.check_box_outline_blank,
+                    color: data.item2 == 0 && context.realDark
+                        ? Colors.grey[800]
+                        : context.actionBarIconColor,
+                  ),
+                ),
               ),
               ActionBarButton(
-                child: Icon(Icons.close),
                 onPressed: (value) {
                   Provider.of<SelectionController>(context, listen: false)
                       .selectMode = false;
                 },
                 connectLeft: true,
+                child: Icon(Icons.close),
               ),
             ],
           );

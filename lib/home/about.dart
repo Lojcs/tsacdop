@@ -8,9 +8,11 @@ import '../widgets/custom_widget.dart';
 const String version = '0.6.0';
 
 class AboutApp extends StatelessWidget {
+  const AboutApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    OverlayEntry _createOverlayEntry(TapDownDetails detail) {
+    OverlayEntry createOverlayEntry(TapDownDetails detail) {
       // RenderBox renderBox = context.findRenderObject();
       final offset = detail.globalPosition;
       return OverlayEntry(
@@ -206,11 +208,11 @@ class AboutApp extends StatelessWidget {
                     alignment: Alignment.center,
                     child: GestureDetector(
                       onTapDown: (detail) async {
-                        OverlayEntry _overlayEntry;
-                        _overlayEntry = _createOverlayEntry(detail);
-                        Overlay.of(context).insert(_overlayEntry);
+                        OverlayEntry overlayEntry;
+                        overlayEntry = createOverlayEntry(detail);
+                        Overlay.of(context).insert(overlayEntry);
                         await Future.delayed(Duration(seconds: 2));
-                        _overlayEntry.remove();
+                        overlayEntry.remove();
                       },
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,

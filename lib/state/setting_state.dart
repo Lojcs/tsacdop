@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/intl_standalone.dart';
-import 'package:tsacdop/state/refresh_podcast.dart';
+import 'refresh_podcast.dart';
 import 'package:workmanager/workmanager.dart';
 
 import '../generated/l10n.dart';
@@ -498,7 +498,7 @@ class SettingState extends ChangeNotifier {
     var localeString = await _localeStorage.getStringList();
     if (localeString.isEmpty) {
       await findSystemLocale();
-      var systemLanCode;
+      String systemLanCode;
       final list = Intl.systemLocale.split('_');
       if (list.length == 2) {
         systemLanCode = list.first;
@@ -739,7 +739,7 @@ class SettingState extends ChangeNotifier {
       await S.load(Locale(Intl.systemLocale));
     } else {
       var localeList = backup.locale!.split('-');
-      var backupLocale;
+      Locale backupLocale;
       if (localeList[1] == 'null') {
         backupLocale = Locale(localeList.first);
       } else {

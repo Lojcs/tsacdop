@@ -19,6 +19,8 @@ import 'podcast_group.dart';
 import 'podcastlist.dart';
 
 class PodcastManage extends StatefulWidget {
+  const PodcastManage({super.key});
+
   @override
   _PodcastManageState createState() => _PodcastManageState();
 }
@@ -130,14 +132,14 @@ class _PodcastManageState extends State<PodcastManage>
             child: Consumer<GroupList>(
               builder: (_, groupList, __) {
                 // var _isLoading = groupList.isLoading;
-                final _groups = groupList.groups;
-                if (_groups.isEmpty) return Center();
+                final groups = groupList.groups;
+                if (groups.isEmpty) return Center();
                 return Stack(
                   children: <Widget>[
                     ColoredBox(
                       color: context.surface,
                       child: CustomTabView(
-                        itemCount: _groups.length,
+                        itemCount: groups.length,
                         tabBuilder: (context, index) => Tab(
                           child: Container(
                             height: 50.0,
@@ -147,7 +149,7 @@ class _PodcastManageState extends State<PodcastManage>
                               borderRadius: BorderRadius.circular(15),
                             ),
                             child: Text(
-                              _groups[index]!.name!,
+                              groups[index]!.name!,
                             ),
                           ),
                         ),
@@ -161,8 +163,8 @@ class _PodcastManageState extends State<PodcastManage>
                           buttonColor: Colors.cyan[500],
                           description: s.featureDiscoveryGroupPodcastDes,
                           child: PodcastGroupList(
-                            group: _groups[index],
-                            key: ValueKey<String?>(_groups[index]!.name),
+                            group: groups[index],
+                            key: ValueKey<String?>(groups[index]!.name),
                           ),
                         ),
                         onPositionChange: (value) =>
@@ -223,7 +225,7 @@ class _PodcastManageState extends State<PodcastManage>
                                           pageBuilder: (context, animaiton,
                                                   secondaryAnimation) =>
                                               RenameGroup(
-                                                group: _groups[_index!],
+                                                group: groups[_index!],
                                               ));
                                 },
                                 child: Container(
@@ -287,10 +289,10 @@ class _PodcastManageState extends State<PodcastManage>
                                                     _index = _index! - 1;
                                                   });
                                                   groupList.delGroup(
-                                                      _groups[_index! + 1]!);
+                                                      groups[_index! + 1]!);
                                                 } else {
                                                   groupList.delGroup(
-                                                      _groups[_index!]!);
+                                                      groups[_index!]!);
                                                 }
                                                 Navigator.of(context).pop();
                                               },
@@ -445,6 +447,8 @@ class _OrderMenu extends StatelessWidget {
 }
 
 class AddGroup extends StatefulWidget {
+  const AddGroup({super.key});
+
   @override
   _AddGroupState createState() => _AddGroupState();
 }

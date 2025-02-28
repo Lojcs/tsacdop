@@ -10,7 +10,8 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:tsacdop/util/cache_manager.dart';
+import '../type/search_api/index_podcast.dart';
+import '../util/cache_manager.dart';
 import 'package:webfeed/webfeed.dart';
 
 import '../.env.dart';
@@ -28,6 +29,7 @@ import '../widgets/custom_widget.dart';
 import 'pocast_discovery.dart';
 
 class MyHomePageDelegate extends SearchDelegate<int?> {
+  @override
   final String? searchFieldLabel;
 
   bool _closing = false;
@@ -197,7 +199,7 @@ class MyHomePageDelegate extends SearchDelegate<int?> {
 }
 
 class RssResult extends StatefulWidget {
-  RssResult({this.url, this.rssFeed, Key? key}) : super(key: key);
+  const RssResult({this.url, this.rssFeed, super.key});
   final RssFeed? rssFeed;
   final String? url;
   @override
@@ -371,7 +373,7 @@ class _RssResultState extends State<RssResult> {
 
 class _SearchPopupMenu extends StatefulWidget {
   final ValueChanged<SearchEngine?>? onSelected;
-  _SearchPopupMenu({this.onSelected, Key? key}) : super(key: key);
+  const _SearchPopupMenu({this.onSelected});
 
   @override
   __SearchPopupMenuState createState() => __SearchPopupMenuState();
@@ -451,7 +453,7 @@ class __SearchPopupMenuState extends State<_SearchPopupMenu> {
 
 class _ListenNotesSearch extends StatefulWidget {
   final String query;
-  _ListenNotesSearch({required this.query, Key? key}) : super(key: key);
+  const _ListenNotesSearch({required this.query});
 
   @override
   __ListenNotesSearchState createState() => __ListenNotesSearchState();
@@ -487,17 +489,19 @@ class __ListenNotesSearchState extends State<_ListenNotesSearch> {
       String searchText, int? nextOffset) async {
     if (nextOffset == 0) _saveHistory(searchText);
     final searchEngine = ListenNotesSearch();
-    var searchResult;
+    SearchPodcast searchResult;
     try {
-      searchResult = await searchEngine.searchPodcasts(
-          searchText: searchText, nextOffset: nextOffset);
+      searchResult = (await searchEngine.searchPodcasts(
+          searchText: searchText, nextOffset: nextOffset))!;
     } catch (e) {
       _loadError = true;
       _loading = false;
       return [];
     }
     _offset = searchResult.nextOffset;
-    var searchList = <OnlinePodcast>[...searchResult.results.cast().toList()];
+    var searchList = <OnlinePodcast>[
+      ...searchResult.results?.cast().toList() ?? []
+    ];
     _podcastList.addAll(searchList);
     _loading = false;
     return _podcastList;
@@ -616,7 +620,7 @@ class __ListenNotesSearchState extends State<_ListenNotesSearch> {
 
 class _PodcastIndexSearch extends StatefulWidget {
   final String? query;
-  _PodcastIndexSearch({this.query, Key? key}) : super(key: key);
+  const _PodcastIndexSearch({this.query});
 
   @override
   __PodcastIndexSearchState createState() => __PodcastIndexSearchState();
@@ -654,7 +658,7 @@ class __PodcastIndexSearchState extends State<_PodcastIndexSearch> {
   Future<List<OnlinePodcast?>> _getPodcatsIndexList(String searchText,
       {int? limit}) async {
     if (_limit == 10) _saveHistory(searchText);
-    var searchResult;
+    PodcastIndexSearchResult searchResult;
     try {
       searchResult = await _searchEngine.searchPodcasts(
           searchText: searchText, limit: limit);
@@ -663,7 +667,8 @@ class __PodcastIndexSearchState extends State<_PodcastIndexSearch> {
       _loading = false;
       return [];
     }
-    var list = searchResult.feeds.cast();
+    if (searchResult.feeds == null) return [];
+    var list = searchResult.feeds!.cast();
     _podcastList = <OnlinePodcast?>[
       for (var podcast in list) podcast.toOnlinePodcast
     ];
@@ -779,7 +784,7 @@ class __PodcastIndexSearchState extends State<_PodcastIndexSearch> {
 
 class SearchResult extends StatelessWidget {
   final OnlinePodcast? onlinePodcast;
-  SearchResult({this.onlinePodcast, Key? key}) : super(key: key);
+  const SearchResult({this.onlinePodcast, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -836,9 +841,8 @@ class SearchResult extends StatelessWidget {
 
 /// Search podcast detail widget
 class SearchResultDetail extends StatefulWidget {
-  SearchResultDetail(this.onlinePodcast,
-      {this.maxHeight, this.isSubscribed, this.searchEngine, Key? key})
-      : super(key: key);
+  const SearchResultDetail(this.onlinePodcast,
+      {this.maxHeight, this.isSubscribed, this.searchEngine, super.key});
   final OnlinePodcast onlinePodcast;
   final double? maxHeight;
   final bool? isSubscribed;
@@ -1049,7 +1053,7 @@ class _SearchResultDetailState extends State<SearchResultDetail>
                   tileColor: Colors.transparent,
                   subtitle: Text(
                       content[index].length == 0
-                          ? '${content[index].pubDate!.toDate(context)}'
+                          ? content[index].pubDate!.toDate(context)
                           : '${content[index].length!.toTime} | '
                               '${content[index].pubDate!.toDate(context)}',
                       style: TextStyle(color: context.accentColor)),
@@ -1148,8 +1152,10 @@ class _SearchResultDetailState extends State<SearchResultDetail>
                                               ''
                                           ? '${widget.onlinePodcast.interval!.toInterval(context)} | '
                                               '${widget.onlinePodcast.latestPubDate!.toDate(context)}'
-                                          : '${widget.onlinePodcast.latestPubDate!.toDate(context)}'
-                                      : '${widget.onlinePodcast.latestPubDate!.toDate(context)}',
+                                          : widget.onlinePodcast.latestPubDate!
+                                              .toDate(context)
+                                      : widget.onlinePodcast.latestPubDate!
+                                          .toDate(context),
                                   maxLines: 1,
                                   overflow: TextOverflow.fade,
                                   style: TextStyle(color: context.accentColor),
@@ -1261,7 +1267,7 @@ class _SearchResultDetailState extends State<SearchResultDetail>
 }
 
 class SubscribeButton extends StatelessWidget {
-  SubscribeButton(this.onlinePodcast, {Key? key}) : super(key: key);
+  const SubscribeButton(this.onlinePodcast, {super.key});
   final OnlinePodcast? onlinePodcast;
 
   @override
@@ -1326,8 +1332,7 @@ class SubscribeButton extends StatelessWidget {
 }
 
 class PodcastSlideup extends StatelessWidget {
-  const PodcastSlideup({this.child, this.searchEngine, Key? key})
-      : super(key: key);
+  const PodcastSlideup({this.child, this.searchEngine, super.key});
   final Widget? child;
   final SearchEngine? searchEngine;
 
@@ -1364,7 +1369,7 @@ class PodcastSlideup extends StatelessWidget {
 }
 
 class PodcastAvatar extends StatelessWidget {
-  const PodcastAvatar(this.podcast, {Key? key}) : super(key: key);
+  const PodcastAvatar(this.podcast, {super.key});
   final OnlinePodcast podcast;
   @override
   Widget build(BuildContext context) {

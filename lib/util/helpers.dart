@@ -6,11 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:tsacdop/util/extension_helper.dart';
 
 import '../local_storage/key_value_storage.dart';
 import '../state/download_state.dart';
 import '../type/episodebrief.dart';
+import '../util/extension_helper.dart';
 import '../widgets/custom_widget.dart';
 import '../widgets/general_dialog.dart';
 
@@ -92,7 +92,7 @@ OverlayEntry createOverlayEntry(BuildContext context,
     builder: (constext) => Positioned(
       left: offset.dx + leftOffset,
       top: offset.dy + topOffset,
-      child: Container(
+      child: SizedBox(
           width: 70,
           height: 100,
           //color: Colors.grey[200],

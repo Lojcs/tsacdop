@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:tsacdop/state/setting_state.dart';
 
 import '../local_storage/key_value_storage.dart';
 import '../service/search_api.dart';
 import '../state/audio_state.dart';
+import '../state/setting_state.dart';
 import '../util/extension_helper.dart';
 import '../widgets/custom_dropdown.dart';
 import '../widgets/custom_widget.dart';
@@ -14,7 +14,7 @@ import '../.env.dart';
 import 'popup_menu.dart';
 
 class LayoutSetting extends StatefulWidget {
-  const LayoutSetting({Key? key}) : super(key: key);
+  const LayoutSetting({super.key});
 
   @override
   _LayoutSettingState createState() => _LayoutSettingState();

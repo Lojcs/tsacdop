@@ -11,7 +11,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:marquee/marquee.dart';
 import 'package:provider/provider.dart';
-import 'package:tsacdop/episodes/shownote.dart';
+import '../episodes/shownote.dart';
 import 'package:tuple/tuple.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
@@ -33,7 +33,7 @@ const List kMinPlayerHeight = <double>[70.0, 75.0, 80.0];
 const List kMaxPlayerHeight = <double>[300.0, 325.0, 350.0];
 
 class PlayerWidget extends StatelessWidget {
-  PlayerWidget({this.playerKey, this.isPlayingPage = false});
+  const PlayerWidget({super.key, this.playerKey, this.isPlayingPage = false});
   final GlobalKey<AudioPanelState>? playerKey;
   final bool isPlayingPage;
 
@@ -75,7 +75,7 @@ class PlayerWidget extends StatelessWidget {
 }
 
 class _MiniPanel extends StatelessWidget {
-  const _MiniPanel({Key? key}) : super(key: key);
+  const _MiniPanel();
 
   @override
   Widget build(BuildContext context) {
@@ -249,7 +249,7 @@ class _MiniPanel extends StatelessWidget {
 }
 
 class LastPosition extends StatelessWidget {
-  LastPosition({Key? key}) : super(key: key);
+  const LastPosition({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -264,24 +264,9 @@ class LastPosition extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Selector<AudioPlayerNotifier, bool?>(
-                selector: (_, audio) => audio.skipSilence,
+              Selector<AudioPlayerNotifier, bool>(
+                selector: (_, audio) => audio.skipSilence == true,
                 builder: (_, data, __) => TextButton(
-                  child: Row(
-                    children: [
-                      Icon(Icons.flash_on,
-                          size: 18,
-                          color:
-                              data! ? context.accentColor : context.textColor),
-                      SizedBox(width: 5),
-                      Text(
-                        s.skipSilence,
-                        style: TextStyle(
-                            color:
-                                data ? context.accentColor : context.textColor),
-                      ),
-                    ],
-                  ),
                   style: TextButton.styleFrom(
                     foregroundColor: data ? context.accentColor : null,
                     shape: RoundedRectangleBorder(
@@ -297,29 +282,27 @@ class LastPosition extends StatelessWidget {
                     ),
                   ),
                   onPressed: () => audio.setSkipSilence(skipSilence: !data),
+                  child: Row(
+                    children: [
+                      Icon(Icons.flash_on,
+                          size: 18,
+                          color:
+                              data ? context.accentColor : context.textColor),
+                      SizedBox(width: 5),
+                      Text(
+                        s.skipSilence,
+                        style: TextStyle(
+                            color:
+                                data ? context.accentColor : context.textColor),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               SizedBox(width: 10),
-              Selector<AudioPlayerNotifier, bool?>(
-                  selector: (_, audio) => audio.boostVolume,
+              Selector<AudioPlayerNotifier, bool>(
+                  selector: (_, audio) => audio.boostVolume == true,
                   builder: (_, data, __) => TextButton(
-                      child: Row(
-                        children: [
-                          Icon(Icons.volume_up,
-                              size: 18,
-                              color: data!
-                                  ? context.accentColor
-                                  : context.textColor),
-                          SizedBox(width: 5),
-                          Text(
-                            s.boostVolume,
-                            style: TextStyle(
-                                color: data
-                                    ? context.accentColor
-                                    : context.textColor),
-                          ),
-                        ],
-                      ),
                       style: TextButton.styleFrom(
                         foregroundColor: data ? context.accentColor : null,
                         shape: RoundedRectangleBorder(
@@ -333,8 +316,24 @@ class LastPosition extends StatelessWidget {
                                         .withValues(alpha: 0.12))),
                         padding: EdgeInsets.symmetric(horizontal: 10),
                       ),
-                      onPressed: () =>
-                          audio.setBoostVolume(boostVolume: !data))),
+                      onPressed: () => audio.setBoostVolume(boostVolume: !data),
+                      child: Row(
+                        children: [
+                          Icon(Icons.volume_up,
+                              size: 18,
+                              color: data
+                                  ? context.accentColor
+                                  : context.textColor),
+                          SizedBox(width: 5),
+                          Text(
+                            s.boostVolume,
+                            style: TextStyle(
+                                color: data
+                                    ? context.accentColor
+                                    : context.textColor),
+                          ),
+                        ],
+                      ))),
               SizedBox(width: 10),
               Selector<AudioPlayerNotifier, int?>(
                   selector: (_, audio) => audio.undoButtonPosition,
@@ -375,7 +374,7 @@ class LastPosition extends StatelessWidget {
               Selector<AudioPlayerNotifier, double>(
                 selector: (_, audio) => audio.switchValue,
                 builder: (_, data, __) => data == 1
-                    ? Container(
+                    ? SizedBox(
                         height: 20,
                         width: 40,
                         child: Transform.rotate(
@@ -393,7 +392,7 @@ class LastPosition extends StatelessWidget {
 }
 
 class PlaylistWidget extends StatefulWidget {
-  const PlaylistWidget({Key? key}) : super(key: key);
+  const PlaylistWidget({super.key});
 
   @override
   _PlaylistWidgetState createState() => _PlaylistWidgetState();
@@ -561,7 +560,7 @@ class _PlaylistWidgetState extends State<PlaylistWidget> {
 }
 
 class SleepMode extends StatefulWidget {
-  SleepMode({Key? key}) : super(key: key);
+  const SleepMode({super.key});
 
   @override
   SleepModeState createState() => SleepModeState();
@@ -595,7 +594,7 @@ class SleepModeState extends State<SleepMode>
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         Provider.of<AudioPlayerNotifier>(context, listen: false)
-          ..sleepTimer(_minSelected);
+            .sleepTimer(_minSelected);
       }
     });
   }
@@ -609,7 +608,7 @@ class SleepModeState extends State<SleepMode>
   @override
   Widget build(BuildContext context) {
     final s = context.s;
-    final _colorTween = ColorTween(
+    final colorTween = ColorTween(
         begin: context.cardColorSchemeCard,
         end: context.cardColorSchemeSaturated);
     var audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
@@ -700,7 +699,7 @@ class SleepModeState extends State<SleepMode>
                                 height: 40,
                                 width: 120,
                                 decoration: BoxDecoration(
-                                  color: _colorTween.transform(move),
+                                  color: colorTween.transform(move),
                                   borderRadius: BorderRadius.circular(20),
                                   boxShadow: context.boxShadowSmall(),
                                 ),
@@ -744,7 +743,7 @@ class SleepModeState extends State<SleepMode>
                                 width: 120,
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
-                                  color: _colorTween.transform(move),
+                                  color: colorTween.transform(move),
                                   borderRadius: BorderRadius.circular(20),
                                   boxShadow: context.boxShadowSmall(),
                                 ),
@@ -859,7 +858,7 @@ class SleepModeState extends State<SleepMode>
 }
 
 class ChaptersWidget extends StatefulWidget {
-  ChaptersWidget({Key? key}) : super(key: key);
+  const ChaptersWidget({super.key});
 
   @override
   _ChaptersWidgetState createState() => _ChaptersWidgetState();
@@ -893,7 +892,7 @@ class _ChaptersWidgetState extends State<ChaptersWidget> {
   Widget _chapterDetailWidget(Chapters chapters) {
     return Column(
       children: [
-        Container(
+        SizedBox(
           // height: 60,
           width: double.infinity,
           child: Row(
@@ -1098,7 +1097,7 @@ class _ChaptersWidgetState extends State<ChaptersWidget> {
 
 class _ChapterImage extends StatefulWidget {
   final String? url;
-  _ChapterImage(this.url, {Key? key}) : super(key: key);
+  const _ChapterImage(this.url);
 
   @override
   __ChapterImageState createState() => __ChapterImageState();
@@ -1159,13 +1158,12 @@ class __ChapterImageState extends State<_ChapterImage> {
 }
 
 class ControlPanel extends StatefulWidget {
-  ControlPanel(
+  const ControlPanel(
       {this.onExpand,
       this.onClose,
       this.maxHeight,
       this.isPlayingPage = false,
-      Key? key})
-      : super(key: key);
+      super.key});
   final VoidCallback? onExpand;
   final VoidCallback? onClose;
   final double? maxHeight;
@@ -1564,11 +1562,11 @@ class _ControlPanelState extends State<ControlPanel>
                 ),
               ),
               if (height > widget.maxHeight!)
-                Container(
+                SizedBox(
                   height: height - widget.maxHeight!,
                   child: SingleChildScrollView(
                     physics: NeverScrollableScrollPhysics(),
-                    child: Container(
+                    child: SizedBox(
                       height: context.height -
                           context.originalPadding.top -
                           context.originalPadding.bottom -
@@ -1696,7 +1694,7 @@ class _ControlPanelState extends State<ControlPanel>
                                               ),
                                             ),
                                             SizedBox(width: 5),
-                                            Container(
+                                            SizedBox(
                                               width: context.width - 130,
                                               child: Text(
                                                 data.item1!.podcastTitle,
@@ -1799,7 +1797,8 @@ class _ControlPanelState extends State<ControlPanel>
                       Positioned(
                         bottom: 0,
                         child: InkWell(
-                            child: Container(
+                            onTap: widget.onExpand,
+                            child: SizedBox(
                               height: 30,
                               width: 115,
                               child: Align(
@@ -1817,8 +1816,7 @@ class _ControlPanelState extends State<ControlPanel>
                                         accentColor: context.accentColor,
                                         color: context.textColor)),
                               ),
-                            ),
-                            onTap: widget.onExpand),
+                            )),
                       ),
                     if (_setSpeed == 0 && height > widget.maxHeight! - 20)
                       Opacity(

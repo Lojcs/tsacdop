@@ -96,13 +96,13 @@ class _DropdownScrollBehavior extends ScrollBehavior {
 // The widget that is the button wrapping the menu items.
 class _DropdownMenuItemButton<T> extends StatefulWidget {
   const _DropdownMenuItemButton({
-    Key? key,
+    super.key,
     required this.padding,
     required this.route,
     required this.buttonRect,
     required this.constraints,
     required this.itemIndex,
-  }) : super(key: key);
+  });
 
   final _DropdownRoute<T>? route;
   final EdgeInsets? padding;
@@ -149,7 +149,7 @@ class _DropdownMenuItemButtonState<T>
 
     Navigator.pop(
       context,
-      _DropdownRouteResult<T>(dropdownMenuItem.value!),
+      _DropdownRouteResult<T>(dropdownMenuItem.value as T),
     );
   }
 
@@ -170,12 +170,12 @@ class _DropdownMenuItemButtonState<T>
       opacity: opacity,
       child: InkWell(
         autofocus: widget.itemIndex == widget.route!.selectedIndex,
+        onTap: _handleOnTap,
+        onFocusChange: _handleFocusChange,
         child: Container(
           padding: widget.padding,
           child: widget.route!.items[widget.itemIndex],
         ),
-        onTap: _handleOnTap,
-        onFocusChange: _handleFocusChange,
       ),
     );
     return child;
@@ -184,14 +184,14 @@ class _DropdownMenuItemButtonState<T>
 
 class _DropdownMenu<T> extends StatefulWidget {
   const _DropdownMenu({
-    Key? key,
+    super.key,
     this.padding,
     this.route,
     this.buttonRect,
     this.constraints,
     this.dropdownColor,
     this.displayItemCount,
-  }) : super(key: key);
+  });
 
   final _DropdownRoute<T>? route;
   final EdgeInsets? padding;
@@ -532,7 +532,7 @@ class _DropdownRoute<T> extends PopupRoute<_DropdownRouteResult<T>> {
 
 class _DropdownRoutePage<T> extends StatelessWidget {
   const _DropdownRoutePage({
-    Key? key,
+    super.key,
     this.route,
     this.constraints,
     this.items,
@@ -544,7 +544,7 @@ class _DropdownRoutePage<T> extends StatelessWidget {
     this.style,
     this.dropdownColor,
     this.displayItemCount,
-  }) : super(key: key);
+  });
 
   final _DropdownRoute<T>? route;
   final BoxConstraints? constraints;
@@ -616,10 +616,10 @@ class _DropdownRoutePage<T> extends StatelessWidget {
 // as closely as possible.
 class _MenuItem<T> extends SingleChildRenderObjectWidget {
   const _MenuItem({
-    Key? key,
+    super.key,
     required this.onLayout,
     required this.item,
-  }) : super(key: key, child: item);
+  }) : super(child: item);
 
   final ValueChanged<Size> onLayout;
   final DropdownMenuItem<T> item;
@@ -656,9 +656,8 @@ class _DropdownMenuItemContainer extends StatelessWidget {
   ///
   /// The [child] argument is required.
   const _DropdownMenuItemContainer({
-    Key? key,
     required this.child,
-  }) : super(key: key);
+  });
 
   /// The widget below this widget in the tree.
   ///
@@ -710,9 +709,9 @@ class DropdownButtonHideUnderline extends InheritedWidget {
   /// Creates a [DropdownButtonHideUnderline]. A non-null [child] must
   /// be given.
   const DropdownButtonHideUnderline({
-    Key? key,
-    required Widget child,
-  }) : super(key: key, child: child);
+    super.key,
+    required super.child,
+  });
 
   /// Returns whether the underline of [DropdownButton] widgets should
   /// be hidden.
@@ -818,7 +817,7 @@ class MyDropdownButton<T> extends StatefulWidget {
   /// dropdown when it is open. If it is null, the current theme's
   /// [ThemeData.canvasColor] will be used instead.
   MyDropdownButton({
-    Key? key,
+    super.key,
     required this.items,
     this.selectedItemBuilder,
     this.value,
@@ -854,8 +853,7 @@ class MyDropdownButton<T> extends StatefulWidget {
           'with the same value',
         ),
         assert(itemHeight >= kMinInteractiveDimension),
-        assert(displayItemCount == null || displayItemCount > 0),
-        super(key: key);
+        assert(displayItemCount == null || displayItemCount > 0);
 
   /// The list of items the user can select.
   ///

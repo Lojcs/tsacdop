@@ -3,7 +3,7 @@ import 'package:flare_flutter/flare_actor.dart';
 import '../util/extension_helper.dart';
 
 class ThirdPage extends StatefulWidget {
-  ThirdPage({Key? key}) : super(key: key);
+  const ThirdPage({super.key});
 
   @override
   _ThirdPageState createState() => _ThirdPageState();

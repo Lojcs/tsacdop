@@ -20,6 +20,8 @@ import 'syncing.dart';
 import 'theme.dart';
 
 class Settings extends StatefulWidget {
+  const Settings({super.key});
+
   @override
   _SettingsState createState() => _SettingsState();
 }

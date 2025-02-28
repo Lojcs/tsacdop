@@ -6,10 +6,11 @@ import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:tsacdop/class/settingstate.dart';
-import 'package:tsacdop/type/theme_data.dart';
+
 import 'package:url_launcher/url_launcher_string.dart';
 import '../generated/l10n.dart';
+import '../state/setting_state.dart';
+import '../type/theme_data.dart';
 
 extension ContextExtension on BuildContext {
   ColorScheme get colorScheme => Theme.of(this).colorScheme;

@@ -42,15 +42,15 @@ class AutoDownloader {
   }
 
   bindBackgroundIsolate() {
-    var _port = ReceivePort();
+    var port = ReceivePort();
     var isSuccess = IsolateNameServer.registerPortWithName(
-        _port.sendPort, 'auto_downloader_send_port');
+        port.sendPort, 'auto_downloader_send_port');
     if (!isSuccess) {
       IsolateNameServer.removePortNameMapping('auto_downloader_send_port');
       bindBackgroundIsolate();
       return;
     }
-    _port.listen((dynamic data) async {
+    port.listen((dynamic data) async {
       String id = data[0];
       int status = data[1];
       int progress = data[2];
@@ -64,7 +64,7 @@ class AutoDownloader {
       } else if (status == DownloadTaskStatus.failed) {
         _episodeTasks.removeWhere((element) =>
             element.episode!.enclosureUrl == episodeTask.episode!.enclosureUrl);
-        if (_episodeTasks.length == 0) _unbindBackgroundIsolate();
+        if (_episodeTasks.isEmpty) _unbindBackgroundIsolate();
       }
     });
   }
@@ -86,7 +86,7 @@ class AutoDownloader {
         taskId: episodeTask.taskId, size: fileStat.size);
     _episodeTasks.removeWhere((element) =>
         element.episode!.enclosureUrl == episodeTask.episode!.enclosureUrl);
-    if (_episodeTasks.length == 0) _unbindBackgroundIsolate();
+    if (_episodeTasks.isEmpty) _unbindBackgroundIsolate();
   }
 
   Future startTask(List<EpisodeBrief> episodes,
@@ -184,16 +184,16 @@ class DownloadState extends ChangeNotifier {
   }
 
   void _bindBackgroundIsolate() {
-    final _port = ReceivePort();
+    final port = ReceivePort();
     final isSuccess = IsolateNameServer.registerPortWithName(
-        _port.sendPort, 'downloader_send_port');
+        port.sendPort, 'downloader_send_port');
     if (!isSuccess) {
       _unbindBackgroundIsolate();
       _bindBackgroundIsolate();
       return;
     }
 
-    _port.listen((dynamic data) {
+    port.listen((dynamic data) {
       String id = data[0];
       int status = data[1];
       int progress = data[2];

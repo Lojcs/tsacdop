@@ -19,6 +19,8 @@ import '../util/extension_helper.dart';
 import '../widgets/custom_widget.dart';
 
 class PlayedHistory extends StatefulWidget {
+  const PlayedHistory({super.key});
+
   @override
   _PlayedHistoryState createState() => _PlayedHistoryState();
 }
@@ -237,13 +239,13 @@ class _PlayedHistoryState extends State<PlayedHistory>
                           scrollDirection: Axis.vertical,
                           itemCount: snapshot.data!.length,
                           itemBuilder: (context, index) {
-                            var _status = snapshot.data![index].status;
+                            var status = snapshot.data![index].status;
                             return Container(
                               color: context.surface,
                               child: Column(
                                 children: <Widget>[
                                   ListTile(
-                                    enabled: _status,
+                                    enabled: status,
                                     title: Column(
                                       mainAxisAlignment:
                                           MainAxisAlignment.start,
@@ -262,7 +264,7 @@ class _PlayedHistoryState extends State<PlayedHistory>
                                         Text(snapshot.data![index].title!),
                                       ],
                                     ),
-                                    subtitle: _status
+                                    subtitle: status
                                         ? Text(s.daysAgo(DateTime.now()
                                             .difference(
                                                 snapshot.data![index].subDate)
@@ -274,7 +276,7 @@ class _PlayedHistoryState extends State<PlayedHistory>
                                                     .data![index].delDate)),
                                             style: TextStyle(color: Colors.red),
                                           ),
-                                    trailing: !_status
+                                    trailing: !status
                                         ? Material(
                                             color: Colors.transparent,
                                             child: IconButton(
@@ -419,7 +421,7 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
 
 class HistoryChart extends StatelessWidget {
   final List<FlSpot> stats;
-  HistoryChart(this.stats);
+  const HistoryChart(this.stats, {super.key});
   @override
   Widget build(BuildContext context) {
     return SafeArea(

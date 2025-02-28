@@ -12,6 +12,8 @@ import '../widgets/custom_widget.dart';
 import '../widgets/general_dialog.dart';
 
 class StorageSetting extends StatefulWidget {
+  const StorageSetting({super.key});
+
   @override
   _StorageSettingState createState() => _StorageSettingState();
 }

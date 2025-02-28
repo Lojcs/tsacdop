@@ -545,7 +545,7 @@ class GroupList extends ChangeNotifier {
 
   Future<void> saveOrder(PodcastGroup? group) async {
     // group.podcastList = group.orderedPodcasts.map((e) => e.id).toList();
-    var orderedGroup;
+    PodcastGroup? orderedGroup;
     for (var g in _orderChanged) {
       if (g == group) orderedGroup = g;
     }
@@ -560,7 +560,7 @@ Future<void> subIsolateEntryPoint(SendPort sendPort) async {
   if (Platform.isAndroid) SharedPreferencesAndroid.registerWith();
   if (Platform.isAndroid) PathProviderAndroid.registerWith();
   var items = <SubscribeItem>[];
-  var _running = false;
+  var running = false;
   final listColor = <String>[
     '388E3C',
     '1976D2',
@@ -570,7 +570,7 @@ Future<void> subIsolateEntryPoint(SendPort sendPort) async {
   var subReceivePort = ReceivePort();
   sendPort.send(subReceivePort.sendPort);
 
-  Future<String> _getColor(File file) async {
+  Future<String> getColor(File file) async {
     final imageProvider = FileImage(file);
     var colorImage = await getImageFromProvider(imageProvider);
     var color = await getColorFromImage(colorImage);
@@ -578,7 +578,7 @@ Future<void> subIsolateEntryPoint(SendPort sendPort) async {
     return primaryColor;
   }
 
-  Future<void> _subscribe(SubscribeItem item) async {
+  Future<void> subscribe(SubscribeItem item) async {
     var dbHelper = DBHelper();
     var rss = item.url!;
     sendPort.send([item.title, item.url, 1]);
@@ -599,7 +599,7 @@ Future<void> subIsolateEntryPoint(SendPort sendPort) async {
         sendPort.send([item.title, item.url, 4]);
         items.removeWhere((element) => element.url == item.url);
         if (items.isNotEmpty) {
-          await _subscribe(items.first);
+          await subscribe(items.first);
         } else {
           sendPort.send("done");
         }
@@ -654,8 +654,8 @@ Future<void> subIsolateEntryPoint(SendPort sendPort) async {
               await Future.delayed(Duration(seconds: 2));
               sendPort.send([item.title, item.url, 4]);
               items.removeWhere((element) => element.url == item.url);
-              if (items.length > 0) {
-                await _subscribe(items.first);
+              if (items.isNotEmpty) {
+                await subscribe(items.first);
               } else {
                 sendPort.send("done");
               }
@@ -666,14 +666,14 @@ Future<void> subIsolateEntryPoint(SendPort sendPort) async {
         File("${dir.path}/$uuid.png")
             .writeAsBytesSync(img.encodePng(thumbnail!));
         var imagePath = "${dir.path}/$uuid.png";
-        var primaryColor = await _getColor(File(imagePath));
+        var primaryColor = await getColor(File(imagePath));
         var author = p.itunes!.author ?? p.author ?? '';
         var provider = p.generator ?? '';
         var link = p.link ?? '';
         var funding = p.podcastFunding!.isNotEmpty
             ? [for (var f in p.podcastFunding!) f!.url]
             : <String>[];
-        var podcastLocal = PodcastLocal(p.title, imageUrl, realUrl,
+        var podcastLocal = PodcastLocal(p.title ?? "", imageUrl, realUrl,
             primaryColor, author, uuid, imagePath, provider, link, funding,
             description: p.description!);
 
@@ -697,8 +697,8 @@ Future<void> subIsolateEntryPoint(SendPort sendPort) async {
 
         sendPort.send([item.title, item.url, 4]);
         items.removeAt(0);
-        if (items.length > 0) {
-          await _subscribe(items.first);
+        if (items.isNotEmpty) {
+          await subscribe(items.first);
         } else {
           sendPort.send("done");
         }
@@ -707,8 +707,8 @@ Future<void> subIsolateEntryPoint(SendPort sendPort) async {
         await Future.delayed(Duration(seconds: 2));
         sendPort.send([item.title, item.url, 4]);
         items.removeAt(0);
-        if (items.length > 0) {
-          await _subscribe(items.first);
+        if (items.isNotEmpty) {
+          await subscribe(items.first);
         } else {
           sendPort.send("done");
         }
@@ -719,8 +719,8 @@ Future<void> subIsolateEntryPoint(SendPort sendPort) async {
       await Future.delayed(Duration(seconds: 2));
       sendPort.send([item.title, item.url, 4]);
       items.removeWhere((element) => element.url == item.url);
-      if (items.length > 0) {
-        await _subscribe(items.first);
+      if (items.isNotEmpty) {
+        await subscribe(items.first);
       } else {
         sendPort.send("done");
       }
@@ -731,9 +731,9 @@ Future<void> subIsolateEntryPoint(SendPort sendPort) async {
     if (message is List<dynamic>) {
       items.add(SubscribeItem(message[0], message[1],
           imgUrl: message[2], group: message[3]));
-      if (!_running) {
-        _subscribe(items.first);
-        _running = true;
+      if (!running) {
+        subscribe(items.first);
+        running = true;
       }
     }
   });

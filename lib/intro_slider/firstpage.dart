@@ -3,7 +3,7 @@ import 'package:flare_flutter/flare_actor.dart';
 import '../util/extension_helper.dart';
 
 class FirstPage extends StatefulWidget {
-  FirstPage({Key? key}) : super(key: key);
+  const FirstPage({super.key});
 
   @override
   _FirstPageState createState() => _FirstPageState();
@@ -23,7 +23,7 @@ class _FirstPageState extends State<FirstPage> {
               Padding(
                 padding: EdgeInsets.symmetric(vertical: 100),
               ),
-              Container(
+              SizedBox(
                   height: context.width * 3 / 4,
                   // color: Colors.red,
                   child: FlareActor(

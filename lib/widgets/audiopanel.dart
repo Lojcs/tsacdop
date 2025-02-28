@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tsacdop/state/audio_state.dart';
+import '../state/audio_state.dart';
 
 import '../util/extension_helper.dart';
 
@@ -16,15 +16,14 @@ class AudioPanel extends StatefulWidget {
   final double midHeight;
   final double? maxHeight;
 
-  AudioPanel(
+  const AudioPanel(
       {required this.miniPanel,
       required this.maxiPanel,
       this.midiPanel,
       this.minHeight = 70,
       this.midHeight = 300,
       this.maxHeight,
-      Key? key})
-      : super(key: key);
+      super.key});
   @override
   AudioPanelState createState() => AudioPanelState();
 }
@@ -139,7 +138,7 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
               onVerticalDragStart: _start,
               onVerticalDragUpdate: _update,
               onVerticalDragEnd: _end,
-              child: Container(
+              child: SizedBox(
                 height: _animation.value < 0 ? 0 : _animation.value,
                 child: Stack(
                   fit: StackFit.passthrough,
@@ -262,7 +261,7 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
 }
 
 class _AudioPanelRoute extends StatefulWidget {
-  _AudioPanelRoute({Key? key}) : super(key: key);
+  const _AudioPanelRoute();
   @override
   __AudioPanelRouteState createState() => __AudioPanelRouteState();
 }

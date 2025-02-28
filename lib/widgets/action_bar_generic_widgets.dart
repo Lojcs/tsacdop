@@ -3,8 +3,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:tsacdop/type/theme_data.dart';
-import 'package:tsacdop/util/extension_helper.dart';
+import '../type/theme_data.dart';
+import '../util/extension_helper.dart';
 import 'package:tuple/tuple.dart';
 
 import 'custom_popupmenu.dart';
@@ -40,6 +40,7 @@ class ActionBarButton extends StatefulWidget {
   final bool connectLeft;
   final bool connectRight;
   const ActionBarButton({
+    super.key,
     required this.child,
     this.expansionController,
     this.shrunkChild,
@@ -369,6 +370,7 @@ class ActionBarDropdownButton<T> extends StatefulWidget {
   final bool connectLeft;
   final bool connectRight;
   const ActionBarDropdownButton({
+    super.key,
     required this.child,
     required this.selected,
     this.expansionController,
@@ -688,6 +690,7 @@ class ActionBarExpandingSearchButton extends StatefulWidget {
   final bool connectLeft;
   final bool connectRight;
   const ActionBarExpandingSearchButton({
+    super.key,
     this.query = "",
     this.popupSearch = false,
     this.expands = true,
@@ -1014,7 +1017,7 @@ class _ActionBarExpandingSearchButtonState
                                   },
                                 ),
                               ),
-                            Container(
+                            SizedBox(
                               width: context.actionBarButtonSizeHorizontal,
                               child: Material(
                                 color: Colors.transparent,
@@ -1053,7 +1056,7 @@ class _SearchIconButton extends StatelessWidget {
   final void Function(String)? onFieldSubmitted;
   final AnimationController activeAnimationController;
   final Color color;
-  _SearchIconButton(
+  const _SearchIconButton(
       {required this.query,
       required this.onFieldSubmitted,
       required this.activeAnimationController,
@@ -1095,9 +1098,8 @@ class _SearchIconButton extends StatelessWidget {
 }
 
 class SearchEpisode extends StatefulWidget {
-  SearchEpisode(
-      {required this.onSearch, this.accentColor, this.query, Key? key})
-      : super(key: key);
+  const SearchEpisode(
+      {required this.onSearch, this.accentColor, this.query, super.key});
   final ValueChanged<String> onSearch;
   final Color? accentColor;
   final String? query;
@@ -1180,18 +1182,18 @@ class _SearchEpisodeState extends State<SearchEpisode> {
 class ExpansionController {
   ValueGetter<double> maxWidth;
   ExpansionController({required this.maxWidth});
-  List<Expandable> _items = [];
+  final List<Expandable> _items = [];
   double _itemsWidth = 0;
   double get _availableWidth => maxWidth() - _itemsWidth;
 
-  List<int> _expandedItems = [];
+  final List<int> _expandedItems = [];
 
   /// Use to add the width of non-expandable items.
   void resetWidth() {
     _itemsWidth = 0;
-    _items.forEach((item) {
+    for (var item in _items) {
       _itemsWidth += item.currentWidth;
-    });
+    }
   }
 
   /// Use to add the width of non-expandable items.

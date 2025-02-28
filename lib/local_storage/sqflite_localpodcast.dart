@@ -8,8 +8,8 @@ import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:tsacdop/state/episode_state.dart';
-import 'package:tsacdop/util/extension_helper.dart';
+import '../state/episode_state.dart';
+import '../util/extension_helper.dart';
 import 'package:tuple/tuple.dart';
 import 'package:webfeed/webfeed.dart';
 
@@ -325,7 +325,7 @@ class DBHelper {
           link ,update_count, episode_count, funding, description FROM PodcastLocal WHERE id = ?""",
             [s]);
       }
-      if (list.length > 0) {
+      if (list.isNotEmpty) {
         podcastLocal.add(PodcastLocal(
             list.first['title'],
             list.first['imageUrl'],
@@ -522,7 +522,7 @@ class DBHelper {
         """SELECT id, title, imageUrl, rssUrl, primaryColor, author, imagePath , provider, 
           link ,update_count, episode_count, funding, description FROM PodcastLocal WHERE id = ?""",
         [id]);
-    if (list.length > 0) {
+    if (list.isNotEmpty) {
       return PodcastLocal(
           list.first['title'],
           list.first['imageUrl'],
@@ -1121,10 +1121,9 @@ class DBHelper {
 
   Future<void> deleteLocalEpisodes(List<String> files) async {
     var dbClient = await database;
-    var s = files.map<String>((e) => "$e").toList();
     await dbClient.transaction((txn) async {
       Batch batchOp = txn.batch();
-      for (String episode in s) {
+      for (String episode in files) {
         batchOp.rawDelete(
             'DELETE FROM Episodes WHERE enclosure_url = ? AND feed_id = ?',
             [episode, localFolderId]);
@@ -1281,7 +1280,7 @@ class DBHelper {
       filters.add(
           " (${(" OR E.title LIKE ?" * likeEpisodeTitles.length).substring(4)})");
       arguements.addAll(likeEpisodeTitles.map(
-        (e) => "%" + e + "%",
+        (e) => "%$e%",
       ));
     }
     if (excludedLikeEpisodeTitles != null &&
@@ -1289,7 +1288,7 @@ class DBHelper {
       filters.add(
           " (${(" OR E.title LIKE ?" * excludedLikeEpisodeTitles.length).substring(4)})");
       arguements.addAll(excludedLikeEpisodeTitles.map(
-        (e) => "%" + e + "%",
+        (e) => "%$e%",
       ));
     }
     if (filterDisplayVersion == 2) {
@@ -1439,7 +1438,7 @@ class DBHelper {
                     i['display_version_id'] == i['id'];
                 break;
               case EpisodeField.versions:
-                fields[const Symbol("versions")] = Set<EpisodeBrief>();
+                fields[const Symbol("versions")] = <EpisodeBrief>{};
                 populateVersions = true;
                 break;
               case EpisodeField.skipSecondsStart:

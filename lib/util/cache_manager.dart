@@ -17,7 +17,7 @@ class CustomCacheManager extends CacheManager with ImageCacheManager {
       {String? key,
       Map<String, String>? authHeaders,
       bool force = false}) async {
-    var file;
+    FileInfo file;
     try {
       file = await super
           .downloadFile(url, key: key, authHeaders: authHeaders, force: force);

@@ -1,7 +1,7 @@
 import 'package:auto_animated/auto_animated.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tsacdop/util/selection_controller.dart';
+import '../util/selection_controller.dart';
 import 'package:tuple/tuple.dart';
 
 import '../episodes/episode_detail.dart';
@@ -26,7 +26,7 @@ class EpisodeGrid extends StatelessWidget {
   final int initNum;
 
   const EpisodeGrid({
-    Key? key,
+    super.key,
     required this.episodes,
     this.initNum = 12,
     this.showDownload = false,
@@ -34,7 +34,7 @@ class EpisodeGrid extends StatelessWidget {
     this.preferEpisodeImage = false,
     this.layout = EpisodeGridLayout.small,
     this.openPodcast = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -104,7 +104,8 @@ class EpisodeGrid extends StatelessWidget {
 
 class OpenContainerWrapper extends StatelessWidget {
   const OpenContainerWrapper(
-      {required this.closedBuilder,
+      {super.key,
+      required this.closedBuilder,
       required this.episode,
       this.playerRunning,
       this.avatarSize,

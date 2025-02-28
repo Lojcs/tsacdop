@@ -3,7 +3,7 @@ import 'package:flare_flutter/flare_actor.dart';
 import '../util/extension_helper.dart';
 
 class FourthPage extends StatefulWidget {
-  FourthPage({Key? key}) : super(key: key);
+  const FourthPage({super.key});
 
   @override
   _FourthPageState createState() => _FourthPageState();
