@@ -133,6 +133,7 @@ Future<void> podcastSync({List<PodcastLocal>? podcasts}) async {
         optionalFields: [EpisodeField.isDownloaded],
         filterNew: true,
         filterDownloaded: false,
+        filterDisplayVersion: true,
         filterAutoDownload: true);
     // For safety
     if (episodes.length < 100 && episodes.length > 0) {
