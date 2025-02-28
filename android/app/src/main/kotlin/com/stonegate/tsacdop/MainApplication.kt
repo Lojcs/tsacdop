@@ -1,4 +1,4 @@
-package com.stonegate.tsacdop
+package dev.lojcs.tsacdop
 import com.rmawatson.flutterisolate.FlutterIsolatePlugin
 import io.flutter.app.FlutterApplication
 import io.flutter.plugins.IsolatePluginRegistrant

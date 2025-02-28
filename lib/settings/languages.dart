@@ -92,7 +92,7 @@ class _LanguagesSettingState extends State<LanguagesSetting> {
         Divider(height: 1),
         ListTile(
           onTap: () =>
-              'mailto:<tsacdop.app@gmail.com>?subject=Tsacdop localization project'
+              'mailto:<lojcsgit+tsacdop@gmail.com>?subject=Tsacdop localization project'
                   .launchUrl,
           contentPadding: const EdgeInsets.only(left: 20, right: 20),
           dense: true,

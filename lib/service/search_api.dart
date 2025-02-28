@@ -13,9 +13,13 @@ import '../type/search_api/search_top_podcast.dart';
 import '../type/search_api/searchepisodes.dart';
 import '../type/search_api/searchpodcast.dart';
 
+// const podcastIndexApi = {
+//   "podcastIndexApiKey": "XXWQEGULBJABVHZUM8NF",
+//   "podcastIndexApiSecret": "KZ2uy4upvq4t3e\$m\$3r2TeFS2fEpFTAaF92xcNdX"
+// };
 const podcastIndexApi = {
-  "podcastIndexApiKey": "XXWQEGULBJABVHZUM8NF",
-  "podcastIndexApiSecret": "KZ2uy4upvq4t3e\$m\$3r2TeFS2fEpFTAaF92xcNdX"
+  "podcastIndexApiKey": "invalid",
+  "podcastIndexApiSecret": "invalid"
 };
 
 enum SearchEngine { podcastIndex, listenNotes }
