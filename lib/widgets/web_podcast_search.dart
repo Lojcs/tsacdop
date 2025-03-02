@@ -12,7 +12,20 @@ import 'package:xml/xml.dart';
 
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/podcast_group.dart';
+import '../state/setting_state.dart';
 import '../util/extension_helper.dart';
+
+enum SearchEngine {
+  ecosia(url: "https://www.ecosia.org/search?q="),
+  duckduckgo(url: "https://duckduckgo.com/?q="),
+  google(url: "https://www.google.com/search?q="),
+  bing(url: "https://www.bing.com/search?q="),
+  yandex(url: "https://yandex.com/search/?text=");
+
+  const SearchEngine({required this.url});
+
+  final String url;
+}
 
 class WebPodcastSearch extends StatefulWidget {
   const WebPodcastSearch({super.key});
@@ -39,7 +52,7 @@ class _WebPodcastSearchState extends State<WebPodcastSearch> {
         .clearLocalStorage(); // TODO: This doesn't clear google dark mode??
     webViewController.setNavigationDelegate(NavigationDelegate(
       onUrlChange: (change) async {
-        if (change.url != null && change.url != "https://www.google.com/") {
+        if (change.url != null && change.url != "") {
           var response = await Dio().get(change.url!);
           if (response.statusCode == 200) {
             try {
@@ -101,7 +114,8 @@ class _WebPodcastSearchState extends State<WebPodcastSearch> {
                     if (e is! FormatException && e is! ArgumentError) rethrow;
                     query = query.replaceAll(" ", "+");
                     if (!query.contains("rss")) query = "$query+rss+feed";
-                    query = "https://www.google.com/search?q=$query";
+                    // query = Provider.of<SettingState>(context).searchEngine.url + query;
+                    query = SearchEngine.ecosia.url + query;
                     webViewController.loadRequest(Uri.parse(query));
                     if (mounted) setState(() {});
                   }

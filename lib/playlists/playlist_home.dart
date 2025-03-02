@@ -912,7 +912,7 @@ class __NewPlaylistState extends State<_NewPlaylist> {
     return await _dbHelper.getEpisodes(
         excludedFeedIds: [localFolderId],
         sortBy: Sorter.pubDate,
-        sortOrder: SortOrder.DESC,
+        sortOrder: SortOrder.desc,
         limit: 10);
   }
 

@@ -960,7 +960,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
       newEpisodes = await _dbHelper.getEpisodes(
           optionalFields: [EpisodeField.mediaId],
           sortBy: Sorter.pubDate,
-          sortOrder: SortOrder.DESC,
+          sortOrder: SortOrder.desc,
           filterNew: true,
           limit: 100);
     } else {
@@ -968,7 +968,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
           optionalFields: [EpisodeField.mediaId],
           feedIds: group,
           sortBy: Sorter.pubDate,
-          sortOrder: SortOrder.DESC,
+          sortOrder: SortOrder.desc,
           filterNew: true,
           limit: 100);
     }
