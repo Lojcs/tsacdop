@@ -17,7 +17,6 @@ import 'state/audio_state.dart';
 import 'state/download_state.dart';
 import 'state/podcast_group.dart';
 import 'state/refresh_podcast.dart';
-import 'state/search_state.dart';
 import 'state/setting_state.dart';
 import 'type/theme_data.dart';
 
@@ -41,7 +40,6 @@ Future main() async {
         ),
         ChangeNotifierProvider(create: (_) => GroupList()),
         ChangeNotifierProvider(create: (_) => RefreshWorker()),
-        ChangeNotifierProvider(create: (_) => SearchState()),
         ChangeNotifierProvider(
           lazy: false,
           create: (context) => DownloadState(context),

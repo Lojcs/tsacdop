@@ -150,7 +150,7 @@ class ActionBar extends StatefulWidget {
     this.filterPlayed,
     this.filterDownloaded,
     this.filterDisplayVersion,
-    this.sortOrder = SortOrder.DESC,
+    this.sortOrder = SortOrder.desc,
     this.extraFields = const [],
     this.layout = EpisodeGridLayout.large,
   });
@@ -1107,11 +1107,11 @@ class ActionBarSwitchSortOrder extends ActionBarWidget {
           buttonType: ActionBarButtonType.single,
           onPressed: (value) {
             switch (data.item1) {
-              case SortOrder.ASC:
-                sharedState.sortOrder = SortOrder.DESC;
+              case SortOrder.asc:
+                sharedState.sortOrder = SortOrder.desc;
                 break;
-              case SortOrder.DESC:
-                sharedState.sortOrder = SortOrder.ASC;
+              case SortOrder.desc:
+                sharedState.sortOrder = SortOrder.asc;
                 break;
             }
             sharedState.onGetEpisodesChanged(sharedState.getGetEpisodes());
@@ -1129,7 +1129,7 @@ class ActionBarSwitchSortOrder extends ActionBarWidget {
             child: Icon(
               data.item2 == Sorter.random
                   ? Icons.casino_outlined
-                  : data.item1 == SortOrder.ASC
+                  : data.item1 == SortOrder.asc
                       ? LineIcons.sortAmountUp
                       : LineIcons.sortAmountDown,
               color: context.actionBarIconColor,
