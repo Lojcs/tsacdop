@@ -18,17 +18,20 @@ class S {
   static S? _current;
 
   static S get current {
-    assert(_current != null,
-        'No instance of S was loaded. Try to initialize the S delegate before accessing S.current.');
+    assert(
+      _current != null,
+      'No instance of S was loaded. Try to initialize the S delegate before accessing S.current.',
+    );
     return _current!;
   }
 
   static const AppLocalizationDelegate delegate = AppLocalizationDelegate();
 
   static Future<S> load(Locale locale) {
-    final name = (locale.countryCode?.isEmpty ?? false)
-        ? locale.languageCode
-        : locale.toString();
+    final name =
+        (locale.countryCode?.isEmpty ?? false)
+            ? locale.languageCode
+            : locale.toString();
     final localeName = Intl.canonicalizedLocale(name);
     return initializeMessages(localeName).then((_) {
       Intl.defaultLocale = localeName;
@@ -41,8 +44,10 @@ class S {
 
   static S of(BuildContext context) {
     final instance = S.maybeOf(context);
-    assert(instance != null,
-        'No instance of S present in the widget tree. Did you add S.delegate in localizationsDelegates?');
+    assert(
+      instance != null,
+      'No instance of S present in the widget tree. Did you add S.delegate in localizationsDelegates?',
+    );
     return instance!;
   }
 
@@ -119,12 +124,7 @@ class S {
 
   /// `All`
   String get all {
-    return Intl.message(
-      'All',
-      name: 'all',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('All', name: 'all', desc: '', args: []);
   }
 
   /// `Auto download`
@@ -139,12 +139,7 @@ class S {
 
   /// `Back`
   String get back {
-    return Intl.message(
-      'Back',
-      name: 'back',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Back', name: 'back', desc: '', args: []);
   }
 
   /// `Before`
@@ -181,32 +176,17 @@ class S {
 
   /// `Buffering`
   String get buffering {
-    return Intl.message(
-      'Buffering',
-      name: 'buffering',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Buffering', name: 'buffering', desc: '', args: []);
   }
 
   /// `CANCEL`
   String get cancel {
-    return Intl.message(
-      'CANCEL',
-      name: 'cancel',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('CANCEL', name: 'cancel', desc: '', args: []);
   }
 
   /// `Default`
   String get capitalDefault {
-    return Intl.message(
-      'Default',
-      name: 'capitalDefault',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Default', name: 'capitalDefault', desc: '', args: []);
   }
 
   /// `Cellular data warning`
@@ -241,32 +221,17 @@ class S {
 
   /// `Changelog`
   String get changelog {
-    return Intl.message(
-      'Changelog',
-      name: 'changelog',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Changelog', name: 'changelog', desc: '', args: []);
   }
 
   /// `Choose a`
   String get chooseA {
-    return Intl.message(
-      'Choose a',
-      name: 'chooseA',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Choose a', name: 'chooseA', desc: '', args: []);
   }
 
   /// `Clear`
   String get clear {
-    return Intl.message(
-      'Clear',
-      name: 'clear',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Clear', name: 'clear', desc: '', args: []);
   }
 
   /// `Clear all`
@@ -281,22 +246,12 @@ class S {
 
   /// `color`
   String get color {
-    return Intl.message(
-      'color',
-      name: 'color',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('color', name: 'color', desc: '', args: []);
   }
 
   /// `CONFIRM`
   String get confirm {
-    return Intl.message(
-      'CONFIRM',
-      name: 'confirm',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('CONFIRM', name: 'confirm', desc: '', args: []);
   }
 
   /// `New playlist`
@@ -311,12 +266,7 @@ class S {
 
   /// `Dark mode`
   String get darkMode {
-    return Intl.message(
-      'Dark mode',
-      name: 'darkMode',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Dark mode', name: 'darkMode', desc: '', args: []);
   }
 
   /// `{count, plural, zero{Today} one{{count} day ago} other{{count} days ago}}`
@@ -377,12 +327,7 @@ class S {
 
   /// `Delete`
   String get delete {
-    return Intl.message(
-      'Delete',
-      name: 'delete',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Delete', name: 'delete', desc: '', args: []);
   }
 
   /// `Deselect All`
@@ -407,12 +352,7 @@ class S {
 
   /// `Dismiss`
   String get dismiss {
-    return Intl.message(
-      'Dismiss',
-      name: 'dismiss',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Dismiss', name: 'dismiss', desc: '', args: []);
   }
 
   /// `Display Version`
@@ -428,22 +368,12 @@ class S {
 
   /// `Done`
   String get done {
-    return Intl.message(
-      'Done',
-      name: 'done',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Done', name: 'done', desc: '', args: []);
   }
 
   /// `Download`
   String get download {
-    return Intl.message(
-      'Download',
-      name: 'download',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Download', name: 'download', desc: '', args: []);
   }
 
   /// `Download Date`
@@ -458,12 +388,7 @@ class S {
 
   /// `Downloaded`
   String get downloaded {
-    return Intl.message(
-      'Downloaded',
-      name: 'downloaded',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Downloaded', name: 'downloaded', desc: '', args: []);
   }
 
   /// `Download removed`
@@ -529,36 +454,6 @@ class S {
     );
   }
 
-  /// `Downloaded if exists, else newest`
-  String get episodeVersioningNewIfNotDownloaded {
-    return Intl.message(
-      'Downloaded if exists, else newest',
-      name: 'episodeVersioningNewIfNotDownloaded',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Newest`
-  String get episodeVersioningNew {
-    return Intl.message(
-      'Newest',
-      name: 'episodeVersioningNew',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Oldest`
-  String get episodeVersioningOld {
-    return Intl.message(
-      'Oldest',
-      name: 'episodeVersioningOld',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Fast forward`
   String get fastForward {
     return Intl.message(
@@ -571,12 +466,7 @@ class S {
 
   /// `Fast rewind`
   String get fastRewind {
-    return Intl.message(
-      'Fast rewind',
-      name: 'fastRewind',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Fast rewind', name: 'fastRewind', desc: '', args: []);
   }
 
   /// `Tap to edit group`
@@ -801,12 +691,7 @@ class S {
 
   /// `Filter`
   String get filter {
-    return Intl.message(
-      'Filter',
-      name: 'filter',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Filter', name: 'filter', desc: '', args: []);
   }
 
   /// `{type} Filter`
@@ -822,42 +707,22 @@ class S {
 
   /// `Fonts`
   String get fonts {
-    return Intl.message(
-      'Fonts',
-      name: 'fonts',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Fonts', name: 'fonts', desc: '', args: []);
   }
 
   /// `Font style`
   String get fontStyle {
-    return Intl.message(
-      'Font style',
-      name: 'fontStyle',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Font style', name: 'fontStyle', desc: '', args: []);
   }
 
   /// `From {time}`
   String from(Object time) {
-    return Intl.message(
-      'From $time',
-      name: 'from',
-      desc: '',
-      args: [time],
-    );
+    return Intl.message('From $time', name: 'from', desc: '', args: [time]);
   }
 
   /// `Good Night`
   String get goodNight {
-    return Intl.message(
-      'Good Night',
-      name: 'goodNight',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Good Night', name: 'goodNight', desc: '', args: []);
   }
 
   /// `Congratulations! You  have linked gpodder.net account successfully. Tsacdop will automatically sync subscriptions on your device with your gpodder.net account.`
@@ -1052,12 +917,7 @@ class S {
 
   /// `Import`
   String get import {
-    return Intl.message(
-      'Import',
-      name: 'import',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Import', name: 'import', desc: '', args: []);
   }
 
   /// `Integrate with {service}`
@@ -1122,42 +982,22 @@ class S {
 
   /// `Later`
   String get later {
-    return Intl.message(
-      'Later',
-      name: 'later',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Later', name: 'later', desc: '', args: []);
   }
 
   /// `Light mode`
   String get lightMode {
-    return Intl.message(
-      'Light mode',
-      name: 'lightMode',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Light mode', name: 'lightMode', desc: '', args: []);
   }
 
   /// `Like`
   String get like {
-    return Intl.message(
-      'Like',
-      name: 'like',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Like', name: 'like', desc: '', args: []);
   }
 
   /// `Liked`
   String get liked {
-    return Intl.message(
-      'Liked',
-      name: 'liked',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Liked', name: 'liked', desc: '', args: []);
   }
 
   /// `Like date`
@@ -1172,22 +1012,12 @@ class S {
 
   /// `Listen`
   String get listen {
-    return Intl.message(
-      'Listen',
-      name: 'listen',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Listen', name: 'listen', desc: '', args: []);
   }
 
   /// `Listened`
   String get listened {
-    return Intl.message(
-      'Listened',
-      name: 'listened',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Listened', name: 'listened', desc: '', args: []);
   }
 
   /// `Local episode at {filePath}`
@@ -1200,14 +1030,14 @@ class S {
     );
   }
 
+  /// `Loading`
+  String get loading {
+    return Intl.message('Loading', name: 'loading', desc: '', args: []);
+  }
+
   /// `Load more`
   String get loadMore {
-    return Intl.message(
-      'Load more',
-      name: 'loadMore',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Load more', name: 'loadMore', desc: '', args: []);
   }
 
   /// `Logged in as {userName}`
@@ -1302,12 +1132,7 @@ class S {
 
   /// `Menu`
   String get menu {
-    return Intl.message(
-      'Menu',
-      name: 'menu',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Menu', name: 'menu', desc: '', args: []);
   }
 
   /// `All podcasts`
@@ -1388,12 +1213,7 @@ class S {
 
   /// `Network`
   String get network {
-    return Intl.message(
-      'Network',
-      name: 'network',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Network', name: 'network', desc: '', args: []);
   }
 
   /// `Network error (DNS issue)`
@@ -1448,12 +1268,7 @@ class S {
 
   /// `Next`
   String get next {
-    return Intl.message(
-      'Next',
-      name: 'next',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Next', name: 'next', desc: '', args: []);
   }
 
   /// `No episodes downloaded yet`
@@ -1608,32 +1423,17 @@ class S {
 
   /// `Password`
   String get password {
-    return Intl.message(
-      'Password',
-      name: 'password',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Password', name: 'password', desc: '', args: []);
   }
 
   /// `Pause`
   String get pause {
-    return Intl.message(
-      'Pause',
-      name: 'pause',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Pause', name: 'pause', desc: '', args: []);
   }
 
   /// `Play`
   String get play {
-    return Intl.message(
-      'Play',
-      name: 'play',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Play', name: 'play', desc: '', args: []);
   }
 
   /// `Playback control`
@@ -1648,52 +1448,27 @@ class S {
 
   /// `Player`
   String get player {
-    return Intl.message(
-      'Player',
-      name: 'player',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Player', name: 'player', desc: '', args: []);
   }
 
   /// `Medium`
   String get playerHeightMed {
-    return Intl.message(
-      'Medium',
-      name: 'playerHeightMed',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Medium', name: 'playerHeightMed', desc: '', args: []);
   }
 
   /// `Low`
   String get playerHeightShort {
-    return Intl.message(
-      'Low',
-      name: 'playerHeightShort',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Low', name: 'playerHeightShort', desc: '', args: []);
   }
 
   /// `High`
   String get playerHeightTall {
-    return Intl.message(
-      'High',
-      name: 'playerHeightTall',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('High', name: 'playerHeightTall', desc: '', args: []);
   }
 
   /// `Playing`
   String get playing {
-    return Intl.message(
-      'Playing',
-      name: 'playing',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Playing', name: 'playing', desc: '', args: []);
   }
 
   /// `Playlist name existed`
@@ -1748,12 +1523,7 @@ class S {
 
   /// `Plugins`
   String get plugins {
-    return Intl.message(
-      'Plugins',
-      name: 'plugins',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Plugins', name: 'plugins', desc: '', args: []);
   }
 
   /// `{count, plural, zero{} one{Podcast} other{Podcasts}}`
@@ -1901,12 +1671,7 @@ class S {
 
   /// `Queue`
   String get queue {
-    return Intl.message(
-      'Queue',
-      name: 'queue',
-      desc: 'Queue',
-      args: [],
-    );
+    return Intl.message('Queue', name: 'queue', desc: 'Queue', args: []);
   }
 
   /// `Random`
@@ -1932,12 +1697,7 @@ class S {
 
   /// `Refresh`
   String get refresh {
-    return Intl.message(
-      'Refresh',
-      name: 'refresh',
-      desc: 'Refresh',
-      args: [],
-    );
+    return Intl.message('Refresh', name: 'refresh', desc: 'Refresh', args: []);
   }
 
   /// `Update artwork`
@@ -2032,32 +1792,17 @@ class S {
 
   /// `Save`
   String get save {
-    return Intl.message(
-      'Save',
-      name: 'save',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Save', name: 'save', desc: '', args: []);
   }
 
   /// `Schedule`
   String get schedule {
-    return Intl.message(
-      'Schedule',
-      name: 'schedule',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Schedule', name: 'schedule', desc: '', args: []);
   }
 
   /// `Search`
   String get search {
-    return Intl.message(
-      'Search',
-      name: 'search',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Search', name: 'search', desc: '', args: []);
   }
 
   /// `Search episode`
@@ -2075,6 +1820,16 @@ class S {
     return Intl.message(
       'Type the podcast name, keywords or enter a feed url.',
       name: 'searchHelper',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enter an rss feed url or search for a podcast and open its rss feed to subscribe.`
+  String get searchInstructions {
+    return Intl.message(
+      'Enter an rss feed url or search for a podcast and open its rss feed to subscribe.',
+      name: 'searchInstructions',
       desc: '',
       args: [],
     );
@@ -2148,12 +1903,7 @@ class S {
 
   /// `Settings`
   String get settings {
-    return Intl.message(
-      'Settings',
-      name: 'settings',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Settings', name: 'settings', desc: '', args: []);
   }
 
   /// `Accent color`
@@ -2258,12 +2008,7 @@ class S {
 
   /// `Backup`
   String get settingsBackup {
-    return Intl.message(
-      'Backup',
-      name: 'settingsBackup',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Backup', name: 'settingsBackup', desc: '', args: []);
   }
 
   /// `Backup app data`
@@ -2449,12 +2194,7 @@ class S {
 
   /// `History`
   String get settingsHistory {
-    return Intl.message(
-      'History',
-      name: 'settingsHistory',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('History', name: 'settingsHistory', desc: '', args: []);
   }
 
   /// `Listen data`
@@ -2469,12 +2209,7 @@ class S {
 
   /// `Info`
   String get settingsInfo {
-    return Intl.message(
-      'Info',
-      name: 'settingsInfo',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Info', name: 'settingsInfo', desc: '', args: []);
   }
 
   /// `Interface`
@@ -2509,12 +2244,7 @@ class S {
 
   /// `Layout`
   String get settingsLayout {
-    return Intl.message(
-      'Layout',
-      name: 'settingsLayout',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Layout', name: 'settingsLayout', desc: '', args: []);
   }
 
   /// `App layout`
@@ -2819,12 +2549,7 @@ class S {
 
   /// `Syncing`
   String get settingsSyncing {
-    return Intl.message(
-      'Syncing',
-      name: 'settingsSyncing',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Syncing', name: 'settingsSyncing', desc: '', args: []);
   }
 
   /// `Refresh podcasts in the background`
@@ -2859,22 +2584,12 @@ class S {
 
   /// `Theme`
   String get settingsTheme {
-    return Intl.message(
-      'Theme',
-      name: 'settingsTheme',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Theme', name: 'settingsTheme', desc: '', args: []);
   }
 
   /// `Storage`
   String get settingStorage {
-    return Intl.message(
-      'Storage',
-      name: 'settingStorage',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Storage', name: 'settingStorage', desc: '', args: []);
   }
 
   /// `Update interval`
@@ -2899,12 +2614,7 @@ class S {
 
   /// `Share`
   String get share {
-    return Intl.message(
-      'Share',
-      name: 'share',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Share', name: 'share', desc: '', args: []);
   }
 
   /// `Show notes font`
@@ -2919,12 +2629,7 @@ class S {
 
   /// `Size`
   String get size {
-    return Intl.message(
-      'Size',
-      name: 'size',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Size', name: 'size', desc: '', args: []);
   }
 
   /// `Skip seconds at end`
@@ -2959,42 +2664,22 @@ class S {
 
   /// `Skip to next`
   String get skipToNext {
-    return Intl.message(
-      'Skip to next',
-      name: 'skipToNext',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Skip to next', name: 'skipToNext', desc: '', args: []);
   }
 
   /// `Sleep timer`
   String get sleepTimer {
-    return Intl.message(
-      'Sleep timer',
-      name: 'sleepTimer',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Sleep timer', name: 'sleepTimer', desc: '', args: []);
   }
 
   /// `Sort By`
   String get sortBy {
-    return Intl.message(
-      'Sort By',
-      name: 'sortBy',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Sort By', name: 'sortBy', desc: '', args: []);
   }
 
   /// `Sort Order`
   String get sortOrder {
-    return Intl.message(
-      'Sort Order',
-      name: 'sortOrder',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Sort Order', name: 'sortOrder', desc: '', args: []);
   }
 
   /// `Status`
@@ -3039,22 +2724,12 @@ class S {
 
   /// `Stop`
   String get stop {
-    return Intl.message(
-      'Stop',
-      name: 'stop',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Stop', name: 'stop', desc: '', args: []);
   }
 
   /// `Subscribe`
   String get subscribe {
-    return Intl.message(
-      'Subscribe',
-      name: 'subscribe',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Subscribe', name: 'subscribe', desc: '', args: []);
   }
 
   /// `Export OPML file of all podcasts`
@@ -3069,12 +2744,7 @@ class S {
 
   /// `Sync now`
   String get syncNow {
-    return Intl.message(
-      'Sync now',
-      name: 'syncNow',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Sync now', name: 'syncNow', desc: '', args: []);
   }
 
   /// `System default`
@@ -3100,22 +2770,12 @@ class S {
 
   /// `{time} Left`
   String timeLeft(Object time) {
-    return Intl.message(
-      '$time Left',
-      name: 'timeLeft',
-      desc: '',
-      args: [time],
-    );
+    return Intl.message('$time Left', name: 'timeLeft', desc: '', args: [time]);
   }
 
   /// `To {time}`
   String to(Object time) {
-    return Intl.message(
-      'To $time',
-      name: 'to',
-      desc: '',
-      args: [time],
-    );
+    return Intl.message('To $time', name: 'to', desc: '', args: [time]);
   }
 
   /// `Added to playlist`
@@ -3261,42 +2921,22 @@ class S {
 
   /// `Translators`
   String get translators {
-    return Intl.message(
-      'Translators',
-      name: 'translators',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Translators', name: 'translators', desc: '', args: []);
   }
 
   /// `Understood`
   String get understood {
-    return Intl.message(
-      'Understood',
-      name: 'understood',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Understood', name: 'understood', desc: '', args: []);
   }
 
   /// `UNDO`
   String get undo {
-    return Intl.message(
-      'UNDO',
-      name: 'undo',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('UNDO', name: 'undo', desc: '', args: []);
   }
 
   /// `Unlike`
   String get unlike {
-    return Intl.message(
-      'Unlike',
-      name: 'unlike',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Unlike', name: 'unlike', desc: '', args: []);
   }
 
   /// `Episode removed from favorites`
@@ -3311,12 +2951,7 @@ class S {
 
   /// `Update date`
   String get updateDate {
-    return Intl.message(
-      'Update date',
-      name: 'updateDate',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Update date', name: 'updateDate', desc: '', args: []);
   }
 
   /// `{count, plural, zero{No update} one{Updated {count} episode} other{Updated {count} episodes}}`
@@ -3344,12 +2979,7 @@ class S {
 
   /// `Username`
   String get username {
-    return Intl.message(
-      'Username',
-      name: 'username',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Username', name: 'username', desc: '', args: []);
   }
 
   /// `Username required`

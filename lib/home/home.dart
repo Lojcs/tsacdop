@@ -27,6 +27,7 @@ import '../widgets/custom_widget.dart';
 import '../widgets/episodegrid.dart';
 import '../widgets/feature_discovery.dart';
 import '../widgets/multiselect_bar.dart';
+import '../widgets/web_podcast_search.dart';
 import 'audioplayer.dart';
 import 'download_list.dart';
 import 'home_groups.dart';
@@ -164,12 +165,17 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                           splashRadius: 20,
                                           icon: Icon(Icons.add_circle_outline),
                                           onPressed: () async {
-                                            await showSearch<int?>(
-                                              context: context,
-                                              delegate: MyHomePageDelegate(
-                                                  searchFieldLabel:
-                                                      s.searchPodcast),
-                                            );
+                                            Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        WebPodcastSearch()));
+                                            // await showSearch<int?>(
+                                            //   context: context,
+                                            //   delegate: MyHomePageDelegate(
+                                            //       searchFieldLabel:
+                                            //           s.searchPodcast),
+                                            // );
                                           },
                                         ),
                                       ),

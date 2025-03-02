@@ -174,7 +174,7 @@ class _PopupMenuState extends State<PopupMenu> {
         for (var rss in list) {
           var rssLink = rssExp.stringMatch(rss.xmlUrl!);
           if (rssLink != null) {
-            var item = SubscribeItem(rssLink, rss.text, group: title);
+            var item = SubscribeItem(rssLink, rss.text ?? "", group: title);
             await subscribeWorker.setSubscribeItem(item);
             await Future.delayed(Duration(milliseconds: 200));
           }

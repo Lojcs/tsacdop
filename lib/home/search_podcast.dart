@@ -1276,8 +1276,8 @@ class SubscribeButton extends StatelessWidget {
     final searchState = context.watch<SearchState>();
     final s = context.s;
     void subscribePodcast(OnlinePodcast podcast) {
-      var item = SubscribeItem(podcast.rss, podcast.title,
-          imgUrl: podcast.image, group: 'Home');
+      var item = SubscribeItem(podcast.rss!, podcast.title!,
+          imgUrl: podcast.image!, group: 'Home');
       subscribeWorker.setSubscribeItem(item);
       searchState.addPodcast(podcast);
     }

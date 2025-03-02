@@ -375,14 +375,8 @@ class _PlayedHistoryState extends State<PlayedHistory>
       );
       var response = await Dio(options).get(url);
       var p = RssFeed.parse(response.data);
-      var podcast = OnlinePodcast(
-          rss: url,
-          title: p.title,
-          publisher: p.author,
-          description: p.description,
-          image: p.itunes!.image!.href);
-      var item = SubscribeItem(podcast.rss, podcast.title,
-          imgUrl: podcast.image, group: 'Home');
+      var item = SubscribeItem(url, p.title ?? url,
+          imgUrl: p.itunes?.image?.href ?? p.image?.url ?? "", group: 'Home');
       subscribeWorker.setSubscribeItem(item);
     } catch (e) {
       developer.log(e.toString(), name: 'Recover podcast error');

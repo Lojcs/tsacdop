@@ -176,10 +176,10 @@ enum SubscribeState { none, start, subscribe, fetch, stop, exist, error }
 
 class SubscribeItem {
   ///Rss url.
-  String? url;
+  String url;
 
   ///Rss title.
-  String? title;
+  String title;
 
   /// Subscribe status.
   SubscribeState subscribeState;
@@ -188,7 +188,7 @@ class SubscribeItem {
   String id;
 
   ///Avatar image link.
-  String? imgUrl;
+  String imgUrl;
 
   ///Podcast group, default Home.
   String group;

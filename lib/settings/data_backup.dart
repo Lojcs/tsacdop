@@ -508,8 +508,8 @@ class __LoginGpodderState extends State<_LoginGpodder> {
             final dbHelper = DBHelper();
             final exist = await dbHelper.checkPodcast(rssLink);
             if (exist == '') {
-              var item = SubscribeItem(
-                  rssLink, rss.text == '' ? rssLink : rss.text,
+              var item = SubscribeItem(rssLink,
+                  (rss.text == null || rss.text == '') ? rssLink : rss.text!,
                   group: 'Home');
               await subscribeWorker.setSubscribeItem(item, syncGpodder: false);
               await Future.delayed(Duration(milliseconds: 200));
@@ -856,8 +856,8 @@ class __GpodderInfoState extends State<_GpodderInfo> {
               final dbHelper = DBHelper();
               final exist = await dbHelper.checkPodcast(rssLink);
               if (exist == '') {
-                var item = SubscribeItem(
-                    rssLink, rss.text == '' ? rssLink : rss.text,
+                var item = SubscribeItem(rssLink,
+                    (rss.text == null || rss.text == '') ? rssLink : rss.text!,
                     group: 'Home');
                 await subscribeWorker.setSubscribeItem(item,
                     syncGpodder: false);

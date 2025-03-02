@@ -72,6 +72,7 @@ dependencies:
   intl: any
   xml: any
   flutter_lints: ^5.0.0
+  webview_flutter: ^4.10.0
 dependency_overrides:
   linkify:
     git:
