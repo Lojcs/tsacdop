@@ -107,10 +107,13 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         builder: (_, playerRunning, __) {
           context.originalPadding = MediaQuery.of(context).padding;
           return AnnotatedRegion<SystemUiOverlayStyle>(
-            value: playerRunning
-                ? context.overlay.copyWith(
-                    systemNavigationBarColor: context.cardColorSchemeCard)
-                : context.overlay,
+            value: SystemUiOverlayStyle(
+              statusBarColor: context.surface,
+              statusBarIconBrightness: context.iconBrightness,
+              systemNavigationBarColor:
+                  playerRunning ? context.cardColorSchemeCard : context.surface,
+              systemNavigationBarIconBrightness: context.iconBrightness,
+            ),
             child: PopScope(
               canPop: settings.openPlaylistDefault! &&
                   !(_playerKey.currentState != null &&

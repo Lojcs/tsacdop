@@ -95,7 +95,6 @@ class _PodcastDetailState extends State<PodcastDetail> {
 
   @override
   void deactivate() {
-    context.statusBarColor = null;
     super.deactivate();
   }
 
@@ -148,8 +147,6 @@ class _PodcastDetailState extends State<PodcastDetail> {
 
   @override
   Widget build(BuildContext context) {
-    context.statusBarColor =
-        context.realDark ? context.surface : cardColorScheme.saturated;
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<SelectionController>(
@@ -162,10 +159,15 @@ class _PodcastDetailState extends State<PodcastDetail> {
           selectionController =
               Provider.of<SelectionController>(context, listen: false);
           return AnnotatedRegion<SystemUiOverlayStyle>(
-            value: (playerRunning
-                ? context.overlay.copyWith(
-                    systemNavigationBarColor: context.cardColorSchemeCard)
-                : context.overlay),
+            value: SystemUiOverlayStyle(
+              statusBarColor: context.realDark
+                  ? context.surface
+                  : cardColorScheme.saturated,
+              statusBarIconBrightness: context.iconBrightness,
+              systemNavigationBarColor:
+                  playerRunning ? context.cardColorSchemeCard : context.surface,
+              systemNavigationBarIconBrightness: context.iconBrightness,
+            ),
             child: Selector<SelectionController, bool>(
               selector: (_, selectionController) =>
                   selectionController.selectMode,

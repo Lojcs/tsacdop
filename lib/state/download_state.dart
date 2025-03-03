@@ -138,6 +138,7 @@ class DownloadState extends ChangeNotifier {
           EpisodeField.skipSecondsStart,
           EpisodeField.skipSecondsEnd,
           EpisodeField.episodeImage,
+          EpisodeField.podcastImage,
           EpisodeField.chapterLink
         ]);
         if (episodes.isEmpty)

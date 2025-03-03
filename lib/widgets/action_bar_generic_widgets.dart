@@ -1113,66 +1113,62 @@ class _SearchEpisodeState extends State<SearchEpisode> {
   @override
   Widget build(BuildContext context) {
     final s = context.s;
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: context.overlayWithBarrier,
-      child: AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: context.radiusMedium,
-        ),
-        backgroundColor: widget.accentColor?.toWeakBackround(context),
-        elevation: 1,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20),
-        titlePadding: const EdgeInsets.all(20),
-        actionsPadding: EdgeInsets.zero,
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              s.cancel,
-              textAlign: TextAlign.end,
-              style: TextStyle(color: Colors.grey[600]),
-            ),
+    return AlertDialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: context.radiusMedium,
+      ),
+      backgroundColor: widget.accentColor?.toWeakBackround(context),
+      elevation: 1,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+      titlePadding: const EdgeInsets.all(20),
+      actionsPadding: EdgeInsets.zero,
+      actions: <Widget>[
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(
+            s.cancel,
+            textAlign: TextAlign.end,
+            style: TextStyle(color: Colors.grey[600]),
           ),
-          TextButton(
-            onPressed: () {
-              if (_query.isNotEmpty) {
-                widget.onSearch(_query);
-                Navigator.of(context).pop();
-              }
-            },
-            child: Text(s.confirm, style: TextStyle(color: widget.accentColor)),
-          )
-        ],
-        title: SizedBox(width: context.width - 160, child: Text(s.search)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            TextFormField(
-              initialValue: widget.query,
-              decoration: InputDecoration(
-                contentPadding: EdgeInsets.symmetric(horizontal: 10),
-                hintText: s.searchEpisode,
-                hintStyle: TextStyle(fontSize: 18),
-                filled: true,
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(
-                      color: widget.accentColor ?? context.accentColor,
-                      width: 2.0),
-                ),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide:
-                      BorderSide(color: context.accentColor, width: 2.0),
-                ),
-              ),
-              cursorRadius: Radius.circular(2),
-              autofocus: true,
-              maxLines: 1,
-              onChanged: (value) {
-                if (mounted) setState(() => _query = value);
-              },
-            ),
-          ],
         ),
+        TextButton(
+          onPressed: () {
+            if (_query.isNotEmpty) {
+              widget.onSearch(_query);
+              Navigator.of(context).pop();
+            }
+          },
+          child: Text(s.confirm, style: TextStyle(color: widget.accentColor)),
+        )
+      ],
+      title: SizedBox(width: context.width - 160, child: Text(s.search)),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          TextFormField(
+            initialValue: widget.query,
+            decoration: InputDecoration(
+              contentPadding: EdgeInsets.symmetric(horizontal: 10),
+              hintText: s.searchEpisode,
+              hintStyle: TextStyle(fontSize: 18),
+              filled: true,
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(
+                    color: widget.accentColor ?? context.accentColor,
+                    width: 2.0),
+              ),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: context.accentColor, width: 2.0),
+              ),
+            ),
+            cursorRadius: Radius.circular(2),
+            autofocus: true,
+            maxLines: 1,
+            onChanged: (value) {
+              if (mounted) setState(() => _query = value);
+            },
+          ),
+        ],
       ),
     );
   }

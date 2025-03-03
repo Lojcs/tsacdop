@@ -106,8 +106,6 @@ class SettingState extends ChangeNotifier {
   Locale? get locale => _locale;
 
   EdgeInsets? originalPadding;
-  List<Color> statusBarColor = [];
-  List<Color> navBarColor = [];
 
   /// Set thememode. default auto.
   ThemeMode? _theme;

@@ -125,7 +125,6 @@ class _DownloadsManageState extends State<DownloadsManage> {
 
   @override
   void deactivate() {
-    context.statusBarColor = null;
     _controller.dispose();
     super.deactivate();
   }
@@ -135,9 +134,13 @@ class _DownloadsManageState extends State<DownloadsManage> {
     Color appBarColor = context.realDark
         ? Colors.black
         : Theme.of(context).extension<CardColorScheme>()!.saturated;
-    context.statusBarColor = appBarColor;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: context.overlay,
+      value: SystemUiOverlayStyle(
+        statusBarColor: appBarColor,
+        statusBarIconBrightness: context.iconBrightness,
+        systemNavigationBarColor: context.surface,
+        systemNavigationBarIconBrightness: context.iconBrightness,
+      ),
       child: Scaffold(
         backgroundColor: context.surface,
         body: SafeArea(

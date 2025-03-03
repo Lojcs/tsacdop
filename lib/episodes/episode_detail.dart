@@ -42,8 +42,6 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
 
   @override
   void deactivate() {
-    context.statusBarColor = null;
-    context.navBarColor = null;
     if (widget.onClosed != null) widget.onClosed!();
     super.deactivate();
   }
@@ -52,8 +50,6 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
   Widget build(BuildContext context) {
     final Color color =
         context.realDark ? context.surface : _episodeItem.cardColor(context);
-    context.statusBarColor = color;
-    context.navBarColor = color;
     return Selector<EpisodeState, bool?>(
       selector: (_, episodeState) => episodeState.globalChange,
       builder: (_, __, ___) => FutureBuilder<EpisodeBrief>(
@@ -70,10 +66,13 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
             selector: (_, audio) => audio.playerRunning,
             builder: (_, playerRunning, __) =>
                 AnnotatedRegion<SystemUiOverlayStyle>(
-              value: playerRunning
-                  ? context.overlay.copyWith(
-                      systemNavigationBarColor: context.cardColorSchemeCard)
-                  : context.overlay,
+              value: SystemUiOverlayStyle(
+                statusBarColor: color,
+                statusBarIconBrightness: context.iconBrightness,
+                systemNavigationBarColor:
+                    playerRunning ? context.cardColorSchemeCard : color,
+                systemNavigationBarIconBrightness: context.iconBrightness,
+              ),
               child: PopScope(
                 canPop: !(_playerKey.currentState != null &&
                     _playerKey.currentState!.size! > 100),

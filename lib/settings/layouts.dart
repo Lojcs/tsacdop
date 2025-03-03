@@ -99,19 +99,19 @@ class _LayoutSettingState extends State<LayoutSetting> {
                             audio.setPlayerHeight = PlayerHeight.values[index]),
                   ),
                 ),
-                Divider(height: 1),
+                // Divider(height: 1),
 
-                Padding(
-                  padding: EdgeInsets.all(10.0),
-                ),
-                Container(
-                  height: 30.0,
-                  padding: EdgeInsets.symmetric(horizontal: 70),
-                  alignment: Alignment.centerLeft,
-                  child: Text(s.search,
-                      style: context.textTheme.bodyLarge!
-                          .copyWith(color: context.accentColor)),
-                ),
+                // Padding(
+                //   padding: EdgeInsets.all(10.0),
+                // ),
+                // Container(
+                //   height: 30.0,
+                //   padding: EdgeInsets.symmetric(horizontal: 70),
+                //   alignment: Alignment.centerLeft,
+                //   child: Text(s.search,
+                //       style: context.textTheme.bodyLarge!
+                //           .copyWith(color: context.accentColor)),
+                // ),
                 // if (environment['apiKey'] != '')
                 //   FutureBuilder<bool>(
                 //     future: _getHideDiscovery(),
