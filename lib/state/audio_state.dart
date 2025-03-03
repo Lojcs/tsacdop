@@ -456,16 +456,19 @@ class AudioPlayerNotifier extends ChangeNotifier {
 
   /// Saves current history and position
   Future<void> saveHistory({bool savePosition = false}) async {
+    if (_episode == null) return;
+    EpisodeBrief saveEpisode = _episode!;
     if (!_playingTemp && _playerRunning) {
       if (savePosition) {
         await saveCurrentPosition();
       }
-      PlayHistory history = PlayHistory(_episode!.title, _episode!.enclosureUrl,
-          _audioPosition ~/ 1000, _seekSliderValue);
+      PlayHistory history = PlayHistory(saveEpisode.title,
+          saveEpisode.enclosureUrl, _audioPosition ~/ 1000, _seekSliderValue);
+
       if (_lastHistory != history) {
         _lastHistory = history;
         if (_seekSliderValue > 0.95) {
-          await _episodeState.setListened([_episode!],
+          await _episodeState.setListened([saveEpisode],
               seconds: history.seconds!, seekValue: history.seekValue!);
         } else {
           await _dbHelper.saveHistory(history);
@@ -785,7 +788,13 @@ class AudioPlayerNotifier extends ChangeNotifier {
           await loadSavedPosition(saveCurrent: false);
         } else {
           if (_playlist.isQueue) {
-            await removeFromPlaylistAt(0);
+            if (_playlist.length == 1) {
+              await saveHistory(savePosition: true);
+              await removeFromPlaylistAt(0);
+              _playerRunning = false;
+            } else {
+              await removeFromPlaylistAt(0);
+            }
           } else if (_episodeIndex != _playlist.length - 1) {
             _episodeIndex++;
           }

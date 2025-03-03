@@ -79,18 +79,18 @@ android {
        }
    }
 
-   flavorDimensions "deploy"
+//    flavorDimensions "deploy"
 
-   productFlavors {
-       play {
-           dimension "deploy"
-           signingConfig signingConfigs.release
-       }
-       fdroid {
-           dimension "deploy"
-           signingConfig signingConfigs.release
-       }
-   }
+//    productFlavors {
+//        play {
+//            dimension "deploy"
+//            signingConfig signingConfigs.release
+//        }
+//        fdroid {
+//            dimension "deploy"
+//            signingConfig signingConfigs.release
+//        }
+//    }
 
 //    android.applicationVariants.all { variant ->
 //        if (variant.flavorName == "play") {
