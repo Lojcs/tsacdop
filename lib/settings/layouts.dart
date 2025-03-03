@@ -9,7 +9,6 @@ import '../util/extension_helper.dart';
 import '../widgets/custom_dropdown.dart';
 import '../widgets/custom_widget.dart';
 import '../widgets/episodegrid.dart';
-import '../.env.dart';
 import 'popup_menu.dart';
 
 class LayoutSetting extends StatefulWidget {

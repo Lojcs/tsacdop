@@ -199,7 +199,9 @@ class _SettingsState extends State<Settings> {
                 ),
                 ListTile(
                   onTap: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => Libries())),
+                      MaterialPageRoute(builder: (context) => LicensePage())),
+                  // onTap: () => Navigator.push(context,
+                  //     MaterialPageRoute(builder: (context) => Libries())),
                   contentPadding: EdgeInsets.symmetric(horizontal: 25.0),
                   leading: Icon(LineIcons.bookOpen, color: Colors.purple[700]),
                   title: Text(s.settingsLibraries),
