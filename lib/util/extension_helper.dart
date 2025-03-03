@@ -6,10 +6,11 @@ import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:tsacdop/class/settingstate.dart';
-import 'package:tsacdop/type/theme_data.dart';
+
 import 'package:url_launcher/url_launcher_string.dart';
 import '../generated/l10n.dart';
+import '../state/setting_state.dart';
+import '../type/theme_data.dart';
 
 extension ContextExtension on BuildContext {
   ColorScheme get colorScheme => Theme.of(this).colorScheme;
@@ -63,17 +64,10 @@ extension ContextExtension on BuildContext {
               blurRadius: 4, spreadRadius: -1, color: color ?? shadowColor)
         ];
   SystemUiOverlayStyle get overlay => SystemUiOverlayStyle(
-        statusBarColor: statusBarColor,
+        statusBarColor: surface,
         statusBarIconBrightness: iconBrightness,
-        systemNavigationBarColor: navBarColor,
+        systemNavigationBarColor: surface,
         systemNavigationBarIconBrightness: iconBrightness,
-      );
-  SystemUiOverlayStyle get overlayWithBarrier => SystemUiOverlayStyle(
-        statusBarColor: Color.alphaBlend(Colors.black54, (statusBarColor)),
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor:
-            Color.alphaBlend(Colors.black54, (navBarColor)),
-        systemNavigationBarIconBrightness: Brightness.light,
       );
   S get s => S.of(this);
   bool get realDark =>
@@ -84,46 +78,6 @@ extension ContextExtension on BuildContext {
       EdgeInsets.all(0);
   set originalPadding(EdgeInsets padding) {
     Provider.of<SettingState>(this, listen: false).originalPadding = padding;
-  }
-
-  /// Returns the last item from the statusBarColor stack. Useful for keeping track of the current
-  Color get statusBarColor =>
-      Provider.of<SettingState>(this, listen: false).statusBarColor.isEmpty
-          ? surface
-          : Provider.of<SettingState>(this, listen: false).statusBarColor.last;
-
-  /// Adds the color to the statusBarColor stack if it's not already the last item. Pass null when exiting the page to pop the last item.
-  set statusBarColor(Color? color) {
-    // TODO: Fix: If an EpisodeDetail is opened while a PodcastDetail is in its closing animation and hasn't called deactivate yet, the color of the PodcastDetail gets stuck in the stack, leading to incorrect colors for eg. mobile data confirmation dialog in home screen.
-    SettingState setting = Provider.of<SettingState>(this, listen: false);
-    // print("$color, ${setting.statusBarColor}");
-    if (color == null) {
-      if (setting.statusBarColor.isNotEmpty) {
-        setting.statusBarColor.removeLast();
-      }
-    } else if (setting.statusBarColor.isEmpty ||
-        setting.statusBarColor.last != color) {
-      Provider.of<SettingState>(this, listen: false).statusBarColor.add(color);
-    }
-  }
-
-  /// Returns the last item from the statusBarColor stack. Useful for keeping track of the current
-  Color get navBarColor =>
-      Provider.of<SettingState>(this, listen: false).navBarColor.isEmpty
-          ? surface
-          : Provider.of<SettingState>(this, listen: false).navBarColor.last;
-
-  /// Adds the color to the statusBarColor stack if it's not already the last item. Pass null when exiting the page to pop the last item.
-  set navBarColor(Color? color) {
-    SettingState setting = Provider.of<SettingState>(this, listen: false);
-    if (color == null) {
-      if (setting.navBarColor.isNotEmpty) {
-        setting.navBarColor.removeLast();
-      }
-    } else if (setting.navBarColor.isEmpty ||
-        setting.navBarColor.last != color) {
-      Provider.of<SettingState>(this, listen: false).navBarColor.add(color);
-    }
   }
 
   BorderRadius get radiusTiny => BorderRadius.circular(5);

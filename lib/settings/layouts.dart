@@ -1,20 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:tsacdop/state/setting_state.dart';
 
 import '../local_storage/key_value_storage.dart';
-import '../service/search_api.dart';
 import '../state/audio_state.dart';
+import '../state/setting_state.dart';
 import '../util/extension_helper.dart';
 import '../widgets/custom_dropdown.dart';
 import '../widgets/custom_widget.dart';
 import '../widgets/episodegrid.dart';
-import '../.env.dart';
 import 'popup_menu.dart';
 
 class LayoutSetting extends StatefulWidget {
-  const LayoutSetting({Key? key}) : super(key: key);
+  const LayoutSetting({super.key});
 
   @override
   _LayoutSettingState createState() => _LayoutSettingState();
@@ -100,62 +98,61 @@ class _LayoutSettingState extends State<LayoutSetting> {
                             audio.setPlayerHeight = PlayerHeight.values[index]),
                   ),
                 ),
-                if (environment['apiKey'] != '') Divider(height: 1),
-                if (environment['apiKey'] != '')
-                  Padding(
-                    padding: EdgeInsets.all(10.0),
-                  ),
-                if (environment['apiKey'] != '')
-                  Container(
-                    height: 30.0,
-                    padding: EdgeInsets.symmetric(horizontal: 70),
-                    alignment: Alignment.centerLeft,
-                    child: Text(s.search,
-                        style: context.textTheme.bodyLarge!
-                            .copyWith(color: context.accentColor)),
-                  ),
-                if (environment['apiKey'] != '')
-                  FutureBuilder<bool>(
-                    future: _getHideDiscovery(),
-                    initialData: false,
-                    builder: (context, snapshot) => ListTile(
-                      contentPadding: EdgeInsets.fromLTRB(70, 10, 10, 10),
-                      onTap: () => _saveHideDiscovery(!snapshot.data!),
-                      title: Text(s.hidePodcastDiscovery),
-                      subtitle: Text(s.hidePodcastDiscoveryDes),
-                      trailing: Transform.scale(
-                        scale: 0.9,
-                        child: Switch(
-                            value: snapshot.data!,
-                            onChanged: _saveHideDiscovery),
-                      ),
-                    ),
-                  ),
-                if (environment['apiKey'] != '')
-                  FutureBuilder(
-                    future: _getSearchEngine(),
-                    initialData: SearchEngine.listenNotes,
-                    builder: (context, snapshot) => ListTile(
-                      contentPadding: EdgeInsets.fromLTRB(70, 10, 10, 10),
-                      title: Text(s.defaultSearchEngine),
-                      subtitle: Text(s.defaultSearchEngineDes),
-                      trailing: MyDropdownButton(
-                          hint: Text(''),
-                          underline: Center(),
-                          elevation: 1,
-                          value: snapshot.data,
-                          items: [
-                            DropdownMenuItem<SearchEngine>(
-                                value: SearchEngine.podcastIndex,
-                                child: Text('Podcastindex')),
-                            DropdownMenuItem<SearchEngine>(
-                                value: SearchEngine.listenNotes,
-                                child: Text('ListenNotes')),
-                          ],
-                          onChanged: (dynamic value) =>
-                              _saveSearchEngine(value)),
-                    ),
-                  ),
+                // Divider(height: 1),
+
+                // Padding(
+                //   padding: EdgeInsets.all(10.0),
+                // ),
+                // Container(
+                //   height: 30.0,
+                //   padding: EdgeInsets.symmetric(horizontal: 70),
+                //   alignment: Alignment.centerLeft,
+                //   child: Text(s.search,
+                //       style: context.textTheme.bodyLarge!
+                //           .copyWith(color: context.accentColor)),
+                // ),
+                // if (environment['apiKey'] != '')
+                //   FutureBuilder<bool>(
+                //     future: _getHideDiscovery(),
+                //     initialData: false,
+                //     builder: (context, snapshot) => ListTile(
+                //       contentPadding: EdgeInsets.fromLTRB(70, 10, 10, 10),
+                //       onTap: () => _saveHideDiscovery(!snapshot.data!),
+                //       title: Text(s.hidePodcastDiscovery),
+                //       subtitle: Text(s.hidePodcastDiscoveryDes),
+                //       trailing: Transform.scale(
+                //         scale: 0.9,
+                //         child: Switch(
+                //             value: snapshot.data!,
+                //             onChanged: _saveHideDiscovery),
+                //       ),
+                //     ),
+                //   ),
+                // if (environment['apiKey'] != '')
+                //   FutureBuilder<>(
+                //     future: _getSearchEngine(),
+                //     initialData: SearchEngine.listenNotes,
+                //     builder: (context, snapshot) => ListTile(
+                //       contentPadding: EdgeInsets.fromLTRB(70, 10, 10, 10),
+                //       title: Text(s.defaultSearchEngine),
+                //       subtitle: Text(s.defaultSearchEngineDes),
+                //       trailing: MyDropdownButton(
+                //           hint: Text(''),
+                //           underline: Center(),
+                //           elevation: 1,
+                //           value: snapshot.data,
+                //           items: [
+                //             DropdownMenuItem<SearchEngine>(
+                //                 value: SearchEngine.podcastIndex,
+                //                 child: Text('Podcastindex')),
+                //             DropdownMenuItem<SearchEngine>(
+                //                 value: SearchEngine.listenNotes,
+                //                 child: Text('ListenNotes')),
+                //           ],
+                //           onChanged: (dynamic value) =>
+                //               _saveSearchEngine(value)),
+                //     ),
+                //   ),
                 Divider(height: 1),
                 SizedBox(height: 20),
                 Container(
@@ -293,17 +290,17 @@ class _LayoutSettingState extends State<LayoutSetting> {
     if (mounted) setState(() {});
   }
 
-  Future<SearchEngine> _getSearchEngine() async {
-    final storage = KeyValueStorage(searchEngineKey);
-    final index = await storage.getInt();
-    return SearchEngine.values[index];
-  }
+  // Future<SearchEngine> _getSearchEngine() async {
+  //   final storage = KeyValueStorage(searchEngineKey);
+  //   final index = await storage.getInt();
+  //   return SearchEngine.values[index];
+  // }
 
-  Future<void> _saveSearchEngine(SearchEngine engine) async {
-    final storage = KeyValueStorage(searchEngineKey);
-    await storage.saveInt(engine.index);
-    if (mounted) setState(() {});
-  }
+  // Future<void> _saveSearchEngine(SearchEngine engine) async {
+  //   final storage = KeyValueStorage(searchEngineKey);
+  //   await storage.saveInt(engine.index);
+  //   if (mounted) setState(() {});
+  // }
 
   String _getHeightString(PlayerHeight? mode) {
     final s = context.s;

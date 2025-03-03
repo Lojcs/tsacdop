@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:provider/provider.dart';
-import 'package:tsacdop/type/episodebrief.dart';
+import '../type/episodebrief.dart';
 
 import '../episodes/episode_detail.dart';
 import '../local_storage/sqflite_localpodcast.dart';
@@ -10,7 +10,7 @@ import '../type/episode_task.dart';
 import '../util/pageroute.dart';
 
 class DownloadList extends StatefulWidget {
-  DownloadList({Key? key}) : super(key: key);
+  const DownloadList({super.key});
 
   @override
   _DownloadListState createState() => _DownloadListState();
@@ -81,7 +81,7 @@ class _DownloadListState extends State<DownloadList> {
       final tasks = downloader.episodeTasks
           .where((task) => task.status!.index != 3)
           .toList(); // TODO: This seems to be slow and unreliable.
-      return tasks.length > 0
+      return tasks.isNotEmpty
           ? SliverPadding(
               padding: EdgeInsets.symmetric(vertical: 5.0),
               sliver: SliverList(

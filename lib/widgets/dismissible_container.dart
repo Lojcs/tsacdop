@@ -14,14 +14,13 @@ class DismissibleContainer extends StatefulWidget {
   final int index;
   final VoidCallback? onRemove;
   final bool selectMode;
-  DismissibleContainer(
+  const DismissibleContainer(
       {required this.playlist,
       required this.episode,
       required this.index,
       this.onRemove,
       this.selectMode = false,
-      Key? key})
-      : super(key: key);
+      super.key});
 
   @override
   _DismissibleContainerState createState() => _DismissibleContainerState();
@@ -143,8 +142,7 @@ class EpisodeTile extends StatelessWidget {
       this.canReorder = false,
       this.showDivider = true,
       this.havePadding = false,
-      Key? key})
-      : super(key: key);
+      super.key});
 
   @override
   Widget build(BuildContext context) {

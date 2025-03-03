@@ -1,4 +1,32 @@
+# Tsacdop-Fork Changelog
+
+## 0.7.0
+Release date 2025/3/4
+
+### New features
+* Changed the looks of episode cards to make them more info dense across different sizes.
+* Added color tinted backgrounds, curved corners and shadows to various ui elements. Real dark mode has accent color borders instead of backgrounds.
+* Added new filter bar with more options. Multi-select bar also has more options.
+* Home and podcast pages load next set of episodes before you reach the end so scrolling doesn't need to stop.
+* Added animations in various places.
+* Changes to episodes (liking, downloading, playing) now reflect to ui instantly.
+* Different versions of the same podcast episode are now grouped together.
+* Real dark mode can also be toggled by touching tsacdop in home screen.
+* Replaced the 'seek to history position' button on the player with an undo seek button, history seek is now automatic.
+* Replaced old search ui and search api support with in-app web search with rss link recognition. For now new podcasts can only be added with rss links
+* Many other minor changes.
+
+### Bug fixes
+* Font size is now the same in dark and light mode.
+* Most audio player / playlists bugs fixed.
+* Fixed animations.
+* Misc bugfixes.
+
+### Other
+* Notification layout is different due to Android 13 restrictions.
+
 # Tsacdop Changelog
+
 ## 0.6.0
 Release date 2021/2/27
 

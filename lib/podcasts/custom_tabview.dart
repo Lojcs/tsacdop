@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tsacdop/util/extension_helper.dart';
+import '../util/extension_helper.dart';
 
 class CustomTabView extends StatefulWidget {
   final int itemCount;
@@ -9,7 +9,8 @@ class CustomTabView extends StatefulWidget {
   final ValueChanged<double>? onScroll;
   final int? initPosition;
 
-  CustomTabView({
+  const CustomTabView({
+    super.key,
     required this.itemCount,
     required this.tabBuilder,
     required this.pageBuilder,

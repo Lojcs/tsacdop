@@ -12,6 +12,8 @@ import '../widgets/custom_widget.dart';
 import '../widgets/general_dialog.dart';
 
 class StorageSetting extends StatefulWidget {
+  const StorageSetting({super.key});
+
   @override
   _StorageSettingState createState() => _StorageSettingState();
 }
@@ -146,46 +148,43 @@ class _StorageSettingState extends State<StorageSetting>
                         subtitle: Text(s.settingsManageDownloadDes),
                       ),
                       FutureBuilder<int?>(
-                          future: _getDownloadPasition(),
-                          initialData: 0,
-                          builder: (context, snapshot) {
-                            return ListTile(
-                              contentPadding:
-                                  EdgeInsets.fromLTRB(70, 10, 20, 10),
-                              title: Text(s.settingsDownloadPosition),
-                              subtitle: Text(
-                                  _dirs == null ? '' : _dirs![snapshot.data!],
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis),
-                              onTap: () => generalSheet(
-                                context,
-                                title: s.settingsDownloadPosition,
-                                child: AnnotatedRegion(
-                                  value: context.overlayWithBarrier,
-                                  child: Column(
-                                    children: [
-                                      SizedBox(
-                                        height: 10,
-                                      ),
-                                      for (var dir in _dirs!)
-                                        ListTile(
-                                          title: Text(dir),
-                                          onTap: () => _setDownloadPosition(
-                                              _dirs!.indexOf(dir)),
-                                          trailing: Radio<int>(
-                                              value: _dirs!.indexOf(dir),
-                                              groupValue: snapshot.data,
-                                              onChanged: _setDownloadPosition),
-                                        ),
-                                      SizedBox(
-                                        height: 30,
-                                      )
-                                    ],
+                        future: _getDownloadPasition(),
+                        initialData: 0,
+                        builder: (context, snapshot) {
+                          return ListTile(
+                            contentPadding: EdgeInsets.fromLTRB(70, 10, 20, 10),
+                            title: Text(s.settingsDownloadPosition),
+                            subtitle: Text(
+                                _dirs == null ? '' : _dirs![snapshot.data!],
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis),
+                            onTap: () => generalSheet(
+                              context,
+                              title: s.settingsDownloadPosition,
+                              child: Column(
+                                children: [
+                                  SizedBox(
+                                    height: 10,
                                   ),
-                                ),
+                                  for (var dir in _dirs!)
+                                    ListTile(
+                                      title: Text(dir),
+                                      onTap: () => _setDownloadPosition(
+                                          _dirs!.indexOf(dir)),
+                                      trailing: Radio<int>(
+                                          value: _dirs!.indexOf(dir),
+                                          groupValue: snapshot.data,
+                                          onChanged: _setDownloadPosition),
+                                    ),
+                                  SizedBox(
+                                    height: 30,
+                                  )
+                                ],
                               ),
-                            );
-                          }),
+                            ),
+                          );
+                        },
+                      ),
                       FutureBuilder<int?>(
                         future: _getAutoDeleteDays(),
                         initialData: 30,

@@ -7,6 +7,8 @@ import '../util/extension_helper.dart';
 import '../widgets/custom_widget.dart';
 
 class ThemeSetting extends StatelessWidget {
+  const ThemeSetting({super.key});
+
   @override
   Widget build(BuildContext context) {
     final s = context.s;
@@ -252,7 +254,7 @@ class ThemeSetting extends StatelessWidget {
 
 class _ColorPicker extends StatefulWidget {
   final ValueChanged<Color>? onColorChanged;
-  _ColorPicker({Key? key, this.onColorChanged}) : super(key: key);
+  const _ColorPicker({this.onColorChanged});
   @override
   __ColorPickerState createState() => __ColorPickerState();
 }
@@ -273,7 +275,7 @@ class __ColorPickerState extends State<_ColorPicker>
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: 400,
       height: 400,
       child: Column(
@@ -281,7 +283,7 @@ class __ColorPickerState extends State<_ColorPicker>
         mainAxisAlignment: MainAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Container(
+          SizedBox(
             height: 40,
             child: TabBar(
               labelPadding: EdgeInsets.symmetric(horizontal: 10),

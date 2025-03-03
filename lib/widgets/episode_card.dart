@@ -4,10 +4,10 @@ import 'package:focused_menu/focused_menu.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
-import 'package:tsacdop/state/episode_state.dart';
-import 'package:tsacdop/type/episodebrief.dart';
-import 'package:tsacdop/util/extension_helper.dart';
-import 'package:tsacdop/util/hide_player_route.dart';
+import '../state/episode_state.dart';
+import '../type/episodebrief.dart';
+import '../util/extension_helper.dart';
+import '../util/hide_player_route.dart';
 import 'package:tuple/tuple.dart';
 
 import '../local_storage/key_value_storage.dart';
@@ -211,18 +211,6 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                     List<FocusedMenuItem> menuItemList = _menuItemList(context,
                         episode, data.item1, data.item2, data.item3, menuList);
                     return _FocusedMenuHolderWrapper(
-                      child: EpisodeCard(context, episode, widget.layout,
-                          openPodcast: widget.openPodcast,
-                          showImage: widget.showImage && !boo,
-                          preferEpisodeImage: widget.preferEpisodeImage,
-                          showNumber: widget.showNumber,
-                          showLiked: widget.showLiked,
-                          showNew: widget.showNew,
-                          showLengthAndSize: widget.showLengthAndSize,
-                          showPlayedAndDownloaded:
-                              widget.showPlayedAndDownloaded,
-                          showDate: widget.showDate,
-                          decorate: false),
                       onPressed: () async {
                         if (widget.selectMode) {
                           widget.onSelect!();
@@ -287,6 +275,18 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                             ),
                       controller: _controller,
                       shadowController: _shadowController,
+                      child: EpisodeCard(context, episode, widget.layout,
+                          openPodcast: widget.openPodcast,
+                          showImage: widget.showImage && !boo,
+                          preferEpisodeImage: widget.preferEpisodeImage,
+                          showNumber: widget.showNumber,
+                          showLiked: widget.showLiked,
+                          showNew: widget.showNew,
+                          showLengthAndSize: widget.showLengthAndSize,
+                          showPlayedAndDownloaded:
+                              widget.showPlayedAndDownloaded,
+                          showDate: widget.showDate,
+                          decorate: false),
                     );
                   },
                 );
@@ -425,7 +425,8 @@ class EpisodeCard extends StatelessWidget {
   /// Applies card decorations
   final bool decorate;
   EpisodeCard(this.context, this.episode, this.layout,
-      {this.openPodcast = false,
+      {super.key,
+      this.openPodcast = false,
       this.showImage = true,
       this.preferEpisodeImage = false,
       this.showNumber = false,
@@ -605,7 +606,7 @@ class _ProgressLowerlay extends StatelessWidget {
   final EpisodeGridLayout layout;
   final bool hide;
   final AnimationController? animator;
-  _ProgressLowerlay(this.episode, this.seekValue, this.layout,
+  const _ProgressLowerlay(this.episode, this.seekValue, this.layout,
       {this.hide = false, this.animator});
 
   @override
@@ -903,7 +904,7 @@ Widget _circleImage(
   required EpisodeBrief episode,
   required Color color,
 }) =>
-    Container(
+    SizedBox(
       height: radius,
       width: radius,
       child: Stack(

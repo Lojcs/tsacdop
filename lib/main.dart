@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
-import 'package:tsacdop/state/episode_state.dart';
+import 'state/episode_state.dart';
 import 'package:tuple/tuple.dart';
 
 import 'generated/l10n.dart';
@@ -17,7 +17,6 @@ import 'state/audio_state.dart';
 import 'state/download_state.dart';
 import 'state/podcast_group.dart';
 import 'state/refresh_podcast.dart';
-import 'state/search_state.dart';
 import 'state/setting_state.dart';
 import 'type/theme_data.dart';
 
@@ -41,7 +40,6 @@ Future main() async {
         ),
         ChangeNotifierProvider(create: (_) => GroupList()),
         ChangeNotifierProvider(create: (_) => RefreshWorker()),
-        ChangeNotifierProvider(create: (_) => SearchState()),
         ChangeNotifierProvider(
           lazy: false,
           create: (context) => DownloadState(context),
@@ -60,6 +58,8 @@ Future main() async {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     Provider.of<SettingState>(context, listen: false).context = context;

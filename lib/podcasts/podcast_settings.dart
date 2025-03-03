@@ -26,8 +26,7 @@ enum MarkStatus { start, complete, none }
 enum RefreshCoverStatus { start, complete, error, none }
 
 class PodcastSetting extends StatefulWidget {
-  const PodcastSetting({required this.podcastLocal, Key? key})
-      : super(key: key);
+  const PodcastSetting({required this.podcastLocal, super.key});
   final PodcastLocal? podcastLocal;
 
   @override
@@ -514,9 +513,7 @@ class _PodcastSettingState extends State<PodcastSetting> {
 }
 
 class _TimePicker extends StatelessWidget {
-  const _TimePicker(
-      {this.onConfirm, this.onCancel, this.onChange, this.color, Key? key})
-      : super(key: key);
+  const _TimePicker({this.onConfirm, this.onCancel, this.onChange, this.color});
   final VoidCallback? onConfirm;
   final VoidCallback? onCancel;
   final ValueChanged<Duration>? onChange;

@@ -75,6 +75,7 @@ class RefreshWorker extends ChangeNotifier {
     }
   }
 
+  @override
   void dispose() {
     refreshIsolate?.kill();
     refreshIsolate = null;
@@ -86,14 +87,14 @@ class RefreshWorker extends ChangeNotifier {
 Future<void> refreshIsolateEntryPoint(SendPort sendPort) async {
   var refreshReceivePort = ReceivePort();
   sendPort.send(refreshReceivePort.sendPort);
-  var _dbHelper = DBHelper();
+  var dbHelper = DBHelper();
 
-  Future<void> _refreshAll(List<String> podcasts) async {
-    var podcastList;
+  Future<void> refreshAll(List<String> podcasts) async {
+    List<PodcastLocal> podcastList;
     if (podcasts.isEmpty) {
-      podcastList = await _dbHelper.getPodcastLocalAll(updateOnly: true);
+      podcastList = await dbHelper.getPodcastLocalAll(updateOnly: true);
     } else {
-      podcastList = await _dbHelper.getPodcastLocal(podcasts, updateOnly: true);
+      podcastList = await dbHelper.getPodcastLocal(podcasts, updateOnly: true);
     }
     await podcastSync(podcasts: podcastList);
     sendPort.send("done");
@@ -101,14 +102,14 @@ Future<void> refreshIsolateEntryPoint(SendPort sendPort) async {
 
   refreshReceivePort.distinct().listen((message) async {
     if (message is List<dynamic>) {
-      await _refreshAll(message as List<String>);
+      await refreshAll(message as List<String>);
     }
   });
 }
 
 Future<void> podcastSync({List<PodcastLocal>? podcasts}) async {
   final dbHelper = DBHelper();
-  final podcastList;
+  final List<PodcastLocal> podcastList;
   if (podcasts == null || podcasts.isEmpty) {
     podcastList = await dbHelper.getPodcastLocalAll(updateOnly: true);
   } else {
@@ -136,7 +137,7 @@ Future<void> podcastSync({List<PodcastLocal>? podcasts}) async {
         filterDisplayVersion: true,
         filterAutoDownload: true);
     // For safety
-    if (episodes.length < 100 && episodes.length > 0) {
+    if (episodes.length < 100 && episodes.isNotEmpty) {
       downloader.bindBackgroundIsolate();
       await downloader.startTask(episodes);
       // This doesn't seem to work unless it's awaited.

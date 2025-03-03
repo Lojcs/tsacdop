@@ -6,6 +6,8 @@ import '../widgets/custom_widget.dart';
 import 'licenses.dart';
 
 class Libries extends StatelessWidget {
+  const Libries({super.key});
+
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(

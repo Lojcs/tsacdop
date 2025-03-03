@@ -11,8 +11,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:html/parser.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
-import 'package:tsacdop/type/theme_data.dart';
-import 'package:tsacdop/widgets/action_bar.dart';
+import '../type/theme_data.dart';
+import '../widgets/action_bar.dart';
 import 'package:tuple/tuple.dart';
 
 import '../home/audioplayer.dart';
@@ -36,8 +36,8 @@ const String kDefaultAvatar = """http://xuanmei.us/assets/default/avatar_small-
 170afdc2be97fc6148b283083942d82c101d4c1061f6b28f87c8958b52664af9.jpg""";
 
 class PodcastDetail extends StatefulWidget {
-  PodcastDetail({Key? key, required this.podcastLocal, this.hide = false})
-      : super(key: key);
+  const PodcastDetail(
+      {super.key, required this.podcastLocal, this.hide = false});
   final PodcastLocal podcastLocal;
   final bool hide;
   @override
@@ -77,7 +77,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
           child: PodcastDetailBody(
             podcastLocal: widget.podcastLocal,
             selectionController: selectionController,
-            key: Key(widget.podcastLocal.id.toString() + "_body"),
+            key: Key("${widget.podcastLocal.id}_body"),
           ),
         ),
       ],
@@ -95,7 +95,6 @@ class _PodcastDetailState extends State<PodcastDetail> {
 
   @override
   void deactivate() {
-    context.statusBarColor = null;
     super.deactivate();
   }
 
@@ -148,8 +147,6 @@ class _PodcastDetailState extends State<PodcastDetail> {
 
   @override
   Widget build(BuildContext context) {
-    context.statusBarColor =
-        context.realDark ? context.surface : cardColorScheme.saturated;
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<SelectionController>(
@@ -162,10 +159,15 @@ class _PodcastDetailState extends State<PodcastDetail> {
           selectionController =
               Provider.of<SelectionController>(context, listen: false);
           return AnnotatedRegion<SystemUiOverlayStyle>(
-            value: (playerRunning
-                ? context.overlay.copyWith(
-                    systemNavigationBarColor: context.cardColorSchemeCard)
-                : context.overlay),
+            value: SystemUiOverlayStyle(
+              statusBarColor: context.realDark
+                  ? context.surface
+                  : cardColorScheme.saturated,
+              statusBarIconBrightness: context.iconBrightness,
+              systemNavigationBarColor:
+                  playerRunning ? context.cardColorSchemeCard : context.surface,
+              systemNavigationBarIconBrightness: context.iconBrightness,
+            ),
             child: Selector<SelectionController, bool>(
               selector: (_, selectionController) =>
                   selectionController.selectMode,
@@ -211,12 +213,11 @@ class PodcastDetailBody extends StatefulWidget {
   final PodcastLocal podcastLocal;
   final bool hide;
 
-  PodcastDetailBody(
-      {Key? key,
+  const PodcastDetailBody(
+      {super.key,
       required this.podcastLocal,
       required this.selectionController,
-      this.hide = false})
-      : super(key: key);
+      this.hide = false});
   @override
   _PodcastDetailBodyState createState() => _PodcastDetailBodyState();
 }
@@ -314,9 +315,7 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
           FutureBuilder<Tuple2<EpisodeGridLayout, bool?>>(
             future: getLayoutAndShowListened(),
             builder: (_, snapshot) {
-              if (_layout == null) {
-                _layout = snapshot.data?.item1;
-              }
+              _layout ??= snapshot.data?.item1;
               return ActionBar(
                 onGetEpisodesChanged: (getEpisodes) async {
                   _getEpisodes = getEpisodes;
@@ -374,7 +373,7 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
               layout: _layout ?? EpisodeGridLayout.large,
               initNum: _scroll ? 0 : 12,
               preferEpisodeImage: false,
-              key: Key(widget.podcastLocal.id.toString() + "_grid"),
+              key: Key("${widget.podcastLocal.id}_grid"),
             ),
 
           // Hidden widget to get the height of [HostsList]
@@ -495,7 +494,7 @@ class __PodcastDetailAppBarState extends State<_PodcastDetailAppBar>
               (1 - ((context.paddingTop - _topHeight + 180) / 124)).clamp(0, 1);
           final titleLineTest = TextPainter(
               text: TextSpan(
-                  text: widget.podcastLocal.title!,
+                  text: widget.podcastLocal.title,
                   style: context.textTheme.headlineSmall!),
               textDirection: TextDirection.ltr);
           titleLineTest.layout(maxWidth: context.width - 185);
@@ -607,9 +606,9 @@ class __PodcastDetailAppBarState extends State<_PodcastDetailAppBar>
             title: Opacity(
               opacity: 1,
               child: Tooltip(
-                message: widget.podcastLocal.title!,
+                message: widget.podcastLocal.title,
                 child: Text(
-                  widget.podcastLocal.title!,
+                  widget.podcastLocal.title,
                   maxLines: titleLineCount < 3
                       ? expandRatio < 0.2
                           ? 1
@@ -643,7 +642,7 @@ class __PodcastDetailAppBarState extends State<_PodcastDetailAppBar>
 class HostsList extends StatelessWidget {
   final BuildContext context;
   final PodcastLocal podcastLocal;
-  HostsList(this.context, this.podcastLocal, {Key? key}) : super(key: key);
+  const HostsList(this.context, this.podcastLocal, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -815,8 +814,7 @@ Widget _podcastLink(BuildContext context,
 class AboutPodcast extends StatefulWidget {
   final PodcastLocal? podcastLocal;
   final Color? accentColor;
-  AboutPodcast({this.podcastLocal, this.accentColor, Key? key})
-      : super(key: key);
+  const AboutPodcast({this.podcastLocal, this.accentColor, super.key});
 
   @override
   _AboutPodcastState createState() => _AboutPodcastState();

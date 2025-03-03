@@ -13,7 +13,7 @@ import 'podcast_settings.dart';
 
 class PodcastGroupList extends StatefulWidget {
   final PodcastGroup? group;
-  PodcastGroupList({this.group, Key? key}) : super(key: key);
+  const PodcastGroupList({this.group, super.key});
   @override
   _PodcastGroupListState createState() => _PodcastGroupListState();
 }
@@ -68,7 +68,7 @@ class _PodcastGroupListState extends State<PodcastGroupList> {
 class _PodcastCard extends StatefulWidget {
   final PodcastLocal? podcastLocal;
   final PodcastGroup? group;
-  _PodcastCard({this.podcastLocal, this.group, Key? key}) : super(key: key);
+  const _PodcastCard({this.podcastLocal, this.group});
   @override
   __PodcastCardState createState() => __PodcastCardState();
 }
@@ -139,7 +139,7 @@ class __PodcastCardState extends State<_PodcastCard>
                         mainAxisSize: MainAxisSize.min,
                         children: <Widget>[
                           Text(
-                            widget.podcastLocal!.title!,
+                            widget.podcastLocal!.title,
                             maxLines: 2,
                             overflow: TextOverflow.fade,
                             style: TextStyle(
@@ -239,7 +239,7 @@ class __PodcastCardState extends State<_PodcastCard>
                                     icon: Icon(Icons.done),
                                     splashRadius: 20,
                                     onPressed: () async {
-                                      if (_selectedGroups.length > 0) {
+                                      if (_selectedGroups.isNotEmpty) {
                                         setState(() {
                                           _addGroup = false;
                                         });
@@ -282,11 +282,6 @@ class __PodcastCardState extends State<_PodcastCard>
                               builder: (context, snapshot) {
                                 return _buttonOnMenu(
                                   icon: Container(
-                                    child: Icon(Icons.file_download,
-                                        size: _value! * 15,
-                                        color: snapshot.data!
-                                            ? Colors.white
-                                            : null),
                                     height: _value == 0 ? 1 : 20 * _value!,
                                     width: _value == 0 ? 1 : 20 * _value!,
                                     decoration: BoxDecoration(
@@ -301,6 +296,11 @@ class __PodcastCardState extends State<_PodcastCard>
                                         shape: BoxShape.circle,
                                         color: snapshot.data!
                                             ? context.accentColor
+                                            : null),
+                                    child: Icon(Icons.file_download,
+                                        size: _value! * 15,
+                                        color: snapshot.data!
+                                            ? Colors.white
                                             : null),
                                   ),
                                   tooltip: s.autoDownload,
@@ -461,7 +461,7 @@ class __PodcastCardState extends State<_PodcastCard>
 
 class RenameGroup extends StatefulWidget {
   final PodcastGroup? group;
-  RenameGroup({this.group, Key? key}) : super(key: key);
+  const RenameGroup({this.group, super.key});
   @override
   _RenameGroupState createState() => _RenameGroupState();
 }

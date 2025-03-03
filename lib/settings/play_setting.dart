@@ -34,6 +34,8 @@ const List<double> kSpeedToSelect = [
 ];
 
 class PlaySetting extends StatefulWidget {
+  const PlaySetting({super.key});
+
   @override
   _PlaySettingState createState() => _PlaySettingState();
 }
@@ -468,7 +470,7 @@ class _PlaySettingState extends State<PlaySetting> {
 }
 
 class _NotificationLayout extends StatefulWidget {
-  _NotificationLayout({Key? key}) : super(key: key);
+  const _NotificationLayout();
 
   @override
   __NotificationLayoutState createState() => __NotificationLayoutState();
@@ -639,7 +641,7 @@ class __NotificationLayoutState extends State<_NotificationLayout> {
 }
 
 class _SpeedList extends StatefulWidget {
-  _SpeedList({Key? key}) : super(key: key);
+  const _SpeedList();
 
   @override
   __SpeedListState createState() => __SpeedListState();

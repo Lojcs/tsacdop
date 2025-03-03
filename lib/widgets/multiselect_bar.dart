@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
-import 'package:tsacdop/util/selection_controller.dart';
+import '../util/selection_controller.dart';
 import 'package:tuple/tuple.dart';
 
 import '../home/audioplayer.dart';
@@ -25,8 +25,8 @@ import 'custom_widget.dart';
 class MultiSelectPanelIntegration extends StatefulWidget {
   final bool expanded;
   const MultiSelectPanelIntegration({
+    super.key,
     this.expanded = true,
-    Key? key,
   });
 
   @override
@@ -124,8 +124,8 @@ class MultiSelectPanel extends StatefulWidget {
   final bool expanded;
   const MultiSelectPanel({
     this.expanded = true,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   _MultiSelectPanelState createState() => _MultiSelectPanelState();
@@ -209,7 +209,7 @@ class _MultiSelectPanelState extends State<MultiSelectPanel>
 
   @override
   Widget build(BuildContext context) {
-    Widget child = Container(
+    Widget child = SizedBox(
       height: widget.expanded
           ? Tween<double>(
                       begin: 10 + iconButtonSize * 2 + iconPadding.vertical * 2,
@@ -324,8 +324,7 @@ class _SelectionOptions extends StatelessWidget {
                   selector: (context, cardColorScheme) =>
                       cardColorScheme.colorScheme.primary,
                   builder: (context, color, _) => Text(
-                    context.s
-                        .selected("${data.item1}" + (data.item3 ? "+" : "")),
+                    context.s.selected("${data.item1}${data.item3 ? "+" : ""}"),
                     style: context.textTheme.titleLarge!.copyWith(color: color),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -467,7 +466,7 @@ class _SelectionOptions extends StatelessWidget {
 class _NewPlaylist extends StatefulWidget {
   final List<EpisodeBrief> episodes;
   final Color? color;
-  _NewPlaylist(this.episodes, {this.color, Key? key}) : super(key: key);
+  const _NewPlaylist(this.episodes, {this.color, super.key});
 
   @override
   __NewPlaylistState createState() => __NewPlaylistState();
@@ -818,11 +817,11 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                         msg: context.s.liked,
                         gravity: ToastGravity.BOTTOM,
                       );
-                      OverlayEntry _overlayEntry;
-                      _overlayEntry = createOverlayEntry(context);
-                      Overlay.of(context).insert(_overlayEntry);
+                      OverlayEntry overlayEntry;
+                      overlayEntry = createOverlayEntry(context);
+                      Overlay.of(context).insert(overlayEntry);
                       await Future.delayed(Duration(seconds: 2));
-                      _overlayEntry.remove();
+                      overlayEntry.remove();
                     } else {
                       await episodeState.unsetLiked(selectedEpisodes);
                       Fluttertoast.showToast(
@@ -1033,7 +1032,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                                 cardColorScheme.colorScheme.primary),
                         builder: (context, data, _) => Text(
                           context.s.selected(
-                              "${data.item1}" + (data.item2 ? "+" : "")),
+                              "${data.item1}${data.item2 ? "+" : ""}"),
                           style: context.textTheme.titleLarge!
                               .copyWith(color: data.item3),
                         ),

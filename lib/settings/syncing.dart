@@ -9,7 +9,7 @@ import '../widgets/custom_dropdown.dart';
 import '../widgets/custom_widget.dart';
 
 class SyncingSetting extends StatefulWidget {
-  const SyncingSetting({Key? key}) : super(key: key);
+  const SyncingSetting({super.key});
 
   @override
   _SyncingSettingState createState() => _SyncingSettingState();

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 class MyRectangularTrackShape extends RectangularSliderTrackShape {
+  @override
   Rect getPreferredRect({
     required RenderBox parentBox,
     Offset offset = Offset.zero,

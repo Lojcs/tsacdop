@@ -8,8 +8,8 @@ import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:tsacdop/state/episode_state.dart';
-import 'package:tsacdop/util/extension_helper.dart';
+import '../state/episode_state.dart';
+import '../util/extension_helper.dart';
 import 'package:tuple/tuple.dart';
 import 'package:webfeed/webfeed.dart';
 
@@ -20,41 +20,26 @@ import '../type/sub_history.dart';
 
 enum Filter { downloaded, liked, search, all }
 
-enum SortOrder { ASC, DESC }
+enum SortOrder {
+  asc(sql: "ASC"),
+  desc(sql: "DESC");
 
-String sortOrderToString(SortOrder sortOrder) {
-  switch (sortOrder) {
-    case SortOrder.ASC:
-      return "ASC";
-    case SortOrder.DESC:
-      return "DESC";
-  }
+  const SortOrder({required this.sql});
+
+  final String sql;
 }
 
 enum Sorter {
-  pubDate,
-  enclosureSize,
-  enclosureDuration,
-  downloadDate,
-  likedDate,
-  random
-}
+  pubDate(sql: "E.milliseconds"),
+  enclosureSize(sql: "E.enclosure_length"),
+  enclosureDuration(sql: "E.duration"),
+  downloadDate(sql: "E.download_date"),
+  likedDate(sql: "E.liked_date"),
+  random(sql: "RANDOM()");
 
-String sorterToString(Sorter sorter) {
-  switch (sorter) {
-    case Sorter.pubDate:
-      return "E.milliseconds";
-    case Sorter.enclosureSize:
-      return "E.enclosure_length";
-    case Sorter.enclosureDuration:
-      return "E.duration";
-    case Sorter.downloadDate:
-      return "E.download_date";
-    case Sorter.likedDate:
-      return "E.liked_date";
-    case Sorter.random:
-      return "RANDOM()";
-  }
+  const Sorter({required this.sql});
+
+  final String sql;
 }
 
 enum EpisodeField {
@@ -325,7 +310,7 @@ class DBHelper {
           link ,update_count, episode_count, funding, description FROM PodcastLocal WHERE id = ?""",
             [s]);
       }
-      if (list.length > 0) {
+      if (list.isNotEmpty) {
         podcastLocal.add(PodcastLocal(
             list.first['title'],
             list.first['imageUrl'],
@@ -522,7 +507,7 @@ class DBHelper {
         """SELECT id, title, imageUrl, rssUrl, primaryColor, author, imagePath , provider, 
           link ,update_count, episode_count, funding, description FROM PodcastLocal WHERE id = ?""",
         [id]);
-    if (list.length > 0) {
+    if (list.isNotEmpty) {
       return PodcastLocal(
           list.first['title'],
           list.first['imageUrl'],
@@ -1121,10 +1106,9 @@ class DBHelper {
 
   Future<void> deleteLocalEpisodes(List<String> files) async {
     var dbClient = await database;
-    var s = files.map<String>((e) => "$e").toList();
     await dbClient.transaction((txn) async {
       Batch batchOp = txn.batch();
-      for (String episode in s) {
+      for (String episode in files) {
         batchOp.rawDelete(
             'DELETE FROM Episodes WHERE enclosure_url = ? AND feed_id = ?',
             [episode, localFolderId]);
@@ -1149,7 +1133,7 @@ class DBHelper {
       List<String>? excludedLikeEpisodeTitles,
       List<EpisodeField>? optionalFields,
       Sorter? sortBy,
-      SortOrder sortOrder = SortOrder.DESC,
+      SortOrder sortOrder = SortOrder.desc,
       List<Sorter>? rangeParameters,
       List<Tuple2<int, int>>? rangeDelimiters,
       int limit = -1,
@@ -1281,7 +1265,7 @@ class DBHelper {
       filters.add(
           " (${(" OR E.title LIKE ?" * likeEpisodeTitles.length).substring(4)})");
       arguements.addAll(likeEpisodeTitles.map(
-        (e) => "%" + e + "%",
+        (e) => "%$e%",
       ));
     }
     if (excludedLikeEpisodeTitles != null &&
@@ -1289,7 +1273,7 @@ class DBHelper {
       filters.add(
           " (${(" OR E.title LIKE ?" * excludedLikeEpisodeTitles.length).substring(4)})");
       arguements.addAll(excludedLikeEpisodeTitles.map(
-        (e) => "%" + e + "%",
+        (e) => "%$e%",
       ));
     }
     if (filterDisplayVersion == 2) {
@@ -1330,17 +1314,18 @@ class DBHelper {
     if (rangeParameters != null &&
         rangeParameters.isNotEmpty &&
         rangeDelimiters != null &&
-        rangeParameters.length == rangeDelimiters.length) {
+        rangeParameters.length == rangeDelimiters.length &&
+        !rangeParameters.contains(Sorter.random)) {
       for (int i = 0; i < rangeParameters.length; i++) {
         if (rangeDelimiters[i].item1 != -1 && rangeDelimiters[i].item2 != -1) {
           filters.add(
-              " ${sorterToString(rangeParameters[i])} BETWEEN ${rangeDelimiters[i].item1} AND ${rangeDelimiters[i].item2}");
+              " ${rangeParameters[i].sql} BETWEEN ${rangeDelimiters[i].item1} AND ${rangeDelimiters[i].item2}");
         } else if (rangeDelimiters[i].item1 != -1) {
-          filters.add(
-              " ${sorterToString(rangeParameters[i])} > ${rangeDelimiters[i].item1}");
+          filters
+              .add(" ${rangeParameters[i].sql} > ${rangeDelimiters[i].item1}");
         } else if (rangeDelimiters[i].item2 != -1) {
-          filters.add(
-              " ${sorterToString(rangeParameters[i])} < ${rangeDelimiters[i].item2}");
+          filters
+              .add(" ${rangeParameters[i].sql} < ${rangeDelimiters[i].item2}");
         }
       }
     }
@@ -1366,10 +1351,9 @@ class DBHelper {
     }
     if (sortBy != null) {
       if (sortBy == Sorter.random) {
-        query.add(" ORDER BY ${sorterToString(sortBy)}");
+        query.add(" ORDER BY ${sortBy.sql}");
       } else {
-        query.add(
-            " ORDER BY ${sorterToString(sortBy)} ${sortOrderToString(sortOrder)}");
+        query.add(" ORDER BY ${sortBy.sql} ${sortOrder.sql}");
       }
     }
     if (limit != -1) {
@@ -1439,7 +1423,7 @@ class DBHelper {
                     i['display_version_id'] == i['id'];
                 break;
               case EpisodeField.versions:
-                fields[const Symbol("versions")] = Set<EpisodeBrief>();
+                fields[const Symbol("versions")] = <EpisodeBrief>{};
                 populateVersions = true;
                 break;
               case EpisodeField.skipSecondsStart:

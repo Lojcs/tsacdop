@@ -1,21 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:tsacdop/state/episode_state.dart';
+import '../state/episode_state.dart';
 import 'package:tuple/tuple.dart';
 import 'package:provider/provider.dart';
-import 'package:tsacdop/episodes/episode_download.dart';
-import 'package:tsacdop/state/audio_state.dart';
-import 'package:tsacdop/type/episodebrief.dart';
-import 'package:tsacdop/util/extension_helper.dart';
-import 'package:tsacdop/widgets/custom_widget.dart';
+import 'episode_download.dart';
+import '../state/audio_state.dart';
+import '../type/episodebrief.dart';
+import '../util/extension_helper.dart';
+import '../widgets/custom_widget.dart';
 
 import '../util/helpers.dart';
 
 class EpisodeActionBar extends StatefulWidget {
   final EpisodeBrief episodeItem;
   final bool? hide;
-  EpisodeActionBar({required this.episodeItem, this.hide, Key? key})
-      : super(key: key);
+  const EpisodeActionBar({required this.episodeItem, this.hide, super.key});
   @override
   EpisodeActionBarState createState() => EpisodeActionBarState();
 }
@@ -46,7 +45,7 @@ class EpisodeActionBarState extends State<EpisodeActionBar> {
                 children: <Widget>[
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 10.0),
-                    child: Container(
+                    child: SizedBox(
                       height: 30.0,
                       width: 30.0,
                       child: widget.hide!
@@ -74,12 +73,12 @@ class EpisodeActionBarState extends State<EpisodeActionBar> {
                           ),
                           onTap: () async {
                             episodeState.setLiked([widget.episodeItem]);
-                            OverlayEntry _overlayEntry;
-                            _overlayEntry =
+                            OverlayEntry overlayEntry;
+                            overlayEntry =
                                 createOverlayEntry(context, leftOffset: 50);
-                            Overlay.of(context).insert(_overlayEntry);
+                            Overlay.of(context).insert(overlayEntry);
                             await Future.delayed(Duration(seconds: 2));
-                            _overlayEntry.remove();
+                            overlayEntry.remove();
                           }),
                   DownloadButton(episode: widget.episodeItem),
                   Selector<AudioPlayerNotifier, List<EpisodeBrief?>>(

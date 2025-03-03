@@ -1,7 +1,7 @@
-name: tsacdop
+name: tsacdop_fork
 description: An open source podcast player.
 
-version: 0.7.0-beta.7+48
+version: 0.7.0+49
 publish_to: "none"
 environment:
   sdk: ">=3.0.0 <4.0.0"
@@ -55,7 +55,6 @@ dependencies:
   path_provider_android: ^2.0.14
   material_color_utilities: ^0.11.1
   dynamic_color: ^1.4.0
-  lints: ^5.0.0
   focused_menu: ^1.0.5
   linkify: ^5.0.0
   webfeed: ^0.7.0
@@ -72,6 +71,8 @@ dependencies:
   flutter_downloader: ^1.11.8
   intl: any
   xml: any
+  flutter_lints: ^5.0.0
+  webview_flutter: ^4.10.0
 dependency_overrides:
   linkify:
     git:
@@ -105,5 +106,3 @@ flutter:
   uses-material-design: true
 flutter_intl:
   enabled: true
-  localizely:
-    project_id: bde4e9bd-4cb2-449b-9de2-18f231ddb47d

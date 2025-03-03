@@ -9,8 +9,8 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
-import 'package:tsacdop/util/selection_controller.dart';
-import 'package:tsacdop/widgets/action_bar.dart';
+import '../util/selection_controller.dart';
+import '../widgets/action_bar.dart';
 import 'package:tuple/tuple.dart';
 
 import '../local_storage/sqflite_localpodcast.dart';
@@ -27,14 +27,16 @@ import '../widgets/custom_widget.dart';
 import '../widgets/episodegrid.dart';
 import '../widgets/feature_discovery.dart';
 import '../widgets/multiselect_bar.dart';
+import '../widgets/web_podcast_search.dart';
 import 'audioplayer.dart';
 import 'download_list.dart';
 import 'home_groups.dart';
 import 'home_menu.dart';
 import 'import_opml.dart';
-import 'search_podcast.dart';
 
 class Home extends StatefulWidget {
+  const Home({super.key});
+
   @override
   _HomeState createState() => _HomeState();
 }
@@ -54,9 +56,12 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   var feature1EnablePulsingAnimation = false;
   double top = 0;
 
-  SelectionController _recentUpdateSelectionController = SelectionController();
-  SelectionController _myFavouriteSelectionController = SelectionController();
-  SelectionController _myDownloadedSelectionController = SelectionController();
+  final SelectionController _recentUpdateSelectionController =
+      SelectionController();
+  final SelectionController _myFavouriteSelectionController =
+      SelectionController();
+  final SelectionController _myDownloadedSelectionController =
+      SelectionController();
 
   SelectionController _tabSelectionController(int i) => i == 0
       ? _recentUpdateSelectionController
@@ -102,10 +107,13 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         builder: (_, playerRunning, __) {
           context.originalPadding = MediaQuery.of(context).padding;
           return AnnotatedRegion<SystemUiOverlayStyle>(
-            value: playerRunning
-                ? context.overlay.copyWith(
-                    systemNavigationBarColor: context.cardColorSchemeCard)
-                : context.overlay,
+            value: SystemUiOverlayStyle(
+              statusBarColor: context.surface,
+              statusBarIconBrightness: context.iconBrightness,
+              systemNavigationBarColor:
+                  playerRunning ? context.cardColorSchemeCard : context.surface,
+              systemNavigationBarIconBrightness: context.iconBrightness,
+            ),
             child: PopScope(
               canPop: settings.openPlaylistDefault! &&
                   !(_playerKey.currentState != null &&
@@ -159,12 +167,17 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                           splashRadius: 20,
                                           icon: Icon(Icons.add_circle_outline),
                                           onPressed: () async {
-                                            await showSearch<int?>(
-                                              context: context,
-                                              delegate: MyHomePageDelegate(
-                                                  searchFieldLabel:
-                                                      s.searchPodcast),
-                                            );
+                                            Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        WebPodcastSearch()));
+                                            // await showSearch<int?>(
+                                            //   context: context,
+                                            //   delegate: MyHomePageDelegate(
+                                            //       searchFieldLabel:
+                                            //           s.searchPodcast),
+                                            // );
                                           },
                                         ),
                                       ),
@@ -355,7 +368,7 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
 }
 
 class _PlaylistButton extends StatefulWidget {
-  _PlaylistButton({Key? key}) : super(key: key);
+  const _PlaylistButton();
 
   @override
   __PlaylistButtonState createState() => __PlaylistButtonState();
@@ -584,9 +597,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
             FutureBuilder<Tuple2<EpisodeGridLayout, bool?>>(
               future: getLayoutAndShowListened(),
               builder: (_, snapshot) {
-                if (_layout == null) {
-                  _layout = snapshot.data?.item1;
-                }
+                _layout ??= snapshot.data?.item1;
                 return ActionBar(
                   onGetEpisodesChanged: (getEpisodes) async {
                     _getEpisodes = getEpisodes;
@@ -637,7 +648,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
                     )
                   : Center(),
             ),
-            _episodes.length != 0
+            _episodes.isNotEmpty
                 ? EpisodeGrid(
                     episodes: _episodes,
                     layout: _layout ?? EpisodeGridLayout.large,
@@ -731,9 +742,7 @@ class _MyFavoriteState extends State<_MyFavorite>
             FutureBuilder<Tuple2<EpisodeGridLayout, bool?>>(
               future: getLayoutAndShowListened(),
               builder: (_, snapshot) {
-                if (_layout == null) {
-                  _layout = snapshot.data?.item1;
-                }
+                _layout ??= snapshot.data?.item1;
                 return ActionBar(
                   onGetEpisodesChanged: (getEpisodes) async {
                     _getEpisodes = getEpisodes;
@@ -779,7 +788,7 @@ class _MyFavoriteState extends State<_MyFavorite>
                     )
                   : Center(),
             ),
-            _episodes.length != 0
+            _episodes.isNotEmpty
                 ? EpisodeGrid(
                     episodes: _episodes,
                     layout: _layout ?? EpisodeGridLayout.large,
@@ -841,11 +850,6 @@ class _MyDownloadState extends State<_MyDownload>
   bool _scroll = false;
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
     super.build(context);
     final s = context.s;
@@ -878,9 +882,7 @@ class _MyDownloadState extends State<_MyDownload>
             FutureBuilder<Tuple2<EpisodeGridLayout, bool?>>(
               future: getLayoutAndShowListened(),
               builder: (_, snapshot) {
-                if (_layout == null) {
-                  _layout = snapshot.data?.item1;
-                }
+                _layout ??= snapshot.data?.item1;
                 return ActionBar(
                   onGetEpisodesChanged: (getEpisodes) async {
                     _getEpisodes = getEpisodes;
@@ -936,7 +938,7 @@ class _MyDownloadState extends State<_MyDownload>
                   Provider.of<SelectionController>(context, listen: false)
                       .setSelectableEpisodes(_episodes, compatible: false);
                 }),
-                builder: (context, snapshot) => _episodes.length != 0
+                builder: (context, snapshot) => _episodes.isNotEmpty
                     ? EpisodeGrid(
                         episodes: _episodes,
                         layout: _layout ?? EpisodeGridLayout.large,

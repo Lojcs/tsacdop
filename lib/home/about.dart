@@ -8,9 +8,11 @@ import '../widgets/custom_widget.dart';
 const String version = '0.6.0';
 
 class AboutApp extends StatelessWidget {
+  const AboutApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    OverlayEntry _createOverlayEntry(TapDownDetails detail) {
+    OverlayEntry createOverlayEntry(TapDownDetails detail) {
       // RenderBox renderBox = context.findRenderObject();
       final offset = detail.globalPosition;
       return OverlayEntry(
@@ -76,33 +78,33 @@ class AboutApp extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      TextButton(
-                        onPressed: () =>
-                            'https://tsacdop.stonegate.me/#/privacy'.launchUrl,
-                        style: TextButton.styleFrom(
-                            foregroundColor: context.accentColor,
-                            textStyle: TextStyle(fontWeight: FontWeight.bold)),
-                        child: Text(
-                          s.privacyPolicy,
-                        ),
-                      ),
-                      Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 5),
-                        height: 4,
-                        width: 4,
-                        decoration: BoxDecoration(
-                            color: context.accentColor, shape: BoxShape.circle),
-                      ),
-                      TextButton(
-                        onPressed: () =>
-                            'https://tsacdop.stonegate.me/#/changelog'
-                                .launchUrl,
-                        style: TextButton.styleFrom(
-                            foregroundColor: context.accentColor,
-                            textStyle: TextStyle(fontWeight: FontWeight.bold)),
-                        child: Text(s.changelog,
-                            style: TextStyle(color: context.accentColor)),
-                      ),
+                      // TextButton(
+                      //   onPressed: () =>
+                      //       'https://tsacdop.stonegate.me/#/privacy'.launchUrl,
+                      //   style: TextButton.styleFrom(
+                      //       foregroundColor: context.accentColor,
+                      //       textStyle: TextStyle(fontWeight: FontWeight.bold)),
+                      //   child: Text(
+                      //     s.privacyPolicy,
+                      //   ),
+                      // ),
+                      // Container(
+                      //   margin: const EdgeInsets.symmetric(horizontal: 5),
+                      //   height: 4,
+                      //   width: 4,
+                      //   decoration: BoxDecoration(
+                      //       color: context.accentColor, shape: BoxShape.circle),
+                      // ),
+                      // TextButton(
+                      //   onPressed: () =>
+                      //       'https://tsacdop.stonegate.me/#/changelog'
+                      //           .launchUrl,
+                      //   style: TextButton.styleFrom(
+                      //       foregroundColor: context.accentColor,
+                      //       textStyle: TextStyle(fontWeight: FontWeight.bold)),
+                      //   child: Text(s.changelog,
+                      //       style: TextStyle(color: context.accentColor)),
+                      // ),
                     ],
                   ),
                   Padding(
@@ -111,54 +113,54 @@ class AboutApp extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
-                        _listItem(context, 'Twitter @tsacdop',
-                            LineIcons.twitter, 'https://twitter.com/tsacdop'),
+                        // _listItem(context, 'Twitter @tsacdop',
+                        //     LineIcons.twitter, 'https://twitter.com/tsacdop'),
                         _listItem(context, 'GitHub', LineIcons.alternateGithub,
-                            'https://github.com/stonega/tsacdop'),
-                        _listItem(context, 'Telegram', LineIcons.telegram,
-                            'https://t.me/joinchat/Bk3LkRpTHy40QYC78PK7Qg'),
+                            'https://github.com/Lojcs/tsacdop'),
+                        // _listItem(context, 'Telegram', LineIcons.telegram,
+                        //     'https://t.me/joinchat/Bk3LkRpTHy40QYC78PK7Qg'),
                         _listItem(context, 'Reddit', LineIcons.redditLogo,
                             'https://www.reddit.com/r/Tsacdop'),
-                        Center(
-                          child: SizedBox(
-                            width: 200,
-                            child: ElevatedButton(
-                              onPressed: () =>
-                                  'https://www.buymeacoffee.com/stonegate'
-                                      .launchUrl,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Color(0xffffdd00),
-                                elevation: 0,
-                                enableFeedback: false,
-                              ),
-                              child: Container(
-                                height: 30.0,
-                                padding: EdgeInsets.symmetric(horizontal: 4.0),
-                                alignment: Alignment.center,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: <Widget>[
-                                    Text(
-                                      'Buy Me A Coffee',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    SizedBox(width: 10),
-                                    Image(
-                                      image:
-                                          AssetImage('assets/buymeacoffee.png'),
-                                      height: 20,
-                                      fit: BoxFit.fitHeight,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
+                        // Center(
+                        //   child: SizedBox(
+                        //     width: 200,
+                        //     child: ElevatedButton(
+                        //       onPressed: () =>
+                        //           'https://www.buymeacoffee.com/stonegate'
+                        //               .launchUrl,
+                        //       style: ElevatedButton.styleFrom(
+                        //         backgroundColor: Color(0xffffdd00),
+                        //         elevation: 0,
+                        //         enableFeedback: false,
+                        //       ),
+                        //       child: Container(
+                        //         height: 30.0,
+                        //         padding: EdgeInsets.symmetric(horizontal: 4.0),
+                        //         alignment: Alignment.center,
+                        //         child: Row(
+                        //           mainAxisAlignment: MainAxisAlignment.center,
+                        //           mainAxisSize: MainAxisSize.min,
+                        //           children: <Widget>[
+                        //             Text(
+                        //               'Buy Me A Coffee',
+                        //               style: TextStyle(
+                        //                 fontWeight: FontWeight.w500,
+                        //                 color: Colors.white,
+                        //               ),
+                        //             ),
+                        //             SizedBox(width: 10),
+                        //             Image(
+                        //               image:
+                        //                   AssetImage('assets/buymeacoffee.png'),
+                        //               height: 20,
+                        //               fit: BoxFit.fitHeight,
+                        //             ),
+                        //           ],
+                        //         ),
+                        //       ),
+                        //     ),
+                        //   ),
+                        // ),
                       ],
                     ),
                   ),
@@ -206,11 +208,11 @@ class AboutApp extends StatelessWidget {
                     alignment: Alignment.center,
                     child: GestureDetector(
                       onTapDown: (detail) async {
-                        OverlayEntry _overlayEntry;
-                        _overlayEntry = _createOverlayEntry(detail);
-                        Overlay.of(context).insert(_overlayEntry);
+                        OverlayEntry overlayEntry;
+                        overlayEntry = createOverlayEntry(detail);
+                        Overlay.of(context).insert(overlayEntry);
                         await Future.delayed(Duration(seconds: 2));
-                        _overlayEntry.remove();
+                        overlayEntry.remove();
                       },
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../util/extension_helper.dart';
 
 class SettingsSheet extends StatefulWidget {
-  SettingsSheet({this.height, Key? key}) : super(key: key);
+  const SettingsSheet({this.height, super.key});
   final double? height;
   @override
   _SettingsSheetState createState() => _SettingsSheetState();
@@ -48,7 +48,7 @@ class _SettingsSheetState extends State<SettingsSheet>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: Container(
+      body: SizedBox(
         height: context.height,
         child: Stack(alignment: Alignment.bottomCenter, children: [
           Positioned.fill(

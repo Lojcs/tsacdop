@@ -23,6 +23,8 @@ import '../widgets/episode_card.dart';
 import '../widgets/episodegrid.dart';
 
 class ScrollPodcasts extends StatefulWidget {
+  const ScrollPodcasts({super.key});
+
   @override
   _ScrollPodcastsState createState() => _ScrollPodcastsState();
 }
@@ -79,7 +81,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
             height: (width - 20) / 3 + 140,
           );
         }
-        if (groups[_groupIndex]!.podcastList.length == 0) {
+        if (groups[_groupIndex]!.podcastList.isEmpty) {
           return SizedBox(
             height: (width - 20) / 3 + 140,
             child: Column(
@@ -424,9 +426,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
 
   Future<int?> _getPodcastUpdateCounts(String? id) async {
     final dbHelper = DBHelper();
-    if (updateCount == null) {
-      updateCount = await dbHelper.getPodcastUpdateCounts(id);
-    }
+    updateCount ??= await dbHelper.getPodcastUpdateCounts(id);
     return updateCount;
   }
 
@@ -463,7 +463,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
 class PodcastPreview extends StatefulWidget {
   final PodcastLocal? podcastLocal;
 
-  PodcastPreview({this.podcastLocal, Key? key}) : super(key: key);
+  const PodcastPreview({this.podcastLocal, super.key});
 
   @override
   _PodcastPreviewState createState() => _PodcastPreviewState();
@@ -513,7 +513,7 @@ class _PodcastPreviewState extends State<PodcastPreview> {
               Expanded(
                 flex: 4,
                 child: Text(
-                  widget.podcastLocal!.title!,
+                  widget.podcastLocal!.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontWeight: FontWeight.bold, color: c),
@@ -557,7 +557,7 @@ class _PodcastPreviewState extends State<PodcastPreview> {
           EpisodeField.isDisplayVersion
         ],
         sortBy: Sorter.pubDate,
-        sortOrder: SortOrder.DESC,
+        sortOrder: SortOrder.desc,
         limit: 2,
         episodeState: Provider.of<EpisodeState>(context, listen: false),
       );
@@ -569,7 +569,7 @@ class _PodcastPreviewState extends State<PodcastPreview> {
 class ShowEpisode extends StatelessWidget {
   final List<EpisodeBrief>? episodes;
   final PodcastLocal? podcastLocal;
-  ShowEpisode({Key? key, this.episodes, this.podcastLocal}) : super(key: key);
+  const ShowEpisode({super.key, this.episodes, this.podcastLocal});
 
   @override
   Widget build(BuildContext context) {

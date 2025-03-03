@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tsacdop/local_storage/sqflite_localpodcast.dart';
-import 'package:tsacdop/state/audio_state.dart';
-import 'package:tsacdop/type/episodebrief.dart';
+import '../local_storage/sqflite_localpodcast.dart';
+import 'audio_state.dart';
+import '../type/episodebrief.dart';
 
 import '../type/play_histroy.dart';
 
@@ -10,7 +10,7 @@ import '../type/play_histroy.dart';
 class EpisodeState extends ChangeNotifier {
   final DBHelper _dbHelper = DBHelper();
   BuildContext? _context;
-  late AudioPlayerNotifier _audio =
+  late final AudioPlayerNotifier _audio =
       Provider.of<AudioPlayerNotifier>(_context!, listen: false);
   set context(BuildContext context) => _context = context;
 

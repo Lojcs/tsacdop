@@ -29,9 +29,9 @@ if (flutterVersionName == null) {
    }
 
 android {
-    namespace = "com.stonegate.tsacdop"
+    namespace = "dev.lojcs.tsacdop"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -52,7 +52,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.stonegate.tsacdop"
+        applicationId "dev.lojcs.tsacdop"
         minSdkVersion 21
         targetSdkVersion 33
         versionCode flutterVersionCode.toInteger()
@@ -79,18 +79,18 @@ android {
        }
    }
 
-   flavorDimensions "deploy"
+//    flavorDimensions "deploy"
 
-   productFlavors {
-       play {
-           dimension "deploy"
-           signingConfig signingConfigs.release
-       }
-       fdroid {
-           dimension "deploy"
-           signingConfig signingConfigs.release
-       }
-   }
+//    productFlavors {
+//        play {
+//            dimension "deploy"
+//            signingConfig signingConfigs.release
+//        }
+//        fdroid {
+//            dimension "deploy"
+//            signingConfig signingConfigs.release
+//        }
+//    }
 
 //    android.applicationVariants.all { variant ->
 //        if (variant.flavorName == "play") {

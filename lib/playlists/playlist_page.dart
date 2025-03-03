@@ -12,7 +12,7 @@ import '../widgets/general_dialog.dart';
 
 class PlaylistDetail extends StatefulWidget {
   final Playlist playlist;
-  PlaylistDetail(this.playlist, {Key? key}) : super(key: key);
+  const PlaylistDetail(this.playlist, {super.key});
 
   @override
   _PlaylistDetailState createState() => _PlaylistDetailState();
@@ -118,9 +118,8 @@ class _PlaylistBody extends StatefulWidget {
   final void Function(int index) onSelect;
   final void Function(int index) onRemove;
   final bool resetSelected;
-  _PlaylistBody(this.playlist, this.onSelect, this.onRemove, this.resetSelected,
-      {Key? key})
-      : super(key: key);
+  const _PlaylistBody(
+      this.playlist, this.onSelect, this.onRemove, this.resetSelected);
   @override
   _PlaylistBodyState createState() => _PlaylistBodyState();
 }
@@ -162,9 +161,8 @@ class _PlaylistItem extends StatefulWidget {
   final bool? reset;
   final ValueChanged<EpisodeBrief> onSelect;
   final ValueChanged<EpisodeBrief> onRemove;
-  _PlaylistItem(this.episode,
-      {required this.onSelect, required this.onRemove, this.reset, Key? key})
-      : super(key: key);
+  const _PlaylistItem(this.episode,
+      {required this.onSelect, required this.onRemove, this.reset, super.key});
 
   @override
   __PlaylistItemState createState() => __PlaylistItemState();
@@ -327,7 +325,7 @@ class __PlaylistItemState extends State<_PlaylistItem>
 
 class _PlaylistSetting extends StatefulWidget {
   final Playlist playlist;
-  _PlaylistSetting(this.playlist, {Key? key}) : super(key: key);
+  const _PlaylistSetting(this.playlist);
 
   @override
   __PlaylistSettingState createState() => __PlaylistSettingState();

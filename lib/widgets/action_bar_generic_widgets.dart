@@ -3,8 +3,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:tsacdop/type/theme_data.dart';
-import 'package:tsacdop/util/extension_helper.dart';
+import '../type/theme_data.dart';
+import '../util/extension_helper.dart';
 import 'package:tuple/tuple.dart';
 
 import 'custom_popupmenu.dart';
@@ -40,6 +40,7 @@ class ActionBarButton extends StatefulWidget {
   final bool connectLeft;
   final bool connectRight;
   const ActionBarButton({
+    super.key,
     required this.child,
     this.expansionController,
     this.shrunkChild,
@@ -369,6 +370,7 @@ class ActionBarDropdownButton<T> extends StatefulWidget {
   final bool connectLeft;
   final bool connectRight;
   const ActionBarDropdownButton({
+    super.key,
     required this.child,
     required this.selected,
     this.expansionController,
@@ -688,6 +690,7 @@ class ActionBarExpandingSearchButton extends StatefulWidget {
   final bool connectLeft;
   final bool connectRight;
   const ActionBarExpandingSearchButton({
+    super.key,
     this.query = "",
     this.popupSearch = false,
     this.expands = true,
@@ -1014,7 +1017,7 @@ class _ActionBarExpandingSearchButtonState
                                   },
                                 ),
                               ),
-                            Container(
+                            SizedBox(
                               width: context.actionBarButtonSizeHorizontal,
                               child: Material(
                                 color: Colors.transparent,
@@ -1053,7 +1056,7 @@ class _SearchIconButton extends StatelessWidget {
   final void Function(String)? onFieldSubmitted;
   final AnimationController activeAnimationController;
   final Color color;
-  _SearchIconButton(
+  const _SearchIconButton(
       {required this.query,
       required this.onFieldSubmitted,
       required this.activeAnimationController,
@@ -1095,9 +1098,8 @@ class _SearchIconButton extends StatelessWidget {
 }
 
 class SearchEpisode extends StatefulWidget {
-  SearchEpisode(
-      {required this.onSearch, this.accentColor, this.query, Key? key})
-      : super(key: key);
+  const SearchEpisode(
+      {required this.onSearch, this.accentColor, this.query, super.key});
   final ValueChanged<String> onSearch;
   final Color? accentColor;
   final String? query;
@@ -1111,66 +1113,62 @@ class _SearchEpisodeState extends State<SearchEpisode> {
   @override
   Widget build(BuildContext context) {
     final s = context.s;
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: context.overlayWithBarrier,
-      child: AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: context.radiusMedium,
-        ),
-        backgroundColor: widget.accentColor?.toWeakBackround(context),
-        elevation: 1,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20),
-        titlePadding: const EdgeInsets.all(20),
-        actionsPadding: EdgeInsets.zero,
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              s.cancel,
-              textAlign: TextAlign.end,
-              style: TextStyle(color: Colors.grey[600]),
-            ),
+    return AlertDialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: context.radiusMedium,
+      ),
+      backgroundColor: widget.accentColor?.toWeakBackround(context),
+      elevation: 1,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+      titlePadding: const EdgeInsets.all(20),
+      actionsPadding: EdgeInsets.zero,
+      actions: <Widget>[
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(
+            s.cancel,
+            textAlign: TextAlign.end,
+            style: TextStyle(color: Colors.grey[600]),
           ),
-          TextButton(
-            onPressed: () {
-              if (_query.isNotEmpty) {
-                widget.onSearch(_query);
-                Navigator.of(context).pop();
-              }
-            },
-            child: Text(s.confirm, style: TextStyle(color: widget.accentColor)),
-          )
-        ],
-        title: SizedBox(width: context.width - 160, child: Text(s.search)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            TextFormField(
-              initialValue: widget.query,
-              decoration: InputDecoration(
-                contentPadding: EdgeInsets.symmetric(horizontal: 10),
-                hintText: s.searchEpisode,
-                hintStyle: TextStyle(fontSize: 18),
-                filled: true,
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(
-                      color: widget.accentColor ?? context.accentColor,
-                      width: 2.0),
-                ),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide:
-                      BorderSide(color: context.accentColor, width: 2.0),
-                ),
-              ),
-              cursorRadius: Radius.circular(2),
-              autofocus: true,
-              maxLines: 1,
-              onChanged: (value) {
-                if (mounted) setState(() => _query = value);
-              },
-            ),
-          ],
         ),
+        TextButton(
+          onPressed: () {
+            if (_query.isNotEmpty) {
+              widget.onSearch(_query);
+              Navigator.of(context).pop();
+            }
+          },
+          child: Text(s.confirm, style: TextStyle(color: widget.accentColor)),
+        )
+      ],
+      title: SizedBox(width: context.width - 160, child: Text(s.search)),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          TextFormField(
+            initialValue: widget.query,
+            decoration: InputDecoration(
+              contentPadding: EdgeInsets.symmetric(horizontal: 10),
+              hintText: s.searchEpisode,
+              hintStyle: TextStyle(fontSize: 18),
+              filled: true,
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(
+                    color: widget.accentColor ?? context.accentColor,
+                    width: 2.0),
+              ),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: context.accentColor, width: 2.0),
+              ),
+            ),
+            cursorRadius: Radius.circular(2),
+            autofocus: true,
+            maxLines: 1,
+            onChanged: (value) {
+              if (mounted) setState(() => _query = value);
+            },
+          ),
+        ],
       ),
     );
   }
@@ -1180,18 +1178,18 @@ class _SearchEpisodeState extends State<SearchEpisode> {
 class ExpansionController {
   ValueGetter<double> maxWidth;
   ExpansionController({required this.maxWidth});
-  List<Expandable> _items = [];
+  final List<Expandable> _items = [];
   double _itemsWidth = 0;
   double get _availableWidth => maxWidth() - _itemsWidth;
 
-  List<int> _expandedItems = [];
+  final List<int> _expandedItems = [];
 
   /// Use to add the width of non-expandable items.
   void resetWidth() {
     _itemsWidth = 0;
-    _items.forEach((item) {
+    for (var item in _items) {
       _itemsWidth += item.currentWidth;
-    });
+    }
   }
 
   /// Use to add the width of non-expandable items.

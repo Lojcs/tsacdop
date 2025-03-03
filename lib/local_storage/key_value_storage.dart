@@ -134,8 +134,8 @@ class KeyValueStorage {
     try {
       episodeIndex = int.parse(saved[1]);
     } catch (e) {
-      if (!(e is FormatException)) {
-        throw e;
+      if (e is! FormatException) {
+        rethrow;
       }
     }
     position = int.parse(saved[2]);

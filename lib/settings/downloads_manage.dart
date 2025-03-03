@@ -17,6 +17,8 @@ import '../widgets/action_bar.dart';
 import '../widgets/custom_widget.dart';
 
 class DownloadsManage extends StatefulWidget {
+  const DownloadsManage({super.key});
+
   @override
   _DownloadsManageState createState() => _DownloadsManageState();
 }
@@ -102,7 +104,7 @@ class _DownloadsManageState extends State<DownloadsManage> {
 
   int sumSelected() {
     var sum = 0;
-    if (_selectedList.length == 0) {
+    if (_selectedList.isEmpty) {
       return sum;
     } else {
       for (var episode in _selectedList) {
@@ -123,7 +125,6 @@ class _DownloadsManageState extends State<DownloadsManage> {
 
   @override
   void deactivate() {
-    context.statusBarColor = null;
     _controller.dispose();
     super.deactivate();
   }
@@ -133,9 +134,13 @@ class _DownloadsManageState extends State<DownloadsManage> {
     Color appBarColor = context.realDark
         ? Colors.black
         : Theme.of(context).extension<CardColorScheme>()!.saturated;
-    context.statusBarColor = appBarColor;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: context.overlay,
+      value: SystemUiOverlayStyle(
+        statusBarColor: appBarColor,
+        statusBarIconBrightness: context.iconBrightness,
+        systemNavigationBarColor: context.surface,
+        systemNavigationBarIconBrightness: context.iconBrightness,
+      ),
       child: Scaffold(
         backgroundColor: context.surface,
         body: SafeArea(
@@ -322,7 +327,7 @@ class _DownloadsManageState extends State<DownloadsManage> {
                 duration: Duration(milliseconds: 800),
                 curve: Curves.elasticInOut,
                 left: context.width / 2 - 50,
-                bottom: _selectedList.length == 0 ? -100 : 30,
+                bottom: _selectedList.isEmpty ? -100 : 30,
                 child: InkWell(
                     onTap: _delSelectedEpisodes,
                     child: Stack(

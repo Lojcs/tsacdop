@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import '../util/extension_helper.dart';
 
 class PodcastLocal extends Equatable {
-  final String? title;
+  final String title;
   final String? imageUrl;
   final String rssUrl;
   final String? author;

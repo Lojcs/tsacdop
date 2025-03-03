@@ -7,7 +7,7 @@ import '../local_storage/key_value_storage.dart';
 import '../util/extension_helper.dart';
 
 class LanguagesSetting extends StatefulWidget {
-  const LanguagesSetting({Key? key}) : super(key: key);
+  const LanguagesSetting({super.key});
 
   @override
   _LanguagesSettingState createState() => _LanguagesSettingState();
@@ -25,7 +25,7 @@ class _LanguagesSettingState extends State<LanguagesSetting> {
     if (systemDefault) {
       await localeStorage.saveStringList([]);
       await findSystemLocale();
-      var systemLanCode;
+      String systemLanCode;
       final list = Intl.systemLocale.split('_');
       if (list.length == 2) {
         systemLanCode = list.first;
@@ -92,7 +92,7 @@ class _LanguagesSettingState extends State<LanguagesSetting> {
         Divider(height: 1),
         ListTile(
           onTap: () =>
-              'mailto:<tsacdop.app@gmail.com>?subject=Tsacdop localization project'
+              'mailto:<lojcsgit+tsacdop@gmail.com>?subject=Tsacdop localization project'
                   .launchUrl,
           contentPadding: const EdgeInsets.only(left: 20, right: 20),
           dense: true,

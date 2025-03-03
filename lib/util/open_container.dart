@@ -15,7 +15,7 @@ enum ContainerTransitionType {
 
 class OpenContainer extends StatefulWidget {
   const OpenContainer(
-      {Key? key,
+      {super.key,
       this.closedColor = Colors.white,
       this.openColor = Colors.white,
       this.beginColor = Colors.white,
@@ -40,8 +40,7 @@ class OpenContainer extends StatefulWidget {
       this.tappable = true,
       this.transitionDuration = const Duration(milliseconds: 300),
       this.transitionType = ContainerTransitionType.fade,
-      this.onDispose})
-      : super(key: key);
+      this.onDispose});
 
   final Color beginColor;
   final Color endColor;
@@ -141,9 +140,9 @@ class _OpenContainerState extends State<OpenContainer> {
 
 class _Hideable extends StatefulWidget {
   const _Hideable({
-    Key? key,
+    super.key,
     this.child,
-  }) : super(key: key);
+  });
 
   final Widget? child;
 

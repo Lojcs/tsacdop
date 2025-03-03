@@ -20,6 +20,8 @@ import 'syncing.dart';
 import 'theme.dart';
 
 class Settings extends StatefulWidget {
+  const Settings({super.key});
+
   @override
   _SettingsState createState() => _SettingsState();
 }
@@ -197,7 +199,9 @@ class _SettingsState extends State<Settings> {
                 ),
                 ListTile(
                   onTap: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => Libries())),
+                      MaterialPageRoute(builder: (context) => LicensePage())),
+                  // onTap: () => Navigator.push(context,
+                  //     MaterialPageRoute(builder: (context) => Libries())),
                   contentPadding: EdgeInsets.symmetric(horizontal: 25.0),
                   leading: Icon(LineIcons.bookOpen, color: Colors.purple[700]),
                   title: Text(s.settingsLibraries),
@@ -213,15 +217,15 @@ class _SettingsState extends State<Settings> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         _feedbackItem(LineIcons.github, s.feedbackGithub,
-                            'https://github.com/stonega/tsacdop/issues'),
-                        _feedbackItem(LineIcons.telegram, s.feedbackTelegram,
-                            'https://t.me/joinchat/Bk3LkRpTHy40QYC78PK7Qg'),
+                            'https://github.com/Lojcs/tsacdop/issues'),
+                        // _feedbackItem(LineIcons.telegram, s.feedbackTelegram,
+                        //     'https://t.me/joinchat/Bk3LkRpTHy40QYC78PK7Qg'),
                         _feedbackItem(
                             LineIcons.envelopeOpenText,
                             s.feedbackEmail,
-                            'mailto:<tsacdop.app@gmail.com>?subject=Tsacdop Feedback'),
-                        _feedbackItem(LineIcons.googlePlay, s.feedbackPlay,
-                            'https://play.google.com/store/apps/details?id=com.stonegate.tsacdop'),
+                            'mailto:<lojcsgit+tsacdop@gmail.com>?subject=Tsacdop Feedback'),
+                        // _feedbackItem(LineIcons.googlePlay, s.feedbackPlay,
+                        //     'https://play.google.com/store/apps/details?id=com.stonegate.tsacdop'),
                       ],
                     ),
                   ),
