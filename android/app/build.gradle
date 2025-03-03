@@ -31,7 +31,7 @@ if (flutterVersionName == null) {
 android {
     namespace = "dev.lojcs.tsacdop"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = "27.0.12077973"
+    ndkVersion = "27.2.12479018"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -75,7 +75,7 @@ android {
    buildTypes {
        release {
            signingConfig signingConfigs.release
-           shrinkResources false
+        //    shrinkResources false
        }
    }
 
