@@ -47,7 +47,7 @@ More to come...
 ## Localization
 
 Currently only has localizations already present in upstream (Chinese, French, Spanish, Portuguese, Italian, Turkish).  
-Until I figure out how to set up a better localization service, localization prs are welcome.
+Until I figure out how to set up a better localization system, localization prs are welcome.
 <!-- Please [Email](mailto:<lojcsgit+tsacdop@gmail.com>) me you'd like to contribute to support more languages! -->
 
 
@@ -94,7 +94,7 @@ flutter run
 
 If you have an issue or found a bug, please raise a GitHub issue. Pull requests are also welcome.
 
-[You can find my list of known issues / personal todo list here](https://github.com/users/Lojcs/projects/5/views/1)
+[You can find a list of known issues / my todo list here](https://github.com/users/Lojcs/projects/5/views/1)
 
 <!-- ## Architecture
 
@@ -149,7 +149,7 @@ src
 
 ## Contact
 
-You reach out to me on [Matrix](https://matrix.to/#/#tsacdop-fork:matrix.org) or email me [lojcsgit+tsacdop@gmail.com](mailto:<lojcsgit+tsacdop@gmail.com>). I'm not active on upstream's Telegram / Reddit groups.
+You can reach out to me on [Matrix](https://matrix.to/#/#tsacdop-fork:matrix.org) or email me [lojcsgit+tsacdop@gmail.com](mailto:<lojcsgit+tsacdop@gmail.com>). I'm not active on upstream's Telegram / Reddit groups.
 
 <!-- Or you can join our [Telegram Group](https://t.me/joinchat/Bk3LkRpTHy40QYC78PK7Qg). -->
 
