@@ -25,6 +25,7 @@ import '../type/fireside_data.dart';
 import '../type/podcastlocal.dart';
 import '../util/helpers.dart';
 
+@pragma('vm:entry-point')
 void callbackDispatcher() {
   if (Platform.isAndroid) {
     Workmanager().executeTask((task, inputData) async {

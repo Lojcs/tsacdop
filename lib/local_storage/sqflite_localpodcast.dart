@@ -878,6 +878,49 @@ class DBHelper {
         WHERE (feed_id = ? AND downloaded = 'ND')""", [feedId]);
   }
 
+  /// Reinitializes display_version_id of Episodes.
+  /// Versions are episodes with different enclosure_urls but same titles and feed_ids
+  /// Display versions are the versions of an episode that should be displayed by default in ui
+  /// Downloaded episodes are always their own display versions.
+  /// Non downloaded episodes' display versions point to (first available)
+  /// a) Manually set version / newsest downloaded version (whichever is newer)
+  /// b) The version all other undownloaded versions point to (newest on rescan)
+  /// c) Itself
+  Future<void> _rescanPodcastEpisodesVersionsDart(
+      DatabaseExecutor dbClient, String feedId) async {
+    List<Map<String, dynamic>> episodes = (await dbClient.rawQuery(
+            "SELECT id, title, milliseconds, downloaded FROM Episodes WHERE feed_id = ?",
+            [feedId]))
+        .toList();
+    episodes.sort((a, b) => b['milliseconds'] - a['milliseconds']);
+    Map<String, Tuple3<int, bool, List<int>>> titles = {};
+    for (var episode in episodes) {
+      Tuple3<int, bool, List<int>> result;
+      if (titles[episode['title']] == null) {
+        result = Tuple3(
+            episode['id'], episode['downloaded'] != 'ND', [episode['id']]);
+      } else {
+        result = titles[episode['title']]!;
+        if (!result.item2 && episode['downloaded'] != 'ND') {
+          result = Tuple3(episode['id'], true, [episode['id']]);
+        } else {
+          result.item3.add(episode['id']);
+        }
+      }
+      titles[episode['title']] = result;
+    }
+    Batch batchOp = dbClient.batch();
+    for (var title in titles.keys) {
+      Tuple3<int, bool, List<int>> result = titles[title]!;
+      for (var id in result.item3) {
+        batchOp.rawInsert(
+            "UPDATE Episodes SET display_version_id = ? WHERE id = ?",
+            [result.item1, id]);
+      }
+    }
+    await batchOp.commit();
+  }
+
   /// Sets the episode as the display version among its undownloaded versions.
   /// Display version might still change afterwards according to usual display version rules.
   Future<void> setDisplayVersion(EpisodeBrief episode,
@@ -944,8 +987,8 @@ class DBHelper {
         final duration = feed.items![i].itunes!.duration?.inSeconds ?? 0;
         final explicit = feed.items![i].itunes!.explicit;
         final chapter = feed.items![i].podcastChapters?.url ?? '';
-        final image = feed.items![i].itunes!.image?.href ??
-            ''; // TODO: Maybe cache these?
+        final image =
+            feed.items![i].itunes!.image?.href ?? ''; // TODO: Maybe save these?
         episodes.add(
           EpisodeBrief(-1, title, url, feedId, "", milliseconds,
               description: _getDescription(
@@ -993,7 +1036,7 @@ class DBHelper {
         }
         await batchOp.commit();
         developer.log("Versioning ${feed.title}");
-        await _rescanPodcastEpisodesVersions(txn, feedId);
+        await _rescanPodcastEpisodesVersionsDart(txn, feedId);
         int count = Sqflite.firstIntValue(await txn.rawQuery(
                 'SELECT COUNT(*) FROM Episodes WHERE feed_id = ?', [feedId])) ??
             0;

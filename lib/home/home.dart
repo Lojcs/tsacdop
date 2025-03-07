@@ -22,7 +22,6 @@ import '../type/episodebrief.dart';
 import '../util/extension_helper.dart';
 import '../widgets/audiopanel.dart';
 import '../widgets/custom_popupmenu.dart';
-import '../widgets/custom_search_delegate.dart';
 import '../widgets/custom_widget.dart';
 import '../widgets/episodegrid.dart';
 import '../widgets/feature_discovery.dart';
