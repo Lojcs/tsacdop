@@ -83,8 +83,8 @@ class _DownloadButtonState extends State<DownloadButton> {
   }
 
   Widget _downloadButton(EpisodeTask task, BuildContext context) {
-    switch (task.status!.index) {
-      case 0: // DownloadTaskStatus.undefined
+    switch (task.status) {
+      case DownloadTaskStatus.undefined:
         return _buttonOnMenu(
             Center(
               child: SizedBox(
@@ -101,7 +101,7 @@ class _DownloadButtonState extends State<DownloadButton> {
               ),
             ),
             () => requestDownload([task.episode!], context));
-      case 1: // DownloadTaskStatus.enqueued
+      case DownloadTaskStatus.enqueued:
         return Material(
           color: Colors.transparent,
           child: InkWell(
@@ -130,7 +130,7 @@ class _DownloadButtonState extends State<DownloadButton> {
             ),
           ),
         );
-      case 2: // DownloadTaskStatus.running
+      case DownloadTaskStatus.running:
         return Material(
           color: Colors.transparent,
           child: InkWell(
@@ -159,7 +159,7 @@ class _DownloadButtonState extends State<DownloadButton> {
             ),
           ),
         );
-      case 3: // DownloadTaskStatus.complete
+      case DownloadTaskStatus.complete:
         return Material(
           color: Colors.transparent,
           child: InkWell(
@@ -185,10 +185,13 @@ class _DownloadButtonState extends State<DownloadButton> {
             ),
           ),
         );
-      case 4: // DownloadTaskStatus.failed
+      case DownloadTaskStatus.failed:
         return _buttonOnMenu(Icon(Icons.refresh, color: Colors.red),
             () => _retryDownload(task.episode!));
-      case 6: // DownloadTaskStatus.paused
+      case DownloadTaskStatus.canceled:
+        return _buttonOnMenu(Icon(Icons.refresh, color: Colors.red),
+            () => _retryDownload(task.episode!));
+      case DownloadTaskStatus.paused:
         return Material(
           color: Colors.transparent,
           child: InkWell(
@@ -218,7 +221,7 @@ class _DownloadButtonState extends State<DownloadButton> {
             ),
           ),
         );
-      default: // DownloadTaskStatus.canceled
+      default: //
         return Center();
     }
   }

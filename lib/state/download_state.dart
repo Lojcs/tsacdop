@@ -61,7 +61,8 @@ class AutoDownloader {
       episodeTask.progress = progress;
       if (episodeTask.status == DownloadTaskStatus.complete) {
         await _saveMediaId(episodeTask);
-      } else if (status == DownloadTaskStatus.failed) {
+      } else if (episodeTask.status == DownloadTaskStatus.failed ||
+          episodeTask.status == DownloadTaskStatus.canceled) {
         _episodeTasks.removeWhere((element) =>
             element.episode!.enclosureUrl == episodeTask.episode!.enclosureUrl);
         if (_episodeTasks.isEmpty) _unbindBackgroundIsolate();
@@ -366,7 +367,8 @@ Future<Directory> _getDownloadDirectory() async {
 
 Future<void> taskStarter(EpisodeBrief episode, List<EpisodeTask> episodeTasks,
     {bool showNotification = false}) async {
-  if (!episode.isDownloaded!) {
+  if (!episode.isDownloaded! &&
+      !episodeTasks.any((task) => task.episode == episode)) {
     final dir = await _getDownloadDirectory();
     var localPath =
         path.join(dir.path, episode.podcastTitle.replaceAll('/', ''));
@@ -376,17 +378,9 @@ Future<void> taskStarter(EpisodeBrief episode, List<EpisodeTask> episodeTasks,
       await saveDir.create();
     }
     var now = DateTime.now();
-    var datePlus = now.year.toString() +
-        now.month.toString() +
-        now.day.toString() +
-        now.second.toString();
+    String dateFull = now.toIso8601String();
     var fileName =
-        '${episode.title.replaceAll('/', '')}$datePlus.${episode.enclosureUrl.split('/').last.split('.').last}';
-    // // TODO: This includes query parameters (.mp3?id=1234) in the extension. Should use the following instead.
-    // // Also, this is collision prone if two episodes with the same name are downloaded at the same second, like from a multiselect batch action.
-    // // Should consider that case.
-    // var fileName =
-    //     '${episode.title.replaceAll('/', '')}$datePlus.${episode.enclosureUrl.split('/').last.split('.').last.split('?').first}';
+        '${episode.title.replaceAll('/', '')},$dateFull,${episode.enclosureUrl.split('/').last.split('.').last.split('?').first}';
     if (fileName.length > 100) {
       fileName = fileName.substring(fileName.length - 100);
     }

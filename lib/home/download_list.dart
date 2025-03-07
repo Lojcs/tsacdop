@@ -18,8 +18,8 @@ class DownloadList extends StatefulWidget {
 
 Widget _downloadButton(EpisodeTask task, BuildContext context) {
   var downloader = Provider.of<DownloadState>(context, listen: false);
-  switch (task.status!.index) {
-    case 2:
+  switch (task.status!) {
+    case DownloadTaskStatus.running:
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -37,7 +37,7 @@ Widget _downloadButton(EpisodeTask task, BuildContext context) {
           ),
         ],
       );
-    case 4:
+    case DownloadTaskStatus.failed:
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
@@ -53,7 +53,23 @@ Widget _downloadButton(EpisodeTask task, BuildContext context) {
           ),
         ],
       );
-    case 6:
+    case DownloadTaskStatus.canceled:
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          IconButton(
+            splashRadius: 20,
+            icon: Icon(Icons.refresh, color: Colors.red),
+            onPressed: () => downloader.retryTask(task.episode!),
+          ),
+          IconButton(
+            splashRadius: 20,
+            icon: Icon(Icons.close),
+            onPressed: () => downloader.delTask(task.episode!),
+          ),
+        ],
+      );
+    case DownloadTaskStatus.paused:
       return Row(mainAxisSize: MainAxisSize.min, children: [
         IconButton(
           splashRadius: 20,
@@ -79,8 +95,8 @@ class _DownloadListState extends State<DownloadList> {
   Widget build(BuildContext context) {
     return Consumer<DownloadState>(builder: (_, downloader, __) {
       final tasks = downloader.episodeTasks
-          .where((task) => task.status!.index != 3)
-          .toList(); // TODO: This seems to be slow and unreliable.
+          .where((task) => task.status != DownloadTaskStatus.complete)
+          .toList();
       return tasks.isNotEmpty
           ? SliverPadding(
               padding: EdgeInsets.symmetric(vertical: 5.0),
@@ -133,8 +149,10 @@ class _DownloadListState extends State<DownloadList> {
                             Expanded(
                               flex: 1,
                               child: tasks[index].progress! >= 0 &&
-                                      tasks[index].status !=
-                                          DownloadTaskStatus.failed
+                                      (tasks[index].status !=
+                                              DownloadTaskStatus.failed &&
+                                          tasks[index].status !=
+                                              DownloadTaskStatus.canceled)
                                   ? Container(
                                       width: 40.0,
                                       height: 20.0,
