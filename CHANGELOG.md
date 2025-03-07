@@ -1,5 +1,15 @@
 # Tsacdop-Fork Changelog
 
+## 0.7.1
+Release date 2025/3/7
+
+### New features
+* Subscribing to podcasts with many episodes is significantly faster.
+
+### Bug fixes
+* Fixed an issue where downloads could get stuck without the option to cancel or retry them.
+* Prevented episodes from getting downloaded multiple times if another download is initiated before the first succeeds
+
 ## 0.7.0
 Release date 2025/3/4
 

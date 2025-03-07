@@ -1,24 +1,30 @@
-Tsacdop is a clean, simply beautiful and friendly podcast app. which is also free and open source.
+Tsacdop-Fork is a fork of Tsacdop; a clean, simply beautiful and friendly podcast app that is both free and open source.
+
+This fork updates the ui, fixes bugs and adds ux features. Gpodder and podcast search apis are currently not supported.
+
 Why Tsacdop?
- <b>Unique Design</b> With Tsacdop, you will get a totally different experience with any other podcast players. Tsacdop has a unique layout and good-looking material design.
- <b>Group management</b> You can manage your podcasts with groups easily.  
- <b>Privacy Friendly</b> Tsacdop is a free and open sourced application,  which won't upload your data to the server.
- <b>Easy Search</b>The podcast is powered by ListenNotes(unavailable in fdroid version) and PodcastIndex, so you can search from more than 1 million podcasts.
+<b>Unique Design</b>: With Tsacdop, you will have a totally different experience compared to other podcast players. It features a unique layout with good looking material design.
+<b>Group Management</b>: You can easily manage your podcasts using groups.
+<b>Privacy Friendly</b>: As a free and open source application, Tsacdop won't upload your data to any server.
+
 Features:
-* Podcasts group management
+* Podcast group management
 * Playlist support
-* Sleep timer
+* Sleep timer / speed setting
 * OPML file export and import
-* Auto syncing in background
-* Listening and subscription history data
-* Dark theme / accent color
+* Auto syncing in the background
+* Listening and subscription history record
+* Dark mode / real dark mode / accent color options
 * Download for offline play
-* Auto download / auto delete downloaded episodes
-* Change play speed
+* Auto download new episodes / auto delete outdated downloads
+* Settings backup
 * Skip silence
 * Boost volume
-More to come...
+* Load local audio files
+More features to come...
+
 License
-All this for FREE, and NO ADS. Tsacdop is an open source project licensed under GPL v3.0,  you can star or fork it on GitHub: https://github.com/stonega/tsacdop 
+Free, open source, no ads. Tsacdop-Fork is an open source project licensed under GPL v3.0. You can star or fork it on GitHub: https://github.com/lojcs/tsacdop 
+
 Contact
-Tsacdop is still in the development stage, I am working hard on new features, if you have any issue or request any feature, please let me know by email  or visit GitHub page.
+Tsacdop-Fork is still in the development stage, and I am working on new features. If you have any issues or requests for additional features, please let me know on GitHub.
