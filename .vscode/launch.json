@@ -14,6 +14,12 @@
             "type": "dart",
             "request": "launch",
             "flutterMode": "profile",
+        },
+        {
+            "name": "Flutter release",
+            "type": "dart",
+            "request": "launch",
+            "flutterMode": "release",
         }
     ]
 }
