@@ -1,5 +1,11 @@
 # Tsacdop-Fork Changelog
 
+## 0.7.2
+Release date 2025/3/8
+
+### Bug fixes
+* Fixed the app crashing when playing anything
+
 ## 0.7.1
 Release date 2025/3/7
 

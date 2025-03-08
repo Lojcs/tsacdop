@@ -1,7 +1,7 @@
 name: tsacdop_fork
 description: An open source podcast player.
 
-version: 0.7.1+50
+version: 0.7.2+51
 publish_to: "none"
 environment:
   sdk: ">=3.0.0 <4.0.0"
