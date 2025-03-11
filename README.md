@@ -69,25 +69,27 @@ Tsacdop is licensed under the [GPL v3.0](https://github.com/lojcs/tsacdop/blob/m
 
 ## Build
 
-1. If you don't have Flutter SDK installed; Please visit the official [Flutter][Flutter Install] site.
+### Reproducible (On linux)
 
-2. Checkout Flutter to the 3.27.4 version.
+1. Download [build.sh](https://github.com/Lojcs/tsacdop/blob/main/tool/build.sh).
+
+2. Create a [key.properties file](https://docs.flutter.dev/deployment/android#reference-the-keystore-from-the-app) pointing at your [keystore](https://docs.flutter.dev/deployment/android#create-an-upload-keystore).
+
+3. Run build.sh.
+
+### Without Script
+
+1. Clone this repo.
 
 ``` 
-git checkout 3.27.4
+git clone https://github.com/lojcs/tsacdop.git --recurse-submodules
 ```
 
-3. Clone this repo.
+2. Run the app with Android Studio or Visual Studio. Or the command line.
 
 ``` 
-git clone https://github.com/lojcs/tsacdop.git
-```
-
-4. Run the app with Android Studio or Visual Studio. Or the command line.
-
-``` 
-flutter pub get
-flutter run
+.flutter/bin/flutter pub get
+.flutter/bin/flutter run
 ```
 
 ## Contribute 
