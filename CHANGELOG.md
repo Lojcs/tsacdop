@@ -1,5 +1,11 @@
 # Tsacdop-Fork Changelog
 
+## 0.7.3
+Release date 2025/3/11
+
+### Other
+* Bundled fonts with the app so they aren't downloaded on the fly
+
 ## 0.7.2
 Release date 2025/3/8
 

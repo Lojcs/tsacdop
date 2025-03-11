@@ -1,10 +1,12 @@
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:feature_discovery/feature_discovery.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'state/episode_state.dart';
 import 'package:tuple/tuple.dart';
@@ -23,6 +25,12 @@ import 'type/theme_data.dart';
 ///Initial theme settings
 final SettingState themeSetting = SettingState();
 Future main() async {
+  GoogleFonts.config.allowRuntimeFetching = false;
+  LicenseRegistry.addLicense(() async* {
+    final license = await rootBundle.loadString('google_fonts/OFL.txt');
+    yield LicenseEntryWithLineBreaks(['google_fonts'], license);
+  });
+
   timeDilation = 1.0;
   WidgetsFlutterBinding.ensureInitialized();
   await themeSetting.initData();

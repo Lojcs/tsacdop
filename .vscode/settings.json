@@ -3,4 +3,7 @@
         "cupertino",
         "tsacdop"
     ],
+    "files.exclude": {
+        ".flutter/*": true
+    },
 }

@@ -1,0 +1,12 @@
+Changes from Tsacdop (brief):
+
+* Color tinted backrounds / rounded corners
+* Smoother animations
+* Responsive ui
+* More filter options
+* Group episode versions
+* Undo seek button
+* Different search experience
+* Bugfixes
+
+Check out https://github.com/Lojcs/tsacdop/blob/v0.7.3/CHANGELOG.md for full changelog.
