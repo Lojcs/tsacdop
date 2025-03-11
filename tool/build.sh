@@ -3,9 +3,9 @@
 set -e
 
 if test -f key.properties; then
-    keypath = key.properties
+    keypath="key.properties"
 elif test -f ~/key.properties; then
-    keypath = ~/key.properties
+    keypath="~/key.properties"
 else
     read -p "Path to key.properties: " keypath
     if ! test -f $keypath; then
