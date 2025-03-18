@@ -617,22 +617,14 @@ class AudioPlayerNotifier extends ChangeNotifier {
   /// Adds episode to beginning of the queue and starts playing.
   Future<void> loadEpisodeToQueue(EpisodeBrief episode,
       {int startPosition = 0}) async {
-    episode = await episode.copyWithFromDB(newFields: [
-      EpisodeField.enclosureDuration,
-      EpisodeField.enclosureSize,
-      EpisodeField.mediaId,
-      EpisodeField.primaryColor,
-      EpisodeField.isExplicit,
-      EpisodeField.isNew,
-      EpisodeField.skipSecondsStart,
-      EpisodeField.skipSecondsEnd,
-      EpisodeField.episodeImage,
-      EpisodeField.podcastImage,
-      EpisodeField.chapterLink
-    ], keepExisting: true);
-    await saveHistory();
+    await loadEpisodesToQueue([episode], startPosition: startPosition);
+  }
 
-    await addToPlaylist([episode], playlist: _queue, index: 0);
+  /// Adds episode to beginning of the queue and starts playing.
+  Future<void> loadEpisodesToQueue(List<EpisodeBrief> episode,
+      {int startPosition = 0}) async {
+    await saveHistory();
+    await addToPlaylist(episode, playlist: _queue, index: 0);
     if (!(playerRunning && _playlist.isQueue)) {
       // Switch to queue
       _startPlaylist = _queue;
@@ -652,9 +644,8 @@ class AudioPlayerNotifier extends ChangeNotifier {
             position: Duration(milliseconds: startPosition));
       }
     }
-
     notifyListeners();
-    await _episodeState.unsetNew([episode]);
+    await _episodeState.unsetNew(episode);
   }
 
   /// Skips to the episode at specified index

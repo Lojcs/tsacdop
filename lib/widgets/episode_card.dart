@@ -17,6 +17,7 @@ import '../state/audio_state.dart';
 import '../type/play_histroy.dart';
 import '../type/podcastlocal.dart';
 import '../util/helpers.dart';
+import '../util/selection_controller.dart';
 import 'custom_widget.dart';
 import 'episodegrid.dart';
 
@@ -718,7 +719,14 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, EpisodeBrief episode,
         ),
         onPressed: () async {
           if (!playing || !playerRunning) {
-            await audio.loadEpisodeToQueue(episode);
+            SelectionController? selectionController =
+                Provider.of<SelectionController?>(context);
+            List<EpisodeBrief> episodes = [episode];
+            if (selectionController != null &&
+                selectionController.selectedEpisodes.contains(episode)) {
+              episodes = selectionController.selectedEpisodes;
+            }
+            await audio.loadEpisodesToQueue(episodes);
           }
         }),
     if (menuList.contains(1))
@@ -733,14 +741,21 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, EpisodeBrief episode,
             color: Colors.cyan,
           ),
           onPressed: () async {
+            SelectionController? selectionController =
+                Provider.of<SelectionController?>(context);
+            List<EpisodeBrief> episodes = [episode];
+            if (selectionController != null &&
+                selectionController.selectedEpisodes.contains(episode)) {
+              episodes = selectionController.selectedEpisodes;
+            }
             if (!inPlaylist) {
-              await audio.addToPlaylist([episode]);
+              await audio.addToPlaylist(episodes);
               await Fluttertoast.showToast(
                 msg: s.toastAddPlaylist,
                 gravity: ToastGravity.BOTTOM,
               );
             } else {
-              await audio.removeFromPlaylist([episode]);
+              await audio.removeFromPlaylist(episodes);
               await Fluttertoast.showToast(
                 msg: s.toastRemovePlaylist,
                 gravity: ToastGravity.BOTTOM,
@@ -756,14 +771,21 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, EpisodeBrief episode,
           title: episode.isLiked! ? Text(s.unlike) : Text(s.like),
           trailing: Icon(LineIcons.heart, color: Colors.red, size: 21),
           onPressed: () async {
+            SelectionController? selectionController =
+                Provider.of<SelectionController?>(context);
+            List<EpisodeBrief> episodes = [episode];
+            if (selectionController != null &&
+                selectionController.selectedEpisodes.contains(episode)) {
+              episodes = selectionController.selectedEpisodes;
+            }
             if (episode.isLiked!) {
-              await episodeState.unsetLiked([episode]);
+              await episodeState.unsetLiked(episodes);
               Fluttertoast.showToast(
                 msg: s.unlike,
                 gravity: ToastGravity.BOTTOM,
               );
             } else {
-              await episodeState.setLiked([episode]);
+              await episodeState.setLiked(episodes);
               Fluttertoast.showToast(
                 msg: s.liked,
                 gravity: ToastGravity.BOTTOM,
@@ -791,14 +813,21 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, EpisodeBrief episode,
                 painter: ListenedAllPainter(Colors.blue, stroke: 1.5)),
           ),
           onPressed: () async {
+            SelectionController? selectionController =
+                Provider.of<SelectionController?>(context);
+            List<EpisodeBrief> episodes = [episode];
+            if (selectionController != null &&
+                selectionController.selectedEpisodes.contains(episode)) {
+              episodes = selectionController.selectedEpisodes;
+            }
             if (episode.isPlayed!) {
-              episodeState.unsetListened([episode]);
+              episodeState.unsetListened(episodes);
               Fluttertoast.showToast(
                 msg: s.markNotListened,
                 gravity: ToastGravity.BOTTOM,
               );
             } else {
-              episodeState.setListened([episode]);
+              episodeState.setListened(episodes);
               Fluttertoast.showToast(
                 msg: s.markListened,
                 gravity: ToastGravity.BOTTOM,
@@ -819,7 +848,14 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, EpisodeBrief episode,
           trailing: Icon(LineIcons.download, color: Colors.green),
           onPressed: () async {
             if (!episode.isDownloaded!) {
-              await requestDownload([episode], context);
+              SelectionController? selectionController =
+                  Provider.of<SelectionController?>(context);
+              List<EpisodeBrief> episodes = [episode];
+              if (selectionController != null &&
+                  selectionController.selectedEpisodes.contains(episode)) {
+                episodes = selectionController.selectedEpisodes;
+              }
+              await requestDownload(episodes, context);
             }
           }),
     if (menuList.contains(5))
