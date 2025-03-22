@@ -49,7 +49,7 @@ class EpisodeGrid extends StatelessWidget {
     if (episodes.isNotEmpty) {
       return SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: 10),
-        sliver: Selector<SelectionController?, Tuple2<Set<int>?, bool>>(
+        sliver: Selector<SelectionController?, Tuple2<List<int>?, bool>>(
           selector: (_, selectionController) => Tuple2(
               selectionController?.selectedIndicies,
               selectionController?.selectMode ?? false),

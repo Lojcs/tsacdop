@@ -335,109 +335,115 @@ class _SelectionOptions extends StatelessWidget {
             Spacer(),
             Selector<SelectionController, bool>(
               selector: (context, selectionController) =>
-                  selectionController.selectBefore,
-              builder: (context, state, _) => ActionBarButton(
-                child: Center(
-                  child: Text(
-                    context.s.before,
-                    style: context.textTheme.titleMedium,
+                  selectionController.batchSelect == BatchSelect.before,
+              builder: (context, state, _) {
+                bool enabled =
+                    selectionController.canSetBatchSelect(BatchSelect.before);
+                return ActionBarButton(
+                  expansionController: expansionController,
+                  shrunkChild: Center(
+                    child: Icon(
+                      Icons.first_page,
+                      color: !enabled && context.realDark
+                          ? Colors.grey[800]
+                          : context.actionBarIconColor,
+                    ),
                   ),
-                ),
-                expansionController: expansionController,
-                shrunkChild: Center(
-                  child: Icon(
-                    Icons.first_page,
-                    color: data.item2 == 0 && context.realDark
-                        ? Colors.grey[800]
-                        : context.actionBarIconColor,
+                  state: state,
+                  buttonType: ActionBarButtonType.onOff,
+                  onPressed: (value) {
+                    selectionController.batchSelect = BatchSelect.before;
+                  },
+                  width: 80,
+                  shrunkWidth: context.actionBarButtonSizeHorizontal,
+                  tooltip: context.s.before,
+                  enabled: enabled,
+                  connectRight: true,
+                  child: Center(
+                    child: Text(
+                      context.s.before,
+                      style: context.textTheme.titleMedium,
+                    ),
                   ),
-                ),
-                state: state,
-                buttonType: ActionBarButtonType.onOff,
-                onPressed: (value) {
-                  selectionController.selectBefore = value!;
-                },
-                width: 80,
-                shrunkWidth: context.actionBarButtonSizeHorizontal,
-                tooltip: context.s.before,
-                enabled: data.item2 >= 1,
-                connectRight: true,
-              ),
+                );
+              },
             ),
             Selector<SelectionController, bool>(
               selector: (context, selectionController) =>
-                  selectionController.selectBetween,
-              builder: (context, state, _) => ActionBarButton(
-                child: Center(
-                  child: Text(
-                    context.s.between,
-                    style: context.textTheme.titleMedium,
+                  selectionController.batchSelect == BatchSelect.between,
+              builder: (context, state, _) {
+                bool enabled =
+                    selectionController.canSetBatchSelect(BatchSelect.between);
+                return ActionBarButton(
+                  expansionController: expansionController,
+                  shrunkChild: Center(
+                    child: Icon(
+                      Icons.more_horiz,
+                      color: !enabled && context.realDark
+                          ? Colors.grey[800]
+                          : context.actionBarIconColor,
+                    ),
                   ),
-                ),
-                expansionController: expansionController,
-                shrunkChild: Center(
-                  child: Icon(
-                    Icons.more_horiz,
-                    color: data.item2 <= 1 && context.realDark
-                        ? Colors.grey[800]
-                        : context.actionBarIconColor,
+                  state: state,
+                  buttonType: ActionBarButtonType.onOff,
+                  onPressed: (value) {
+                    selectionController.batchSelect = BatchSelect.between;
+                  },
+                  width: 80,
+                  shrunkWidth: context.actionBarButtonSizeHorizontal,
+                  tooltip: context.s.between,
+                  enabled: enabled,
+                  connectLeft: true,
+                  connectRight: true,
+                  child: Center(
+                    child: Text(
+                      context.s.between,
+                      style: context.textTheme.titleMedium,
+                    ),
                   ),
-                ),
-                state: state,
-                buttonType: ActionBarButtonType.onOff,
-                onPressed: (value) {
-                  selectionController.selectBetween = value!;
-                },
-                width: 80,
-                shrunkWidth: context.actionBarButtonSizeHorizontal,
-                tooltip: context.s.between,
-                enabled: data.item2 >= 2,
-                connectLeft: true,
-                connectRight: true,
-              ),
+                );
+              },
             ),
             Selector<SelectionController, bool>(
               selector: (context, selectionController) =>
-                  selectionController.selectAfter,
-              builder: (context, state, _) => ActionBarButton(
-                child: Center(
-                  child: Text(
-                    context.s.after,
-                    style: context.textTheme.titleMedium,
+                  selectionController.batchSelect == BatchSelect.after,
+              builder: (context, state, _) {
+                bool enabled =
+                    selectionController.canSetBatchSelect(BatchSelect.after);
+                return ActionBarButton(
+                  expansionController: expansionController,
+                  shrunkChild: Center(
+                    child: Icon(
+                      Icons.last_page,
+                      color: !enabled && context.realDark
+                          ? Colors.grey[800]
+                          : context.actionBarIconColor,
+                    ),
                   ),
-                ),
-                expansionController: expansionController,
-                shrunkChild: Center(
-                  child: Icon(
-                    Icons.last_page,
-                    color: data.item2 == 0 && context.realDark
-                        ? Colors.grey[800]
-                        : context.actionBarIconColor,
+                  state: state,
+                  buttonType: ActionBarButtonType.onOff,
+                  onPressed: (value) {
+                    selectionController.batchSelect = BatchSelect.after;
+                  },
+                  width: 80,
+                  shrunkWidth: context.actionBarButtonSizeHorizontal,
+                  tooltip: context.s.after,
+                  enabled: enabled,
+                  connectLeft: true,
+                  connectRight: true,
+                  child: Center(
+                    child: Text(
+                      context.s.after,
+                      style: context.textTheme.titleMedium,
+                    ),
                   ),
-                ),
-                state: state,
-                buttonType: ActionBarButtonType.onOff,
-                onPressed: (value) {
-                  selectionController.selectAfter = value!;
-                },
-                width: 80,
-                shrunkWidth: context.actionBarButtonSizeHorizontal,
-                tooltip: context.s.after,
-                enabled: data.item2 >= 1,
-                connectLeft: true,
-                connectRight: true,
-              ),
+                );
+              },
             ),
             Selector<SelectionController, bool>(
               selector: (context, selectionController) =>
-                  selectionController.selectAll,
+                  selectionController.batchSelect == BatchSelect.all,
               builder: (context, state, _) => ActionBarButton(
-                child: Center(
-                  child: Text(
-                    context.s.all,
-                    style: context.textTheme.titleMedium,
-                  ),
-                ),
                 expansionController: expansionController,
                 shrunkChild: Center(
                   child: Icon(
@@ -448,12 +454,18 @@ class _SelectionOptions extends StatelessWidget {
                 state: state,
                 buttonType: ActionBarButtonType.onOff,
                 onPressed: (value) {
-                  selectionController.selectAll = value!;
+                  selectionController.batchSelect = BatchSelect.all;
                 },
                 width: 80,
                 shrunkWidth: context.actionBarButtonSizeHorizontal,
                 tooltip: context.s.all,
                 connectLeft: true,
+                child: Center(
+                  child: Text(
+                    context.s.all,
+                    style: context.textTheme.titleMedium,
+                  ),
+                ),
               ),
             ),
           ],
