@@ -51,6 +51,12 @@ class SelectionController extends ChangeNotifier {
     super.dispose();
   }
 
+  void clearCachedSelectionLists() {
+    _selectedIndicies = null;
+    _selectedEpisodes = null;
+    _previouslySelectedIndicies = null;
+  }
+
   /// Gets all episodes the selection covers so batch selection is not tentative.
   /// Always call before getting selectable episodes.
   Future<void> getEpisodesLimitless() async {
@@ -59,8 +65,6 @@ class SelectionController extends ChangeNotifier {
       _selectableEpisodes =
           await onGetEpisodesLimitless?.call() ?? _selectableEpisodes;
       _batchSelectController.selectableCount = _selectableEpisodes.length;
-      _selectedIndicies = null;
-      _selectedEpisodes = null;
       if (!_disposed && selectMode) notifyListeners();
     }
   }
@@ -82,8 +86,7 @@ class SelectionController extends ChangeNotifier {
           _selectableEpisodes =
               episodes.toList(); // Prevent spooky action at a distance
           _batchSelectController.selectableCount = _selectableEpisodes.length;
-          _selectedIndicies = null;
-          _selectedEpisodes = null;
+          clearCachedSelectionLists();
         }
       } else {
         hasAllSelectableEpisodes = false;
@@ -93,8 +96,7 @@ class SelectionController extends ChangeNotifier {
         _batchSelectController.trySetBatchSelect(BatchSelect.none);
         _explicitlySelectedIndicies.clear();
         _explicitlyDeselectedIndicies.clear();
-        _selectedIndicies = null;
-        _selectedEpisodes = null;
+        clearCachedSelectionLists();
       }
       if (!_disposed && selectMode) notifyListeners();
     }
@@ -120,8 +122,7 @@ class SelectionController extends ChangeNotifier {
         _previouslySelectedEpisodes[i] = episodeMap[episode.id]!;
       }
     }
-    _selectedIndicies = null;
-    _selectedEpisodes = null;
+    clearCachedSelectionLists();
     episodesUpdated = !episodesUpdated;
     if (!_disposed && selectMode) notifyListeners();
   }
@@ -139,7 +140,7 @@ class SelectionController extends ChangeNotifier {
     if (_selectMode != boo) {
       _selectMode = boo;
       if (!boo) deselectAll();
-      if (!_disposed && selectMode) notifyListeners();
+      if (!_disposed) notifyListeners();
     }
   }
 
@@ -164,9 +165,29 @@ class SelectionController extends ChangeNotifier {
   List<int>? _selectedIndicies;
 
   /// Indicies of [_previouslySelectedEpisodes] that are on the current [selectableEpisodes].
-  Iterable<int> get previouslySelectedIndicies => _previouslySelectedEpisodes
-      .map<int?>((e) => selectableEpisodes.indexOf(e))
-      .nonNulls;
+  List<int> get previouslySelectedIndicies {
+    _previouslySelectedIndicies ??=
+        _previouslySelectedEpisodesToIndicies.toList();
+    return _previouslySelectedIndicies!;
+  }
+
+  List<int>? _previouslySelectedIndicies;
+
+  Iterable<int> get _previouslySelectedEpisodesToIndicies sync* {
+    int? smallest;
+    int? largest;
+    for (EpisodeBrief episode in _previouslySelectedEpisodes) {
+      int i = selectableEpisodes.indexOf(episode);
+      if (smallest != null && i < smallest) {
+        smallest = i;
+      } else if (largest != null && i > largest) {
+        largest = i;
+      }
+      if (i != -1) yield i;
+    }
+    _batchSelectController.potentialDelimiter(smallest);
+    _batchSelectController.potentialDelimiter(largest);
+  }
 
   /// Episodes previously selected before [_selectableEpisodes] changed.
   /// Cleared on [selectMode] off.
@@ -174,27 +195,40 @@ class SelectionController extends ChangeNotifier {
 
   /// Tentative list of indicies of selected selectable episodes that weren't
   /// selected previously (thus newly selected)
-  Iterable<int> get newlySelectedIndicies => batchSelectedIndicies.isNotEmpty
-      ? batchSelectedIndicies
-      : _explicitlySelectedIndicies;
+  Iterable<int> get newlySelectedIndicies => batchSelect == BatchSelect.none
+      ? _explicitlySelectedIndicies
+      : batchSelectedIndicies;
 
   /// Indicies selected by batch select, except the ones explicitly deselected.
-  Iterable<int> get batchSelectedIndicies => implicitlySelectedIndicies
-      .takeWhile((i) => !_explicitlyDeselectedIndicies.contains(i));
+  Iterable<int> get batchSelectedIndicies sync* {
+    for (int i in implicitlySelectedIndicies) {
+      if (!_explicitlyDeselectedIndicies.contains(i)) yield i;
+    }
+  }
 
-  /// Current batch selection mode.
-  BatchSelect get batchSelect => _batchSelectController._batchSelect;
+  /// Current batch selection mode. Setting same value toggles it with none.
+  BatchSelect get batchSelect => _batchSelectController.batchSelect;
   late final _BatchSelectController _batchSelectController =
       _BatchSelectController(
-    setExplicitSelection: (explicitlySelected) {
+    setIndividualSelection: (explicitlySelected) {
       _explicitlyDeselectedIndicies.clear();
       _explicitlySelectedIndicies.clear();
       _explicitlySelectedIndicies.addAll(explicitlySelected);
     },
-    clearExplicitSelection: () => _explicitlySelectedIndicies.clear(),
+    clearIndividualSelection: () {
+      _explicitlySelectedIndicies.clear();
+      _previouslySelectedEpisodes
+          .removeWhere((e) => selectableEpisodes.contains(e));
+    },
   );
-  set batchSelect(BatchSelect select) =>
-      _batchSelectController.trySetBatchSelect(select);
+  set batchSelect(BatchSelect select) {
+    if (select == batchSelect) {
+      select = BatchSelect.none;
+    }
+    _batchSelectController.trySetBatchSelect(select);
+    clearCachedSelectionLists();
+    if (!_disposed && selectMode) notifyListeners();
+  }
 
   /// Wheter batch select can be set to [select].
   bool canSetBatchSelect(BatchSelect select) =>
@@ -214,8 +248,7 @@ class SelectionController extends ChangeNotifier {
   Iterable<int> get implicitlySelectedIndicies sync* {
     for (int index in _batchSelectController.selection()) {
       if (_previouslySelectedEpisodes.remove(selectableEpisodes[index])) {
-        _selectedIndicies = null;
-        _selectedEpisodes = null;
+        clearCachedSelectionLists();
       }
       yield index;
     }
@@ -226,31 +259,73 @@ class SelectionController extends ChangeNotifier {
   void select(int i) {
     if (i >= 0 && i < _selectableEpisodes.length) {
       if (batchSelect == BatchSelect.none) {
-        if (!_explicitlySelectedIndicies.remove(i)) {
-          _explicitlySelectedIndicies.add(i);
+        // Batch select is disabled, deselect if index was explicitly selected.
+        bool wasSelected = _explicitlySelectedIndicies.remove(i);
+        if (!wasSelected) {
+          // Index wasn't explicitly selected. Check if it was previously selected
+          wasSelected = previouslySelectedIndicies.contains(i);
+          if (wasSelected) {
+            // It was previously selected, deselect.
+            _previouslySelectedEpisodes.remove(selectableEpisodes[i]);
+          }
         }
-      } else {
-        bool setAsDelimiter = _batchSelectController.potentialDelimiter(i);
-        if (!setAsDelimiter) {
-          _BatchSelectDelimiter? delimiter =
-              _batchSelectController.isDelimiter(i);
-          if (delimiter != null) {
-            while (_explicitlyDeselectedIndicies.remove(i)) {
-              i++;
-            }
+        if (wasSelected) {
+          // Index was selected and got deselected. Update batch select
+          // delimiters if it was one of them.
+          if (selectedIndicies.isEmpty) {
+            // No episode selected, clear delimiters
+            _batchSelectController.replaceDelimiter(
+                _BatchSelectDelimiter.both, null);
+          } else {
+            _BatchSelectDelimiter delimiter =
+                _batchSelectController.isDelimiter(i);
+            // Find the next explicitly selected index to be the delimiter.
             _batchSelectController.replaceDelimiter(
                 delimiter,
-                _explicitlyDeselectedIndicies.reduce((a, b) =>
+                _explicitlySelectedIndicies.reduce((a, b) =>
                     (a < b) ^ (delimiter == _BatchSelectDelimiter.first)
                         ? b
                         : a));
-          } else if (!_explicitlyDeselectedIndicies.remove(i)) {
-            _explicitlyDeselectedIndicies.add(i);
+          }
+        } else {
+          // Index wasn't selected, select.
+          _explicitlySelectedIndicies.add(i);
+          _batchSelectController.potentialDelimiter(i);
+        }
+      } else {
+        // Batch select enabled. Try to set index as new delimiter.
+        bool setAsDelimiter = _batchSelectController.potentialDelimiter(i);
+        if (!setAsDelimiter) {
+          // Index isn't set as delimiter, so it's either already a delimeter
+          // or will explicitly deselect
+          _BatchSelectDelimiter delimiter =
+              _batchSelectController.isDelimiter(i);
+          if (delimiter == _BatchSelectDelimiter.none) {
+            // ındex isn't a delimiter, toggle explicit deselection.
+            if (!_explicitlyDeselectedIndicies.remove(i)) {
+              _explicitlyDeselectedIndicies.add(i);
+            }
+          } else if (selectedIndicies.isEmpty) {
+            // No episode selected, clear delimiters
+            _batchSelectController.replaceDelimiter(
+                _BatchSelectDelimiter.both, null);
+          } else {
+            // Index is a delimeter, set next non explicitly deselected index as the
+            // delimiter and remove explicit deselection of the indicies in between
+            do {
+              if (delimiter == _BatchSelectDelimiter.first ||
+                  batchSelect == BatchSelect.after) {
+                i++;
+              } else {
+                i--;
+              }
+            } while (_explicitlyDeselectedIndicies.remove(i));
+            _batchSelectController.replaceDelimiter(delimiter, i);
           }
         }
       }
-      _selectedIndicies = null;
-      _selectedEpisodes = null;
+      clearCachedSelectionLists();
+      if (!_disposed && selectMode) notifyListeners();
     }
   }
 
@@ -260,8 +335,8 @@ class SelectionController extends ChangeNotifier {
     _explicitlyDeselectedIndicies.clear();
     _explicitlySelectedIndicies.clear();
     _previouslySelectedEpisodes.clear();
-    _selectedIndicies = null;
-    _selectedEpisodes = null;
+    clearCachedSelectionLists();
+    if (!_disposed && selectMode) notifyListeners();
   }
 }
 
@@ -307,15 +382,15 @@ enum BatchSelect {
 }
 
 /// Delimiter type for batch select
-enum _BatchSelectDelimiter { first, last }
+enum _BatchSelectDelimiter { first, last, both, none }
 
 /// Wraps [BatchSelect] and batch selection delimiters.
 class _BatchSelectController {
-  final void Function(List<int> explicitlySelected) setExplicitSelection;
-  final void Function() clearExplicitSelection;
+  final void Function(List<int> explicitlySelected) setIndividualSelection;
+  final void Function() clearIndividualSelection;
   _BatchSelectController(
-      {required this.setExplicitSelection,
-      required this.clearExplicitSelection});
+      {required this.setIndividualSelection,
+      required this.clearIndividualSelection});
 
   BatchSelect get batchSelect => _batchSelect;
   BatchSelect _batchSelect = BatchSelect.none;
@@ -324,80 +399,135 @@ class _BatchSelectController {
   int? _firstSelected;
   int? _lastSelected;
   bool firstBeforeLast = true;
-  List<int> get selectionOrderedDelimiters => _firstSelected != null
-      ? _lastSelected != null
-          ? firstBeforeLast
-              ? [_firstSelected!, _lastSelected!]
-              : [_lastSelected!, _firstSelected!]
-          : [_firstSelected!]
-      : _lastSelected != null
-          ? [_lastSelected!]
-          : [];
+  List<int> get individualSelectionFromDelimiters => switch (_batchSelect) {
+        BatchSelect.all => [],
+        BatchSelect.after => [_firstSelected!],
+        BatchSelect.before => [_lastSelected!],
+        BatchSelect.between => firstBeforeLast
+            ? [_firstSelected!, _lastSelected!]
+            : [_lastSelected!, _firstSelected!],
+        BatchSelect.none => [],
+      };
 
   /// Wheter batch select can be set to [select].
-  bool canSetBatchSelect(BatchSelect select) {
-    switch (select) {
-      case BatchSelect.all:
-        return true;
-      case BatchSelect.after:
-        return _firstSelected != null;
-      case BatchSelect.before:
-        return _lastSelected != null;
-      case BatchSelect.between:
-        return _firstSelected != null && _lastSelected != null;
-      case BatchSelect.none:
-        return true;
-    }
-  }
+  bool canSetBatchSelect(BatchSelect select) => switch (select) {
+        BatchSelect.all => true,
+        BatchSelect.after => _firstSelected != null,
+        BatchSelect.before => _lastSelected != null,
+        BatchSelect.between =>
+          _firstSelected != null && _firstSelected != _lastSelected,
+        BatchSelect.none => true,
+      };
 
   /// Sets batch select to [select] if it can be set to it.
   void trySetBatchSelect(BatchSelect select) {
-    if (select != BatchSelect.none && _batchSelect == BatchSelect.none) {
-      setExplicitSelection([]);
-    } else if (select == BatchSelect.none && _batchSelect != BatchSelect.none) {
-      clearExplicitSelection();
-    } else {
-      if (canSetBatchSelect(select)) _batchSelect = select;
+    if (canSetBatchSelect(select)) {
+      if (select != BatchSelect.none && _batchSelect == BatchSelect.none) {
+        clearIndividualSelection();
+      } else if (select == BatchSelect.none &&
+          _batchSelect != BatchSelect.none) {
+        setIndividualSelection(individualSelectionFromDelimiters);
+      } else {
+        setIndividualSelection(individualSelectionFromDelimiters);
+        clearIndividualSelection();
+      }
+      switch (select) {
+        case BatchSelect.all:
+          _firstSelected = null;
+          _lastSelected = null;
+          break;
+        case BatchSelect.after:
+          _lastSelected = _firstSelected;
+          break;
+        case BatchSelect.before:
+          _firstSelected = _lastSelected;
+          break;
+        case BatchSelect.between:
+        case BatchSelect.none:
+      }
+      _batchSelect = select;
     }
   }
 
   /// Updates a delimiter with [i] if it would expand selection and returns whether successful.
-  bool potentialDelimiter(int i) {
-    if (_firstSelected != null) {
-      if (i < _firstSelected!) {
+  bool potentialDelimiter(int? i) {
+    if (i == null) return false;
+    bool result = false;
+    if (_firstSelected == null) {
+      if (_batchSelect != BatchSelect.all) {
         _firstSelected = i;
-        firstBeforeLast = true;
-        return true;
-      }
-    }
-    if (_lastSelected != null) {
-      if (i > _lastSelected!) {
         _lastSelected = i;
-        firstBeforeLast = false;
-        return true;
+        result = true;
+      }
+    } else {
+      switch (_batchSelect) {
+        case BatchSelect.all:
+          break;
+        case BatchSelect.after:
+          if (i < _firstSelected!) {
+            _firstSelected = i;
+            _lastSelected = i;
+            result = true;
+          }
+          break;
+        case BatchSelect.before:
+          if (i > _lastSelected!) {
+            _lastSelected = i;
+            _firstSelected = i;
+            result = true;
+          }
+          break;
+        case BatchSelect.between: // Fall through
+        case BatchSelect.none:
+          if (i < _firstSelected!) {
+            _firstSelected = i;
+            firstBeforeLast = true;
+            result = true;
+          } else if (i > _lastSelected!) {
+            _lastSelected = i;
+            firstBeforeLast = false;
+            result = true;
+          }
       }
     }
-    return false;
+    return result;
   }
 
   /// Returns delimiter type if [i] is a delimiter or null otherwise
-  _BatchSelectDelimiter? isDelimiter(int i) {
+  _BatchSelectDelimiter isDelimiter(int i) {
     if (_firstSelected == i) {
-      return _BatchSelectDelimiter.first;
+      if (_lastSelected == i) {
+        return _BatchSelectDelimiter.both;
+      } else {
+        return _BatchSelectDelimiter.first;
+      }
     } else if (_lastSelected == i) {
       return _BatchSelectDelimiter.last;
     } else {
-      return null;
+      return _BatchSelectDelimiter.none;
     }
   }
 
   /// Replaces [delimiter] with [i].
-  void replaceDelimiter(_BatchSelectDelimiter delimiter, int i) {
+  void replaceDelimiter(_BatchSelectDelimiter delimiter, int? i) {
     switch (delimiter) {
       case _BatchSelectDelimiter.first:
         _firstSelected = i;
+        break;
       case _BatchSelectDelimiter.last:
         _lastSelected = i;
+        break;
+      case _BatchSelectDelimiter.both:
+        _firstSelected = i;
+        _lastSelected = i;
+        break;
+      case _BatchSelectDelimiter.none:
+        break;
+    }
+    if ((_firstSelected == null) ||
+        (_firstSelected == _lastSelected &&
+            _batchSelect == BatchSelect.between)) {
+      _batchSelect = BatchSelect.none;
     }
   }
 

@@ -333,23 +333,22 @@ class _SelectionOptions extends StatelessWidget {
               ),
             ),
             Spacer(),
-            Selector<SelectionController, bool>(
-              selector: (context, selectionController) =>
+            Selector<SelectionController, Tuple2<bool, bool>>(
+              selector: (context, selectionController) => Tuple2(
                   selectionController.batchSelect == BatchSelect.before,
-              builder: (context, state, _) {
-                bool enabled =
-                    selectionController.canSetBatchSelect(BatchSelect.before);
+                  selectionController.canSetBatchSelect(BatchSelect.before)),
+              builder: (context, data, _) {
                 return ActionBarButton(
                   expansionController: expansionController,
                   shrunkChild: Center(
                     child: Icon(
                       Icons.first_page,
-                      color: !enabled && context.realDark
+                      color: !data.item2 && context.realDark
                           ? Colors.grey[800]
                           : context.actionBarIconColor,
                     ),
                   ),
-                  state: state,
+                  state: data.item1,
                   buttonType: ActionBarButtonType.onOff,
                   onPressed: (value) {
                     selectionController.batchSelect = BatchSelect.before;
@@ -357,7 +356,7 @@ class _SelectionOptions extends StatelessWidget {
                   width: 80,
                   shrunkWidth: context.actionBarButtonSizeHorizontal,
                   tooltip: context.s.before,
-                  enabled: enabled,
+                  enabled: data.item2,
                   connectRight: true,
                   child: Center(
                     child: Text(
@@ -368,23 +367,22 @@ class _SelectionOptions extends StatelessWidget {
                 );
               },
             ),
-            Selector<SelectionController, bool>(
-              selector: (context, selectionController) =>
+            Selector<SelectionController, Tuple2<bool, bool>>(
+              selector: (context, selectionController) => Tuple2(
                   selectionController.batchSelect == BatchSelect.between,
-              builder: (context, state, _) {
-                bool enabled =
-                    selectionController.canSetBatchSelect(BatchSelect.between);
+                  selectionController.canSetBatchSelect(BatchSelect.between)),
+              builder: (context, data, _) {
                 return ActionBarButton(
                   expansionController: expansionController,
                   shrunkChild: Center(
                     child: Icon(
                       Icons.more_horiz,
-                      color: !enabled && context.realDark
+                      color: !data.item2 && context.realDark
                           ? Colors.grey[800]
                           : context.actionBarIconColor,
                     ),
                   ),
-                  state: state,
+                  state: data.item1,
                   buttonType: ActionBarButtonType.onOff,
                   onPressed: (value) {
                     selectionController.batchSelect = BatchSelect.between;
@@ -392,7 +390,7 @@ class _SelectionOptions extends StatelessWidget {
                   width: 80,
                   shrunkWidth: context.actionBarButtonSizeHorizontal,
                   tooltip: context.s.between,
-                  enabled: enabled,
+                  enabled: data.item2,
                   connectLeft: true,
                   connectRight: true,
                   child: Center(

@@ -53,20 +53,21 @@ class _WebPodcastSearchState extends State<WebPodcastSearch> {
     webViewController.setNavigationDelegate(NavigationDelegate(
       onUrlChange: (change) async {
         if (change.url != null && change.url != "") {
-          var response = await Dio().get(change.url!);
-          if (response.statusCode == 200) {
-            try {
+          try {
+            var response = await Dio().get(change.url!);
+            if (response.statusCode == 200) {
               RssFeed.parse(response.data);
               if (!foundUrls.contains(change.url)) {
                 foundUrls.add(change.url!);
               }
-            } catch (e) {
-              if (e is! XmlParserException &&
-                  e is! XmlTagException &&
-                  e is! FormatException &&
-                  e is! ArgumentError) {
-                rethrow;
-              }
+            }
+          } catch (e) {
+            if (e is! XmlParserException &&
+                e is! XmlTagException &&
+                e is! FormatException &&
+                e is! ArgumentError &&
+                e is! DioException) {
+              rethrow;
             }
           }
         }
