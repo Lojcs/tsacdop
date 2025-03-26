@@ -272,7 +272,7 @@ class SelectionController extends ChangeNotifier {
         if (wasSelected) {
           // Index was selected and got deselected. Update batch select
           // delimiters if it was one of them.
-          if (selectedIndicies.isEmpty) {
+          if (_explicitlySelectedIndicies.isEmpty) {
             // No episode selected, clear delimiters
             _batchSelectController.replaceDelimiter(
                 _BatchSelectDelimiter.both, null);
@@ -305,7 +305,7 @@ class SelectionController extends ChangeNotifier {
             if (!_explicitlyDeselectedIndicies.remove(i)) {
               _explicitlyDeselectedIndicies.add(i);
             }
-          } else if (selectedIndicies.isEmpty) {
+          } else if (selectedIndicies.length == 1) {
             // No episode selected, clear delimiters
             _batchSelectController.replaceDelimiter(
                 _BatchSelectDelimiter.both, null);
