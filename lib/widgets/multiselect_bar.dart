@@ -1,9 +1,8 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
 import '../util/selection_controller.dart';
 import 'package:tuple/tuple.dart';
@@ -189,6 +188,7 @@ class _MultiSelectPanelIntegrationState
   }
 }
 
+/// Handle with selection stats and panel to preview selection contents
 class SelectionPreview extends StatefulWidget {
   final void Function(double height) onHeightChanged;
   const SelectionPreview({required this.onHeightChanged, super.key});
@@ -511,7 +511,7 @@ class _MultiSelectPanelState extends State<MultiSelectPanel>
           mainAxisAlignment: MainAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            _selectionOptions,
+            _actionBar,
             SizedBox(
               height: Tween<double>(
                       begin: 0, end: iconButtonSize + iconPadding.vertical / 2)
@@ -523,7 +523,7 @@ class _MultiSelectPanelState extends State<MultiSelectPanel>
                     )
                   : Center(),
             ),
-            _actionBar,
+            _selectionOptions,
           ],
         ),
       ),
@@ -562,7 +562,6 @@ class _SelectionOptions extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Spacer(),
           Selector<SelectionController, Tuple2<bool, bool>>(
             selector: (context, selectionController) => Tuple2(
                 selectionController.batchSelect == BatchSelect.before,
@@ -695,6 +694,14 @@ class _SelectionOptions extends StatelessWidget {
                 ),
               ),
             ),
+          ),
+          Spacer(),
+          ActionBarButton(
+            onPressed: (value) {
+              Provider.of<SelectionController>(context, listen: false)
+                  .selectMode = false;
+            },
+            child: Icon(Icons.close),
           ),
         ],
       ),
@@ -1195,13 +1202,21 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                   ),
                 ),
               ),
+              Spacer(),
               ActionBarButton(
-                falseChild: Icon(
-                  Icons.playlist_add,
-                  color: data.item2 == 0 && context.realDark
-                      ? Colors.grey[800]
-                      : context.actionBarIconColor,
+                state: secondRow,
+                buttonType: ActionBarButtonType.onOff,
+                onPressed: (value) {
+                  secondRow = value!;
+                },
+                connectLeft: false,
+                connectRight: true,
+                child: Icon(
+                  Icons.add_box_outlined,
+                  color: context.actionBarIconColor,
                 ),
+              ),
+              ActionBarButton(
                 state: inPlaylist,
                 buttonType: ActionBarButtonType.partialOnOff,
                 onPressed: (value) async {
@@ -1232,8 +1247,14 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                   }
                 },
                 enabled: data.item2 >= 1,
-                connectLeft: false,
+                connectLeft: true,
                 connectRight: true,
+                falseChild: Icon(
+                  Icons.playlist_add,
+                  color: data.item2 == 0 && context.realDark
+                      ? Colors.grey[800]
+                      : context.actionBarIconColor,
+                ),
                 child: Selector<CardColorScheme, Color>(
                   selector: (context, cardColorScheme) =>
                       cardColorScheme.colorScheme.primary,
@@ -1242,43 +1263,107 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                 ),
               ),
               ActionBarButton(
-                state: secondRow,
-                buttonType: ActionBarButtonType.onOff,
-                onPressed: (value) {
-                  secondRow = value!;
+                state: inPlaylist,
+                buttonType: ActionBarButtonType.partialOnOff,
+                onPressed: (value) async {
+                  if (selectedEpisodes.isNotEmpty) {
+                    SelectionController selectionController =
+                        Provider.of<SelectionController>(context,
+                            listen: false);
+                    await selectionController.getEpisodesLimitless();
+                    selectedEpisodes = selectionController.selectedEpisodes;
+                    inPlaylist = value;
+                    if (value!) {
+                      AudioPlayerNotifier audio =
+                          Provider.of<AudioPlayerNotifier>(context,
+                              listen: false);
+                      await audio.addToPlaylist(selectedEpisodes,
+                          index: audio.playlist.length > 0 ? 1 : 0);
+                      await Fluttertoast.showToast(
+                        msg: context.s.toastAddPlaylist,
+                        gravity: ToastGravity.BOTTOM,
+                      );
+                    } else {
+                      await Provider.of<AudioPlayerNotifier>(context,
+                              listen: false)
+                          .removeFromPlaylist(selectedEpisodes);
+                      await Fluttertoast.showToast(
+                        msg: context.s.toastRemovePlaylist,
+                        gravity: ToastGravity.BOTTOM,
+                      );
+                    }
+                  }
                 },
+                enabled: data.item2 >= 1,
                 connectLeft: true,
-                child: Icon(
-                  Icons.add_box_outlined,
-                  color: context.actionBarIconColor,
+                connectRight: true,
+                falseChild: Icon(
+                  LineIcons.lightningBolt,
+                  color: data.item2 == 0 && context.realDark
+                      ? Colors.grey[800]
+                      : context.actionBarIconColor,
+                ),
+                child: Selector<CardColorScheme, Color>(
+                  selector: (context, cardColorScheme) =>
+                      cardColorScheme.colorScheme.primary,
+                  builder: (context, color, _) => Stack(
+                    children: [
+                      Icon(LineIcons.lightningBolt, color: color),
+                      Container(
+                        alignment: Alignment.bottomRight,
+                        child: Icon(
+                          Icons.check,
+                          color: color,
+                          size: 12,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              Spacer(),
-              ActionBarButton(
-                buttonType: ActionBarButtonType.single,
-                onPressed: (value) {
-                  Provider.of<SelectionController>(context, listen: false)
-                      .deselectAll();
-                },
-                tooltip: context.s.deselectAll,
-                enabled: data.item2 >= 1,
-                connectRight: true,
-                child: Center(
-                  child: Icon(
-                    Icons.check_box_outline_blank,
+              Selector<AudioPlayerNotifier, bool>(
+                selector: (context, audio) => audio.playerRunning,
+                builder: (context, playerRunning, _) => ActionBarButton(
+                  state: playerRunning ? inPlaylist : false,
+                  buttonType: ActionBarButtonType.partialOnOff,
+                  onPressed: (value) async {
+                    if (selectedEpisodes.isNotEmpty) {
+                      SelectionController selectionController =
+                          Provider.of<SelectionController>(context,
+                              listen: false);
+                      await selectionController.getEpisodesLimitless();
+                      selectedEpisodes = selectionController.selectedEpisodes;
+                      inPlaylist = value;
+                      if (value!) {
+                        await Provider.of<AudioPlayerNotifier>(context,
+                                listen: false)
+                            .loadEpisodesToQueue(selectedEpisodes);
+                        await Fluttertoast.showToast(
+                          msg: context.s.toastAddPlaylist,
+                          gravity: ToastGravity.BOTTOM,
+                        );
+                      }
+                    }
+                  },
+                  enabled: data.item2 >= 1,
+                  connectLeft: true,
+                  connectRight: false,
+                  falseChild: Icon(
+                    Icons.play_arrow,
                     color: data.item2 == 0 && context.realDark
                         ? Colors.grey[800]
                         : context.actionBarIconColor,
                   ),
+                  child: Selector<CardColorScheme, Color>(
+                    selector: (context, cardColorScheme) =>
+                        cardColorScheme.colorScheme.primary,
+                    builder: (context, color, _) => SizedBox(
+                      width: 20,
+                      height: 15,
+                      child: WaveLoader(color: context.accentColor),
+                    ),
+                  ),
                 ),
-              ),
-              ActionBarButton(
-                onPressed: (value) {
-                  Provider.of<SelectionController>(context, listen: false)
-                      .selectMode = false;
-                },
-                connectLeft: true,
-                child: Icon(Icons.close),
               ),
             ],
           );
