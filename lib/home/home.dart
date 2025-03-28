@@ -270,8 +270,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                     child: Stack(
                                       children: [
                                         _RecentUpdate(),
-                                        MultiSelectPanelIntegration(
-                                            expanded: true),
+                                        MultiSelectPanelIntegration(),
                                       ],
                                     ),
                                   ),
@@ -284,8 +283,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                     child: Stack(
                                       children: [
                                         _MyFavorite(),
-                                        MultiSelectPanelIntegration(
-                                            expanded: true),
+                                        MultiSelectPanelIntegration(),
                                       ],
                                     ),
                                   ),
@@ -298,8 +296,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                     child: Stack(
                                       children: [
                                         _MyDownload(),
-                                        MultiSelectPanelIntegration(
-                                            expanded: true),
+                                        MultiSelectPanelIntegration(),
                                       ],
                                     ),
                                   ),

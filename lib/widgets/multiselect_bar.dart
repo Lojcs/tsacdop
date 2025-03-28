@@ -1,6 +1,9 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../util/selection_controller.dart';
 import 'package:tuple/tuple.dart';
@@ -16,31 +19,76 @@ import '../type/theme_data.dart';
 import '../util/extension_helper.dart';
 import '../util/helpers.dart';
 import 'action_bar_generic_widgets.dart';
+import 'custom_dropdown.dart';
 import 'custom_widget.dart';
+import 'episodegrid.dart';
 
 /// Integrates [MultiSelectPanel] with [EpisodeState]
 /// and places it above the [PlayerWidget]
 /// [SelectionController] needs to be provided with a [ChangeNotifierProvider]
 /// Uses the [CardColorScheme] provided with a [Provider], or defaults to the global theme
 class MultiSelectPanelIntegration extends StatefulWidget {
-  final bool expanded;
   const MultiSelectPanelIntegration({
     super.key,
-    this.expanded = true,
   });
 
   @override
-  _MultiSelectPanelIntegrationState createState() =>
-      _MultiSelectPanelIntegrationState();
+  State<StatefulWidget> createState() => _MultiSelectPanelIntegrationState();
 }
 
 class _MultiSelectPanelIntegrationState
-    extends State<MultiSelectPanelIntegration> with TickerProviderStateMixin {
+    extends State<MultiSelectPanelIntegration>
+    with SingleTickerProviderStateMixin {
+  late bool selectMode;
+
+  late AnimationController _slideController;
+  late Animation<double> _slideAnimation;
+
+  double get iconButtonSize => context.actionBarButtonSizeVertical;
+  EdgeInsets get iconPadding => context.actionBarIconPadding;
+  Radius get iconRadius => context.actionBarIconRadius;
+
   late bool episodeStateGlobalChange;
   bool initialBuild = true;
+
+  late double previewHeight = iconButtonSize + 8;
+  late double multiSelectHeight =
+      iconButtonSize * 2 + iconPadding.vertical * 3 / 2;
+
   @override
   void initState() {
     super.initState();
+    _slideController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 200))
+      ..addListener(() {
+        if (mounted) {
+          setState(() {});
+        }
+      });
+    _slideAnimation = CurvedAnimation(
+      parent: _slideController,
+      curve: Curves.easeInOutCirc,
+      reverseCurve: Curves.easeInOutCirc,
+    );
+    SelectionController selectionController =
+        Provider.of<SelectionController>(context, listen: false);
+    selectMode = selectionController.selectMode;
+    selectionController.addListener(() {
+      if (selectMode != selectionController.selectMode) {
+        selectMode = selectionController.selectMode;
+        if (selectionController.selectMode) {
+          _slideController.forward();
+        } else {
+          _slideController.reverse();
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _slideController.dispose();
+    super.dispose();
   }
 
   @override
@@ -50,40 +98,65 @@ class _MultiSelectPanelIntegrationState
       episodeStateGlobalChange =
           Provider.of<EpisodeState>(context).globalChange;
     }
-    return Selector<AudioPlayerNotifier, Tuple2<bool, PlayerHeight?>>(
-      selector: (_, audio) => Tuple2(audio.playerRunning, audio.playerHeight),
-      builder: (_, data, __) {
-        var height = kMinPlayerHeight[data.item2!.index];
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Selector<EpisodeState, bool>(
-              selector: (_, episodeState) => episodeState.globalChange,
-              builder: (_, data, ___) => FutureBuilder<void>(
-                future: () async {
-                  if (data != episodeStateGlobalChange) {
-                    // Prevents unnecessary database calls when the bar is rebuilt for other reasons
-                    episodeStateGlobalChange = data;
-                    List<EpisodeBrief> updatedEpisodes =
-                        await _getUpdatedEpisodes(context);
-                    Provider.of<SelectionController>(context, listen: false)
-                        .updateEpisodes(updatedEpisodes);
-                  }
-                }(),
-                builder: (context, _) {
-                  return MultiSelectPanel(
-                    expanded: widget.expanded,
-                    key: widget.key,
-                  );
-                },
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Container(
+          alignment: Alignment.bottomCenter,
+          constraints: BoxConstraints.loose(Size(context.width, 400)),
+          height: (previewHeight + multiSelectHeight + 8) *
+              _slideAnimation.value.clamp(0, 1),
+          child: ScrollConfiguration(
+            behavior: const NoOverscrollScrollBehavior(),
+            child: SingleChildScrollView(
+              physics: const NeverScrollableScrollPhysics(),
+              hitTestBehavior: HitTestBehavior.deferToChild,
+              child: Column(
+                children: [
+                  SelectionPreview(
+                    onHeightChanged: (height) {
+                      if (mounted) setState(() => previewHeight = height);
+                    },
+                  ),
+                  Selector<EpisodeState, bool>(
+                    selector: (_, episodeState) => episodeState.globalChange,
+                    builder: (_, data, ___) => FutureBuilder<void>(
+                      future: () async {
+                        if (data != episodeStateGlobalChange) {
+                          // Prevents unnecessary database calls when the bar is rebuilt for other reasons
+                          episodeStateGlobalChange = data;
+                          List<EpisodeBrief> updatedEpisodes =
+                              await _getUpdatedEpisodes(context);
+                          Provider.of<SelectionController>(context,
+                                  listen: false)
+                              .updateEpisodes(updatedEpisodes);
+                        }
+                      }(),
+                      builder: (context, _) {
+                        return MultiSelectPanel(
+                          onHeightChanged: (height) {
+                            if (mounted) {
+                              setState(() => multiSelectHeight = height);
+                            }
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
-            SizedBox(
-              height: data.item1 ? height : 0,
-            ),
-          ],
-        );
-      },
+          ),
+        ),
+        Selector<AudioPlayerNotifier, Tuple2<bool, PlayerHeight?>>(
+          selector: (_, audio) =>
+              Tuple2(audio.playerRunning, audio.playerHeight),
+          builder: (_, data, __) {
+            var height = kMinPlayerHeight[data.item2!.index];
+            return SizedBox(height: data.item1 ? height : 0);
+          },
+        ),
+      ],
     );
   }
 
@@ -116,27 +189,249 @@ class _MultiSelectPanelIntegrationState
   }
 }
 
+class SelectionPreview extends StatefulWidget {
+  final void Function(double height) onHeightChanged;
+  const SelectionPreview({required this.onHeightChanged, super.key});
+
+  @override
+  State<StatefulWidget> createState() => _SelectionPreviewState();
+}
+
+class _SelectionPreviewState extends State<SelectionPreview>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _expandController;
+  late Animation<double> _expandAnimation;
+
+  double get iconButtonSize => context.actionBarButtonSizeVertical;
+  EdgeInsets get iconPadding => context.actionBarIconPadding;
+  Radius get iconRadius => context.actionBarIconRadius;
+
+  late bool selectMode;
+  bool expanded = false;
+  double maxBodyHeight = 200;
+  double get bodyHeight => maxBodyHeight * _expandAnimation.value;
+
+  @override
+  void initState() {
+    super.initState();
+    _expandController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 175))
+      ..addListener(() {
+        widget.onHeightChanged(bodyHeight + iconButtonSize + 8);
+        if (mounted) setState(() {});
+      });
+    _expandAnimation = CurvedAnimation(
+      parent: _expandController,
+      curve: Curves.easeOutQuad,
+    );
+    SelectionController selectionController =
+        Provider.of<SelectionController>(context, listen: false);
+    selectMode = selectionController.selectMode;
+    selectionController.addListener(() {
+      if (selectMode != selectionController.selectMode) {
+        selectMode = selectionController.selectMode;
+        if (!selectionController.selectMode) {
+          expanded = false;
+          _expandController.reverse();
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _expandController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Widget child = SizedBox(
+      height: bodyHeight + iconButtonSize + 8,
+      child: Selector<CardColorScheme, Tuple3<Color, Color, Color>>(
+        selector: (_, cardColorScheme) => Tuple3(
+          cardColorScheme.shadow,
+          cardColorScheme.colorScheme.surface,
+          cardColorScheme.colorScheme.primary,
+        ),
+        builder: (context, colors, _) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          verticalDirection: VerticalDirection.up,
+          children: [
+            Container(
+              height: bodyHeight,
+              decoration: BoxDecoration(
+                color: context.realDark ? context.surface : colors.item2,
+                borderRadius:
+                    BorderRadius.only(topRight: context.radiusMedium.topRight),
+                boxShadow: _expandAnimation.value == 0
+                    ? null
+                    : context.boxShadowMedium(
+                        color: context.realDark ? colors.item1 : null),
+              ),
+              width: context.width - 48,
+              margin: EdgeInsets.symmetric(horizontal: 24),
+              clipBehavior: Clip.hardEdge,
+              child: CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: SizedBox(
+                      height: 8,
+                    ),
+                  ),
+                  Selector<SelectionController,
+                      Tuple2<List<EpisodeBrief>, int>>(
+                    selector: (_, selectionController) => Tuple2(
+                      selectionController.selectedEpisodes,
+                      selectionController.selectedEpisodes.length,
+                    ),
+                    builder: (context, data, _) =>
+                        FutureBuilder<List<EpisodeBrief>>(
+                      future:
+                          Future.wait(data.item1.map((e) => e.copyWithFromDB(
+                                keepExisting: true,
+                                newFields: [
+                                  EpisodeField.number,
+                                  EpisodeField.enclosureDuration,
+                                  EpisodeField.enclosureSize,
+                                  EpisodeField.episodeImage,
+                                  EpisodeField.podcastImage,
+                                  EpisodeField.primaryColor,
+                                ],
+                              ))),
+                      initialData: [],
+                      builder: (context, snapshot) => EpisodeGrid(
+                        episodes: snapshot.data!,
+                        layout: EpisodeGridLayout.medium,
+                        openPodcast: true,
+                        selectable: false,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              margin: EdgeInsets.symmetric(horizontal: 16),
+              padding: EdgeInsets.only(left: 8, top: 8, right: 8),
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(),
+              child: GestureDetector(
+                onTap: () {
+                  if (expanded) {
+                    expanded = false;
+                    _expandController.reverse();
+                  } else {
+                    expanded = true;
+                    _expandController.forward();
+                  }
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: context.realDark ? context.surface : colors.item2,
+                    borderRadius: BorderRadius.vertical(
+                        top: context.radiusMedium.topLeft),
+                    boxShadow: context.boxShadowMedium(
+                        color: context.realDark ? colors.item1 : null),
+                  ),
+                  clipBehavior: Clip.hardEdge,
+                  padding: EdgeInsets.only(
+                    left: iconPadding.left,
+                    top: iconPadding.top / 2,
+                    right: iconPadding.right,
+                    bottom: iconPadding.bottom / 2,
+                  ),
+                  height: iconButtonSize,
+                  width: 260,
+                  child: Row(
+                    children: [
+                      UpDownIndicator(
+                        status: !expanded,
+                        color: context.actionBarIconColor,
+                      ),
+                      Selector<SelectionController, Tuple2<int, bool>>(
+                        selector: (context, selectionController) => Tuple2(
+                          selectionController.selectedEpisodes.length,
+                          selectionController.selectionTentative,
+                        ),
+                        builder: (context, data, _) => Text(
+                          context.s.selected(
+                              "${data.item1}${data.item2 ? "+" : ""}"),
+                          style: context.textTheme.titleLarge!
+                              .copyWith(color: colors.item3),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(
+                            top: context.actionBarIconPadding.vertical / 2),
+                        child: Selector<SelectionController,
+                            Tuple2<List<EpisodeBrief>, int>>(
+                          selector: (context, selectionController) => Tuple2(
+                            selectionController.selectedEpisodes,
+                            selectionController.selectedEpisodes.length,
+                          ),
+                          builder: (context, data, _) {
+                            int size = data.item1.fold(
+                                0,
+                                (size, episode) =>
+                                    size + (episode.enclosureSize ?? 0));
+                            int duration = data.item1.fold(
+                                0,
+                                (duration, episode) =>
+                                    duration +
+                                    (episode.enclosureDuration ?? 0));
+                            return Text(
+                              "  ${size ~/ 1000000}MB  ${duration.toTime}",
+                              style: GoogleFonts.teko(
+                                  textStyle: context.textTheme.titleSmall!),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    CardColorScheme? cardColorScheme = Provider.of<CardColorScheme?>(context);
+    if (cardColorScheme == null) {
+      return MultiProvider(
+        providers: [
+          Provider<CardColorScheme>.value(
+              value: Theme.of(context).extension<CardColorScheme>()!),
+        ],
+        child: child,
+      );
+    } else {
+      return child;
+    }
+  }
+}
+
 /// Multi select panel to use with a [SelectionController].
 /// Allows advanced selection options and batch actions on selected episodes.
 /// [SelectionController] needs to be provided with a [ChangeNotifierProvider]
 /// Uses the [CardColorScheme] provided with a [Provider], or defaults to the global theme
 class MultiSelectPanel extends StatefulWidget {
-  final bool expanded;
-  const MultiSelectPanel({
-    this.expanded = true,
-    super.key,
-  });
+  final void Function(double height) onHeightChanged;
+  const MultiSelectPanel({required this.onHeightChanged, super.key});
 
   @override
-  _MultiSelectPanelState createState() => _MultiSelectPanelState();
+  State<StatefulWidget> createState() => _MultiSelectPanelState();
 }
 
 class _MultiSelectPanelState extends State<MultiSelectPanel>
     with TickerProviderStateMixin {
   late bool selectMode;
 
-  late AnimationController _slideController;
-  late Animation<double> _slideAnimation;
   late AnimationController _secondRowController;
   late Animation<double> _secondRowSlideAnimation;
   late Animation<double> _secondRowAppearAnimation;
@@ -149,29 +444,22 @@ class _MultiSelectPanelState extends State<MultiSelectPanel>
   late Widget _playlistList = _PlaylistList();
   late Widget _actionBar = _MultiselectActionBar(
     secondRowController: _secondRowController,
-    expanded: widget.expanded,
   );
+
+  double get height => Tween<double>(
+          begin: iconButtonSize * 2 + iconPadding.vertical * 3 / 2,
+          end: iconButtonSize * 3 + iconPadding.vertical * 2)
+      .evaluate(_secondRowSlideAnimation);
 
   @override
   void initState() {
     super.initState();
-    _slideController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 200))
-      ..addListener(() {
-        if (mounted) {
-          setState(() {});
-        }
-      });
     _secondRowController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 200))
       ..addListener(() {
+        widget.onHeightChanged(height);
         if (mounted) setState(() {});
       });
-    _slideAnimation = CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.easeInOutCubicEmphasized,
-      reverseCurve: Curves.easeInOutCirc,
-    );
     _secondRowSlideAnimation = CurvedAnimation(
       parent: _secondRowController,
       curve: Curves.easeInOutCubicEmphasized,
@@ -185,10 +473,7 @@ class _MultiSelectPanelState extends State<MultiSelectPanel>
     selectionController.addListener(() {
       if (selectMode != selectionController.selectMode) {
         selectMode = selectionController.selectMode;
-        if (selectionController.selectMode) {
-          _slideController.forward();
-        } else {
-          _slideController.reverse();
+        if (!selectionController.selectMode) {
           _secondRowController.reverse();
         }
       }
@@ -197,79 +482,49 @@ class _MultiSelectPanelState extends State<MultiSelectPanel>
 
   @override
   void dispose() {
-    _slideController.dispose();
     _secondRowController.dispose();
     super.dispose();
   }
 
   @override
-  void didUpdateWidget(MultiSelectPanel oldWidget) {
-    super.didUpdateWidget(oldWidget);
-  }
-
-  @override
   Widget build(BuildContext context) {
-    Widget child = SizedBox(
-      height: widget.expanded
-          ? Tween<double>(
-                      begin: 10 + iconButtonSize * 2 + iconPadding.vertical * 2,
-                      end: 10 +
-                          iconButtonSize * 3 +
-                          iconPadding.vertical * 5 / 2)
-                  .evaluate(_secondRowSlideAnimation) *
-              _slideAnimation.value.clamp(0, 2)
-          : Tween<double>(
-                  begin: 10 + iconButtonSize + iconPadding.vertical / 2,
-                  end: 10 + iconButtonSize * 2 + iconPadding.vertical)
-              .evaluate(_secondRowSlideAnimation),
-      child: SingleChildScrollView(
-        physics: const NeverScrollableScrollPhysics(),
-        child: Selector<CardColorScheme, Tuple2<Color, Color>>(
-          selector: (_, cardColorScheme) => Tuple2(
-              cardColorScheme.shadow, cardColorScheme.colorScheme.surface),
-          builder: (context, data, _) => Container(
-            decoration: BoxDecoration(
-              color: context.realDark ? context.surface : data.item2,
-              borderRadius: context.radiusMedium,
-              boxShadow: context.boxShadowMedium(
-                  color: context.realDark ? data.item1 : null),
+    Widget child = Selector<CardColorScheme, Tuple2<Color, Color>>(
+      selector: (_, cardColorScheme) =>
+          Tuple2(cardColorScheme.shadow, cardColorScheme.colorScheme.surface),
+      builder: (context, data, _) => Container(
+        decoration: BoxDecoration(
+          color: context.realDark ? context.surface : data.item2,
+          borderRadius: context.radiusMedium,
+          boxShadow: context.boxShadowMedium(
+              color: context.realDark ? data.item1 : null),
+        ),
+        clipBehavior: Clip.antiAlias,
+        margin: EdgeInsets.only(left: 10, right: 10, bottom: 10),
+        padding: EdgeInsets.only(
+          left: iconPadding.left,
+          top: iconPadding.top / 2,
+          right: iconPadding.right,
+          bottom: iconPadding.bottom / 2,
+        ),
+        height: height,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _selectionOptions,
+            SizedBox(
+              height: Tween<double>(
+                      begin: 0, end: iconButtonSize + iconPadding.vertical / 2)
+                  .evaluate(_secondRowSlideAnimation),
+              child: _secondRowAppearAnimation.value != 0
+                  ? FadeTransition(
+                      opacity: _secondRowAppearAnimation,
+                      child: _playlistList,
+                    )
+                  : Center(),
             ),
-            clipBehavior: Clip.hardEdge,
-            margin: EdgeInsets.only(
-              left: 10,
-              right: 10,
-            ),
-            padding: EdgeInsets.only(
-              left: iconPadding.left,
-              top: iconPadding.top / 2,
-              right: iconPadding.right,
-              bottom: iconPadding.bottom / 2,
-            ),
-            height: Tween<double>(
-                    begin: 10 + iconButtonSize * 2 + iconPadding.vertical,
-                    end: 10 + iconButtonSize * 3 + iconPadding.vertical * 3 / 2)
-                .evaluate(_secondRowSlideAnimation),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (widget.expanded) _selectionOptions,
-                SizedBox(
-                  height: Tween<double>(
-                          begin: 0,
-                          end: iconButtonSize + iconPadding.vertical / 2)
-                      .evaluate(_secondRowSlideAnimation),
-                  child: _secondRowAppearAnimation.value != 0
-                      ? FadeTransition(
-                          opacity: _secondRowAppearAnimation,
-                          child: _playlistList,
-                        )
-                      : Center(),
-                ),
-                _actionBar,
-              ],
-            ),
-          ),
+            _actionBar,
+          ],
         ),
       ),
     );
@@ -304,170 +559,144 @@ class _SelectionOptions extends StatelessWidget {
         top: context.actionBarIconPadding.top / 2,
         bottom: context.actionBarIconPadding.bottom / 2,
       ),
-      child: Selector<SelectionController, Tuple3<int, int, bool>>(
-        selector: (context, selectionController) => Tuple3(
-          selectionController.selectedEpisodes.length,
-          selectionController.explicitlySelectedCount,
-          selectionController.selectionTentative,
-        ),
-        builder: (context, data, _) => Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              alignment: AlignmentDirectional.centerStart,
-              height: 40,
-              width: 160,
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                    horizontal: context.actionBarIconPadding.horizontal / 2),
-                child: Selector<CardColorScheme, Color>(
-                  selector: (context, cardColorScheme) =>
-                      cardColorScheme.colorScheme.primary,
-                  builder: (context, color, _) => Text(
-                    context.s.selected("${data.item1}${data.item3 ? "+" : ""}"),
-                    style: context.textTheme.titleLarge!.copyWith(color: color),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ),
-            ),
-            Spacer(),
-            Selector<SelectionController, Tuple2<bool, bool>>(
-              selector: (context, selectionController) => Tuple2(
-                  selectionController.batchSelect == BatchSelect.before,
-                  selectionController.canSetBatchSelect(BatchSelect.before)),
-              builder: (context, data, _) {
-                return ActionBarButton(
-                  expansionController: expansionController,
-                  shrunkChild: Center(
-                    child: Icon(
-                      Icons.first_page,
-                      color: !data.item2 && context.realDark
-                          ? Colors.grey[800]
-                          : context.actionBarIconColor,
-                    ),
-                  ),
-                  state: data.item1,
-                  buttonType: ActionBarButtonType.onOff,
-                  onPressed: (value) {
-                    selectionController.batchSelect = BatchSelect.before;
-                  },
-                  width: 80,
-                  shrunkWidth: context.actionBarButtonSizeHorizontal,
-                  tooltip: context.s.before,
-                  enabled: data.item2,
-                  connectRight: true,
-                  child: Center(
-                    child: Text(
-                      context.s.before,
-                      style: context.textTheme.titleMedium,
-                    ),
-                  ),
-                );
-              },
-            ),
-            Selector<SelectionController, Tuple2<bool, bool>>(
-              selector: (context, selectionController) => Tuple2(
-                  selectionController.batchSelect == BatchSelect.between,
-                  selectionController.canSetBatchSelect(BatchSelect.between)),
-              builder: (context, data, _) {
-                return ActionBarButton(
-                  expansionController: expansionController,
-                  shrunkChild: Center(
-                    child: Icon(
-                      Icons.more_horiz,
-                      color: !data.item2 && context.realDark
-                          ? Colors.grey[800]
-                          : context.actionBarIconColor,
-                    ),
-                  ),
-                  state: data.item1,
-                  buttonType: ActionBarButtonType.onOff,
-                  onPressed: (value) {
-                    selectionController.batchSelect = BatchSelect.between;
-                  },
-                  width: 80,
-                  shrunkWidth: context.actionBarButtonSizeHorizontal,
-                  tooltip: context.s.between,
-                  enabled: data.item2,
-                  connectLeft: true,
-                  connectRight: true,
-                  child: Center(
-                    child: Text(
-                      context.s.between,
-                      style: context.textTheme.titleMedium,
-                    ),
-                  ),
-                );
-              },
-            ),
-            Selector<SelectionController, bool>(
-              selector: (context, selectionController) =>
-                  selectionController.batchSelect == BatchSelect.after,
-              builder: (context, state, _) {
-                bool enabled =
-                    selectionController.canSetBatchSelect(BatchSelect.after);
-                return ActionBarButton(
-                  expansionController: expansionController,
-                  shrunkChild: Center(
-                    child: Icon(
-                      Icons.last_page,
-                      color: !enabled && context.realDark
-                          ? Colors.grey[800]
-                          : context.actionBarIconColor,
-                    ),
-                  ),
-                  state: state,
-                  buttonType: ActionBarButtonType.onOff,
-                  onPressed: (value) {
-                    selectionController.batchSelect = BatchSelect.after;
-                  },
-                  width: 80,
-                  shrunkWidth: context.actionBarButtonSizeHorizontal,
-                  tooltip: context.s.after,
-                  enabled: enabled,
-                  connectLeft: true,
-                  connectRight: true,
-                  child: Center(
-                    child: Text(
-                      context.s.after,
-                      style: context.textTheme.titleMedium,
-                    ),
-                  ),
-                );
-              },
-            ),
-            Selector<SelectionController, bool>(
-              selector: (context, selectionController) =>
-                  selectionController.batchSelect == BatchSelect.all,
-              builder: (context, state, _) => ActionBarButton(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Spacer(),
+          Selector<SelectionController, Tuple2<bool, bool>>(
+            selector: (context, selectionController) => Tuple2(
+                selectionController.batchSelect == BatchSelect.before,
+                selectionController.canSetBatchSelect(BatchSelect.before)),
+            builder: (context, data, _) {
+              return ActionBarButton(
                 expansionController: expansionController,
                 shrunkChild: Center(
                   child: Icon(
-                    Icons.select_all,
-                    color: context.actionBarIconColor,
+                    Icons.first_page,
+                    color: !data.item2 && context.realDark
+                        ? Colors.grey[800]
+                        : context.actionBarIconColor,
                   ),
                 ),
-                state: state,
+                state: data.item1,
                 buttonType: ActionBarButtonType.onOff,
                 onPressed: (value) {
-                  selectionController.batchSelect = BatchSelect.all;
+                  selectionController.batchSelect = BatchSelect.before;
                 },
                 width: 80,
                 shrunkWidth: context.actionBarButtonSizeHorizontal,
-                tooltip: context.s.all,
-                connectLeft: true,
+                tooltip: context.s.before,
+                enabled: data.item2,
+                connectRight: true,
                 child: Center(
                   child: Text(
-                    context.s.all,
+                    context.s.before,
                     style: context.textTheme.titleMedium,
                   ),
                 ),
+              );
+            },
+          ),
+          Selector<SelectionController, Tuple2<bool, bool>>(
+            selector: (context, selectionController) => Tuple2(
+                selectionController.batchSelect == BatchSelect.between,
+                selectionController.canSetBatchSelect(BatchSelect.between)),
+            builder: (context, data, _) {
+              return ActionBarButton(
+                expansionController: expansionController,
+                shrunkChild: Center(
+                  child: Icon(
+                    Icons.more_horiz,
+                    color: !data.item2 && context.realDark
+                        ? Colors.grey[800]
+                        : context.actionBarIconColor,
+                  ),
+                ),
+                state: data.item1,
+                buttonType: ActionBarButtonType.onOff,
+                onPressed: (value) {
+                  selectionController.batchSelect = BatchSelect.between;
+                },
+                width: 80,
+                shrunkWidth: context.actionBarButtonSizeHorizontal,
+                tooltip: context.s.between,
+                enabled: data.item2,
+                connectLeft: true,
+                connectRight: true,
+                child: Center(
+                  child: Text(
+                    context.s.between,
+                    style: context.textTheme.titleMedium,
+                  ),
+                ),
+              );
+            },
+          ),
+          Selector<SelectionController, Tuple2<bool, bool>>(
+            selector: (context, selectionController) => Tuple2(
+              selectionController.batchSelect == BatchSelect.after,
+              selectionController.canSetBatchSelect(BatchSelect.after),
+            ),
+            builder: (context, data, _) {
+              return ActionBarButton(
+                expansionController: expansionController,
+                shrunkChild: Center(
+                  child: Icon(
+                    Icons.last_page,
+                    color: !data.item2 && context.realDark
+                        ? Colors.grey[800]
+                        : context.actionBarIconColor,
+                  ),
+                ),
+                state: data.item1,
+                buttonType: ActionBarButtonType.onOff,
+                onPressed: (value) {
+                  selectionController.batchSelect = BatchSelect.after;
+                },
+                width: 80,
+                shrunkWidth: context.actionBarButtonSizeHorizontal,
+                tooltip: context.s.after,
+                enabled: data.item2,
+                connectLeft: true,
+                connectRight: true,
+                child: Center(
+                  child: Text(
+                    context.s.after,
+                    style: context.textTheme.titleMedium,
+                  ),
+                ),
+              );
+            },
+          ),
+          Selector<SelectionController, bool>(
+            selector: (context, selectionController) =>
+                selectionController.batchSelect == BatchSelect.all,
+            builder: (context, state, _) => ActionBarButton(
+              expansionController: expansionController,
+              shrunkChild: Center(
+                child: Icon(
+                  Icons.select_all,
+                  color: context.actionBarIconColor,
+                ),
+              ),
+              state: state,
+              buttonType: ActionBarButtonType.onOff,
+              onPressed: (value) {
+                selectionController.batchSelect = BatchSelect.all;
+              },
+              width: 80,
+              shrunkWidth: context.actionBarButtonSizeHorizontal,
+              tooltip: context.s.all,
+              connectLeft: true,
+              child: Center(
+                child: Text(
+                  context.s.all,
+                  style: context.textTheme.titleMedium,
+                ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -476,7 +705,7 @@ class _SelectionOptions extends StatelessWidget {
 class _NewPlaylist extends StatefulWidget {
   final List<EpisodeBrief> episodes;
   final Color? color;
-  const _NewPlaylist(this.episodes, {this.color, super.key});
+  const _NewPlaylist(this.episodes, {this.color});
 
   @override
   __NewPlaylistState createState() => __NewPlaylistState();
@@ -518,7 +747,7 @@ class __NewPlaylistState extends State<_NewPlaylist> {
               if (context
                   .read<AudioPlayerNotifier>()
                   .playlistExists(_playlistName)) {
-                setState(() => _error = 1);
+                if (mounted) setState(() => _error = 1);
               } else {
                 final episodesList =
                     widget.episodes.map((e) => e.enclosureUrl).toList();
@@ -671,7 +900,7 @@ class _PlaylistList extends StatelessWidget {
                                   selectionController.selectedEpisodes,
                                   playlist: p);
                         },
-                      )
+                      ),
                 ],
               ),
             ),
@@ -697,11 +926,9 @@ class _PlaylistList extends StatelessWidget {
 /// Action bar for batch actions
 class _MultiselectActionBar extends StatefulWidget {
   final AnimationController secondRowController;
-  final bool expanded;
 
   const _MultiselectActionBar({
     required this.secondRowController,
-    required this.expanded,
   });
   @override
   _MultiselectActionBarState createState() => _MultiselectActionBarState();
@@ -727,7 +954,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
         .selectionTentative);
     widget.secondRowController.addStatusListener(
       (status) {
-        if (status == AnimationStatus.dismissed) setState(() {});
+        if (mounted && status == AnimationStatus.dismissed) setState(() {});
       },
     );
   }
@@ -804,7 +1031,6 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
           return Row(
             children: [
               ActionBarButton(
-                child: Icon(Icons.favorite, color: Colors.red),
                 falseChild: Icon(Icons.favorite_border,
                     color: data.item2 == 0 && context.realDark
                         ? Colors.grey[800]
@@ -843,16 +1069,9 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                 },
                 enabled: data.item2 >= 1,
                 connectRight: true,
+                child: Icon(Icons.favorite, color: Colors.red),
               ),
               ActionBarButton(
-                child: Selector<CardColorScheme, Color>(
-                  selector: (context, cardColorScheme) =>
-                      cardColorScheme.colorScheme.primary,
-                  builder: (context, color, _) => CustomPaint(
-                    size: Size(25, 25),
-                    painter: ListenedAllPainter(color, stroke: 2.0),
-                  ),
-                ),
                 falseChild: CustomPaint(
                   size: Size(25, 25),
                   painter: MarkListenedPainter(
@@ -891,25 +1110,16 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                 enabled: data.item2 >= 1,
                 connectLeft: true,
                 connectRight: true,
-              ),
-              ActionBarButton(
-                child: Center(
-                  child: SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: Selector<CardColorScheme, Color>(
-                      selector: (context, cardColorScheme) =>
-                          cardColorScheme.colorScheme.primary,
-                      builder: (context, color, _) => CustomPaint(
-                        painter: DownloadPainter(
-                            color: color,
-                            fraction: 1,
-                            progressColor: color,
-                            progress: 1),
-                      ),
-                    ),
+                child: Selector<CardColorScheme, Color>(
+                  selector: (context, cardColorScheme) =>
+                      cardColorScheme.colorScheme.primary,
+                  builder: (context, color, _) => CustomPaint(
+                    size: Size(25, 25),
+                    painter: ListenedAllPainter(color, stroke: 2.0),
                   ),
                 ),
+              ),
+              ActionBarButton(
                 falseChild: Center(
                   child: SizedBox(
                     height: 20,
@@ -967,14 +1177,25 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                 enabled: data.item2 >= 1,
                 connectLeft: true,
                 connectRight: false,
+                child: Center(
+                  child: SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: Selector<CardColorScheme, Color>(
+                      selector: (context, cardColorScheme) =>
+                          cardColorScheme.colorScheme.primary,
+                      builder: (context, color, _) => CustomPaint(
+                        painter: DownloadPainter(
+                            color: color,
+                            fraction: 1,
+                            progressColor: color,
+                            progress: 1),
+                      ),
+                    ),
+                  ),
+                ),
               ),
               ActionBarButton(
-                child: Selector<CardColorScheme, Color>(
-                  selector: (context, cardColorScheme) =>
-                      cardColorScheme.colorScheme.primary,
-                  builder: (context, color, _) =>
-                      Icon(Icons.playlist_add_check, color: color),
-                ),
                 falseChild: Icon(
                   Icons.playlist_add,
                   color: data.item2 == 0 && context.realDark
@@ -1013,52 +1234,27 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                 enabled: data.item2 >= 1,
                 connectLeft: false,
                 connectRight: true,
+                child: Selector<CardColorScheme, Color>(
+                  selector: (context, cardColorScheme) =>
+                      cardColorScheme.colorScheme.primary,
+                  builder: (context, color, _) =>
+                      Icon(Icons.playlist_add_check, color: color),
+                ),
               ),
               ActionBarButton(
-                child: Icon(
-                  Icons.add_box_outlined,
-                  color: context.actionBarIconColor,
-                ),
                 state: secondRow,
                 buttonType: ActionBarButtonType.onOff,
                 onPressed: (value) {
                   secondRow = value!;
                 },
                 connectLeft: true,
+                child: Icon(
+                  Icons.add_box_outlined,
+                  color: context.actionBarIconColor,
+                ),
               ),
               Spacer(),
-              if (!widget.expanded)
-                SizedBox(
-                  height: 40,
-                  child: Center(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 10.0),
-                      child: Selector2<SelectionController, CardColorScheme,
-                          Tuple3<int, bool, Color>>(
-                        selector: (_, selectionController, cardColorScheme) =>
-                            Tuple3(
-                                selectionController.selectedEpisodes.length,
-                                selectionController.selectionTentative,
-                                cardColorScheme.colorScheme.primary),
-                        builder: (context, data, _) => Text(
-                          context.s.selected(
-                              "${data.item1}${data.item2 ? "+" : ""}"),
-                          style: context.textTheme.titleLarge!
-                              .copyWith(color: data.item3),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
               ActionBarButton(
-                child: Center(
-                  child: Icon(
-                    Icons.check_box_outline_blank,
-                    color: data.item2 == 0 && context.realDark
-                        ? Colors.grey[800]
-                        : context.actionBarIconColor,
-                  ),
-                ),
                 buttonType: ActionBarButtonType.single,
                 onPressed: (value) {
                   Provider.of<SelectionController>(context, listen: false)
@@ -1067,14 +1263,22 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                 tooltip: context.s.deselectAll,
                 enabled: data.item2 >= 1,
                 connectRight: true,
+                child: Center(
+                  child: Icon(
+                    Icons.check_box_outline_blank,
+                    color: data.item2 == 0 && context.realDark
+                        ? Colors.grey[800]
+                        : context.actionBarIconColor,
+                  ),
+                ),
               ),
               ActionBarButton(
-                child: Icon(Icons.close),
                 onPressed: (value) {
                   Provider.of<SelectionController>(context, listen: false)
                       .selectMode = false;
                 },
                 connectLeft: true,
+                child: Icon(Icons.close),
               ),
             ],
           );

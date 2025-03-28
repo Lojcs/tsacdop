@@ -84,7 +84,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
     ),
   );
 
-  late Widget multiSelect = MultiSelectPanelIntegration(expanded: true);
+  late Widget multiSelect = MultiSelectPanelIntegration();
   late Widget player = Container(child: PlayerWidget(playerKey: _playerKey));
 
   @override
@@ -369,7 +369,6 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
           if (!widget.hide)
             EpisodeGrid(
               episodes: _episodes,
-              showFavorite: true,
               layout: _layout ?? EpisodeGridLayout.large,
               initNum: _scroll ? 0 : 12,
               preferEpisodeImage: false,

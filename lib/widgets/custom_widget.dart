@@ -1533,6 +1533,7 @@ class _UpDownIndicatorState extends State<UpDownIndicator>
     super.initState();
     controller =
         AnimationController(vsync: this, duration: Duration(milliseconds: 300));
+    if (widget.status) controller.value = 1;
   }
 
   @override

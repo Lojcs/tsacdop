@@ -720,7 +720,7 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, EpisodeBrief episode,
         onPressed: () async {
           if (!playing || !playerRunning) {
             SelectionController? selectionController =
-                Provider.of<SelectionController?>(context);
+                Provider.of<SelectionController?>(context, listen: false);
             List<EpisodeBrief> episodes = [episode];
             if (selectionController != null &&
                 selectionController.selectedEpisodes.contains(episode)) {
@@ -742,7 +742,7 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, EpisodeBrief episode,
           ),
           onPressed: () async {
             SelectionController? selectionController =
-                Provider.of<SelectionController?>(context);
+                Provider.of<SelectionController?>(context, listen: false);
             List<EpisodeBrief> episodes = [episode];
             if (selectionController != null &&
                 selectionController.selectedEpisodes.contains(episode)) {
@@ -772,7 +772,7 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, EpisodeBrief episode,
           trailing: Icon(LineIcons.heart, color: Colors.red, size: 21),
           onPressed: () async {
             SelectionController? selectionController =
-                Provider.of<SelectionController?>(context);
+                Provider.of<SelectionController?>(context, listen: false);
             List<EpisodeBrief> episodes = [episode];
             if (selectionController != null &&
                 selectionController.selectedEpisodes.contains(episode)) {
@@ -814,7 +814,7 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, EpisodeBrief episode,
           ),
           onPressed: () async {
             SelectionController? selectionController =
-                Provider.of<SelectionController?>(context);
+                Provider.of<SelectionController?>(context, listen: false);
             List<EpisodeBrief> episodes = [episode];
             if (selectionController != null &&
                 selectionController.selectedEpisodes.contains(episode)) {
@@ -849,7 +849,7 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, EpisodeBrief episode,
           onPressed: () async {
             if (!episode.isDownloaded!) {
               SelectionController? selectionController =
-                  Provider.of<SelectionController?>(context);
+                  Provider.of<SelectionController?>(context, listen: false);
               List<EpisodeBrief> episodes = [episode];
               if (selectionController != null &&
                   selectionController.selectedEpisodes.contains(episode)) {

@@ -90,7 +90,9 @@ class SelectionController extends ChangeNotifier {
         }
       } else {
         hasAllSelectableEpisodes = false;
-        _previouslySelectedEpisodes = selectedEpisodes;
+        _previouslySelectedEpisodes.addAll(selectedEpisodes);
+        _previouslySelectedEpisodes =
+            _previouslySelectedEpisodes.toSet().toList();
         _selectableEpisodes = episodes.toList();
         _batchSelectController.selectableCount = _selectableEpisodes.length;
         _batchSelectController.trySetBatchSelect(BatchSelect.none);
