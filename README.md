@@ -18,7 +18,13 @@ This fork updates the ui, fixes bugs and adds ux features. Gpodder and podcast s
 
 Credit to upstream project [tsacdop](https://github.com/tsacdop/tsacdop), the Flutter team and all involved plugins, especially [webfeed](https://github.com/witochandra/webfeed), [Just_Audio](https://pub.dev/packages/just_audio), and [Provider](https://pub.dev/packages/provider).
 
-<!-- The podcast search engine is powered by, [ListenNotes](https://listennotes.com) & [PodcastIndex](https://podcastindex.org/). -->
+## Download
+
+[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
+     alt="Get it on F-Droid"
+     height="80">](https://f-droid.org/packages/dev.lojcs.tsacdop/)
+
+Or download the latest APK from the [Releases Section](https://github.com/Lojcs/tsacdop/releases/latest).
 
 ## Features
 
