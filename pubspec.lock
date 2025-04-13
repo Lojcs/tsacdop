@@ -565,10 +565,10 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: eedce9840aa7f382f309d7874de2d7ade1e90158
+      resolved-ref: "04cb8f595fa5ec8bf95d730b3a9bd0ef89f310e2"
       url: "https://github.com/lojcs/focused_menu.git"
     source: git
-    version: "1.0.6"
+    version: "1.0.7"
   frontend_server_client:
     dependency: transitive
     description:

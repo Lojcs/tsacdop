@@ -312,87 +312,91 @@ class _SelectionPreviewState extends State<SelectionPreview>
               ),
             ),
             Container(
-              margin: EdgeInsets.symmetric(horizontal: 16),
-              padding: EdgeInsets.only(left: 8, top: 8, right: 8),
-              clipBehavior: Clip.antiAlias,
+              padding: EdgeInsets.only(left: 24, top: 8, right: 24),
+              clipBehavior: Clip.antiAlias, // Clip the shadow on the bottom
               decoration: BoxDecoration(),
-              child: GestureDetector(
-                onTap: () {
-                  if (expanded) {
-                    expanded = false;
-                    _expandController.reverse();
-                  } else {
-                    expanded = true;
-                    _expandController.forward();
-                  }
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: context.realDark ? context.surface : colors.item2,
-                    borderRadius: BorderRadius.vertical(
-                        top: context.radiusMedium.topLeft),
-                    boxShadow: context.boxShadowMedium(
-                        color: context.realDark ? colors.item1 : null),
-                  ),
-                  clipBehavior: Clip.hardEdge,
-                  padding: EdgeInsets.only(
-                    left: iconPadding.left,
-                    top: iconPadding.top / 2,
-                    right: iconPadding.right,
-                    bottom: iconPadding.bottom / 2,
-                  ),
-                  height: iconButtonSize,
-                  width: 260,
-                  child: Row(
-                    children: [
-                      UpDownIndicator(
-                        status: !expanded,
-                        color: context.actionBarIconColor,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: context.realDark ? context.surface : colors.item2,
+                  borderRadius:
+                      BorderRadius.vertical(top: context.radiusMedium.topLeft),
+                  boxShadow: context.boxShadowMedium(
+                      color: context.realDark ? colors.item1 : null),
+                ),
+                clipBehavior: Clip.hardEdge,
+                height: iconButtonSize,
+                width: 260,
+                child: Material(
+                  child: InkWell(
+                    onTap: () {
+                      if (expanded) {
+                        expanded = false;
+                        _expandController.reverse();
+                      } else {
+                        expanded = true;
+                        _expandController.forward();
+                      }
+                    },
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        left: iconPadding.left,
+                        top: iconPadding.top / 2,
+                        right: iconPadding.right,
+                        bottom: iconPadding.bottom / 2,
                       ),
-                      Selector<SelectionController, Tuple2<int, bool>>(
-                        selector: (context, selectionController) => Tuple2(
-                          selectionController.selectedEpisodes.length,
-                          selectionController.selectionTentative,
-                        ),
-                        builder: (context, data, _) => Text(
-                          context.s.selected(
-                              "${data.item1}${data.item2 ? "+" : ""}"),
-                          style: context.textTheme.titleLarge!
-                              .copyWith(color: colors.item3),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.only(
-                            top: context.actionBarIconPadding.vertical / 2),
-                        child: Selector<SelectionController,
-                            Tuple2<List<EpisodeBrief>, int>>(
-                          selector: (context, selectionController) => Tuple2(
-                            selectionController.selectedEpisodes,
-                            selectionController.selectedEpisodes.length,
+                      child: Row(
+                        children: [
+                          UpDownIndicator(
+                            status: !expanded,
+                            color: context.actionBarIconColor,
                           ),
-                          builder: (context, data, _) {
-                            int size = data.item1.fold(
-                                0,
-                                (size, episode) =>
-                                    size + (episode.enclosureSize ?? 0));
-                            int duration = data.item1.fold(
-                                0,
-                                (duration, episode) =>
-                                    duration +
-                                    (episode.enclosureDuration ?? 0));
-                            return Text(
-                              "  ${size ~/ 1000000}MB  ${duration.toTime}",
-                              style: GoogleFonts.teko(
-                                  textStyle: context.textTheme.titleSmall!),
+                          Selector<SelectionController, Tuple2<int, bool>>(
+                            selector: (context, selectionController) => Tuple2(
+                              selectionController.selectedEpisodes.length,
+                              selectionController.selectionTentative,
+                            ),
+                            builder: (context, data, _) => Text(
+                              context.s.selected(
+                                  "${data.item1}${data.item2 ? "+" : ""}"),
+                              style: context.textTheme.titleLarge!
+                                  .copyWith(color: colors.item3),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                            );
-                          },
-                        ),
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(
+                                top: context.actionBarIconPadding.vertical / 2),
+                            child: Selector<SelectionController,
+                                Tuple2<List<EpisodeBrief>, int>>(
+                              selector: (context, selectionController) =>
+                                  Tuple2(
+                                selectionController.selectedEpisodes,
+                                selectionController.selectedEpisodes.length,
+                              ),
+                              builder: (context, data, _) {
+                                int size = data.item1.fold(
+                                    0,
+                                    (size, episode) =>
+                                        size + (episode.enclosureSize ?? 0));
+                                int duration = data.item1.fold(
+                                    0,
+                                    (duration, episode) =>
+                                        duration +
+                                        (episode.enclosureDuration ?? 0));
+                                return Text(
+                                  "  ${size ~/ 1000000}MB  ${duration.toTime}",
+                                  style: GoogleFonts.teko(
+                                      textStyle: context.textTheme.titleSmall!),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                );
+                              },
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),

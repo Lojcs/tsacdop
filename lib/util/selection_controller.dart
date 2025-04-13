@@ -141,10 +141,14 @@ class SelectionController extends ChangeNotifier {
   set selectMode(bool boo) {
     if (_selectMode != boo) {
       _selectMode = boo;
+      if (boo) temporarySelect = false;
       if (!boo) deselectAll();
       if (!_disposed) notifyListeners();
     }
   }
+
+  /// If set, [selectMode] is turned off after all episodes are deselected.
+  bool temporarySelect = false;
 
   /// List of selected episodes.
   List<EpisodeBrief> get selectedEpisodes {
@@ -258,7 +262,7 @@ class SelectionController extends ChangeNotifier {
 
   /// Inverts the selection of [i]th selectable episode
   /// or changes the delimiters of batch selection
-  void select(int i) {
+  bool select(int i) {
     if (i >= 0 && i < _selectableEpisodes.length) {
       if (batchSelect == BatchSelect.none) {
         // Batch select is disabled, deselect if index was explicitly selected.
@@ -327,12 +331,19 @@ class SelectionController extends ChangeNotifier {
         }
       }
       clearCachedSelectionLists();
-      if (!_disposed && selectMode) notifyListeners();
+      if (temporarySelect && selectedEpisodes.isEmpty) selectMode = false;
+      if (!_disposed) notifyListeners();
+    }
+    if (selectedIndicies.contains(i)) {
+      return true;
+    } else {
+      return false;
     }
   }
 
   /// Deselects all episodes
   void deselectAll() {
+    _batchSelectController.trySetBatchSelect(BatchSelect.all);
     _batchSelectController.trySetBatchSelect(BatchSelect.none);
     _explicitlyDeselectedIndicies.clear();
     _explicitlySelectedIndicies.clear();
@@ -471,15 +482,13 @@ class _BatchSelectController {
             _lastSelected = i;
             result = true;
           }
-          break;
         case BatchSelect.before:
           if (i > _lastSelected!) {
             _lastSelected = i;
             _firstSelected = i;
             result = true;
           }
-          break;
-        case BatchSelect.between: // Fall through
+        case BatchSelect.between:
         case BatchSelect.none:
           if (i < _firstSelected!) {
             _firstSelected = i;
@@ -526,9 +535,11 @@ class _BatchSelectController {
       case _BatchSelectDelimiter.none:
         break;
     }
-    if ((_firstSelected == null) ||
-        (_firstSelected == _lastSelected &&
-            _batchSelect == BatchSelect.between)) {
+    if (_firstSelected == null || _lastSelected == null) {
+      _batchSelect = BatchSelect.none;
+    } else if (_firstSelected == _lastSelected &&
+        _batchSelect == BatchSelect.between) {
+      setIndividualSelection([_lastSelected!]);
       _batchSelect = BatchSelect.none;
     }
   }

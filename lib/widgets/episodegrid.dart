@@ -48,52 +48,41 @@ class EpisodeGrid extends StatelessWidget {
       return SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: 10),
         sliver: selectable
-            ? Selector<SelectionController?, Tuple2<List<int>?, bool>>(
-                selector: (_, selectionController) => Tuple2(
-                    selectionController?.selectedIndicies,
-                    selectionController?.selectMode ?? false),
-                builder: (_, data, __) => LiveSliverGrid.options(
-                  controller: scrollController,
-                  options: options,
-                  itemCount: episodes.length,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    childAspectRatio: layout == EpisodeGridLayout.small
-                        ? 1
-                        : layout == EpisodeGridLayout.medium
-                            ? 1.5
-                            : 4,
-                    crossAxisCount: layout == EpisodeGridLayout.small
-                        ? 3
-                        : layout == EpisodeGridLayout.medium
-                            ? 2
-                            : 1,
-                    mainAxisSpacing: 10.0,
-                    crossAxisSpacing: 10.0,
-                  ),
-                  itemBuilder: (context, index, animation) {
-                    bool selected = data.item1?.contains(index) ?? false;
-                    return FadeTransition(
-                      opacity:
-                          Tween<double>(begin: index < initNum ? 0 : 1, end: 1)
-                              .animate(animation),
-                      child: InteractiveEpisodeCard(
-                        context,
-                        episodes[index],
-                        layout,
-                        openPodcast: openPodcast,
-                        preferEpisodeImage: preferEpisodeImage,
-                        showNumber: true,
-                        selectMode: data.item2,
-                        onSelect: selectionController != null
-                            ? () {
-                                selectionController.select(index);
-                              }
-                            : null,
-                        selected: selected,
-                      ),
-                    );
-                  },
+            ? LiveSliverGrid.options(
+                controller: scrollController,
+                options: options,
+                itemCount: episodes.length,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  childAspectRatio: layout == EpisodeGridLayout.small
+                      ? 1
+                      : layout == EpisodeGridLayout.medium
+                          ? 1.5
+                          : 4,
+                  crossAxisCount: layout == EpisodeGridLayout.small
+                      ? 3
+                      : layout == EpisodeGridLayout.medium
+                          ? 2
+                          : 1,
+                  mainAxisSpacing: 10.0,
+                  crossAxisSpacing: 10.0,
                 ),
+                itemBuilder: (context, index, animation) {
+                  return FadeTransition(
+                    opacity:
+                        Tween<double>(begin: index < initNum ? 0 : 1, end: 1)
+                            .animate(animation),
+                    child: InteractiveEpisodeCard(
+                      context,
+                      episodes[index],
+                      layout,
+                      openPodcast: openPodcast,
+                      preferEpisodeImage: preferEpisodeImage,
+                      showNumber: true,
+                      selectable: true,
+                      index: index,
+                    ),
+                  );
+                },
               )
             : LiveSliverGrid.options(
                 controller: scrollController,

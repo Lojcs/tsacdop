@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:focused_menu/focused_menu.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -56,14 +57,16 @@ class InteractiveEpisodeCard extends StatefulWidget {
   /// Controls the date indicator
   final bool showDate;
 
-  /// Sets the primary action to highlight instead of open
-  final bool selectMode;
+  /// Enables selection if a [SelectionController] provider is in the tree.
+  final bool selectable;
 
-  /// Callback to call when [selectMode] is on and the card is selected
-  final VoidCallback? onSelect;
+  /// Index to control with selectionController
+  final int? index;
 
-  /// Wheter the episode is selected
-  final bool selected;
+  /// If true and this episode is selected, context menu actions are applied
+  /// to [SelectionController.selectedEpisodes].
+  final bool applyActionToAllSelected;
+
   InteractiveEpisodeCard(this.context, this.episode, this.layout,
       {this.openPodcast = true,
       this.showImage = true,
@@ -74,9 +77,9 @@ class InteractiveEpisodeCard extends StatefulWidget {
       this.showLengthAndSize = true,
       this.showPlayedAndDownloaded = true,
       this.showDate = false,
-      this.selectMode = false,
-      this.onSelect,
-      this.selected = false})
+      this.selectable = false,
+      this.index,
+      this.applyActionToAllSelected = true})
       : assert((!preferEpisodeImage &&
                 episode.fields.contains(EpisodeField.podcastImage)) ||
             episode.fields.contains(EpisodeField.episodeImage) ||
@@ -92,6 +95,7 @@ class InteractiveEpisodeCard extends StatefulWidget {
             (episode.fields.contains(EpisodeField.isPlayed) &&
                 episode.fields.contains(EpisodeField.isDownloaded))),
         assert(episode.fields.contains(EpisodeField.primaryColor)),
+        assert(!selectable || index != null),
         super(key: Key(episode.id.toString()));
 
   @override
@@ -102,11 +106,16 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
     with TickerProviderStateMixin {
   late AnimationController _controller;
   late AnimationController _shadowController;
-  bool selected = false;
-  // Wheter the card has been selected internally
-  bool liveSelect = false;
+
   late EpisodeBrief episode;
   PlayHistory? savedPosition;
+
+  late SelectionController? selectionController =
+      Provider.of<SelectionController?>(context, listen: false);
+
+  bool get selectable => widget.selectable && selectionController != null;
+  late bool selected =
+      selectionController?.selectedIndicies.contains(widget.index) ?? false;
 
   bool _initialBuild = true;
   late bool? episodeChange;
@@ -119,10 +128,6 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
         vsync: this, duration: const Duration(milliseconds: 200));
     _shadowController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 200));
-    selected = widget.selected;
-    if (widget.selected) {
-      _controller.value = 1;
-    }
   }
 
   @override
@@ -135,15 +140,6 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   @override
   void didUpdateWidget(covariant InteractiveEpisodeCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Apply external selection
-    if (widget.selected != selected && !liveSelect && widget.selectMode) {
-      selected = widget.selected;
-      if (widget.selected) {
-        _controller.forward();
-      } else {
-        _controller.reverse();
-      }
-    }
     if (widget.layout != oldWidget.layout) {
       _body = _getBody();
     }
@@ -156,15 +152,14 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
       episodeChange =
           Provider.of<EpisodeState>(context).episodeChangeMap[episode.id];
     }
-    // Unselect on selectMode exit
-    if (!widget.selectMode && selected) {
-      setState(() {
-        selected = false;
-        _controller.reverse();
-      });
+    if (selectionController == null) {
+      return ChangeNotifierProvider.value(
+        value: SelectionController(),
+        child: _body,
+      );
+    } else {
+      return _body;
     }
-    liveSelect = false;
-    return _body; // This is to avoid rebuild when selecting or enabling select mode.
   }
 
   Widget _getBody() {
@@ -197,43 +192,113 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
             onClosed: (() {
               _shadowController.reverse();
             }),
-            closedBuilder: (context, action, boo) =>
-                FutureBuilder<Tuple2<bool, List<int>>>(
-              future: _initData(episode),
-              initialData: Tuple2(false, []),
+            closedBuilder: (context, action, boo) => FutureBuilder<List<int>>(
+              future: _getEpisodeMenu(),
+              initialData: [],
               builder: (context, snapshot) {
-                final tapToOpen = snapshot.data!.item1;
-                final menuList = snapshot.data!.item2;
-                return Selector<AudioPlayerNotifier, Tuple3<bool, bool, bool>>(
-                  selector: (_, audio) => Tuple3(audio.episode == episode,
-                      audio.playlist.contains(episode), audio.playerRunning),
+                final menuList = snapshot.data!;
+                return Selector2<AudioPlayerNotifier, SelectionController,
+                    Tuple4<bool, bool, bool, bool>>(
+                  selector: (_, audio, select) => Tuple4(
+                      audio.episode == episode,
+                      audio.playlist.contains(episode),
+                      audio.playerRunning,
+                      select.selectedIndicies.contains(widget.index)),
                   builder: (_, data, __) {
+                    selected = data.item4;
+                    if (selected) {
+                      _controller.forward();
+                    } else {
+                      _controller.reverse();
+                    }
                     if (data.item1) savedPosition = null;
                     List<FocusedMenuItem> menuItemList = _menuItemList(context,
-                        episode, data.item1, data.item2, data.item3, menuList);
+                        episode, data.item1, data.item2, data.item3, menuList,
+                        applyToAllSelected: widget.applyActionToAllSelected);
                     return _FocusedMenuHolderWrapper(
-                      onPressed: () async {
-                        if (widget.selectMode) {
-                          widget.onSelect!();
-                          if (mounted) {
-                            setState(() {
-                              if (selected) {
-                                _controller.reverse();
-                              } else {
-                                _controller.forward();
-                              }
-                              selected = !selected;
-                              liveSelect = true;
-                            });
+                      onTap: () async {
+                        if (selectable && selectionController!.selectMode) {
+                          selected = selectionController!.select(widget.index!);
+                          if (selected) {
+                            _controller.forward();
+                          } else {
+                            _controller.reverse();
                           }
                         } else {
                           _shadowController.forward();
                           action();
                         }
                       },
+                      onShortTapHold: () {
+                        if (selectable && !selected) {
+                          selectionController!.selectMode = true;
+                          selectionController!.temporarySelect = true;
+                          selected = selectionController!.select(widget.index!);
+                          if (selected) {
+                            _controller.forward();
+                          } else {
+                            _controller.reverse();
+                          }
+                        }
+                      },
+                      onPrimaryClick: () {
+                        if (selectable) {
+                          if (selectionController!.selectMode) {
+                            selected =
+                                selectionController!.select(widget.index!);
+                          } else {
+                            selectionController!.deselectAll();
+                            selected =
+                                selectionController!.select(widget.index!);
+                          }
+                          if (selected) {
+                            _controller.forward();
+                          } else {
+                            _controller.reverse();
+                          }
+                        }
+                      },
+                      onDoubleClick: () {
+                        _shadowController.forward();
+                        action();
+                      },
+                      onAddSelect: () {
+                        if (selectable) {
+                          if (!selectionController!.selectMode) {
+                            selectionController!.selectMode = true;
+                            selectionController!.temporarySelect = true;
+                          }
+                          selected = selectionController!.select(widget.index!);
+                          if (selected) {
+                            _controller.forward();
+                          } else {
+                            _controller.reverse();
+                          }
+                        }
+                      },
+                      onRangeSelect: () {
+                        if (selectable) {
+                          if (!selectionController!.selectMode) {
+                            selectionController!.selectMode = true;
+                            selectionController!.temporarySelect = true;
+                          }
+                          selectionController!.batchSelect = BatchSelect.none;
+                          if (!selected) {
+                            selected =
+                                selectionController!.select(widget.index!);
+                          }
+                          selectionController!.batchSelect =
+                              BatchSelect.between;
+                          if (selected) {
+                            _controller.forward();
+                          } else {
+                            _controller.reverse();
+                          }
+                        }
+                      },
+                      onTapDrag: () {},
                       episode: episode,
                       layout: widget.layout,
-                      tapToOpen: tapToOpen,
                       menuItemList: menuItemList,
                       menuItemExtent: widget.layout == EpisodeGridLayout.small
                           ? 41.5
@@ -310,11 +375,22 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
 
 class _FocusedMenuHolderWrapper extends StatefulWidget {
   final Widget child;
-  final Function onPressed;
+
+  /// Wheter to show menu on medium tap hold.
+  final VoidCallback? onTap;
+  final VoidCallback? onShortTapHold;
+  final VoidCallback? onLongTapHold;
+  final VoidCallback? onPrimaryClick;
+  final VoidCallback? onDoubleClick;
+  final VoidCallback? onAddSelect;
+  final VoidCallback? onRangeSelect;
+  final VoidCallback? onTapDrag;
+  final VoidCallback? onPrimaryDrag;
+  final VoidCallback? onDragOver;
+
   final EpisodeBrief episode;
   final EpisodeGridLayout layout;
 
-  final bool tapToOpen;
   final List<FocusedMenuItem> menuItemList;
   final double? menuItemExtent;
   final BoxDecoration? menuBoxDecoration;
@@ -324,10 +400,18 @@ class _FocusedMenuHolderWrapper extends StatefulWidget {
   final AnimationController shadowController;
   const _FocusedMenuHolderWrapper(
       {required this.child,
-      required this.onPressed,
+      this.onTap,
+      this.onShortTapHold,
+      this.onLongTapHold,
+      this.onPrimaryClick,
+      this.onDoubleClick,
+      this.onAddSelect,
+      this.onRangeSelect,
+      this.onTapDrag,
+      this.onPrimaryDrag,
+      this.onDragOver,
       required this.episode,
       required this.layout,
-      required this.tapToOpen,
       required this.menuItemList,
       required this.menuItemExtent,
       required this.menuBoxDecoration,
@@ -373,13 +457,22 @@ class _FocusedMenuHolderWrapperState extends State<_FocusedMenuHolderWrapper> {
       ),
       childLowerlay: widget.childLowerlay,
       duration: const Duration(milliseconds: 100),
-      openWithTap: widget.tapToOpen,
       animateMenuItems: false,
       blurBackgroundColor: context.surface,
       bottomOffsetHeight: 10,
       menuOffset: 10,
       menuItems: widget.menuItemList,
-      onPressed: widget.onPressed,
+      showMenuOnMediumHold: false,
+      onTap: widget.onTap,
+      onShortTapHold: widget.onShortTapHold,
+      onLongTapHold: widget.onLongTapHold,
+      onPrimaryClick: widget.onPrimaryClick,
+      onDoubleClick: widget.onDoubleClick,
+      onAddSelect: widget.onAddSelect,
+      onRangeSelect: widget.onRangeSelect,
+      onTapDrag: widget.onTapDrag,
+      onPrimaryDrag: widget.onPrimaryDrag,
+      onDragOver: widget.onDragOver,
       child: widget.child,
     );
   }
@@ -700,7 +793,8 @@ BoxDecoration _cardDecoration(
 }
 
 List<FocusedMenuItem> _menuItemList(BuildContext context, EpisodeBrief episode,
-    bool playing, bool inPlaylist, bool playerRunning, List<int> menuList) {
+    bool playing, bool inPlaylist, bool playerRunning, List<int> menuList,
+    {bool applyToAllSelected = false}) {
   var audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
   var episodeState = Provider.of<EpisodeState>(context, listen: false);
   var s = context.s;
@@ -719,11 +813,10 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, EpisodeBrief episode,
         ),
         onPressed: () async {
           if (!playing || !playerRunning) {
+            List<EpisodeBrief> episodes = [episode];
             SelectionController? selectionController =
                 Provider.of<SelectionController?>(context, listen: false);
-            List<EpisodeBrief> episodes = [episode];
-            if (selectionController != null &&
-                selectionController.selectedEpisodes.contains(episode)) {
+            if (selectionController != null && applyToAllSelected) {
               episodes = selectionController.selectedEpisodes;
             }
             await audio.loadEpisodesToQueue(episodes);
@@ -741,11 +834,10 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, EpisodeBrief episode,
             color: Colors.cyan,
           ),
           onPressed: () async {
+            List<EpisodeBrief> episodes = [episode];
             SelectionController? selectionController =
                 Provider.of<SelectionController?>(context, listen: false);
-            List<EpisodeBrief> episodes = [episode];
-            if (selectionController != null &&
-                selectionController.selectedEpisodes.contains(episode)) {
+            if (selectionController != null && applyToAllSelected) {
               episodes = selectionController.selectedEpisodes;
             }
             if (!inPlaylist) {
@@ -771,11 +863,10 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, EpisodeBrief episode,
           title: episode.isLiked! ? Text(s.unlike) : Text(s.like),
           trailing: Icon(LineIcons.heart, color: Colors.red, size: 21),
           onPressed: () async {
+            List<EpisodeBrief> episodes = [episode];
             SelectionController? selectionController =
                 Provider.of<SelectionController?>(context, listen: false);
-            List<EpisodeBrief> episodes = [episode];
-            if (selectionController != null &&
-                selectionController.selectedEpisodes.contains(episode)) {
+            if (selectionController != null && applyToAllSelected) {
               episodes = selectionController.selectedEpisodes;
             }
             if (episode.isLiked!) {
@@ -813,11 +904,10 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, EpisodeBrief episode,
                 painter: ListenedAllPainter(Colors.blue, stroke: 1.5)),
           ),
           onPressed: () async {
+            List<EpisodeBrief> episodes = [episode];
             SelectionController? selectionController =
                 Provider.of<SelectionController?>(context, listen: false);
-            List<EpisodeBrief> episodes = [episode];
-            if (selectionController != null &&
-                selectionController.selectedEpisodes.contains(episode)) {
+            if (selectionController != null && applyToAllSelected) {
               episodes = selectionController.selectedEpisodes;
             }
             if (episode.isPlayed!) {
@@ -848,11 +938,10 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, EpisodeBrief episode,
           trailing: Icon(LineIcons.download, color: Colors.green),
           onPressed: () async {
             if (!episode.isDownloaded!) {
+              List<EpisodeBrief> episodes = [episode];
               SelectionController? selectionController =
                   Provider.of<SelectionController?>(context, listen: false);
-              List<EpisodeBrief> episodes = [episode];
-              if (selectionController != null &&
-                  selectionController.selectedEpisodes.contains(episode)) {
+              if (selectionController != null && applyToAllSelected) {
                 episodes = selectionController.selectedEpisodes;
               }
               await requestDownload(episodes, context);
@@ -870,7 +959,13 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, EpisodeBrief episode,
           color: Colors.amber,
         ),
         onPressed: () {
-          audio.addToPlaylist([episode],
+          List<EpisodeBrief> episodes = [episode];
+          SelectionController? selectionController =
+              Provider.of<SelectionController?>(context, listen: false);
+          if (selectionController != null && applyToAllSelected) {
+            episodes = selectionController.selectedEpisodes;
+          }
+          audio.addToPlaylist(episodes,
               index: audio.playlist.length > 0 ? 1 : 0);
           Fluttertoast.showToast(
             msg: s.playNextDes,
@@ -1153,21 +1248,9 @@ Widget _pubDate(BuildContext context, EpisodeBrief episode,
                   : episode.colorScheme(context).onSecondaryContainer),
     );
 
-Future<Tuple2<bool, List<int>>> _initData(EpisodeBrief episode) async {
-  final menuList = await _getEpisodeMenu();
-  final tapToOpen = await _getTapToOpenPopupMenu();
-  return Tuple2(tapToOpen, menuList);
-}
-
 Future<List<int>> _getEpisodeMenu() async {
   final popupMenuStorage = KeyValueStorage(
       episodePopupMenuKey); // TODO: These should be obtainable from SettingState.
   final list = await popupMenuStorage.getMenu();
   return list;
-}
-
-Future<bool> _getTapToOpenPopupMenu() async {
-  final tapToOpenPopupMenuStorage = KeyValueStorage(tapToOpenPopupMenuKey);
-  final boo = await tapToOpenPopupMenuStorage.getBool(defaultValue: false);
-  return boo;
 }
