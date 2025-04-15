@@ -5,6 +5,7 @@ import 'package:focused_menu/focused_menu.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
+import 'package:vibration/vibration.dart';
 import '../state/episode_state.dart';
 import '../type/episodebrief.dart';
 import '../util/extension_helper.dart';
@@ -152,14 +153,44 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
       episodeChange =
           Provider.of<EpisodeState>(context).episodeChangeMap[episode.id];
     }
-    if (selectionController == null) {
-      return ChangeNotifierProvider.value(
-        value: SelectionController(),
-        child: _body,
-      );
-    } else {
-      return _body;
-    }
+    return _body;
+  }
+
+  void _vibrateTapNormal() {
+    Vibration.vibrate(
+      pattern: [5, 145, 50, 50],
+      intensities: [32, 0, 4, 0],
+    );
+  }
+
+  Future<void> _vibrateTapSelected() async {
+    await Vibration.cancel();
+    Vibration.vibrate(duration: 5, amplitude: 32);
+  }
+
+  Future<void> _vibrateLongTap() async {
+    await Vibration.cancel();
+    Vibration.vibrate(duration: 5, amplitude: 48);
+  }
+
+  Future<void> _vibrateLongTapSelectMode() async {
+    await Vibration.cancel();
+    Vibration.vibrate(
+      pattern: [32, 4, 4],
+      intensities: [4, 0, 32],
+    );
+  }
+
+  Future<void> _vibrateLongTapSelected() async {
+    await Vibration.cancel();
+    Vibration.vibrate(
+      pattern: [4, 12, 24, 8, 4],
+      intensities: [32, 0, 8, 6, 4],
+    );
+  }
+
+  Future<void> _vibrateEnd() async {
+    await Vibration.cancel();
   }
 
   Widget _getBody() {
@@ -197,13 +228,13 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
               initialData: [],
               builder: (context, snapshot) {
                 final menuList = snapshot.data!;
-                return Selector2<AudioPlayerNotifier, SelectionController,
+                return Selector2<AudioPlayerNotifier, SelectionController?,
                     Tuple4<bool, bool, bool, bool>>(
                   selector: (_, audio, select) => Tuple4(
                       audio.episode == episode,
                       audio.playlist.contains(episode),
                       audio.playerRunning,
-                      select.selectedIndicies.contains(widget.index)),
+                      select?.selectedIndicies.contains(widget.index) ?? false),
                   builder: (_, data, __) {
                     selected = data.item4;
                     if (selected) {
@@ -216,12 +247,24 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                         episode, data.item1, data.item2, data.item3, menuList,
                         applyToAllSelected: widget.applyActionToAllSelected);
                     return _FocusedMenuHolderWrapper(
+                      onTapStart: () {
+                        if (selected) {
+                          _vibrateTapSelected();
+                        } else {
+                          _vibrateTapNormal();
+                        }
+                      },
+                      onTapEnd: () {
+                        _vibrateEnd();
+                      },
                       onTap: () async {
                         if (selectable && selectionController!.selectMode) {
                           selected = selectionController!.select(widget.index!);
                           if (selected) {
+                            _vibrateLongTapSelectMode();
                             _controller.forward();
                           } else {
+                            _vibrateLongTapSelected();
                             _controller.reverse();
                           }
                         } else {
@@ -231,14 +274,14 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                       },
                       onShortTapHold: () {
                         if (selectable && !selected) {
-                          selectionController!.selectMode = true;
-                          selectionController!.temporarySelect = true;
-                          selected = selectionController!.select(widget.index!);
-                          if (selected) {
-                            _controller.forward();
-                          } else {
-                            _controller.reverse();
+                          _vibrateLongTap();
+                          if (!selectionController!.selectMode) {
+                            selectionController!.selectMode = true;
+                            selectionController!.temporarySelect = true;
                           }
+                          selected = selectionController!.select(widget.index!);
+
+                          _controller.forward();
                         }
                       },
                       onPrimaryClick: () {
@@ -377,6 +420,8 @@ class _FocusedMenuHolderWrapper extends StatefulWidget {
   final Widget child;
 
   /// Wheter to show menu on medium tap hold.
+  final VoidCallback? onTapStart;
+  final VoidCallback? onTapEnd;
   final VoidCallback? onTap;
   final VoidCallback? onShortTapHold;
   final VoidCallback? onLongTapHold;
@@ -400,6 +445,8 @@ class _FocusedMenuHolderWrapper extends StatefulWidget {
   final AnimationController shadowController;
   const _FocusedMenuHolderWrapper(
       {required this.child,
+      this.onTapStart,
+      this.onTapEnd,
       this.onTap,
       this.onShortTapHold,
       this.onLongTapHold,
@@ -441,39 +488,48 @@ class _FocusedMenuHolderWrapperState extends State<_FocusedMenuHolderWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    return FocusedMenuHolder(
-      blurSize: 0,
-      menuItemExtent: widget.menuItemExtent,
-      enableMenuScroll: false,
-      menuBoxDecoration: widget.menuBoxDecoration,
-      childDecoration: _cardDecoration(context, widget.episode, widget.layout,
-          controller: widget.controller,
-          shadowController: widget.shadowController),
-      openChildDecoration: _cardDecoration(
-        context,
-        widget.episode,
-        widget.layout,
-        selected: true,
+    return Padding(
+      padding: EdgeInsets.all(1 *
+          CurvedAnimation(
+            parent: widget.controller,
+            curve: Curves.easeOutQuad,
+          ).value),
+      child: FocusedMenuHolder(
+        blurSize: 0,
+        menuItemExtent: widget.menuItemExtent,
+        enableMenuScroll: false,
+        menuBoxDecoration: widget.menuBoxDecoration,
+        childDecoration: _cardDecoration(context, widget.episode, widget.layout,
+            controller: widget.controller,
+            shadowController: widget.shadowController),
+        openChildDecoration: _cardDecoration(
+          context,
+          widget.episode,
+          widget.layout,
+          selected: true,
+        ),
+        childLowerlay: widget.childLowerlay,
+        duration: const Duration(milliseconds: 100),
+        animateMenuItems: false,
+        blurBackgroundColor: context.surface,
+        bottomOffsetHeight: 10,
+        menuOffset: 10,
+        menuItems: widget.menuItemList,
+        showMenuOnMediumHold: false,
+        onTapStart: widget.onTapStart,
+        onTapEnd: widget.onTapEnd,
+        onTap: widget.onTap,
+        onShortTapHold: widget.onShortTapHold,
+        onLongTapHold: widget.onLongTapHold,
+        onPrimaryClick: widget.onPrimaryClick,
+        onDoubleClick: widget.onDoubleClick,
+        onAddSelect: widget.onAddSelect,
+        onRangeSelect: widget.onRangeSelect,
+        onTapDrag: widget.onTapDrag,
+        onPrimaryDrag: widget.onPrimaryDrag,
+        onDragOver: widget.onDragOver,
+        child: widget.child,
       ),
-      childLowerlay: widget.childLowerlay,
-      duration: const Duration(milliseconds: 100),
-      animateMenuItems: false,
-      blurBackgroundColor: context.surface,
-      bottomOffsetHeight: 10,
-      menuOffset: 10,
-      menuItems: widget.menuItemList,
-      showMenuOnMediumHold: false,
-      onTap: widget.onTap,
-      onShortTapHold: widget.onShortTapHold,
-      onLongTapHold: widget.onLongTapHold,
-      onPrimaryClick: widget.onPrimaryClick,
-      onDoubleClick: widget.onDoubleClick,
-      onAddSelect: widget.onAddSelect,
-      onRangeSelect: widget.onRangeSelect,
-      onTapDrag: widget.onTapDrag,
-      onPrimaryDrag: widget.onPrimaryDrag,
-      onDragOver: widget.onDragOver,
-      child: widget.child,
     );
   }
 }

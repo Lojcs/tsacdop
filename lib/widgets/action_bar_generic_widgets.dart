@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:vibration/vibration.dart';
+import 'package:vibration/vibration_presets.dart';
 import '../type/theme_data.dart';
 import '../util/extension_helper.dart';
 import 'package:tuple/tuple.dart';
@@ -290,6 +292,7 @@ class _ActionBarButtonState extends State<ActionBarButton>
             clipBehavior: Clip.hardEdge,
             borderRadius: borderRadius,
             child: InkWell(
+              onTapDown: (details) {},
               onTap: widget.enabled
                   ? () {
                       if (mounted) {
@@ -314,6 +317,12 @@ class _ActionBarButtonState extends State<ActionBarButton>
                               }
                           }
                         });
+                        // if (expands) {
+                        //   Vibration.vibrate(
+                        //     pattern: [4, 40, 24, 12, 12, 40, 4],
+                        //     intensities: [8, 0, 8, 6, 4, 0, 32],
+                        //   );
+                        // }
                         if (active) {
                           animationController.forward();
                           expand(true);
