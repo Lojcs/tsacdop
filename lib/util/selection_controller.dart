@@ -229,6 +229,9 @@ class SelectionController extends ChangeNotifier {
   );
   set batchSelect(BatchSelect select) {
     if (select == batchSelect) {
+      if (select == BatchSelect.all) {
+        temporarySelect = false;
+      }
       select = BatchSelect.none;
     }
     _batchSelectController.trySetBatchSelect(select);

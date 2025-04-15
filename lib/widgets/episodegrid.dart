@@ -42,8 +42,6 @@ class EpisodeGrid extends StatelessWidget {
       showItemDuration: Duration(milliseconds: 50),
     );
     final scrollController = ScrollController();
-    late final SelectionController? selectionController =
-        Provider.of<SelectionController?>(context);
     if (episodes.isNotEmpty) {
       return SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -131,7 +129,7 @@ class OpenContainerWrapper extends StatelessWidget {
       required this.closedBuilder,
       required this.episode,
       this.playerRunning,
-      this.avatarSize,
+      this.getAvatarSize,
       required this.preferEpisodeImage,
       required this.layout,
       this.onClosed});
@@ -139,7 +137,7 @@ class OpenContainerWrapper extends StatelessWidget {
   final OpenContainerBuilder closedBuilder;
   final EpisodeBrief episode;
   final bool? playerRunning;
-  final double? avatarSize;
+  final double? Function()? getAvatarSize;
   final bool preferEpisodeImage;
   final EpisodeGridLayout layout;
   final VoidCallback? onClosed;
@@ -155,7 +153,7 @@ class OpenContainerWrapper extends StatelessWidget {
             backgroundImage: preferEpisodeImage
                 ? episode.episodeOrPodcastImageProvider
                 : episode.podcastImageProvider),
-        flightWidgetBeginSize: avatarSize,
+        getFlightWidgetBeginSize: getAvatarSize,
         flightWidgetEndSize: 30,
         flightWidgetBeginOffsetX: layout == EpisodeGridLayout.small ? 6 : 8,
         flightWidgetBeginOffsetY: layout == EpisodeGridLayout.small

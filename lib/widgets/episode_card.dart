@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -121,6 +123,9 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   bool _initialBuild = true;
   late bool? episodeChange;
   late Widget _body = _getBody();
+
+  double avatarSize = 0;
+
   @override
   void initState() {
     super.initState();
@@ -211,180 +216,191 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
           if (snapshot.hasData && snapshot.data != null) {
             episode = snapshot.data!;
           }
-          return OpenContainerWrapper(
-            layout: widget.layout,
-            avatarSize: widget.layout == EpisodeGridLayout.small
-                ? context.width / 20
-                : widget.layout == EpisodeGridLayout.medium
-                    ? context.width / 15
-                    : context.width / 6,
-            episode: episode,
-            preferEpisodeImage: widget.preferEpisodeImage,
-            onClosed: (() {
-              _shadowController.reverse();
-            }),
-            closedBuilder: (context, action, boo) => FutureBuilder<List<int>>(
-              future: _getEpisodeMenu(),
-              initialData: [],
-              builder: (context, snapshot) {
-                final menuList = snapshot.data!;
-                return Selector2<AudioPlayerNotifier, SelectionController?,
-                    Tuple4<bool, bool, bool, bool>>(
-                  selector: (_, audio, select) => Tuple4(
-                      audio.episode == episode,
-                      audio.playlist.contains(episode),
-                      audio.playerRunning,
-                      select?.selectedIndicies.contains(widget.index) ?? false),
-                  builder: (_, data, __) {
-                    selected = data.item4;
-                    if (selected) {
-                      _controller.forward();
-                    } else {
-                      _controller.reverse();
-                    }
-                    if (data.item1) savedPosition = null;
-                    List<FocusedMenuItem> menuItemList = _menuItemList(context,
-                        episode, data.item1, data.item2, data.item3, menuList,
-                        applyToAllSelected: widget.applyActionToAllSelected);
-                    return _FocusedMenuHolderWrapper(
-                      onTapStart: () {
-                        if (selected) {
-                          _vibrateTapSelected();
-                        } else {
-                          _vibrateTapNormal();
-                        }
-                      },
-                      onTapEnd: () {
-                        _vibrateEnd();
-                      },
-                      onTap: () async {
-                        if (selectable && selectionController!.selectMode) {
-                          selected = selectionController!.select(widget.index!);
+          return LayoutBuilder(
+            builder: (context, constraints) => OpenContainerWrapper(
+              layout: widget.layout,
+              getAvatarSize: () => avatarSize,
+              episode: episode,
+              preferEpisodeImage: widget.preferEpisodeImage,
+              onClosed: (() {
+                _shadowController.reverse();
+              }),
+              closedBuilder: (context, action, boo) => FutureBuilder<List<int>>(
+                future: _getEpisodeMenu(),
+                initialData: [],
+                builder: (context, snapshot) {
+                  final menuList = snapshot.data!;
+                  return Selector2<AudioPlayerNotifier, SelectionController?,
+                      Tuple4<bool, bool, bool, bool>>(
+                    selector: (_, audio, select) => Tuple4(
+                        audio.episode == episode,
+                        audio.playlist.contains(episode),
+                        audio.playerRunning,
+                        select?.selectedIndicies.contains(widget.index) ??
+                            false),
+                    builder: (_, data, __) {
+                      selected = data.item4;
+                      if (selected) {
+                        _controller.forward();
+                      } else {
+                        _controller.reverse();
+                      }
+                      if (data.item1) savedPosition = null;
+                      List<FocusedMenuItem> menuItemList = _menuItemList(
+                          context,
+                          episode,
+                          data.item1,
+                          data.item2,
+                          data.item3,
+                          menuList,
+                          applyToAllSelected: widget.applyActionToAllSelected);
+                      return _FocusedMenuHolderWrapper(
+                        onTapStart: () {
                           if (selected) {
-                            _vibrateLongTapSelectMode();
-                            _controller.forward();
+                            _vibrateTapSelected();
                           } else {
-                            _vibrateLongTapSelected();
-                            _controller.reverse();
+                            _vibrateTapNormal();
                           }
-                        } else {
+                        },
+                        onTapEnd: () {
+                          _vibrateEnd();
+                        },
+                        onTap: () async {
+                          if (selectable && selectionController!.selectMode) {
+                            selected =
+                                selectionController!.select(widget.index!);
+                            if (selected) {
+                              _vibrateLongTapSelectMode();
+                              _controller.forward();
+                            } else {
+                              _vibrateLongTapSelected();
+                              _controller.reverse();
+                            }
+                          } else {
+                            _shadowController.forward();
+                            action();
+                          }
+                        },
+                        onShortTapHold: () {
+                          if (selectable && !selected) {
+                            _vibrateLongTap();
+                            if (!selectionController!.selectMode) {
+                              selectionController!.selectMode = true;
+                              selectionController!.temporarySelect = true;
+                            }
+                            selected =
+                                selectionController!.select(widget.index!);
+
+                            _controller.forward();
+                          }
+                        },
+                        onPrimaryClick: () {
+                          if (selectable) {
+                            if (selectionController!.selectMode) {
+                              selected =
+                                  selectionController!.select(widget.index!);
+                            } else {
+                              selectionController!.deselectAll();
+                              selected =
+                                  selectionController!.select(widget.index!);
+                            }
+                            if (selected) {
+                              _controller.forward();
+                            } else {
+                              _controller.reverse();
+                            }
+                          }
+                        },
+                        onDoubleClick: () {
                           _shadowController.forward();
                           action();
-                        }
-                      },
-                      onShortTapHold: () {
-                        if (selectable && !selected) {
-                          _vibrateLongTap();
-                          if (!selectionController!.selectMode) {
-                            selectionController!.selectMode = true;
-                            selectionController!.temporarySelect = true;
-                          }
-                          selected = selectionController!.select(widget.index!);
-
-                          _controller.forward();
-                        }
-                      },
-                      onPrimaryClick: () {
-                        if (selectable) {
-                          if (selectionController!.selectMode) {
+                        },
+                        onAddSelect: () {
+                          if (selectable) {
+                            if (!selectionController!.selectMode) {
+                              selectionController!.selectMode = true;
+                              selectionController!.temporarySelect = true;
+                            }
                             selected =
                                 selectionController!.select(widget.index!);
-                          } else {
-                            selectionController!.deselectAll();
-                            selected =
-                                selectionController!.select(widget.index!);
+                            if (selected) {
+                              _controller.forward();
+                            } else {
+                              _controller.reverse();
+                            }
                           }
-                          if (selected) {
-                            _controller.forward();
-                          } else {
-                            _controller.reverse();
+                        },
+                        onRangeSelect: () {
+                          if (selectable) {
+                            if (!selectionController!.selectMode) {
+                              selectionController!.selectMode = true;
+                              selectionController!.temporarySelect = true;
+                            }
+                            selectionController!.batchSelect = BatchSelect.none;
+                            if (!selected) {
+                              selected =
+                                  selectionController!.select(widget.index!);
+                            }
+                            selectionController!.batchSelect =
+                                BatchSelect.between;
+                            if (selected) {
+                              _controller.forward();
+                            } else {
+                              _controller.reverse();
+                            }
                           }
-                        }
-                      },
-                      onDoubleClick: () {
-                        _shadowController.forward();
-                        action();
-                      },
-                      onAddSelect: () {
-                        if (selectable) {
-                          if (!selectionController!.selectMode) {
-                            selectionController!.selectMode = true;
-                            selectionController!.temporarySelect = true;
-                          }
-                          selected = selectionController!.select(widget.index!);
-                          if (selected) {
-                            _controller.forward();
-                          } else {
-                            _controller.reverse();
-                          }
-                        }
-                      },
-                      onRangeSelect: () {
-                        if (selectable) {
-                          if (!selectionController!.selectMode) {
-                            selectionController!.selectMode = true;
-                            selectionController!.temporarySelect = true;
-                          }
-                          selectionController!.batchSelect = BatchSelect.none;
-                          if (!selected) {
-                            selected =
-                                selectionController!.select(widget.index!);
-                          }
-                          selectionController!.batchSelect =
-                              BatchSelect.between;
-                          if (selected) {
-                            _controller.forward();
-                          } else {
-                            _controller.reverse();
-                          }
-                        }
-                      },
-                      onTapDrag: () {},
-                      episode: episode,
-                      layout: widget.layout,
-                      menuItemList: menuItemList,
-                      menuItemExtent: widget.layout == EpisodeGridLayout.small
-                          ? 41.5
-                          : widget.layout == EpisodeGridLayout.medium
-                              ? 42.5
-                              : 100 / menuItemList.length,
-                      menuBoxDecoration: BoxDecoration(
-                        color: context.accentBackground,
-                        border: Border.all(
-                          color: context.accentColor,
-                          width: 1.0,
-                        ),
-                        borderRadius: widget.layout == EpisodeGridLayout.small
-                            ? context.radiusSmall
+                        },
+                        onTapDrag: () {},
+                        episode: episode,
+                        layout: widget.layout,
+                        menuItemList: menuItemList,
+                        menuItemExtent: widget.layout == EpisodeGridLayout.small
+                            ? 41.5
                             : widget.layout == EpisodeGridLayout.medium
-                                ? context.radiusMedium
-                                : context.radiusLarge,
-                      ),
-                      childLowerlay: data.item1 && data.item3
-                          ? Selector<AudioPlayerNotifier, double>(
-                              selector: (_, audio) => audio.seekSliderValue,
-                              builder: (_, seekValue, __) => _ProgressLowerlay(
-                                episode,
-                                seekValue,
-                                widget.layout,
-                                animator: _controller,
+                                ? 42.5
+                                : 100 / menuItemList.length,
+                        menuBoxDecoration: BoxDecoration(
+                          color: context.accentBackground,
+                          border: Border.all(
+                            color: context.accentColor,
+                            width: 1.0,
+                          ),
+                          borderRadius: widget.layout == EpisodeGridLayout.small
+                              ? context.radiusSmall
+                              : widget.layout == EpisodeGridLayout.medium
+                                  ? context.radiusMedium
+                                  : context.radiusLarge,
+                        ),
+                        childLowerlay: data.item1 && data.item3
+                            ? Selector<AudioPlayerNotifier, double>(
+                                selector: (_, audio) => audio.seekSliderValue,
+                                builder: (_, seekValue, __) =>
+                                    _ProgressLowerlay(
+                                  episode,
+                                  seekValue,
+                                  widget.layout,
+                                  animator: _controller,
+                                ),
+                              )
+                            : FutureBuilder<PlayHistory>(
+                                future: _getSavedPosition(),
+                                // initialData: PlayHistory("", "", 0, 0),
+                                builder: (context, snapshot) =>
+                                    _ProgressLowerlay(
+                                  episode,
+                                  snapshot.hasData
+                                      ? snapshot.data!.seekValue!
+                                      : 0,
+                                  widget.layout,
+                                  animator: _controller,
+                                ),
                               ),
-                            )
-                          : FutureBuilder<PlayHistory>(
-                              future: _getSavedPosition(),
-                              // initialData: PlayHistory("", "", 0, 0),
-                              builder: (context, snapshot) => _ProgressLowerlay(
-                                episode,
-                                snapshot.hasData
-                                    ? snapshot.data!.seekValue!
-                                    : 0,
-                                widget.layout,
-                                animator: _controller,
-                              ),
-                            ),
-                      controller: _controller,
-                      shadowController: _shadowController,
-                      child: EpisodeCard(context, episode, widget.layout,
+                        controller: _controller,
+                        shadowController: _shadowController,
+                        child: EpisodeCard(
+                          context,
+                          episode,
+                          widget.layout,
                           openPodcast: widget.openPodcast,
                           showImage: widget.showImage && !boo,
                           preferEpisodeImage: widget.preferEpisodeImage,
@@ -395,11 +411,16 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                           showPlayedAndDownloaded:
                               widget.showPlayedAndDownloaded,
                           showDate: widget.showDate,
-                          decorate: false),
-                    );
-                  },
-                );
-              },
+                          decorate: false,
+                          avatarSizeCallback: (size) {
+                            avatarSize = size;
+                          },
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           );
         },
@@ -488,12 +509,13 @@ class _FocusedMenuHolderWrapperState extends State<_FocusedMenuHolderWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.all(1 *
-          CurvedAnimation(
-            parent: widget.controller,
-            curve: Curves.easeOutQuad,
-          ).value),
+    return Transform.scale(
+      scale: 1 -
+          0.00 *
+              CurvedAnimation(
+                parent: widget.controller,
+                curve: Curves.easeOutQuad,
+              ).value,
       child: FocusedMenuHolder(
         blurSize: 0,
         menuItemExtent: widget.menuItemExtent,
@@ -574,6 +596,9 @@ class EpisodeCard extends StatelessWidget {
 
   /// Applies card decorations
   final bool decorate;
+
+  /// Callback that sends back the actual size of the avatar.
+  final void Function(double)? avatarSizeCallback;
   EpisodeCard(this.context, this.episode, this.layout,
       {super.key,
       this.openPodcast = false,
@@ -586,7 +611,8 @@ class EpisodeCard extends StatelessWidget {
       this.showPlayedAndDownloaded = true,
       this.showDate = false,
       this.selected = false,
-      this.decorate = true})
+      this.decorate = true,
+      this.avatarSizeCallback})
       : assert((!preferEpisodeImage &&
                 episode.fields.contains(EpisodeField.podcastImage)) ||
             episode.fields.contains(EpisodeField.episodeImage) ||
@@ -635,22 +661,18 @@ class EpisodeCard extends StatelessWidget {
                     flex: 3,
                     child: Row(
                       children: <Widget>[
-                        showImage
-                            ? _circleImage(
-                                context,
-                                openPodcast,
-                                preferEpisodeImage,
-                                radius: layout == EpisodeGridLayout.small
-                                    ? context.width / 20
-                                    : context.width / 15,
-                                episode: episode,
-                                color: episode.colorScheme(context).primary,
-                              )
-                            : SizedBox(
-                                width: layout == EpisodeGridLayout.small
-                                    ? context.width / 20
-                                    : context.width / 15,
-                              ),
+                        _circleImage(
+                          context,
+                          openPodcast,
+                          preferEpisodeImage,
+                          radius: layout == EpisodeGridLayout.small
+                              ? context.width / 20
+                              : context.width / 15,
+                          episode: episode,
+                          color: episode.colorScheme(context).primary,
+                          actualSizeCallback: avatarSizeCallback,
+                          showImage: showImage,
+                        ),
                         SizedBox(
                           width: 5,
                         ),
@@ -667,18 +689,16 @@ class EpisodeCard extends StatelessWidget {
                   child: layout == EpisodeGridLayout.large
                       ? Row(
                           children: [
-                            showImage
-                                ? _circleImage(
-                                    context,
-                                    openPodcast,
-                                    preferEpisodeImage,
-                                    radius: context.width / 6,
-                                    episode: episode,
-                                    color: episode.colorScheme(context).primary,
-                                  )
-                                : SizedBox(
-                                    width: context.width / 6,
-                                  ),
+                            _circleImage(
+                              context,
+                              openPodcast,
+                              preferEpisodeImage,
+                              radius: context.width / 6,
+                              episode: episode,
+                              color: episode.colorScheme(context).primary,
+                              actualSizeCallback: avatarSizeCallback,
+                              showImage: showImage,
+                            ),
                             SizedBox(
                               width: 5,
                             ),
@@ -1090,42 +1110,58 @@ Widget _circleImage(
   required double radius,
   required EpisodeBrief episode,
   required Color color,
+  void Function(double)? actualSizeCallback,
+  bool showImage = true,
 }) =>
-    SizedBox(
-      height: radius,
-      width: radius,
-      child: Stack(
-        children: [
-          CircleAvatar(
-              radius: radius,
-              backgroundColor: color.withValues(alpha: 0.5),
-              backgroundImage: preferEpisodeImage
-                  ? episode.episodeOrPodcastImageProvider
-                  : episode.podcastImageProvider),
-          if (openPodcast)
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(radius),
-                onTap: () async {
-                  DBHelper dbHelper = DBHelper();
-                  PodcastLocal? podcast =
-                      await dbHelper.getPodcastWithUrl(episode.enclosureUrl);
-                  if (podcast != null) {
-                    Navigator.push(
-                      context,
-                      HidePlayerRoute(
-                        PodcastDetail(podcastLocal: podcast),
-                        PodcastDetail(podcastLocal: podcast, hide: true),
-                        duration: Duration(milliseconds: 300),
+    LayoutBuilder(
+      builder: (context, constraints) {
+        double actualSize = math.min(
+            math.min(radius, constraints.maxHeight), constraints.maxWidth);
+        actualSizeCallback?.call(
+          math.min(
+              math.min(radius, constraints.maxHeight), constraints.maxWidth),
+        );
+        return SizedBox(
+          height: actualSize,
+          width: actualSize,
+          child: showImage
+              ? Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: actualSize,
+                      backgroundColor: color.withValues(alpha: 0.5),
+                      backgroundImage: preferEpisodeImage
+                          ? episode.episodeOrPodcastImageProvider
+                          : episode.podcastImageProvider,
+                    ),
+                    if (openPodcast)
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(actualSize),
+                          onTap: () async {
+                            DBHelper dbHelper = DBHelper();
+                            PodcastLocal? podcast = await dbHelper
+                                .getPodcastWithUrl(episode.enclosureUrl);
+                            if (podcast != null) {
+                              Navigator.push(
+                                context,
+                                HidePlayerRoute(
+                                  PodcastDetail(podcastLocal: podcast),
+                                  PodcastDetail(
+                                      podcastLocal: podcast, hide: true),
+                                  duration: Duration(milliseconds: 300),
+                                ),
+                              );
+                            }
+                          },
+                        ),
                       ),
-                    );
-                  }
-                },
-              ),
-            ),
-        ],
-      ),
+                  ],
+                )
+              : Center(),
+        );
+      },
     );
 
 Widget _lengthAndSize(

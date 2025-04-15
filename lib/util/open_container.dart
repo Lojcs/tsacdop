@@ -29,7 +29,7 @@ class OpenContainer extends StatefulWidget {
       required this.closedBuilder,
       required this.openBuilder,
       this.flightWidget,
-      this.flightWidgetBeginSize,
+      this.getFlightWidgetBeginSize,
       this.flightWidgetEndSize,
       this.flightWidgetBeginOffsetX,
       this.flightWidgetBeginOffsetY,
@@ -46,7 +46,7 @@ class OpenContainer extends StatefulWidget {
   final Color endColor;
   final Color closedColor;
   final Widget? flightWidget;
-  final double? flightWidgetBeginSize;
+  final double? Function()? getFlightWidgetBeginSize;
   final double? flightWidgetEndSize;
   final double? flightWidgetBeginOffsetX;
   final double? flightWidgetBeginOffsetY;
@@ -103,7 +103,7 @@ class _OpenContainerState extends State<OpenContainer> {
         transitionDuration: widget.transitionDuration,
         transitionType: widget.transitionType,
         flightWidget: widget.flightWidget,
-        flightWidgetBeginSize: widget.flightWidgetBeginSize,
+        getFlightWidgetBeginSize: widget.getFlightWidgetBeginSize,
         flightWidgetEndSize: widget.flightWidgetEndSize,
         flightWidgetBeginOffsetX: widget.flightWidgetBeginOffsetX,
         flightWidgetBeginOffsetY: widget.flightWidgetBeginOffsetY,
@@ -212,7 +212,7 @@ class _OpenContainerRoute extends ModalRoute<void> {
     required this.transitionDuration,
     required this.transitionType,
     this.flightWidget,
-    this.flightWidgetBeginSize,
+    this.getFlightWidgetBeginSize,
     this.flightWidgetEndSize,
     this.flightWidgetBeginOffsetX,
     this.flightWidgetBeginOffsetY,
@@ -239,7 +239,7 @@ class _OpenContainerRoute extends ModalRoute<void> {
         _openOpacityTween = _getOpenOpacityTween(transitionType);
 
   final Widget? flightWidget;
-  final double? flightWidgetBeginSize;
+  final double? Function()? getFlightWidgetBeginSize;
   final double? flightWidgetEndSize;
   final double? flightWidgetBeginOffsetX;
   final double? flightWidgetBeginOffsetY;
@@ -603,7 +603,7 @@ class _OpenContainerRoute extends ModalRoute<void> {
           _positionTween.end =
               Offset(flightWidgetEndOffsetX!, flightWidgetEndOffsetY!);
 
-          _avatarScaleTween.begin = flightWidgetBeginSize;
+          _avatarScaleTween.begin = getFlightWidgetBeginSize?.call();
           _avatarScaleTween.end = flightWidgetEndSize;
           return SizedBox.expand(
             child: Stack(
