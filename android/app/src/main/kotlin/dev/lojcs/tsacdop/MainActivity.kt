@@ -3,7 +3,6 @@ package dev.lojcs.tsacdop
 import androidx.annotation.NonNull;
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
-import io.flutter.view.FlutterNativeView
 import io.flutter.plugins.GeneratedPluginRegistrant
 import io.flutter.plugins.IsolatePluginRegistrant
 import io.flutter.plugin.common.MethodChannel

@@ -22,7 +22,7 @@ dependencies:
   dio: ^5.7.0
   extended_nested_scroll_view: ^6.2.1
   feature_discovery: ^0.14.0
-  file_picker: ^8.1.4
+  file_picker: ^10.1.2
   flutter_html: ^3.0.0-beta.2
   fluttertoast: ^8.0.9
   flutter_isolate: ^2.0.0
@@ -37,7 +37,7 @@ dependencies:
   image: ^4.3.0
   json_serializable: ^6.8.0
   json_annotation: ^4.0.1
-  permission_handler: ^11.3.1
+  permission_handler: ^12.0.0+1
   provider: ^6.0.0
   sqflite: ^2.0.0+3
   state_notifier: ^1.0.0
@@ -93,7 +93,11 @@ dependency_overrides:
     git:
       url: https://github.com/ykh09242/Flare-Flutter                   # Updated fork, new version of flare is rive
       path: flare_flutter
-
+  workmanager:
+    git:
+      url: https://github.com/fluttercommunity/flutter_workmanager.git
+      path: workmanager
+      ref: main
 dev_dependencies:
   flutter_test:
     sdk: flutter
