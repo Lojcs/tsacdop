@@ -563,9 +563,11 @@ packages:
   focused_menu:
     dependency: "direct main"
     description:
-      path: "../focused_menu"
-      relative: true
-    source: path
+      path: "."
+      ref: HEAD
+      resolved-ref: "9a7212215e7b94ac5bd3f1e24cf6afd3581befa1"
+      url: "https://github.com/lojcs/focused_menu.git"
+    source: git
     version: "1.0.7"
   frontend_server_client:
     dependency: transitive

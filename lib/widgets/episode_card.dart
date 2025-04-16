@@ -511,7 +511,7 @@ class _FocusedMenuHolderWrapperState extends State<_FocusedMenuHolderWrapper> {
   Widget build(BuildContext context) {
     return Transform.scale(
       scale: 1 -
-          0.00 *
+          0.01 *
               CurvedAnimation(
                 parent: widget.controller,
                 curve: Curves.easeOutQuad,

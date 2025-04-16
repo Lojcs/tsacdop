@@ -1,10 +1,7 @@
-import 'dart:developer' as developer;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:webfeed/webfeed.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -12,7 +9,6 @@ import 'package:xml/xml.dart';
 
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/podcast_group.dart';
-import '../state/setting_state.dart';
 import '../util/extension_helper.dart';
 
 enum SearchEngine {
@@ -46,6 +42,7 @@ class _WebPodcastSearchState extends State<WebPodcastSearch> {
   @override
   void initState() {
     super.initState();
+    WebViewCookieManager().clearCookies();
     webViewController.setJavaScriptMode(JavaScriptMode.unrestricted);
     webViewController.clearCache();
     webViewController
@@ -83,6 +80,8 @@ class _WebPodcastSearchState extends State<WebPodcastSearch> {
               linksChannel.postMessage(url);
             }
           }
+          
+          document.querySelector('.cookie-notice').remove();
         """);
         await Future.delayed(Duration(seconds: 1));
       },
