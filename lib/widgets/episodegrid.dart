@@ -191,7 +191,7 @@ class OpenContainerWrapper extends StatelessWidget {
             hide: boo,
           );
         },
-        tappable: true,
+        tappable: false,
         closedBuilder: closedBuilder,
         onDispose: onClosed,
       ),

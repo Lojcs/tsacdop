@@ -557,7 +557,6 @@ class _SelectionOptions extends StatelessWidget {
         maxWidth: () =>
             context.width -
             (16 + context.actionBarIconPadding.horizontal * 3 / 2));
-    expansionController.addWidth(160);
     return Padding(
       padding: EdgeInsets.only(
         top: context.actionBarIconPadding.top / 2,
@@ -700,12 +699,35 @@ class _SelectionOptions extends StatelessWidget {
             ),
           ),
           Spacer(),
+          Selector<SelectionController, bool>(
+            selector: (context, selectionController) =>
+                selectionController.selectedEpisodes.isNotEmpty,
+            builder: (context, enable, _) => ActionBarButton(
+              expansionController: expansionController,
+              buttonType: ActionBarButtonType.single,
+              onPressed: (value) {
+                selectionController.deselectAll();
+              },
+              width: context.actionBarButtonSizeHorizontal,
+              tooltip: context.s.deselectAll,
+              enabled: enable,
+              connectRight: true,
+              child: Center(
+                child: Icon(
+                  Icons.check_box_outline_blank,
+                  color: context.actionBarIconColor,
+                ),
+              ),
+            ),
+          ),
           ActionBarButton(
+            expansionController: expansionController,
             onPressed: (value) {
               Provider.of<SelectionController>(context, listen: false)
                   .selectMode = false;
             },
-            child: Icon(Icons.close),
+            connectLeft: true,
+            child: Icon(Icons.close, color: context.actionBarIconColor),
           ),
         ],
       ),
@@ -958,6 +980,8 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
       ? widget.secondRowController.forward()
       : widget.secondRowController.reverse();
 
+  bool actionLock = false;
+
   @override
   void initState() {
     super.initState();
@@ -1049,6 +1073,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                 state: liked,
                 buttonType: ActionBarButtonType.partialOnOff,
                 onPressed: (value) async {
+                  setState(() => actionLock = true);
                   if (selectedEpisodes.isNotEmpty) {
                     EpisodeState episodeState =
                         Provider.of<EpisodeState>(context, listen: false);
@@ -1060,6 +1085,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                     liked = value;
                     if (value!) {
                       await episodeState.setLiked(selectedEpisodes);
+                      setState(() => actionLock = false);
                       Fluttertoast.showToast(
                         msg: context.s.liked,
                         gravity: ToastGravity.BOTTOM,
@@ -1071,6 +1097,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                       overlayEntry.remove();
                     } else {
                       await episodeState.unsetLiked(selectedEpisodes);
+                      setState(() => actionLock = false);
                       Fluttertoast.showToast(
                         msg: context.s.unlike,
                         gravity: ToastGravity.BOTTOM,
@@ -1078,7 +1105,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                     }
                   }
                 },
-                enabled: data.item2 >= 1,
+                enabled: !actionLock && data.item2 >= 1,
                 connectRight: true,
                 child: Icon(Icons.favorite, color: Colors.red),
               ),
@@ -1094,6 +1121,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                 state: played,
                 buttonType: ActionBarButtonType.partialOnOff,
                 onPressed: (value) async {
+                  setState(() => actionLock = true);
                   if (selectedEpisodes.isNotEmpty) {
                     EpisodeState episodeState =
                         Provider.of<EpisodeState>(context, listen: false);
@@ -1117,8 +1145,9 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                       );
                     }
                   }
+                  setState(() => actionLock = false);
                 },
-                enabled: data.item2 >= 1,
+                enabled: !actionLock && data.item2 >= 1,
                 connectLeft: true,
                 connectRight: true,
                 child: Selector<CardColorScheme, Color>(
@@ -1151,6 +1180,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                 state: downloaded,
                 buttonType: ActionBarButtonType.partialOnOff,
                 onPressed: (value) async {
+                  setState(() => actionLock = true);
                   if (selectedEpisodes.isNotEmpty) {
                     SelectionController selectionController =
                         Provider.of<SelectionController>(context,
@@ -1184,8 +1214,9 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                       );
                     }
                   }
+                  setState(() => actionLock = false);
                 },
-                enabled: data.item2 >= 1,
+                enabled: !actionLock && data.item2 >= 1,
                 connectLeft: true,
                 connectRight: false,
                 child: Center(
@@ -1224,6 +1255,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                 state: inPlaylist,
                 buttonType: ActionBarButtonType.partialOnOff,
                 onPressed: (value) async {
+                  setState(() => actionLock = true);
                   if (selectedEpisodes.isNotEmpty) {
                     SelectionController selectionController =
                         Provider.of<SelectionController>(context,
@@ -1249,8 +1281,9 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                       );
                     }
                   }
+                  setState(() => actionLock = false);
                 },
-                enabled: data.item2 >= 1,
+                enabled: !actionLock && data.item2 >= 1,
                 connectLeft: true,
                 connectRight: true,
                 falseChild: Icon(
@@ -1270,6 +1303,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                 state: inPlaylist,
                 buttonType: ActionBarButtonType.partialOnOff,
                 onPressed: (value) async {
+                  setState(() => actionLock = true);
                   if (selectedEpisodes.isNotEmpty) {
                     SelectionController selectionController =
                         Provider.of<SelectionController>(context,
@@ -1297,8 +1331,10 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                       );
                     }
                   }
+
+                  setState(() => actionLock = false);
                 },
-                enabled: data.item2 >= 1,
+                enabled: !actionLock && data.item2 >= 1,
                 connectLeft: true,
                 connectRight: true,
                 falseChild: Icon(
@@ -1331,6 +1367,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                   state: playerRunning ? inPlaylist : false,
                   buttonType: ActionBarButtonType.partialOnOff,
                   onPressed: (value) async {
+                    setState(() => actionLock = true);
                     if (selectedEpisodes.isNotEmpty) {
                       SelectionController selectionController =
                           Provider.of<SelectionController>(context,
@@ -1348,8 +1385,9 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                         );
                       }
                     }
+                    setState(() => actionLock = false);
                   },
-                  enabled: data.item2 >= 1,
+                  enabled: !actionLock && data.item2 >= 1,
                   connectLeft: true,
                   connectRight: false,
                   falseChild: Icon(

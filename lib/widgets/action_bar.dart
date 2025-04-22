@@ -1481,8 +1481,9 @@ class ActionBarSearchTitle extends ActionBarWidget {
   }
 }
 
-Future<Tuple2<EpisodeGridLayout, bool?>> getLayoutAndShowListened() async {
-  final layoutStorage = KeyValueStorage(podcastLayoutKey);
+Future<Tuple2<EpisodeGridLayout, bool?>> getLayoutAndShowListened(
+    {String layoutKey = podcastLayoutKey}) async {
+  final layoutStorage = KeyValueStorage(layoutKey);
   final index = await layoutStorage.getInt(defaultValue: 1);
   EpisodeGridLayout layout = EpisodeGridLayout.values[index];
   final hideListenedStorage = KeyValueStorage(hideListenedKey);

@@ -178,7 +178,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
     Vibration.vibrate(duration: 5, amplitude: 48);
   }
 
-  Future<void> _vibrateLongTapSelectMode() async {
+  Future<void> _vibrateTapFinishedSelect() async {
     await Vibration.cancel();
     Vibration.vibrate(
       pattern: [32, 4, 4],
@@ -186,10 +186,10 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
     );
   }
 
-  Future<void> _vibrateLongTapSelected() async {
+  Future<void> _vibrateTapFinishedRelease() async {
     await Vibration.cancel();
     Vibration.vibrate(
-      pattern: [4, 12, 24, 8, 4],
+      pattern: [4, 12, 16, 12, 6],
       intensities: [32, 0, 8, 6, 4],
     );
   }
@@ -270,10 +270,10 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                             selected =
                                 selectionController!.select(widget.index!);
                             if (selected) {
-                              _vibrateLongTapSelectMode();
+                              _vibrateTapFinishedSelect();
                               _controller.forward();
                             } else {
-                              _vibrateLongTapSelected();
+                              _vibrateTapFinishedRelease();
                               _controller.reverse();
                             }
                           } else {

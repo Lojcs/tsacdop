@@ -9,6 +9,8 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
+import '../local_storage/key_value_storage.dart';
+import '../state/episode_state.dart';
 import '../util/selection_controller.dart';
 import '../widgets/action_bar.dart';
 import 'package:tuple/tuple.dart';
@@ -591,7 +593,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
           key: PageStorageKey<String>('update'),
           slivers: <Widget>[
             FutureBuilder<Tuple2<EpisodeGridLayout, bool?>>(
-              future: getLayoutAndShowListened(),
+              future: getLayoutAndShowListened(layoutKey: recentLayoutKey),
               builder: (_, snapshot) {
                 _layout ??= snapshot.data?.item1;
                 return ActionBar(
@@ -644,30 +646,41 @@ class _RecentUpdateState extends State<_RecentUpdate>
                     )
                   : Center(),
             ),
-            _episodes.isNotEmpty
-                ? EpisodeGrid(
-                    episodes: _episodes,
-                    layout: _layout ?? EpisodeGridLayout.large,
-                    initNum: _scroll ? 0 : 12,
-                    openPodcast: true,
-                  )
-                : SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.only(top: 150),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Icon(LineIcons.alternateCloudDownload,
-                              size: 80, color: Colors.grey[500]),
-                          Padding(padding: EdgeInsets.symmetric(vertical: 10)),
-                          Text(
-                            s.noEpisodeRecent,
-                            style: TextStyle(color: Colors.grey[500]),
-                          )
-                        ],
+            Selector<EpisodeState, bool>(
+              selector: (_, episodeState) => episodeState.globalChange,
+              builder: (context, value, _) => FutureBuilder(
+                future: Future.microtask(() async {
+                  _episodes = await _getEpisodes(_top);
+                  Provider.of<SelectionController>(context, listen: false)
+                      .setSelectableEpisodes(_episodes, compatible: false);
+                }),
+                builder: (context, snapshot) => _episodes.isNotEmpty
+                    ? EpisodeGrid(
+                        episodes: _episodes,
+                        layout: _layout ?? EpisodeGridLayout.large,
+                        openPodcast: true,
+                        initNum: 0,
+                      )
+                    : SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.only(top: 150),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Icon(LineIcons.alternateCloudDownload,
+                                  size: 80, color: Colors.grey[500]),
+                              Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 10)),
+                              Text(
+                                s.noEpisodeRecent,
+                                style: TextStyle(color: Colors.grey[500]),
+                              )
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
+              ),
+            )
           ],
         ),
       ),
@@ -736,7 +749,7 @@ class _MyFavoriteState extends State<_MyFavorite>
           key: PageStorageKey<String>('favorite'),
           slivers: <Widget>[
             FutureBuilder<Tuple2<EpisodeGridLayout, bool?>>(
-              future: getLayoutAndShowListened(),
+              future: getLayoutAndShowListened(layoutKey: favLayoutKey),
               builder: (_, snapshot) {
                 _layout ??= snapshot.data?.item1;
                 return ActionBar(
@@ -784,30 +797,41 @@ class _MyFavoriteState extends State<_MyFavorite>
                     )
                   : Center(),
             ),
-            _episodes.isNotEmpty
-                ? EpisodeGrid(
-                    episodes: _episodes,
-                    layout: _layout ?? EpisodeGridLayout.large,
-                    initNum: _scroll ? 0 : 12,
-                    openPodcast: true,
-                  )
-                : SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.only(top: 150),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Icon(LineIcons.heartbeat,
-                              size: 80, color: Colors.grey[500]),
-                          Padding(padding: EdgeInsets.symmetric(vertical: 10)),
-                          Text(
-                            s.noEpisodeFavorite,
-                            style: TextStyle(color: Colors.grey[500]),
-                          )
-                        ],
+            Selector<EpisodeState, bool>(
+              selector: (_, episodeState) => episodeState.globalChange,
+              builder: (context, value, _) => FutureBuilder(
+                future: Future.microtask(() async {
+                  _episodes = await _getEpisodes(_top);
+                  Provider.of<SelectionController>(context, listen: false)
+                      .setSelectableEpisodes(_episodes, compatible: false);
+                }),
+                builder: (context, snapshot) => _episodes.isNotEmpty
+                    ? EpisodeGrid(
+                        episodes: _episodes,
+                        layout: _layout ?? EpisodeGridLayout.large,
+                        openPodcast: true,
+                        initNum: 0,
+                      )
+                    : SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.only(top: 150),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Icon(LineIcons.heartbeat,
+                                  size: 80, color: Colors.grey[500]),
+                              Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 10)),
+                              Text(
+                                s.noEpisodeFavorite,
+                                style: TextStyle(color: Colors.grey[500]),
+                              )
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
+              ),
+            ),
           ],
         ),
       ),
@@ -876,7 +900,7 @@ class _MyDownloadState extends State<_MyDownload>
           key: PageStorageKey<String>('download_list'),
           slivers: <Widget>[
             FutureBuilder<Tuple2<EpisodeGridLayout, bool?>>(
-              future: getLayoutAndShowListened(),
+              future: getLayoutAndShowListened(layoutKey: downloadLayoutKey),
               builder: (_, snapshot) {
                 _layout ??= snapshot.data?.item1;
                 return ActionBar(

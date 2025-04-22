@@ -565,7 +565,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: "9a7212215e7b94ac5bd3f1e24cf6afd3581befa1"
+      resolved-ref: "60f42976ee70903fa59046b682e0672fab07916e"
       url: "https://github.com/lojcs/focused_menu.git"
     source: git
     version: "1.0.7"

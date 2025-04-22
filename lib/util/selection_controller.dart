@@ -10,13 +10,13 @@ import '../type/episodebrief.dart';
 /// [newlySelectedIndicies] = [batchSelectedIndicies] ?? [_explicitlySelectedIndicies]
 /// [batchSelectedIndicies] = [implicitlySelectedIndicies] - [_explicitlyDeselectedIndicies]
 ///
-/// [_selectedEpisodes], [_selectedIndicies], [_previouslySelectedEpisodes],
+/// [_selectedEpisodes], [_selectedIndicies], [previouslySelectedEpisodes],
 /// [_explicitlySelectedIndicies] and [_explicitlySelectedIndicies] are kept
 /// in memory and should be cleared when [selectMode] changes.
 ///
 /// Use [setSelectableEpisodes] to communicate change of [selectableEpisodes].
-/// If compatible is false current selection is moved to [_previouslySelectedEpisodes].
-/// [setSelectableEpisodes] => !compatible ? [_previouslySelectedEpisodes] = [selectedEpisodes]
+/// If compatible is false current selection is moved to [previouslySelectedEpisodes].
+/// [setSelectableEpisodes] => !compatible ? [previouslySelectedEpisodes] = [selectedEpisodes]
 ///
 /// Selection lists are generally sorted in the order episodes were selected.
 /// If batch selection options are used [_explicitlySelectedIndicies] is cleared.
@@ -90,9 +90,9 @@ class SelectionController extends ChangeNotifier {
         }
       } else {
         hasAllSelectableEpisodes = false;
-        _previouslySelectedEpisodes.addAll(selectedEpisodes);
-        _previouslySelectedEpisodes =
-            _previouslySelectedEpisodes.toSet().toList();
+        previouslySelectedEpisodes.addAll(selectedEpisodes);
+        previouslySelectedEpisodes =
+            previouslySelectedEpisodes.toSet().toList();
         _selectableEpisodes = episodes.toList();
         _batchSelectController.selectableCount = _selectableEpisodes.length;
         _batchSelectController.trySetBatchSelect(BatchSelect.none);
@@ -118,10 +118,10 @@ class SelectionController extends ChangeNotifier {
         selectableEpisodes[i] = episodeMap[episode.id]!;
       }
     }
-    for (int i = 0; i < _previouslySelectedEpisodes.length; i++) {
-      var episode = _previouslySelectedEpisodes[i];
+    for (int i = 0; i < previouslySelectedEpisodes.length; i++) {
+      var episode = previouslySelectedEpisodes[i];
       if (episodeMap.containsKey(episode.id)) {
-        _previouslySelectedEpisodes[i] = episodeMap[episode.id]!;
+        previouslySelectedEpisodes[i] = episodeMap[episode.id]!;
       }
     }
     clearCachedSelectionLists();
@@ -152,8 +152,10 @@ class SelectionController extends ChangeNotifier {
 
   /// List of selected episodes.
   List<EpisodeBrief> get selectedEpisodes {
-    _selectedEpisodes ??=
-        selectedIndicies.map((i) => _selectableEpisodes[i]).toList();
+    _selectedEpisodes ??= [
+      ...previouslySelectedEpisodes,
+      ...newlySelectedIndicies.map((i) => _selectableEpisodes[i])
+    ];
     return _selectedEpisodes!;
   }
 
@@ -170,7 +172,7 @@ class SelectionController extends ChangeNotifier {
 
   List<int>? _selectedIndicies;
 
-  /// Indicies of [_previouslySelectedEpisodes] that are on the current [selectableEpisodes].
+  /// Indicies of [previouslySelectedEpisodes] that are on the current [selectableEpisodes].
   List<int> get previouslySelectedIndicies {
     _previouslySelectedIndicies ??=
         _previouslySelectedEpisodesToIndicies.toList();
@@ -182,7 +184,7 @@ class SelectionController extends ChangeNotifier {
   Iterable<int> get _previouslySelectedEpisodesToIndicies sync* {
     int? smallest;
     int? largest;
-    for (EpisodeBrief episode in _previouslySelectedEpisodes) {
+    for (EpisodeBrief episode in previouslySelectedEpisodes) {
       int i = selectableEpisodes.indexOf(episode);
       if (smallest != null && i < smallest) {
         smallest = i;
@@ -197,7 +199,7 @@ class SelectionController extends ChangeNotifier {
 
   /// Episodes previously selected before [_selectableEpisodes] changed.
   /// Cleared on [selectMode] off.
-  List<EpisodeBrief> _previouslySelectedEpisodes = [];
+  List<EpisodeBrief> previouslySelectedEpisodes = [];
 
   /// Tentative list of indicies of selected selectable episodes that weren't
   /// selected previously (thus newly selected)
@@ -223,7 +225,7 @@ class SelectionController extends ChangeNotifier {
     },
     clearIndividualSelection: () {
       _explicitlySelectedIndicies.clear();
-      _previouslySelectedEpisodes
+      previouslySelectedEpisodes
           .removeWhere((e) => selectableEpisodes.contains(e));
     },
   );
@@ -256,7 +258,7 @@ class SelectionController extends ChangeNotifier {
   /// Indicies implicitly selected by batch selection. Overrides previous selection status.
   Iterable<int> get implicitlySelectedIndicies sync* {
     for (int index in _batchSelectController.selection()) {
-      if (_previouslySelectedEpisodes.remove(selectableEpisodes[index])) {
+      if (previouslySelectedEpisodes.remove(selectableEpisodes[index])) {
         clearCachedSelectionLists();
       }
       yield index;
@@ -275,7 +277,7 @@ class SelectionController extends ChangeNotifier {
           wasSelected = previouslySelectedIndicies.contains(i);
           if (wasSelected) {
             // It was previously selected, deselect.
-            _previouslySelectedEpisodes.remove(selectableEpisodes[i]);
+            previouslySelectedEpisodes.remove(selectableEpisodes[i]);
           }
         }
         if (wasSelected) {
@@ -350,7 +352,7 @@ class SelectionController extends ChangeNotifier {
     _batchSelectController.trySetBatchSelect(BatchSelect.none);
     _explicitlyDeselectedIndicies.clear();
     _explicitlySelectedIndicies.clear();
-    _previouslySelectedEpisodes.clear();
+    previouslySelectedEpisodes.clear();
     clearCachedSelectionLists();
     if (!_disposed && selectMode) notifyListeners();
   }
@@ -443,9 +445,6 @@ class _BatchSelectController {
       } else if (select == BatchSelect.none &&
           _batchSelect != BatchSelect.none) {
         setIndividualSelection(individualSelectionFromDelimiters);
-      } else {
-        setIndividualSelection(individualSelectionFromDelimiters);
-        clearIndividualSelection();
       }
       switch (select) {
         case BatchSelect.all:

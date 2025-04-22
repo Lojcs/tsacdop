@@ -38,9 +38,7 @@ Future main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (_) => themeSetting,
-        ),
+        ChangeNotifierProvider(create: (_) => themeSetting),
         ChangeNotifierProvider(create: (_) => EpisodeState()),
         ChangeNotifierProvider(
           lazy: false,
