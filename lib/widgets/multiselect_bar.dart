@@ -444,10 +444,33 @@ class _MultiSelectPanelState extends State<MultiSelectPanel>
   EdgeInsets get iconPadding => context.actionBarIconPadding;
   Radius get iconRadius => context.actionBarIconRadius;
 
-  late Widget _selectionOptions = _SelectionOptions();
-  late Widget _playlistList = _PlaylistList();
+  late Playlist _playlist =
+      Provider.of<AudioPlayerNotifier>(context, listen: false).playlist;
+  set playlist(Playlist p) {
+    _playlist = p;
+    _playlistList = _PlaylistList(
+        playlist: _playlist, onPlaylistChanged: (p) => playlist = p);
+    _actionBar = _MultiselectActionBar(
+      secondRowController: _secondRowController,
+      playlist: _playlist,
+      onSecondRowOpen: () {
+        _playlist =
+            Provider.of<AudioPlayerNotifier>(context, listen: false).playlist;
+      },
+    );
+    setState(() {});
+  }
+
+  late final Widget _selectionOptions = _SelectionOptions();
+  late Widget _playlistList = _PlaylistList(
+      playlist: _playlist, onPlaylistChanged: (p) => playlist = p);
   late Widget _actionBar = _MultiselectActionBar(
     secondRowController: _secondRowController,
+    playlist: _playlist,
+    onSecondRowOpen: () {
+      _playlist =
+          Provider.of<AudioPlayerNotifier>(context, listen: false).playlist;
+    },
   );
 
   double get height => Tween<double>(
@@ -839,6 +862,16 @@ class __NewPlaylistState extends State<_NewPlaylist> {
 
 /// Bar of the list of playlists to choose which playlist to batch add to
 class _PlaylistList extends StatelessWidget {
+  /// Default playlist to use with playlist actions
+  final Playlist playlist;
+
+  /// Communicates that the playlist to use with playlist actions has changed
+  final void Function(Playlist playlist) onPlaylistChanged;
+  const _PlaylistList({
+    required this.playlist,
+    required this.onPlaylistChanged,
+  });
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -858,82 +891,88 @@ class _PlaylistList extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  for (var p in data.item1)
-                    if (p.name == 'Queue')
-                      _buttonOnMenu(
-                        child: Row(
-                          children: [
-                            Icon(Icons.add),
-                            SizedBox(width: 5),
-                            Text('New')
-                          ],
-                        ),
-                        onTap: () {
-                          showGeneralDialog(
-                            context: context,
-                            barrierDismissible: true,
-                            barrierLabel: MaterialLocalizations.of(context)
-                                .modalBarrierDismissLabel,
-                            barrierColor: Colors.black54,
-                            transitionDuration:
-                                const Duration(milliseconds: 200),
-                            pageBuilder: (_, animaiton, secondaryAnimation) =>
-                                _NewPlaylist(
-                                    Provider.of<SelectionController>(context,
-                                            listen: false)
-                                        .selectedEpisodes,
-                                    color: Provider.of<CardColorScheme>(context,
-                                            listen: false)
-                                        .colorScheme
-                                        .primary),
-                          );
-                        },
-                      )
-                    else
-                      _buttonOnMenu(
-                        child: Row(
-                          children: [
-                            Container(
-                              height: 30,
-                              width: 30,
+                  _buttonOnMenu(
+                    context,
+                    child: Row(
+                      children: [
+                        Icon(Icons.add),
+                        SizedBox(width: 5),
+                        Text('New')
+                      ],
+                    ),
+                    onTap: () {
+                      showGeneralDialog(
+                        context: context,
+                        barrierDismissible: true,
+                        barrierLabel: MaterialLocalizations.of(context)
+                            .modalBarrierDismissLabel,
+                        barrierColor: Colors.black54,
+                        transitionDuration: const Duration(milliseconds: 200),
+                        pageBuilder: (_, animaiton, secondaryAnimation) =>
+                            _NewPlaylist(
+                                Provider.of<SelectionController>(context,
+                                        listen: false)
+                                    .selectedEpisodes,
+                                color: Provider.of<CardColorScheme>(context,
+                                        listen: false)
+                                    .colorScheme
+                                    .primary),
+                      );
+                    },
+                  ),
+                  ...data.item1.map<Widget>(
+                    (p) => _buttonOnMenu(
+                      context,
+                      child: Row(
+                        children: [
+                          Container(
+                            height: 30,
+                            width: 30,
+                            decoration: BoxDecoration(
                               color: Provider.of<CardColorScheme>(context,
                                       listen: false)
                                   .colorScheme
                                   .primary
                                   .toHighlightBackround(context),
-                              child: FutureBuilder<EpisodeBrief?>(
-                                future: () async {
-                                  await p.getPlaylist();
-                                  return p.episodes.first;
-                                }(),
-                                builder: (_, snapshot) {
-                                  if (snapshot.data != null) {
-                                    return SizedBox(
-                                        height: 30,
-                                        width: 30,
-                                        child: Image(
-                                            image: snapshot.data!.avatarImage));
-                                  }
-                                  return Center();
-                                },
-                              ),
+                              borderRadius: context.radiusSmall,
                             ),
-                            SizedBox(width: 10),
-                            Text(p.name!),
-                          ],
-                        ),
-                        onTap: () async {
-                          SelectionController selectionController =
-                              Provider.of<SelectionController>(context,
-                                  listen: false);
-                          await selectionController.getEpisodesLimitless();
-                          await context
-                              .read<AudioPlayerNotifier>()
-                              .addToPlaylist(
-                                  selectionController.selectedEpisodes,
-                                  playlist: p);
-                        },
+                            clipBehavior: Clip.antiAlias,
+                            child: Stack(
+                              children: [
+                                FutureBuilder<EpisodeBrief?>(
+                                  future: () async {
+                                    await p.getPlaylist();
+                                    return p.episodes.first;
+                                  }(),
+                                  builder: (_, snapshot) {
+                                    if (snapshot.data != null) {
+                                      return SizedBox(
+                                          height: 30,
+                                          width: 30,
+                                          child: Image(
+                                              image:
+                                                  snapshot.data!.avatarImage));
+                                    }
+                                    return Center();
+                                  },
+                                ),
+                                if (p == playlist)
+                                  Center(
+                                    child: Icon(
+                                      Icons.check,
+                                      size: 30,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(width: 10),
+                          Text(p.name!),
+                        ],
                       ),
+                      onTap: () => onPlaylistChanged(p),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -943,7 +982,14 @@ class _PlaylistList extends StatelessWidget {
     );
   }
 
-  Widget _buttonOnMenu({Widget? child, VoidCallback? onTap}) => Material(
+  Widget _buttonOnMenu(
+    BuildContext context, {
+    Widget? child,
+    VoidCallback? onTap,
+  }) =>
+      Material(
+        borderRadius: context.radiusSmall,
+        clipBehavior: Clip.antiAlias,
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
@@ -959,9 +1005,14 @@ class _PlaylistList extends StatelessWidget {
 /// Action bar for batch actions
 class _MultiselectActionBar extends StatefulWidget {
   final AnimationController secondRowController;
+  final Playlist playlist;
+
+  final VoidCallback onSecondRowOpen;
 
   const _MultiselectActionBar({
     required this.secondRowController,
+    required this.playlist,
+    required this.onSecondRowOpen,
   });
   @override
   _MultiselectActionBarState createState() => _MultiselectActionBarState();
@@ -976,9 +1027,14 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
   List<EpisodeBrief> selectedEpisodes = [];
 
   bool get secondRow => widget.secondRowController.value != 0;
-  set secondRow(bool boo) => boo
-      ? widget.secondRowController.forward()
-      : widget.secondRowController.reverse();
+  set secondRow(bool boo) {
+    if (boo) {
+      widget.onSecondRowOpen();
+      widget.secondRowController.forward();
+    } else {
+      widget.secondRowController.reverse();
+    }
+  }
 
   bool actionLock = false;
 
@@ -1009,7 +1065,6 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
       played = false;
       downloaded = false;
       inPlaylist = false;
-      var audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
       for (var episode in selectedEpisodes) {
         if (!likedSet) {
           liked = episode.isLiked!;
@@ -1030,9 +1085,9 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
           downloaded = null;
         }
         if (!inPlaylistSet) {
-          inPlaylist = audio.playlist.contains(episode);
+          inPlaylist = widget.playlist.contains(episode);
           inPlaylistSet = true;
-        } else if (audio.playlist.contains(episode) != inPlaylist) {
+        } else if (widget.playlist.contains(episode) != inPlaylist) {
           inPlaylist = null;
         }
         if (liked == null &&
@@ -1266,7 +1321,8 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                     if (value!) {
                       await Provider.of<AudioPlayerNotifier>(context,
                               listen: false)
-                          .addToPlaylist(selectedEpisodes);
+                          .addToPlaylist(selectedEpisodes,
+                              playlist: widget.playlist);
                       await Fluttertoast.showToast(
                         msg: context.s.toastAddPlaylist,
                         gravity: ToastGravity.BOTTOM,
@@ -1274,7 +1330,8 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                     } else {
                       await Provider.of<AudioPlayerNotifier>(context,
                               listen: false)
-                          .removeFromPlaylist(selectedEpisodes);
+                          .removeFromPlaylist(selectedEpisodes,
+                              playlist: widget.playlist);
                       await Fluttertoast.showToast(
                         msg: context.s.toastRemovePlaylist,
                         gravity: ToastGravity.BOTTOM,
@@ -1316,7 +1373,8 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                           Provider.of<AudioPlayerNotifier>(context,
                               listen: false);
                       await audio.addToPlaylist(selectedEpisodes,
-                          index: audio.playlist.length > 0 ? 1 : 0);
+                          index: audio.playlist.length > 0 ? 1 : 0,
+                          playlist: widget.playlist);
                       await Fluttertoast.showToast(
                         msg: context.s.toastAddPlaylist,
                         gravity: ToastGravity.BOTTOM,
@@ -1324,7 +1382,8 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                     } else {
                       await Provider.of<AudioPlayerNotifier>(context,
                               listen: false)
-                          .removeFromPlaylist(selectedEpisodes);
+                          .removeFromPlaylist(selectedEpisodes,
+                              playlist: widget.playlist);
                       await Fluttertoast.showToast(
                         msg: context.s.toastRemovePlaylist,
                         gravity: ToastGravity.BOTTOM,
