@@ -159,30 +159,29 @@ class _MultiSelectPanelIntegrationState
     );
   }
 
+  /// Only need to refetch episodes that were previously selected, currently selectable
+  /// episodes are refetched by [InteractiveEpisodeGrid]
   Future<List<EpisodeBrief>> _getUpdatedEpisodes(BuildContext context) async {
     var dbHelper = DBHelper();
-    List<int> episodeIds = [];
-    EpisodeState episodeState =
-        Provider.of<EpisodeState>(context, listen: false);
     SelectionController selectionController =
         Provider.of<SelectionController>(context);
-    Set<int> episodesInSelectionController = selectionController
-            .hasAllSelectableEpisodes
-        ? selectionController.selectableEpisodes.map((e) => e.id).toSet()
-        : selectionController.selectableEpisodes.map((e) => e.id).toSet()
-      ..addAll(selectionController.selectedEpisodes.map((e) => e.id).toSet());
-    for (var id in episodeState.changedIds) {
-      if (episodesInSelectionController.contains(id)) {
-        episodeIds.add(id);
-      }
-    }
+    List<int> episodeIds = selectionController.previouslySelectedEpisodes
+        .map((e) => e.id)
+        .toList();
     var episodes =
         await dbHelper.getEpisodes(episodeIds: episodeIds, optionalFields: [
+      EpisodeField.description,
+      EpisodeField.number,
+      EpisodeField.enclosureDuration,
+      EpisodeField.enclosureSize,
       EpisodeField.isDownloaded,
+      EpisodeField.episodeImage,
+      EpisodeField.podcastImage,
+      EpisodeField.primaryColor,
       EpisodeField.isLiked,
       EpisodeField.isNew,
       EpisodeField.isPlayed,
-      EpisodeField.episodeImage,
+      EpisodeField.isDisplayVersion
     ]);
     return episodes;
   }
