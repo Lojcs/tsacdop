@@ -65,6 +65,7 @@ class SelectionController extends ChangeNotifier {
       _selectableEpisodes =
           await onGetEpisodesLimitless?.call() ?? _selectableEpisodes;
       _batchSelectController.selectableCount = _selectableEpisodes.length;
+      clearCachedSelectionLists();
       if (!_disposed && selectMode) notifyListeners();
     }
   }

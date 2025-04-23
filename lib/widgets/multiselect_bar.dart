@@ -454,7 +454,7 @@ class _MultiSelectPanelState extends State<MultiSelectPanel>
       secondRowController: _secondRowController,
       playlist: _playlist,
       onSecondRowOpen: () {
-        _playlist =
+        playlist =
             Provider.of<AudioPlayerNotifier>(context, listen: false).playlist;
       },
     );
@@ -468,7 +468,7 @@ class _MultiSelectPanelState extends State<MultiSelectPanel>
     secondRowController: _secondRowController,
     playlist: _playlist,
     onSecondRowOpen: () {
-      _playlist =
+      playlist =
           Provider.of<AudioPlayerNotifier>(context, listen: false).playlist;
     },
   );

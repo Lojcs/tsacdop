@@ -11,6 +11,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:html/parser.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
+import '../state/episode_state.dart';
 import '../type/theme_data.dart';
 import '../widgets/action_bar.dart';
 import 'package:tuple/tuple.dart';
@@ -367,12 +368,20 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
                 : Center(),
           ),
           if (!widget.hide)
-            EpisodeGrid(
-              episodes: _episodes,
-              layout: _layout ?? EpisodeGridLayout.large,
-              initNum: _scroll ? 0 : 12,
-              preferEpisodeImage: false,
-              key: Key("${widget.podcastLocal.id}_grid"),
+            Selector<EpisodeState, bool>(
+              selector: (_, episodeState) => episodeState.globalChange,
+              builder: (context, value, _) => FutureBuilder(
+                  future: Future.microtask(() async {
+                    _episodes = await _getEpisodes(_top);
+                    Provider.of<SelectionController>(context, listen: false)
+                        .setSelectableEpisodes(_episodes, compatible: false);
+                  }),
+                  builder: (context, snapshot) => EpisodeGrid(
+                        episodes: _episodes,
+                        layout: _layout ?? EpisodeGridLayout.large,
+                        openPodcast: true,
+                        initNum: 0,
+                      )),
             ),
 
           // Hidden widget to get the height of [HostsList]

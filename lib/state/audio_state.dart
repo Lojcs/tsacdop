@@ -999,7 +999,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
         }
       }
     }
-    _batchRemoveIndexesFromPlaylistHelper(indexes);
+    _batchRemoveIndexesFromPlaylistHelper(indexes, playlist: playlist);
     return indexes;
   }
 
@@ -1011,13 +1011,15 @@ class AudioPlayerNotifier extends ChangeNotifier {
     if (playlist.isEmpty) return [];
     if (playlist.episodes.isEmpty) await playlist.getPlaylist();
     indexes.sort();
-    _batchRemoveIndexesFromPlaylistHelper(indexes);
+    _batchRemoveIndexesFromPlaylistHelper(indexes, playlist: playlist);
     return indexes;
   }
 
   /// Helper function for batch removing sorted indexes
-  Future<void> _batchRemoveIndexesFromPlaylistHelper(List<int> indexes) async {
+  Future<void> _batchRemoveIndexesFromPlaylistHelper(List<int> indexes,
+      {Playlist? playlist}) async {
     // Remove items in batches starting from the end
+    playlist ??= _playlist;
     int? index1;
     int? index2;
     int number = 0;
@@ -1050,7 +1052,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
   Future<void> removeFromPlaylistAt(int index,
       {int number = 1, Playlist? playlist}) async {
     Future seekFuture = Future(() {});
-    playlist ??= _queue;
+    playlist ??= _playlist;
     if (playlist.isEmpty) return seekFuture;
     if (index < 0) index += playlist.length + 1;
     final int end = index + number;
