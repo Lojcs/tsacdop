@@ -245,6 +245,10 @@ class MessageLookup extends MessageLookupByLibrary {
       "Are you sure you want to delete this group? Podcasts will be moved to the Home group.",
     ),
     "groups": m6,
+    "haptics": MessageLookupByLibrary.simpleMessage("Haptic Feedback"),
+    "hapticsDes": MessageLookupByLibrary.simpleMessage(
+      "Toggle and adjust the intensity of haptics. (Requires device support)",
+    ),
     "hideListenedSetting": MessageLookupByLibrary.simpleMessage(
       "Hide listened",
     ),
@@ -270,6 +274,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "hoursAgo": m8,
     "hoursCount": m9,
     "import": MessageLookupByLibrary.simpleMessage("Import"),
+    "interaction": MessageLookupByLibrary.simpleMessage("Interaction"),
     "intergateWith": m10,
     "introFourthPage": MessageLookupByLibrary.simpleMessage(
       "You can long press on episode card for quick actions.",

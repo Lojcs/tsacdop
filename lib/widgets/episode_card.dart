@@ -10,6 +10,7 @@ import 'package:vibration/vibration.dart';
 import '../episodes/episode_detail.dart';
 import '../home/audioplayer.dart';
 import '../state/episode_state.dart';
+import '../state/setting_state.dart';
 import '../type/episodebrief.dart';
 import '../util/extension_helper.dart';
 import '../util/hide_player_route.dart';
@@ -125,6 +126,8 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
 
   late SelectionController? selectionController =
       Provider.of<SelectionController?>(context, listen: false);
+  late SettingState settings =
+      Provider.of<SettingState>(context, listen: false);
 
   bool get selectable => widget.selectable && selectionController != null;
   late bool selected =
@@ -202,20 +205,26 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
     if (!(await Vibration.hasAmplitudeControl())) return;
     Vibration.vibrate(
       pattern: [5, 145, 50, 50],
-      intensities: [32, 0, 4, 0],
+      intensities: [32, 0, 4, 0]
+          .map((i) => (i * math.pow(2, settings.hapticsStrength / 2)).toInt())
+          .toList(),
     );
   }
 
   Future<void> _vibrateTapSelected() async {
     if (!(await Vibration.hasAmplitudeControl())) return;
     await Vibration.cancel();
-    Vibration.vibrate(duration: 5, amplitude: 32);
+    Vibration.vibrate(
+        duration: 5,
+        amplitude: (32 * math.pow(2, settings.hapticsStrength / 2).toInt()));
   }
 
   Future<void> _vibrateLongTap() async {
     if (!(await Vibration.hasAmplitudeControl())) return;
     await Vibration.cancel();
-    Vibration.vibrate(duration: 5, amplitude: 48);
+    Vibration.vibrate(
+        duration: 5,
+        amplitude: (48 * math.pow(2, settings.hapticsStrength / 2).toInt()));
   }
 
   Future<void> _vibrateTapFinishedSelect() async {
@@ -223,7 +232,9 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
     await Vibration.cancel();
     Vibration.vibrate(
       pattern: [32, 4, 4],
-      intensities: [4, 0, 32],
+      intensities: [4, 0, 32]
+          .map((i) => (i * math.pow(2, settings.hapticsStrength / 2)).toInt())
+          .toList(),
     );
   }
 
@@ -232,12 +243,13 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
     await Vibration.cancel();
     Vibration.vibrate(
       pattern: [4, 12, 16, 12, 6],
-      intensities: [32, 0, 8, 6, 4],
+      intensities: [32, 0, 8, 6, 4]
+          .map((i) => (i * math.pow(2, settings.hapticsStrength / 2)).toInt())
+          .toList(),
     );
   }
 
   Future<void> _vibrateEnd() async {
-    if (!(await Vibration.hasAmplitudeControl())) return;
     await Vibration.cancel();
   }
 

@@ -69,6 +69,7 @@ class SettingState extends ChangeNotifier {
   final _openAllPodcastDefaultStorage =
       KeyValueStorage(openAllPodcastDefaultKey);
   final _useWallpaperThemeStorage = KeyValueStorage(useWallpapterThemeKey);
+  final _hapticsStrengthStorage = KeyValueStorage(hapticsStrengthKey);
 
   Future initData() async {
     await _getTheme();
@@ -88,6 +89,7 @@ class SettingState extends ChangeNotifier {
     _getSleepTimerData();
     _getPlayerSeconds();
     _getShowNotesFonts();
+    _getHapticsStrength();
     _getOpenAllPodcastDefault();
     _getUpdateInterval().then((value) async {
       if (_initUpdateTag == 0) {
@@ -414,6 +416,14 @@ class SettingState extends ChangeNotifier {
     _saveShowNotesFonts();
   }
 
+  late int _hapticsStrength;
+  int get hapticsStrength => _hapticsStrength;
+  set hapticsStrength(int power) {
+    _hapticsStrength = power;
+    notifyListeners();
+    _saveHapticsStrength();
+  }
+
   Future _getTheme() async {
     var mode = await _themeStorage.getInt();
     _theme = ThemeMode.values[mode];
@@ -517,6 +527,10 @@ class SettingState extends ChangeNotifier {
     _showNotesFontIndex = await _showNotesFontStorage.getInt(defaultValue: 1);
   }
 
+  Future<void> _getHapticsStrength() async {
+    _hapticsStrength = await _hapticsStrengthStorage.getInt(defaultValue: 0);
+  }
+
   Future<void> _saveAccentSetColor() async {
     // // color.toString() is different in debug mode vs release!
     // String colorString =
@@ -597,6 +611,10 @@ class SettingState extends ChangeNotifier {
     await _showNotesFontStorage.saveInt(_showNotesFontIndex);
   }
 
+  Future<void> _saveHapticsStrength() async {
+    await _hapticsStrengthStorage.saveInt(_hapticsStrength);
+  }
+
   Future<SettingsBackup> backup() async {
     var theme = await _themeStorage.getInt();
     var accentColor = await _accentStorage.getString();
@@ -652,43 +670,46 @@ class SettingState extends ChangeNotifier {
         await _openPlaylistDefaultStorage.getBool(defaultValue: false);
     final openAllPodcastDefault =
         await _openAllPodcastDefaultStorage.getBool(defaultValue: false);
+    var hapticsStrength = await _hapticsStrengthStorage.getInt(defaultValue: 0);
 
     return SettingsBackup(
-        theme: theme,
-        accentColor: accentColor,
-        realDark: realDark,
-        useWallpaperTheme: useWallpaperTheme,
-        autoPlay: autoPlay,
-        autoUpdate: autoUpdate,
-        updateInterval: updateInterval,
-        downloadUsingData: downloadUsingData,
-        cacheMax: cacheMax,
-        podcastLayout: podcastLayout,
-        recentLayout: recentLayout,
-        favLayout: favLayout,
-        downloadLayout: downloadLayout,
-        autoDownloadNetwork: autoDownloadNetwork,
-        episodePopupMenu: episodePopupMenu.map((e) => e.toString()).toList(),
-        autoDelete: autoDelete,
-        autoSleepTimer: autoSleepTimer,
-        autoSleepTimerStart: autoSleepTimerStart,
-        autoSleepTimerEnd: autoSleepTimerEnd,
-        autoSleepTimerMode: autoSleepTimerMode,
-        defaultSleepTime: defaultSleepTime,
-        tapToOpenPopupMenu: tapToOpenPopupMenu,
-        fastForwardSeconds: fastForwardSeconds,
-        rewindSeconds: rewindSeconds,
-        playerHeight: playerHeight,
-        locale: backupLocale,
-        hideListened: hideListened,
-        notificationLayout: notificationLayout,
-        showNotesFont: showNotesFont,
-        speedList: speedList,
-        hidePodcastDiscovery: hidePodcastDiscovery,
-        markListenedAfterSkip: markListenedAfterSKip,
-        deleteAfterPlayed: deleteAfterPlayed,
-        openPlaylistDefault: openPlaylistDefault,
-        openAllPodcastDefault: openAllPodcastDefault);
+      theme: theme,
+      accentColor: accentColor,
+      realDark: realDark,
+      useWallpaperTheme: useWallpaperTheme,
+      autoPlay: autoPlay,
+      autoUpdate: autoUpdate,
+      updateInterval: updateInterval,
+      downloadUsingData: downloadUsingData,
+      cacheMax: cacheMax,
+      podcastLayout: podcastLayout,
+      recentLayout: recentLayout,
+      favLayout: favLayout,
+      downloadLayout: downloadLayout,
+      autoDownloadNetwork: autoDownloadNetwork,
+      episodePopupMenu: episodePopupMenu.map((e) => e.toString()).toList(),
+      autoDelete: autoDelete,
+      autoSleepTimer: autoSleepTimer,
+      autoSleepTimerStart: autoSleepTimerStart,
+      autoSleepTimerEnd: autoSleepTimerEnd,
+      autoSleepTimerMode: autoSleepTimerMode,
+      defaultSleepTime: defaultSleepTime,
+      tapToOpenPopupMenu: tapToOpenPopupMenu,
+      fastForwardSeconds: fastForwardSeconds,
+      rewindSeconds: rewindSeconds,
+      playerHeight: playerHeight,
+      locale: backupLocale,
+      hideListened: hideListened,
+      notificationLayout: notificationLayout,
+      showNotesFont: showNotesFont,
+      speedList: speedList,
+      hidePodcastDiscovery: hidePodcastDiscovery,
+      markListenedAfterSkip: markListenedAfterSKip,
+      deleteAfterPlayed: deleteAfterPlayed,
+      openPlaylistDefault: openPlaylistDefault,
+      openAllPodcastDefault: openAllPodcastDefault,
+      hapticsStrength: hapticsStrength,
+    );
   }
 
   Future<void> restore(SettingsBackup backup) async {
@@ -731,6 +752,7 @@ class SettingState extends ChangeNotifier {
         .saveBool(backup.deleteAfterPlayed);
     await _openPlaylistDefaultStorage.saveBool(backup.openPlaylistDefault);
     await _openAllPodcastDefaultStorage.saveBool(backup.openAllPodcastDefault);
+    await _hapticsStrengthStorage.saveInt(backup.hapticsStrength);
 
     if (backup.locale == '') {
       await _localeStorage.saveStringList([]);

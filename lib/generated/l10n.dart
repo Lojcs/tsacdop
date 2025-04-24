@@ -785,6 +785,26 @@ class S {
     );
   }
 
+  /// `Haptic Feedback`
+  String get haptics {
+    return Intl.message(
+      'Haptic Feedback',
+      name: 'haptics',
+      desc: 'Haptic Feedback (vibrations)',
+      args: [],
+    );
+  }
+
+  /// `Toggle and adjust the intensity of haptics. (Requires device support)`
+  String get hapticsDes {
+    return Intl.message(
+      'Toggle and adjust the intensity of haptics. (Requires device support)',
+      name: 'hapticsDes',
+      desc: 'Haptic Feedback settings item description',
+      args: [],
+    );
+  }
+
   /// `Hide listened`
   String get hideListenedSetting {
     return Intl.message(
@@ -934,6 +954,16 @@ class S {
   /// `Import`
   String get import {
     return Intl.message('Import', name: 'import', desc: '', args: []);
+  }
+
+  /// `Interaction`
+  String get interaction {
+    return Intl.message(
+      'Interaction',
+      name: 'interaction',
+      desc: 'Interaction setting menu section title',
+      args: [],
+    );
   }
 
   /// `Integrate with {service}`

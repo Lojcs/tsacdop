@@ -211,6 +211,14 @@
   "@groupRemoveConfirm": {},
   "groups": "{count, plural, zero{Group} one{Group} other{Groups}}",
   "@groups": {},
+  "haptics": "Haptic Feedback",
+  "@haptics": {
+    "description": "Haptic Feedback (vibrations)"
+  },
+  "hapticsDes": "Toggle and adjust the intensity of haptics. (Requires device support)",
+  "@hapticsDes": {
+    "description": "Haptic Feedback settings item description"
+  },
   "hideListenedSetting": "Hide listened",
   "@hideListenedSetting": {},
   "hidePodcastDiscovery": "Hide podcast discovery",
@@ -247,6 +255,10 @@
   "@hoursCount": {},
   "import": "Import",
   "@import": {},
+  "interaction": "Interaction",
+  "@interaction": {
+    "description": "Interaction setting menu section title"
+  },
   "intergateWith": "Integrate with {service}",
   "@intergateWith": {
     "description": "Integrate with",
