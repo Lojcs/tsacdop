@@ -4,4 +4,4 @@ Changes from v0.7.3:
 * Haptic feedback on select
 * Selection preview
 
-Check out https://github.com/Lojcs/tsacdop/blob/v0.7.3/CHANGELOG.md for full changelog.
+Check out https://github.com/Lojcs/tsacdop/blob/v0.8.2/CHANGELOG.md for full changelog.
