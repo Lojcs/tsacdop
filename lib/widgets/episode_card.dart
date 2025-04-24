@@ -134,7 +134,6 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
       selectionController?.selectedIndicies.contains(widget.index) ?? false;
 
   bool _initialBuild = true;
-  late bool? episodeChange;
 
   double avatarSize = 0;
 
@@ -161,16 +160,11 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   Widget build(BuildContext context) {
     if (_initialBuild) {
       _initialBuild = false;
-      episodeChange =
-          Provider.of<EpisodeState>(context).episodeChangeMap[episode.id];
       _body = _getBody();
     }
     if (widget.externallyRefreshed) {
-      bool? changeValue =
-          Provider.of<EpisodeState>(context).episodeChangeMap[episode.id];
-      if (changeValue != null && changeValue != episodeChange) {
+      if (Provider.of<EpisodeState>(context).changedIds.contains(episode.id)) {
         episode = widget.episode;
-        episodeChange = changeValue;
         _body = _getBody();
       }
       return _body;
@@ -180,9 +174,10 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
             episodeState.episodeChangeMap[episode.id],
         builder: (_, data, ___) => FutureBuilder<EpisodeBrief?>(
           future: () async {
-            if (data != episodeChange) {
+            if (Provider.of<EpisodeState>(context)
+                .changedIds
+                .contains(episode.id)) {
               // Prevents unnecessary database calls when the card is rebuilt for other reasons
-              episodeChange = data;
               return widget.episode.copyWithFromDB(
                   update: true); // It needs to be widget.episode
             } else {
