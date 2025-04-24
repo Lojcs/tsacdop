@@ -1,5 +1,43 @@
 # Tsacdop-Fork Changelog
 
+## 0.8.2
+
+### Bugfixes
+* Misc. bugfixes
+
+### Removed
+* Option to swap tap and long press to open popup menu
+
+## 0.8.1
+
+### Bugfixes
+* Misc. bugfixes
+
+## 0.8.0
+
+This is the second release and there are less changes than the first so I'm writing a more detailed changelog.
+
+### New
+* Long pressing an episode turns on multi select mode instead of opening popup menu.
+* Popup menu actions are moved to the multi select bar and apply to all selected episodes.
+* Added haptic feedback for selecting episodes, can be configured in settings>appearance.
+* For mouse input, right click opens popup menu, ctrl+click enables selection,  shift+click selects range.
+* Episodes selected by batch selection options can be deselected.
+* Added button to finalize batch selection without doing any action on the episodes.
+* Total size and duration of all selected episodes is visible on an handle above the multi select bar. Clicking on the handle opens a panel to preview the selected episodes.
+* Cookie notice on Ecosia is removed automatically. (cookies aren't kept)
+* @Poussinou - Added fdroid badge to readme.
+
+### Bugfixes
+* Home screen tab layout settings work properly.
+* Episodes selection properly persists across filter / sorting changes.
+* Recently liked episodes remain liked after scrolling away and back.
+* Duplicate episode versions are hidden from the podcast preview cards in home screen.
+* Misc. bugfixes
+
+### Other
+* Refactored some code
+
 ## 0.7.3
 Release date 2025/3/11
 

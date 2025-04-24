@@ -1,0 +1,7 @@
+Changes from v0.7.3:
+
+* Long press to select
+* Haptic feedback on select
+* Selection preview
+
+Check out https://github.com/Lojcs/tsacdop/blob/v0.7.3/CHANGELOG.md for full changelog.
