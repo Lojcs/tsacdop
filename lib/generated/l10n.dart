@@ -244,6 +244,11 @@ class S {
     );
   }
 
+  /// `Close`
+  String get close {
+    return Intl.message('Close', name: 'close', desc: '', args: []);
+  }
+
   /// `color`
   String get color {
     return Intl.message('color', name: 'color', desc: '', args: []);
@@ -685,6 +690,17 @@ class S {
       'Join group',
       name: 'feedbackTelegram',
       desc: '',
+      args: [],
+    );
+  }
+
+  /// `Finalize Selection`
+  String get finalizeSelection {
+    return Intl.message(
+      'Finalize Selection',
+      name: 'finalizeSelection',
+      desc:
+          'Tooltip for button that finalizes a tentative seelction by getting all episodes included in it.',
       args: [],
     );
   }
@@ -1757,6 +1773,16 @@ class S {
       name: 'removedAt',
       desc: 'For example ：Removed at 2020.10.10',
       args: [date],
+    );
+  }
+
+  /// `Remove Download`
+  String get removeDownload {
+    return Intl.message(
+      'Remove Download',
+      name: 'removeDownload',
+      desc: '',
+      args: [],
     );
   }
 

@@ -713,6 +713,30 @@ class _SelectionOptions extends StatelessWidget {
           Spacer(),
           Selector<SelectionController, bool>(
             selector: (context, selectionController) =>
+                selectionController.selectionTentative,
+            builder: (context, data, _) {
+              return ActionBarButton(
+                expansionController: expansionController,
+                state: data,
+                buttonType: ActionBarButtonType.onOff,
+                onPressed: (value) async {
+                  SelectionController selectionController =
+                      Provider.of<SelectionController>(context, listen: false);
+                  await selectionController.getEpisodesLimitless();
+                },
+                tooltip: context.s.finalizeSelection,
+                enabled: data,
+                connectRight: true,
+                child: Selector<CardColorScheme, Color>(
+                  selector: (context, cardColorScheme) =>
+                      cardColorScheme.colorScheme.primary,
+                  builder: (context, color, _) => Icon(Icons.all_inclusive),
+                ),
+              );
+            },
+          ),
+          Selector<SelectionController, bool>(
+            selector: (context, selectionController) =>
                 selectionController.selectedEpisodes.isNotEmpty,
             builder: (context, enable, _) => ActionBarButton(
               expansionController: expansionController,
@@ -723,6 +747,7 @@ class _SelectionOptions extends StatelessWidget {
               width: context.actionBarButtonSizeHorizontal,
               tooltip: context.s.deselectAll,
               enabled: enable,
+              connectLeft: true,
               connectRight: true,
               child: Center(
                 child: Icon(
@@ -738,6 +763,7 @@ class _SelectionOptions extends StatelessWidget {
               Provider.of<SelectionController>(context, listen: false)
                   .selectMode = false;
             },
+            tooltip: context.s.close,
             connectLeft: true,
             child: Icon(Icons.close, color: context.actionBarIconColor),
           ),
@@ -1014,9 +1040,10 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
   bool? inPlaylist;
 
   List<EpisodeBrief> selectedEpisodes = [];
-
-  bool get secondRow => widget.secondRowController.value != 0;
+  bool _secondRow = false;
+  bool get secondRow => _secondRow;
   set secondRow(bool boo) {
+    _secondRow = boo;
     if (boo) {
       widget.onSecondRowOpen();
       widget.secondRowController.forward();
@@ -1149,6 +1176,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                     }
                   }
                 },
+                tooltip: liked != false ? context.s.like : context.s.unlike,
                 enabled: !actionLock && data.item2 >= 1,
                 connectRight: true,
                 child: Icon(Icons.favorite, color: Colors.red),
@@ -1191,6 +1219,9 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                   }
                   setState(() => actionLock = false);
                 },
+                tooltip: played != false
+                    ? context.s.markListened
+                    : context.s.markNotListened,
                 enabled: !actionLock && data.item2 >= 1,
                 connectLeft: true,
                 connectRight: true,
@@ -1260,6 +1291,9 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                   }
                   setState(() => actionLock = false);
                 },
+                tooltip: downloaded != false
+                    ? context.s.download
+                    : context.s.removeDownload,
                 enabled: !actionLock && data.item2 >= 1,
                 connectLeft: true,
                 connectRight: false,
@@ -1288,6 +1322,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                 onPressed: (value) {
                   secondRow = value!;
                 },
+                tooltip: context.s.playlists,
                 connectLeft: false,
                 connectRight: true,
                 child: Icon(
@@ -1329,6 +1364,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                   }
                   setState(() => actionLock = false);
                 },
+                tooltip: context.s.later,
                 enabled: !actionLock && data.item2 >= 1,
                 connectLeft: true,
                 connectRight: true,
@@ -1382,6 +1418,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
 
                   setState(() => actionLock = false);
                 },
+                tooltip: context.s.playNext,
                 enabled: !actionLock && data.item2 >= 1,
                 connectLeft: true,
                 connectRight: true,
@@ -1435,6 +1472,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                     }
                     setState(() => actionLock = false);
                   },
+                  tooltip: context.s.play,
                   enabled: !actionLock && data.item2 >= 1,
                   connectLeft: true,
                   connectRight: false,

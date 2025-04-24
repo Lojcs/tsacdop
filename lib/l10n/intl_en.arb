@@ -62,6 +62,8 @@
   "@clearAll": {
     "description": "Clear all episodes in playlist."
   },
+  "close": "Close",
+  "@close": {},
   "color": "color",
   "@color": {},
   "confirm": "CONFIRM",
@@ -174,6 +176,10 @@
   },
   "feedbackTelegram": "Join group",
   "@feedbackTelegram": {},
+  "finalizeSelection": "Finalize Selection",
+  "@finalizeSelection": {
+    "description": "Tooltip for button that finalizes a tentative seelction by getting all episodes included in it."
+  },
   "filter": "Filter",
   "@filter": {},
   "filterType": "{type} Filter",
@@ -524,6 +530,8 @@
       "date": {}
     }
   },
+  "removeDownload": "Remove Download",
+  "@removeDownload": {},
   "removeNewMark": "Remove new mark",
   "@removeNewMark": {
     "description": "Remove new mark for new episodes."

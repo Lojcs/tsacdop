@@ -133,6 +133,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "chooseA": MessageLookupByLibrary.simpleMessage("Choose a"),
     "clear": MessageLookupByLibrary.simpleMessage("Clear"),
     "clearAll": MessageLookupByLibrary.simpleMessage("Clear all"),
+    "close": MessageLookupByLibrary.simpleMessage("Close"),
     "color": MessageLookupByLibrary.simpleMessage("color"),
     "confirm": MessageLookupByLibrary.simpleMessage("CONFIRM"),
     "createNewPlaylist": MessageLookupByLibrary.simpleMessage("New playlist"),
@@ -227,6 +228,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "feedbackTelegram": MessageLookupByLibrary.simpleMessage("Join group"),
     "filter": MessageLookupByLibrary.simpleMessage("Filter"),
     "filterType": m32,
+    "finalizeSelection": MessageLookupByLibrary.simpleMessage(
+      "Finalize Selection",
+    ),
     "fontStyle": MessageLookupByLibrary.simpleMessage("Font style"),
     "fonts": MessageLookupByLibrary.simpleMessage("Fonts"),
     "from": m5,
@@ -411,6 +415,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "removeConfirm": MessageLookupByLibrary.simpleMessage(
       "Removal confirmation",
     ),
+    "removeDownload": MessageLookupByLibrary.simpleMessage("Remove Download"),
     "removeNewMark": MessageLookupByLibrary.simpleMessage("Remove new mark"),
     "removePodcastDes": MessageLookupByLibrary.simpleMessage(
       "Are you sure you want to unsubscribe?",
