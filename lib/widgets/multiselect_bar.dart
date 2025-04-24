@@ -454,7 +454,6 @@ class _MultiSelectPanelState extends State<MultiSelectPanel>
       playlist: _playlist, onPlaylistChanged: (p) => playlist = p);
   late Widget _actionBar = _MultiselectActionBar(
     secondRowController: _secondRowController,
-    playlist: _playlist,
     onSecondRowOpen: () {
       playlist =
           Provider.of<AudioPlayerNotifier>(context, listen: false).playlist;
@@ -1020,13 +1019,13 @@ class _PlaylistList extends StatelessWidget {
 /// Action bar for batch actions
 class _MultiselectActionBar extends StatefulWidget {
   final AnimationController secondRowController;
-  final Playlist playlist;
+  final Playlist? playlist;
 
   final VoidCallback onSecondRowOpen;
 
   const _MultiselectActionBar({
     required this.secondRowController,
-    required this.playlist,
+    this.playlist,
     required this.onSecondRowOpen,
   });
   @override
@@ -1038,6 +1037,8 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
   bool? played;
   bool? downloaded;
   bool? inPlaylist;
+
+  late Playlist playlist;
 
   List<EpisodeBrief> selectedEpisodes = [];
   bool _secondRow = false;
@@ -1066,6 +1067,14 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
     );
   }
 
+  @override
+  void didUpdateWidget(_MultiselectActionBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.playlist != null) {
+      playlist = widget.playlist!;
+    }
+  }
+
   void _initProperties(bool selectionTentative) {
     if (selectionTentative) {
       liked = null;
@@ -1081,6 +1090,10 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
       played = false;
       downloaded = false;
       inPlaylist = false;
+      if (widget.playlist == null) {
+        playlist =
+            Provider.of<AudioPlayerNotifier>(context, listen: false).playlist;
+      }
       for (var episode in selectedEpisodes) {
         if (!likedSet) {
           liked = episode.isLiked!;
@@ -1101,9 +1114,9 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
           downloaded = null;
         }
         if (!inPlaylistSet) {
-          inPlaylist = widget.playlist.contains(episode);
+          inPlaylist = playlist.contains(episode);
           inPlaylistSet = true;
-        } else if (widget.playlist.contains(episode) != inPlaylist) {
+        } else if (playlist.contains(episode) != inPlaylist) {
           inPlaylist = null;
         }
         if (liked == null &&
@@ -1339,23 +1352,22 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                     SelectionController selectionController =
                         Provider.of<SelectionController>(context,
                             listen: false);
+                    AudioPlayerNotifier audio =
+                        Provider.of<AudioPlayerNotifier>(context,
+                            listen: false);
                     await selectionController.getEpisodesLimitless();
                     selectedEpisodes = selectionController.selectedEpisodes;
                     inPlaylist = value;
                     if (value!) {
-                      await Provider.of<AudioPlayerNotifier>(context,
-                              listen: false)
-                          .addToPlaylist(selectedEpisodes,
-                              playlist: widget.playlist);
+                      await audio.addToPlaylist(selectedEpisodes,
+                          playlist: playlist);
                       await Fluttertoast.showToast(
                         msg: context.s.toastAddPlaylist,
                         gravity: ToastGravity.BOTTOM,
                       );
                     } else {
-                      await Provider.of<AudioPlayerNotifier>(context,
-                              listen: false)
-                          .removeFromPlaylist(selectedEpisodes,
-                              playlist: widget.playlist);
+                      await audio.removeFromPlaylist(selectedEpisodes,
+                          playlist: playlist);
                       await Fluttertoast.showToast(
                         msg: context.s.toastRemovePlaylist,
                         gravity: ToastGravity.BOTTOM,
@@ -1390,25 +1402,23 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                     SelectionController selectionController =
                         Provider.of<SelectionController>(context,
                             listen: false);
+                    AudioPlayerNotifier audio =
+                        Provider.of<AudioPlayerNotifier>(context,
+                            listen: false);
                     await selectionController.getEpisodesLimitless();
                     selectedEpisodes = selectionController.selectedEpisodes;
                     inPlaylist = value;
                     if (value!) {
-                      AudioPlayerNotifier audio =
-                          Provider.of<AudioPlayerNotifier>(context,
-                              listen: false);
                       await audio.addToPlaylist(selectedEpisodes,
                           index: audio.playlist.length > 0 ? 1 : 0,
-                          playlist: widget.playlist);
+                          playlist: playlist);
                       await Fluttertoast.showToast(
                         msg: context.s.toastAddPlaylist,
                         gravity: ToastGravity.BOTTOM,
                       );
                     } else {
-                      await Provider.of<AudioPlayerNotifier>(context,
-                              listen: false)
-                          .removeFromPlaylist(selectedEpisodes,
-                              playlist: widget.playlist);
+                      await audio.removeFromPlaylist(selectedEpisodes,
+                          playlist: playlist);
                       await Fluttertoast.showToast(
                         msg: context.s.toastRemovePlaylist,
                         gravity: ToastGravity.BOTTOM,

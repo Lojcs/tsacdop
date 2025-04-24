@@ -1101,7 +1101,8 @@ class AudioPlayerNotifier extends ChangeNotifier {
     if (playlist == _playlist &&
         !_playerRunning &&
         _playlist.isQueue &&
-        index == 0) {
+        index == 0 &&
+        _playlist.isNotEmpty) {
       loadEpisodeHistoryPosition();
       _loadStartPosition();
     }

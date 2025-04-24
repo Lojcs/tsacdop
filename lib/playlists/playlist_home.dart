@@ -38,7 +38,7 @@ class PlaylistHome extends StatefulWidget {
   const PlaylistHome({super.key});
 
   @override
-  _PlaylistHomeState createState() => _PlaylistHomeState();
+  State<PlaylistHome> createState() => _PlaylistHomeState();
 }
 
 class _PlaylistHomeState extends State<PlaylistHome> {
@@ -326,17 +326,18 @@ class _Queue extends StatefulWidget {
   const _Queue();
 
   @override
-  __QueueState createState() => __QueueState();
+  State<_Queue> createState() => _QueueState();
 }
 
-class __QueueState extends State<_Queue> {
+class _QueueState extends State<_Queue> {
   @override
   Widget build(BuildContext context) {
-    return Selector<AudioPlayerNotifier, Tuple3<bool, int?, EpisodeBrief?>>(
-      selector: (_, audio) =>
-          Tuple3(audio.playerRunning, audio.episodeIndex, audio.episode),
+    return Selector<AudioPlayerNotifier,
+        Tuple5<bool, int?, EpisodeBrief?, Playlist, int>>(
+      selector: (_, audio) => Tuple5(audio.playerRunning, audio.episodeIndex,
+          audio.episode, audio.playlist, audio.playlist.length),
       builder: (_, data, __) {
-        Playlist? playlist = context.read<AudioPlayerNotifier>().playlist;
+        Playlist? playlist = data.item4;
         bool running = data.item1;
         int? episodeIndex = data.item2;
         if (episodeIndex == null) {
@@ -385,10 +386,10 @@ class _History extends StatefulWidget {
   const _History();
 
   @override
-  __HistoryState createState() => __HistoryState();
+  State<_History> createState() => _HistoryState();
 }
 
-class __HistoryState extends State<_History> {
+class _HistoryState extends State<_History> {
   var dbHelper = DBHelper();
   bool _loadMore = false;
   late Future<List<PlayHistory>> _getData;
@@ -650,10 +651,10 @@ class _Playlists extends StatefulWidget {
   const _Playlists();
 
   @override
-  __PlaylistsState createState() => __PlaylistsState();
+  State<_Playlists> createState() => _PlaylistsState();
 }
 
-class __PlaylistsState extends State<_Playlists> {
+class _PlaylistsState extends State<_Playlists> {
   Future<EpisodeBrief?> _getEpisode(String url) async {
     var dbHelper = DBHelper();
     List episodes = await dbHelper.getEpisodes(episodeUrls: [
@@ -884,10 +885,10 @@ class _NewPlaylist extends StatefulWidget {
   const _NewPlaylist();
 
   @override
-  __NewPlaylistState createState() => __NewPlaylistState();
+  State<_NewPlaylist> createState() => _NewPlaylistState();
 }
 
-class __NewPlaylistState extends State<_NewPlaylist> {
+class _NewPlaylistState extends State<_NewPlaylist> {
   final _dbHelper = DBHelper();
   String _playlistName = '';
   late NewPlaylistOption _option;
