@@ -283,12 +283,12 @@ class ThemeSetting extends StatelessWidget {
                         scale: 0.9,
                         child: Switch(
                           activeColor: context.accentColor,
-                          value: data > -8,
+                          value: data > -100,
                           onChanged: (boo) async {
                             if (boo) {
                               settings.hapticsStrength = 0;
                             } else {
-                              settings.hapticsStrength = -8;
+                              settings.hapticsStrength = -100;
                             }
                           },
                         ),
@@ -304,7 +304,7 @@ class ThemeSetting extends StatelessWidget {
                       child: AnimatedContainer(
                         duration: Duration(milliseconds: 200),
                         constraints:
-                            BoxConstraints(maxHeight: (data > -8) ? 50 : 1),
+                            BoxConstraints(maxHeight: (data > -100) ? 50 : 1),
                         padding: EdgeInsets.only(
                             left: 50.0, right: 20.0, bottom: 10.0),
                         child: SingleChildScrollView(

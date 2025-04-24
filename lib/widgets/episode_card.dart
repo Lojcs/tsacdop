@@ -197,7 +197,10 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   }
 
   Future<void> _vibrateTapNormal() async {
-    if (!(await Vibration.hasAmplitudeControl())) return;
+    if (!(await Vibration.hasAmplitudeControl()) ||
+        settings.hapticsStrength <= -100) {
+      return;
+    }
     Vibration.vibrate(
       pattern: [5, 145, 50, 50],
       intensities: [32, 0, 4, 0]
@@ -207,7 +210,10 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   }
 
   Future<void> _vibrateTapSelected() async {
-    if (!(await Vibration.hasAmplitudeControl())) return;
+    if (!(await Vibration.hasAmplitudeControl()) ||
+        settings.hapticsStrength <= -100) {
+      return;
+    }
     await Vibration.cancel();
     Vibration.vibrate(
         duration: 5,
@@ -215,7 +221,10 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   }
 
   Future<void> _vibrateLongTap() async {
-    if (!(await Vibration.hasAmplitudeControl())) return;
+    if (!(await Vibration.hasAmplitudeControl()) ||
+        settings.hapticsStrength <= -100) {
+      return;
+    }
     await Vibration.cancel();
     Vibration.vibrate(
         duration: 5,
@@ -223,7 +232,10 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   }
 
   Future<void> _vibrateTapFinishedSelect() async {
-    if (!(await Vibration.hasAmplitudeControl())) return;
+    if (!(await Vibration.hasAmplitudeControl()) ||
+        settings.hapticsStrength <= -100) {
+      return;
+    }
     await Vibration.cancel();
     Vibration.vibrate(
       pattern: [32, 4, 4],
@@ -234,7 +246,10 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   }
 
   Future<void> _vibrateTapFinishedRelease() async {
-    if (!(await Vibration.hasAmplitudeControl())) return;
+    if (!(await Vibration.hasAmplitudeControl()) ||
+        settings.hapticsStrength <= -100) {
+      return;
+    }
     await Vibration.cancel();
     Vibration.vibrate(
       pattern: [4, 12, 16, 12, 6],

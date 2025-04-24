@@ -137,24 +137,24 @@ class _PopupMenuSettingState extends State<PopupMenuSetting> {
                                     .titleMedium!
                                     .copyWith(color: context.accentColor)),
                           ),
-                          FutureBuilder<bool>(
-                            future: _getTapToOpenPopupMenu(),
-                            initialData: false,
-                            builder: (context, snapshot) => ListTile(
-                              contentPadding: EdgeInsets.only(
-                                  left: 80, top: 10, bottom: 10, right: 30),
-                              onTap: () =>
-                                  _saveTapToOpenPopupMenu(!snapshot.data!),
-                              title: Text(s.settingsTapToOpenPopupMenu),
-                              subtitle: Text(s.settingsTapToOpenPopupMenuDes),
-                              trailing: Transform.scale(
-                                scale: 0.9,
-                                child: Switch(
-                                    value: snapshot.data!,
-                                    onChanged: _saveTapToOpenPopupMenu),
-                              ),
-                            ),
-                          ),
+                          // FutureBuilder<bool>(
+                          //   future: _getTapToOpenPopupMenu(),
+                          //   initialData: false,
+                          //   builder: (context, snapshot) => ListTile(
+                          //     contentPadding: EdgeInsets.only(
+                          //         left: 80, top: 10, bottom: 10, right: 30),
+                          //     onTap: () =>
+                          //         _saveTapToOpenPopupMenu(!snapshot.data!),
+                          //     title: Text(s.settingsTapToOpenPopupMenu),
+                          //     subtitle: Text(s.settingsTapToOpenPopupMenuDes),
+                          //     trailing: Transform.scale(
+                          //       scale: 0.9,
+                          //       child: Switch(
+                          //           value: snapshot.data!,
+                          //           onChanged: _saveTapToOpenPopupMenu),
+                          //     ),
+                          //   ),
+                          // ),
                           ...menu.map<Widget>((e) {
                             var i = e % 10;
                             switch (i) {
