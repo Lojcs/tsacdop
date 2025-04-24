@@ -81,7 +81,8 @@ class _WebPodcastSearchState extends State<WebPodcastSearch> {
             }
           }
           
-          document.querySelector('.cookie-notice').remove();
+          document.querySelector('.cookie-wrapper').remove();
+          document.querySelector('#didomi-host').remove();
         """);
         await Future.delayed(Duration(seconds: 1));
       },
