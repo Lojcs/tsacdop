@@ -1,13 +1,14 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:focused_menu/focused_menu.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:vibration/vibration.dart';
+import '../episodes/episode_detail.dart';
+import '../home/audioplayer.dart';
 import '../state/episode_state.dart';
 import '../type/episodebrief.dart';
 import '../util/extension_helper.dart';
@@ -21,6 +22,7 @@ import '../state/audio_state.dart';
 import '../type/play_histroy.dart';
 import '../type/podcastlocal.dart';
 import '../util/helpers.dart';
+import '../util/open_container.dart';
 import '../util/selection_controller.dart';
 import 'custom_widget.dart';
 import 'episodegrid.dart';
@@ -70,20 +72,28 @@ class InteractiveEpisodeCard extends StatefulWidget {
   /// to [SelectionController.selectedEpisodes].
   final bool applyActionToAllSelected;
 
-  InteractiveEpisodeCard(this.context, this.episode, this.layout,
-      {this.openPodcast = true,
-      this.showImage = true,
-      this.preferEpisodeImage = false,
-      this.showNumber = false,
-      this.showLiked = true,
-      this.showNew = true,
-      this.showLengthAndSize = true,
-      this.showPlayedAndDownloaded = true,
-      this.showDate = false,
-      this.selectable = false,
-      this.index,
-      this.applyActionToAllSelected = true})
-      : assert((!preferEpisodeImage &&
+  /// Disables the card listening to [EpisodeState] to refresh itself.
+  /// [EpisodeState] is still checked to prevent unnecessary rebuilds.
+  final bool externallyRefreshed;
+
+  InteractiveEpisodeCard(
+    this.context,
+    this.episode,
+    this.layout, {
+    this.openPodcast = true,
+    this.showImage = true,
+    this.preferEpisodeImage = false,
+    this.showNumber = false,
+    this.showLiked = true,
+    this.showNew = true,
+    this.showLengthAndSize = true,
+    this.showPlayedAndDownloaded = true,
+    this.showDate = false,
+    this.selectable = false,
+    this.index,
+    this.applyActionToAllSelected = true,
+    this.externallyRefreshed = false,
+  })  : assert((!preferEpisodeImage &&
                 episode.fields.contains(EpisodeField.podcastImage)) ||
             episode.fields.contains(EpisodeField.episodeImage) ||
             episode.fields.contains(EpisodeField.podcastImage)),
@@ -122,9 +132,10 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
 
   bool _initialBuild = true;
   late bool? episodeChange;
-  late Widget _body = _getBody();
 
   double avatarSize = 0;
+
+  late Widget _body;
 
   @override
   void initState() {
@@ -144,24 +155,51 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   }
 
   @override
-  void didUpdateWidget(covariant InteractiveEpisodeCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.layout != oldWidget.layout) {
-      _body = _getBody();
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     if (_initialBuild) {
       _initialBuild = false;
       episodeChange =
           Provider.of<EpisodeState>(context).episodeChangeMap[episode.id];
+      _body = _getBody();
     }
-    return _body;
+    if (widget.externallyRefreshed) {
+      bool? changeValue =
+          Provider.of<EpisodeState>(context).episodeChangeMap[episode.id];
+      if (changeValue != null && changeValue != episodeChange) {
+        episode = widget.episode;
+        episodeChange = changeValue;
+        _body = _getBody();
+      }
+      return _body;
+    } else {
+      return Selector<EpisodeState, bool?>(
+        selector: (_, episodeState) =>
+            episodeState.episodeChangeMap[episode.id],
+        builder: (_, data, ___) => FutureBuilder<EpisodeBrief?>(
+          future: () async {
+            if (data != episodeChange) {
+              // Prevents unnecessary database calls when the card is rebuilt for other reasons
+              episodeChange = data;
+              return widget.episode.copyWithFromDB(
+                  update: true); // It needs to be widget.episode
+            } else {
+              return null;
+            }
+          }(),
+          builder: (context, snapshot) {
+            if (snapshot.hasData && snapshot.data != null) {
+              episode = snapshot.data!;
+            }
+            _body = _getBody();
+            return _body;
+          },
+        ),
+      );
+    }
   }
 
-  void _vibrateTapNormal() {
+  Future<void> _vibrateTapNormal() async {
+    if (!(await Vibration.hasAmplitudeControl())) return;
     Vibration.vibrate(
       pattern: [5, 145, 50, 50],
       intensities: [32, 0, 4, 0],
@@ -169,16 +207,19 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   }
 
   Future<void> _vibrateTapSelected() async {
+    if (!(await Vibration.hasAmplitudeControl())) return;
     await Vibration.cancel();
     Vibration.vibrate(duration: 5, amplitude: 32);
   }
 
   Future<void> _vibrateLongTap() async {
+    if (!(await Vibration.hasAmplitudeControl())) return;
     await Vibration.cancel();
     Vibration.vibrate(duration: 5, amplitude: 48);
   }
 
   Future<void> _vibrateTapFinishedSelect() async {
+    if (!(await Vibration.hasAmplitudeControl())) return;
     await Vibration.cancel();
     Vibration.vibrate(
       pattern: [32, 4, 4],
@@ -187,6 +228,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   }
 
   Future<void> _vibrateTapFinishedRelease() async {
+    if (!(await Vibration.hasAmplitudeControl())) return;
     await Vibration.cancel();
     Vibration.vibrate(
       pattern: [4, 12, 16, 12, 6],
@@ -195,233 +237,194 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   }
 
   Future<void> _vibrateEnd() async {
+    if (!(await Vibration.hasAmplitudeControl())) return;
     await Vibration.cancel();
   }
 
   Widget _getBody() {
-    return Selector<EpisodeState, bool?>(
-      selector: (_, episodeState) => episodeState.episodeChangeMap[episode.id],
-      builder: (_, data, ___) => FutureBuilder<EpisodeBrief?>(
-        future: () async {
-          if (data != episodeChange) {
-            // Prevents unnecessary database calls when the card is rebuilt for other reasons
-            episodeChange = data;
-            return widget.episode
-                .copyWithFromDB(update: true); // It needs to be widget.episode
-          } else {
-            return null;
-          }
-        }(),
+    return OpenContainerWrapper(
+      layout: widget.layout,
+      getAvatarSize: () => avatarSize,
+      episode: episode,
+      preferEpisodeImage: widget.preferEpisodeImage,
+      onClosed: (() {
+        _shadowController.reverse();
+      }),
+      closedBuilder: (context, action, boo) => FutureBuilder<List<int>>(
+        future: _getEpisodeMenu(),
+        initialData: [],
         builder: (context, snapshot) {
-          if (snapshot.hasData && snapshot.data != null) {
-            episode = snapshot.data!;
-          }
-          return LayoutBuilder(
-            builder: (context, constraints) => OpenContainerWrapper(
-              layout: widget.layout,
-              getAvatarSize: () => avatarSize,
-              episode: episode,
-              preferEpisodeImage: widget.preferEpisodeImage,
-              onClosed: (() {
-                _shadowController.reverse();
-              }),
-              closedBuilder: (context, action, boo) => FutureBuilder<List<int>>(
-                future: _getEpisodeMenu(),
-                initialData: [],
-                builder: (context, snapshot) {
-                  final menuList = snapshot.data!;
-                  return Selector2<AudioPlayerNotifier, SelectionController?,
-                      Tuple4<bool, bool, bool, bool>>(
-                    selector: (_, audio, select) => Tuple4(
-                        audio.episode == episode,
-                        audio.playlist.contains(episode),
-                        audio.playerRunning,
-                        select?.selectedIndicies.contains(widget.index) ??
-                            false),
-                    builder: (_, data, __) {
-                      selected = data.item4;
-                      if (selected) {
-                        _controller.forward();
-                      } else {
-                        _controller.reverse();
-                      }
-                      if (data.item1) savedPosition = null;
-                      List<FocusedMenuItem> menuItemList = _menuItemList(
-                          context,
-                          episode,
-                          data.item1,
-                          data.item2,
-                          data.item3,
-                          menuList,
-                          applyToAllSelected: widget.applyActionToAllSelected);
-                      return _FocusedMenuHolderWrapper(
-                        onTapStart: () {
-                          if (selected) {
-                            _vibrateTapSelected();
-                          } else {
-                            _vibrateTapNormal();
-                          }
-                        },
-                        onTapEnd: () {
-                          _vibrateEnd();
-                        },
-                        onTap: () async {
-                          if (selectable && selectionController!.selectMode) {
-                            selected =
-                                selectionController!.select(widget.index!);
-                            if (selected) {
-                              _vibrateTapFinishedSelect();
-                              _controller.forward();
-                            } else {
-                              _vibrateTapFinishedRelease();
-                              _controller.reverse();
-                            }
-                          } else {
-                            _shadowController.forward();
-                            action();
-                          }
-                        },
-                        onShortTapHold: () {
-                          if (selectable && !selected) {
-                            _vibrateLongTap();
-                            if (!selectionController!.selectMode) {
-                              selectionController!.selectMode = true;
-                              selectionController!.temporarySelect = true;
-                            }
-                            selected =
-                                selectionController!.select(widget.index!);
-
-                            _controller.forward();
-                          }
-                        },
-                        onPrimaryClick: () {
-                          if (selectable) {
-                            if (selectionController!.selectMode) {
-                              selected =
-                                  selectionController!.select(widget.index!);
-                            } else {
-                              selectionController!.deselectAll();
-                              selected =
-                                  selectionController!.select(widget.index!);
-                            }
-                            if (selected) {
-                              _controller.forward();
-                            } else {
-                              _controller.reverse();
-                            }
-                          }
-                        },
-                        onDoubleClick: () {
-                          _shadowController.forward();
-                          action();
-                        },
-                        onAddSelect: () {
-                          if (selectable) {
-                            if (!selectionController!.selectMode) {
-                              selectionController!.selectMode = true;
-                              selectionController!.temporarySelect = true;
-                            }
-                            selected =
-                                selectionController!.select(widget.index!);
-                            if (selected) {
-                              _controller.forward();
-                            } else {
-                              _controller.reverse();
-                            }
-                          }
-                        },
-                        onRangeSelect: () {
-                          if (selectable) {
-                            if (!selectionController!.selectMode) {
-                              selectionController!.selectMode = true;
-                              selectionController!.temporarySelect = true;
-                            }
-                            selectionController!.batchSelect = BatchSelect.none;
-                            if (!selected) {
-                              selected =
-                                  selectionController!.select(widget.index!);
-                            }
-                            selectionController!.batchSelect =
-                                BatchSelect.between;
-                            if (selected) {
-                              _controller.forward();
-                            } else {
-                              _controller.reverse();
-                            }
-                          }
-                        },
-                        onTapDrag: () {},
-                        episode: episode,
-                        layout: widget.layout,
-                        menuItemList: menuItemList,
-                        menuItemExtent: widget.layout == EpisodeGridLayout.small
-                            ? 41.5
-                            : widget.layout == EpisodeGridLayout.medium
-                                ? 42.5
-                                : 100 / menuItemList.length,
-                        menuBoxDecoration: BoxDecoration(
-                          color: context.accentBackground,
-                          border: Border.all(
-                            color: context.accentColor,
-                            width: 1.0,
-                          ),
-                          borderRadius: widget.layout == EpisodeGridLayout.small
-                              ? context.radiusSmall
-                              : widget.layout == EpisodeGridLayout.medium
-                                  ? context.radiusMedium
-                                  : context.radiusLarge,
-                        ),
-                        childLowerlay: data.item1 && data.item3
-                            ? Selector<AudioPlayerNotifier, double>(
-                                selector: (_, audio) => audio.seekSliderValue,
-                                builder: (_, seekValue, __) =>
-                                    _ProgressLowerlay(
-                                  episode,
-                                  seekValue,
-                                  widget.layout,
-                                  animator: _controller,
-                                ),
-                              )
-                            : FutureBuilder<PlayHistory>(
-                                future: _getSavedPosition(),
-                                // initialData: PlayHistory("", "", 0, 0),
-                                builder: (context, snapshot) =>
-                                    _ProgressLowerlay(
-                                  episode,
-                                  snapshot.hasData
-                                      ? snapshot.data!.seekValue!
-                                      : 0,
-                                  widget.layout,
-                                  animator: _controller,
-                                ),
-                              ),
-                        controller: _controller,
-                        shadowController: _shadowController,
-                        child: EpisodeCard(
-                          context,
-                          episode,
-                          widget.layout,
-                          openPodcast: widget.openPodcast,
-                          showImage: widget.showImage && !boo,
-                          preferEpisodeImage: widget.preferEpisodeImage,
-                          showNumber: widget.showNumber,
-                          showLiked: widget.showLiked,
-                          showNew: widget.showNew,
-                          showLengthAndSize: widget.showLengthAndSize,
-                          showPlayedAndDownloaded:
-                              widget.showPlayedAndDownloaded,
-                          showDate: widget.showDate,
-                          decorate: false,
-                          avatarSizeCallback: (size) {
-                            avatarSize = size;
-                          },
-                        ),
-                      );
-                    },
-                  );
+          final menuList = snapshot.data!;
+          return Selector2<AudioPlayerNotifier, SelectionController?,
+              Tuple4<bool, bool, bool, bool>>(
+            selector: (_, audio, select) => Tuple4(
+                audio.episode == episode,
+                audio.playlist.contains(episode),
+                audio.playerRunning,
+                select?.selectedIndicies.contains(widget.index) ?? false),
+            builder: (_, data, __) {
+              selected = data.item4;
+              if (selected) {
+                _controller.forward();
+              } else {
+                _controller.reverse();
+              }
+              if (data.item1) savedPosition = null;
+              List<FocusedMenuItem> menuItemList = _menuItemList(context,
+                  episode, data.item1, data.item2, data.item3, menuList,
+                  applyToAllSelected: widget.applyActionToAllSelected);
+              return _FocusedMenuHolderWrapper(
+                onTapStart: () {
+                  if (selected) {
+                    _vibrateTapSelected();
+                  } else {
+                    _vibrateTapNormal();
+                  }
                 },
-              ),
-            ),
+                onTapEnd: () {
+                  _vibrateEnd();
+                },
+                onTap: () async {
+                  if (selectable && selectionController!.selectMode) {
+                    selected = selectionController!.select(widget.index!);
+                    if (selected) {
+                      _vibrateTapFinishedSelect();
+                      _controller.forward();
+                    } else {
+                      _vibrateTapFinishedRelease();
+                      _controller.reverse();
+                    }
+                  } else {
+                    _shadowController.forward();
+                    action();
+                  }
+                },
+                onShortTapHold: () {
+                  if (selectable && !selected) {
+                    _vibrateLongTap();
+                    if (!selectionController!.selectMode) {
+                      selectionController!.selectMode = true;
+                      selectionController!.temporarySelect = true;
+                    }
+                    selected = selectionController!.select(widget.index!);
+
+                    _controller.forward();
+                  }
+                },
+                onPrimaryClick: () {
+                  if (selectable) {
+                    if (selectionController!.selectMode) {
+                      selected = selectionController!.select(widget.index!);
+                    } else {
+                      selectionController!.deselectAll();
+                      selected = selectionController!.select(widget.index!);
+                    }
+                    if (selected) {
+                      _controller.forward();
+                    } else {
+                      _controller.reverse();
+                    }
+                  }
+                },
+                onDoubleClick: () {
+                  _shadowController.forward();
+                  action();
+                },
+                onAddSelect: () {
+                  if (selectable) {
+                    if (!selectionController!.selectMode) {
+                      selectionController!.selectMode = true;
+                      selectionController!.temporarySelect = true;
+                    }
+                    selected = selectionController!.select(widget.index!);
+                    if (selected) {
+                      _controller.forward();
+                    } else {
+                      _controller.reverse();
+                    }
+                  }
+                },
+                onRangeSelect: () {
+                  if (selectable) {
+                    if (!selectionController!.selectMode) {
+                      selectionController!.selectMode = true;
+                      selectionController!.temporarySelect = true;
+                    }
+                    selectionController!.batchSelect = BatchSelect.none;
+                    if (!selected) {
+                      selected = selectionController!.select(widget.index!);
+                    }
+                    selectionController!.batchSelect = BatchSelect.between;
+                    if (selected) {
+                      _controller.forward();
+                    } else {
+                      _controller.reverse();
+                    }
+                  }
+                },
+                onTapDrag: () {},
+                episode: episode,
+                layout: widget.layout,
+                menuItemList: menuItemList,
+                menuItemExtent: widget.layout == EpisodeGridLayout.small
+                    ? 41.5
+                    : widget.layout == EpisodeGridLayout.medium
+                        ? 42.5
+                        : 100 / menuItemList.length,
+                menuBoxDecoration: BoxDecoration(
+                  color: context.accentBackground,
+                  border: Border.all(
+                    color: context.accentColor,
+                    width: 1.0,
+                  ),
+                  borderRadius: widget.layout == EpisodeGridLayout.small
+                      ? context.radiusSmall
+                      : widget.layout == EpisodeGridLayout.medium
+                          ? context.radiusMedium
+                          : context.radiusLarge,
+                ),
+                childLowerlay: data.item1 && data.item3
+                    ? Selector<AudioPlayerNotifier, double>(
+                        selector: (_, audio) => audio.seekSliderValue,
+                        builder: (_, seekValue, __) => _ProgressLowerlay(
+                          episode,
+                          seekValue,
+                          widget.layout,
+                          animator: _controller,
+                        ),
+                      )
+                    : FutureBuilder<PlayHistory>(
+                        future: _getSavedPosition(),
+                        // initialData: PlayHistory("", "", 0, 0),
+                        builder: (context, snapshot) => _ProgressLowerlay(
+                          episode,
+                          snapshot.hasData ? snapshot.data!.seekValue! : 0,
+                          widget.layout,
+                          animator: _controller,
+                        ),
+                      ),
+                controller: _controller,
+                shadowController: _shadowController,
+                child: EpisodeCard(
+                  context,
+                  episode,
+                  widget.layout,
+                  openPodcast: widget.openPodcast,
+                  showImage: widget.showImage && !boo,
+                  preferEpisodeImage: widget.preferEpisodeImage,
+                  showNumber: widget.showNumber,
+                  showLiked: widget.showLiked,
+                  showNew: widget.showNew,
+                  showLengthAndSize: widget.showLengthAndSize,
+                  showPlayedAndDownloaded: widget.showPlayedAndDownloaded,
+                  showDate: widget.showDate,
+                  decorate: false,
+                  avatarSizeCallback: (size) {
+                    avatarSize = size;
+                  },
+                ),
+              );
+            },
           );
         },
       ),
@@ -434,6 +437,82 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
       savedPosition = await dbHelper.getPosition(widget.episode);
     }
     return savedPosition!;
+  }
+}
+
+class OpenContainerWrapper extends StatelessWidget {
+  const OpenContainerWrapper(
+      {super.key,
+      required this.closedBuilder,
+      required this.episode,
+      this.playerRunning,
+      this.getAvatarSize,
+      required this.preferEpisodeImage,
+      required this.layout,
+      this.onClosed});
+
+  final OpenContainerBuilder closedBuilder;
+  final EpisodeBrief episode;
+  final bool? playerRunning;
+  final double? Function()? getAvatarSize;
+  final bool preferEpisodeImage;
+  final EpisodeGridLayout layout;
+  final VoidCallback? onClosed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Selector<AudioPlayerNotifier, Tuple2<bool, PlayerHeight?>>(
+      selector: (_, audio) => Tuple2(audio.playerRunning, audio.playerHeight),
+      builder: (_, data, __) => OpenContainer(
+        playerRunning: data.item1,
+        playerHeight: kMinPlayerHeight[data.item2!.index],
+        flightWidget: CircleAvatar(
+            backgroundImage: preferEpisodeImage
+                ? episode.episodeOrPodcastImageProvider
+                : episode.podcastImageProvider),
+        getFlightWidgetBeginSize: getAvatarSize,
+        flightWidgetEndSize: 30,
+        flightWidgetBeginOffsetX: layout == EpisodeGridLayout.small ? 6 : 8,
+        flightWidgetBeginOffsetY: layout == EpisodeGridLayout.small
+            ? 7
+            : layout == EpisodeGridLayout.medium
+                ? 8
+                : 15,
+        flightWidgetEndOffsetX: 10,
+        flightWidgetEndOffsetY: data.item1
+            ? context.height -
+                kMinPlayerHeight[data.item2!.index]! -
+                40 -
+                context.originalPadding.bottom
+            : context.height - 40 - context.originalPadding.bottom,
+        transitionDuration: Duration(milliseconds: 400),
+        beginColor: Theme.of(context).primaryColor,
+        endColor: Theme.of(context).primaryColor,
+        closedColor: Theme.of(context).brightness == Brightness.light
+            ? context.primaryColor
+            : context.surface,
+        openColor: context.surface,
+        openElevation: 0,
+        closedElevation: 0,
+        openShape: RoundedRectangleBorder(borderRadius: context.radiusSmall),
+        closedShape: RoundedRectangleBorder(
+            borderRadius: layout == EpisodeGridLayout.small
+                ? context.radiusSmall
+                : layout == EpisodeGridLayout.medium
+                    ? context.radiusMedium
+                    : context.radiusLarge),
+        transitionType: ContainerTransitionType.fadeThrough,
+        openBuilder: (context, _, boo) {
+          return EpisodeDetail(
+            episodeItem: episode,
+            hide: boo,
+          );
+        },
+        tappable: false,
+        closedBuilder: closedBuilder,
+        onDispose: onClosed,
+      ),
+    );
   }
 }
 

@@ -269,137 +269,85 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
 
   @override
   Widget build(BuildContext context) {
-    return ScrollConfiguration(
-      behavior: NoGrowBehavior(),
-      child: CustomScrollView(
-        controller: _controller
-          ..addListener(() async {
-            if (_controller.offset >=
-                    _controller.position.maxScrollExtent - context.width &&
-                _episodes.length == _top) {
-              if (!_loadMore) {
-                if (mounted) setState(() => _loadMore = true);
-                _episodes.addAll(await _getEpisodes(36, offset: _top));
-                _top = _top + 36;
-                widget.selectionController
-                    .setSelectableEpisodes(_episodes, compatible: true);
-                if (mounted) setState(() => _loadMore = false);
-              }
-            }
-            if (mounted && !_scroll && _controller.offset > 0) {
-              setState(() => _scroll = true);
-            }
-          }),
-        physics: const AlwaysScrollableScrollPhysics(),
-        slivers: <Widget>[
-          Builder(
-            builder: (context) {
-              if (_infoHeight == 0 && _infoKey.currentContext != null) {
-                _infoHeight =
-                    (_infoKey.currentContext!.findRenderObject() as RenderBox)
-                        .size
-                        .height;
-              }
-              return Selector<CardColorScheme, Tuple2<Color, Color>>(
-                selector: (context, cardColorScheme) => Tuple2(
-                    context.realDark ? Colors.black : cardColorScheme.saturated,
-                    cardColorScheme.colorScheme.onPrimaryContainer),
-                builder: (context, data, _) => _PodcastDetailAppBar(
-                  podcastLocal: widget.podcastLocal,
-                  color: data.item1,
-                  textColor: data.item2,
-                  infoHeight: _infoHeight,
-                ),
-              );
-            },
-          ),
-          FutureBuilder<Tuple2<EpisodeGridLayout, bool?>>(
-            future: getLayoutAndShowListened(),
-            builder: (_, snapshot) {
-              _layout ??= snapshot.data?.item1;
-              return ActionBar(
-                onGetEpisodesChanged: (getEpisodes) async {
-                  _getEpisodes = getEpisodes;
-                  _episodes = await _getEpisodes(_top);
-                  widget.selectionController.setSelectableEpisodes(_episodes);
-                  if (mounted) setState(() {});
-                },
-                onLayoutChanged: (layout) {
-                  _layout = layout;
-                  if (mounted) setState(() {});
-                },
-                widgetsFirstRow: const [
-                  ActionBarDropdownSortBy(0, 0),
-                  ActionBarSwitchSortOrder(0, 1),
-                  ActionBarSpacer(0, 2),
-                  ActionBarFilterNew(0, 3),
-                  ActionBarFilterLiked(0, 4),
-                  ActionBarFilterPlayed(0, 5),
-                  ActionBarFilterDownloaded(0, 6),
-                  ActionBarSwitchSelectMode(0, 7),
-                  ActionBarSwitchSecondRow(0, 8),
+    return FutureBuilder<Tuple2<EpisodeGridLayout, bool?>>(
+      future: getLayoutAndShowListened(layoutKey: recentLayoutKey),
+      builder: (_, snapshot) {
+        return InteractiveEpisodeGrid(
+          additionalSliversList: [
+            Builder(
+              builder: (context) {
+                if (_infoHeight == 0 && _infoKey.currentContext != null) {
+                  _infoHeight =
+                      (_infoKey.currentContext!.findRenderObject() as RenderBox)
+                          .size
+                          .height;
+                }
+                return Selector<CardColorScheme, Tuple2<Color, Color>>(
+                  selector: (context, cardColorScheme) => Tuple2(
+                      context.realDark
+                          ? Colors.black
+                          : cardColorScheme.saturated,
+                      cardColorScheme.colorScheme.onPrimaryContainer),
+                  builder: (context, data, _) => _PodcastDetailAppBar(
+                    podcastLocal: widget.podcastLocal,
+                    color: data.item1,
+                    textColor: data.item2,
+                    infoHeight: _infoHeight,
+                  ),
+                );
+              },
+            ), // Hidden widget to get the height of [HostsList]
+            SliverToBoxAdapter(
+              child: Stack(
+                children: [
+                  _infoHeight == 0
+                      ? Opacity(
+                          opacity: 0,
+                          key: _infoKey,
+                          child: HostsList(context, widget.podcastLocal),
+                        )
+                      : Center(),
                 ],
-                widgetsSecondRow: const [
-                  ActionBarFilterDisplayVersion(1, 0),
-                  ActionBarSearchTitle(1, 1),
-                  ActionBarSpacer(1, 2),
-                  ActionBarButtonRemoveNewMark(1, 3),
-                  ActionBarSwitchLayout(1, 4),
-                  ActionBarButtonRefresh(1, 5),
-                ],
-                podcast: widget.podcastLocal,
-                filterPlayed: snapshot.data?.item2,
-                filterDisplayVersion: true,
-                layout: _layout ?? EpisodeGridLayout.large,
-              );
-            },
-          ),
-          SliverAppBar(
-            pinned: true,
-            leading: Center(),
-            toolbarHeight: 2,
-            backgroundColor: Colors.transparent,
-            scrolledUnderElevation: 0,
-            flexibleSpace: _loadMore
-                ? LinearProgressIndicator(
-                    color: Provider.of<CardColorScheme>(context).saturated,
-                    backgroundColor: Colors.transparent,
-                  )
-                : Center(),
-          ),
-          if (!widget.hide)
-            Selector<EpisodeState, bool>(
-              selector: (_, episodeState) => episodeState.globalChange,
-              builder: (context, value, _) => FutureBuilder(
-                  future: Future.microtask(() async {
-                    _episodes = await _getEpisodes(_top);
-                    Provider.of<SelectionController>(context, listen: false)
-                        .setSelectableEpisodes(_episodes, compatible: false);
-                  }),
-                  builder: (context, snapshot) => EpisodeGrid(
-                        episodes: _episodes,
-                        layout: _layout ?? EpisodeGridLayout.large,
-                        openPodcast: true,
-                        initNum: 0,
-                      )),
+              ),
             ),
-
-          // Hidden widget to get the height of [HostsList]
-          SliverToBoxAdapter(
-            child: Stack(
-              children: [
-                _infoHeight == 0
-                    ? Opacity(
-                        opacity: 0,
-                        key: _infoKey,
-                        child: HostsList(context, widget.podcastLocal),
-                      )
-                    : Center(),
-              ],
-            ),
+          ],
+          sliverInsertIndicies: (
+            actionBarIndex: 1,
+            loadingIndicatorIndex: 2,
+            gridIndex: 3
           ),
-        ],
-      ),
+          showGrid: !widget.hide,
+          openPodcast: true,
+          actionBarWidgetsFirstRow: const [
+            ActionBarDropdownSortBy(0, 0),
+            ActionBarSwitchSortOrder(0, 1),
+            ActionBarSpacer(0, 2),
+            ActionBarFilterNew(0, 3),
+            ActionBarFilterLiked(0, 4),
+            ActionBarFilterPlayed(0, 5),
+            ActionBarFilterDownloaded(0, 6),
+            ActionBarSwitchSelectMode(0, 7),
+            ActionBarSwitchSecondRow(0, 8),
+          ],
+          actionBarWidgetsSecondRow: const [
+            ActionBarFilterDisplayVersion(1, 0),
+            ActionBarSearchTitle(1, 1),
+            ActionBarSpacer(1, 2),
+            ActionBarButtonRemoveNewMark(1, 3),
+            ActionBarSwitchLayout(1, 4),
+            ActionBarButtonRefresh(1, 5),
+          ],
+          actionBarSortByItems: const [
+            Sorter.downloadDate,
+            Sorter.pubDate,
+            Sorter.enclosureSize,
+            Sorter.enclosureDuration
+          ],
+          actionBarPodcast: widget.podcastLocal,
+          actionBarFilterPlayed: snapshot.data?.item2,
+          layout: snapshot.data?.item1 ?? EpisodeGridLayout.small,
+        );
+      },
     );
   }
 }

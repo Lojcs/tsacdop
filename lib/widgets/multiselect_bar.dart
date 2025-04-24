@@ -95,7 +95,7 @@ class _MultiSelectPanelIntegrationState
     if (initialBuild) {
       initialBuild = false;
       episodeStateGlobalChange =
-          Provider.of<EpisodeState>(context).globalChange;
+          Provider.of<EpisodeState>(context, listen: false).globalChange;
     }
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
@@ -126,9 +126,11 @@ class _MultiSelectPanelIntegrationState
                           episodeStateGlobalChange = data;
                           List<EpisodeBrief> updatedEpisodes =
                               await _getUpdatedEpisodes(context);
-                          Provider.of<SelectionController>(context,
-                                  listen: false)
-                              .updateEpisodes(updatedEpisodes);
+                          if (context.mounted) {
+                            Provider.of<SelectionController>(context,
+                                    listen: false)
+                                .updateEpisodes(updatedEpisodes);
+                          }
                         }
                       }(),
                       builder: (context, _) {
@@ -164,7 +166,7 @@ class _MultiSelectPanelIntegrationState
   Future<List<EpisodeBrief>> _getUpdatedEpisodes(BuildContext context) async {
     var dbHelper = DBHelper();
     SelectionController selectionController =
-        Provider.of<SelectionController>(context);
+        Provider.of<SelectionController>(context, listen: false);
     List<int> episodeIds = selectionController.previouslySelectedEpisodes
         .map((e) => e.id)
         .toList();
@@ -284,28 +286,14 @@ class _SelectionPreviewState extends State<SelectionPreview>
                       selectionController.selectedEpisodes,
                       selectionController.selectedEpisodes.length,
                     ),
-                    builder: (context, data, _) =>
-                        FutureBuilder<List<EpisodeBrief>>(
-                      future:
-                          Future.wait(data.item1.map((e) => e.copyWithFromDB(
-                                keepExisting: true,
-                                newFields: [
-                                  EpisodeField.number,
-                                  EpisodeField.enclosureDuration,
-                                  EpisodeField.enclosureSize,
-                                  EpisodeField.episodeImage,
-                                  EpisodeField.podcastImage,
-                                  EpisodeField.primaryColor,
-                                ],
-                              ))),
-                      initialData: [],
-                      builder: (context, snapshot) => EpisodeGrid(
-                        episodes: snapshot.data!,
+                    builder: (context, data, _) {
+                      return EpisodeGrid(
+                        episodes: data.item1,
                         layout: EpisodeGridLayout.medium,
                         openPodcast: true,
                         selectable: false,
-                      ),
-                    ),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -404,7 +392,8 @@ class _SelectionPreviewState extends State<SelectionPreview>
         ),
       ),
     );
-    CardColorScheme? cardColorScheme = Provider.of<CardColorScheme?>(context);
+    CardColorScheme? cardColorScheme =
+        Provider.of<CardColorScheme?>(context, listen: false);
     if (cardColorScheme == null) {
       return MultiProvider(
         providers: [
@@ -554,7 +543,8 @@ class _MultiSelectPanelState extends State<MultiSelectPanel>
         ),
       ),
     );
-    CardColorScheme? cardColorScheme = Provider.of<CardColorScheme?>(context);
+    CardColorScheme? cardColorScheme =
+        Provider.of<CardColorScheme?>(context, listen: false);
     if (cardColorScheme == null) {
       return MultiProvider(
         providers: [

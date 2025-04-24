@@ -542,148 +542,30 @@ class _RecentUpdateState extends State<_RecentUpdate>
   //final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
   //    GlobalKey<RefreshIndicatorState>();
 
-  /// Episodes to display
-  List<EpisodeBrief> _episodes = [];
-
-  /// Function to get episodes
-  Future<List<EpisodeBrief>> Function(int count, {int offset}) _getEpisodes =
-      (int _, {int offset = 0}) async {
-    return <EpisodeBrief>[];
-  };
-
-  /// Episodes loaded first time.
-  int _top = 108;
-
-  /// Load more episodes when scroll to bottom.
-  bool _loadMore = false;
-
-  EpisodeGridLayout? _layout;
-
-  // Stop animating after first scroll
-  bool _scroll = false;
-
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final s = context.s;
-    return NotificationListener<ScrollNotification>(
-      onNotification: (scrollInfo) {
-        if (scrollInfo.metrics.pixels >=
-                scrollInfo.metrics.maxScrollExtent - context.width &&
-            _episodes.length == _top) {
-          if (!_loadMore) {
-            Future.microtask(() async {
-              if (mounted) setState(() => _loadMore = true);
-              _episodes.addAll(await _getEpisodes(36, offset: _top));
-              _top = _top + 36;
-              Provider.of<SelectionController>(context, listen: false)
-                  .setSelectableEpisodes(_episodes, compatible: true);
-              if (mounted) setState(() => _loadMore = false);
-            });
-          }
-        }
-        if (mounted && !_scroll && scrollInfo.metrics.pixels > 0) {
-          setState(() => _scroll = true);
-        }
-        return true;
+    return FutureBuilder<Tuple2<EpisodeGridLayout, bool?>>(
+      future: getLayoutAndShowListened(layoutKey: recentLayoutKey),
+      builder: (_, snapshot) {
+        return InteractiveEpisodeGrid(
+          noEpisodesWidget: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Icon(LineIcons.alternateCloudDownload,
+                  size: 80, color: Colors.grey[500]),
+              Padding(padding: EdgeInsets.symmetric(vertical: 10)),
+              Text(
+                context.s.noEpisodeRecent,
+                style: TextStyle(color: Colors.grey[500]),
+              )
+            ],
+          ),
+          openPodcast: true,
+          actionBarFilterPlayed: snapshot.data?.item2,
+          layout: snapshot.data?.item1 ?? EpisodeGridLayout.small,
+        );
       },
-      child: ScrollConfiguration(
-        behavior: NoGrowBehavior(),
-        child: CustomScrollView(
-          key: PageStorageKey<String>('update'),
-          slivers: <Widget>[
-            FutureBuilder<Tuple2<EpisodeGridLayout, bool?>>(
-              future: getLayoutAndShowListened(layoutKey: recentLayoutKey),
-              builder: (_, snapshot) {
-                _layout ??= snapshot.data?.item1;
-                return ActionBar(
-                  onGetEpisodesChanged: (getEpisodes) async {
-                    _getEpisodes = getEpisodes;
-                    _episodes = await _getEpisodes(_top);
-                    Provider.of<SelectionController>(context, listen: false)
-                        .setSelectableEpisodes(_episodes);
-                    if (mounted) setState(() {});
-                  },
-                  onLayoutChanged: (layout) {
-                    _layout = layout;
-                    if (mounted) setState(() {});
-                  },
-                  widgetsFirstRow: const [
-                    ActionBarDropdownSortBy(0, 0),
-                    ActionBarSwitchSortOrder(0, 1),
-                    ActionBarDropdownGroups(0, 2),
-                    ActionBarSpacer(0, 3),
-                    ActionBarFilterPlayed(0, 4),
-                    ActionBarFilterNew(0, 5),
-                    ActionBarButtonRemoveNewMark(0, 6),
-                    ActionBarSwitchSelectMode(0, 7),
-                    ActionBarSwitchSecondRow(0, 8),
-                  ],
-                  widgetsSecondRow: const [
-                    ActionBarDropdownPodcasts(1, 0),
-                    ActionBarSearchTitle(1, 1),
-                    ActionBarSpacer(1, 2),
-                    ActionBarFilterDownloaded(1, 3),
-                    ActionBarFilterLiked(1, 4),
-                    ActionBarSwitchLayout(1, 5),
-                    ActionBarButtonRefresh(1, 6),
-                  ],
-                  filterPlayed: false,
-                  filterDisplayVersion: true,
-                  layout: _layout ?? EpisodeGridLayout.large,
-                );
-              },
-            ),
-            SliverAppBar(
-              pinned: true,
-              leading: Center(),
-              toolbarHeight: 2,
-              backgroundColor: Colors.transparent,
-              scrolledUnderElevation: 0,
-              flexibleSpace: _loadMore
-                  ? LinearProgressIndicator(
-                      backgroundColor: Colors.transparent,
-                    )
-                  : Center(),
-            ),
-            Selector<EpisodeState, bool>(
-              selector: (_, episodeState) => episodeState.globalChange,
-              builder: (context, value, _) => FutureBuilder(
-                future: Future.microtask(() async {
-                  _episodes = await _getEpisodes(_top);
-                  Provider.of<SelectionController>(context, listen: false)
-                      .setSelectableEpisodes(_episodes, compatible: false);
-                }),
-                builder: (context, snapshot) => _episodes.isNotEmpty
-                    ? EpisodeGrid(
-                        episodes: _episodes,
-                        layout: _layout ?? EpisodeGridLayout.large,
-                        openPodcast: true,
-                        initNum: 0,
-                      )
-                    : SliverToBoxAdapter(
-                        child: Padding(
-                          padding: EdgeInsets.only(top: 150),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Icon(LineIcons.alternateCloudDownload,
-                                  size: 80, color: Colors.grey[500]),
-                              Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 10)),
-                              Text(
-                                s.noEpisodeRecent,
-                                style: TextStyle(color: Colors.grey[500]),
-                              )
-                            ],
-                          ),
-                        ),
-                      ),
-              ),
-            )
-          ],
-        ),
-      ),
     );
   }
 
@@ -698,143 +580,47 @@ class _MyFavorite extends StatefulWidget {
 
 class _MyFavoriteState extends State<_MyFavorite>
     with AutomaticKeepAliveClientMixin {
-  /// Episodes to display
-  List<EpisodeBrief> _episodes = [];
-
-  /// Function to get episodes
-  Future<List<EpisodeBrief>> Function(int count, {int offset}) _getEpisodes =
-      (int _, {int offset = 0}) async {
-    return <EpisodeBrief>[];
-  };
-
-  /// Episodes loaded first time.
-  int _top = 108;
-
-  /// Load more episodes when scroll to bottom.
-  bool _loadMore = false;
-
-  EpisodeGridLayout? _layout;
-
-  // Stop animating after first scroll
-  bool _scroll = false;
-
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final s = context.s;
-    return NotificationListener<ScrollNotification>(
-      onNotification: (scrollInfo) {
-        if (scrollInfo.metrics.pixels >=
-                scrollInfo.metrics.maxScrollExtent - context.width &&
-            _episodes.length == _top) {
-          if (!_loadMore) {
-            Future.microtask(() async {
-              if (mounted) setState(() => _loadMore = true);
-              _episodes.addAll(await _getEpisodes(36, offset: _top));
-              _top = _top + 36;
-              Provider.of<SelectionController>(context, listen: false)
-                  .setSelectableEpisodes(_episodes, compatible: true);
-              if (mounted) setState(() => _loadMore = false);
-            });
-          }
-        }
-        if (mounted && !_scroll && scrollInfo.metrics.pixels > 0) {
-          setState(() => _scroll = true);
-        }
-        return true;
-      },
-      child: ScrollConfiguration(
-        behavior: NoGrowBehavior(),
-        child: CustomScrollView(
-          key: PageStorageKey<String>('favorite'),
-          slivers: <Widget>[
-            FutureBuilder<Tuple2<EpisodeGridLayout, bool?>>(
-              future: getLayoutAndShowListened(layoutKey: favLayoutKey),
-              builder: (_, snapshot) {
-                _layout ??= snapshot.data?.item1;
-                return ActionBar(
-                  onGetEpisodesChanged: (getEpisodes) async {
-                    _getEpisodes = getEpisodes;
-                    _episodes = await _getEpisodes(_top);
-                    Provider.of<SelectionController>(context, listen: false)
-                        .setSelectableEpisodes(_episodes);
-                    if (mounted) setState(() {});
-                  },
-                  onLayoutChanged: (layout) {
-                    _layout = layout;
-                    if (mounted) setState(() {});
-                  },
-                  widgetsFirstRow: const [
-                    ActionBarDropdownSortBy(0, 0),
-                    ActionBarSwitchSortOrder(0, 1),
-                    ActionBarDropdownGroups(0, 2),
-                    ActionBarSpacer(0, 3),
-                    ActionBarFilterLiked(0, 4),
-                    ActionBarSwitchLayout(0, 5),
-                    ActionBarSwitchSelectMode(0, 6),
-                  ],
-                  sortByItems: const [
-                    Sorter.likedDate,
-                    Sorter.pubDate,
-                    Sorter.enclosureSize,
-                    Sorter.enclosureDuration
-                  ],
-                  sortBy: Sorter.likedDate,
-                  filterLiked: true,
-                  layout: _layout ?? EpisodeGridLayout.large,
-                );
-              },
-            ),
-            SliverAppBar(
-              pinned: true,
-              leading: Center(),
-              toolbarHeight: 2,
-              backgroundColor: Colors.transparent,
-              scrolledUnderElevation: 0,
-              flexibleSpace: _loadMore
-                  ? LinearProgressIndicator(
-                      backgroundColor: Colors.transparent,
-                    )
-                  : Center(),
-            ),
-            Selector<EpisodeState, bool>(
-              selector: (_, episodeState) => episodeState.globalChange,
-              builder: (context, value, _) => FutureBuilder(
-                future: Future.microtask(() async {
-                  _episodes = await _getEpisodes(_top);
-                  Provider.of<SelectionController>(context, listen: false)
-                      .setSelectableEpisodes(_episodes, compatible: false);
-                }),
-                builder: (context, snapshot) => _episodes.isNotEmpty
-                    ? EpisodeGrid(
-                        episodes: _episodes,
-                        layout: _layout ?? EpisodeGridLayout.large,
-                        openPodcast: true,
-                        initNum: 0,
-                      )
-                    : SliverToBoxAdapter(
-                        child: Padding(
-                          padding: EdgeInsets.only(top: 150),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Icon(LineIcons.heartbeat,
-                                  size: 80, color: Colors.grey[500]),
-                              Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 10)),
-                              Text(
-                                s.noEpisodeFavorite,
-                                style: TextStyle(color: Colors.grey[500]),
-                              )
-                            ],
-                          ),
-                        ),
-                      ),
-              ),
-            ),
+    return FutureBuilder<Tuple2<EpisodeGridLayout, bool?>>(
+      future: getLayoutAndShowListened(layoutKey: favLayoutKey),
+      builder: (_, snapshot) {
+        return InteractiveEpisodeGrid(
+          noEpisodesWidget: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Icon(LineIcons.heartbeat, size: 80, color: Colors.grey[500]),
+              Padding(padding: EdgeInsets.symmetric(vertical: 10)),
+              Text(
+                context.s.noEpisodeFavorite,
+                style: TextStyle(color: Colors.grey[500]),
+              )
+            ],
+          ),
+          openPodcast: true,
+          actionBarWidgetsFirstRow: const [
+            ActionBarDropdownSortBy(0, 0),
+            ActionBarSwitchSortOrder(0, 1),
+            ActionBarDropdownGroups(0, 2),
+            ActionBarSpacer(0, 3),
+            ActionBarFilterLiked(0, 4),
+            ActionBarSwitchLayout(0, 5),
+            ActionBarSwitchSelectMode(0, 6),
           ],
-        ),
-      ),
+          actionBarWidgetsSecondRow: [],
+          actionBarSortByItems: const [
+            Sorter.likedDate,
+            Sorter.pubDate,
+            Sorter.enclosureSize,
+            Sorter.enclosureDuration
+          ],
+          actionBarSortBy: Sorter.likedDate,
+          actionBarFilterLiked: true,
+          actionBarFilterDisplayVersion: null,
+          layout: snapshot.data?.item1 ?? EpisodeGridLayout.small,
+        );
+      },
     );
   }
 
@@ -849,145 +635,54 @@ class _MyDownload extends StatefulWidget {
 
 class _MyDownloadState extends State<_MyDownload>
     with AutomaticKeepAliveClientMixin {
-  /// Episodes to display
-  List<EpisodeBrief> _episodes = [];
-
-  /// Function to get episodes
-  Future<List<EpisodeBrief>> Function(int count, {int offset}) _getEpisodes =
-      (int _, {int offset = 0}) async {
-    return <EpisodeBrief>[];
-  };
-
-  /// Episodes loaded first time.
-  int _top = 108;
-
-  /// Load more episodes when scroll to bottom.
-  bool _loadMore = false;
-
-  EpisodeGridLayout? _layout;
-
-  // Stop animating after first scroll
-  bool _scroll = false;
-
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final s = context.s;
-    return NotificationListener<ScrollNotification>(
-      onNotification: (scrollInfo) {
-        if (scrollInfo.metrics.pixels >=
-                scrollInfo.metrics.maxScrollExtent - context.width &&
-            _episodes.length == _top) {
-          if (!_loadMore) {
-            Future.microtask(() async {
-              if (mounted) setState(() => _loadMore = true);
-              _episodes.addAll(await _getEpisodes(36, offset: _top));
-              _top = _top + 36;
-              Provider.of<SelectionController>(context, listen: false)
-                  .setSelectableEpisodes(_episodes, compatible: true);
-              if (mounted) setState(() => _loadMore = false);
-            });
-          }
-        }
-        if (mounted && !_scroll && scrollInfo.metrics.pixels > 0) {
-          setState(() => _scroll = true);
-        }
-        return true;
-      },
-      child: ScrollConfiguration(
-        behavior: NoGrowBehavior(),
-        child: CustomScrollView(
-          key: PageStorageKey<String>('download_list'),
-          slivers: <Widget>[
-            FutureBuilder<Tuple2<EpisodeGridLayout, bool?>>(
-              future: getLayoutAndShowListened(layoutKey: downloadLayoutKey),
-              builder: (_, snapshot) {
-                _layout ??= snapshot.data?.item1;
-                return ActionBar(
-                  onGetEpisodesChanged: (getEpisodes) async {
-                    _getEpisodes = getEpisodes;
-                    _episodes = await _getEpisodes(_top);
-                    Provider.of<SelectionController>(context, listen: false)
-                        .setSelectableEpisodes(_episodes);
-                    if (mounted) setState(() {});
-                  },
-                  onLayoutChanged: (layout) {
-                    _layout = layout;
-                    if (mounted) setState(() {});
-                  },
-                  widgetsFirstRow: const [
-                    ActionBarDropdownSortBy(0, 0),
-                    ActionBarSwitchSortOrder(0, 1),
-                    ActionBarDropdownGroups(0, 2),
-                    ActionBarSpacer(0, 3),
-                    ActionBarFilterPlayed(0, 4),
-                    ActionBarFilterDownloaded(0, 5),
-                    ActionBarSwitchLayout(0, 6),
-                    ActionBarSwitchSelectMode(0, 7),
-                  ],
-                  sortByItems: const [
-                    Sorter.downloadDate,
-                    Sorter.pubDate,
-                    Sorter.enclosureSize,
-                    Sorter.enclosureDuration
-                  ],
-                  sortBy: Sorter.downloadDate,
-                  filterDownloaded: true,
-                  layout: _layout ?? EpisodeGridLayout.large,
-                );
-              },
-            ),
-            SliverAppBar(
-              pinned: true,
-              leading: Center(),
-              toolbarHeight: 2,
-              backgroundColor: Colors.transparent,
-              scrolledUnderElevation: 0,
-              flexibleSpace: _loadMore
-                  ? LinearProgressIndicator(
-                      backgroundColor: Colors.transparent,
-                    )
-                  : Center(),
-            ),
-            DownloadList(),
-            Selector<DownloadState, bool>(
-              selector: (_, downloadState) => downloadState.downloadFinished,
-              builder: (context, value, _) => FutureBuilder(
-                future: Future.microtask(() async {
-                  _episodes = await _getEpisodes(_top);
-                  Provider.of<SelectionController>(context, listen: false)
-                      .setSelectableEpisodes(_episodes, compatible: false);
-                }),
-                builder: (context, snapshot) => _episodes.isNotEmpty
-                    ? EpisodeGrid(
-                        episodes: _episodes,
-                        layout: _layout ?? EpisodeGridLayout.large,
-                        openPodcast: true,
-                        initNum: 0,
-                      )
-                    : SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 110),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Icon(LineIcons.download,
-                                  size: 80, color: Colors.grey[500]),
-                              Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 10)),
-                              Text(
-                                s.noEpisodeDownload,
-                                style: TextStyle(color: Colors.grey[500]),
-                              )
-                            ],
-                          ),
-                        ),
-                      ),
-              ),
-            ),
+    return FutureBuilder<Tuple2<EpisodeGridLayout, bool?>>(
+      future: getLayoutAndShowListened(layoutKey: downloadLayoutKey),
+      builder: (_, snapshot) {
+        return InteractiveEpisodeGrid(
+          additionalSliversList: [DownloadList()],
+          sliverInsertIndicies: (
+            actionBarIndex: 0,
+            loadingIndicatorIndex: 1,
+            gridIndex: 3
+          ),
+          noEpisodesWidget: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Icon(LineIcons.download, size: 80, color: Colors.grey[500]),
+              Padding(padding: EdgeInsets.symmetric(vertical: 10)),
+              Text(
+                context.s.noEpisodeDownload,
+                style: TextStyle(color: Colors.grey[500]),
+              )
+            ],
+          ),
+          openPodcast: true,
+          actionBarWidgetsFirstRow: const [
+            ActionBarDropdownSortBy(0, 0),
+            ActionBarSwitchSortOrder(0, 1),
+            ActionBarDropdownGroups(0, 2),
+            ActionBarSpacer(0, 3),
+            ActionBarFilterPlayed(0, 4),
+            ActionBarFilterDownloaded(0, 5),
+            ActionBarSwitchLayout(0, 6),
+            ActionBarSwitchSelectMode(0, 7),
           ],
-        ),
-      ),
+          actionBarWidgetsSecondRow: [],
+          actionBarSortByItems: const [
+            Sorter.downloadDate,
+            Sorter.pubDate,
+            Sorter.enclosureSize,
+            Sorter.enclosureDuration
+          ],
+          actionBarSortBy: Sorter.downloadDate,
+          actionBarFilterDownloaded: true,
+          actionBarFilterDisplayVersion: null,
+          layout: snapshot.data?.item1 ?? EpisodeGridLayout.small,
+        );
+      },
     );
   }
 

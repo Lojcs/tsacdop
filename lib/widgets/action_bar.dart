@@ -106,7 +106,7 @@ class ActionBar extends StatefulWidget {
   /// Default sort order
   final SortOrder sortOrder;
 
-  /// Default layout (overrides general default)
+  /// Default layout
   final EpisodeGridLayout layout;
 
   const ActionBar({
