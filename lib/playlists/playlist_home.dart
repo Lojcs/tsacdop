@@ -657,22 +657,12 @@ class _Playlists extends StatefulWidget {
 class _PlaylistsState extends State<_Playlists> {
   Future<EpisodeBrief?> _getEpisode(String url) async {
     var dbHelper = DBHelper();
-    List episodes = await dbHelper.getEpisodes(episodeUrls: [
-      url
-    ], optionalFields: [
-      EpisodeField.mediaId,
-      EpisodeField.primaryColor,
-      EpisodeField.isNew,
-      EpisodeField.skipSecondsStart,
-      EpisodeField.skipSecondsEnd,
-      EpisodeField.episodeImage,
-      EpisodeField.podcastImage,
-      EpisodeField.chapterLink
-    ]);
-    if (episodes.isEmpty)
+    List episodes = await dbHelper.getEpisodes(episodeUrls: [url]);
+    if (episodes.isEmpty) {
       return null;
-    else
+    } else {
       return episodes[0];
+    }
   }
 
   @override
@@ -1044,15 +1034,19 @@ class _NewPlaylistState extends State<_NewPlaylist> {
       primaryColor = await _getColor(File(imagePath));
     }
     final fileName = path.split('/').last;
-    return EpisodeBrief(0, fileName, 'file://$path', localFolderId,
-        metadata.albumName ?? '', pubDate, // metadata.year ?
-        description: context.s.localEpisodeDescription(path),
-        enclosureDuration: metadata.trackDuration! ~/ 1000,
-        enclosureSize: fileLength,
-        mediaId: 'file://$path',
-        podcastImage: '',
-        episodeImage: imagePath ?? '',
-        primaryColor: primaryColor?.toColor());
+    return EpisodeBrief(
+      id: 0, title: fileName, enclosureUrl: 'file://$path',
+      podcastId: localFolderId,
+      podcastTitle: metadata.albumName ?? '',
+      pubDate: pubDate, // metadata.year ?
+      description: context.s.localEpisodeDescription(path),
+      enclosureDuration: metadata.trackDuration! ~/ 1000,
+      enclosureSize: fileLength,
+      mediaId: 'file://$path',
+      podcastImage: '',
+      episodeImage: imagePath ?? '',
+      primaryColor: primaryColor?.toColor(),
+    );
   }
 
   Future<String> _getColor(File file) async {

@@ -107,30 +107,10 @@ class _DownloadListState extends State<DownloadList> {
                       onTap: () => Navigator.push(
                         context,
                         ScaleRoute(
-                            page: FutureBuilder(
-                                future: tasks[index]
-                                    .episode!
-                                    .copyWithFromDB(newFields: [
-                                  EpisodeField.description,
-                                  EpisodeField.number,
-                                  EpisodeField.enclosureDuration,
-                                  EpisodeField.enclosureSize,
-                                  EpisodeField.isDownloaded,
-                                  EpisodeField.episodeImage,
-                                  EpisodeField.podcastImage,
-                                  EpisodeField.primaryColor,
-                                  EpisodeField.isLiked,
-                                  EpisodeField.isNew,
-                                  EpisodeField.isPlayed,
-                                  EpisodeField.isDisplayVersion
-                                ]),
-                                builder: ((context, snapshot) =>
-                                    snapshot.hasData
-                                        ? EpisodeDetail(
-                                            episodeItem:
-                                                snapshot.data as EpisodeBrief,
-                                          )
-                                        : Center()))),
+                          page: EpisodeDetail(
+                            episodeItem: tasks[index].episode!,
+                          ),
+                        ),
                       ),
                       title: SizedBox(
                         height: 40,

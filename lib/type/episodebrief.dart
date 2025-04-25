@@ -5,7 +5,6 @@ import 'package:equatable/equatable.dart';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import 'theme_data.dart';
 import '../util/extension_helper.dart';
@@ -38,9 +37,14 @@ class EpisodeBrief extends Equatable {
   final int skipSecondsEnd;
   final String? chapterLink;
 
-  EpisodeBrief(this.id, this.title, this.enclosureUrl, this.podcastId,
-      this.podcastTitle, this.pubDate,
-      {this.description,
+  EpisodeBrief(
+      {required this.id,
+      required this.title,
+      required this.enclosureUrl,
+      required this.podcastId,
+      required this.podcastTitle,
+      required this.pubDate,
+      this.description,
       this.number,
       this.enclosureDuration,
       this.enclosureSize,
@@ -178,63 +182,6 @@ class EpisodeBrief extends Equatable {
         : colorSchemeDark;
   }
 
-  /// The list of filled fields in the form of [EpisodeField]s.
-  late final List<EpisodeField> fields = _getfields();
-
-  dynamic _getFieldValue(EpisodeField episodeField) {
-    switch (episodeField) {
-      case EpisodeField.description:
-        return description;
-      case EpisodeField.number:
-        return number;
-      case EpisodeField.enclosureDuration:
-        return enclosureDuration;
-      case EpisodeField.enclosureSize:
-        return enclosureSize;
-      case EpisodeField.isDownloaded:
-        return isDownloaded;
-      case EpisodeField.downloadDate:
-        return downloadDate;
-      case EpisodeField.mediaId:
-        return mediaId;
-      case EpisodeField.episodeImage:
-        return episodeImage;
-      case EpisodeField.podcastImage:
-        return podcastImage;
-      case EpisodeField.primaryColor:
-        return primaryColor;
-      case EpisodeField.isExplicit:
-        return isExplicit;
-      case EpisodeField.isLiked:
-        return isLiked;
-      case EpisodeField.isNew:
-        return isNew;
-      case EpisodeField.isPlayed:
-        return isPlayed;
-      case EpisodeField.isDisplayVersion:
-        return isDisplayVersion;
-      case EpisodeField.versions:
-        return null;
-      case EpisodeField.skipSecondsStart:
-        return skipSecondsStart;
-      case EpisodeField.skipSecondsEnd:
-        return skipSecondsEnd;
-      case EpisodeField.chapterLink:
-        return chapterLink;
-    }
-  }
-
-  List<EpisodeField> _getfields() {
-    List<EpisodeField> fieldList = [];
-    for (EpisodeField field in EpisodeField.values) {
-      if (_getFieldValue(field) != null) fieldList.add(field);
-    }
-    if (versions != null) {
-      fieldList.add(EpisodeField.versions);
-    }
-    return fieldList;
-  }
-
   EpisodeBrief copyWith(
           {int? id,
           String? title,
@@ -262,12 +209,12 @@ class EpisodeBrief extends Equatable {
           int? skipSecondsEnd,
           String? chapterLink}) =>
       EpisodeBrief(
-          id ?? this.id,
-          title ?? this.title,
-          enclosureUrl ?? this.enclosureUrl,
-          podcastId ?? this.podcastId,
-          podcastTitle ?? this.podcastTitle,
-          pubDate ?? this.pubDate,
+          id: id ?? this.id,
+          title: title ?? this.title,
+          enclosureUrl: enclosureUrl ?? this.enclosureUrl,
+          podcastId: podcastId ?? this.podcastId,
+          podcastTitle: podcastTitle ?? this.podcastTitle,
+          pubDate: pubDate ?? this.pubDate,
           description: description ?? this.description,
           number: number ?? this.number,
           enclosureDuration: enclosureDuration ?? this.enclosureDuration,
@@ -291,82 +238,10 @@ class EpisodeBrief extends Equatable {
   /// Returns a copy with the [newFields] filled from the database.
   /// [keepExisting] disables overwriting already existing fields.
   /// [update] refetches all already existing fields from database.
-  Future<EpisodeBrief> copyWithFromDB(
-      {List<EpisodeField>? newFields,
-      bool keepExisting = false,
-      bool update = false}) async {
-    assert(newFields != null || update,
-        "If update is false newFields can't be null.");
-    assert(!keepExisting || !update,
-        "Can't both update and keep existing fields.");
-    Map<EpisodeField, List> fieldsMap = {
-      // I'm so sorry this is so ugly
-      EpisodeField.description: [const Symbol("description"), description],
-      EpisodeField.number: [const Symbol("number"), number],
-      EpisodeField.enclosureDuration: [
-        const Symbol("enclosureDuration"),
-        enclosureDuration
-      ],
-      EpisodeField.enclosureSize: [
-        const Symbol("enclosureSize"),
-        enclosureSize
-      ],
-      EpisodeField.isDownloaded: [const Symbol("isDownloaded"), isDownloaded],
-      EpisodeField.downloadDate: [const Symbol("downloadDate"), downloadDate],
-      EpisodeField.mediaId: [const Symbol("mediaId"), mediaId],
-      EpisodeField.episodeImage: [const Symbol("episodeImage"), episodeImage],
-      EpisodeField.podcastImage: [const Symbol("podcastImage"), podcastImage],
-      EpisodeField.primaryColor: [const Symbol("primaryColor"), primaryColor],
-      EpisodeField.isExplicit: [const Symbol("isExplicit"), isExplicit],
-      EpisodeField.isLiked: [const Symbol("isLiked"), isLiked],
-      EpisodeField.isNew: [const Symbol("isNew"), isNew],
-      EpisodeField.isPlayed: [const Symbol("isPlayed"), isPlayed],
-      EpisodeField.isDisplayVersion: [
-        const Symbol("isDisplayVersion"),
-        isDisplayVersion
-      ],
-      EpisodeField.versions: [const Symbol("versions"), versions],
-      EpisodeField.skipSecondsStart: [
-        const Symbol("skipSecondsStart"),
-        skipSecondsStart
-      ],
-      EpisodeField.skipSecondsEnd: [
-        const Symbol("skipSecondsEnd"),
-        skipSecondsEnd
-      ],
-      EpisodeField.chapterLink: [const Symbol("chapterLink"), chapterLink]
-    };
-
-    var dbHelper = DBHelper();
-    newFields ??= [];
-    if (update) {
-      newFields.addAll(this.fields);
-    }
-    Map<Symbol, dynamic> oldFieldsSymbolMap = {};
-    List<EpisodeField> oldFields = this.fields.toList();
-    if (keepExisting) {
-      for (EpisodeField field in oldFields) {
-        newFields.remove(field);
-      }
-    } else {
-      for (EpisodeField field in newFields) {
-        oldFields.remove(field);
-      }
-    }
-    EpisodeBrief newEpisode;
-    if (newFields.isEmpty) {
-      newEpisode = this.copyWith();
-    } else {
-      for (EpisodeField field in oldFields) {
-        oldFieldsSymbolMap[fieldsMap[field]![0]] = fieldsMap[field]![1];
-      }
-      newEpisode = (await dbHelper.getEpisodes(
-              episodeIds: [id], optionalFields: newFields..addAll(oldFields)))
+  Future<EpisodeBrief> updateFromDB({bool getVersions = false}) async =>
+      (await DBHelper().getEpisodes(
+              episodeIds: [id], getVersions: getVersions || versions != null))
           .first;
-      newEpisode = Function.apply(newEpisode.copyWith, [], oldFieldsSymbolMap);
-    }
-    return newEpisode;
-  }
 
   @override
   List<Object?> get props => [id, enclosureUrl];

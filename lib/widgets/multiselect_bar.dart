@@ -170,21 +170,7 @@ class _MultiSelectPanelIntegrationState
     List<int> episodeIds = selectionController.previouslySelectedEpisodes
         .map((e) => e.id)
         .toList();
-    var episodes =
-        await dbHelper.getEpisodes(episodeIds: episodeIds, optionalFields: [
-      EpisodeField.description,
-      EpisodeField.number,
-      EpisodeField.enclosureDuration,
-      EpisodeField.enclosureSize,
-      EpisodeField.isDownloaded,
-      EpisodeField.episodeImage,
-      EpisodeField.podcastImage,
-      EpisodeField.primaryColor,
-      EpisodeField.isLiked,
-      EpisodeField.isNew,
-      EpisodeField.isPlayed,
-      EpisodeField.isDisplayVersion
-    ]);
+    var episodes = await dbHelper.getEpisodes(episodeIds: episodeIds);
     return episodes;
   }
 }

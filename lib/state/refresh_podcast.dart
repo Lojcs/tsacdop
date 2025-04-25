@@ -131,7 +131,6 @@ Future<void> podcastSync({List<PodcastLocal>? podcasts}) async {
   final result = await Connectivity().checkConnectivity();
   if (autoDownloadNetwork == 1 || result.contains(ConnectivityResult.wifi)) {
     final episodes = await dbHelper.getEpisodes(
-        optionalFields: [EpisodeField.isDownloaded],
         filterNew: true,
         filterDownloaded: false,
         filterDisplayVersion: true,

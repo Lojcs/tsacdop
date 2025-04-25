@@ -130,22 +130,13 @@ class DownloadState extends ChangeNotifier {
     if (tasks != null && tasks.isNotEmpty) {
       for (var task in tasks) {
         EpisodeBrief? episode;
-        List<EpisodeBrief> episodes = await _dbHelper.getEpisodes(episodeUrls: [
-          task.url
-        ], optionalFields: [
-          EpisodeField.isDownloaded,
-          EpisodeField.mediaId,
-          EpisodeField.isNew,
-          EpisodeField.skipSecondsStart,
-          EpisodeField.skipSecondsEnd,
-          EpisodeField.episodeImage,
-          EpisodeField.podcastImage,
-          EpisodeField.chapterLink
-        ]);
-        if (episodes.isEmpty)
+        List<EpisodeBrief> episodes =
+            await _dbHelper.getEpisodes(episodeUrls: [task.url]);
+        if (episodes.isEmpty) {
           episode = null;
-        else
+        } else {
           episode = episodes[0];
+        }
         if (episode == null) {
           await FlutterDownloader.remove(
               taskId: task.taskId, shouldDeleteContent: true);
@@ -230,12 +221,7 @@ class DownloadState extends ChangeNotifier {
         episodeState: _episodeState,
         taskId: episodeTask.taskId,
         size: fileStat.size);
-    EpisodeBrief episode =
-        await episodeTask.episode!.copyWithFromDB(newFields: [
-      EpisodeField.isDownloaded,
-      EpisodeField.mediaId,
-      EpisodeField.isNew,
-    ]);
+    EpisodeBrief episode = await episodeTask.episode!.updateFromDB();
     _removeTask(episodeTask.episode);
     _episodeTasks.add(EpisodeTask(episode, episodeTask.taskId,
         progress: 100, status: DownloadTaskStatus.complete));
@@ -263,11 +249,8 @@ class DownloadState extends ChangeNotifier {
   }
 
   Future startTask(EpisodeBrief episode, {bool showNotification = true}) async {
-    episode =
-        await episode.copyWithFromDB(newFields: [EpisodeField.isDownloaded]);
-
+    episode = await episode.updateFromDB();
     taskStarter(episode, _episodeTasks, showNotification: showNotification);
-
     notifyListeners();
   }
 

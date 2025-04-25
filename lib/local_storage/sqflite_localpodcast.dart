@@ -42,28 +42,6 @@ enum Sorter {
   final String sql;
 }
 
-enum EpisodeField {
-  description,
-  number,
-  enclosureDuration,
-  enclosureSize,
-  isDownloaded,
-  downloadDate,
-  mediaId,
-  episodeImage,
-  podcastImage,
-  primaryColor,
-  isExplicit,
-  isLiked,
-  isNew,
-  isPlayed,
-  isDisplayVersion,
-  versions,
-  skipSecondsStart,
-  skipSecondsEnd,
-  chapterLink
-}
-
 const localFolderId = "46e48103-06c7-4fe1-a0b1-68aa7205b7f0";
 
 class DBHelper {
@@ -948,12 +926,8 @@ class DBHelper {
     List<int> otherVersionIds =
         results.map<int>((result) => result['id']).toList();
     otherVersionIds.remove(episode.id);
-    List<EpisodeField> fields = episode.fields.toList()
-      ..remove(EpisodeField.versions);
     List<EpisodeBrief> versions = await getEpisodes(
-        episodeIds: otherVersionIds,
-        optionalFields: fields,
-        episodeState: episodeState);
+        episodeIds: otherVersionIds, episodeState: episodeState);
     versions = versions.map((e) => e.copyWith(versions: {})).toList();
     versions.add(episode);
     for (EpisodeBrief version1 in versions) {
@@ -990,7 +964,13 @@ class DBHelper {
         final image =
             feed.items![i].itunes!.image?.href ?? ''; // TODO: Maybe save these?
         episodes.add(
-          EpisodeBrief(-1, title, url, feedId, "", milliseconds,
+          EpisodeBrief(
+              id: -1,
+              title: title,
+              enclosureUrl: url,
+              podcastId: feedId,
+              podcastTitle: "",
+              pubDate: milliseconds,
               description: _getDescription(
                   feed.items![i].content?.value ?? '',
                   feed.items![i].description ?? '',
@@ -1174,7 +1154,7 @@ class DBHelper {
       List<String>? excludedEpisodeTitles,
       List<String>? likeEpisodeTitles,
       List<String>? excludedLikeEpisodeTitles,
-      List<EpisodeField>? optionalFields,
+      bool getVersions = false,
       Sorter? sortBy,
       SortOrder sortOrder = SortOrder.desc,
       List<Sorter>? rangeParameters,
@@ -1190,81 +1170,17 @@ class DBHelper {
       List<String>? customFilters,
       List<String>? customArguements,
       EpisodeState? episodeState}) async {
-    bool doGroup = false;
     List<String> query = [
       """SELECT E.id, E.title, E.enclosure_url, E.feed_id, P.title as feed_title,
-      E.milliseconds"""
+      E.milliseconds, E.description, E.number, E.duration, E.enclosure_length,
+      E.downloaded, E.download_date, E.media_id, E.episode_image, P.imagePath,
+      P.primaryColor, E.explicit, E.chapter_link, SUM(H.listen_time) as play_time,
+      E.is_new, E.display_version_id, P.skip_seconds, P.skip_seconds_end, E.liked"""
     ];
     List<String> filters = [];
     List arguements = [];
-    if (optionalFields != null && optionalFields.isNotEmpty) {
-      for (var field in optionalFields) {
-        switch (field) {
-          case EpisodeField.description:
-            query.add(", E.description");
-            break;
-          case EpisodeField.number:
-            query.add(", E.number");
-            break;
-          case EpisodeField.enclosureDuration:
-            query.add(", E.duration");
-            break;
-          case EpisodeField.enclosureSize:
-            query.add(", E.enclosure_length");
-            break;
-          case EpisodeField.isDownloaded:
-            query.add(", E.downloaded");
-            break;
-          case EpisodeField.downloadDate:
-            query.add(", E.download_date");
-            break;
-          case EpisodeField.mediaId:
-            query.add(", E.media_id");
-            break;
-          case EpisodeField.episodeImage:
-            query.add(", E.episode_image");
-            break;
-          case EpisodeField.podcastImage:
-            query.add(", P.imagePath");
-            break;
-          case EpisodeField.primaryColor:
-            query.add(", P.primaryColor");
-            break;
-          case EpisodeField.isExplicit:
-            query.add(", E.explicit");
-            break;
-          case EpisodeField.isLiked:
-            query.add(", E.liked");
-            break;
-          case EpisodeField.isNew:
-            query.add(", E.is_new");
-            break;
-          case EpisodeField.isPlayed:
-            doGroup = true;
-            query.add(", SUM(H.listen_time) as play_time");
-            break;
-          case EpisodeField.isDisplayVersion:
-            query.add(", E.display_version_id");
-            break;
-          case EpisodeField.versions:
-            break;
-          case EpisodeField.skipSecondsStart:
-            query.add(", P.skip_seconds");
-            break;
-          case EpisodeField.skipSecondsEnd:
-            query.add(", P.skip_seconds_end");
-            break;
-          case EpisodeField.chapterLink:
-            query.add(", E.chapter_link");
-            break;
-        }
-      }
-    }
     query.add(" FROM Episodes E INNER JOIN PodcastLocal P ON E.feed_id = P.id");
-    if (filterPlayed != null || doGroup) {
-      query
-          .add(" LEFT JOIN PlayHistory H ON E.enclosure_url = H.enclosure_url");
-    }
+    query.add(" LEFT JOIN PlayHistory H ON E.enclosure_url = H.enclosure_url");
 
     if (feedIds != null && feedIds.isNotEmpty) {
       filters.add(" P.id IN (${(", ?" * feedIds.length).substring(2)})");
@@ -1384,9 +1300,7 @@ class DBHelper {
       query.add(" WHERE");
     }
     query.add(filters.join(" AND"));
-    if (filterPlayed != null || doGroup) {
-      query.add(" GROUP BY E.enclosure_url");
-    }
+    query.add(" GROUP BY E.enclosure_url");
     if (filterPlayed == false) {
       query.add(" HAVING SUM(H.listen_time) IS Null OR SUM(H.listen_time) = 0");
     } else if (filterPlayed == true) {
@@ -1406,94 +1320,42 @@ class DBHelper {
       }
     }
 
-    bool populateVersions = false;
     var dbClient = await database;
     List<EpisodeBrief> episodes = [];
     List<Map> result;
     result = await dbClient.rawQuery(query.join(), arguements);
     if (result.isNotEmpty) {
       for (var i in result) {
-        Map<Symbol, dynamic> fields = {};
-        if (optionalFields != null) {
-          for (var field in optionalFields) {
-            switch (field) {
-              case EpisodeField.description:
-                fields[const Symbol("description")] = i['description'];
-                break;
-              case EpisodeField.number:
-                fields[const Symbol("number")] = i['number'];
-                break;
-              case EpisodeField.enclosureDuration:
-                fields[const Symbol("enclosureDuration")] = i['duration'];
-                break;
-              case EpisodeField.enclosureSize:
-                fields[const Symbol("enclosureSize")] = i['enclosure_length'];
-                break;
-              case EpisodeField.isDownloaded:
-                fields[const Symbol("isDownloaded")] = i['downloaded'] != 'ND';
-                break;
-              case EpisodeField.downloadDate:
-                fields[const Symbol("downloadDate")] = i['download_date'];
-                break;
-              case EpisodeField.mediaId:
-                fields[const Symbol("mediaId")] = i['media_id'];
-                break;
-              case EpisodeField.episodeImage:
-                fields[const Symbol("episodeImage")] = i['episode_image'];
-                break;
-              case EpisodeField.podcastImage:
-                fields[const Symbol("podcastImage")] = i['imagePath'];
-                break;
-              case EpisodeField.primaryColor:
-                fields[const Symbol("primaryColor")] =
-                    (i['primaryColor'] as String).toColor();
-                break;
-              case EpisodeField.isExplicit:
-                fields[const Symbol("isExplicit")] = i['explicit'] == 1;
-                break;
-              case EpisodeField.isLiked:
-                fields[const Symbol("isLiked")] = i['liked'] == 1;
-                break;
-              case EpisodeField.isNew:
-                fields[const Symbol("isNew")] = i['is_new'] == 1;
-                break;
-              case EpisodeField.isPlayed:
-                fields[const Symbol("isPlayed")] =
-                    (i['play_time'] != null && i['play_time'] != 0);
-                break;
-              case EpisodeField.isDisplayVersion:
-                fields[const Symbol("isDisplayVersion")] =
-                    i['display_version_id'] == i['id'];
-                break;
-              case EpisodeField.versions:
-                fields[const Symbol("versions")] = <EpisodeBrief>{};
-                populateVersions = true;
-                break;
-              case EpisodeField.skipSecondsStart:
-                fields[const Symbol("skipSecondsStart")] = i['skip_seconds'];
-                break;
-              case EpisodeField.skipSecondsEnd:
-                fields[const Symbol("skipSecondsEnd")] = i['skip_seconds_end'];
-                break;
-              case EpisodeField.chapterLink:
-                fields[const Symbol("chapterLink")] = i['chapter_link'];
-                break;
-            }
-          }
-        }
-        EpisodeBrief episode = Function.apply(
-            EpisodeBrief.new,
-            [
-              i['id'],
-              i['title'],
-              i['enclosure_url'],
-              i['feed_id'],
-              i['feed_title'],
-              i['milliseconds']
-            ],
-            fields);
-        if (populateVersions)
+        EpisodeBrief episode = EpisodeBrief(
+          id: i['id'],
+          title: i['title'],
+          enclosureUrl: i['enclosure_url'],
+          podcastId: i['feed_id'],
+          podcastTitle: i['feed_title'],
+          pubDate: i['milliseconds'],
+          description: i['description'],
+          number: i['number'],
+          enclosureDuration: i['duration'],
+          enclosureSize: i['enclosure_length'],
+          isDownloaded: i['downloaded'] != 'ND',
+          downloadDate: i['download_date'],
+          mediaId: i['media_id'],
+          episodeImage: i['episode_image'],
+          podcastImage: i['imagePath'],
+          primaryColor: (i['primaryColor'] as String).toColor(),
+          isExplicit: i['explicit'] == 1,
+          isLiked: i['liked'] == 1,
+          isNew: i['is_new'] == 1,
+          isPlayed: i['play_time'] != null && i['play_time'] != 0,
+          isDisplayVersion: i['display_version_id'] == i['id'],
+          versions: null,
+          skipSecondsStart: i['skip_seconds'],
+          skipSecondsEnd: i['skip_seconds_end'],
+          chapterLink: i['chapter_link'],
+        );
+        if (getVersions) {
           episode = await populateEpisodeVersions(episode, episodeState);
+        }
         episodes.add(episode);
         if (episodeState != null) {
           episodeState.addEpisode(episode);

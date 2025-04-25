@@ -542,20 +542,6 @@ class _PodcastPreviewState extends State<PodcastPreview> {
       final dbHelper = DBHelper();
       episodePreview = await dbHelper.getEpisodes(
         feedIds: [podcastLocal.id],
-        optionalFields: [
-          EpisodeField.description,
-          EpisodeField.number,
-          EpisodeField.enclosureDuration,
-          EpisodeField.enclosureSize,
-          EpisodeField.isDownloaded,
-          EpisodeField.episodeImage,
-          EpisodeField.podcastImage,
-          EpisodeField.primaryColor,
-          EpisodeField.isLiked,
-          EpisodeField.isNew,
-          EpisodeField.isPlayed,
-          EpisodeField.isDisplayVersion
-        ],
         sortBy: Sorter.pubDate,
         sortOrder: SortOrder.desc,
         limit: 2,

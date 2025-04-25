@@ -53,11 +53,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
     return Selector<EpisodeState, bool?>(
       selector: (_, episodeState) => episodeState.globalChange,
       builder: (_, __, ___) => FutureBuilder<EpisodeBrief>(
-        future: _episodeItem.copyWithFromDB(newFields: [
-          EpisodeField.episodeImage,
-          EpisodeField.podcastImage,
-          EpisodeField.versions,
-        ], update: true),
+        future: _episodeItem.updateFromDB(getVersions: true),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             _episodeItem = snapshot.data!;

@@ -888,26 +888,13 @@ class AudioPlayerNotifier extends ChangeNotifier {
     Future seekFuture = Future(() {});
     if (episodes.isEmpty) return seekFuture;
     playlist ??= _playlist;
-    if (index < 0)
+    if (index < 0) {
       index += playlist.length + 1;
-    else if (index > playlist.length) index = playlist.length;
-    if (playlist.isNotEmpty && playlist.episodes.isEmpty)
+    } else if (index > playlist.length) {
+      index = playlist.length;
+    }
+    if (playlist.isNotEmpty && playlist.episodes.isEmpty) {
       playlist.getPlaylist();
-    for (int i = 0; i < episodes.length; i++) {
-      // TODO: Add batch copyWithFromDB option for speed
-      episodes[i] = await episodes[i].copyWithFromDB(newFields: [
-        EpisodeField.enclosureDuration,
-        EpisodeField.enclosureSize,
-        EpisodeField.mediaId,
-        EpisodeField.primaryColor,
-        EpisodeField.isExplicit,
-        EpisodeField.isNew,
-        EpisodeField.skipSecondsStart,
-        EpisodeField.skipSecondsEnd,
-        EpisodeField.episodeImage,
-        EpisodeField.podcastImage,
-        EpisodeField.chapterLink
-      ], keepExisting: true);
     }
     await _episodeState.unsetNew(episodes);
     EpisodeCollision ifExists =
@@ -958,14 +945,12 @@ class AudioPlayerNotifier extends ChangeNotifier {
     var newEpisodes = <EpisodeBrief>[];
     if (group.isEmpty) {
       newEpisodes = await _dbHelper.getEpisodes(
-          optionalFields: [EpisodeField.mediaId],
           sortBy: Sorter.pubDate,
           sortOrder: SortOrder.desc,
           filterNew: true,
           limit: 100);
     } else {
       newEpisodes = await _dbHelper.getEpisodes(
-          optionalFields: [EpisodeField.mediaId],
           feedIds: group,
           sortBy: Sorter.pubDate,
           sortOrder: SortOrder.desc,
@@ -1195,50 +1180,42 @@ class AudioPlayerNotifier extends ChangeNotifier {
   /// Updates the media ID of an episode from the database.
   /// Replaces the playing episode if its media ID changed.
   Future<void> updateEpisodeMediaID(EpisodeBrief episode) async {
-    EpisodeBrief? oldEpisode;
     EpisodeBrief? updatedEpisode;
     if (_playlist.episodes.contains(episode)) {
-      oldEpisode = _playlist.episodes.firstWhere((e) => e == episode);
-      updatedEpisode =
-          await oldEpisode.copyWithFromDB(newFields: [EpisodeField.mediaId]);
-      if (oldEpisode.mediaId != updatedEpisode.mediaId) {
-        _playlistBeingEdited++;
-
-        final List<int> indexes = _playlist.updateEpisode(updatedEpisode);
-        if (_playerRunning) {
-          if (indexes.remove(_episodeIndex)) {
-            // Currently playing episode is replaced
-            int index = _episodeIndex;
+      updatedEpisode = await episode.updateFromDB();
+      _playlistBeingEdited++;
+      final List<int> indexes = _playlist.updateEpisode(updatedEpisode);
+      if (_playerRunning) {
+        if (indexes.remove(_episodeIndex)) {
+          // Currently playing episode is replaced
+          int index = _episodeIndex;
+          await _audioHandler
+              .addQueueItemsAt([updatedEpisode.mediaItem], index + 1);
+          _episodeIndex = index;
+          await _audioHandler.combinedSeek(
+              position: Duration(milliseconds: _audioPosition),
+              index: index + 1);
+          _episodeIndex = index;
+          await _audioHandler.removeQueueItemsAt(index);
+        }
+        // Another episode is replaced.
+        if (effectiveAutoPlay) {
+          for (int i in indexes) {
             await _audioHandler
-                .addQueueItemsAt([updatedEpisode.mediaItem], index + 1);
-            _episodeIndex = index;
-            await _audioHandler.combinedSeek(
-                position: Duration(milliseconds: _audioPosition),
-                index: index + 1);
-            _episodeIndex = index;
-            await _audioHandler.removeQueueItemsAt(index);
-          }
-          // Another episode is replaced.
-          if (effectiveAutoPlay) {
-            for (int i in indexes) {
-              await _audioHandler
-                  .addQueueItemsAt([updatedEpisode.mediaItem], i + 1);
-              await _audioHandler.removeQueueItemsAt(i);
-            }
+                .addQueueItemsAt([updatedEpisode.mediaItem], i + 1);
+            await _audioHandler.removeQueueItemsAt(i);
           }
         }
-        _playlistBeingEdited--;
       }
+      _playlistBeingEdited--;
     }
     final containingPlaylists = _playlists.where(
         (playlist) => playlist != _playlist && playlist.contains(episode));
+    if (containingPlaylists.isNotEmpty) {
+      updatedEpisode ??= await episode.updateFromDB();
+    }
     for (final playlist in containingPlaylists) {
-      updatedEpisode ??= await playlist.episodes
-          .firstWhere((episode) => episode == episode)
-          .copyWithFromDB(newFields: [EpisodeField.mediaId]);
-      if (oldEpisode!.mediaId != updatedEpisode.mediaId) {
-        playlist.updateEpisode(updatedEpisode);
-      }
+      playlist.updateEpisode(updatedEpisode!);
     }
   }
 

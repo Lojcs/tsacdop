@@ -1622,9 +1622,9 @@ class _ControlPanelState extends State<ControlPanel>
                         opacity: ((widget.maxHeight! + 25 - height) / 25)
                             .clamp(0, 1),
                         child: Selector<AudioPlayerNotifier,
-                            Tuple4<EpisodeBrief?, bool, bool, double?>>(
+                            Tuple4<EpisodeBrief, bool, bool, double?>>(
                           selector: (_, audio) => Tuple4(
-                              audio.episode,
+                              audio.episode!,
                               audio.stopOnComplete,
                               audio.sleepTimerActive,
                               audio.currentSpeed),
@@ -1644,43 +1644,12 @@ class _ControlPanelState extends State<ControlPanel>
                                           widget.onClose!();
                                           if (!widget.isPlayingPage) {
                                             Navigator.push(
-                                                context,
-                                                FadeRoute(
-                                                    page: FutureBuilder(
-                                                        future: data.item1!
-                                                            .copyWithFromDB(
-                                                                newFields: [
-                                                              EpisodeField
-                                                                  .description,
-                                                              EpisodeField
-                                                                  .number,
-                                                              EpisodeField
-                                                                  .enclosureDuration,
-                                                              EpisodeField
-                                                                  .enclosureSize,
-                                                              EpisodeField
-                                                                  .episodeImage,
-                                                              EpisodeField
-                                                                  .podcastImage,
-                                                              EpisodeField
-                                                                  .primaryColor,
-                                                              EpisodeField
-                                                                  .isLiked,
-                                                              EpisodeField
-                                                                  .isNew,
-                                                              EpisodeField
-                                                                  .isPlayed,
-                                                              EpisodeField
-                                                                  .isDisplayVersion
-                                                            ]),
-                                                        builder: ((context,
-                                                                snapshot) =>
-                                                            snapshot.hasData
-                                                                ? EpisodeDetail(
-                                                                    episodeItem:
-                                                                        snapshot.data
-                                                                            as EpisodeBrief)
-                                                                : Center()))));
+                                              context,
+                                              FadeRoute(
+                                                page: EpisodeDetail(
+                                                    episodeItem: data.item1),
+                                              ),
+                                            );
                                           }
                                         },
                                         child: Row(

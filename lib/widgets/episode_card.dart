@@ -94,26 +94,11 @@ class InteractiveEpisodeCard extends StatefulWidget {
     this.index,
     this.applyActionToAllSelected = true,
     this.externallyRefreshed = false,
-  })  : assert((!preferEpisodeImage &&
-                episode.fields.contains(EpisodeField.podcastImage)) ||
-            episode.fields.contains(EpisodeField.episodeImage) ||
-            episode.fields.contains(EpisodeField.podcastImage)),
-        assert(!showNumber || episode.fields.contains(EpisodeField.number)),
-        assert(!showLiked || episode.fields.contains(EpisodeField.isLiked)),
-        assert(!showNew || episode.fields.contains(EpisodeField.isNew)),
-        assert(!showLengthAndSize ||
-            (episode.fields.contains(EpisodeField.enclosureDuration) &&
-                episode.fields.contains(EpisodeField.enclosureSize))),
-        assert(!showPlayedAndDownloaded ||
-            !showLengthAndSize ||
-            (episode.fields.contains(EpisodeField.isPlayed) &&
-                episode.fields.contains(EpisodeField.isDownloaded))),
-        assert(episode.fields.contains(EpisodeField.primaryColor)),
-        assert(!selectable || index != null),
+  })  : assert(!selectable || index != null),
         super(key: Key(episode.id.toString()));
 
   @override
-  _InteractiveEpisodeCardState createState() => _InteractiveEpisodeCardState();
+  State<InteractiveEpisodeCard> createState() => _InteractiveEpisodeCardState();
 }
 
 class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
@@ -178,8 +163,8 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                 .changedIds
                 .contains(episode.id)) {
               // Prevents unnecessary database calls when the card is rebuilt for other reasons
-              return widget.episode.copyWithFromDB(
-                  update: true); // It needs to be widget.episode
+              return widget.episode.updateFromDB();
+              // It needs to be widget.episode
             } else {
               return null;
             }
@@ -713,22 +698,7 @@ class EpisodeCard extends StatelessWidget {
       this.showDate = false,
       this.selected = false,
       this.decorate = true,
-      this.avatarSizeCallback})
-      : assert((!preferEpisodeImage &&
-                episode.fields.contains(EpisodeField.podcastImage)) ||
-            episode.fields.contains(EpisodeField.episodeImage) ||
-            episode.fields.contains(EpisodeField.podcastImage)),
-        assert(!showNumber || episode.fields.contains(EpisodeField.number)),
-        assert(!showLiked || episode.fields.contains(EpisodeField.isLiked)),
-        assert(!showNew || episode.fields.contains(EpisodeField.isNew)),
-        assert(!showLengthAndSize ||
-            (episode.fields.contains(EpisodeField.enclosureDuration) &&
-                episode.fields.contains(EpisodeField.enclosureSize))),
-        assert(!showPlayedAndDownloaded ||
-            !showLengthAndSize ||
-            (episode.fields.contains(EpisodeField.isPlayed) &&
-                episode.fields.contains(EpisodeField.isDownloaded))),
-        assert(episode.fields.contains(EpisodeField.primaryColor));
+      this.avatarSizeCallback});
 
   @override
   Widget build(BuildContext context) {

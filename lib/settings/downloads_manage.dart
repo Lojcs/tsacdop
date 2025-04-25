@@ -260,7 +260,6 @@ class _DownloadsManageState extends State<DownloadsManage> {
                     ],
                     sortBy: Sorter.downloadDate,
                     filterDownloaded: true,
-                    extraFields: [EpisodeField.downloadDate],
                   ),
                   SliverList.builder(
                     itemCount: _episodes.length,

@@ -96,18 +96,14 @@ class ActionBar extends StatefulWidget {
   /// Default filter display version
   final bool? filterDisplayVersion;
 
-  /// Extra episode fields to fill. All fields needed for episode cards are already filled.
-  /// These are: [EpisodeField.description], [EpisodeField.number], [EpisodeField.enclosureDuration]
-  /// [EpisodeField.enclosureSize], [EpisodeField.isDownloaded], [EpisodeField.episodeImage]
-  /// [EpisodeField.podcastImage], [EpisodeField.primaryColor], [EpisodeField.isLiked]
-  /// [EpisodeField.isNew], [EpisodeField.isPlayed], [EpisodeField.isDisplayVersion]
-  final List<EpisodeField> extraFields;
-
   /// Default sort order
   final SortOrder sortOrder;
 
   /// Default layout
   final EpisodeGridLayout layout;
+
+  /// Wheter to get the 'versions' field of the [EpisodeBrief]s
+  final bool getVersions;
 
   const ActionBar({
     super.key,
@@ -151,8 +147,8 @@ class ActionBar extends StatefulWidget {
     this.filterDownloaded,
     this.filterDisplayVersion,
     this.sortOrder = SortOrder.desc,
-    this.extraFields = const [],
     this.layout = EpisodeGridLayout.large,
+    this.getVersions = false,
   });
   @override
   _ActionBarState createState() => _ActionBarState();
@@ -254,8 +250,8 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
         filterDownloaded: widget.filterDownloaded,
         filterDisplayVersion: widget.filterDisplayVersion,
         sortOrder: widget.sortOrder,
-        extraFields: widget.extraFields,
         layout: widget.layout,
+        getVersions: widget.getVersions,
         switchSecondRowController: _switchSecondRowController,
         buttonRefreshController: _buttonRefreshController,
         buttonRemoveNewMarkController: _buttonRemoveNewMarkController,
@@ -475,14 +471,14 @@ class _ActionBarSharedState extends ChangeNotifier {
     notifyListeners();
   }
 
-  List<EpisodeField> extraFields;
-
   EpisodeGridLayout _layout;
   EpisodeGridLayout get layout => _layout;
   set layout(EpisodeGridLayout layout) {
     _layout = layout;
     notifyListeners();
   }
+
+  bool getVersions;
 
   final AnimationController switchSecondRowController;
   final AnimationController buttonRefreshController;
@@ -505,8 +501,8 @@ class _ActionBarSharedState extends ChangeNotifier {
     required bool? filterDownloaded,
     required bool? filterDisplayVersion,
     required SortOrder sortOrder,
-    required this.extraFields,
     required EpisodeGridLayout layout,
+    required this.getVersions,
     required this.switchSecondRowController,
     required this.buttonRefreshController,
     required this.buttonRemoveNewMarkController,
@@ -577,21 +573,7 @@ class _ActionBarSharedState extends ChangeNotifier {
                   : []
               : group.podcastList,
           likeEpisodeTitles: searchTitleQuery == "" ? null : [searchTitleQuery],
-          optionalFields: [
-                EpisodeField.description,
-                EpisodeField.number,
-                EpisodeField.enclosureDuration,
-                EpisodeField.enclosureSize,
-                EpisodeField.isDownloaded,
-                EpisodeField.episodeImage,
-                EpisodeField.podcastImage,
-                EpisodeField.primaryColor,
-                EpisodeField.isLiked,
-                EpisodeField.isNew,
-                EpisodeField.isPlayed,
-                EpisodeField.isDisplayVersion
-              ] +
-              extraFields,
+          getVersions: getVersions,
           sortBy: sortBy,
           sortOrder: sortOrder,
           limit: count,

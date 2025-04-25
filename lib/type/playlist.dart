@@ -93,20 +93,7 @@ class Playlist extends Equatable {
     episodes.clear();
     if (episodeUrlList.isNotEmpty) {
       // Single database call should be faster
-      episodes.addAll(await _dbHelper
-          .getEpisodes(episodeUrls: episodeUrlList, optionalFields: [
-        EpisodeField.enclosureDuration,
-        EpisodeField.enclosureSize,
-        EpisodeField.mediaId,
-        EpisodeField.primaryColor,
-        EpisodeField.isExplicit,
-        EpisodeField.isNew,
-        EpisodeField.skipSecondsStart,
-        EpisodeField.skipSecondsEnd,
-        EpisodeField.episodeImage,
-        EpisodeField.podcastImage,
-        EpisodeField.chapterLink
-      ]));
+      episodes.addAll(await _dbHelper.getEpisodes(episodeUrls: episodeUrlList));
     }
     // Remove episode urls from episodeList if they are not in the database
     if (episodes.length < episodeUrlList.length) {

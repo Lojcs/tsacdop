@@ -168,8 +168,7 @@ class EpisodeState extends ChangeNotifier {
     await _dbHelper.setDisplayVersion(episode);
     bool changeHappened = false;
     changedIds.clear();
-    episode = await episode
-        .copyWithFromDB(newFields: [EpisodeField.versions], keepExisting: true);
+    episode = await episode.updateFromDB(getVersions: true);
     for (var version in episode.versions!) {
       if (episodeChangeMap.containsKey(version.id)) {
         episodeChangeMap[version.id] = !episodeChangeMap[version.id]!;
