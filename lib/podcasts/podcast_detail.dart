@@ -127,7 +127,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
               feedIds: [podcastLocal.id],
               filterNew: true,
               filterDownloaded: false,
-              filterDisplayVersion: true,
+              filterDisplayVersion: false,
               filterAutoDownload: true);
           // For safety
           if (episodes.length < 100) {

@@ -545,7 +545,7 @@ class _PodcastPreviewState extends State<PodcastPreview> {
         sortBy: Sorter.pubDate,
         sortOrder: SortOrder.desc,
         limit: 2,
-        filterDisplayVersion: true,
+        filterDisplayVersion: false,
         episodeState: Provider.of<EpisodeState>(context, listen: false),
       );
     }

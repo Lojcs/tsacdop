@@ -6,6 +6,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:media_info/media_info.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -80,11 +82,13 @@ class AutoDownloader {
         query: "SELECT * FROM task WHERE task_id = '${episodeTask.taskId}'");
     final filePath =
         'file://${path.join(completeTask!.first.savedDir, Uri.encodeComponent(completeTask.first.filename!))}';
-    final fileStat = await File(
-            path.join(completeTask.first.savedDir, completeTask.first.filename))
-        .stat();
-    await _dbHelper.saveMediaId(episodeTask.episode!, filePath,
-        taskId: episodeTask.taskId, size: fileStat.size);
+    final fileStat = await File(filePath).stat();
+    final mediaInfo = await MediaInfo().getMediaInfo(filePath);
+    await _dbHelper.setDownloaded(episodeTask.episode!.id,
+        mediaId: filePath,
+        taskId: episodeTask.taskId ?? "downloaded",
+        size: fileStat.size,
+        duration: mediaInfo["durationMs"] ~/ 1000);
     _episodeTasks.removeWhere((element) =>
         element.episode!.enclosureUrl == episodeTask.episode!.enclosureUrl);
     if (_episodeTasks.isEmpty) _unbindBackgroundIsolate();
@@ -147,18 +151,18 @@ class DownloadState extends ChangeNotifier {
             if (!exist) {
               await FlutterDownloader.remove(
                   taskId: task.taskId, shouldDeleteContent: true);
-              await _dbHelper.saveMediaId(episode, episode.enclosureUrl,
-                  episodeState: _episodeState);
+              await _episodeState.unsetDownloaded(episode.id);
             } else {
               var filePath =
                   'file://${path.join(task.savedDir, Uri.encodeComponent(task.filename!))}';
               if (episode.enclosureUrl == episode.mediaId) {
-                var fileStat =
-                    await File(path.join(task.savedDir, task.filename)).stat();
-                await _dbHelper.saveMediaId(episode, filePath,
-                    episodeState: _episodeState,
+                var fileStat = await File(filePath).stat();
+                final mediaInfo = await MediaInfo().getMediaInfo(filePath);
+                await _episodeState.setDownloaded(episode.id,
+                    mediaId: filePath,
                     taskId: task.taskId,
-                    size: fileStat.size);
+                    size: fileStat.size,
+                    duration: mediaInfo["durationMs"] ~/ 1000);
               }
               _episodeTasks.add(EpisodeTask(
                   episode.copyWith(mediaId: filePath, isDownloaded: true),
@@ -214,13 +218,13 @@ class DownloadState extends ChangeNotifier {
         query: "SELECT * FROM task WHERE task_id = '${episodeTask.taskId}'");
     final filePath =
         'file://${path.join(completeTask!.first.savedDir, Uri.encodeComponent(completeTask.first.filename!))}';
-    final fileStat = await File(
-            path.join(completeTask.first.savedDir, completeTask.first.filename))
-        .stat();
-    await _dbHelper.saveMediaId(episodeTask.episode!, filePath,
-        episodeState: _episodeState,
-        taskId: episodeTask.taskId,
-        size: fileStat.size);
+    var fileStat = await File(filePath).stat();
+    final mediaInfo = await MediaInfo().getMediaInfo(filePath);
+    await _episodeState.setDownloaded(episodeTask.episode!.id,
+        mediaId: filePath,
+        taskId: episodeTask.taskId!,
+        size: fileStat.size,
+        duration: mediaInfo["durationMs"] ~/ 1000);
     EpisodeBrief episode = await episodeTask.episode!.updateFromDB();
     _removeTask(episodeTask.episode);
     _episodeTasks.add(EpisodeTask(episode, episodeTask.taskId,
@@ -231,7 +235,7 @@ class DownloadState extends ChangeNotifier {
     IsolateNameServer.removePortNameMapping('downloader_send_port');
   }
 
-  EpisodeTask episodeToTask(EpisodeBrief? episode) {
+  EpisodeTask episodeToTask(EpisodeBrief episode) {
     return _episodeTasks.firstWhere(
         (task) => task.episode!.enclosureUrl == episode!.enclosureUrl,
         orElse: () {
@@ -290,8 +294,7 @@ class DownloadState extends ChangeNotifier {
     var task = episodeToTask(episode);
     await FlutterDownloader.remove(
         taskId: task.taskId!, shouldDeleteContent: true);
-    await _dbHelper.saveMediaId(episode, episode.enclosureUrl,
-        episodeState: _episodeState);
+    await _episodeState.unsetDownloaded(episode.id);
 
     for (var episodeTask in _episodeTasks) {
       if (episodeTask.taskId == task.taskId) {

@@ -133,7 +133,7 @@ Future<void> podcastSync({List<PodcastLocal>? podcasts}) async {
     final episodes = await dbHelper.getEpisodes(
         filterNew: true,
         filterDownloaded: false,
-        filterDisplayVersion: true,
+        filterDisplayVersion: false,
         filterAutoDownload: true);
     // For safety
     if (episodes.length < 100 && episodes.isNotEmpty) {

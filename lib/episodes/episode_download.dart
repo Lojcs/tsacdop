@@ -14,8 +14,8 @@ import '../util/helpers.dart';
 import '../widgets/custom_widget.dart';
 
 class DownloadButton extends StatefulWidget {
-  final EpisodeBrief? episode;
-  const DownloadButton({this.episode, super.key});
+  final EpisodeBrief episode;
+  const DownloadButton({required this.episode, super.key});
   @override
   _DownloadButtonState createState() => _DownloadButtonState();
 }

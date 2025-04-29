@@ -17,25 +17,25 @@ class EpisodeBrief extends Equatable {
   final String podcastTitle;
   final int pubDate;
 
-  final String? description;
-  final int? number;
-  final int? enclosureDuration;
-  final int? enclosureSize;
-  final bool? isDownloaded;
-  final int? downloadDate;
-  final String? mediaId;
-  final String? episodeImage;
-  final String? podcastImage;
-  final Color? primaryColor;
-  final bool? isExplicit;
-  final bool? isLiked;
-  final bool? isNew;
-  final bool? isPlayed;
-  final bool? isDisplayVersion;
-  final Set<EpisodeBrief>? versions;
+  final String description;
+  final int number;
+  final int enclosureDuration;
+  final int enclosureSize;
+  final bool isDownloaded;
+  final int downloadDate;
+  final String mediaId;
+  final String episodeImage;
+  final String podcastImage;
+  final Color primaryColor;
+  final bool isExplicit;
+  final bool isLiked;
+  final bool isNew;
+  final bool isPlayed;
+  final bool isDisplayVersion;
+  final List<int>? versions;
   final int skipSecondsStart;
   final int skipSecondsEnd;
-  final String? chapterLink;
+  final String chapterLink;
 
   EpisodeBrief(
       {required this.id,
@@ -44,25 +44,25 @@ class EpisodeBrief extends Equatable {
       required this.podcastId,
       required this.podcastTitle,
       required this.pubDate,
-      this.description,
-      this.number,
-      this.enclosureDuration,
-      this.enclosureSize,
-      this.isDownloaded,
-      this.downloadDate,
-      this.mediaId,
-      this.episodeImage,
-      this.podcastImage,
-      this.primaryColor,
-      this.isExplicit,
-      this.isLiked,
-      this.isNew,
-      this.isPlayed,
-      this.isDisplayVersion,
+      required this.description,
+      required this.number,
+      required this.enclosureDuration,
+      required this.enclosureSize,
+      required this.isDownloaded,
+      required this.downloadDate,
+      required this.mediaId,
+      required this.episodeImage,
+      required this.podcastImage,
+      required this.primaryColor,
+      required this.isExplicit,
+      required this.isLiked,
+      required this.isNew,
+      required this.isPlayed,
+      required this.isDisplayVersion,
       this.versions,
       this.skipSecondsStart = 0,
       this.skipSecondsEnd = 0,
-      this.chapterLink});
+      required this.chapterLink});
 
   late final MediaItem mediaItem = MediaItem(
       id: mediaId!,
@@ -204,7 +204,7 @@ class EpisodeBrief extends Equatable {
           bool? isNew,
           bool? isPlayed,
           bool? isDisplayVersion,
-          Set<EpisodeBrief>? versions,
+          List<int>? versions,
           int? skipSecondsStart,
           int? skipSecondsEnd,
           String? chapterLink}) =>
@@ -234,14 +234,6 @@ class EpisodeBrief extends Equatable {
           skipSecondsStart: skipSecondsStart ?? this.skipSecondsStart,
           skipSecondsEnd: skipSecondsEnd ?? this.skipSecondsEnd,
           chapterLink: chapterLink ?? this.chapterLink);
-
-  /// Returns a copy with the [newFields] filled from the database.
-  /// [keepExisting] disables overwriting already existing fields.
-  /// [update] refetches all already existing fields from database.
-  Future<EpisodeBrief> updateFromDB({bool getVersions = false}) async =>
-      (await DBHelper().getEpisodes(
-              episodeIds: [id], getVersions: getVersions || versions != null))
-          .first;
 
   @override
   List<Object?> get props => [id, enclosureUrl];

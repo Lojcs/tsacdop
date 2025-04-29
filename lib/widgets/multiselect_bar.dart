@@ -1203,13 +1203,13 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                     selectedEpisodes = selectionController.selectedEpisodes;
                     played = value;
                     if (value!) {
-                      await episodeState.setListened(selectedEpisodes);
+                      await episodeState.setPlayed(selectedEpisodes);
                       Fluttertoast.showToast(
                         msg: context.s.markListened,
                         gravity: ToastGravity.BOTTOM,
                       );
                     } else {
-                      await episodeState.unsetListened(selectedEpisodes);
+                      await episodeState.unsetPlayed(selectedEpisodes);
                       Fluttertoast.showToast(
                         msg: context.s.markNotListened,
                         gravity: ToastGravity.BOTTOM,

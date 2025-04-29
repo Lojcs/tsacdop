@@ -4,6 +4,7 @@ import 'dart:developer' as developer;
 
 import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart';
@@ -639,31 +640,16 @@ class DBHelper {
     return playHistory;
   }
 
-  Future<int> isListened(String url) async {
+  /// Sets the episodes as not liked
+  Future<int?> unsetLiked(List<int> ids) async {
     var dbClient = await database;
-    int? i = 0;
-    List<Map> list = await dbClient.rawQuery(
-        "SELECT SUM(listen_time) FROM PlayHistory WHERE enclosure_url = ?",
-        [url]);
-    if (list.isNotEmpty) {
-      i = list.first['SUM(listen_time)'];
-      return i ?? 0;
-    }
-    return 0;
-  }
-
-  Future<int?> markNotListened(List<String> urls) async {
-    var dbClient = await database;
-    int? count;
-    await dbClient.transaction((txn) async {
-      count = await txn.rawUpdate(
-          "UPDATE OR IGNORE PlayHistory SET listen_time = 0 WHERE enclosure_url IN (${(", ?" * urls.length).substring(2)})",
-          [...urls]);
-    });
+    int? count = await dbClient.rawUpdate(
+        "UPDATE OR IGNORE PlayHistory SET listen_time = 0 WHERE id IN (${(", ?" * ids.length).substring(2)})",
+        ids);
     await dbClient.rawDelete(
-        'DELETE FROM PlayHistory WHERE enclosure_url in (${(", ?" * urls.length).substring(2)}) '
+        'DELETE FROM PlayHistory WHERE id in (${(", ?" * ids.length).substring(2)}) '
         'AND listen_time = 0 AND seconds = 0',
-        [...urls]);
+        ids);
     return count;
   }
 
@@ -909,33 +895,33 @@ class DBHelper {
         [episode.id, episode.podcastId, episode.title]);
   }
 
-  /// Populates the EpisodeBrief.versions set. Expects the set to be not null.
-  /// Doesn't populate if it is not empty.
-  /// Versions have all the fields that the original episode has.
-  Future<EpisodeBrief> populateEpisodeVersions(
-      EpisodeBrief episode, EpisodeState? episodeState) async {
+  /// Populates the EpisodeBrief.versions set with ids of episode versions.
+  /// Returns the set of EpisodeBriefs of the episode versions.
+  /// Doesn't populate if it is not null unless [force] is set.
+  Future<List<EpisodeBrief>> populateReturnVersions(EpisodeBrief episode,
+      {bool force = false}) async {
     var dbClient = await database;
-    if (episode.versions!.isNotEmpty) return episode;
-    List<Map> results = await dbClient.rawQuery(
-        "SELECT id FROM Episodes WHERE (feed_id = ? AND title = ?)",
-        [episode.podcastId, episode.title]);
+    if (episode.versions != null && !force) return [episode];
+    List<Map> results = await dbClient
+        .rawQuery("""SELECT id FROM Episodes WHERE (feed_id = ? AND title = ?)
+        ORDER BY milliseconds DESC""", [episode.podcastId, episode.title]);
     if (results.length == 1) {
-      episode.versions!.add(episode);
-      return episode;
+      episode.versions!.add(episode.id);
+      return [episode];
     }
     List<int> otherVersionIds =
         results.map<int>((result) => result['id']).toList();
     otherVersionIds.remove(episode.id);
-    List<EpisodeBrief> versions = await getEpisodes(
-        episodeIds: otherVersionIds, episodeState: episodeState);
-    versions = versions.map((e) => e.copyWith(versions: {})).toList();
+    List<EpisodeBrief> versions =
+        await getEpisodes(episodeIds: otherVersionIds);
     versions.add(episode);
+    versions = versions.map((e) => e.copyWith(versions: [])).toList();
     for (EpisodeBrief version1 in versions) {
       for (EpisodeBrief version2 in versions) {
-        version1.versions!.add(version2);
+        version1.versions!.add(version2.id);
       }
     }
-    return episode;
+    return versions;
   }
 
   /// Parses and saves episodes in an [RssFeed]. Set [update] for existing feeds.
@@ -959,27 +945,39 @@ class DBHelper {
         final milliseconds = pubDate?.millisecondsSinceEpoch ??
             DateTime.now().millisecondsSinceEpoch;
         final duration = feed.items![i].itunes!.duration?.inSeconds ?? 0;
-        final explicit = feed.items![i].itunes!.explicit;
+        final explicit = feed.items![i].itunes!.explicit ?? false;
         final chapter = feed.items![i].podcastChapters?.url ?? '';
         final image =
             feed.items![i].itunes!.image?.href ?? ''; // TODO: Maybe save these?
         episodes.add(
           EpisodeBrief(
-              id: -1,
-              title: title,
-              enclosureUrl: url,
-              podcastId: feedId,
-              podcastTitle: "",
-              pubDate: milliseconds,
-              description: _getDescription(
-                  feed.items![i].content?.value ?? '',
-                  feed.items![i].description ?? '',
-                  feed.items![i].itunes!.summary ?? ''),
-              enclosureDuration: duration,
-              enclosureSize: length,
-              episodeImage: image,
-              isExplicit: explicit,
-              chapterLink: chapter),
+            id: -1,
+            title: title,
+            enclosureUrl: url,
+            podcastId: feedId,
+            podcastTitle: "",
+            pubDate: milliseconds,
+            description: _getDescription(
+                feed.items![i].content?.value ?? '',
+                feed.items![i].description ?? '',
+                feed.items![i].itunes!.summary ?? ''),
+            enclosureDuration: duration,
+            enclosureSize: length,
+            episodeImage: image,
+            isExplicit: explicit,
+            chapterLink: chapter,
+            // These don't matter
+            isDownloaded: false,
+            downloadDate: 0,
+            mediaId: "",
+            podcastImage: "",
+            primaryColor: Colors.teal,
+            isLiked: false,
+            isNew: false,
+            isPlayed: false,
+            isDisplayVersion: false,
+            number: 0,
+          ),
         );
       }
     }
@@ -1141,7 +1139,7 @@ class DBHelper {
   }
 
   /// Queries the database with the provided options and returns found episodes.
-  /// Filters are tri-state with false being inverse
+  /// Filters are tri-state (null - no filter, true - only, false - exclude)
   Future<List<EpisodeBrief>> getEpisodes(
       // TODO: Optimize the query via indexes and intersects
       {List<String>? feedIds,
@@ -1154,11 +1152,10 @@ class DBHelper {
       List<String>? excludedEpisodeTitles,
       List<String>? likeEpisodeTitles,
       List<String>? excludedLikeEpisodeTitles,
-      bool getVersions = false,
       Sorter? sortBy,
       SortOrder sortOrder = SortOrder.desc,
       List<Sorter>? rangeParameters,
-      List<Tuple2<int, int>>? rangeDelimiters,
+      List<(int, int)>? rangeDelimiters,
       int limit = -1,
       int offset = -1,
       bool? filterNew,
@@ -1168,8 +1165,7 @@ class DBHelper {
       bool? filterDisplayVersion,
       bool? filterAutoDownload,
       List<String>? customFilters,
-      List<String>? customArguements,
-      EpisodeState? episodeState}) async {
+      List<String>? customArguements}) async {
     List<String> query = [
       """SELECT E.id, E.title, E.enclosure_url, E.feed_id, P.title as feed_title,
       E.milliseconds, E.description, E.number, E.duration, E.enclosure_length,
@@ -1235,16 +1231,6 @@ class DBHelper {
         (e) => "%$e%",
       ));
     }
-    if (filterDisplayVersion == 2) {
-      filters.add(" E.version_info = 'NONE'");
-    } else if (filterDisplayVersion == 1) {
-      filters.add(
-          " (E.version_info = 'HAS' OR E.version_info = 'FHAS' OR E.version_info = 'NONE')");
-    } else if (filterDisplayVersion == -1) {
-      filters.add(" E.version_info = 'IS'");
-    } else if (filterDisplayVersion == -2) {
-      filters.add(" (E.version_info = 'HAS' OR E.version_info = 'FHAS')");
-    }
     if (filterNew == false) {
       filters.add(" E.is_new = 0");
     } else if (filterNew == true) {
@@ -1261,9 +1247,9 @@ class DBHelper {
       filters.add(" E.downloaded != 'ND'");
     }
     if (filterDisplayVersion == false) {
-      filters.add(" E.display_version_id != E.id");
-    } else if (filterDisplayVersion == true) {
       filters.add(" E.display_version_id = E.id");
+    } else if (filterDisplayVersion == true) {
+      filters.add(" E.display_version_id != E.id");
     }
     if (filterAutoDownload == false) {
       filters.add(" P.auto_download = 0");
@@ -1276,15 +1262,13 @@ class DBHelper {
         rangeParameters.length == rangeDelimiters.length &&
         !rangeParameters.contains(Sorter.random)) {
       for (int i = 0; i < rangeParameters.length; i++) {
-        if (rangeDelimiters[i].item1 != -1 && rangeDelimiters[i].item2 != -1) {
+        if (rangeDelimiters[i].$1 != -1 && rangeDelimiters[i].$2 != -1) {
           filters.add(
-              " ${rangeParameters[i].sql} BETWEEN ${rangeDelimiters[i].item1} AND ${rangeDelimiters[i].item2}");
-        } else if (rangeDelimiters[i].item1 != -1) {
-          filters
-              .add(" ${rangeParameters[i].sql} > ${rangeDelimiters[i].item1}");
-        } else if (rangeDelimiters[i].item2 != -1) {
-          filters
-              .add(" ${rangeParameters[i].sql} < ${rangeDelimiters[i].item2}");
+              " ${rangeParameters[i].sql} BETWEEN ${rangeDelimiters[i].$1} AND ${rangeDelimiters[i].$2}");
+        } else if (rangeDelimiters[i].$1 != -1) {
+          filters.add(" ${rangeParameters[i].sql} > ${rangeDelimiters[i].$1}");
+        } else if (rangeDelimiters[i].$2 != -1) {
+          filters.add(" ${rangeParameters[i].sql} < ${rangeDelimiters[i].$2}");
         }
       }
     }
@@ -1353,13 +1337,7 @@ class DBHelper {
           skipSecondsEnd: i['skip_seconds_end'],
           chapterLink: i['chapter_link'],
         );
-        if (getVersions) {
-          episode = await populateEpisodeVersions(episode, episodeState);
-        }
         episodes.add(episode);
-        if (episodeState != null) {
-          episodeState.addEpisode(episode);
-        }
       }
     }
     return episodes;
@@ -1415,50 +1393,28 @@ class DBHelper {
     return list.isNotEmpty;
   }
 
-  /// Saves [mediaId] and optionally [size] of an [episode]. Sets or unsets downloaded status based on [mediaId].
-  Future<int?> saveMediaId(EpisodeBrief episode, String mediaId,
-      {EpisodeState? episodeState, String? taskId, int? size}) async {
-    var dbClient = await database;
-    int? count;
-    count = await dbClient.rawUpdate(
-        "UPDATE Episodes SET media_id = ? WHERE enclosure_url = ?",
-        [mediaId, episode.enclosureUrl]);
-    if (size != null) {
-      await dbClient.rawUpdate(
-          "UPDATE Episodes SET enclosure_length = ? WHERE enclosure_url = ?",
-          [size, episode.enclosureUrl]);
-    }
-    if (episodeState != null) {
-      if (episode.enclosureUrl != mediaId) {
-        await episodeState.setDownloaded([episode], taskId!);
-      } else {
-        await episodeState.unsetDownloaded([episode]);
-      }
-    } else {
-      if (episode.enclosureUrl != mediaId) {
-        await setDownloaded(episode.id, taskId!);
-      } else {
-        await unsetDownloaded([episode.id]);
-      }
-    }
-    return count;
-  }
-
-  Future<int> setDownloaded(int episodeId, String taskId) async {
+  /// Sets the episode as downloaded and saves its mediaId, download task id
+  /// size and duration
+  Future<void> setDownloaded(int episodeId,
+      {required String mediaId,
+      required String taskId,
+      required int size,
+      required int duration}) async {
     var dbClient = await database;
     var milliseconds = DateTime.now().millisecondsSinceEpoch;
-    int count = await dbClient.rawUpdate(
-        "UPDATE Episodes SET downloaded = ?, download_date = ? WHERE id = ?",
-        [taskId, milliseconds, episodeId]);
-    return count;
+    await dbClient.rawUpdate(
+        """UPDATE Episodes SET downloaded = ?, download_date = ?, media_id = ?,
+        enclosure_length = ?, duration = ? WHERE id = ?""",
+        [taskId, milliseconds, mediaId, size, duration, episodeId]);
   }
 
-  Future<int> unsetDownloaded(List<int> ids) async {
+  /// Sets the episode as not downloaded and sets its mediaId to enclosureUrl
+  Future<void> unsetDownloaded(int episodeId,
+      {required String enclosureUrl}) async {
     var dbClient = await database;
-    int count = await dbClient.rawUpdate(
-        "UPDATE Episodes SET downloaded = 'ND' WHERE id IN (${(", ?" * ids.length).substring(2)})",
-        [...ids]);
-    return count;
+    await dbClient.rawUpdate(
+        "UPDATE Episodes SET downloaded = 'ND', media_id = ? WHERE id = ?",
+        [enclosureUrl, episodeId]);
   }
 
   Future<String?> getDescription(String url) async {

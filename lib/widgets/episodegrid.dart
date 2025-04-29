@@ -132,7 +132,7 @@ class InteractiveEpisodeGrid extends StatefulWidget {
     this.actionBarFilterLiked,
     this.actionBarFilterPlayed,
     this.actionBarFilterDownloaded,
-    this.actionBarFilterDisplayVersion = true,
+    this.actionBarFilterDisplayVersion = false,
     this.actionBarSortOrder = SortOrder.desc,
     this.layout = EpisodeGridLayout.small,
   });

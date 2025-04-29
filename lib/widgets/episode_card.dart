@@ -155,8 +155,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
       return _body;
     } else {
       return Selector<EpisodeState, bool?>(
-        selector: (_, episodeState) =>
-            episodeState.episodeChangeMap[episode.id],
+        selector: (_, episodeState) => episodeState.episodeMap[episode.id],
         builder: (_, data, ___) => FutureBuilder<EpisodeBrief?>(
           future: () async {
             if (Provider.of<EpisodeState>(context)
@@ -1058,13 +1057,13 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, EpisodeBrief episode,
               episodes = selectionController.selectedEpisodes;
             }
             if (episode.isPlayed!) {
-              episodeState.unsetListened(episodes);
+              episodeState.unsetPlayed(episodes);
               Fluttertoast.showToast(
                 msg: s.markNotListened,
                 gravity: ToastGravity.BOTTOM,
               );
             } else {
-              episodeState.setListened(episodes);
+              episodeState.setPlayed(episodes);
               Fluttertoast.showToast(
                 msg: s.markListened,
                 gravity: ToastGravity.BOTTOM,

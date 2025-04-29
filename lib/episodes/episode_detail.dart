@@ -92,11 +92,11 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
 }
 
 class _EpisodeDetailInner extends StatefulWidget {
-  final EpisodeBrief episodeItem;
+  final int episodeId;
   final Color color;
   final bool hide;
 
-  const _EpisodeDetailInner(this.episodeItem, this.color, this.hide);
+  const _EpisodeDetailInner(this.episodeId, this.color, this.hide);
 
   @override
   __EpisodeDetailInnerState createState() => __EpisodeDetailInnerState();
@@ -104,8 +104,6 @@ class _EpisodeDetailInner extends StatefulWidget {
 
 class __EpisodeDetailInnerState extends State<_EpisodeDetailInner> {
   final _dbHelper = DBHelper();
-
-  late EpisodeBrief _episodeItem = widget.episodeItem;
 
   late final ScrollController _controller;
 
@@ -115,7 +113,13 @@ class __EpisodeDetailInnerState extends State<_EpisodeDetailInner> {
 
   bool lateInitComplete = false;
 
-  bool forceDisplayVersionIndicator = false;
+  late int episodeId = widget.episodeId;
+
+  late EpisodeState episodeState =
+      Provider.of<EpisodeState>(context, listen: false);
+
+  /// Only use this for immutable properties or in callbacks.
+  EpisodeBrief get episodeItem => episodeState[episodeId];
 
   bool _scrollListener(ScrollNotification notification) {
     // In debug mode manually scrolling before animateTo has finished
@@ -175,21 +179,6 @@ class __EpisodeDetailInnerState extends State<_EpisodeDetailInner> {
   }
 
   @override
-  void didUpdateWidget(_EpisodeDetailInner oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.episodeItem.versions != null) {
-      for (EpisodeBrief version in widget.episodeItem.versions!) {
-        if (_episodeItem == version) {
-          _episodeItem = version;
-        }
-      }
-      if (_episodeItem.isDisplayVersion!) {
-        forceDisplayVersionIndicator = false;
-      }
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     _lateInit();
     return Stack(
@@ -205,7 +194,7 @@ class __EpisodeDetailInnerState extends State<_EpisodeDetailInner> {
                 final titleLineTest = TextPainter(
                     maxLines: 3,
                     text: TextSpan(
-                      text: _episodeItem.title,
+                      text: episodeItem.title,
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
                     textDirection: TextDirection.ltr);
@@ -261,7 +250,7 @@ class __EpisodeDetailInnerState extends State<_EpisodeDetailInner> {
                               child: Image(
                                   alignment: Alignment.topCenter,
                                   fit: BoxFit.fitWidth,
-                                  image: _episodeItem
+                                  image: episodeItem
                                       .episodeOrPodcastImageProvider),
                             ),
                           ),
@@ -271,7 +260,7 @@ class __EpisodeDetailInnerState extends State<_EpisodeDetailInner> {
                               Padding(
                                 padding: EdgeInsets.only(top: 2),
                                 child: Text(
-                                  "${_episodeItem.number} | ",
+                                  "${episodeItem.number} | ",
                                   style: GoogleFonts.teko(
                                       textStyle:
                                           context.textTheme.headlineSmall),
@@ -279,15 +268,15 @@ class __EpisodeDetailInnerState extends State<_EpisodeDetailInner> {
                               ),
                               Expanded(
                                 child: Tooltip(
-                                  message: _episodeItem.podcastTitle,
+                                  message: episodeItem.podcastTitle,
                                   child: Text(
-                                    _episodeItem.podcastTitle,
+                                    episodeItem.podcastTitle,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: context.textTheme.headlineSmall!
                                         .copyWith(
                                       fontWeight: FontWeight.bold,
-                                      color: _episodeItem
+                                      color: episodeItem
                                           .colorScheme(context)
                                           .onSecondaryContainer,
                                     ),
@@ -307,9 +296,8 @@ class __EpisodeDetailInnerState extends State<_EpisodeDetailInner> {
                     // floating: true,
                     scrolledUnderElevation: 0,
                     leading: CustomBackButton(
-                      color: _episodeItem
-                          .colorScheme(context)
-                          .onSecondaryContainer,
+                      color:
+                          episodeItem.colorScheme(context).onSecondaryContainer,
                     ),
                     elevation: 0,
                   ),
@@ -326,9 +314,9 @@ class __EpisodeDetailInnerState extends State<_EpisodeDetailInner> {
                       height: titleHeight,
                       padding: EdgeInsets.only(left: 30, right: 30),
                       child: Tooltip(
-                        message: _episodeItem.title,
+                        message: episodeItem.title,
                         child: Text(
-                          _episodeItem.title,
+                          episodeItem.title,
                           maxLines: 3,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.left,
@@ -336,7 +324,7 @@ class __EpisodeDetailInnerState extends State<_EpisodeDetailInner> {
                               .textTheme
                               .headlineMedium!
                               .copyWith(
-                                color: _episodeItem
+                                color: episodeItem
                                     .colorScheme(context)
                                     .onSecondaryContainer,
                               ),
@@ -371,22 +359,22 @@ class __EpisodeDetailInnerState extends State<_EpisodeDetailInner> {
                                     const EdgeInsets.fromLTRB(20, 5, 20, 5),
                                 child: Row(
                                   children: [
-                                    Builder(
-                                      builder: (context) {
-                                        if (_episodeItem.versions != null) {
-                                          List<EpisodeBrief?> versions =
-                                              _episodeItem.versions!.toList();
-                                          versions.sort((a, b) =>
-                                              b!.pubDate.compareTo(a!.pubDate));
-                                          return _versionDateSelector(versions);
-                                        } else {
-                                          return _versionDateSelector(
-                                              [_episodeItem]);
-                                        }
-                                      },
-                                    ),
+                                    episodeItem.versions == null
+                                        ? FutureBuilder(
+                                            future: episodeState
+                                                .populateEpisodeVersions(
+                                                    episodeId),
+                                            builder: (context, snapshot) =>
+                                                (episodeItem.versions == null)
+                                                    ? _versionDateSelector(
+                                                        [episodeId])
+                                                    : _versionDateSelector(
+                                                        episodeItem.versions!),
+                                          )
+                                        : _versionDateSelector(
+                                            episodeItem.versions!),
                                     SizedBox(width: 10),
-                                    if (_episodeItem.isExplicit == true)
+                                    if (episodeItem.isExplicit == true)
                                       Text(
                                         'E',
                                         style: TextStyle(
@@ -401,44 +389,58 @@ class __EpisodeDetailInnerState extends State<_EpisodeDetailInner> {
                                     horizontal: 20, vertical: 5),
                                 child: Row(
                                   children: <Widget>[
-                                    if (_episodeItem.enclosureDuration != 0)
-                                      Container(
-                                          decoration: BoxDecoration(
-                                              color: context.secondary,
-                                              borderRadius: context.radiusHuge),
-                                          height: 40.0,
-                                          margin: EdgeInsets.only(right: 12.0),
-                                          padding: EdgeInsets.symmetric(
-                                              horizontal: 10.0),
-                                          alignment: Alignment.center,
-                                          child: Text(
-                                            context.s.minsCount(
-                                              _episodeItem.enclosureDuration! ~/
-                                                  60,
-                                            ),
-                                            style: TextStyle(
-                                                color: context.surface),
-                                          )),
-                                    if (_episodeItem.enclosureSize != null &&
-                                        _episodeItem.enclosureSize != 0)
-                                      Container(
-                                        decoration: BoxDecoration(
-                                            color: context.tertiary,
-                                            borderRadius: context.radiusHuge),
-                                        height: 40.0,
-                                        margin: EdgeInsets.only(right: 12.0),
-                                        padding: EdgeInsets.symmetric(
-                                            horizontal: 10.0),
-                                        alignment: Alignment.center,
-                                        child: Text(
-                                          '${_episodeItem.enclosureSize! ~/ 1000000}MB',
-                                          style:
-                                              TextStyle(color: context.surface),
-                                        ),
-                                      ),
+                                    Selector<EpisodeState, int>(
+                                      selector: (_, episodeState) =>
+                                          episodeState[episodeId]
+                                              .enclosureDuration,
+                                      builder: (context, value, _) => value != 0
+                                          ? Container(
+                                              decoration: BoxDecoration(
+                                                  color: context.secondary,
+                                                  borderRadius:
+                                                      context.radiusHuge),
+                                              height: 40.0,
+                                              margin:
+                                                  EdgeInsets.only(right: 12.0),
+                                              padding: EdgeInsets.symmetric(
+                                                  horizontal: 10.0),
+                                              alignment: Alignment.center,
+                                              child: Text(
+                                                context.s.minsCount(
+                                                  value ~/ 60,
+                                                ),
+                                                style: TextStyle(
+                                                    color: context.surface),
+                                              ),
+                                            )
+                                          : Center(),
+                                    ),
+                                    Selector<EpisodeState, int>(
+                                      selector: (_, episodeState) =>
+                                          episodeState[episodeId].enclosureSize,
+                                      builder: (context, value, _) => value != 0
+                                          ? Container(
+                                              decoration: BoxDecoration(
+                                                  color: context.tertiary,
+                                                  borderRadius:
+                                                      context.radiusHuge),
+                                              height: 40.0,
+                                              margin:
+                                                  EdgeInsets.only(right: 12.0),
+                                              padding: EdgeInsets.symmetric(
+                                                  horizontal: 10.0),
+                                              alignment: Alignment.center,
+                                              child: Text(
+                                                '${value ~/ 1000000}MB',
+                                                style: TextStyle(
+                                                    color: context.surface),
+                                              ),
+                                            )
+                                          : Center(),
+                                    ),
                                     FutureBuilder<PlayHistory>(
                                       future:
-                                          _dbHelper.getPosition(_episodeItem),
+                                          _dbHelper.getPosition(episodeItem),
                                       builder: (context, snapshot) {
                                         if (snapshot.hasError) {
                                           developer
@@ -458,7 +460,7 @@ class __EpisodeDetailInnerState extends State<_EpisodeDetailInner> {
                                                       context.radiusHuge,
                                                 ),
                                                 side: BorderSide(
-                                                  color: _episodeItem
+                                                  color: episodeItem
                                                       .colorScheme(context)
                                                       .onSecondaryContainer,
                                                 ),
@@ -468,7 +470,7 @@ class __EpisodeDetailInnerState extends State<_EpisodeDetailInner> {
                                                       context,
                                                       listen: false)
                                                   .loadEpisodeToQueue(
-                                                      _episodeItem,
+                                                      episodeItem,
                                                       startPosition: (snapshot
                                                                   .data!
                                                                   .seconds! *
@@ -514,7 +516,7 @@ class __EpisodeDetailInnerState extends State<_EpisodeDetailInner> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ShowNote(episode: _episodeItem),
+                    ShowNote(episode: episodeItem),
                     Selector<AudioPlayerNotifier, Tuple2<bool, PlayerHeight>>(
                         selector: (_, audio) =>
                             Tuple2(audio.playerRunning, audio.playerHeight!),
@@ -542,8 +544,8 @@ class __EpisodeDetailInnerState extends State<_EpisodeDetailInner> {
                 height: 50,
                 child: SingleChildScrollView(
                   scrollDirection: Axis.vertical,
-                  child: EpisodeActionBar(
-                      episodeItem: _episodeItem, hide: widget.hide),
+                  child:
+                      EpisodeActionBar(episodeId: episodeId, hide: widget.hide),
                 ),
               ),
             );
@@ -554,52 +556,55 @@ class __EpisodeDetailInnerState extends State<_EpisodeDetailInner> {
           builder: (_, data, __) => Container(
             child: PlayerWidget(
                 playerKey: GlobalKey<AudioPanelState>(),
-                isPlayingPage: data == _episodeItem),
+                isPlayingPage: data == episodeItem),
           ),
         ),
       ],
     );
   }
 
-  Widget _versionDateSelector(List<EpisodeBrief?> versions) => Row(
+  Widget _versionDateSelector(List<int> versions) => Row(
         children: [
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 4),
             child: buttonOnMenu(
               context,
-              child: (forceDisplayVersionIndicator ||
-                      _episodeItem.isDisplayVersion!)
-                  ? Icon(
-                      Icons.radio_button_on,
-                      size: 24,
-                      color: context.accentColor,
-                    )
-                  : Icon(
-                      Icons.radio_button_off,
-                      size: 24,
-                    ),
+              child: Selector<EpisodeState, bool>(
+                selector: (_, episodeState) =>
+                    episodeState[episodeId].isDisplayVersion,
+                builder: (context, value, _) => value
+                    ? Icon(
+                        Icons.radio_button_on,
+                        size: 24,
+                        color: context.accentColor,
+                      )
+                    : Icon(
+                        Icons.radio_button_off,
+                        size: 24,
+                      ),
+              ),
               onTap: () {
-                if (!_episodeItem.isDisplayVersion!) {
-                  _setEpisodeDisplayVersion(_episodeItem);
+                if (!episodeItem.isDisplayVersion) {
+                  episodeState.setDisplayVersion(episodeId);
                 }
               },
             ),
           ),
-          DropdownButton(
+          DropdownButton<int>(
             hint: Text(
                 context.s.published(
-                    "${formateDate(_episodeItem.pubDate)} ${((_episodeItem.pubDate ~/ 1000) % 1440).toTime}"),
+                    "${formateDate(episodeItem.pubDate)} ${((episodeItem.pubDate ~/ 1000) % 1440).toTime}"),
                 style: TextStyle(color: context.accentColor)),
             underline: Center(),
             dropdownColor: context.accentBackground,
             borderRadius: context.radiusSmall,
             isDense: true,
-            value: _episodeItem,
+            value: episodeId,
             selectedItemBuilder: (context) => versions
                 .map(
-                  (e) => Text(
+                  (id) => Text(
                     context.s.published(
-                      "${formateDate(e!.pubDate)} ${((_episodeItem.pubDate ~/ 1000) % 1440).toTime}",
+                      "${formateDate(episodeState[id].pubDate)} ${((episodeState[id].pubDate ~/ 1000) % 1440).toTime}",
                     ),
                     style: TextStyle(
                       color: context.accentColor,
@@ -608,37 +613,31 @@ class __EpisodeDetailInnerState extends State<_EpisodeDetailInner> {
                 )
                 .toList(),
             items: versions
-                .map((e) => DropdownMenuItem(
+                .map(
+                  (e) => DropdownMenuItem(
                     value: e,
-                    child: Row(
-                      children: [
-                        Text(
-                          "${context.s.published(formateDate(e!.pubDate))} ${((_episodeItem.pubDate ~/ 1000) % 1440).toTime}",
-                          style: TextStyle(
-                            fontWeight: e.isDisplayVersion!
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                          ),
+                    child: Selector<EpisodeState, bool>(
+                      selector: (_, episodeState) =>
+                          episodeState[episodeId].isDisplayVersion,
+                      builder: (context, value, _) => Text(
+                        "${context.s.published(formateDate(episodeState[e].pubDate))} ${((episodeState[e].pubDate ~/ 1000) % 1440).toTime}",
+                        style: TextStyle(
+                          fontWeight:
+                              value ? FontWeight.bold : FontWeight.normal,
                         ),
-                      ],
-                    )))
+                      ),
+                    ),
+                  ),
+                )
                 .toList(),
             onChanged: versions.length == 1
                 ? null
-                : (EpisodeBrief? episode) {
-                    if (mounted && episode != null) {
-                      setState(() {
-                        forceDisplayVersionIndicator = false;
-                        _episodeItem = episode;
-                      });
+                : (int? id) {
+                    if (mounted && id != null) {
+                      setState(() => episodeId = id);
                     }
                   },
           ),
         ],
       );
-  Future<void> _setEpisodeDisplayVersion(EpisodeBrief episode) async {
-    await Provider.of<EpisodeState>(context, listen: false)
-        .setDisplayVersion(episode);
-    forceDisplayVersionIndicator = true;
-  }
 }

@@ -468,7 +468,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
       if (_lastHistory != history) {
         _lastHistory = history;
         if (_seekSliderValue > 0.95) {
-          await _episodeState.setListened([saveEpisode],
+          await _episodeState.setPlayed([saveEpisode],
               seconds: history.seconds!, seekValue: history.seekValue!);
         } else {
           await _dbHelper.saveHistory(history);
