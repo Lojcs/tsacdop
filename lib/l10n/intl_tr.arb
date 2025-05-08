@@ -770,9 +770,9 @@
   "@username": {},
   "usernameRequired": "Kullanıcı adı gerekli",
   "@usernameRequired": {},
-  "useWallpaperTheme": "",
+  "useWallpaperTheme": "Temayı arkaplandan seç",
   "@useWallpaperTheme": {},
-  "useWallpaperThemeDes": "",
+  "useWallpaperThemeDes": "Temayı arkaplandan seç.",
   "@useWallpaperThemeDes": {},
   "version": "Version: {version}",
   "@version": {
@@ -828,5 +828,55 @@
   "displayVersion": "Gösterilen Sürüm",
   "@displayVersion": {
     "description": "The version of an episode displayed by default. Used with filterType."
-  }
+  },
+  "interaction": "Etkileşim",
+  "@interaction": {
+    "description": "Interaction setting menu section title"
+  },
+  "loading": "Yükleniyor",
+  "@loading": {},
+  "moreOptions": "Daha Çok Seçenek",
+  "@moreOptions": {},
+  "networkErrorDNS": "Ağ hatası (DNS sorunu)",
+  "@networkErrorDNS": {
+    "description": "Notify the user that the host address couldn't be found."
+  },
+  "newPlain": "Yeni",
+  "@newPlain": {
+    "description": "Word to describe a new episode (and use in filterType)"
+  },
+  "random": "Rastgele",
+  "@random": {
+    "description": "Random sort order"
+  },
+  "refreshFinished": "Yenileme Tamamlandı",
+  "@refreshFinished": {
+    "description": "Toast for refresh finish"
+  },
+  "removeDownload": "İndirmeyi Sil",
+  "@removeDownload": {},
+  "restartAppForEffect": "Değişiklerin etki göstermesi için uygulamayı yeniden başlatın.",
+  "@restartAppForEffect": {
+    "description": "Notify user that the change will take effect after app restart."
+  },
+  "searchInstructions": "Bir podcast'e abone olmak için rss akışı url'sini girin veya adı ile arama yapıp rss akışını açın.",
+  "@searchInstructions": {},
+  "sortOrder": "Sıralandırma Yönü",
+  "@sortOrder": {},
+  "localEpisodeDescription": "{filePath} adresindeki yerel bölüm",
+  "@localEpisodeDescription": {
+    "placeholders": {
+      "filePath": {}
+    }
+  },
+  "publishDate": "Yayın Tarihi",
+  "@publishDate": {
+    "description": "Publish Date sort order"
+  },
+  "sortBy": "Sıralandırma Ölçütü",
+  "@sortBy": {},
+  "settingsDiscoveryDes": "\"Keşif Özellikleri\"ni yeniden açmak istediğinizden emin misiniz?",
+  "@settingsDiscoveryDes": {},
+  "selectMode": "Seçim Modu",
+  "@selectMode": {}
 }
