@@ -184,7 +184,7 @@
   "@filter": {},
   "filterType": "{type} Filter",
   "@filterType": {
-    "description": "To use with different episode filter types. Ex: {Downloaded} Filter, {Played} Filter, {Group} Filter...",
+    "description": "To use with different episode filter types. Noun, not verb. Ex: {Downloaded} Filter, {Played} Filter, {Group} Filter...",
     "placeholders": {
       "type": {}
     }
