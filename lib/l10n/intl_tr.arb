@@ -28,7 +28,7 @@
   "@boostVolume": {
     "description": "Boost volume in player widget."
   },
-  "buffering": "Yükleniyor",
+  "buffering": "Arabelleğe alınıyor",
   "@buffering": {},
   "cancel": "İPTAL",
   "@cancel": {},
@@ -38,7 +38,7 @@
   "@cellularConfirmDes": {},
   "changeLayout": "Görünümü değiştir",
   "@changeLayout": {},
-  "changelog": "Neler yeni?",
+  "changelog": "Değişenler",
   "@changelog": {},
   "chooseA": "Seç",
   "@chooseA": {},
@@ -106,7 +106,7 @@
   "@featureDiscoveryEditGroupDes": {},
   "featureDiscoveryEpisode": "Bölüm görünümü",
   "@featureDiscoveryEpisode": {},
-  "featureDiscoveryEpisodeDes": "Bölümü oynatmak için uzun dokun veya bir çalma listesine ekle. ",
+  "featureDiscoveryEpisodeDes": "Bölümü oynatmak veya çalma listesine eklemek için uzun dokun.",
   "@featureDiscoveryEpisodeDes": {},
   "featureDiscoveryEpisodeTitle": "Bölümü hemen oynatmak için uzun bas",
   "@featureDiscoveryEpisodeTitle": {},
@@ -188,7 +188,7 @@
   "@homeSubMenuSortBy": {},
   "homeTabMenuFavotite": "Favori",
   "@homeTabMenuFavotite": {},
-  "homeTabMenuRecent": "Son çalınan",
+  "homeTabMenuRecent": "Son yayınlar",
   "@homeTabMenuRecent": {},
   "homeToprightMenuAbout": "Hakkında",
   "@homeToprightMenuAbout": {},
@@ -223,7 +223,7 @@
   "@introThirdPage": {},
   "invalidName": "Geçersiz kullanıcı adı",
   "@invalidName": {},
-  "lastUpdate": "Son güncelleme\n",
+  "lastUpdate": "Son güncelleme",
   "@lastUpdate": {
     "description": "gpodder.net update"
   },
@@ -245,7 +245,7 @@
   "@listened": {},
   "loadMore": "Daha fazla göster",
   "@loadMore": {},
-  "loggedInAs": "{userName} olarak giriş yapıldı ",
+  "loggedInAs": "{userName} olarak giriş yapıldı",
   "@loggedInAs": {
     "description": "gpodder.net",
     "placeholders": {
@@ -256,7 +256,7 @@
   "@login": {
     "description": "gpodder.net login"
   },
-  "loginFailed": "Giriş başarısız ",
+  "loginFailed": "Giriş başarısız",
   "@loginFailed": {},
   "logout": "Çıkış yap",
   "@logout": {
@@ -396,7 +396,7 @@
   },
   "plugins": "Eklentiler",
   "@plugins": {},
-  "podcast": "{count, plural, zero{} one{Bölüm} other{Bölümler}}",
+  "podcast": "{count, plural, zero{} one{Podcast} other{Podcast'ler}}",
   "@podcast": {},
   "podcastSubscribed": "Podcaste abone olundu",
   "@podcastSubscribed": {},
@@ -523,13 +523,13 @@
   "@settingsBoostVolumeDes": {},
   "settingsDefaultGrid": "Varsayılan ızgara görünümü",
   "@settingsDefaultGrid": {},
-  "settingsDefaultGridDownload": "İndirilenler",
+  "settingsDefaultGridDownload": "İndirilenler sekmesi",
   "@settingsDefaultGridDownload": {},
-  "settingsDefaultGridFavorite": "Favoriler",
+  "settingsDefaultGridFavorite": "Favoriler sekmesi",
   "@settingsDefaultGridFavorite": {},
   "settingsDefaultGridPodcast": "Podcastler",
   "@settingsDefaultGridPodcast": {},
-  "settingsDefaultGridRecent": "En son oynatılanlar",
+  "settingsDefaultGridRecent": "Son yayınlar sekmesi",
   "@settingsDefaultGridRecent": {},
   "settingsDiscovery": "Keşfet özelliğini yeniden aktifleştir",
   "@settingsDiscovery": {
