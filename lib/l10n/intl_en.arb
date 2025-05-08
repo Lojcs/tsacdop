@@ -215,7 +215,7 @@
   "@haptics": {
     "description": "Haptic Feedback (vibrations)"
   },
-  "hapticsDes": "Toggle and adjust the intensity of haptics. (Requires device support)",
+  "hapticsDes": "Toggle haptic feedback and adjust its intensity. (Requires device support)",
   "@hapticsDes": {
     "description": "Haptic Feedback settings item description"
   },
