@@ -804,5 +804,29 @@
     "placeholders": {
       "type": {}
     }
+  },
+  "haptics": "Dokunsal Geribildirim",
+  "@haptics": {
+    "description": "Haptic Feedback (vibrations)"
+  },
+  "downloadDate": "İndirme Tarihi",
+  "@downloadDate": {
+    "description": "Download Date sort order"
+  },
+  "finalizeSelection": "Seçimi Tamamla",
+  "@finalizeSelection": {
+    "description": "Tooltip for button that finalizes a tentative seelction by getting all episodes included in it."
+  },
+  "hapticsDes": "Dokunsal geri bildirimi aç ve yoğunluğunu ayarla. (Cihaz desteği gerektirir)",
+  "@hapticsDes": {
+    "description": "Haptic Feedback settings item description"
+  },
+  "duration": "Süre",
+  "@duration": {
+    "description": "Duration sort order"
+  },
+  "displayVersion": "Gösterilen Sürüm",
+  "@displayVersion": {
+    "description": "The version of an episode displayed by default. Used with filterType."
   }
 }
