@@ -779,5 +779,30 @@
     "placeholders": {
       "version": {}
     }
+  },
+  "deselectAll": "Tüm Seçimi Kaldır",
+  "@deselectAll": {},
+  "before": "Öncesi",
+  "@before": {
+    "description": "Used in a button to select episodes before the selected one(s) on a list. Not used for time"
+  },
+  "between": "Arası",
+  "@between": {
+    "description": "Used in a button to select episodes between the selected one(s) on a list"
+  },
+  "capitalDefault": "Varsayılan",
+  "@capitalDefault": {},
+  "close": "Kapat",
+  "@close": {},
+  "after": "Sonrası",
+  "@after": {
+    "description": "Used in a button to select episodes after the selected one(s) on a list. Not used for time"
+  },
+  "filterType": "{type} Filtresi",
+  "@filterType": {
+    "description": "To use with different episode filter types. Ex: {Downloaded} Filter, {Played} Filter, {Group} Filter...",
+    "placeholders": {
+      "type": {}
+    }
   }
 }
