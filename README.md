@@ -6,6 +6,8 @@
 [![Github Downloads][]][github release - recent]
 [![style: effective dart][]][effective dart pub]
 [![License badge][]][license]
+[![Weblate percentage][]][weblate engage]
+[![weblate langouage count][]][weblate engage]
 <!-- [![fdroid install][]][fdroid link] -->
 
 ## About
@@ -51,23 +53,13 @@ More to come...
 | ![][Homepage ScreenShot] | ![][Group Screenshot] | ![][Podcast Screenshot] | ![][Episode Screenshot]|![][Download Screenshot] | ![][Player Screenshot]
 
 ## Localization
+Tsacdop-Fork has a [localization project](https://hosted.weblate.org/engage/tsacdop-fork/) on [Weblate](https://weblate.org/) thanks to their kind support of open source projects. You can translate untranslated strings, edit existing translations and add languages on the project page.
 
-Currently only has localizations already present in upstream (Chinese, French, Spanish, Portuguese, Italian, Turkish).  
-Until I figure out how to set up a better localization system, localization prs are welcome.
-<!-- Please [Email](mailto:<lojcsgit+tsacdop@gmail.com>) me you'd like to contribute to support more languages! -->
+Translation status:
 
-
-<!-- Credit to [Localizely](https://localizely.com/) for kind support to open source projects. -->
-
-<!-- ### ![English]
-
-### ![Chinese Simplified]
-
-### ![French] 
-
-### ![Spanish]
-
-### ![Portuguese] -->
+[<img src="https://hosted.weblate.org/widget/tsacdop-fork/multi-auto.svg"
+     alt="Translation status"
+     height="200">](https://hosted.weblate.org/engage/tsacdop-fork/)
 
 ## License
 
@@ -172,13 +164,9 @@ You can reach out to me on [Matrix](https://matrix.to/#/#tsacdop-fork:matrix.org
 [github downloads]: https://img.shields.io/github/downloads/lojcs/tsacdop/total?color=%230000d&label=downloads
 <!-- [fdroid install]: https://img.shields.io/f-droid/v/com.stonegate.tsacdop?include_prereleases
 [fdroid link]: https://f-droid.org/en/packages/com.stonegate.tsacdop/ -->
-<!-- [localizely]: https://img.shields.io/badge/dynamic/json?color=%2326c6da&label=localizely&query=%24.languages.length&url=https%3A%2F%2Fapi.localizely.com%2Fv1%2Fprojects%2Fbde4e9bd-4cb2-449b-9de2-18f231ddb47d%2Fstatus -->
-<!-- [English]: https://img.shields.io/badge/dynamic/json?style=for-the-badge&color=%2323CCC6&label=English&query=%24.languages%5B3%5D.reviewedProgress&url=https%3A%2F%2Fapi.localizely.com%2Fv1%2Fprojects%2Fbde4e9bd-4cb2-449b-9de2-18f231ddb47d%2Fstatus&suffix=%
-[Chinese Simplified]: https://img.shields.io/badge/dynamic/json?style=for-the-badge&color=%2323CCC6&label=Chinese%20Simplified&query=%24.languages%5B2%5D.reviewedProgress&url=https%3A%2F%2Fapi.localizely.com%2Fv1%2Fprojects%2Fbde4e9bd-4cb2-449b-9de2-18f231ddb47d%2Fstatus&suffix=%
-[French]: https://img.shields.io/badge/dynamic/json?style=for-the-badge&color=%2323CCC6&label=French(ppp)&query=%24.languages%5B5%5D.reviewedProgress&url=https%3A%2F%2Fapi.localizely.com%2Fv1%2Fprojects%2Fbde4e9bd-4cb2-449b-9de2-18f231ddb47d%2Fstatus&suffix=%
-[Spanish]: https://img.shields.io/badge/dynamic/json?style=for-the-badge&color=%2323CCC6&label=Spanish(Joel)&query=%24.languages%5B7%5D.reviewedProgress&url=https%3A%2F%2Fapi.localizely.com%2Fv1%2Fprojects%2Fbde4e9bd-4cb2-449b-9de2-18f231ddb47d%2Fstatus&suffix=%
-[Portuguese]: https://img.shields.io/badge/dynamic/json?style=for-the-badge&color=%2323CCC6&label=portuguese(Bruno)&query=%24.languages%5B9%5D.reviewedProgress&url=https%3A%2F%2Fapi.localizely.com%2Fv1%2Fprojects%2Fbde4e9bd-4cb2-449b-9de2-18f231ddb47d%2Fstatus&suffix=%
-[localizely - website]: https://localizely.com/ -->
+[weblate engage]: https://hosted.weblate.org/engage/tsacdop-fork/
+[Weblate percentage]: https://hosted.weblate.org/widget/tsacdop-fork/svg-badge.svg
+[weblate langouage count]: https://hosted.weblate.org/widget/tsacdop-fork/language-badge.svg
 <!-- [google play - icon]: https://img.shields.io/badge/google-playStore-%2323CCC6
 [google play]: https://play.google.com/store/apps/details?id=com.stonegate.tsacdop -->
 [Homepage ScreenShot]: preview/light-home.png
