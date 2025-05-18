@@ -37,43 +37,72 @@ class EpisodeBrief extends Equatable {
   final int skipSecondsEnd;
   final String chapterLink;
 
-  EpisodeBrief(
-      {required this.id,
-      required this.title,
-      required this.enclosureUrl,
-      required this.podcastId,
-      required this.podcastTitle,
-      required this.pubDate,
-      required this.description,
-      required this.number,
-      required this.enclosureDuration,
-      required this.enclosureSize,
-      required this.isDownloaded,
-      required this.downloadDate,
-      required this.mediaId,
-      required this.episodeImage,
-      required this.podcastImage,
-      required this.primaryColor,
-      required this.isExplicit,
-      required this.isLiked,
-      required this.isNew,
-      required this.isPlayed,
-      required this.isDisplayVersion,
-      this.versions,
-      this.skipSecondsStart = 0,
-      this.skipSecondsEnd = 0,
-      required this.chapterLink});
+  EpisodeBrief({
+    required this.id,
+    required this.title,
+    required this.enclosureUrl,
+    required this.podcastId,
+    required this.podcastTitle,
+    required this.pubDate,
+    required this.description,
+    required this.number,
+    required this.enclosureDuration,
+    required this.enclosureSize,
+    required this.isDownloaded,
+    required this.downloadDate,
+    required this.mediaId,
+    required this.episodeImage,
+    required this.podcastImage,
+    required this.primaryColor,
+    required this.isExplicit,
+    required this.isLiked,
+    required this.isNew,
+    required this.isPlayed,
+    required this.isDisplayVersion,
+    this.versions,
+    this.skipSecondsStart = 0,
+    this.skipSecondsEnd = 0,
+    required this.chapterLink,
+  });
+
+  /// Use for new local episodes not yet in database
+  EpisodeBrief.local({
+    required this.title,
+    required this.enclosureUrl,
+    String? podcastTitle,
+    required this.pubDate,
+    required this.description,
+    required this.enclosureDuration,
+    required this.enclosureSize,
+    required this.mediaId,
+    required this.episodeImage,
+    Color? primaryColor,
+  })  : id = -1,
+        podcastId = localFolderId,
+        podcastTitle = podcastTitle ?? 'Local Folder',
+        number = -1,
+        isDownloaded = true,
+        downloadDate = pubDate,
+        podcastImage = '',
+        primaryColor = primaryColor ?? Colors.teal,
+        isExplicit = false,
+        isLiked = false,
+        isNew = false,
+        isPlayed = false,
+        isDisplayVersion = true,
+        versions = null,
+        skipSecondsStart = 0,
+        skipSecondsEnd = 0,
+        chapterLink = '';
 
   late final MediaItem mediaItem = MediaItem(
-      id: mediaId!,
+      id: mediaId,
       title: title,
       artist: podcastTitle,
       album: podcastTitle,
-      duration: enclosureDuration != null
-          ? Duration(seconds: enclosureDuration!)
-          : Duration.zero,
-      artUri: Uri.parse(
-          episodeImage != '' ? episodeImage! : 'file://$podcastImage'),
+      duration: Duration(seconds: enclosureDuration),
+      artUri:
+          Uri.parse(episodeImage != '' ? episodeImage : 'file://$podcastImage'),
       extras: {
         'skipSecondsStart': skipSecondsStart,
         'skipSecondsEnd': skipSecondsEnd
@@ -81,31 +110,31 @@ class EpisodeBrief extends Equatable {
 
   ImageProvider get avatarImage {
     // TODO: Get rid of this
-    if (podcastImage != null) {
-      if (File(podcastImage!).existsSync()) {
-        return FileImage(File(podcastImage!));
+    if (podcastImage != '') {
+      if (File(podcastImage).existsSync()) {
+        return FileImage(File(podcastImage));
       }
-    } else if (episodeImage != null) {
-      if (File(episodeImage!).existsSync()) {
-        return FileImage(File(episodeImage!));
+    } else if (episodeImage != '') {
+      if (File(episodeImage).existsSync()) {
+        return FileImage(File(episodeImage));
       } else if (episodeImage != '') {
-        return CachedNetworkImageProvider(episodeImage!);
+        return CachedNetworkImageProvider(episodeImage);
       }
     }
     return AssetImage('assets/avatar_backup.png');
   }
 
-  late final ImageProvider _episodeImageProvider = ((episodeImage != null)
-      ? (File(episodeImage!).existsSync())
-          ? FileImage(File(episodeImage!))
+  late final ImageProvider _episodeImageProvider = ((episodeImage != '')
+      ? (File(episodeImage).existsSync())
+          ? FileImage(File(episodeImage))
           : (episodeImage != '')
-              ? CachedNetworkImageProvider(episodeImage!)
+              ? CachedNetworkImageProvider(episodeImage)
               : const AssetImage('assets/avatar_backup.png')
       : const AssetImage('assets/avatar_backup.png')) as ImageProvider;
 
-  late final ImageProvider podcastImageProvider = ((podcastImage != null)
-      ? (File(podcastImage!).existsSync())
-          ? FileImage(File(podcastImage!))
+  late final ImageProvider podcastImageProvider = ((podcastImage != '')
+      ? (File(podcastImage).existsSync())
+          ? FileImage(File(podcastImage))
           : const AssetImage('assets/avatar_backup.png')
       : const AssetImage('assets/avatar_backup.png')) as ImageProvider;
 
@@ -157,11 +186,11 @@ class EpisodeBrief extends Equatable {
   }
 
   late final ColorScheme colorSchemeLight = ColorScheme.fromSeed(
-    seedColor: primaryColor!,
+    seedColor: primaryColor,
     brightness: Brightness.light,
   );
   late final ColorScheme colorSchemeDark = ColorScheme.fromSeed(
-    seedColor: primaryColor!,
+    seedColor: primaryColor,
     brightness: Brightness.dark,
   );
   late final CardColorScheme cardColorSchemeLight =

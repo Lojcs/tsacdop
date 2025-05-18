@@ -468,7 +468,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
       if (_lastHistory != history) {
         _lastHistory = history;
         if (_seekSliderValue > 0.95) {
-          await _episodeState.setPlayed([saveEpisode],
+          await _episodeState.setPlayed([saveEpisode.id],
               seconds: history.seconds!, seekValue: history.seekValue!);
         } else {
           await _dbHelper.saveHistory(history);
@@ -547,7 +547,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
       _episodeIndex = _startEpisodeIndex;
       if (_playerRunning) {
         _loadStartPosition();
-        _audioDuration = _startEpisode!.enclosureDuration! * 1000;
+        _audioDuration = _startEpisode!.enclosureDuration * 1000;
         if (samePlaylist) {
           _playlistBeingEdited++;
           await skipToIndex(_startEpisodeIndex);
@@ -621,10 +621,10 @@ class AudioPlayerNotifier extends ChangeNotifier {
   }
 
   /// Adds episode to beginning of the queue and starts playing.
-  Future<void> loadEpisodesToQueue(List<EpisodeBrief> episode,
+  Future<void> loadEpisodesToQueue(List<EpisodeBrief> episodes,
       {int startPosition = 0}) async {
     await saveHistory();
-    await addToPlaylist(episode, playlist: _queue, index: 0);
+    await addToPlaylist(episodes, playlist: _queue, index: 0);
     if (!(playerRunning && _playlist.isQueue)) {
       // Switch to queue
       _startPlaylist = _queue;
@@ -645,7 +645,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
       }
     }
     notifyListeners();
-    await _episodeState.unsetNew(episode);
+    await _episodeState.unsetNew(episodes.map((e) => e.id).toList());
   }
 
   /// Skips to the episode at specified index
@@ -669,7 +669,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     _sleepTimerMode = SleepTimerMode.undefined;
     _switchValue = 0;
     _audioState = AudioProcessingState.loading;
-    _audioDuration = _episode!.enclosureDuration! * 1000;
+    _audioDuration = _episode!.enclosureDuration * 1000;
     _playerRunning = true;
     _skipStart = true;
     notifyListeners();
@@ -896,7 +896,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     if (playlist.isNotEmpty && playlist.episodes.isEmpty) {
       playlist.getPlaylist();
     }
-    await _episodeState.unsetNew(episodes);
+    await _episodeState.unsetNew(episodes.map((e) => e.id).toList());
     EpisodeCollision ifExists =
         playlist.isQueue ? EpisodeCollision.Replace : EpisodeCollision.Ignore;
 
@@ -1180,17 +1180,14 @@ class AudioPlayerNotifier extends ChangeNotifier {
   /// Updates the media ID of an episode from the database.
   /// Replaces the playing episode if its media ID changed.
   Future<void> updateEpisodeMediaID(EpisodeBrief episode) async {
-    EpisodeBrief? updatedEpisode;
     if (_playlist.episodes.contains(episode)) {
-      updatedEpisode = await episode.updateFromDB();
       _playlistBeingEdited++;
-      final List<int> indexes = _playlist.updateEpisode(updatedEpisode);
+      final List<int> indexes = _playlist.updateEpisode(episode);
       if (_playerRunning) {
         if (indexes.remove(_episodeIndex)) {
           // Currently playing episode is replaced
           int index = _episodeIndex;
-          await _audioHandler
-              .addQueueItemsAt([updatedEpisode.mediaItem], index + 1);
+          await _audioHandler.addQueueItemsAt([episode.mediaItem], index + 1);
           _episodeIndex = index;
           await _audioHandler.combinedSeek(
               position: Duration(milliseconds: _audioPosition),
@@ -1201,21 +1198,17 @@ class AudioPlayerNotifier extends ChangeNotifier {
         // Another episode is replaced.
         if (effectiveAutoPlay) {
           for (int i in indexes) {
-            await _audioHandler
-                .addQueueItemsAt([updatedEpisode.mediaItem], i + 1);
+            await _audioHandler.addQueueItemsAt([episode.mediaItem], i + 1);
             await _audioHandler.removeQueueItemsAt(i);
           }
         }
       }
       _playlistBeingEdited--;
     }
-    final containingPlaylists = _playlists.where(
-        (playlist) => playlist != _playlist && playlist.contains(episode));
-    if (containingPlaylists.isNotEmpty) {
-      updatedEpisode ??= await episode.updateFromDB();
-    }
-    for (final playlist in containingPlaylists) {
-      playlist.updateEpisode(updatedEpisode!);
+    final otherPlaylists =
+        _playlists.where((playlist) => playlist != _playlist);
+    for (final playlist in otherPlaylists) {
+      playlist.updateEpisode(episode);
     }
   }
 

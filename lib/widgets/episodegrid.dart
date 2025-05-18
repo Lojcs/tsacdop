@@ -145,12 +145,12 @@ class _InteractiveEpisodeGridState extends State<InteractiveEpisodeGrid> {
   _InteractiveEpisodeGridState();
 
   /// Episodes to display
-  List<EpisodeBrief> _episodes = [];
+  List<int> _episodeIds = [];
 
   /// Function to get episodes
-  Future<List<EpisodeBrief>> Function(int count, {int offset}) _getEpisodes =
+  Future<List<int>> Function(int count, {int offset}) _getEpisodeIds =
       (int _, {int offset = 0}) async {
-    return <EpisodeBrief>[];
+    return <int>[];
   };
 
   /// Episodes loaded first time.
@@ -164,9 +164,6 @@ class _InteractiveEpisodeGridState extends State<InteractiveEpisodeGrid> {
 
   /// Stop animating after first scroll
   bool _scroll = false;
-
-  /// The grid
-  Widget? _grid;
 
   @override
   void didUpdateWidget(covariant InteractiveEpisodeGrid oldWidget) {
@@ -182,14 +179,14 @@ class _InteractiveEpisodeGridState extends State<InteractiveEpisodeGrid> {
     slivers.insert(
       widget.sliverInsertIndicies.actionBarIndex,
       ActionBar(
-        onGetEpisodesChanged: (getEpisodes) async {
-          _getEpisodes = getEpisodes;
-          _episodes = await _getEpisodes(_top);
+        onGetEpisodeIdsChanged: (getEpisodes) async {
+          _getEpisodeIds = getEpisodes;
+          _episodeIds = await _getEpisodeIds(_top);
           if (mounted && context.mounted) {
             SelectionController? selectionController =
                 Provider.of<SelectionController?>(context, listen: false);
             if (selectionController != null) {
-              selectionController.setSelectableEpisodes(_episodes);
+              selectionController.setSelectableEpisodes(_episodeIds);
             }
             setState(() {});
           }
@@ -231,58 +228,38 @@ class _InteractiveEpisodeGridState extends State<InteractiveEpisodeGrid> {
     slivers.insert(
       widget.sliverInsertIndicies.gridIndex,
       widget.showGrid
-          ? Selector<EpisodeState, bool>(
-              selector: (_, episodeState) => episodeState.globalChange,
-              builder: (context, value, _) => FutureBuilder(
-                future: Future.microtask(() async {
-                  _episodes = await _getEpisodes(_top);
-                  if (context.mounted) {
-                    SelectionController? selectionController =
-                        Provider.of<SelectionController?>(context,
-                            listen: false);
-                    if (selectionController != null) {
-                      selectionController.setSelectableEpisodes(_episodes);
-                    }
-                    _grid = null;
-                  }
-                }),
-                builder: (context, snapshot) {
-                  _grid ??= EpisodeGrid(
-                    episodes: _episodes,
-                    initNum: widget.initNum,
-                    preferEpisodeImage: widget.preferEpisodeImage,
-                    layout: _layout,
-                    openPodcast: widget.openPodcast,
-                    selectable: widget.selectable,
-                    externallyRefreshed: true,
-                  );
-                  return _episodes.isNotEmpty
-                      ? _grid!
-                      : SliverToBoxAdapter(
-                          child: Padding(
-                            padding: EdgeInsets.only(top: 150),
-                            child: widget.noEpisodesWidget,
-                          ),
-                        );
-                },
-              ),
-            )
+          ? _episodeIds.isNotEmpty
+              ? EpisodeGrid(
+                  episodeIds: _episodeIds,
+                  initNum: widget.initNum,
+                  preferEpisodeImage: widget.preferEpisodeImage,
+                  layout: _layout,
+                  openPodcast: widget.openPodcast,
+                  selectable: widget.selectable,
+                  externallyRefreshed: true,
+                )
+              : SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 150),
+                    child: widget.noEpisodesWidget,
+                  ),
+                )
           : SliverToBoxAdapter(),
     );
     return NotificationListener<ScrollNotification>(
       onNotification: (scrollInfo) {
         if (scrollInfo.metrics.pixels >=
                 scrollInfo.metrics.maxScrollExtent - context.width &&
-            _episodes.length == _top) {
+            _episodeIds.length == _top) {
           if (!_loadMore) {
             Future.microtask(() async {
-              _episodes.addAll(await _getEpisodes(36, offset: _top));
+              _episodeIds.addAll(await _getEpisodeIds(36, offset: _top));
               _top = _top + 36;
               if (mounted && context.mounted) {
                 SelectionController? selectionController =
                     Provider.of<SelectionController?>(context, listen: false);
                 if (selectionController != null) {
-                  selectionController.setSelectableEpisodes(_episodes);
+                  selectionController.setSelectableEpisodes(_episodeIds);
                 }
                 setState(() => _loadMore = false);
               }
@@ -306,7 +283,7 @@ class _InteractiveEpisodeGridState extends State<InteractiveEpisodeGrid> {
 
 /// Widget that displays [InteractiveEpisodeCard]s in a grid.
 class EpisodeGrid extends StatelessWidget {
-  final List<EpisodeBrief> episodes;
+  final List<int> episodeIds;
   final bool preferEpisodeImage;
   final EpisodeGridLayout layout;
   final bool openPodcast;
@@ -318,7 +295,7 @@ class EpisodeGrid extends StatelessWidget {
 
   const EpisodeGrid({
     super.key,
-    required this.episodes,
+    required this.episodeIds,
     this.initNum = 12,
     this.preferEpisodeImage = false,
     this.layout = EpisodeGridLayout.small,
@@ -335,13 +312,13 @@ class EpisodeGrid extends StatelessWidget {
       showItemDuration: Duration(milliseconds: 50),
     );
     final scrollController = ScrollController();
-    if (episodes.isNotEmpty) {
+    if (episodeIds.isNotEmpty) {
       return SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: 10),
         sliver: LiveSliverGrid.options(
           controller: scrollController,
           options: options,
-          itemCount: episodes.length,
+          itemCount: episodeIds.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             childAspectRatio: layout == EpisodeGridLayout.small
                 ? 1
@@ -361,15 +338,13 @@ class EpisodeGrid extends StatelessWidget {
               opacity: Tween<double>(begin: index < initNum ? 0 : 1, end: 1)
                   .animate(animation),
               child: InteractiveEpisodeCard(
-                context,
-                episodes[index],
+                episodeIds[index],
                 layout,
                 openPodcast: openPodcast,
                 preferEpisodeImage: preferEpisodeImage,
                 showNumber: true,
                 selectable: selectable,
                 index: index,
-                externallyRefreshed: externallyRefreshed,
               ),
             );
           },

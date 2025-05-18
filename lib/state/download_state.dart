@@ -66,7 +66,7 @@ class AutoDownloader {
       } else if (episodeTask.status == DownloadTaskStatus.failed ||
           episodeTask.status == DownloadTaskStatus.canceled) {
         _episodeTasks.removeWhere((element) =>
-            element.episode!.enclosureUrl == episodeTask.episode!.enclosureUrl);
+            element.episode.enclosureUrl == episodeTask.episode.enclosureUrl);
         if (_episodeTasks.isEmpty) _unbindBackgroundIsolate();
       }
     });
@@ -84,13 +84,13 @@ class AutoDownloader {
         'file://${path.join(completeTask!.first.savedDir, Uri.encodeComponent(completeTask.first.filename!))}';
     final fileStat = await File(filePath).stat();
     final mediaInfo = await MediaInfo().getMediaInfo(filePath);
-    await _dbHelper.setDownloaded(episodeTask.episode!.id,
+    await _dbHelper.setDownloaded(episodeTask.episode.id,
         mediaId: filePath,
         taskId: episodeTask.taskId ?? "downloaded",
         size: fileStat.size,
         duration: mediaInfo["durationMs"] ~/ 1000);
     _episodeTasks.removeWhere((element) =>
-        element.episode!.enclosureUrl == episodeTask.episode!.enclosureUrl);
+        element.episode.enclosureUrl == episodeTask.episode.enclosureUrl);
     if (_episodeTasks.isEmpty) _unbindBackgroundIsolate();
   }
 
@@ -220,12 +220,12 @@ class DownloadState extends ChangeNotifier {
         'file://${path.join(completeTask!.first.savedDir, Uri.encodeComponent(completeTask.first.filename!))}';
     var fileStat = await File(filePath).stat();
     final mediaInfo = await MediaInfo().getMediaInfo(filePath);
-    await _episodeState.setDownloaded(episodeTask.episode!.id,
+    await _episodeState.setDownloaded(episodeTask.episode.id,
         mediaId: filePath,
-        taskId: episodeTask.taskId!,
+        taskId: episodeTask.taskId,
         size: fileStat.size,
         duration: mediaInfo["durationMs"] ~/ 1000);
-    EpisodeBrief episode = await episodeTask.episode!.updateFromDB();
+    EpisodeBrief episode = _episodeState[episodeTask.episode.id];
     _removeTask(episodeTask.episode);
     _episodeTasks.add(EpisodeTask(episode, episodeTask.taskId,
         progress: 100, status: DownloadTaskStatus.complete));
@@ -236,9 +236,9 @@ class DownloadState extends ChangeNotifier {
   }
 
   EpisodeTask episodeToTask(EpisodeBrief episode) {
-    return _episodeTasks.firstWhere(
-        (task) => task.episode!.enclosureUrl == episode!.enclosureUrl,
-        orElse: () {
+    return _episodeTasks
+        .firstWhere((task) => task.episode.enclosureUrl == episode.enclosureUrl,
+            orElse: () {
       return EpisodeTask(
         episode,
         '',
@@ -253,23 +253,22 @@ class DownloadState extends ChangeNotifier {
   }
 
   Future startTask(EpisodeBrief episode, {bool showNotification = true}) async {
-    episode = await episode.updateFromDB();
     taskStarter(episode, _episodeTasks, showNotification: showNotification);
     notifyListeners();
   }
 
-  Future pauseTask(EpisodeBrief? episode) async {
+  Future pauseTask(EpisodeBrief episode) async {
     var task = episodeToTask(episode);
     if (task.progress! > 0) {
-      await FlutterDownloader.pause(taskId: task.taskId!);
+      await FlutterDownloader.pause(taskId: task.taskId);
     }
     notifyListeners();
   }
 
   Future resumeTask(EpisodeBrief episode) async {
     var task = episodeToTask(episode);
-    var newTaskId = await FlutterDownloader.resume(taskId: task.taskId!);
-    await FlutterDownloader.remove(taskId: task.taskId!);
+    var newTaskId = await FlutterDownloader.resume(taskId: task.taskId);
+    await FlutterDownloader.remove(taskId: task.taskId);
     var index = _episodeTasks.indexOf(task);
     _episodeTasks[index] = task.copyWith(taskId: newTaskId);
     notifyListeners();
@@ -277,8 +276,8 @@ class DownloadState extends ChangeNotifier {
 
   Future retryTask(EpisodeBrief episode) async {
     var task = episodeToTask(episode);
-    var newTaskId = await FlutterDownloader.retry(taskId: task.taskId!);
-    await FlutterDownloader.remove(taskId: task.taskId!);
+    var newTaskId = await FlutterDownloader.retry(taskId: task.taskId);
+    await FlutterDownloader.remove(taskId: task.taskId);
     var index = _episodeTasks.indexOf(task);
     _episodeTasks[index] = task.copyWith(taskId: newTaskId);
     notifyListeners();
@@ -287,13 +286,13 @@ class DownloadState extends ChangeNotifier {
   Future removeTask(EpisodeBrief episode) async {
     var task = episodeToTask(episode);
     await FlutterDownloader.remove(
-        taskId: task.taskId!, shouldDeleteContent: false);
+        taskId: task.taskId, shouldDeleteContent: false);
   }
 
   Future<void> delTask(EpisodeBrief episode) async {
     var task = episodeToTask(episode);
     await FlutterDownloader.remove(
-        taskId: task.taskId!, shouldDeleteContent: true);
+        taskId: task.taskId, shouldDeleteContent: true);
     await _episodeState.unsetDownloaded(episode.id);
 
     for (var episodeTask in _episodeTasks) {
@@ -324,7 +323,7 @@ class DownloadState extends ChangeNotifier {
           .millisecondsSinceEpoch;
       var episodes = await _dbHelper.getEpisodes(
           rangeParameters: [Sorter.downloadDate],
-          rangeDelimiters: [Tuple2(-1, deadline)],
+          rangeDelimiters: [(-1, deadline)],
           filterDownloaded: true);
       episodes.addAll(await _dbHelper.getEpisodes(
           filterPlayed: true, filterDownloaded: true));
@@ -353,7 +352,7 @@ Future<Directory> _getDownloadDirectory() async {
 
 Future<void> taskStarter(EpisodeBrief episode, List<EpisodeTask> episodeTasks,
     {bool showNotification = false}) async {
-  if (!episode.isDownloaded! &&
+  if (!episode.isDownloaded &&
       !episodeTasks.any((task) => task.episode == episode)) {
     final dir = await _getDownloadDirectory();
     var localPath =
@@ -377,6 +376,8 @@ Future<void> taskStarter(EpisodeBrief episode, List<EpisodeTask> episodeTasks,
       showNotification: showNotification,
       openFileFromNotification: false,
     );
-    episodeTasks.add(EpisodeTask(episode, taskId));
+    if (taskId != null) {
+      episodeTasks.add(EpisodeTask(episode, taskId));
+    }
   }
 }

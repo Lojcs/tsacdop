@@ -461,16 +461,16 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
 }
 
 class PodcastPreview extends StatefulWidget {
-  final PodcastLocal? podcastLocal;
+  final PodcastLocal podcastLocal;
 
-  const PodcastPreview({this.podcastLocal, super.key});
+  const PodcastPreview({required this.podcastLocal, super.key});
 
   @override
   _PodcastPreviewState createState() => _PodcastPreviewState();
 }
 
 class _PodcastPreviewState extends State<PodcastPreview> {
-  List<EpisodeBrief> episodePreview = [];
+  List<int>? episodePreview;
 
   @override
   void initState() {
@@ -487,12 +487,12 @@ class _PodcastPreviewState extends State<PodcastPreview> {
             selector: (_, refreshWorker, groupWorker) =>
                 tuple.Tuple2(refreshWorker.created, groupWorker.created),
             builder: (_, data, __) {
-              return FutureBuilder<List<EpisodeBrief>>(
-                future: _getPodcastPreview(widget.podcastLocal!),
+              return FutureBuilder<List<int>>(
+                future: _getPodcastPreview(widget.podcastLocal),
                 builder: (context, snapshot) {
                   return (snapshot.hasData)
                       ? ShowEpisode(
-                          episodes: snapshot.data,
+                          episodeIds: snapshot.data!,
                           podcastLocal: widget.podcastLocal,
                         )
                       : Padding(
@@ -536,27 +536,24 @@ class _PodcastPreviewState extends State<PodcastPreview> {
     );
   }
 
-  Future<List<EpisodeBrief>> _getPodcastPreview(
-      PodcastLocal podcastLocal) async {
-    if (episodePreview.isEmpty) {
-      final dbHelper = DBHelper();
-      episodePreview = await dbHelper.getEpisodes(
-        feedIds: [podcastLocal.id],
-        sortBy: Sorter.pubDate,
-        sortOrder: SortOrder.desc,
-        limit: 2,
-        filterDisplayVersion: false,
-        episodeState: Provider.of<EpisodeState>(context, listen: false),
-      );
-    }
-    return episodePreview;
+  Future<List<int>> _getPodcastPreview(PodcastLocal podcastLocal) async {
+    episodePreview ??=
+        await Provider.of<EpisodeState>(context, listen: false).getEpisodes(
+      feedIds: [podcastLocal.id],
+      sortBy: Sorter.pubDate,
+      sortOrder: SortOrder.desc,
+      limit: 2,
+      filterDisplayVersion: false,
+    );
+    return episodePreview!;
   }
 }
 
 class ShowEpisode extends StatelessWidget {
-  final List<EpisodeBrief>? episodes;
-  final PodcastLocal? podcastLocal;
-  const ShowEpisode({super.key, this.episodes, this.podcastLocal});
+  final List<int> episodeIds;
+  final PodcastLocal podcastLocal;
+  const ShowEpisode(
+      {required this.episodeIds, required this.podcastLocal, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -576,14 +573,13 @@ class ShowEpisode extends StatelessWidget {
             delegate: SliverChildBuilderDelegate(
               (context, index) {
                 return InteractiveEpisodeCard(
-                  context,
-                  episodes![index],
+                  episodeIds[index],
                   EpisodeGridLayout.medium,
                   preferEpisodeImage: false,
                   showNumber: true,
                 );
               },
-              childCount: math.min(episodes!.length, 2),
+              childCount: math.min(episodeIds.length, 2),
             ),
           ),
         ),

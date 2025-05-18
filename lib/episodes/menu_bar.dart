@@ -13,8 +13,10 @@ import '../util/helpers.dart';
 
 class EpisodeActionBar extends StatefulWidget {
   final int episodeId;
+
+  /// Hides the avatar image
   final bool? hide;
-  const EpisodeActionBar({required this.episodeId, this.hide, super.key});
+  const EpisodeActionBar(this.episodeId, {this.hide = false, super.key});
   @override
   EpisodeActionBarState createState() => EpisodeActionBarState();
 }

@@ -29,7 +29,7 @@ class _DownloadButtonState extends State<DownloadButton> {
     );
   }
 
-  Future<void> _pauseDownload(EpisodeBrief? episode) async {
+  Future<void> _pauseDownload(EpisodeBrief episode) async {
     Provider.of<DownloadState>(context, listen: false).pauseTask(episode);
   }
 
@@ -100,7 +100,7 @@ class _DownloadButtonState extends State<DownloadButton> {
                 ),
               ),
             ),
-            () => requestDownload([task.episode!], context));
+            () => requestDownload([task.episode], context));
       case DownloadTaskStatus.enqueued:
         return Material(
           color: Colors.transparent,
@@ -164,7 +164,7 @@ class _DownloadButtonState extends State<DownloadButton> {
           color: Colors.transparent,
           child: InkWell(
             onTap: () {
-              _deleteDownload(task.episode!);
+              _deleteDownload(task.episode);
             },
             child: Container(
               height: 50.0,
@@ -187,16 +187,16 @@ class _DownloadButtonState extends State<DownloadButton> {
         );
       case DownloadTaskStatus.failed:
         return _buttonOnMenu(Icon(Icons.refresh, color: Colors.red),
-            () => _retryDownload(task.episode!));
+            () => _retryDownload(task.episode));
       case DownloadTaskStatus.canceled:
         return _buttonOnMenu(Icon(Icons.refresh, color: Colors.red),
-            () => _retryDownload(task.episode!));
+            () => _retryDownload(task.episode));
       case DownloadTaskStatus.paused:
         return Material(
           color: Colors.transparent,
           child: InkWell(
             onTap: () {
-              _resumeDownload(task.episode!);
+              _resumeDownload(task.episode);
             },
             child: Container(
               height: 50.0,

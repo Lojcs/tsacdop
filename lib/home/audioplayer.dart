@@ -1622,14 +1622,15 @@ class _ControlPanelState extends State<ControlPanel>
                         opacity: ((widget.maxHeight! + 25 - height) / 25)
                             .clamp(0, 1),
                         child: Selector<AudioPlayerNotifier,
-                            Tuple4<EpisodeBrief, bool, bool, double?>>(
-                          selector: (_, audio) => Tuple4(
-                              audio.episode!,
-                              audio.stopOnComplete,
-                              audio.sleepTimerActive,
-                              audio.currentSpeed),
+                            (EpisodeBrief, bool, bool, double?)>(
+                          selector: (_, audio) => (
+                            audio.episode!,
+                            audio.stopOnComplete,
+                            audio.sleepTimerActive,
+                            audio.currentSpeed
+                          ),
                           builder: (_, data, __) {
-                            final currentSpeed = data.item4 ?? 1.0;
+                            final currentSpeed = data.$4 ?? 1.0;
                             return Padding(
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 20.0),
@@ -1646,8 +1647,7 @@ class _ControlPanelState extends State<ControlPanel>
                                             Navigator.push(
                                               context,
                                               FadeRoute(
-                                                page: EpisodeDetail(
-                                                    episodeItem: data.item1),
+                                                page: EpisodeDetail(data.$1.id),
                                               ),
                                             );
                                           }
@@ -1658,7 +1658,7 @@ class _ControlPanelState extends State<ControlPanel>
                                               height: 30.0,
                                               width: 30.0,
                                               child: CircleAvatar(
-                                                backgroundImage: data.item1!
+                                                backgroundImage: data.$1!
                                                     .episodeOrPodcastImageProvider,
                                               ),
                                             ),
@@ -1666,7 +1666,7 @@ class _ControlPanelState extends State<ControlPanel>
                                             SizedBox(
                                               width: context.width - 130,
                                               child: Text(
-                                                data.item1!.podcastTitle,
+                                                data.$1.podcastTitle,
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
                                               ),

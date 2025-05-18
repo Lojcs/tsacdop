@@ -8,7 +8,6 @@ import '../util/selection_controller.dart';
 import 'package:tuple/tuple.dart';
 
 import '../home/audioplayer.dart';
-import '../local_storage/sqflite_localpodcast.dart';
 import '../state/audio_state.dart';
 import '../state/download_state.dart';
 import '../state/episode_state.dart';
@@ -46,9 +45,6 @@ class _MultiSelectPanelIntegrationState
   double get iconButtonSize => context.actionBarButtonSizeVertical;
   EdgeInsets get iconPadding => context.actionBarIconPadding;
   Radius get iconRadius => context.actionBarIconRadius;
-
-  late bool episodeStateGlobalChange;
-  bool initialBuild = true;
 
   late double previewHeight = iconButtonSize + 8;
   late double multiSelectHeight =
@@ -92,11 +88,6 @@ class _MultiSelectPanelIntegrationState
 
   @override
   Widget build(BuildContext context) {
-    if (initialBuild) {
-      initialBuild = false;
-      episodeStateGlobalChange =
-          Provider.of<EpisodeState>(context, listen: false).globalChange;
-    }
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
@@ -117,32 +108,12 @@ class _MultiSelectPanelIntegrationState
                       if (mounted) setState(() => previewHeight = height);
                     },
                   ),
-                  Selector<EpisodeState, bool>(
-                    selector: (_, episodeState) => episodeState.globalChange,
-                    builder: (_, data, ___) => FutureBuilder<void>(
-                      future: () async {
-                        if (data != episodeStateGlobalChange) {
-                          // Prevents unnecessary database calls when the bar is rebuilt for other reasons
-                          episodeStateGlobalChange = data;
-                          List<EpisodeBrief> updatedEpisodes =
-                              await _getUpdatedEpisodes(context);
-                          if (context.mounted) {
-                            Provider.of<SelectionController>(context,
-                                    listen: false)
-                                .updateEpisodes(updatedEpisodes);
-                          }
-                        }
-                      }(),
-                      builder: (context, _) {
-                        return MultiSelectPanel(
-                          onHeightChanged: (height) {
-                            if (mounted) {
-                              setState(() => multiSelectHeight = height);
-                            }
-                          },
-                        );
-                      },
-                    ),
+                  MultiSelectPanel(
+                    onHeightChanged: (height) {
+                      if (mounted) {
+                        setState(() => multiSelectHeight = height);
+                      }
+                    },
                   ),
                 ],
               ),
@@ -159,19 +130,6 @@ class _MultiSelectPanelIntegrationState
         ),
       ],
     );
-  }
-
-  /// Only need to refetch episodes that were previously selected, currently selectable
-  /// episodes are refetched by [InteractiveEpisodeGrid]
-  Future<List<EpisodeBrief>> _getUpdatedEpisodes(BuildContext context) async {
-    var dbHelper = DBHelper();
-    SelectionController selectionController =
-        Provider.of<SelectionController>(context, listen: false);
-    List<int> episodeIds = selectionController.previouslySelectedEpisodes
-        .map((e) => e.id)
-        .toList();
-    var episodes = await dbHelper.getEpisodes(episodeIds: episodeIds);
-    return episodes;
   }
 }
 
@@ -266,15 +224,14 @@ class _SelectionPreviewState extends State<SelectionPreview>
                       height: 8,
                     ),
                   ),
-                  Selector<SelectionController,
-                      Tuple2<List<EpisodeBrief>, int>>(
-                    selector: (_, selectionController) => Tuple2(
+                  Selector<SelectionController, (List<int>, int)>(
+                    selector: (_, selectionController) => (
                       selectionController.selectedEpisodes,
                       selectionController.selectedEpisodes.length,
                     ),
                     builder: (context, data, _) {
                       return EpisodeGrid(
-                        episodes: data.item1,
+                        episodeIds: data.$1,
                         layout: EpisodeGridLayout.medium,
                         openPodcast: true,
                         selectable: false,
@@ -340,23 +297,24 @@ class _SelectionPreviewState extends State<SelectionPreview>
                           Padding(
                             padding: EdgeInsets.only(
                                 top: context.actionBarIconPadding.vertical / 2),
-                            child: Selector<SelectionController,
-                                Tuple2<List<EpisodeBrief>, int>>(
-                              selector: (context, selectionController) =>
-                                  Tuple2(
+                            child:
+                                Selector<SelectionController, (List<int>, int)>(
+                              selector: (context, selectionController) => (
                                 selectionController.selectedEpisodes,
                                 selectionController.selectedEpisodes.length,
                               ),
                               builder: (context, data, _) {
-                                int size = data.item1.fold(
+                                var eState = Provider.of<EpisodeState>(context,
+                                    listen: false);
+                                int size = data.$1.fold(
                                     0,
-                                    (size, episode) =>
-                                        size + (episode.enclosureSize ?? 0));
-                                int duration = data.item1.fold(
+                                    (size, id) =>
+                                        size + eState[id].enclosureSize);
+                                int duration = data.$1.fold(
                                     0,
-                                    (duration, episode) =>
+                                    (duration, id) =>
                                         duration +
-                                        (episode.enclosureDuration ?? 0));
+                                        eState[id].enclosureDuration);
                                 return Text(
                                   "  ${size ~/ 1000000}MB  ${duration.toTime}",
                                   style: GoogleFonts.teko(
@@ -759,9 +717,9 @@ class _SelectionOptions extends StatelessWidget {
 }
 
 class _NewPlaylist extends StatefulWidget {
-  final List<EpisodeBrief> episodes;
+  final List<int> episodeIds;
   final Color? color;
-  const _NewPlaylist(this.episodes, {this.color});
+  const _NewPlaylist(this.episodeIds, {this.color});
 
   @override
   __NewPlaylistState createState() => __NewPlaylistState();
@@ -805,8 +763,11 @@ class __NewPlaylistState extends State<_NewPlaylist> {
                   .playlistExists(_playlistName)) {
                 if (mounted) setState(() => _error = 1);
               } else {
-                final episodesList =
-                    widget.episodes.map((e) => e.enclosureUrl).toList();
+                final episodesList = widget.episodeIds
+                    .map((i) =>
+                        Provider.of<EpisodeState>(context, listen: false)[i]
+                            .enclosureUrl)
+                    .toList();
                 final playlist =
                     Playlist(_playlistName, episodeUrlList: episodesList);
                 context.read<AudioPlayerNotifier>().addPlaylist(playlist);
@@ -1026,7 +987,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
 
   late Playlist playlist;
 
-  List<EpisodeBrief> selectedEpisodes = [];
+  List<int> selectedEpisodeIds = [];
   bool _secondRow = false;
   bool get secondRow => _secondRow;
   set secondRow(bool boo) {
@@ -1080,23 +1041,24 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
         playlist =
             Provider.of<AudioPlayerNotifier>(context, listen: false).playlist;
       }
-      for (var episode in selectedEpisodes) {
+      for (var episode in selectedEpisodeIds
+          .map((i) => Provider.of<EpisodeState>(context, listen: false)[i])) {
         if (!likedSet) {
-          liked = episode.isLiked!;
+          liked = episode.isLiked;
           likedSet = true;
-        } else if (episode.isLiked! != liked) {
+        } else if (episode.isLiked != liked) {
           liked = null;
         }
         if (!playedSet) {
-          played = episode.isPlayed!;
+          played = episode.isPlayed;
           playedSet = true;
-        } else if (episode.isPlayed! != played) {
+        } else if (episode.isPlayed != played) {
           played = null;
         }
         if (!downloadedSet) {
-          downloaded = episode.isDownloaded!;
+          downloaded = episode.isDownloaded;
           downloadedSet = true;
-        } else if (episode.isDownloaded! != downloaded) {
+        } else if (episode.isDownloaded != downloaded) {
           downloaded = null;
         }
         if (!inPlaylistSet) {
@@ -1122,39 +1084,39 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
         top: context.actionBarIconPadding.top / 2,
         bottom: context.actionBarIconPadding.bottom / 2,
       ),
-      child: Selector<SelectionController,
-          Tuple4<List<EpisodeBrief>, int, bool, bool>>(
-        selector: (_, selectionController) => Tuple4(
-            selectionController.selectedEpisodes,
-            selectionController.selectedEpisodes.length,
-            selectionController.episodesUpdated,
-            selectionController.selectionTentative),
+      child: Selector2<SelectionController, EpisodeState,
+          (List<int>, int, bool, bool)>(
+        selector: (_, selectionController, episodeState) => (
+          selectionController.selectedEpisodes,
+          selectionController.selectedEpisodes.length,
+          selectionController.selectionTentative,
+          episodeState.globalChange,
+        ),
         builder: (context, data, _) {
-          // Only item 1 & 2 is used, other items just communicate change.
-          selectedEpisodes = data.item1;
-          _initProperties(data.item4);
+          selectedEpisodeIds = data.$1;
+          _initProperties(data.$3);
           return Row(
             children: [
               ActionBarButton(
                 falseChild: Icon(Icons.favorite_border,
-                    color: data.item2 == 0 && context.realDark
+                    color: data.$2 == 0 && context.realDark
                         ? Colors.grey[800]
                         : context.actionBarIconColor),
                 state: liked,
                 buttonType: ActionBarButtonType.partialOnOff,
                 onPressed: (value) async {
                   setState(() => actionLock = true);
-                  if (selectedEpisodes.isNotEmpty) {
+                  if (selectedEpisodeIds.isNotEmpty) {
                     EpisodeState episodeState =
                         Provider.of<EpisodeState>(context, listen: false);
                     SelectionController selectionController =
                         Provider.of<SelectionController>(context,
                             listen: false);
                     await selectionController.getEpisodesLimitless();
-                    selectedEpisodes = selectionController.selectedEpisodes;
+                    selectedEpisodeIds = selectionController.selectedEpisodes;
                     liked = value;
                     if (value!) {
-                      await episodeState.setLiked(selectedEpisodes);
+                      await episodeState.setLiked(selectedEpisodeIds);
                       setState(() => actionLock = false);
                       Fluttertoast.showToast(
                         msg: context.s.liked,
@@ -1166,7 +1128,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                       await Future.delayed(Duration(seconds: 2));
                       overlayEntry.remove();
                     } else {
-                      await episodeState.unsetLiked(selectedEpisodes);
+                      await episodeState.unsetLiked(selectedEpisodeIds);
                       setState(() => actionLock = false);
                       Fluttertoast.showToast(
                         msg: context.s.unlike,
@@ -1176,7 +1138,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                   }
                 },
                 tooltip: liked != false ? context.s.like : context.s.unlike,
-                enabled: !actionLock && data.item2 >= 1,
+                enabled: !actionLock && data.$2 >= 1,
                 connectRight: true,
                 child: Icon(Icons.favorite, color: Colors.red),
               ),
@@ -1184,7 +1146,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                 falseChild: CustomPaint(
                   size: Size(25, 25),
                   painter: MarkListenedPainter(
-                      data.item2 == 0 && context.realDark
+                      data.$2 == 0 && context.realDark
                           ? Colors.grey[800]!
                           : context.actionBarIconColor,
                       stroke: 2.0),
@@ -1193,23 +1155,23 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                 buttonType: ActionBarButtonType.partialOnOff,
                 onPressed: (value) async {
                   setState(() => actionLock = true);
-                  if (selectedEpisodes.isNotEmpty) {
+                  if (selectedEpisodeIds.isNotEmpty) {
                     EpisodeState episodeState =
                         Provider.of<EpisodeState>(context, listen: false);
                     SelectionController selectionController =
                         Provider.of<SelectionController>(context,
                             listen: false);
                     await selectionController.getEpisodesLimitless();
-                    selectedEpisodes = selectionController.selectedEpisodes;
+                    selectedEpisodeIds = selectionController.selectedEpisodes;
                     played = value;
                     if (value!) {
-                      await episodeState.setPlayed(selectedEpisodes);
+                      await episodeState.setPlayed(selectedEpisodeIds);
                       Fluttertoast.showToast(
                         msg: context.s.markListened,
                         gravity: ToastGravity.BOTTOM,
                       );
                     } else {
-                      await episodeState.unsetPlayed(selectedEpisodes);
+                      await episodeState.unsetPlayed(selectedEpisodeIds);
                       Fluttertoast.showToast(
                         msg: context.s.markNotListened,
                         gravity: ToastGravity.BOTTOM,
@@ -1221,7 +1183,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                 tooltip: played != false
                     ? context.s.markListened
                     : context.s.markNotListened,
-                enabled: !actionLock && data.item2 >= 1,
+                enabled: !actionLock && data.$2 >= 1,
                 connectLeft: true,
                 connectRight: true,
                 child: Selector<CardColorScheme, Color>(
@@ -1240,11 +1202,11 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                     width: 20,
                     child: CustomPaint(
                       painter: DownloadPainter(
-                        color: data.item2 == 0 && context.realDark
+                        color: data.$2 == 0 && context.realDark
                             ? Colors.grey[800]
                             : context.actionBarIconColor,
                         fraction: 0,
-                        progressColor: data.item2 == 0 && context.realDark
+                        progressColor: data.$2 == 0 && context.realDark
                             ? Colors.grey[800]
                             : context.actionBarIconColor,
                       ),
@@ -1255,13 +1217,17 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                 buttonType: ActionBarButtonType.partialOnOff,
                 onPressed: (value) async {
                   setState(() => actionLock = true);
-                  if (selectedEpisodes.isNotEmpty) {
+                  if (selectedEpisodeIds.isNotEmpty) {
                     SelectionController selectionController =
                         Provider.of<SelectionController>(context,
                             listen: false);
                     await selectionController.getEpisodesLimitless();
-                    selectedEpisodes = selectionController.selectedEpisodes;
+                    selectedEpisodeIds = selectionController.selectedEpisodes;
                     downloaded = value;
+                    List<EpisodeBrief> selectedEpisodes = selectedEpisodeIds
+                        .map((i) => Provider.of<EpisodeState>(context,
+                            listen: false)[i])
+                        .toList();
                     if (value!) {
                       await requestDownload(
                         selectedEpisodes,
@@ -1293,7 +1259,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                 tooltip: downloaded != false
                     ? context.s.download
                     : context.s.removeDownload,
-                enabled: !actionLock && data.item2 >= 1,
+                enabled: !actionLock && data.$2 >= 1,
                 connectLeft: true,
                 connectRight: false,
                 child: Center(
@@ -1334,7 +1300,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                 buttonType: ActionBarButtonType.partialOnOff,
                 onPressed: (value) async {
                   setState(() => actionLock = true);
-                  if (selectedEpisodes.isNotEmpty) {
+                  if (selectedEpisodeIds.isNotEmpty) {
                     SelectionController selectionController =
                         Provider.of<SelectionController>(context,
                             listen: false);
@@ -1342,8 +1308,12 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                         Provider.of<AudioPlayerNotifier>(context,
                             listen: false);
                     await selectionController.getEpisodesLimitless();
-                    selectedEpisodes = selectionController.selectedEpisodes;
+                    selectedEpisodeIds = selectionController.selectedEpisodes;
                     inPlaylist = value;
+                    List<EpisodeBrief> selectedEpisodes = selectedEpisodeIds
+                        .map((i) => Provider.of<EpisodeState>(context,
+                            listen: false)[i])
+                        .toList();
                     if (value!) {
                       await audio.addToPlaylist(selectedEpisodes,
                           playlist: playlist);
@@ -1363,12 +1333,12 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                   setState(() => actionLock = false);
                 },
                 tooltip: context.s.later,
-                enabled: !actionLock && data.item2 >= 1,
+                enabled: !actionLock && data.$2 >= 1,
                 connectLeft: true,
                 connectRight: true,
                 falseChild: Icon(
                   Icons.playlist_add,
-                  color: data.item2 == 0 && context.realDark
+                  color: data.$2 == 0 && context.realDark
                       ? Colors.grey[800]
                       : context.actionBarIconColor,
                 ),
@@ -1384,7 +1354,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                 buttonType: ActionBarButtonType.partialOnOff,
                 onPressed: (value) async {
                   setState(() => actionLock = true);
-                  if (selectedEpisodes.isNotEmpty) {
+                  if (selectedEpisodeIds.isNotEmpty) {
                     SelectionController selectionController =
                         Provider.of<SelectionController>(context,
                             listen: false);
@@ -1392,8 +1362,12 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                         Provider.of<AudioPlayerNotifier>(context,
                             listen: false);
                     await selectionController.getEpisodesLimitless();
-                    selectedEpisodes = selectionController.selectedEpisodes;
+                    selectedEpisodeIds = selectionController.selectedEpisodes;
                     inPlaylist = value;
+                    List<EpisodeBrief> selectedEpisodes = selectedEpisodeIds
+                        .map((i) => Provider.of<EpisodeState>(context,
+                            listen: false)[i])
+                        .toList();
                     if (value!) {
                       await audio.addToPlaylist(selectedEpisodes,
                           index: audio.playlist.length > 0 ? 1 : 0,
@@ -1415,12 +1389,12 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                   setState(() => actionLock = false);
                 },
                 tooltip: context.s.playNext,
-                enabled: !actionLock && data.item2 >= 1,
+                enabled: !actionLock && data.$2 >= 1,
                 connectLeft: true,
                 connectRight: true,
                 falseChild: Icon(
                   LineIcons.lightningBolt,
-                  color: data.item2 == 0 && context.realDark
+                  color: data.$2 == 0 && context.realDark
                       ? Colors.grey[800]
                       : context.actionBarIconColor,
                 ),
@@ -1449,13 +1423,17 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                   buttonType: ActionBarButtonType.partialOnOff,
                   onPressed: (value) async {
                     setState(() => actionLock = true);
-                    if (selectedEpisodes.isNotEmpty) {
+                    if (selectedEpisodeIds.isNotEmpty) {
                       SelectionController selectionController =
                           Provider.of<SelectionController>(context,
                               listen: false);
                       await selectionController.getEpisodesLimitless();
-                      selectedEpisodes = selectionController.selectedEpisodes;
+                      selectedEpisodeIds = selectionController.selectedEpisodes;
                       inPlaylist = value;
+                      List<EpisodeBrief> selectedEpisodes = selectedEpisodeIds
+                          .map((i) => Provider.of<EpisodeState>(context,
+                              listen: false)[i])
+                          .toList();
                       if (value!) {
                         await Provider.of<AudioPlayerNotifier>(context,
                                 listen: false)
@@ -1469,12 +1447,12 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                     setState(() => actionLock = false);
                   },
                   tooltip: context.s.play,
-                  enabled: !actionLock && data.item2 >= 1,
+                  enabled: !actionLock && data.$2 >= 1,
                   connectLeft: true,
                   connectRight: false,
                   falseChild: Icon(
                     Icons.play_arrow,
-                    color: data.item2 == 0 && context.realDark
+                    color: data.$2 == 0 && context.realDark
                         ? Colors.grey[800]
                         : context.actionBarIconColor,
                   ),

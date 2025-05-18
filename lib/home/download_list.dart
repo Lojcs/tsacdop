@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:provider/provider.dart';
-import '../type/episodebrief.dart';
 
 import '../episodes/episode_detail.dart';
-import '../local_storage/sqflite_localpodcast.dart';
 import '../state/download_state.dart';
 import '../type/episode_task.dart';
 import '../util/pageroute.dart';
@@ -13,7 +11,7 @@ class DownloadList extends StatefulWidget {
   const DownloadList({super.key});
 
   @override
-  _DownloadListState createState() => _DownloadListState();
+  State<DownloadList> createState() => _DownloadListState();
 }
 
 Widget _downloadButton(EpisodeTask task, BuildContext context) {
@@ -33,7 +31,7 @@ Widget _downloadButton(EpisodeTask task, BuildContext context) {
           IconButton(
             splashRadius: 20,
             icon: Icon(Icons.close),
-            onPressed: () => downloader.delTask(task.episode!),
+            onPressed: () => downloader.delTask(task.episode),
           ),
         ],
       );
@@ -44,12 +42,12 @@ Widget _downloadButton(EpisodeTask task, BuildContext context) {
           IconButton(
             splashRadius: 20,
             icon: Icon(Icons.refresh, color: Colors.red),
-            onPressed: () => downloader.retryTask(task.episode!),
+            onPressed: () => downloader.retryTask(task.episode),
           ),
           IconButton(
             splashRadius: 20,
             icon: Icon(Icons.close),
-            onPressed: () => downloader.delTask(task.episode!),
+            onPressed: () => downloader.delTask(task.episode),
           ),
         ],
       );
@@ -60,12 +58,12 @@ Widget _downloadButton(EpisodeTask task, BuildContext context) {
           IconButton(
             splashRadius: 20,
             icon: Icon(Icons.refresh, color: Colors.red),
-            onPressed: () => downloader.retryTask(task.episode!),
+            onPressed: () => downloader.retryTask(task.episode),
           ),
           IconButton(
             splashRadius: 20,
             icon: Icon(Icons.close),
-            onPressed: () => downloader.delTask(task.episode!),
+            onPressed: () => downloader.delTask(task.episode),
           ),
         ],
       );
@@ -74,12 +72,12 @@ Widget _downloadButton(EpisodeTask task, BuildContext context) {
         IconButton(
           splashRadius: 20,
           icon: Icon(Icons.play_circle_filled),
-          onPressed: () => downloader.resumeTask(task.episode!),
+          onPressed: () => downloader.resumeTask(task.episode),
         ),
         IconButton(
           splashRadius: 20,
           icon: Icon(Icons.close),
-          onPressed: () => downloader.delTask(task.episode!),
+          onPressed: () => downloader.delTask(task.episode),
         ),
       ]);
     default:
@@ -107,9 +105,7 @@ class _DownloadListState extends State<DownloadList> {
                       onTap: () => Navigator.push(
                         context,
                         ScaleRoute(
-                          page: EpisodeDetail(
-                            episodeItem: tasks[index].episode!,
-                          ),
+                          page: EpisodeDetail(tasks[index].episode.id),
                         ),
                       ),
                       title: SizedBox(
@@ -121,7 +117,7 @@ class _DownloadListState extends State<DownloadList> {
                             Expanded(
                               flex: 5,
                               child: Text(
-                                tasks[index].episode!.title,
+                                tasks[index].episode.title,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -164,7 +160,7 @@ class _DownloadListState extends State<DownloadList> {
                       ),
                       leading: CircleAvatar(
                           radius: 20,
-                          backgroundImage: tasks[index].episode!.avatarImage),
+                          backgroundImage: tasks[index].episode.avatarImage),
                       trailing: _downloadButton(tasks[index], context),
                     );
                   },

@@ -1034,16 +1034,14 @@ class _NewPlaylistState extends State<_NewPlaylist> {
       primaryColor = await _getColor(File(imagePath));
     }
     final fileName = path.split('/').last;
-    return EpisodeBrief(
-      id: 0, title: fileName, enclosureUrl: 'file://$path',
-      podcastId: localFolderId,
+    return EpisodeBrief.local(
+      title: fileName, enclosureUrl: 'file://$path',
       podcastTitle: metadata.albumName ?? '',
       pubDate: pubDate, // metadata.year ?
       description: context.s.localEpisodeDescription(path),
       enclosureDuration: metadata.trackDuration! ~/ 1000,
       enclosureSize: fileLength,
       mediaId: 'file://$path',
-      podcastImage: '',
       episodeImage: imagePath ?? '',
       primaryColor: primaryColor?.toColor(),
     );
