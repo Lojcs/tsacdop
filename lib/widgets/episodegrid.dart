@@ -46,6 +46,9 @@ class InteractiveEpisodeGrid extends StatefulWidget {
   /// Show or hide grid
   final bool showGrid;
 
+  /// Episode list is refetched when this notifies.
+  final Listenable? refreshNotifier;
+
   /// Items to show on the sction bar
   final List<ActionBarWidget> actionBarWidgetsFirstRow;
 
@@ -99,6 +102,7 @@ class InteractiveEpisodeGrid extends StatefulWidget {
     this.selectable = true,
     this.initNum = 12,
     this.showGrid = true,
+    this.refreshNotifier,
     this.actionBarWidgetsFirstRow = const [
       ActionBarDropdownSortBy(0, 0),
       ActionBarSwitchSortOrder(0, 1),
@@ -164,6 +168,24 @@ class _InteractiveEpisodeGridState extends State<InteractiveEpisodeGrid> {
 
   /// Stop animating after first scroll
   bool _scroll = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.refreshNotifier != null) {
+      widget.refreshNotifier!.addListener(() async {
+        _episodeIds = await _getEpisodeIds(_top);
+        if (mounted && context.mounted) {
+          SelectionController? selectionController =
+              Provider.of<SelectionController?>(context, listen: false);
+          if (selectionController != null) {
+            selectionController.setSelectableEpisodes(_episodeIds);
+          }
+          setState(() {});
+        }
+      });
+    }
+  }
 
   @override
   void didUpdateWidget(covariant InteractiveEpisodeGrid oldWidget) {

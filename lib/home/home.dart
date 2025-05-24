@@ -660,6 +660,7 @@ class _MyDownloadState extends State<_MyDownload>
             ],
           ),
           openPodcast: true,
+          refreshNotifier: Provider.of<DownloadState>(context, listen: false),
           actionBarWidgetsFirstRow: const [
             ActionBarDropdownSortBy(0, 0),
             ActionBarSwitchSortOrder(0, 1),
