@@ -89,7 +89,7 @@ class EpisodeState extends ChangeNotifier {
 
   /// Gets the versions of the episode with [id] and populates their versions fields.
   Future<void> populateEpisodeVersions(int id) async {
-    assert(!_episodeMap.keys.contains(id), "Populate called with unknown id");
+    assert(_episodeMap.keys.contains(id), "Populate called with unknown id");
     List<EpisodeBrief> versions =
         await _dbHelper.populateReturnVersions(_episodeMap[id]!);
     for (var version in versions) {
@@ -104,7 +104,7 @@ class EpisodeState extends ChangeNotifier {
 
   /// Sets the episodes as liked
   Future<void> setLiked(List<int> ids) async {
-    assert(!ids.every((id) => _episodeMap.keys.contains(id)),
+    assert(ids.every((id) => _episodeMap.keys.contains(id)),
         "setLiked called with unknown id");
     await _dbHelper.setLiked(ids);
     changedIds.clear();
@@ -120,7 +120,7 @@ class EpisodeState extends ChangeNotifier {
 
   /// Sets the episodes as not liked
   Future<void> unsetLiked(List<int> ids) async {
-    assert(!ids.every((id) => _episodeMap.keys.contains(id)),
+    assert(ids.every((id) => _episodeMap.keys.contains(id)),
         "unsetLiked called with unknown id");
     await _dbHelper.setUnliked(ids);
     changedIds.clear();
@@ -136,7 +136,7 @@ class EpisodeState extends ChangeNotifier {
 
   /// Sets the episodes as not new
   Future<void> unsetNew(List<int> ids) async {
-    assert(!ids.every((id) => _episodeMap.keys.contains(id)),
+    assert(ids.every((id) => _episodeMap.keys.contains(id)),
         "unsetNew called with unknown id");
     await _dbHelper.removeEpisodesNewMark(ids);
     changedIds.clear();
@@ -153,7 +153,7 @@ class EpisodeState extends ChangeNotifier {
   /// Sets the episodes as played
   Future<void> setPlayed(List<int> ids,
       {double seekValue = 1, int seconds = 0}) async {
-    assert(!ids.every((id) => _episodeMap.keys.contains(id)),
+    assert(ids.every((id) => _episodeMap.keys.contains(id)),
         "setPlayed called with unknown id");
     changedIds.clear();
     for (var id in ids) {
@@ -171,7 +171,7 @@ class EpisodeState extends ChangeNotifier {
 
   /// Sets the episodes as not played
   Future<void> unsetPlayed(List<int> ids) async {
-    assert(!ids.every((id) => _episodeMap.keys.contains(id)),
+    assert(ids.every((id) => _episodeMap.keys.contains(id)),
         "unsetPlayed called with unknown id");
     await _dbHelper.unsetLiked(ids);
     changedIds.clear();

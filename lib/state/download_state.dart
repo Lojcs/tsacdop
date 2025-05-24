@@ -7,7 +7,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:media_info/media_info.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -83,12 +82,12 @@ class AutoDownloader {
     final filePath =
         'file://${path.join(completeTask!.first.savedDir, Uri.encodeComponent(completeTask.first.filename!))}';
     final fileStat = await File(filePath).stat();
-    final mediaInfo = await MediaInfo().getMediaInfo(filePath);
+    var duration = await AudioPlayer().setUrl(filePath);
     await _dbHelper.setDownloaded(episodeTask.episode.id,
         mediaId: filePath,
         taskId: episodeTask.taskId ?? "downloaded",
         size: fileStat.size,
-        duration: mediaInfo["durationMs"] ~/ 1000);
+        duration: duration?.inSeconds ?? 0);
     _episodeTasks.removeWhere((element) =>
         element.episode.enclosureUrl == episodeTask.episode.enclosureUrl);
     if (_episodeTasks.isEmpty) _unbindBackgroundIsolate();
@@ -157,12 +156,12 @@ class DownloadState extends ChangeNotifier {
                   'file://${path.join(task.savedDir, Uri.encodeComponent(task.filename!))}';
               if (episode.enclosureUrl == episode.mediaId) {
                 var fileStat = await File(filePath).stat();
-                final mediaInfo = await MediaInfo().getMediaInfo(filePath);
+                var duration = await AudioPlayer().setUrl(filePath);
                 await _episodeState.setDownloaded(episode.id,
                     mediaId: filePath,
                     taskId: task.taskId,
                     size: fileStat.size,
-                    duration: mediaInfo["durationMs"] ~/ 1000);
+                    duration: duration?.inSeconds ?? 0);
               }
               _episodeTasks.add(EpisodeTask(
                   episode.copyWith(mediaId: filePath, isDownloaded: true),
@@ -219,12 +218,12 @@ class DownloadState extends ChangeNotifier {
     final filePath =
         'file://${path.join(completeTask!.first.savedDir, Uri.encodeComponent(completeTask.first.filename!))}';
     var fileStat = await File(filePath).stat();
-    final mediaInfo = await MediaInfo().getMediaInfo(filePath);
+    var duration = await AudioPlayer().setUrl(filePath);
     await _episodeState.setDownloaded(episodeTask.episode.id,
         mediaId: filePath,
         taskId: episodeTask.taskId,
         size: fileStat.size,
-        duration: mediaInfo["durationMs"] ~/ 1000);
+        duration: duration?.inSeconds ?? 0);
     EpisodeBrief episode = _episodeState[episodeTask.episode.id];
     _removeTask(episodeTask.episode);
     _episodeTasks.add(EpisodeTask(episode, episodeTask.taskId,

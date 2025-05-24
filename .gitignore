@@ -48,3 +48,4 @@ android/app/.cxx/
 # Custom
 lib/.env.dart
 devtools_options.yaml
+android/build/reports/problems/problems-report.html

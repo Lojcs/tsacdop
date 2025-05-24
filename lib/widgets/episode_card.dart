@@ -211,7 +211,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   }
 
   Widget _getBody() {
-    return OpenContainerWrapper(
+    return _OpenContainerWrapper(
       layout: widget.layout,
       getAvatarSize: () => avatarSize,
       episodeId: widget.episodeId,
@@ -219,7 +219,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
       onClosed: (() {
         _shadowController.reverse();
       }),
-      closedBuilder: (context, action, boo) => FutureBuilder<List<int>>(
+      closedBuilder: (context, action) => FutureBuilder<List<int>>(
         future: _getEpisodeMenu(),
         initialData: [],
         builder: (context, snapshot) {
@@ -383,7 +383,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                   widget.episodeId,
                   widget.layout,
                   openPodcast: widget.openPodcast,
-                  showImage: widget.showImage && !boo,
+                  showImage: widget.showImage,
                   preferEpisodeImage: widget.preferEpisodeImage,
                   showNumber: widget.showNumber,
                   showLiked: widget.showLiked,
@@ -413,20 +413,18 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   }
 }
 
-class OpenContainerWrapper extends StatelessWidget {
-  const OpenContainerWrapper(
-      {super.key,
-      required this.closedBuilder,
+class _OpenContainerWrapper extends StatelessWidget {
+  const _OpenContainerWrapper(
+      {required this.closedBuilder,
       required this.episodeId,
-      this.playerRunning,
       this.getAvatarSize,
       required this.preferEpisodeImage,
       required this.layout,
       this.onClosed});
 
-  final OpenContainerBuilder closedBuilder;
+  final Widget Function(BuildContext context, VoidCallback action)
+      closedBuilder;
   final int episodeId;
-  final bool? playerRunning;
   final double? Function()? getAvatarSize;
   final bool preferEpisodeImage;
   final EpisodeGridLayout layout;
@@ -483,7 +481,10 @@ class OpenContainerWrapper extends StatelessWidget {
           );
         },
         tappable: false,
-        closedBuilder: closedBuilder,
+        closedBuilder: (context, action, hide) => Provider.value(
+          value: hide,
+          child: closedBuilder(context, action),
+        ),
         onDispose: onClosed,
       ),
     );
@@ -621,7 +622,7 @@ class EpisodeCard extends StatelessWidget {
   /// Opens the podcast details if avatar image is tapped
   final bool openPodcast;
 
-  /// Controls the avatar image
+  /// Controls if the avatar image is shown at any time.
   final bool showImage;
 
   /// Prefer episode image over podcast image for avatar (requires [showimage])
@@ -653,6 +654,7 @@ class EpisodeCard extends StatelessWidget {
 
   /// Callback that sends back the actual size of the avatar.
   final void Function(double)? avatarSizeCallback;
+
   const EpisodeCard(this.episodeId, this.layout,
       {super.key,
       this.openPodcast = false,
@@ -670,8 +672,269 @@ class EpisodeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final DBHelper dbHelper = DBHelper();
-    EpisodeState eState = Provider.of<EpisodeState>(context, listen: false);
+    /// EpisodeBrief for convenience, don't use for value that might change
+    EpisodeBrief episode =
+        Provider.of<EpisodeState>(context, listen: false)[episodeId];
+
+    /// Episode title widget.
+    Widget title(BuildContext context) => Container(
+          alignment: layout == EpisodeGridLayout.large
+              ? Alignment.centerLeft
+              : Alignment.topLeft,
+          padding:
+              EdgeInsets.only(top: layout == EpisodeGridLayout.large ? 0 : 2),
+          child: Text(
+            episode.title,
+            style: (layout == EpisodeGridLayout.small
+                    ? context.textTheme.bodySmall
+                    : context.textTheme.bodyMedium)!
+                .copyWith(
+              height: 1.25,
+              color: episode.colorScheme(context).onSurface,
+            ),
+            maxLines: layout == EpisodeGridLayout.small
+                ? 4
+                : layout == EpisodeGridLayout.medium
+                    ? 3
+                    : 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        );
+
+    /// Episode title widget.
+    Widget podcastTitle(BuildContext context) => Container(
+          alignment: layout == EpisodeGridLayout.large
+              ? Alignment.centerLeft
+              : Alignment.topLeft,
+          padding:
+              EdgeInsets.only(top: layout == EpisodeGridLayout.large ? 0 : 2),
+          width: context.width / 2.25,
+          child: Text(
+            episode.podcastTitle,
+            style: (layout == EpisodeGridLayout.small
+                    ? context.textTheme.bodySmall
+                    : layout == EpisodeGridLayout.medium
+                        ? context.textTheme.bodyMedium
+                        : context.textTheme.bodyLarge)!
+                .copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: episode.colorScheme(context).onSecondaryContainer),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        );
+
+    /// Circle avatar widget.
+    Widget circleImage(
+      bool openPodcast,
+      bool preferEpisodeImage, {
+      required double radius,
+      void Function(double)? actualSizeCallback,
+    }) =>
+        LayoutBuilder(
+          builder: (context, constraints) {
+            double actualSize = math.min(
+                math.min(radius, constraints.maxHeight), constraints.maxWidth);
+            actualSizeCallback?.call(
+              math.min(math.min(radius, constraints.maxHeight),
+                  constraints.maxWidth),
+            );
+            return SizedBox(
+              height: actualSize,
+              width: actualSize,
+              child: Consumer<bool>(
+                builder: (context, hideImage, _) => showImage && !hideImage
+                    ? Stack(
+                        children: [
+                          CircleAvatar(
+                            radius: actualSize,
+                            backgroundColor:
+                                episode.colorScheme(context).primary,
+                            backgroundImage: preferEpisodeImage
+                                ? episode.episodeOrPodcastImageProvider
+                                : episode.podcastImageProvider,
+                          ),
+                          if (openPodcast)
+                            Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(actualSize),
+                                onTap: () async {
+                                  DBHelper dbHelper = DBHelper();
+                                  PodcastLocal? podcast = await dbHelper
+                                      .getPodcastWithUrl(episode.enclosureUrl);
+                                  if (podcast != null && context.mounted) {
+                                    Navigator.push(
+                                      context,
+                                      HidePlayerRoute(
+                                        PodcastDetail(podcastLocal: podcast),
+                                        PodcastDetail(
+                                            podcastLocal: podcast, hide: true),
+                                        duration: Duration(milliseconds: 300),
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
+                            ),
+                        ],
+                      )
+                    : Center(),
+              ),
+            );
+          },
+        );
+
+    /// Widget that shows the length, size properties and optionally the
+    /// played, downloaded status of the episode.
+    Widget lengthAndSize(BuildContext context,
+        {bool showPlayedAndDownloaded = false}) {
+      BorderSide side = BorderSide(
+          color: context.realDark
+              ? Colors.transparent
+              : episode.colorScheme(context).onSecondaryContainer,
+          width: 1);
+      BorderSide innerSide = BorderSide(
+          color: episode.colorScheme(context).onSecondaryContainer, width: 1);
+      Color backgroundColor = context.realDark
+          ? episode.colorScheme(context).secondaryContainer
+          : episode.colorScheme(context).onSecondaryContainer;
+      return Selector<EpisodeState,
+          ({int duration, int size, bool played, bool downloaded})>(
+        selector: (_, episodeState) => (
+          duration: episodeState[episodeId].enclosureDuration,
+          size: episodeState[episodeId].enclosureSize,
+          played: episodeState[episodeId].isPlayed,
+          downloaded: episodeState[episodeId].isDownloaded,
+        ),
+        builder: (context, value, _) => Row(
+          children: [
+            if (value.duration != 0)
+              Container(
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.horizontal(
+                        left: Radius.circular(5),
+                        right:
+                            value.size == 0 ? Radius.circular(5) : Radius.zero),
+                    border: Border.fromBorderSide(side),
+                    color: showPlayedAndDownloaded && value.played
+                        ? backgroundColor
+                        : Colors.transparent),
+                foregroundDecoration: context.realDark
+                    ? BoxDecoration(
+                        borderRadius: BorderRadius.horizontal(
+                            right: value.size == 0
+                                ? Radius.circular(5)
+                                : Radius.zero),
+                        border: value.size == 0 ||
+                                (showPlayedAndDownloaded &&
+                                    (value.played || value.downloaded))
+                            ? null
+                            : Border(right: innerSide),
+                      )
+                    : null,
+                alignment: Alignment.center,
+                child: Text(
+                  value.duration.toTime,
+                  style: (layout == EpisodeGridLayout.large
+                          ? context.textTheme.labelMedium
+                          : context.textTheme.labelSmall)!
+                      .copyWith(
+                          color: showPlayedAndDownloaded &&
+                                  !context.realDark &&
+                                  value.played
+                              ? episode.colorScheme(context).secondaryContainer
+                              : episode
+                                  .colorScheme(context)
+                                  .onSecondaryContainer),
+                ),
+              ),
+            if (value.size != 0)
+              Container(
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.horizontal(
+                        right: Radius.circular(5),
+                        left: value.duration == 0
+                            ? Radius.circular(5)
+                            : Radius.zero),
+                    border: value.duration == 0
+                        ? Border.fromBorderSide(side)
+                        : Border(top: side, right: side, bottom: side),
+                    color: showPlayedAndDownloaded && value.downloaded
+                        ? backgroundColor
+                        : Colors.transparent),
+                alignment: Alignment.center,
+                child: Text(
+                  '${value.size ~/ 1000000}MB',
+                  style: (layout == EpisodeGridLayout.large
+                          ? context.textTheme.labelMedium
+                          : context.textTheme.labelSmall)!
+                      .copyWith(
+                          color: showPlayedAndDownloaded &&
+                                  !context.realDark &&
+                                  value.downloaded
+                              ? episode.colorScheme(context).secondaryContainer
+                              : episode
+                                  .colorScheme(context)
+                                  .onSecondaryContainer),
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+
+    /// Liked indicator widget.
+    Widget isLikedIndicator() => Align(
+          alignment: Alignment.center,
+          child: Selector<EpisodeState, bool>(
+            selector: (_, episodeState) => episodeState[episodeId].isNew,
+            builder: (context, value, _) => value
+                ? Icon(Icons.favorite,
+                    color: Colors.red,
+                    size: layout == EpisodeGridLayout.small
+                        ? context.textTheme.bodySmall!.fontSize
+                        : context.textTheme.bodyLarge!.fontSize)
+                : Center(),
+          ),
+        );
+
+    /// Count indicator widget.
+    Widget numberIndicator() => Padding(
+          padding: EdgeInsets.only(top: 0.5),
+          child: Selector<EpisodeState, int>(
+            selector: (_, episodeState) => episodeState[episodeId].number,
+            builder: (context, value, _) => Text(
+              value.toString() + (layout == EpisodeGridLayout.large ? "|" : ""),
+              style: GoogleFonts.teko(
+                  textStyle: layout == EpisodeGridLayout.small
+                      ? context.textTheme.bodySmall
+                      : layout == EpisodeGridLayout.medium
+                          ? context.textTheme.bodyMedium
+                          : context.textTheme.bodyLarge),
+            ),
+          ),
+        );
+
+    /// Pubdate widget
+    Widget pubDate(bool showNew) => Selector<EpisodeState, bool>(
+          selector: (_, episodeState) =>
+              showNew || episodeState[episodeId].isNew,
+          builder: (context, value, _) => Text(
+            episode.pubDate.toDate(context),
+            overflow: TextOverflow.visible,
+            textAlign: TextAlign.center,
+            style: (layout == EpisodeGridLayout.small
+                    ? context.textTheme.labelSmall
+                    : context.textTheme.labelMedium)!
+                .copyWith(
+                    fontStyle: FontStyle.italic,
+                    color: value
+                        ? Colors.red
+                        : episode.colorScheme(context).onSecondaryContainer),
+          ),
+        );
+
     return Container(
       decoration: BoxDecoration(
           borderRadius:
@@ -687,7 +950,7 @@ class EpisodeCard extends StatelessWidget {
               : Center(),
           decorate
               ? FutureBuilder<PlayHistory>(
-                  future: dbHelper.getPosition(eState[episodeId]),
+                  future: DBHelper().getPosition(episode),
                   builder: (context, snapshot) => _ProgressLowerlay(episodeId,
                       snapshot.hasData ? snapshot.data!.seekValue! : 0, layout,
                       hide: selected))
@@ -702,26 +965,20 @@ class EpisodeCard extends StatelessWidget {
                     flex: 3,
                     child: Row(
                       children: <Widget>[
-                        _circleImage(
-                          context,
+                        circleImage(
                           openPodcast,
                           preferEpisodeImage,
                           radius: layout == EpisodeGridLayout.small
                               ? context.width / 20
                               : context.width / 15,
-                          episode: eState[episodeId],
-                          color: eState[episodeId].colorScheme(context).primary,
                           actualSizeCallback: avatarSizeCallback,
-                          showImage: showImage,
                         ),
                         SizedBox(
                           width: 5,
                         ),
-                        if (showNumber)
-                          _numberIndicator(context,
-                              eState[episodeId].number!.toString(), layout),
+                        if (showNumber) numberIndicator(),
                         Spacer(),
-                        _pubDate(context, episode, layout, showNew),
+                        pubDate(showNew),
                       ],
                     ),
                   ),
@@ -730,15 +987,11 @@ class EpisodeCard extends StatelessWidget {
                   child: layout == EpisodeGridLayout.large
                       ? Row(
                           children: [
-                            _circleImage(
-                              context,
+                            circleImage(
                               openPodcast,
                               preferEpisodeImage,
                               radius: context.width / 6,
-                              episode: episode,
-                              color: episode.colorScheme(context).primary,
                               actualSizeCallback: avatarSizeCallback,
-                              showImage: showImage,
                             ),
                             SizedBox(
                               width: 5,
@@ -750,32 +1003,22 @@ class EpisodeCard extends StatelessWidget {
                                     flex: 2,
                                     child: Row(
                                       children: <Widget>[
-                                        if (showNumber)
-                                          _numberIndicator(
-                                              context,
-                                              episode.number!.toString(),
-                                              layout),
-                                        _podcastTitle(episode, context, layout),
+                                        if (showNumber) numberIndicator(),
+                                        podcastTitle(context),
                                         Spacer(),
-                                        _pubDate(
-                                            context, episode, layout, showNew),
+                                        pubDate(showNew),
                                       ],
                                     ),
                                   ),
-                                  Expanded(
-                                      flex: 5,
-                                      child: _title(episode, context, layout)),
+                                  Expanded(flex: 5, child: title(context)),
                                   Expanded(
                                     flex: 2,
                                     child: Row(
                                       children: <Widget>[
-                                        if (showLiked)
-                                          _isLikedIndicator(
-                                              episode, context, layout),
+                                        if (showLiked) isLikedIndicator(),
                                         Spacer(),
                                         if (showLengthAndSize)
-                                          _lengthAndSize(
-                                              context, layout, episode,
+                                          lengthAndSize(context,
                                               showPlayedAndDownloaded:
                                                   showPlayedAndDownloaded)
                                       ],
@@ -786,18 +1029,17 @@ class EpisodeCard extends StatelessWidget {
                             )
                           ],
                         )
-                      : _title(episode, context, layout),
+                      : title(context),
                 ),
                 if (layout != EpisodeGridLayout.large)
                   Expanded(
                     flex: 2,
                     child: Row(
                       children: <Widget>[
-                        if (showLiked)
-                          _isLikedIndicator(episode, context, layout),
+                        if (showLiked) isLikedIndicator(),
                         Spacer(),
                         if (showLengthAndSize)
-                          _lengthAndSize(context, layout, episode,
+                          lengthAndSize(context,
                               showPlayedAndDownloaded: showPlayedAndDownloaded),
                       ],
                     ),
@@ -1104,294 +1346,6 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, int episodeId,
       ),
   ];
 }
-
-/// Episode title widget.
-Widget _title(
-        EpisodeBrief episode, BuildContext context, EpisodeGridLayout layout) =>
-    Container(
-      alignment: layout == EpisodeGridLayout.large
-          ? Alignment.centerLeft
-          : Alignment.topLeft,
-      padding: EdgeInsets.only(top: layout == EpisodeGridLayout.large ? 0 : 2),
-      child: Text(
-        episode.title,
-        style: (layout == EpisodeGridLayout.small
-                ? context.textTheme.bodySmall
-                : context.textTheme.bodyMedium)!
-            .copyWith(
-          height: 1.25,
-          color: episode.colorScheme(context).onSurface,
-        ),
-        maxLines: layout == EpisodeGridLayout.small
-            ? 4
-            : layout == EpisodeGridLayout.medium
-                ? 3
-                : 2,
-        overflow: TextOverflow.ellipsis,
-      ),
-    );
-
-/// Episode title widget.
-Widget _podcastTitle(
-        EpisodeBrief episode, BuildContext context, EpisodeGridLayout layout) =>
-    Container(
-      alignment: layout == EpisodeGridLayout.large
-          ? Alignment.centerLeft
-          : Alignment.topLeft,
-      padding: EdgeInsets.only(top: layout == EpisodeGridLayout.large ? 0 : 2),
-      width: context.width / 2.25,
-      child: Text(
-        episode.podcastTitle,
-        style: (layout == EpisodeGridLayout.small
-                ? context.textTheme.bodySmall
-                : layout == EpisodeGridLayout.medium
-                    ? context.textTheme.bodyMedium
-                    : context.textTheme.bodyLarge)!
-            .copyWith(
-                fontWeight: FontWeight.bold,
-                color: episode.colorScheme(context).onSecondaryContainer),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-    );
-
-/// Circle avatar widget.
-Widget _circleImage(
-  BuildContext context,
-  bool openPodcast,
-  bool preferEpisodeImage, {
-  required double radius,
-  required EpisodeBrief episode,
-  required Color color,
-  void Function(double)? actualSizeCallback,
-  bool showImage = true,
-}) =>
-    LayoutBuilder(
-      builder: (context, constraints) {
-        double actualSize = math.min(
-            math.min(radius, constraints.maxHeight), constraints.maxWidth);
-        actualSizeCallback?.call(
-          math.min(
-              math.min(radius, constraints.maxHeight), constraints.maxWidth),
-        );
-        return SizedBox(
-          height: actualSize,
-          width: actualSize,
-          child: showImage
-              ? Stack(
-                  children: [
-                    CircleAvatar(
-                      radius: actualSize,
-                      backgroundColor: color.withValues(alpha: 0.5),
-                      backgroundImage: preferEpisodeImage
-                          ? episode.episodeOrPodcastImageProvider
-                          : episode.podcastImageProvider,
-                    ),
-                    if (openPodcast)
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(actualSize),
-                          onTap: () async {
-                            DBHelper dbHelper = DBHelper();
-                            PodcastLocal? podcast = await dbHelper
-                                .getPodcastWithUrl(episode.enclosureUrl);
-                            if (podcast != null) {
-                              Navigator.push(
-                                context,
-                                HidePlayerRoute(
-                                  PodcastDetail(podcastLocal: podcast),
-                                  PodcastDetail(
-                                      podcastLocal: podcast, hide: true),
-                                  duration: Duration(milliseconds: 300),
-                                ),
-                              );
-                            }
-                          },
-                        ),
-                      ),
-                  ],
-                )
-              : Center(),
-        );
-      },
-    );
-
-Widget _lengthAndSize(
-    BuildContext context, EpisodeGridLayout layout, EpisodeBrief episode,
-    {bool showPlayedAndDownloaded = false}) {
-  BorderSide side = BorderSide(
-      color: context.realDark
-          ? Colors.transparent
-          : episode.colorScheme(context).onSecondaryContainer,
-      width: 1);
-  BorderSide innerSide = BorderSide(
-      color: episode.colorScheme(context).onSecondaryContainer, width: 1);
-  Color backgroundColor = context.realDark
-      ? episode.colorScheme(context).secondaryContainer
-      : episode.colorScheme(context).onSecondaryContainer;
-  return Row(
-    children: [
-      if (episode.enclosureDuration != 0)
-        Container(
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.horizontal(
-                  left: Radius.circular(5),
-                  right: episode.enclosureSize == 0
-                      ? Radius.circular(5)
-                      : Radius.zero),
-              border: Border.fromBorderSide(side),
-              color: showPlayedAndDownloaded && episode.isPlayed
-                  ? backgroundColor
-                  : Colors.transparent),
-          foregroundDecoration: context.realDark
-              ? BoxDecoration(
-                  borderRadius: BorderRadius.horizontal(
-                      right: episode.enclosureSize == 0
-                          ? Radius.circular(5)
-                          : Radius.zero),
-                  border: episode.enclosureSize == 0 ||
-                          (showPlayedAndDownloaded &&
-                              (episode.isPlayed || episode.isDownloaded))
-                      ? null
-                      : Border(right: innerSide),
-                )
-              : null,
-          alignment: Alignment.center,
-          child: Text(
-            episode.enclosureDuration.toTime,
-            style: (layout == EpisodeGridLayout.large
-                    ? context.textTheme.labelMedium
-                    : context.textTheme.labelSmall)!
-                .copyWith(
-                    color: showPlayedAndDownloaded &&
-                            !context.realDark &&
-                            episode.isPlayed
-                        ? episode.colorScheme(context).secondaryContainer
-                        : episode.colorScheme(context).onSecondaryContainer),
-          ),
-        ),
-      if (episode.enclosureSize != 0)
-        Container(
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.horizontal(
-                  right: Radius.circular(5),
-                  left: episode.enclosureDuration == 0
-                      ? Radius.circular(5)
-                      : Radius.zero),
-              border: episode.enclosureDuration == 0
-                  ? Border.fromBorderSide(side)
-                  : Border(top: side, right: side, bottom: side),
-              color: showPlayedAndDownloaded && episode.isDownloaded
-                  ? backgroundColor
-                  : Colors.transparent),
-          alignment: Alignment.center,
-          child: Text(
-            '${episode.enclosureSize ~/ 1000000}MB',
-            style: (layout == EpisodeGridLayout.large
-                    ? context.textTheme.labelMedium
-                    : context.textTheme.labelSmall)!
-                .copyWith(
-                    color: showPlayedAndDownloaded &&
-                            !context.realDark &&
-                            episode.isDownloaded
-                        ? episode.colorScheme(context).secondaryContainer
-                        : episode.colorScheme(context).onSecondaryContainer),
-          ),
-        ),
-    ],
-  );
-}
-
-Widget _downloadIndicator(
-        BuildContext context, EpisodeGridLayout layout, bool showDownload,
-        {bool? isDownloaded}) =>
-    showDownload && layout != EpisodeGridLayout.small
-        ? isDownloaded!
-            ? Container(
-                height: 20,
-                width: 20,
-                alignment: Alignment.center,
-                margin: EdgeInsets.symmetric(horizontal: 5),
-                padding: EdgeInsets.fromLTRB(2, 2, 2, 3),
-                decoration: BoxDecoration(
-                  color: context.accentColor,
-                  shape: BoxShape.circle,
-                ),
-                child: CustomPaint(
-                  size: Size(12, 12),
-                  painter: DownloadPainter(
-                    stroke: 1.0,
-                    color: context.accentColor,
-                    fraction: 1,
-                    progressColor: Colors.white,
-                    progress: 1,
-                  ),
-                ),
-              )
-            : Center()
-        : Center();
-
-/// New indicator widget.
-Widget _isNewIndicator(
-        EpisodeBrief episode, BuildContext context, EpisodeGridLayout layout) =>
-    episode.isNew
-        ? Container(
-            padding: EdgeInsets.symmetric(horizontal: 2),
-            child: Text('New',
-                style: (layout == EpisodeGridLayout.large
-                        ? context.textTheme.labelMedium
-                        : context.textTheme.labelSmall)!
-                    .copyWith(color: Colors.red, fontStyle: FontStyle.italic)),
-          )
-        : Center();
-
-/// Liked indicator widget.
-Widget _isLikedIndicator(
-        EpisodeBrief episode, BuildContext context, EpisodeGridLayout layout) =>
-    Container(
-      alignment: Alignment.center,
-      child: episode.isLiked
-          ? Icon(Icons.favorite,
-              color: Colors.red,
-              size: layout == EpisodeGridLayout.small
-                  ? context.textTheme.bodySmall!.fontSize
-                  : context.textTheme.bodyLarge!.fontSize)
-          : Center(),
-    );
-
-/// Count indicator widget.
-Widget _numberIndicator(
-        BuildContext context, String numberText, EpisodeGridLayout layout) =>
-    Padding(
-      padding: EdgeInsets.only(top: 0.5),
-      child: Text(
-        numberText + (layout == EpisodeGridLayout.large ? "|" : ""),
-        style: GoogleFonts.teko(
-            textStyle: layout == EpisodeGridLayout.small
-                ? context.textTheme.bodySmall
-                : layout == EpisodeGridLayout.medium
-                    ? context.textTheme.bodyMedium
-                    : context.textTheme.bodyLarge),
-      ),
-    );
-
-/// Pubdate widget
-Widget _pubDate(BuildContext context, EpisodeBrief episode,
-        EpisodeGridLayout layout, bool showNew) =>
-    Text(
-      episode.pubDate.toDate(context),
-      overflow: TextOverflow.visible,
-      textAlign: TextAlign.center,
-      style: (layout == EpisodeGridLayout.small
-              ? context.textTheme.labelSmall
-              : context.textTheme.labelMedium)!
-          .copyWith(
-              fontStyle: FontStyle.italic,
-              color: episode.isNew
-                  ? Colors.red
-                  : episode.colorScheme(context).onSecondaryContainer),
-    );
 
 Future<List<int>> _getEpisodeMenu() async {
   final popupMenuStorage = KeyValueStorage(

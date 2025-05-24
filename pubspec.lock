@@ -794,14 +794,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.11.1"
-  media_info:
-    dependency: "direct main"
-    description:
-      name: media_info
-      sha256: "3c98c454c66823cc028eb018d7f3519fa39b212d9ef9ef8c42a600feb79ddece"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.12.0+2"
   meta:
     dependency: transitive
     description:
