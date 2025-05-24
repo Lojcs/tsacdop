@@ -112,11 +112,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   late bool selected =
       selectionController?.selectedIndicies.contains(widget.index) ?? false;
 
-  bool _initialBuild = true;
-
   double avatarSize = 0;
-
-  late Widget _body;
 
   @override
   void initState() {
@@ -136,81 +132,6 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
 
   @override
   Widget build(BuildContext context) {
-    if (_initialBuild) {
-      _initialBuild = false;
-      _body = _getBody();
-    }
-    return _body;
-  }
-
-  Future<void> _vibrateTapNormal() async {
-    if (!(await Vibration.hasAmplitudeControl()) ||
-        settings.hapticsStrength <= -100) {
-      return;
-    }
-    Vibration.vibrate(
-      pattern: [5, 145, 50, 50],
-      intensities: [32, 0, 4, 0]
-          .map((i) => (i * math.pow(2, settings.hapticsStrength / 2)).toInt())
-          .toList(),
-    );
-  }
-
-  Future<void> _vibrateTapSelected() async {
-    if (!(await Vibration.hasAmplitudeControl()) ||
-        settings.hapticsStrength <= -100) {
-      return;
-    }
-    await Vibration.cancel();
-    Vibration.vibrate(
-        duration: 5,
-        amplitude: (32 * math.pow(2, settings.hapticsStrength / 2).toInt()));
-  }
-
-  Future<void> _vibrateLongTap() async {
-    if (!(await Vibration.hasAmplitudeControl()) ||
-        settings.hapticsStrength <= -100) {
-      return;
-    }
-    await Vibration.cancel();
-    Vibration.vibrate(
-        duration: 5,
-        amplitude: (48 * math.pow(2, settings.hapticsStrength / 2).toInt()));
-  }
-
-  Future<void> _vibrateTapFinishedSelect() async {
-    if (!(await Vibration.hasAmplitudeControl()) ||
-        settings.hapticsStrength <= -100) {
-      return;
-    }
-    await Vibration.cancel();
-    Vibration.vibrate(
-      pattern: [32, 4, 4],
-      intensities: [4, 0, 32]
-          .map((i) => (i * math.pow(2, settings.hapticsStrength / 2)).toInt())
-          .toList(),
-    );
-  }
-
-  Future<void> _vibrateTapFinishedRelease() async {
-    if (!(await Vibration.hasAmplitudeControl()) ||
-        settings.hapticsStrength <= -100) {
-      return;
-    }
-    await Vibration.cancel();
-    Vibration.vibrate(
-      pattern: [4, 12, 16, 12, 6],
-      intensities: [32, 0, 8, 6, 4]
-          .map((i) => (i * math.pow(2, settings.hapticsStrength / 2)).toInt())
-          .toList(),
-    );
-  }
-
-  Future<void> _vibrateEnd() async {
-    await Vibration.cancel();
-  }
-
-  Widget _getBody() {
     return _OpenContainerWrapper(
       layout: widget.layout,
       getAvatarSize: () => avatarSize,
@@ -402,6 +323,73 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
         },
       ),
     );
+  }
+
+  Future<void> _vibrateTapNormal() async {
+    if (!(await Vibration.hasAmplitudeControl()) ||
+        settings.hapticsStrength <= -100) {
+      return;
+    }
+    Vibration.vibrate(
+      pattern: [5, 145, 50, 50],
+      intensities: [32, 0, 4, 0]
+          .map((i) => (i * math.pow(2, settings.hapticsStrength / 2)).toInt())
+          .toList(),
+    );
+  }
+
+  Future<void> _vibrateTapSelected() async {
+    if (!(await Vibration.hasAmplitudeControl()) ||
+        settings.hapticsStrength <= -100) {
+      return;
+    }
+    await Vibration.cancel();
+    Vibration.vibrate(
+        duration: 5,
+        amplitude: (32 * math.pow(2, settings.hapticsStrength / 2).toInt()));
+  }
+
+  Future<void> _vibrateLongTap() async {
+    if (!(await Vibration.hasAmplitudeControl()) ||
+        settings.hapticsStrength <= -100) {
+      return;
+    }
+    await Vibration.cancel();
+    Vibration.vibrate(
+        duration: 5,
+        amplitude: (48 * math.pow(2, settings.hapticsStrength / 2).toInt()));
+  }
+
+  Future<void> _vibrateTapFinishedSelect() async {
+    if (!(await Vibration.hasAmplitudeControl()) ||
+        settings.hapticsStrength <= -100) {
+      return;
+    }
+    await Vibration.cancel();
+    Vibration.vibrate(
+      pattern: [32, 4, 4],
+      intensities: [4, 0, 32]
+          .map((i) => (i * math.pow(2, settings.hapticsStrength / 2)).toInt())
+          .toList(),
+    );
+  }
+
+  Future<void> _vibrateTapFinishedRelease() async {
+    if (!(await Vibration.hasAmplitudeControl()) ||
+        settings.hapticsStrength <= -100) {
+      return;
+    }
+    await Vibration.cancel();
+    Vibration.vibrate(
+      pattern: [4, 12, 16, 12, 6],
+      intensities: [32, 0, 8, 6, 4]
+          .map((i) => (i * math.pow(2, settings.hapticsStrength / 2)).toInt())
+          .toList(),
+    );
+  }
+
+  Future<void> _vibrateEnd() async {
+    await Vibration.cancel();
   }
 
   Future<PlayHistory> _getSavedPosition() async {
@@ -934,7 +922,6 @@ class EpisodeCard extends StatelessWidget {
                         : episode.colorScheme(context).onSecondaryContainer),
           ),
         );
-
     return Container(
       decoration: BoxDecoration(
           borderRadius:
