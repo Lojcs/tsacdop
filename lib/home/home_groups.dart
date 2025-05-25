@@ -14,7 +14,6 @@ import '../state/episode_state.dart';
 import '../state/podcast_group.dart';
 import '../state/refresh_podcast.dart';
 import '../state/setting_state.dart';
-import '../type/episodebrief.dart';
 import '../type/podcastlocal.dart';
 import '../util/extension_helper.dart';
 import '../util/hide_player_route.dart';
@@ -26,7 +25,7 @@ class ScrollPodcasts extends StatefulWidget {
   const ScrollPodcasts({super.key});
 
   @override
-  _ScrollPodcastsState createState() => _ScrollPodcastsState();
+  State<ScrollPodcasts> createState() => _ScrollPodcastsState();
 }
 
 class _ScrollPodcastsState extends State<ScrollPodcasts>
@@ -337,14 +336,8 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                       alignment: Alignment.centerLeft,
                       color: Colors.transparent,
                       child: TabBar(
+                        enableFeedback: false,
                         splashFactory: NoSplash.splashFactory,
-                        overlayColor: WidgetStateProperty.resolveWith<Color?>(
-                          (Set<WidgetState> states) {
-                            return states.contains(WidgetState.focused)
-                                ? null
-                                : Colors.transparent;
-                          },
-                        ),
                         labelPadding: EdgeInsets.fromLTRB(6.0, 5.0, 6.0, 10.0),
                         indicator: CircleTabIndicator(
                             color: context.accentColor, radius: 3),
@@ -353,7 +346,6 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                         tabAlignment: TabAlignment.start,
                         tabs: groups[_groupIndex]!.podcasts.map<Widget>(
                           (podcastLocal) {
-                            final color = podcastLocal.backgroudColor(context);
                             return Tab(
                               child: Transform.translate(
                                 offset: Offset(
@@ -363,7 +355,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                                   maxWidth: 50,
                                   child: CircleAvatar(
                                     backgroundColor:
-                                        color.withValues(alpha: 0.5),
+                                        podcastLocal.primaryColor!.toColor(),
                                     backgroundImage: podcastLocal.avatarImage,
                                     child: _updateIndicator(
                                         podcastLocal), // TODO: This doesn't update currently

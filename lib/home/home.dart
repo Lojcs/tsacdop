@@ -64,6 +64,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   final SelectionController _myDownloadedSelectionController =
       SelectionController();
 
+  List<Widget>? headerSlivers;
+
   SelectionController _tabSelectionController(int i) => i == 0
       ? _recentUpdateSelectionController
       : i == 1
@@ -143,7 +145,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                       pinnedHeaderSliverHeightBuilder: () => 50,
                       // floatHeaderSlivers: true,
                       headerSliverBuilder: (context, innerBoxScrolled) {
-                        return <Widget>[
+                        // Otherwise this rebuilds every time inner bos scrolls
+                        headerSlivers ??= [
                           SliverToBoxAdapter(
                             child: Column(
                               children: <Widget>[
@@ -256,6 +259,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                             pinned: true,
                           ),
                         ];
+                        return headerSlivers!;
                       },
                       body: Column(
                         children: [

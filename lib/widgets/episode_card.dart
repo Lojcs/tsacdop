@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -132,6 +133,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
 
   @override
   Widget build(BuildContext context) {
+    List<FocusedMenuItem> menuItemList = [];
     return _OpenContainerWrapper(
       layout: widget.layout,
       getAvatarSize: () => avatarSize,
@@ -140,185 +142,181 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
       onClosed: (() {
         _shadowController.reverse();
       }),
-      closedBuilder: (context, action) => FutureBuilder<List<int>>(
-        future: _getEpisodeMenu(),
-        initialData: [],
-        builder: (context, snapshot) {
-          final menuList = snapshot.data!;
-          return Selector2<AudioPlayerNotifier, SelectionController?,
-              Tuple4<bool, bool, bool, bool>>(
-            selector: (_, audio, select) => Tuple4(
-                audio.episode?.id == widget.episodeId,
-                audio.playlist.episodes.any((e) => e.id == widget.episodeId),
-                audio.playerRunning,
-                select?.selectedIndicies.contains(widget.index) ?? false),
-            builder: (_, data, __) {
-              selected = data.item4;
+      closedBuilder: (context, action) => Selector2<AudioPlayerNotifier,
+          SelectionController?, Tuple4<bool, bool, bool, bool>>(
+        selector: (_, audio, select) => Tuple4(
+            audio.episode?.id == widget.episodeId,
+            audio.playlist.episodes.any((e) => e.id == widget.episodeId),
+            audio.playerRunning,
+            select?.selectedIndicies.contains(widget.index) ?? false),
+        builder: (_, data, __) {
+          selected = data.item4;
+          if (selected) {
+            _controller.forward();
+          } else {
+            _controller.reverse();
+          }
+          if (data.item1) savedPosition = null;
+          return _FocusedMenuHolderWrapper(
+            onTapStart: () {
               if (selected) {
-                _controller.forward();
+                _vibrateTapSelected();
               } else {
-                _controller.reverse();
+                _vibrateTapNormal();
               }
-              if (data.item1) savedPosition = null;
-              List<FocusedMenuItem> menuItemList = _menuItemList(
-                  context,
-                  widget.episodeId,
-                  data.item1,
-                  data.item2,
-                  data.item3,
-                  menuList,
-                  applyToAllSelected: widget.applyActionToAllSelected);
-              return _FocusedMenuHolderWrapper(
-                onTapStart: () {
-                  if (selected) {
-                    _vibrateTapSelected();
-                  } else {
-                    _vibrateTapNormal();
-                  }
-                },
-                onTapEnd: () {
-                  _vibrateEnd();
-                },
-                onTap: () async {
-                  if (selectable && selectionController!.selectMode) {
-                    selected = selectionController!.select(widget.index!);
-                    if (selected) {
-                      _vibrateTapFinishedSelect();
-                      _controller.forward();
-                    } else {
-                      _vibrateTapFinishedRelease();
-                      _controller.reverse();
-                    }
-                  } else {
-                    _shadowController.forward();
-                    action();
-                  }
-                },
-                onShortTapHold: () {
-                  if (selectable && !selected) {
-                    _vibrateLongTap();
-                    if (!selectionController!.selectMode) {
-                      selectionController!.selectMode = true;
-                      selectionController!.temporarySelect = true;
-                    }
-                    selected = selectionController!.select(widget.index!);
-
-                    _controller.forward();
-                  }
-                },
-                onPrimaryClick: () {
-                  if (selectable) {
-                    if (selectionController!.selectMode) {
-                      selected = selectionController!.select(widget.index!);
-                    } else {
-                      selectionController!.deselectAll();
-                      selected = selectionController!.select(widget.index!);
-                    }
-                    if (selected) {
-                      _controller.forward();
-                    } else {
-                      _controller.reverse();
-                    }
-                  }
-                },
-                onDoubleClick: () {
-                  _shadowController.forward();
-                  action();
-                },
-                onAddSelect: () {
-                  if (selectable) {
-                    if (!selectionController!.selectMode) {
-                      selectionController!.selectMode = true;
-                      selectionController!.temporarySelect = true;
-                    }
-                    selected = selectionController!.select(widget.index!);
-                    if (selected) {
-                      _controller.forward();
-                    } else {
-                      _controller.reverse();
-                    }
-                  }
-                },
-                onRangeSelect: () {
-                  if (selectable) {
-                    if (!selectionController!.selectMode) {
-                      selectionController!.selectMode = true;
-                      selectionController!.temporarySelect = true;
-                    }
-                    selectionController!.batchSelect = BatchSelect.none;
-                    if (!selected) {
-                      selected = selectionController!.select(widget.index!);
-                    }
-                    selectionController!.batchSelect = BatchSelect.between;
-                    if (selected) {
-                      _controller.forward();
-                    } else {
-                      _controller.reverse();
-                    }
-                  }
-                },
-                onTapDrag: () {},
-                episodeId: widget.episodeId,
-                layout: widget.layout,
-                menuItemList: menuItemList,
-                menuItemExtent: widget.layout == EpisodeGridLayout.small
-                    ? 41.5
-                    : widget.layout == EpisodeGridLayout.medium
-                        ? 42.5
-                        : 100 / menuItemList.length,
-                menuBoxDecoration: BoxDecoration(
-                  color: context.accentBackground,
-                  border: Border.all(
-                    color: context.accentColor,
-                    width: 1.0,
-                  ),
-                  borderRadius: widget.layout == EpisodeGridLayout.small
-                      ? context.radiusSmall
-                      : widget.layout == EpisodeGridLayout.medium
-                          ? context.radiusMedium
-                          : context.radiusLarge,
-                ),
-                childLowerlay: data.item1 && data.item3
-                    ? Selector<AudioPlayerNotifier, double>(
-                        selector: (_, audio) => audio.seekSliderValue,
-                        builder: (_, seekValue, __) => _ProgressLowerlay(
-                          widget.episodeId,
-                          seekValue,
-                          widget.layout,
-                          animator: _controller,
-                        ),
-                      )
-                    : FutureBuilder<PlayHistory>(
-                        future: _getSavedPosition(),
-                        // initialData: PlayHistory("", "", 0, 0),
-                        builder: (context, snapshot) => _ProgressLowerlay(
-                          widget.episodeId,
-                          snapshot.hasData ? snapshot.data!.seekValue! : 0,
-                          widget.layout,
-                          animator: _controller,
-                        ),
-                      ),
-                controller: _controller,
-                shadowController: _shadowController,
-                child: EpisodeCard(
-                  widget.episodeId,
-                  widget.layout,
-                  openPodcast: widget.openPodcast,
-                  showImage: widget.showImage,
-                  preferEpisodeImage: widget.preferEpisodeImage,
-                  showNumber: widget.showNumber,
-                  showLiked: widget.showLiked,
-                  showNew: widget.showNew,
-                  showLengthAndSize: widget.showLengthAndSize,
-                  showPlayedAndDownloaded: widget.showPlayedAndDownloaded,
-                  showDate: widget.showDate,
-                  decorate: false,
-                  avatarSizeCallback: (size) {
-                    avatarSize = size;
-                  },
-                ),
-              );
             },
+            onTapEnd: () {
+              _vibrateEnd();
+            },
+            onTap: () async {
+              if (selectable && selectionController!.selectMode) {
+                selected = selectionController!.select(widget.index!);
+                if (selected) {
+                  _vibrateTapFinishedSelect();
+                  _controller.forward();
+                } else {
+                  _vibrateTapFinishedRelease();
+                  _controller.reverse();
+                }
+              } else {
+                _shadowController.forward();
+                action();
+              }
+            },
+            onShortTapHold: () {
+              if (selectable && !selected) {
+                _vibrateLongTap();
+                if (!selectionController!.selectMode) {
+                  selectionController!.selectMode = true;
+                  selectionController!.temporarySelect = true;
+                }
+                selected = selectionController!.select(widget.index!);
+
+                _controller.forward();
+              }
+            },
+            onPrimaryClick: () {
+              if (selectable) {
+                if (selectionController!.selectMode) {
+                  selected = selectionController!.select(widget.index!);
+                } else {
+                  selectionController!.deselectAll();
+                  selected = selectionController!.select(widget.index!);
+                }
+                if (selected) {
+                  _controller.forward();
+                } else {
+                  _controller.reverse();
+                }
+              }
+            },
+            onDoubleClick: () {
+              _shadowController.forward();
+              action();
+            },
+            onAddSelect: () {
+              if (selectable) {
+                if (!selectionController!.selectMode) {
+                  selectionController!.selectMode = true;
+                  selectionController!.temporarySelect = true;
+                }
+                selected = selectionController!.select(widget.index!);
+                if (selected) {
+                  _controller.forward();
+                } else {
+                  _controller.reverse();
+                }
+              }
+            },
+            onRangeSelect: () {
+              if (selectable) {
+                if (!selectionController!.selectMode) {
+                  selectionController!.selectMode = true;
+                  selectionController!.temporarySelect = true;
+                }
+                selectionController!.batchSelect = BatchSelect.none;
+                if (!selected) {
+                  selected = selectionController!.select(widget.index!);
+                }
+                selectionController!.batchSelect = BatchSelect.between;
+                if (selected) {
+                  _controller.forward();
+                } else {
+                  _controller.reverse();
+                }
+              }
+            },
+            onTapDrag: () {},
+            episodeId: widget.episodeId,
+            layout: widget.layout,
+            menuItemList: () async {
+              if (context.mounted) {
+                final menulist = await _getEpisodeMenu();
+                menuItemList = _menuItemList(context, widget.episodeId,
+                    data.item1, data.item2, data.item3, menulist,
+                    applyToAllSelected: widget.applyActionToAllSelected);
+              }
+              return menuItemList;
+            },
+            menuItemExtent: () async {
+              final menulist = await _getEpisodeMenu();
+              return widget.layout == EpisodeGridLayout.small
+                  ? 41.5
+                  : widget.layout == EpisodeGridLayout.medium
+                      ? 42.5
+                      : 100 / menulist.where((i) => i < 10).length;
+            },
+            menuBoxDecoration: BoxDecoration(
+              color: context.accentBackground,
+              border: Border.all(
+                color: context.accentColor,
+                width: 1.0,
+              ),
+              borderRadius: widget.layout == EpisodeGridLayout.small
+                  ? context.radiusSmall
+                  : widget.layout == EpisodeGridLayout.medium
+                      ? context.radiusMedium
+                      : context.radiusLarge,
+            ),
+            childLowerlay: data.item1 && data.item3
+                ? Selector<AudioPlayerNotifier, double>(
+                    selector: (_, audio) => audio.seekSliderValue,
+                    builder: (_, seekValue, __) => _ProgressLowerlay(
+                      widget.episodeId,
+                      seekValue,
+                      widget.layout,
+                      animator: _controller,
+                    ),
+                  )
+                : FutureBuilder<PlayHistory>(
+                    future: _getSavedPosition(),
+                    // initialData: PlayHistory("", "", 0, 0),
+                    builder: (context, snapshot) => _ProgressLowerlay(
+                      widget.episodeId,
+                      snapshot.hasData ? snapshot.data!.seekValue! : 0,
+                      widget.layout,
+                      animator: _controller,
+                    ),
+                  ),
+            controller: _controller,
+            shadowController: _shadowController,
+            child: EpisodeCard(
+              widget.episodeId,
+              widget.layout,
+              openPodcast: widget.openPodcast,
+              showImage: widget.showImage,
+              preferEpisodeImage: widget.preferEpisodeImage,
+              showNumber: widget.showNumber,
+              showLiked: widget.showLiked,
+              showNew: widget.showNew,
+              showLengthAndSize: widget.showLengthAndSize,
+              showPlayedAndDownloaded: widget.showPlayedAndDownloaded,
+              showDate: widget.showDate,
+              decorate: false,
+              avatarSizeCallback: (size) {
+                avatarSize = size;
+              },
+            ),
           );
         },
       ),
@@ -499,13 +497,16 @@ class _FocusedMenuHolderWrapper extends StatefulWidget {
   final int episodeId;
   final EpisodeGridLayout layout;
 
-  final List<FocusedMenuItem> menuItemList;
-  final double? menuItemExtent;
+  final Future<List<FocusedMenuItem>> Function() menuItemList;
+  final Future<double> Function()? menuItemExtent;
   final BoxDecoration? menuBoxDecoration;
   final Widget? childLowerlay;
 
   final AnimationController controller;
   final AnimationController shadowController;
+
+  final VoidCallback? beforeOpened;
+  final Future? initData;
   const _FocusedMenuHolderWrapper(
       {required this.child,
       this.onTapStart,
@@ -527,7 +528,9 @@ class _FocusedMenuHolderWrapper extends StatefulWidget {
       required this.menuBoxDecoration,
       required this.childLowerlay,
       required this.controller,
-      required this.shadowController});
+      required this.shadowController,
+      this.beforeOpened,
+      this.initData});
   @override
   _FocusedMenuHolderWrapperState createState() =>
       _FocusedMenuHolderWrapperState();
@@ -551,48 +554,49 @@ class _FocusedMenuHolderWrapperState extends State<_FocusedMenuHolderWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    return Transform.scale(
-      scale: 1 -
-          0.01 *
-              CurvedAnimation(
-                parent: widget.controller,
-                curve: Curves.easeOutQuad,
-              ).value,
-      child: FocusedMenuHolder(
-        blurSize: 0,
-        menuItemExtent: widget.menuItemExtent,
-        enableMenuScroll: false,
-        menuBoxDecoration: widget.menuBoxDecoration,
-        childDecoration: _cardDecoration(
-            context, widget.episodeId, widget.layout,
-            controller: widget.controller,
-            shadowController: widget.shadowController),
-        openChildDecoration: _cardDecoration(
-          context,
-          widget.episodeId,
-          widget.layout,
-          selected: true,
-        ),
-        childLowerlay: widget.childLowerlay,
-        duration: const Duration(milliseconds: 100),
-        animateMenuItems: false,
-        blurBackgroundColor: context.surface,
-        bottomOffsetHeight: 10,
-        menuOffset: 10,
-        menuItems: widget.menuItemList,
-        showMenuOnMediumHold: false,
-        onTapStart: widget.onTapStart,
-        onTapEnd: widget.onTapEnd,
-        onTap: widget.onTap,
-        onShortTapHold: widget.onShortTapHold,
-        onLongTapHold: widget.onLongTapHold,
-        onPrimaryClick: widget.onPrimaryClick,
-        onDoubleClick: widget.onDoubleClick,
-        onAddSelect: widget.onAddSelect,
-        onRangeSelect: widget.onRangeSelect,
-        onTapDrag: widget.onTapDrag,
-        onPrimaryDrag: widget.onPrimaryDrag,
-        onDragOver: widget.onDragOver,
+    return FocusedMenuHolder(
+      blurSize: 0,
+      menuItemExtent: widget.menuItemExtent,
+      enableMenuScroll: false,
+      menuBoxDecoration: widget.menuBoxDecoration,
+      childDecoration: _cardDecoration(context, widget.episodeId, widget.layout,
+          controller: widget.controller,
+          shadowController: widget.shadowController),
+      openChildDecoration: _cardDecoration(
+        context,
+        widget.episodeId,
+        widget.layout,
+        selected: true,
+      ),
+      childLowerlay: widget.childLowerlay,
+      duration: const Duration(milliseconds: 100),
+      animateMenuItems: false,
+      blurBackgroundColor: context.surface,
+      bottomOffsetHeight: 10,
+      menuOffset: 10,
+      menuItems: widget.menuItemList,
+      showMenuOnMediumHold: false,
+      onTapStart: widget.onTapStart,
+      onTapEnd: widget.onTapEnd,
+      onTap: widget.onTap,
+      onShortTapHold: widget.onShortTapHold,
+      onLongTapHold: widget.onLongTapHold,
+      onPrimaryClick: widget.onPrimaryClick,
+      onDoubleClick: widget.onDoubleClick,
+      onAddSelect: widget.onAddSelect,
+      onRangeSelect: widget.onRangeSelect,
+      onTapDrag: widget.onTapDrag,
+      onPrimaryDrag: widget.onPrimaryDrag,
+      onDragOver: widget.onDragOver,
+      beforeOpened: widget.beforeOpened,
+      initData: widget.initData,
+      child: Transform.scale(
+        scale: 1 -
+            0.01 *
+                CurvedAnimation(
+                  parent: widget.controller,
+                  curve: Curves.easeOutQuad,
+                ).value,
         child: widget.child,
       ),
     );
@@ -730,8 +734,9 @@ class EpisodeCard extends StatelessWidget {
             return SizedBox(
               height: actualSize,
               width: actualSize,
-              child: Consumer<bool>(
-                builder: (context, hideImage, _) => showImage && !hideImage
+              child: Consumer<bool?>(
+                builder: (context, hideImage, _) => showImage &&
+                        (hideImage == null || !hideImage)
                     ? Stack(
                         children: [
                           CircleAvatar(
