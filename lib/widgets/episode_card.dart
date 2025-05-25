@@ -876,7 +876,7 @@ class EpisodeCard extends StatelessWidget {
     Widget isLikedIndicator() => Align(
           alignment: Alignment.center,
           child: Selector<EpisodeState, bool>(
-            selector: (_, episodeState) => episodeState[episodeId].isNew,
+            selector: (_, episodeState) => episodeState[episodeId].isLiked,
             builder: (context, value, _) => value
                 ? Icon(Icons.favorite,
                     color: Colors.red,
@@ -907,7 +907,7 @@ class EpisodeCard extends StatelessWidget {
     /// Pubdate widget
     Widget pubDate(bool showNew) => Selector<EpisodeState, bool>(
           selector: (_, episodeState) =>
-              showNew || episodeState[episodeId].isNew,
+              showNew && episodeState[episodeId].isNew,
           builder: (context, value, _) => Text(
             episode.pubDate.toDate(context),
             overflow: TextOverflow.visible,
