@@ -902,7 +902,7 @@ class _PlaylistList extends StatelessWidget {
                               children: [
                                 FutureBuilder<EpisodeBrief?>(
                                   future: () async {
-                                    await p.getPlaylist();
+                                    await p.cachePlaylist();
                                     return p.episodes.first;
                                   }(),
                                   builder: (_, snapshot) {

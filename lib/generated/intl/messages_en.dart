@@ -150,6 +150,10 @@ class MessageLookup extends MessageLookupByLibrary {
       "Choose the default podcast search engine",
     ),
     "delete": MessageLookupByLibrary.simpleMessage("Delete"),
+    "deleted": MessageLookupByLibrary.simpleMessage("Deleted"),
+    "deletedEpisodeDesc": MessageLookupByLibrary.simpleMessage(
+      "This episode has been deleted from the database",
+    ),
     "deselectAll": MessageLookupByLibrary.simpleMessage("Deselect All"),
     "developer": MessageLookupByLibrary.simpleMessage("Developer"),
     "dismiss": MessageLookupByLibrary.simpleMessage("Dismiss"),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../local_storage/sqflite_localpodcast.dart';
+import '../util/extension_helper.dart';
 import 'audio_state.dart';
 import '../type/episodebrief.dart';
 
@@ -9,17 +10,32 @@ import '../type/play_histroy.dart';
 /// Global class to manage [EpisodeBrief] field updates.
 class EpisodeState extends ChangeNotifier {
   final DBHelper _dbHelper = DBHelper();
-  BuildContext? _context;
+  late BuildContext _context;
   late final AudioPlayerNotifier _audio =
-      Provider.of<AudioPlayerNotifier>(_context!, listen: false);
+      Provider.of<AudioPlayerNotifier>(_context, listen: false);
   set context(BuildContext context) => _context = context;
 
   /// episode id : EpisodeBrief
   final Map<int, EpisodeBrief> _episodeMap = {};
   // using Id here to reduce memory footprint.
 
+  /// List of deleted episode ids.
+  final List<int> _deletedIds = [];
+
+  late final EpisodeBrief deletedEpisode = EpisodeBrief.local(
+      title: _context.s.deleted,
+      enclosureUrl: "",
+      pubDate: 0,
+      description: _context.s.deletedEpisodeDesc,
+      enclosureDuration: 0,
+      enclosureSize: 0,
+      mediaId: "",
+      episodeImage: "");
+
   /// Convenience operator for .episodeMap[id]!
-  EpisodeBrief operator [](int id) => _episodeMap[id]!;
+  EpisodeBrief operator [](int id) =>
+      _episodeMap[id] ??
+      (_deletedIds.contains(id) ? deletedEpisode : _episodeMap[id]!);
 
   /// Indicates something changed
   bool globalChange = false;
@@ -28,6 +44,19 @@ class EpisodeState extends ChangeNotifier {
   List<int> changedIds = [];
 
   EpisodeState();
+
+  /// Ensures the episodes with the given ids are cached.
+  /// Returns the ids not found in database.
+  Future<List<int>> cacheEpisodes(List<int> episodeIds) async {
+    List<int> missingIds = [];
+    for (var id in episodeIds) {
+      if (!_episodeMap.containsKey(id)) {
+        missingIds.add(id);
+      }
+    }
+    List<int> foundIds = await getEpisodes(episodeIds: missingIds);
+    return missingIds.where((id) => !foundIds.contains(id)).toList();
+  }
 
   /// Queries the database with the provided options and returns found episodes.
   /// Filters are tri-state (null - no filter, true - only, false - exclude)
@@ -98,8 +127,11 @@ class EpisodeState extends ChangeNotifier {
   }
 
   /// Call this only when an episode is removed from the database // TODO: Actually do this
-  void removeEpisode(int id) {
-    _episodeMap.remove(id);
+  void deleteLocalEpisodes(List<int> ids) {
+    for (var id in ids) {
+      if (_episodeMap.remove(id) != null) _deletedIds.add(id);
+    }
+    _dbHelper.deleteLocalEpisodes(ids);
   }
 
   /// Sets the episodes as liked

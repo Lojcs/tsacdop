@@ -1125,14 +1125,13 @@ class DBHelper {
     });
   }
 
-  Future<void> deleteLocalEpisodes(List<String> files) async {
+  Future<void> deleteLocalEpisodes(List<int> ids) async {
     var dbClient = await database;
     await dbClient.transaction((txn) async {
       Batch batchOp = txn.batch();
-      for (String episode in files) {
-        batchOp.rawDelete(
-            'DELETE FROM Episodes WHERE enclosure_url = ? AND feed_id = ?',
-            [episode, localFolderId]);
+      for (var id in ids) {
+        batchOp.rawDelete('DELETE FROM Episodes WHERE id = ? AND feed_id = ?',
+            [id, localFolderId]);
       }
       await batchOp.commit();
     });

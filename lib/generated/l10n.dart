@@ -335,6 +335,21 @@ class S {
     return Intl.message('Delete', name: 'delete', desc: '', args: []);
   }
 
+  /// `Deleted`
+  String get deleted {
+    return Intl.message('Deleted', name: 'deleted', desc: '', args: []);
+  }
+
+  /// `This episode has been deleted from the database`
+  String get deletedEpisodeDesc {
+    return Intl.message(
+      'This episode has been deleted from the database',
+      name: 'deletedEpisodeDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Deselect All`
   String get deselectAll {
     return Intl.message(

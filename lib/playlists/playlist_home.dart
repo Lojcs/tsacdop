@@ -702,7 +702,7 @@ class _PlaylistsState extends State<_Playlists> {
                               child: FutureBuilder<Playlist>(
                                 future: Future.sync(() async {
                                   if (queue.episodes.isEmpty) {
-                                    await queue.getPlaylist();
+                                    await queue.cachePlaylist();
                                   }
                                   return queue;
                                 }),
@@ -1109,7 +1109,7 @@ class _NewPlaylistState extends State<_NewPlaylist> {
                         _playlistName,
                         episodeUrlList: [for (var e in recent) e.enclosureUrl],
                       );
-                      await playlist.getPlaylist();
+                      await playlist.cachePlaylist();
                       if (mounted) {
                         setState(() {
                           _processing = false;
@@ -1127,7 +1127,7 @@ class _NewPlaylistState extends State<_NewPlaylist> {
                         _playlistName,
                         episodeUrlList: [for (var e in random) e.enclosureUrl],
                       );
-                      await playlist.getPlaylist();
+                      await playlist.cachePlaylist();
                       if (mounted) {
                         setState(() {
                           _processing = false;
@@ -1157,7 +1157,7 @@ class _NewPlaylistState extends State<_NewPlaylist> {
                           for (var e in episodes) e.enclosureUrl
                         ],
                       );
-                      await playlist.getPlaylist();
+                      await playlist.cachePlaylist();
                       if (mounted) {
                         setState(() {
                           _processing = false;

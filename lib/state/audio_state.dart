@@ -119,7 +119,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
   final _markListenedAfterSkipStorage =
       const KeyValueStorage(markListenedAfterSkipKey);
 
-  /// List of [PlaylistEntity]s // TODO: Move this to sql maybe?
+  /// List of [Playlist]s encoded as json // TODO: Move this to sql maybe?
   final _playlistsStorage = const KeyValueStorage(playlistsAllKey);
 
   /// [Last playing playlist id, episode enclosure url, position (unused)]
@@ -435,11 +435,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
   /// Loads playlists
   Future<void> initPlaylists() async {
     if (_playlists.isEmpty) {
-      List<PlaylistEntity> playlistEntities =
-          await _playlistsStorage.getPlaylists();
-      _playlists = [
-        for (var entity in playlistEntities) Playlist.fromEntity(entity)
-      ];
+      _playlists = await _playlistsStorage.getPlaylists(_episodeState);
       // Seems unused
       await KeyValueStorage(lastWorkKey).saveInt(0);
     }
@@ -486,7 +482,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     // Set playlist
     _startPlaylist = _playlists.firstWhere((p) => p.id == lastState.item1,
         orElse: () => _playlists.first);
-    await _startPlaylist.getPlaylist();
+    playlist.cachePlaylist(_episodeState);
     // Set episode index
     if (_startPlaylist.isEmpty) {
       _startEpisodeIndex = 0;
@@ -540,9 +536,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
         _startEpisodeIndex < _startPlaylist.length &&
         (!_startPlaylist.isQueue || _startEpisodeIndex == 0) &&
         _startPlaylist.isNotEmpty) {
-      if (_startPlaylist.episodes.isEmpty) {
-        await _startPlaylist.getPlaylist();
-      }
+      playlist.cachePlaylist(_episodeState);
       _playlist = _startPlaylist;
       _episodeIndex = _startEpisodeIndex;
       if (_playerRunning) {
@@ -555,7 +549,9 @@ class AudioPlayerNotifier extends ChangeNotifier {
         } else {
           if (effectiveAutoPlay) {
             _playlistBeingEdited++;
-            await _audioHandler.replaceQueue(_startPlaylist.mediaItems);
+            await _audioHandler.replaceQueue(_playlist.episodeIdList
+                .map((id) => _episodeState[id].mediaItem)
+                .toList());
             await skipToIndex(_startEpisodeIndex);
             _playlistBeingEdited--;
           } else {
@@ -695,7 +691,9 @@ class AudioPlayerNotifier extends ChangeNotifier {
     _playlist = _startPlaylist;
     _episodeIndex = _startEpisodeIndex;
     if (effectiveAutoPlay) {
-      await _audioHandler.replaceQueue(_startPlaylist.mediaItems);
+      await _audioHandler.replaceQueue(_playlist.episodeIdList
+          .map((id) => _episodeState[id].mediaItem)
+          .toList());
       // await _audioHandler.skipToQueueItem(_episodeIndex!);
     } else {
       await _audioHandler.replaceQueue([_startEpisode!.mediaItem]);
@@ -893,12 +891,10 @@ class AudioPlayerNotifier extends ChangeNotifier {
     } else if (index > playlist.length) {
       index = playlist.length;
     }
-    if (playlist.isNotEmpty && playlist.episodes.isEmpty) {
-      playlist.getPlaylist();
-    }
+    playlist.cachePlaylist(_episodeState);
     await _episodeState.unsetNew(episodes.map((e) => e.id).toList());
     EpisodeCollision ifExists =
-        playlist.isQueue ? EpisodeCollision.Replace : EpisodeCollision.Ignore;
+        playlist.isQueue ? EpisodeCollision.replace : EpisodeCollision.ignore;
 
     _playlistBeingEdited++;
     if (playlist == _playlist && _playerRunning) {
@@ -972,7 +968,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     if (episodes.isEmpty) return [];
     playlist ??= _playlist;
     if (playlist.isEmpty) return [];
-    if (playlist.episodes.isEmpty) await playlist.getPlaylist();
+    playlist.cachePlaylist(_episodeState);
     List<int> indexes = [];
     // Find episode indexes
     for (int i = 0; i < playlist.episodes.length; i++) {
@@ -994,7 +990,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     if (indexes.isEmpty) return [];
     playlist ??= _playlist;
     if (playlist.isEmpty) return [];
-    if (playlist.episodes.isEmpty) await playlist.getPlaylist();
+    playlist.cachePlaylist(_episodeState);
     indexes.sort();
     _batchRemoveIndexesFromPlaylistHelper(indexes, playlist: playlist);
     return indexes;
@@ -1042,7 +1038,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     if (index < 0) index += playlist.length + 1;
     final int end = index + number;
     if (end > playlist.length || number < 0) return seekFuture;
-    if (playlist.episodes.isEmpty) await playlist.getPlaylist();
+    playlist.cachePlaylist(_episodeState);
 
     _playlistBeingEdited++;
     if (playlist == _playlist && _playerRunning) {
@@ -1107,7 +1103,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     if (newIndex < 0) newIndex += playlist.length;
     if (oldIndex >= playlist.length || newIndex >= playlist.length)
       return seekFuture;
-    if (playlist.episodes.isEmpty) await playlist.getPlaylist();
+    playlist.cachePlaylist(_episodeState);
 
     _playlistBeingEdited++;
     if (playlist == _playlist && _playerRunning) {
@@ -1180,9 +1176,10 @@ class AudioPlayerNotifier extends ChangeNotifier {
   /// Updates the media ID of an episode from the database.
   /// Replaces the playing episode if its media ID changed.
   Future<void> updateEpisodeMediaID(EpisodeBrief episode) async {
-    if (_playlist.episodes.contains(episode)) {
+    List<int> indexes =
+        _playlist.episodeIdList.where((id) => id == episode.id).toList();
+    if (indexes.isNotEmpty) {
       _playlistBeingEdited++;
-      final List<int> indexes = _playlist.updateEpisode(episode);
       if (_playerRunning) {
         if (indexes.remove(_episodeIndex)) {
           // Currently playing episode is replaced
@@ -1205,11 +1202,6 @@ class AudioPlayerNotifier extends ChangeNotifier {
       }
       _playlistBeingEdited--;
     }
-    final otherPlaylists =
-        _playlists.where((playlist) => playlist != _playlist);
-    for (final playlist in otherPlaylists) {
-      playlist.updateEpisode(episode);
-    }
   }
 
   /// Custom playlist management.
@@ -1226,8 +1218,8 @@ class AudioPlayerNotifier extends ChangeNotifier {
     _playlists.remove(playlist);
     notifyListeners();
     _savePlaylists();
-    if (playlist.isLocal!) {
-      _dbHelper.deleteLocalEpisodes(playlist.episodeUrlList);
+    if (playlist.isLocal) {
+      _dbHelper.deleteLocalEpisodes(playlist.episodeIdList);
     }
   }
 
@@ -1439,7 +1431,9 @@ class AudioPlayerNotifier extends ChangeNotifier {
       _skipStart = true;
       _historyPosition = _audioPosition;
       _playlistBeingEdited++;
-      await _audioHandler.replaceQueue(_playlist.mediaItems);
+      await _audioHandler.replaceQueue(_playlist.episodeIdList
+          .map((id) => _episodeState[id].mediaItem)
+          .toList());
       await skipToIndex(_episodeIndex);
       _playlistBeingEdited--;
       notifyListeners();
@@ -1682,14 +1676,14 @@ class CustomAudioHandler extends BaseAudioHandler
 
   /// Adds [items] to the queue at [index]. Handles live adding.
   Future<void> addQueueItemsAt(List<MediaItem> items, int index,
-      {EpisodeCollision ifExists = EpisodeCollision.Ignore}) async {
+      {EpisodeCollision ifExists = EpisodeCollision.ignore}) async {
     List<AudioSource> sources = [for (var item in items) _itemToSource(item)];
     if (_playerReady) {
       switch (ifExists) {
-        case EpisodeCollision.KeepExisting:
+        case EpisodeCollision.keepExisting:
           items.removeWhere((item) => queue.value.contains(item));
           break;
-        case EpisodeCollision.Replace:
+        case EpisodeCollision.replace:
           List<MediaItem> queueItems = queue.value;
           for (int i = 0; i < queueItems.length; i++) {
             int newIndex = items.indexOf(queueItems[i]);
@@ -1704,7 +1698,7 @@ class CustomAudioHandler extends BaseAudioHandler
           }
           queue.add(queueItems);
           break;
-        case EpisodeCollision.Ignore:
+        case EpisodeCollision.ignore:
           break;
       }
       if (index >= queue.value.length) {
