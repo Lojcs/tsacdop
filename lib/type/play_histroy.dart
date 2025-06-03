@@ -1,9 +1,7 @@
 import '../local_storage/sqflite_localpodcast.dart';
-import 'episodebrief.dart';
+import '../state/episode_state.dart';
 
 class PlayHistory {
-  final DBHelper _dbHelper = DBHelper();
-
   /// Episdoe title.
   String? title;
 
@@ -22,15 +20,15 @@ class PlayHistory {
   PlayHistory(this.title, this.url, this.seconds, this.seekValue,
       {this.playdate});
 
-  EpisodeBrief? _episode;
-  EpisodeBrief? get episode => _episode;
+  int? _episodeId;
+  int? get episodeId => _episodeId;
 
-  Future<void> getEpisode() async {
-    var episodes = await _dbHelper.getEpisodes(episodeUrls: [url!]);
+  Future<void> getEpisodeId(EpisodeState eState) async {
+    var episodes = await eState.getEpisodes(episodeUrls: [url!]);
     if (episodes.isEmpty) {
-      _episode = null;
+      _episodeId = null;
     } else {
-      _episode = episodes[0];
+      _episodeId = episodes[0];
     }
   }
 }

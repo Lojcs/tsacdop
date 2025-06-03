@@ -200,7 +200,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              ShowNote(episode: episodeItem),
+                              ShowNote(episodeId: widget.episodeId),
                               Selector<AudioPlayerNotifier,
                                       Tuple2<bool, PlayerHeight>>(
                                   selector: (_, audio) => Tuple2(
@@ -239,13 +239,11 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                       );
                     },
                   ),
-                  Selector<AudioPlayerNotifier, EpisodeBrief?>(
-                    selector: (_, audio) => audio.episode,
-                    builder: (_, data, __) => Container(
-                      child: PlayerWidget(
-                          playerKey: GlobalKey<AudioPanelState>(),
-                          isPlayingPage: data == episodeItem),
-                    ),
+                  Selector<AudioPlayerNotifier, int?>(
+                    selector: (_, audio) => audio.episodeId,
+                    builder: (_, data, __) => PlayerWidget(
+                        playerKey: GlobalKey<AudioPanelState>(),
+                        isPlayingPage: data == widget.episodeId),
                   ),
                 ],
               ),
@@ -471,7 +469,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                   onPressed: () => Provider.of<
                                               AudioPlayerNotifier>(context,
                                           listen: false)
-                                      .loadEpisodeToQueue(episodeItem,
+                                      .loadEpisodeToQueue(episodeId,
                                           startPosition:
                                               (snapshot.data!.seconds! * 1000)
                                                   .toInt()),

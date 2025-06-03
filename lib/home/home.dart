@@ -412,8 +412,8 @@ class __PlaylistButtonState extends State<_PlaylistButton> {
             value: 1,
             child:
                 Selector<AudioPlayerNotifier, Tuple3<bool, EpisodeBrief?, int>>(
-              selector: (_, audio) => Tuple3(
-                  audio.playerRunning, audio.episode, audio.historyPosition),
+              selector: (_, audio) => Tuple3(audio.playerRunning,
+                  audio.episodeBrief, audio.historyPosition),
               builder: (_, data, __) => !_loadPlay ||
                       data.item1 ||
                       data.item2 == null

@@ -726,7 +726,7 @@ class _NewPlaylist extends StatefulWidget {
 }
 
 class __NewPlaylistState extends State<_NewPlaylist> {
-  String? _playlistName;
+  String _playlistName = "";
   int? _error;
 
   @override
@@ -763,13 +763,8 @@ class __NewPlaylistState extends State<_NewPlaylist> {
                   .playlistExists(_playlistName)) {
                 if (mounted) setState(() => _error = 1);
               } else {
-                final episodesList = widget.episodeIds
-                    .map((i) =>
-                        Provider.of<EpisodeState>(context, listen: false)[i]
-                            .enclosureUrl)
-                    .toList();
                 final playlist =
-                    Playlist(_playlistName, episodeUrlList: episodesList);
+                    Playlist(_playlistName, episodeIds: widget.episodeIds);
                 context.read<AudioPlayerNotifier>().addPlaylist(playlist);
                 Navigator.of(context).pop();
               }
@@ -900,22 +895,22 @@ class _PlaylistList extends StatelessWidget {
                             clipBehavior: Clip.antiAlias,
                             child: Stack(
                               children: [
-                                FutureBuilder<EpisodeBrief?>(
+                                FutureBuilder<ImageProvider?>(
                                   future: () async {
-                                    await p.cachePlaylist();
-                                    return p.episodes.first;
+                                    if (p.isEmpty) return null;
+                                    EpisodeState eState = context.episodeState;
+                                    await p.cachePlaylist(eState);
+                                    return eState[p.episodeIds.first]
+                                        .podcastImageProvider;
                                   }(),
-                                  builder: (_, snapshot) {
-                                    if (snapshot.data != null) {
-                                      return SizedBox(
+                                  builder: (_, snapshot) => snapshot.data !=
+                                          null
+                                      ? SizedBox(
                                           height: 30,
                                           width: 30,
-                                          child: Image(
-                                              image:
-                                                  snapshot.data!.avatarImage));
-                                    }
-                                    return Center();
-                                  },
+                                          child: Image(image: snapshot.data!),
+                                        )
+                                      : Center(),
                                 ),
                                 if (p == playlist)
                                   Center(
@@ -1041,8 +1036,8 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
         playlist =
             Provider.of<AudioPlayerNotifier>(context, listen: false).playlist;
       }
-      for (var episode in selectedEpisodeIds
-          .map((i) => Provider.of<EpisodeState>(context, listen: false)[i])) {
+      for (var id in selectedEpisodeIds) {
+        var episode = Provider.of<EpisodeState>(context, listen: false)[id];
         if (!likedSet) {
           liked = episode.isLiked;
           likedSet = true;
@@ -1062,9 +1057,9 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
           downloaded = null;
         }
         if (!inPlaylistSet) {
-          inPlaylist = playlist.contains(episode);
+          inPlaylist = playlist.contains(id);
           inPlaylistSet = true;
-        } else if (playlist.contains(episode) != inPlaylist) {
+        } else if (playlist.contains(id) != inPlaylist) {
           inPlaylist = null;
         }
         if (liked == null &&
@@ -1310,19 +1305,15 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                     await selectionController.getEpisodesLimitless();
                     selectedEpisodeIds = selectionController.selectedEpisodes;
                     inPlaylist = value;
-                    List<EpisodeBrief> selectedEpisodes = selectedEpisodeIds
-                        .map((i) => Provider.of<EpisodeState>(context,
-                            listen: false)[i])
-                        .toList();
                     if (value!) {
-                      await audio.addToPlaylist(selectedEpisodes,
+                      await audio.addToPlaylist(selectedEpisodeIds,
                           playlist: playlist);
                       await Fluttertoast.showToast(
                         msg: context.s.toastAddPlaylist,
                         gravity: ToastGravity.BOTTOM,
                       );
                     } else {
-                      await audio.removeFromPlaylist(selectedEpisodes,
+                      await audio.removeFromPlaylist(selectedEpisodeIds,
                           playlist: playlist);
                       await Fluttertoast.showToast(
                         msg: context.s.toastRemovePlaylist,
@@ -1364,12 +1355,8 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                     await selectionController.getEpisodesLimitless();
                     selectedEpisodeIds = selectionController.selectedEpisodes;
                     inPlaylist = value;
-                    List<EpisodeBrief> selectedEpisodes = selectedEpisodeIds
-                        .map((i) => Provider.of<EpisodeState>(context,
-                            listen: false)[i])
-                        .toList();
                     if (value!) {
-                      await audio.addToPlaylist(selectedEpisodes,
+                      await audio.addToPlaylist(selectedEpisodeIds,
                           index: audio.playlist.length > 0 ? 1 : 0,
                           playlist: playlist);
                       await Fluttertoast.showToast(
@@ -1377,7 +1364,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                         gravity: ToastGravity.BOTTOM,
                       );
                     } else {
-                      await audio.removeFromPlaylist(selectedEpisodes,
+                      await audio.removeFromPlaylist(selectedEpisodeIds,
                           playlist: playlist);
                       await Fluttertoast.showToast(
                         msg: context.s.toastRemovePlaylist,
@@ -1430,14 +1417,10 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                       await selectionController.getEpisodesLimitless();
                       selectedEpisodeIds = selectionController.selectedEpisodes;
                       inPlaylist = value;
-                      List<EpisodeBrief> selectedEpisodes = selectedEpisodeIds
-                          .map((i) => Provider.of<EpisodeState>(context,
-                              listen: false)[i])
-                          .toList();
                       if (value!) {
                         await Provider.of<AudioPlayerNotifier>(context,
                                 listen: false)
-                            .loadEpisodesToQueue(selectedEpisodes);
+                            .loadEpisodesToQueue(selectedEpisodeIds);
                         await Fluttertoast.showToast(
                           msg: context.s.toastAddPlaylist,
                           gravity: ToastGravity.BOTTOM,

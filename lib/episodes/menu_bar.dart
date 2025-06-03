@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import '../state/episode_state.dart';
-import 'package:tuple/tuple.dart';
 import 'package:provider/provider.dart';
 import 'episode_download.dart';
 import '../state/audio_state.dart';
@@ -94,9 +93,9 @@ class EpisodeActionBarState extends State<EpisodeActionBar> {
                   ),
                   DownloadButton(episode: episodeItem),
                   _buttonOnMenu(
-                    child: Selector<AudioPlayerNotifier, List<EpisodeBrief?>>(
-                      selector: (_, audio) => audio.playlist.episodes,
-                      builder: (_, data, __) => data.contains(episodeItem)
+                    child: Selector<AudioPlayerNotifier, List<int?>>(
+                      selector: (_, audio) => audio.playlist.episodeIds,
+                      builder: (_, data, __) => data.contains(widget.episodeId)
                           ? Icon(
                               Icons.playlist_add_check,
                               color: context.accentColor,
@@ -114,15 +113,15 @@ class EpisodeActionBarState extends State<EpisodeActionBar> {
                               context,
                               listen: false)
                           .playlist
-                          .contains(episodeItem);
+                          .contains(widget.episodeId);
                       if (inPlaylist) {
-                        await audio.removeFromPlaylist([episodeItem]);
+                        await audio.removeFromPlaylist([widget.episodeId]);
                         await Fluttertoast.showToast(
                           msg: s.toastRemovePlaylist,
                           gravity: ToastGravity.BOTTOM,
                         );
                       } else {
-                        await audio.addToPlaylist([episodeItem]);
+                        await audio.addToPlaylist([widget.episodeId]);
                         await Fluttertoast.showToast(
                           msg: s.toastAddPlaylist,
                           gravity: ToastGravity.BOTTOM,
@@ -154,7 +153,7 @@ class EpisodeActionBarState extends State<EpisodeActionBar> {
                       ),
                     ),
                     onTap: () async {
-                      episodeItem.isPlayed!
+                      episodeItem.isPlayed
                           ? episodeState.unsetPlayed([widget.episodeId])
                           : episodeState.setPlayed([widget.episodeId]);
                       Fluttertoast.showToast(
@@ -169,10 +168,10 @@ class EpisodeActionBarState extends State<EpisodeActionBar> {
               ),
             ),
           ),
-          Selector<AudioPlayerNotifier, Tuple2<EpisodeBrief?, bool>>(
-            selector: (_, audio) => Tuple2(audio.episode, audio.playerRunning),
+          Selector<AudioPlayerNotifier, (int?, bool)>(
+            selector: (_, audio) => (audio.episodeId, audio.playerRunning),
             builder: (_, data, __) {
-              return (episodeItem == data.item1 && data.item2)
+              return (widget.episodeId == data.$1 && data.$2)
                   ? Padding(
                       padding: EdgeInsets.only(right: 30),
                       child: SizedBox(
@@ -183,7 +182,7 @@ class EpisodeActionBarState extends State<EpisodeActionBar> {
                       color: Colors.transparent,
                       child: InkWell(
                         onTap: () async {
-                          await audio.loadEpisodeToQueue(episodeItem);
+                          await audio.loadEpisodeToQueue(widget.episodeId);
                           if (!audio.playing) {
                             await audio.resumeAudio();
                           }

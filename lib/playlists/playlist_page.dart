@@ -9,6 +9,7 @@ import '../state/episode_state.dart';
 import '../type/episodebrief.dart';
 import '../type/playlist.dart';
 import '../util/extension_helper.dart';
+import '../widgets/custom_widget.dart';
 import '../widgets/general_dialog.dart';
 
 class PlaylistDetail extends StatefulWidget {
@@ -125,7 +126,7 @@ class _PlaylistBody extends StatefulWidget {
 }
 
 class _PlaylistBodyState extends State<_PlaylistBody> {
-  late List<EpisodeBrief> episodes = widget.playlist.episodes.toList();
+  late List<int> episodes = widget.playlist.episodeIds.toList();
   @override
   Widget build(BuildContext context) {
     return ReorderableListView(
@@ -141,12 +142,12 @@ class _PlaylistBodyState extends State<_PlaylistBody> {
       },
       scrollDirection: Axis.vertical,
       children: episodes.mapIndexed<Widget>(
-        (index, episode) {
-          return _PlaylistItem(episode, key: ValueKey(episode.enclosureUrl),
-              onSelect: (episode) {
+        (index, episodeId) {
+          return _PlaylistItem(episodeId, key: ValueKey(episodeId),
+              onSelect: () {
             widget.onSelect(index);
             setState(() {});
-          }, onRemove: (episode) {
+          }, onRemove: () {
             widget.onRemove(index);
             setState(() {});
           }, reset: widget.resetSelected);
@@ -157,12 +158,15 @@ class _PlaylistBodyState extends State<_PlaylistBody> {
 }
 
 class _PlaylistItem extends StatefulWidget {
-  final EpisodeBrief? episode;
-  final bool? reset;
-  final ValueChanged<EpisodeBrief> onSelect;
-  final ValueChanged<EpisodeBrief> onRemove;
-  const _PlaylistItem(this.episode,
-      {required this.onSelect, required this.onRemove, this.reset, super.key});
+  final int episodeId;
+  final bool reset;
+  final VoidCallback onSelect;
+  final VoidCallback onRemove;
+  const _PlaylistItem(this.episodeId,
+      {required this.onSelect,
+      required this.onRemove,
+      required this.reset,
+      super.key});
 
   @override
   __PlaylistItemState createState() => __PlaylistItemState();
@@ -209,25 +213,11 @@ class __PlaylistItemState extends State<_PlaylistItem>
     super.dispose();
   }
 
-  Widget _episodeTag(String text, Color? color) {
-    if (text == '') {
-      return Center();
-    }
-    return Container(
-      decoration: BoxDecoration(
-          color: color, borderRadius: BorderRadius.circular(15.0)),
-      height: 25.0,
-      margin: EdgeInsets.only(right: 10.0),
-      padding: EdgeInsets.symmetric(horizontal: 8.0),
-      alignment: Alignment.center,
-      child: Text(text, style: TextStyle(fontSize: 14.0, color: Colors.black)),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final s = context.s;
-    final episode = widget.episode!;
+    final episode =
+        Provider.of<EpisodeState>(context, listen: false)[widget.episodeId];
     final c = episode.backgroudColor(context);
     return SizedBox(
       height: 90.0,
@@ -240,10 +230,10 @@ class __PlaylistItemState extends State<_PlaylistItem>
               onTap: () {
                 if (_fraction == 0) {
                   _controller.forward();
-                  widget.onSelect(episode);
+                  widget.onSelect();
                 } else {
                   _controller.reverse();
-                  widget.onRemove(episode);
+                  widget.onRemove();
                 }
               },
               title: Container(
@@ -287,28 +277,32 @@ class __PlaylistItemState extends State<_PlaylistItem>
                 height: 35,
                 child: Row(
                   children: <Widget>[
-                    if (episode.isExplicit!)
+                    if (episode.isExplicit)
                       Container(
-                          decoration: BoxDecoration(
-                              color: Colors.red[800], shape: BoxShape.circle),
-                          height: 25.0,
-                          width: 25.0,
-                          margin: EdgeInsets.only(right: 10.0),
-                          alignment: Alignment.center,
-                          child:
-                              Text('E', style: TextStyle(color: Colors.white))),
-                    if (episode.enclosureDuration != 0)
-                      _episodeTag(
-                          episode.enclosureDuration == 0
-                              ? ''
-                              : s.minsCount(episode.enclosureDuration! ~/ 60),
-                          Colors.cyan[300]),
-                    if (episode.enclosureSize != null)
-                      _episodeTag(
-                          episode.enclosureSize == 0
-                              ? ''
-                              : '${episode.enclosureSize! ~/ 1000000}MB',
-                          Colors.lightBlue[300]),
+                        decoration: BoxDecoration(
+                            color: Colors.red[800], shape: BoxShape.circle),
+                        height: 25.0,
+                        width: 25.0,
+                        margin: EdgeInsets.only(right: 10.0),
+                        alignment: Alignment.center,
+                        child: Text('E', style: TextStyle(color: Colors.white)),
+                      ),
+                    Selector<EpisodeState, int>(
+                      selector: (_, eState) =>
+                          eState[widget.episodeId].enclosureDuration,
+                      builder: (context, value, _) => value != 0
+                          ? episodeTag(
+                              s.minsCount(value ~/ 60), Colors.cyan[300])
+                          : Center(),
+                    ),
+                    Selector<EpisodeState, int>(
+                      selector: (_, eState) =>
+                          eState[widget.episodeId].enclosureSize,
+                      builder: (context, value, _) => value != 0
+                          ? episodeTag(
+                              '${value ~/ 1000000}MB', Colors.lightBlue[300])
+                          : Center(),
+                    ),
                   ],
                 ),
               ),

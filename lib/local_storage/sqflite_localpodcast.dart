@@ -1102,27 +1102,26 @@ class DBHelper {
     }
   }
 
-  Future<void> saveLocalEpisode(EpisodeBrief episode) async {
+  Future<int> saveLocalEpisode(EpisodeBrief episode) async {
     var dbClient = await database;
-    await dbClient.transaction((txn) async {
-      int episodeId = await txn.rawInsert(
-          """INSERT OR REPLACE INTO Episodes(title, enclosure_url, enclosure_length, pubDate, 
+    int episodeId = await dbClient.rawInsert(
+        """INSERT OR REPLACE INTO Episodes(title, enclosure_url, enclosure_length, pubDate, 
                 description, feed_id, milliseconds, duration, explicit, media_id, episode_image) 
                 VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-          [
-            episode.title,
-            episode.enclosureUrl,
-            episode.enclosureSize,
-            '',
-            '',
-            localFolderId,
-            episode.pubDate,
-            episode.enclosureDuration,
-            0,
-            episode.enclosureUrl,
-            episode.episodeImage
-          ]);
-    });
+        [
+          episode.title,
+          episode.enclosureUrl,
+          episode.enclosureSize,
+          '',
+          '',
+          localFolderId,
+          episode.pubDate,
+          episode.enclosureDuration,
+          0,
+          episode.enclosureUrl,
+          episode.episodeImage
+        ]);
+    return episodeId;
   }
 
   Future<void> deleteLocalEpisodes(List<int> ids) async {
@@ -1416,20 +1415,19 @@ class DBHelper {
         [enclosureUrl, episodeId]);
   }
 
-  Future<String?> getDescription(String url) async {
+  Future<String?> getDescription(int id) async {
     var dbClient = await database;
-    List<Map> list = await dbClient.rawQuery(
-        'SELECT description FROM Episodes WHERE enclosure_url = ?', [url]);
+    List<Map> list = await dbClient
+        .rawQuery('SELECT description FROM Episodes WHERE id = ?', [id]);
     String? description = list[0]['description'];
     return description;
   }
 
-  Future saveEpisodeDes(String url, {String? description}) async {
+  Future saveEpisodeDes(int id, {String? description}) async {
     var dbClient = await database;
     await dbClient.transaction((txn) async {
-      await txn.rawUpdate(
-          "UPDATE Episodes SET description = ? WHERE enclosure_url = ?",
-          [description, url]);
+      await txn.rawUpdate("UPDATE Episodes SET description = ? WHERE id = ?",
+          [description, id]);
     });
   }
 

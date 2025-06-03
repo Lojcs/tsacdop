@@ -15,7 +15,6 @@ import '../state/setting_state.dart';
 import '../type/episodebrief.dart';
 import '../util/extension_helper.dart';
 import '../util/hide_player_route.dart';
-import 'package:tuple/tuple.dart';
 
 import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
@@ -143,20 +142,21 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
         _shadowController.reverse();
       }),
       closedBuilder: (context, action) => Selector2<AudioPlayerNotifier,
-          SelectionController?, Tuple4<bool, bool, bool, bool>>(
-        selector: (_, audio, select) => Tuple4(
-            audio.episode?.id == widget.episodeId,
-            audio.playlist.episodes.any((e) => e.id == widget.episodeId),
-            audio.playerRunning,
-            select?.selectedIndicies.contains(widget.index) ?? false),
+          SelectionController?, (bool, bool, bool, bool)>(
+        selector: (_, audio, select) => (
+          audio.episodeId == widget.episodeId,
+          audio.playlist.contains(widget.episodeId),
+          audio.playerRunning,
+          select?.selectedIndicies.contains(widget.index) ?? false,
+        ),
         builder: (_, data, __) {
-          selected = data.item4;
+          selected = data.$4;
           if (selected) {
             _controller.forward();
           } else {
             _controller.reverse();
           }
-          if (data.item1) savedPosition = null;
+          if (data.$1) savedPosition = null;
           return _FocusedMenuHolderWrapper(
             onTapStart: () {
               if (selected) {
@@ -252,8 +252,8 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
             menuItemList: () async {
               if (context.mounted) {
                 final menulist = await _getEpisodeMenu();
-                menuItemList = _menuItemList(context, widget.episodeId,
-                    data.item1, data.item2, data.item3, menulist,
+                menuItemList = _menuItemList(context, widget.episodeId, data.$1,
+                    data.$2, data.$3, menulist,
                     applyToAllSelected: widget.applyActionToAllSelected);
               }
               return menuItemList;
@@ -278,7 +278,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                       ? context.radiusMedium
                       : context.radiusLarge,
             ),
-            childLowerlay: data.item1 && data.item3
+            childLowerlay: data.$1 && data.$3
                 ? Selector<AudioPlayerNotifier, double>(
                     selector: (_, audio) => audio.seekSliderValue,
                     builder: (_, seekValue, __) => _ProgressLowerlay(
@@ -419,11 +419,11 @@ class _OpenContainerWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     EpisodeState eState = Provider.of<EpisodeState>(context, listen: false);
-    return Selector<AudioPlayerNotifier, Tuple2<bool, PlayerHeight?>>(
-      selector: (_, audio) => Tuple2(audio.playerRunning, audio.playerHeight),
+    return Selector<AudioPlayerNotifier, (bool, PlayerHeight?)>(
+      selector: (_, audio) => (audio.playerRunning, audio.playerHeight),
       builder: (_, data, __) => OpenContainer(
-        playerRunning: data.item1,
-        playerHeight: kMinPlayerHeight[data.item2!.index],
+        playerRunning: data.$1,
+        playerHeight: kMinPlayerHeight[data.$2!.index],
         flightWidget: CircleAvatar(
             backgroundImage: preferEpisodeImage
                 ? eState[episodeId].episodeOrPodcastImageProvider
@@ -437,9 +437,9 @@ class _OpenContainerWrapper extends StatelessWidget {
                 ? 8
                 : 15,
         flightWidgetEndOffsetX: 10,
-        flightWidgetEndOffsetY: data.item1
+        flightWidgetEndOffsetY: data.$1
             ? context.height -
-                kMinPlayerHeight[data.item2!.index]! -
+                kMinPlayerHeight[data.$2!.index]! -
                 40 -
                 context.originalPadding.bottom
             : context.height - 40 - context.originalPadding.bottom,
@@ -1168,15 +1168,13 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, int episodeId,
         ),
         onPressed: () async {
           if (!playing || !playerRunning) {
-            List<int> episodes = [episodeId];
+            List<int> episodeIds = [episodeId];
             SelectionController? selectionController =
                 Provider.of<SelectionController?>(context, listen: false);
             if (selectionController != null && applyToAllSelected) {
-              episodes = selectionController.selectedEpisodes;
+              episodeIds = selectionController.selectedEpisodes;
             }
-            List<EpisodeBrief> selectedEpisodes =
-                episodes.map((i) => eState[i]).toList();
-            await audio.loadEpisodesToQueue(selectedEpisodes);
+            await audio.loadEpisodesToQueue(episodeIds);
           }
         }),
     if (menuList.contains(1))
@@ -1191,22 +1189,20 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, int episodeId,
             color: Colors.cyan,
           ),
           onPressed: () async {
-            List<int> episodes = [episodeId];
+            List<int> episodeIds = [episodeId];
             SelectionController? selectionController =
                 Provider.of<SelectionController?>(context, listen: false);
             if (selectionController != null && applyToAllSelected) {
-              episodes = selectionController.selectedEpisodes;
+              episodeIds = selectionController.selectedEpisodes;
             }
-            List<EpisodeBrief> selectedEpisodes =
-                episodes.map((i) => eState[i]).toList();
             if (!inPlaylist) {
-              await audio.addToPlaylist(selectedEpisodes);
+              await audio.addToPlaylist(episodeIds);
               await Fluttertoast.showToast(
                 msg: s.toastAddPlaylist,
                 gravity: ToastGravity.BOTTOM,
               );
             } else {
-              await audio.removeFromPlaylist(selectedEpisodes);
+              await audio.removeFromPlaylist(episodeIds);
               await Fluttertoast.showToast(
                 msg: s.toastRemovePlaylist,
                 gravity: ToastGravity.BOTTOM,
@@ -1320,15 +1316,13 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, int episodeId,
           color: Colors.amber,
         ),
         onPressed: () {
-          List<int> episodes = [episodeId];
+          List<int> episodeIds = [episodeId];
           SelectionController? selectionController =
               Provider.of<SelectionController?>(context, listen: false);
           if (selectionController != null && applyToAllSelected) {
-            episodes = selectionController.selectedEpisodes;
+            episodeIds = selectionController.selectedEpisodes;
           }
-          List<EpisodeBrief> selectedEpisodes =
-              episodes.map((i) => eState[i]).toList();
-          audio.addToPlaylist(selectedEpisodes,
+          audio.addToPlaylist(episodeIds,
               index: audio.playlist.length > 0 ? 1 : 0);
           Fluttertoast.showToast(
             msg: s.playNextDes,
