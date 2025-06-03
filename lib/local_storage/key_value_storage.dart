@@ -102,12 +102,11 @@ class KeyValueStorage {
             'playlists': [playlist.toJson()]
           }));
     }
-    List<Map<String, dynamic>> playlists =
-        json.decode(prefs.getString(key)!)['playlists'];
+    final playlists = json.decode(prefs.getString(key)!)['playlists'];
     List<Playlist> result = [];
     for (var playlist in playlists) {
       if (playlist.containsKey('episodeList')) {
-        List<String> urlList = playlist['episodeList'];
+        final urlList = List<String>.from(playlist['episodeList']);
         List<int> idList = await eState.getEpisodes(episodeUrls: urlList);
         List<int> sortedList = List<int>.filled(idList.length, -1);
         for (var id in idList) {

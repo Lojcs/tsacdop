@@ -554,7 +554,7 @@ class _FocusedMenuHolderWrapperState extends State<_FocusedMenuHolderWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    return FocusedMenuHolder(
+    final child = FocusedMenuHolder(
       blurSize: 0,
       menuItemExtent: widget.menuItemExtent,
       enableMenuScroll: false,
@@ -590,16 +590,16 @@ class _FocusedMenuHolderWrapperState extends State<_FocusedMenuHolderWrapper> {
       onDragOver: widget.onDragOver,
       beforeOpened: widget.beforeOpened,
       initData: widget.initData,
-      child: Transform.scale(
+      child: widget.child,
+    );
+    return Transform.scale(
         scale: 1 -
             0.01 *
                 CurvedAnimation(
                   parent: widget.controller,
                   curve: Curves.easeOutQuad,
                 ).value,
-        child: widget.child,
-      ),
-    );
+        child: child);
   }
 }
 

@@ -48,7 +48,7 @@ class Playlist {
       : name = json['name'] as String,
         id = json['id'] as String,
         isLocal = json['isLocal'] == true,
-        episodeIds = json['episodeIdList'] as List<int>;
+        episodeIds = List<int>.from(json['episodeIdList']);
 
   /// Caches [episodeIds] into [eState] and removes missing ids from the playlist.
   Future<void> cachePlaylist(EpisodeState eState) async {

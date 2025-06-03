@@ -185,11 +185,12 @@ class AudioPlayerNotifier extends ChangeNotifier {
 
   /// Helper to get the object of currently playing episode.
   /// Make sure [_episodeId] isn't null
-  EpisodeBrief get _episodeBrief => _episodeState[_episodeId!];
+  EpisodeBrief? get _episodeBrief =>
+      _episodeId != null ? _episodeState[_episodeId!] : null;
 
   /// Helper to get the object of currently playing episode.
   /// Make sure [_episodeId] isn't null
-  MediaItem get _mediaItem => _episodeBrief.mediaItem;
+  MediaItem? get _mediaItem => _episodeBrief?.mediaItem;
 
   /// Currently playing playlist.
   Playlist _playlist = Playlist("none");
@@ -455,13 +456,16 @@ class AudioPlayerNotifier extends ChangeNotifier {
       if (savePosition) {
         await saveCurrentPosition();
       }
-      PlayHistory history = PlayHistory(_episodeBrief.title,
-          _episodeBrief.enclosureUrl, _audioPosition ~/ 1000, _seekSliderValue);
+      PlayHistory history = PlayHistory(
+          _episodeBrief!.title,
+          _episodeBrief!.enclosureUrl,
+          _audioPosition ~/ 1000,
+          _seekSliderValue);
 
       if (_lastHistory != history) {
         _lastHistory = history;
         if (_seekSliderValue > 0.95) {
-          await _episodeState.setPlayed([_episodeBrief.id],
+          await _episodeState.setPlayed([_episodeBrief!.id],
               seconds: history.seconds!, seekValue: history.seekValue!);
         } else {
           await _dbHelper.saveHistory(history);
@@ -479,7 +483,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     // Set playlist
     _startPlaylist = _playlists.firstWhere((p) => p.id == lastState.item1,
         orElse: () => _playlists.first);
-    playlist.cachePlaylist(_episodeState);
+    _startPlaylist.cachePlaylist(_episodeState);
     // Set episode index
     if (_startPlaylist.isEmpty) {
       _startEpisodeIndex = 0;
@@ -497,7 +501,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     if (_startPlaylist.isNotEmpty) {
       _historyPosition = lastState.item3;
       if (_historyPosition == 0) {
-        PlayHistory position = await _dbHelper.getPosition(_episodeBrief);
+        PlayHistory position = await _dbHelper.getPosition(_episodeBrief!);
         _historyPosition = position.seconds! * 1000;
       }
     }
@@ -519,8 +523,8 @@ class AudioPlayerNotifier extends ChangeNotifier {
         _historySeek < 0.95 &&
         _historyPosition > 10000) {
       _audioPosition = _historyPosition;
-    } else if (_episodeBrief.skipSecondsStart != 0) {
-      _audioPosition = _episodeBrief.skipSecondsStart * 1000;
+    } else if (_episodeBrief!.skipSecondsStart != 0) {
+      _audioPosition = _episodeBrief!.skipSecondsStart * 1000;
     } else {
       _audioPosition = 0;
     }
@@ -538,7 +542,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
       _episodeIndex = _startEpisodeIndex;
       if (_playerRunning) {
         _loadStartPosition();
-        _audioDuration = _episodeBrief.enclosureDuration * 1000;
+        _audioDuration = _episodeBrief!.enclosureDuration * 1000;
         if (samePlaylist) {
           _playlistBeingEdited++;
           await skipToIndex(_startEpisodeIndex);
@@ -553,7 +557,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
             _playlistBeingEdited--;
           } else {
             _playlistBeingEdited++;
-            await _audioHandler.replaceQueue([_mediaItem]);
+            await _audioHandler.replaceQueue([_mediaItem!]);
             _playlistBeingEdited--;
           }
         }
@@ -660,7 +664,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     _sleepTimerMode = SleepTimerMode.unset;
     _switchValue = 0;
     _audioState = AudioProcessingState.loading;
-    _audioDuration = _episodeBrief.enclosureDuration * 1000;
+    _audioDuration = _episodeBrief!.enclosureDuration * 1000;
     _playerRunning = true;
     _skipStart = true;
     notifyListeners();
@@ -691,7 +695,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
           .toList());
       // await _audioHandler.skipToQueueItem(_episodeIndex!);
     } else {
-      await _audioHandler.replaceQueue([_mediaItem]);
+      await _audioHandler.replaceQueue([_mediaItem!]);
     }
     await skipToIndex(_startEpisodeIndex);
     await _audioHandler.play();
@@ -825,26 +829,26 @@ class AudioPlayerNotifier extends ChangeNotifier {
           _skipStart = false;
           if (_historyPosition / _audioDuration < 0.95 &&
               _historyPosition > 10000) {
-            if (_episodeBrief.skipSecondsStart != 0 &&
-                _historyPosition > _episodeBrief.skipSecondsStart * 1000) {
+            if (_episodeBrief!.skipSecondsStart != 0 &&
+                _historyPosition > _episodeBrief!.skipSecondsStart * 1000) {
               _undoButtonPositionsStack
-                  .add(_episodeBrief.skipSecondsStart * 1000);
+                  .add(_episodeBrief!.skipSecondsStart * 1000);
             }
             await seekTo(_historyPosition);
-          } else if (_episodeBrief.skipSecondsStart != 0) {
+          } else if (_episodeBrief!.skipSecondsStart != 0) {
             if (_historyPosition != 0) {
               _undoButtonPositionsStack.add(_historyPosition);
             }
-            await seekTo(_episodeBrief.skipSecondsStart * 1000);
+            await seekTo(_episodeBrief!.skipSecondsStart * 1000);
           }
         }
         if (_skipEnd) {
           if (_audioPosition >
-              (_audioDuration - _episodeBrief.skipSecondsEnd * 1000)) {
+              (_audioDuration - _episodeBrief!.skipSecondsEnd * 1000)) {
             _skipEnd = false;
             _undoButtonPositionsStack.clear();
             _undoButtonPositionsStack
-                .addAll([_episodeBrief.skipSecondsEnd, -1]);
+                .addAll([_episodeBrief!.skipSecondsEnd, -1]);
             await seekTo(_audioDuration);
           }
         }
@@ -1393,7 +1397,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
       _skipStart = true;
       _historyPosition = _audioPosition;
       _playlistBeingEdited++;
-      await _audioHandler.replaceQueue([_episodeBrief.mediaItem]);
+      await _audioHandler.replaceQueue([_mediaItem!]);
       // Loads the episode as if [_autoPlay] is disabled
       _playlistBeingEdited--;
       notifyListeners();
