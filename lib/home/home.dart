@@ -111,7 +111,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
           context.originalPadding = MediaQuery.of(context).padding;
           return AnnotatedRegion<SystemUiOverlayStyle>(
             value: SystemUiOverlayStyle(
-              statusBarColor: context.surface,
+              statusBarColor: Colors.transparent,
               statusBarIconBrightness: context.iconBrightness,
               systemNavigationBarColor:
                   playerRunning ? context.cardColorSchemeCard : context.surface,
@@ -556,7 +556,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return FutureBuilder<Tuple2<EpisodeGridLayout, bool?>>(
+    return FutureBuilder<(EpisodeGridLayout, bool?)>(
       future: getLayoutAndShowListened(layoutKey: recentLayoutKey),
       builder: (_, snapshot) {
         return InteractiveEpisodeGrid(
@@ -573,8 +573,8 @@ class _RecentUpdateState extends State<_RecentUpdate>
             ],
           ),
           openPodcast: true,
-          actionBarFilterPlayed: snapshot.data?.item2,
-          layout: snapshot.data?.item1 ?? EpisodeGridLayout.small,
+          actionBarFilterPlayed: snapshot.data?.$2,
+          layout: snapshot.data?.$1 ?? EpisodeGridLayout.small,
         );
       },
     );
@@ -594,7 +594,7 @@ class _MyFavoriteState extends State<_MyFavorite>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return FutureBuilder<Tuple2<EpisodeGridLayout, bool?>>(
+    return FutureBuilder<(EpisodeGridLayout, bool?)>(
       future: getLayoutAndShowListened(layoutKey: favLayoutKey),
       builder: (_, snapshot) {
         return InteractiveEpisodeGrid(
@@ -629,7 +629,7 @@ class _MyFavoriteState extends State<_MyFavorite>
           actionBarSortBy: Sorter.likedDate,
           actionBarFilterLiked: true,
           actionBarFilterDisplayVersion: null,
-          layout: snapshot.data?.item1 ?? EpisodeGridLayout.small,
+          layout: snapshot.data?.$1 ?? EpisodeGridLayout.small,
         );
       },
     );
@@ -649,7 +649,7 @@ class _MyDownloadState extends State<_MyDownload>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return FutureBuilder<Tuple2<EpisodeGridLayout, bool?>>(
+    return FutureBuilder<(EpisodeGridLayout, bool?)>(
       future: getLayoutAndShowListened(layoutKey: downloadLayoutKey),
       builder: (_, snapshot) {
         return InteractiveEpisodeGrid(
@@ -692,7 +692,7 @@ class _MyDownloadState extends State<_MyDownload>
           actionBarSortBy: Sorter.downloadDate,
           actionBarFilterDownloaded: true,
           actionBarFilterDisplayVersion: null,
-          layout: snapshot.data?.item1 ?? EpisodeGridLayout.small,
+          layout: snapshot.data?.$1 ?? EpisodeGridLayout.small,
         );
       },
     );

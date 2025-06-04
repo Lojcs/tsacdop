@@ -121,7 +121,6 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
       selector: (_, audio) => audio.playerRunning,
       builder: (_, playerRunning, __) => AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle(
-          statusBarColor: color,
           statusBarIconBrightness: context.iconBrightness,
           systemNavigationBarColor:
               playerRunning ? context.cardColorSchemeCard : color,
@@ -133,119 +132,125 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
           onPopInvokedWithResult: (_, __) =>
               _playerKey.currentState?.backToMini(),
           child: Scaffold(
-            backgroundColor: context.realDark
-                ? context.surface
-                : episodeItem.colorScheme(context).surface,
+            backgroundColor: color,
+            extendBody: true,
             body: SafeArea(
-              child: Stack(
-                children: <Widget>[
-                  StretchingOverscrollIndicator(
-                    axisDirection: AxisDirection.down,
-                    child: NotificationListener<ScrollNotification>(
-                      onNotification: _scrollListener,
-                      child: NestedScrollView(
-                        scrollDirection: Axis.vertical,
-                        controller: _controller,
-                        headerSliverBuilder: (context, innerBoxScrolled) {
-                          final titleLineTest = TextPainter(
-                              maxLines: 3,
-                              text: TextSpan(
-                                text: episodeItem.title,
-                                style:
-                                    Theme.of(context).textTheme.headlineMedium,
-                              ),
-                              textDirection: TextDirection.ltr);
-                          titleLineTest.layout(maxWidth: context.width - 60);
+              child: ColoredBox(
+                color: context.realDark
+                    ? context.surface
+                    : episodeItem.colorScheme(context).surface,
+                child: Stack(
+                  children: <Widget>[
+                    StretchingOverscrollIndicator(
+                      axisDirection: AxisDirection.down,
+                      child: NotificationListener<ScrollNotification>(
+                        onNotification: _scrollListener,
+                        child: NestedScrollView(
+                          scrollDirection: Axis.vertical,
+                          controller: _controller,
+                          headerSliverBuilder: (context, innerBoxScrolled) {
+                            final titleLineTest = TextPainter(
+                                maxLines: 3,
+                                text: TextSpan(
+                                  text: episodeItem.title,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineMedium,
+                                ),
+                                textDirection: TextDirection.ltr);
+                            titleLineTest.layout(maxWidth: context.width - 60);
 
-                          double titleHeight =
-                              titleLineTest.computeLineMetrics().length * 30 +
-                                  15;
-                          return <Widget>[
-                            _hiddenImage(),
-                            // Titlebar
-                            SliverAppBar(
-                              pinned: true,
-                              leading: Center(),
-                              toolbarHeight: titleHeight,
-                              collapsedHeight: titleHeight,
-                              expandedHeight: titleHeight,
-                              backgroundColor: color,
-                              scrolledUnderElevation: 0,
-                              flexibleSpace: Container(
-                                height: titleHeight,
-                                padding: EdgeInsets.only(left: 30, right: 30),
-                                child: Tooltip(
-                                  message: episodeItem.title,
-                                  child: Text(
-                                    episodeItem.title,
-                                    maxLines: 3,
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.left,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .headlineMedium!
-                                        .copyWith(
-                                          color: episodeItem
-                                              .colorScheme(context)
-                                              .onSecondaryContainer,
-                                        ),
+                            double titleHeight =
+                                titleLineTest.computeLineMetrics().length * 30 +
+                                    15;
+                            return <Widget>[
+                              _hiddenImage(),
+                              // Titlebar
+                              SliverAppBar(
+                                pinned: true,
+                                leading: Center(),
+                                toolbarHeight: titleHeight,
+                                collapsedHeight: titleHeight,
+                                expandedHeight: titleHeight,
+                                backgroundColor: color,
+                                scrolledUnderElevation: 0,
+                                flexibleSpace: Container(
+                                  height: titleHeight,
+                                  padding: EdgeInsets.only(left: 30, right: 30),
+                                  child: Tooltip(
+                                    message: episodeItem.title,
+                                    child: Text(
+                                      episodeItem.title,
+                                      maxLines: 3,
+                                      overflow: TextOverflow.ellipsis,
+                                      textAlign: TextAlign.left,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .headlineMedium!
+                                          .copyWith(
+                                            color: episodeItem
+                                                .colorScheme(context)
+                                                .onSecondaryContainer,
+                                          ),
+                                    ),
                                   ),
                                 ),
                               ),
+                              _infoBar(),
+                            ];
+                          },
+                          body: SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ShowNote(episodeId: widget.episodeId),
+                                Selector<AudioPlayerNotifier,
+                                        Tuple2<bool, PlayerHeight>>(
+                                    selector: (_, audio) => Tuple2(
+                                        audio.playerRunning,
+                                        audio.playerHeight!),
+                                    builder: (_, data, __) {
+                                      final height =
+                                          kMinPlayerHeight[data.item2.index];
+                                      return SizedBox(
+                                        height: data.item1 ? height : 0,
+                                      );
+                                    }),
+                              ],
                             ),
-                            _infoBar(),
-                          ];
-                        },
-                        body: SingleChildScrollView(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              ShowNote(episodeId: widget.episodeId),
-                              Selector<AudioPlayerNotifier,
-                                      Tuple2<bool, PlayerHeight>>(
-                                  selector: (_, audio) => Tuple2(
-                                      audio.playerRunning, audio.playerHeight!),
-                                  builder: (_, data, __) {
-                                    final height =
-                                        kMinPlayerHeight[data.item2.index];
-                                    return SizedBox(
-                                      height: data.item1 ? height : 0,
-                                    );
-                                  }),
-                            ],
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  Selector<AudioPlayerNotifier, Tuple2<bool, PlayerHeight>>(
-                    selector: (_, audio) =>
-                        Tuple2(audio.playerRunning, audio.playerHeight!),
-                    builder: (_, data, __) {
-                      return Container(
-                        alignment: Alignment.bottomCenter,
-                        padding: EdgeInsets.only(
-                            bottom: data.item1
-                                ? kMinPlayerHeight[data.item2.index]
-                                : 0),
-                        child: SizedBox(
-                          height: 50,
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.vertical,
-                            child:
-                                EpisodeActionBar(episodeId, hide: widget.hide),
+                    Selector<AudioPlayerNotifier, Tuple2<bool, PlayerHeight>>(
+                      selector: (_, audio) =>
+                          Tuple2(audio.playerRunning, audio.playerHeight!),
+                      builder: (_, data, __) {
+                        return Container(
+                          alignment: Alignment.bottomCenter,
+                          padding: EdgeInsets.only(
+                              bottom: data.item1
+                                  ? kMinPlayerHeight[data.item2.index]
+                                  : 0),
+                          child: SizedBox(
+                            height: 50,
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.vertical,
+                              child: EpisodeActionBar(episodeId,
+                                  hide: widget.hide),
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                  Selector<AudioPlayerNotifier, int?>(
-                    selector: (_, audio) => audio.episodeId,
-                    builder: (_, data, __) => PlayerWidget(
-                        playerKey: GlobalKey<AudioPanelState>(),
-                        isPlayingPage: data == widget.episodeId),
-                  ),
-                ],
+                        );
+                      },
+                    ),
+                    Selector<AudioPlayerNotifier, int?>(
+                      selector: (_, audio) => audio.episodeId,
+                      builder: (_, data, __) => PlayerWidget(
+                          playerKey: GlobalKey<AudioPanelState>(),
+                          isPlayingPage: data == widget.episodeId),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

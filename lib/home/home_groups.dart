@@ -6,6 +6,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart' as tuple;
 
+import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../podcasts/podcast_detail.dart';
 import '../podcasts/podcast_manage.dart';
@@ -18,6 +19,7 @@ import '../type/podcastlocal.dart';
 import '../util/extension_helper.dart';
 import '../util/hide_player_route.dart';
 import '../util/pageroute.dart';
+import '../widgets/action_bar.dart';
 import '../widgets/episode_card.dart';
 import '../widgets/episodegrid.dart';
 
@@ -384,23 +386,33 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                         key: ObjectKey(podcastLocal.title),
                         child: Material(
                           color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(20),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                HidePlayerRoute(
-                                  PodcastDetail(
-                                    podcastLocal: podcastLocal,
-                                  ),
-                                  PodcastDetail(
-                                      podcastLocal: podcastLocal, hide: true),
-                                  duration: Duration(milliseconds: 300),
+                          child:
+                              Selector2<RefreshWorker, GroupList, (bool, bool)>(
+                            selector: (_, refreshWorker, groupWorker) =>
+                                (refreshWorker.created, groupWorker.created),
+                            builder: (_, data, __) => FutureBuilder<List<int>>(
+                              future: _getPodcastPreview(context, podcastLocal),
+                              builder: (context, snapshot) => InkWell(
+                                borderRadius: BorderRadius.circular(20),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    HidePlayerRoute(
+                                      PodcastDetail(
+                                        podcastLocal: podcastLocal,
+                                        initIds: snapshot.hasData
+                                            ? snapshot.data!
+                                            : null,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: PodcastPreview(
+                                  podcastLocal: podcastLocal,
+                                  previewIds:
+                                      snapshot.hasData ? snapshot.data! : [],
                                 ),
-                              );
-                            },
-                            child: PodcastPreview(
-                              podcastLocal: podcastLocal,
+                              ),
                             ),
                           ),
                         ),
@@ -450,49 +462,43 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
               : Center();
         },
       );
+
+  Future<List<int>> _getPodcastPreview(
+      BuildContext context, PodcastLocal podcastLocal) async {
+    final layout = await getLayoutAndShowListened(layoutKey: podcastLayoutKey);
+    if (context.mounted) {
+      final limit = layout.$1.getVerticalCount(context.width, context.height);
+      return Provider.of<EpisodeState>(context, listen: false).getEpisodes(
+        feedIds: [podcastLocal.id],
+        sortBy: Sorter.pubDate,
+        sortOrder: SortOrder.desc,
+        limit: limit,
+        filterDisplayVersion: false,
+      );
+    } else {
+      return Future.value([]);
+    }
+  }
 }
 
-class PodcastPreview extends StatefulWidget {
+class PodcastPreview extends StatelessWidget {
   final PodcastLocal podcastLocal;
 
-  const PodcastPreview({required this.podcastLocal, super.key});
+  /// Episodes to preview (only the first row is shown)
+  final List<int> previewIds;
 
-  @override
-  _PodcastPreviewState createState() => _PodcastPreviewState();
-}
-
-class _PodcastPreviewState extends State<PodcastPreview> {
-  List<int>? episodePreview;
-
-  @override
-  void initState() {
-    super.initState();
-  }
+  const PodcastPreview(
+      {required this.podcastLocal, required this.previewIds, super.key});
 
   @override
   Widget build(BuildContext context) {
-    final c = widget.podcastLocal!.backgroudColor(context);
+    final c = podcastLocal.backgroudColor(context);
     return Column(
       children: <Widget>[
         Expanded(
-          child: Selector2<RefreshWorker, GroupList, tuple.Tuple2<bool, bool>>(
-            selector: (_, refreshWorker, groupWorker) =>
-                tuple.Tuple2(refreshWorker.created, groupWorker.created),
-            builder: (_, data, __) {
-              return FutureBuilder<List<int>>(
-                future: _getPodcastPreview(widget.podcastLocal),
-                builder: (context, snapshot) {
-                  return (snapshot.hasData)
-                      ? ShowEpisode(
-                          episodeIds: snapshot.data!,
-                          podcastLocal: widget.podcastLocal,
-                        )
-                      : Padding(
-                          padding: const EdgeInsets.all(5.0),
-                        );
-                },
-              );
-            },
+          child: ShowEpisode(
+            episodeIds: previewIds,
+            podcastLocal: podcastLocal,
           ),
         ),
         Container(
@@ -505,7 +511,7 @@ class _PodcastPreviewState extends State<PodcastPreview> {
               Expanded(
                 flex: 4,
                 child: Text(
-                  widget.podcastLocal!.title,
+                  podcastLocal.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontWeight: FontWeight.bold, color: c),
@@ -526,18 +532,6 @@ class _PodcastPreviewState extends State<PodcastPreview> {
         ),
       ],
     );
-  }
-
-  Future<List<int>> _getPodcastPreview(PodcastLocal podcastLocal) async {
-    episodePreview ??=
-        await Provider.of<EpisodeState>(context, listen: false).getEpisodes(
-      feedIds: [podcastLocal.id],
-      sortBy: Sorter.pubDate,
-      sortOrder: SortOrder.desc,
-      limit: 2,
-      filterDisplayVersion: false,
-    );
-    return episodePreview!;
   }
 }
 

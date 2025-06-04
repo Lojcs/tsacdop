@@ -501,7 +501,7 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
       reverseCurve: Curves.easeInExpo,
     );
     if (active && !activeAnimationController.isCompleted) {
-      activeAnimationController.forward();
+      activeAnimationController.value = 1;
       expand(true);
     }
   }

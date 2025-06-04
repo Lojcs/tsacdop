@@ -21,7 +21,6 @@ import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/audio_state.dart';
 import '../state/download_state.dart';
-import '../type/episodebrief.dart';
 import '../type/fireside_data.dart';
 import '../type/podcastlocal.dart';
 import '../util/extension_helper.dart';
@@ -33,16 +32,16 @@ import '../widgets/general_dialog.dart';
 import '../widgets/multiselect_bar.dart';
 import 'podcast_settings.dart';
 
-const String kDefaultAvatar = """http://xuanmei.us/assets/default/avatar_small-
-170afdc2be97fc6148b283083942d82c101d4c1061f6b28f87c8958b52664af9.jpg""";
-
 class PodcastDetail extends StatefulWidget {
   const PodcastDetail(
-      {super.key, required this.podcastLocal, this.hide = false});
+      {super.key, required this.podcastLocal, this.initIds, this.hide = false});
   final PodcastLocal podcastLocal;
   final bool hide;
+
+  /// Prefetched episode ids to display at first
+  final List<int>? initIds;
   @override
-  _PodcastDetailState createState() => _PodcastDetailState();
+  State<PodcastDetail> createState() => _PodcastDetailState();
 }
 
 class _PodcastDetailState extends State<PodcastDetail> {
@@ -78,7 +77,8 @@ class _PodcastDetailState extends State<PodcastDetail> {
           child: PodcastDetailBody(
             podcastLocal: widget.podcastLocal,
             selectionController: selectionController,
-            key: Key("${widget.podcastLocal.id}_body"),
+            initIds: widget.initIds,
+            hide: widget.hide,
           ),
         ),
       ],
@@ -161,9 +161,6 @@ class _PodcastDetailState extends State<PodcastDetail> {
               Provider.of<SelectionController>(context, listen: false);
           return AnnotatedRegion<SystemUiOverlayStyle>(
             value: SystemUiOverlayStyle(
-              statusBarColor: context.realDark
-                  ? context.surface
-                  : cardColorScheme.saturated,
               statusBarIconBrightness: context.iconBrightness,
               systemNavigationBarColor:
                   playerRunning ? context.cardColorSchemeCard : context.surface,
@@ -188,7 +185,8 @@ class _PodcastDetailState extends State<PodcastDetail> {
                   child: Scaffold(
                     backgroundColor: context.realDark
                         ? context.surface
-                        : cardColorScheme.colorScheme.surface,
+                        : cardColorScheme.saturated,
+                    extendBody: true,
                     body: SafeArea(
                       child: Stack(
                         children: <Widget>[
@@ -212,42 +210,24 @@ class _PodcastDetailState extends State<PodcastDetail> {
 class PodcastDetailBody extends StatefulWidget {
   final SelectionController selectionController;
   final PodcastLocal podcastLocal;
+
+  /// Prefetched episode ids to display at first
+  final List<int>? initIds;
   final bool hide;
 
   const PodcastDetailBody(
       {super.key,
       required this.podcastLocal,
       required this.selectionController,
+      this.initIds,
       this.hide = false});
   @override
-  _PodcastDetailBodyState createState() => _PodcastDetailBodyState();
+  State<PodcastDetailBody> createState() => _PodcastDetailBodyState();
 }
 
 class _PodcastDetailBodyState extends State<PodcastDetailBody> {
   final GlobalKey _infoKey = GlobalKey();
-
-  /// Episodes to display
-  List<EpisodeBrief> _episodes = [];
-
-  /// Function to get episodes
-  Future<List<EpisodeBrief>> Function(int count, {int offset}) _getEpisodes =
-      (int _, {int offset = 0}) async {
-    return <EpisodeBrief>[];
-  };
-
-  /// Default layout.
-  EpisodeGridLayout? _layout;
-
-  /// If true, stop grid load animation.
-  bool _scroll = false;
-
   late ScrollController _controller;
-
-  /// Episodes num load first time.
-  late int _top = 108;
-
-  /// Load more episodes when scroll to bottom.
-  bool _loadMore = false;
 
   double _infoHeightValue = 0;
   double get _infoHeight => _infoHeightValue;
@@ -269,10 +249,12 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Tuple2<EpisodeGridLayout, bool?>>(
-      future: getLayoutAndShowListened(layoutKey: recentLayoutKey),
-      builder: (_, snapshot) {
-        return InteractiveEpisodeGrid(
+    return ColoredBox(
+        color: context.realDark
+            ? context.surface
+            : context.select<CardColorScheme, Color>(
+                (colors) => colors.colorScheme.surface),
+        child: InteractiveEpisodeGrid(
           additionalSliversList: [
             Builder(
               builder: (context) {
@@ -285,7 +267,7 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
                 return Selector<CardColorScheme, Tuple2<Color, Color>>(
                   selector: (context, cardColorScheme) => Tuple2(
                       context.realDark
-                          ? Colors.black
+                          ? context.surface
                           : cardColorScheme.saturated,
                       cardColorScheme.colorScheme.onPrimaryContainer),
                   builder: (context, data, _) => _PodcastDetailAppBar(
@@ -344,11 +326,10 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
             Sorter.enclosureDuration
           ],
           actionBarPodcast: widget.podcastLocal,
-          actionBarFilterPlayed: snapshot.data?.item2,
-          layout: snapshot.data?.item1 ?? EpisodeGridLayout.small,
-        );
-      },
-    );
+          layoutKey: podcastLayoutKey,
+          initNum: widget.initIds != null ? 0 : 1 << 32,
+          initIds: widget.initIds,
+        ));
   }
 }
 
@@ -479,50 +460,53 @@ class __PodcastDetailAppBarState extends State<_PodcastDetailAppBar>
             expandedTitleScale: titleScale,
             background: Stack(
               children: <Widget>[
-                Padding(
-                  padding: EdgeInsets.only(top: 120),
-                  child: InkWell(
-                    onTap: () => setState(() {
-                      if (_showInfo) {
-                        _showInfo = false;
-                        _slideController.reverse();
-                      } else {
-                        _showInfo = true;
-                        _slideController.forward();
-                      }
-                    }),
-                    child: Container(
-                      height: 60,
-                      padding: EdgeInsets.only(left: 40, right: 130),
-                      color: context.brightness == Brightness.light
-                          ? Color.lerp(widget.color, Colors.black, 0.08)
-                          : Color.lerp(widget.color, Colors.white, 0.12),
-                      alignment: Alignment.centerLeft,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: <Widget>[
-                                Text(widget.podcastLocal.author ?? '',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: context.textTheme.titleMedium),
-                                if (widget.podcastLocal.provider.isNotEmpty)
-                                  Text(
-                                    widget.podcastLocal.provider,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: context.textTheme.titleSmall,
-                                  ),
-                              ],
+                Container(
+                  margin: EdgeInsets.only(top: 120),
+                  color: context.brightness == Brightness.light
+                      ? Color.lerp(widget.color, Colors.black, 0.08)
+                      : Color.lerp(widget.color, Colors.white, 0.12),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => setState(() {
+                        if (_showInfo) {
+                          _showInfo = false;
+                          _slideController.reverse();
+                        } else {
+                          _showInfo = true;
+                          _slideController.forward();
+                        }
+                      }),
+                      child: Container(
+                        height: 60,
+                        padding: EdgeInsets.only(left: 40, right: 130),
+                        alignment: Alignment.centerLeft,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: <Widget>[
+                                  Text(widget.podcastLocal.author ?? '',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: context.textTheme.titleMedium),
+                                  if (widget.podcastLocal.provider.isNotEmpty)
+                                    Text(
+                                      widget.podcastLocal.provider,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: context.textTheme.titleSmall,
+                                    ),
+                                ],
+                              ),
                             ),
-                          ),
-                          UpDownIndicator(
-                              status: _showInfo, color: context.textColor),
-                        ],
+                            UpDownIndicator(
+                                status: _showInfo, color: context.textColor),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -651,9 +635,6 @@ class HostsList extends StatelessWidget {
                         if (snapshot.hasData)
                           ...snapshot.data!.item2!
                               .map<Widget>((host) {
-                                final image = host.image == kDefaultAvatar
-                                    ? kDefaultAvatar
-                                    : host.image;
                                 return Container(
                                   padding: EdgeInsets.fromLTRB(5, 10, 5, 0),
                                   width: 60.0,
@@ -662,7 +643,7 @@ class HostsList extends StatelessWidget {
                                     mainAxisSize: MainAxisSize.min,
                                     children: <Widget>[
                                       CachedNetworkImage(
-                                        imageUrl: image!,
+                                        imageUrl: host.image!,
                                         progressIndicatorBuilder:
                                             (context, url, downloadProgress) =>
                                                 CircleAvatar(

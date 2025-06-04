@@ -738,7 +738,6 @@ class ActionBarDropdownSortBy extends ActionBarSort {
     return Selector<_ActionBarSharedState, Sorter>(
       selector: (_, sharedState) => sharedState.sortBy,
       builder: (context, data, _) {
-        final row = sharedState.rows[rowIndex];
         return ActionBarDropdownButton<Sorter>(
           selected: data,
           expansionController: sharedState.expansionControllers[rowIndex],
@@ -1408,12 +1407,12 @@ class ActionBarSearchTitle extends ActionBarFilter {
   }
 }
 
-Future<Tuple2<EpisodeGridLayout, bool?>> getLayoutAndShowListened(
+Future<(EpisodeGridLayout, bool?)> getLayoutAndShowListened(
     {String layoutKey = podcastLayoutKey}) async {
   final layoutStorage = KeyValueStorage(layoutKey);
   final index = await layoutStorage.getInt(defaultValue: 1);
   EpisodeGridLayout layout = EpisodeGridLayout.values[index];
   final hideListenedStorage = KeyValueStorage(hideListenedKey);
   bool hideListened = await hideListenedStorage.getBool(defaultValue: false);
-  return Tuple2(layout, hideListened ? false : null);
+  return (layout, hideListened ? false : null);
 }

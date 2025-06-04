@@ -790,9 +790,6 @@ class EpisodeCard extends StatelessWidget {
                                       context,
                                       HidePlayerRoute(
                                         PodcastDetail(podcastLocal: podcast),
-                                        PodcastDetail(
-                                            podcastLocal: podcast, hide: true),
-                                        duration: Duration(milliseconds: 300),
                                       ),
                                     );
                                   }
