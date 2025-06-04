@@ -112,6 +112,9 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
 
   double avatarSize = 0;
 
+  bool avatarHasFocus = false;
+  Future<void> waitForAvatar = Future(() {});
+
   void _selectionListener() {
     if (mounted) {
       selected = selectionController!.selectedIndicies.contains(widget.index);
@@ -160,7 +163,10 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
         ),
         builder: (_, data, __) {
           return _FocusedMenuHolderWrapper(
-            onTapStart: () {
+            onTapStart: () async {
+              waitForAvatar = Future.delayed(Duration(milliseconds: 1));
+              await waitForAvatar;
+              if (avatarHasFocus) return;
               if (selected) {
                 _vibrateTapSelected();
               } else {
@@ -168,9 +174,12 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
               }
             },
             onTapEnd: () {
+              if (avatarHasFocus) return;
               _vibrateEnd();
             },
             onTap: () async {
+              await waitForAvatar;
+              if (avatarHasFocus) return;
               if (selectable && selectionController!.selectMode) {
                 selected = selectionController!.select(widget.index!);
                 if (selected) {
@@ -186,6 +195,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
               }
             },
             onShortTapHold: () {
+              if (avatarHasFocus) return;
               if (selectable && !selected) {
                 _vibrateLongTap();
                 if (!selectionController!.selectMode) {
@@ -198,6 +208,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
               }
             },
             onPrimaryClick: () {
+              if (avatarHasFocus) return;
               if (selectable) {
                 if (selectionController!.selectMode) {
                   selected = selectionController!.select(widget.index!);
@@ -213,10 +224,12 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
               }
             },
             onDoubleClick: () {
+              if (avatarHasFocus) return;
               _shadowController.forward();
               action();
             },
             onAddSelect: () {
+              if (avatarHasFocus) return;
               if (selectable) {
                 if (!selectionController!.selectMode) {
                   selectionController!.selectMode = true;
@@ -231,6 +244,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
               }
             },
             onRangeSelect: () {
+              if (avatarHasFocus) return;
               if (selectable) {
                 if (!selectionController!.selectMode) {
                   selectionController!.selectMode = true;
@@ -318,9 +332,10 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
               showPlayedAndDownloaded: widget.showPlayedAndDownloaded,
               showDate: widget.showDate,
               decorate: false,
-              avatarSizeCallback: (size) {
-                avatarSize = size;
-              },
+              avatarSizeCallback: (size) => avatarSize = size,
+              onTapDown: () => avatarHasFocus = true,
+              onTapUp: () => Future.delayed(
+                  Duration(milliseconds: 6), () => avatarHasFocus = false),
             ),
           );
         },
@@ -649,20 +664,31 @@ class EpisodeCard extends StatelessWidget {
   /// Callback that sends back the actual size of the avatar.
   final void Function(double)? avatarSizeCallback;
 
-  const EpisodeCard(this.episodeId, this.layout,
-      {super.key,
-      this.openPodcast = false,
-      this.showImage = true,
-      this.preferEpisodeImage = false,
-      this.showNumber = false,
-      this.showLiked = true,
-      this.showNew = true,
-      this.showLengthAndSize = true,
-      this.showPlayedAndDownloaded = true,
-      this.showDate = false,
-      this.selected = false,
-      this.decorate = true,
-      this.avatarSizeCallback});
+  /// Callback that disables card gesture callbacks
+  final VoidCallback? onTapDown;
+
+  /// Callback that reenables card gesture callbacks
+  final VoidCallback? onTapUp;
+
+  const EpisodeCard(
+    this.episodeId,
+    this.layout, {
+    super.key,
+    this.openPodcast = false,
+    this.showImage = true,
+    this.preferEpisodeImage = false,
+    this.showNumber = false,
+    this.showLiked = true,
+    this.showNew = true,
+    this.showLengthAndSize = true,
+    this.showPlayedAndDownloaded = true,
+    this.showDate = false,
+    this.selected = false,
+    this.decorate = true,
+    this.avatarSizeCallback,
+    this.onTapDown,
+    this.onTapUp,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -723,13 +749,12 @@ class EpisodeCard extends StatelessWidget {
       bool openPodcast,
       bool preferEpisodeImage, {
       required double radius,
-      void Function(double)? actualSizeCallback,
     }) =>
         LayoutBuilder(
           builder: (context, constraints) {
             double actualSize = math.min(
                 math.min(radius, constraints.maxHeight), constraints.maxWidth);
-            actualSizeCallback?.call(
+            avatarSizeCallback?.call(
               math.min(math.min(radius, constraints.maxHeight),
                   constraints.maxWidth),
             );
@@ -754,6 +779,8 @@ class EpisodeCard extends StatelessWidget {
                               color: Colors.transparent,
                               child: InkWell(
                                 borderRadius: BorderRadius.circular(actualSize),
+                                onTapDown: (details) => onTapDown?.call(),
+                                onTapUp: (details) => onTapUp?.call(),
                                 onTap: () async {
                                   DBHelper dbHelper = DBHelper();
                                   PodcastLocal? podcast = await dbHelper
@@ -965,7 +992,6 @@ class EpisodeCard extends StatelessWidget {
                           radius: layout == EpisodeGridLayout.small
                               ? context.width / 20
                               : context.width / 15,
-                          actualSizeCallback: avatarSizeCallback,
                         ),
                         SizedBox(
                           width: 5,
@@ -985,7 +1011,6 @@ class EpisodeCard extends StatelessWidget {
                               openPodcast,
                               preferEpisodeImage,
                               radius: context.width / 6,
-                              actualSizeCallback: avatarSizeCallback,
                             ),
                             SizedBox(
                               width: 5,

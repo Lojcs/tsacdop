@@ -16,28 +16,6 @@ import '../state/refresh_podcast.dart';
 import 'custom_widget.dart';
 import 'episodegrid.dart';
 
-Set<Type> _filterWidgets = {
-  ActionBarDropdownGroups,
-  ActionBarDropdownPodcasts,
-  ActionBarFilterNew,
-  ActionBarFilterLiked,
-  ActionBarFilterPlayed,
-  ActionBarFilterDownloaded,
-  ActionBarFilterDisplayVersion,
-  ActionBarSearchTitle
-};
-Set<Type> _sortWidgets = {
-  ActionBarDropdownSortBy,
-  ActionBarSwitchSortOrder,
-};
-Set<Type> _controlWidgets = {
-  ActionBarSwitchLayout,
-  ActionBarSwitchSelectMode,
-  ActionBarSwitchSecondRow,
-  ActionBarButtonRefresh,
-  ActionBarButtonRemoveNewMark,
-};
-
 /// Bar with buttons to sort, filter episodes and control view.
 /// Returns the get episodes callback with the [onGetEpisodeIdsChanged] callback.
 /// Subwidgets can be chosen by passing [widgetsFirstRow] & [widgetsFirstRow]
@@ -591,12 +569,25 @@ class ActionBarSpacer extends ActionBarWidget {
   }
 }
 
-class ActionBarDropdownGroups extends ActionBarWidget {
+sealed class ActionBarFilter extends ActionBarWidget {
+  const ActionBarFilter(super.rowIndex, super.index, {super.key});
+}
+
+sealed class ActionBarSort extends ActionBarWidget {
+  const ActionBarSort(super.rowIndex, super.index, {super.key});
+}
+
+sealed class ActionBarControl extends ActionBarWidget {
+  const ActionBarControl(super.rowIndex, super.index, {super.key});
+}
+
+class ActionBarDropdownGroups extends ActionBarFilter {
   const ActionBarDropdownGroups(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
     _ActionBarSharedState sharedState =
         Provider.of<_ActionBarSharedState>(context, listen: false);
+    final row = sharedState.rows[rowIndex];
     return Selector<_ActionBarSharedState, PodcastGroup>(
       selector: (_, sharedState) => sharedState.group,
       builder: (context, data, _) {
@@ -651,12 +642,9 @@ class ActionBarDropdownGroups extends ActionBarWidget {
           maxExpandedWidth: sharedState.maxGroupTitleWidth,
           tooltip: context.s.filterType(context.s.groups(1)),
           active: (value) => value != sharedState.groupAll,
-          connectLeft: index != 0 &&
-              _filterWidgets
-                  .contains(sharedState.rows[rowIndex][index - 1].runtimeType),
-          connectRight: index != sharedState.rows[rowIndex].length - 1 &&
-              _filterWidgets
-                  .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+          connectLeft: index != 0 && row[index - 1] is ActionBarFilter,
+          connectRight:
+              index != row.length - 1 && row[index + 1] is ActionBarFilter,
           child: Icon(Icons.all_out, color: context.actionBarIconColor),
         );
       },
@@ -664,12 +652,13 @@ class ActionBarDropdownGroups extends ActionBarWidget {
   }
 }
 
-class ActionBarDropdownPodcasts extends ActionBarWidget {
+class ActionBarDropdownPodcasts extends ActionBarFilter {
   const ActionBarDropdownPodcasts(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
     _ActionBarSharedState sharedState =
         Provider.of<_ActionBarSharedState>(context, listen: false);
+    final row = sharedState.rows[rowIndex];
     return Selector<_ActionBarSharedState, PodcastLocal>(
       selector: (_, sharedState) => sharedState.podcast,
       builder: (context, data, _) {
@@ -692,7 +681,6 @@ class ActionBarDropdownPodcasts extends ActionBarWidget {
             }
             sharedState.maxPodcastTitleWidth =
                 expandedWidth; // It's tricky to update this after the fact.
-
             return ActionBarDropdownButton<PodcastLocal>(
               selected: data,
               expansionController: sharedState.expansionControllers[rowIndex],
@@ -728,12 +716,9 @@ class ActionBarDropdownPodcasts extends ActionBarWidget {
               maxExpandedWidth: sharedState.maxPodcastTitleWidth,
               tooltip: context.s.filterType(context.s.podcast(1)),
               active: (value) => value != sharedState.podcastAll,
-              connectLeft: index != 0 &&
-                  _filterWidgets.contains(
-                      sharedState.rows[rowIndex][index - 1].runtimeType),
-              connectRight: index != sharedState.rows[rowIndex].length - 1 &&
-                  _filterWidgets.contains(
-                      sharedState.rows[rowIndex][index + 1].runtimeType),
+              connectLeft: index != 0 && row[index - 1] is ActionBarFilter,
+              connectRight:
+                  index != row.length - 1 && row[index + 1] is ActionBarFilter,
               child: Icon(Icons.podcasts, color: context.actionBarIconColor),
             );
           },
@@ -743,15 +728,17 @@ class ActionBarDropdownPodcasts extends ActionBarWidget {
   }
 }
 
-class ActionBarDropdownSortBy extends ActionBarWidget {
+class ActionBarDropdownSortBy extends ActionBarSort {
   const ActionBarDropdownSortBy(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
     _ActionBarSharedState sharedState =
         Provider.of<_ActionBarSharedState>(context, listen: false);
+    final row = sharedState.rows[rowIndex];
     return Selector<_ActionBarSharedState, Sorter>(
       selector: (_, sharedState) => sharedState.sortBy,
       builder: (context, data, _) {
+        final row = sharedState.rows[rowIndex];
         return ActionBarDropdownButton<Sorter>(
           selected: data,
           expansionController: sharedState.expansionControllers[rowIndex],
@@ -762,12 +749,9 @@ class ActionBarDropdownSortBy extends ActionBarWidget {
           },
           tooltip: context.s.sortBy,
           active: (_) => true,
-          connectLeft: index != 0 &&
-              _sortWidgets
-                  .contains(sharedState.rows[rowIndex][index - 1].runtimeType),
-          connectRight: index != sharedState.rows[rowIndex].length - 1 &&
-              _sortWidgets
-                  .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+          connectLeft: index != 0 && row[index - 1] is ActionBarSort,
+          connectRight:
+              index != row.length - 1 && row[index + 1] is ActionBarSort,
           child: _getSorterIcon(context, sharedState.sortBy),
         );
       },
@@ -871,12 +855,13 @@ Icon _getSorterIcon(BuildContext context, Sorter sorter) {
   }
 }
 
-class ActionBarFilterNew extends ActionBarWidget {
+class ActionBarFilterNew extends ActionBarFilter {
   const ActionBarFilterNew(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
     _ActionBarSharedState sharedState =
         Provider.of<_ActionBarSharedState>(context, listen: false);
+    final row = sharedState.rows[rowIndex];
     return Selector<_ActionBarSharedState, bool?>(
       selector: (_, sharedState) => sharedState.filterNew,
       builder: (context, data, _) {
@@ -889,12 +874,9 @@ class ActionBarFilterNew extends ActionBarWidget {
             sharedState.onGetEpisodeIdsChanged(sharedState.getGetEpisodes());
           },
           tooltip: context.s.filterType(context.s.newPlain),
-          connectLeft: index != 0 &&
-              _filterWidgets
-                  .contains(sharedState.rows[rowIndex][index - 1].runtimeType),
-          connectRight: index != sharedState.rows[rowIndex].length - 1 &&
-              _filterWidgets
-                  .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+          connectLeft: index != 0 && row[index - 1] is ActionBarFilter,
+          connectRight:
+              index != row.length - 1 && row[index + 1] is ActionBarFilter,
           child: SizedBox(
             height: context.actionBarButtonSizeVertical,
             width: context.actionBarButtonSizeHorizontal,
@@ -909,12 +891,13 @@ class ActionBarFilterNew extends ActionBarWidget {
   }
 }
 
-class ActionBarFilterLiked extends ActionBarWidget {
+class ActionBarFilterLiked extends ActionBarFilter {
   const ActionBarFilterLiked(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
     _ActionBarSharedState sharedState =
         Provider.of<_ActionBarSharedState>(context, listen: false);
+    final row = sharedState.rows[rowIndex];
     return Selector<_ActionBarSharedState, bool?>(
       selector: (_, sharedState) => sharedState.filterLiked,
       builder: (context, data, _) {
@@ -927,12 +910,9 @@ class ActionBarFilterLiked extends ActionBarWidget {
             sharedState.onGetEpisodeIdsChanged(sharedState.getGetEpisodes());
           },
           tooltip: context.s.filterType(context.s.liked),
-          connectLeft: index != 0 &&
-              _filterWidgets
-                  .contains(sharedState.rows[rowIndex][index - 1].runtimeType),
-          connectRight: index != sharedState.rows[rowIndex].length - 1 &&
-              _filterWidgets
-                  .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+          connectLeft: index != 0 && row[index - 1] is ActionBarFilter,
+          connectRight:
+              index != row.length - 1 && row[index + 1] is ActionBarFilter,
           child: SizedBox(
             height: context.actionBarButtonSizeVertical,
             width: context.actionBarButtonSizeHorizontal,
@@ -945,12 +925,13 @@ class ActionBarFilterLiked extends ActionBarWidget {
   }
 }
 
-class ActionBarFilterPlayed extends ActionBarWidget {
+class ActionBarFilterPlayed extends ActionBarFilter {
   const ActionBarFilterPlayed(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
     _ActionBarSharedState sharedState =
         Provider.of<_ActionBarSharedState>(context, listen: false);
+    final row = sharedState.rows[rowIndex];
     return Selector<_ActionBarSharedState, bool?>(
       selector: (_, sharedState) => sharedState.filterPlayed,
       builder: (context, data, _) {
@@ -963,12 +944,9 @@ class ActionBarFilterPlayed extends ActionBarWidget {
             sharedState.onGetEpisodeIdsChanged(sharedState.getGetEpisodes());
           },
           tooltip: context.s.filterType(context.s.listened),
-          connectLeft: index != 0 &&
-              _filterWidgets
-                  .contains(sharedState.rows[rowIndex][index - 1].runtimeType),
-          connectRight: index != sharedState.rows[rowIndex].length - 1 &&
-              _filterWidgets
-                  .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+          connectLeft: index != 0 && row[index - 1] is ActionBarFilter,
+          connectRight:
+              index != row.length - 1 && row[index + 1] is ActionBarFilter,
           child: SizedBox(
             height: context.actionBarButtonSizeVertical,
             width: context.actionBarButtonSizeHorizontal,
@@ -982,12 +960,13 @@ class ActionBarFilterPlayed extends ActionBarWidget {
   }
 }
 
-class ActionBarFilterDownloaded extends ActionBarWidget {
+class ActionBarFilterDownloaded extends ActionBarFilter {
   const ActionBarFilterDownloaded(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
     _ActionBarSharedState sharedState =
         Provider.of<_ActionBarSharedState>(context, listen: false);
+    final row = sharedState.rows[rowIndex];
     return Selector<_ActionBarSharedState, bool?>(
       selector: (_, sharedState) => sharedState.filterDownloaded,
       builder: (context, data, _) {
@@ -1000,12 +979,9 @@ class ActionBarFilterDownloaded extends ActionBarWidget {
             sharedState.onGetEpisodeIdsChanged(sharedState.getGetEpisodes());
           },
           tooltip: context.s.filterType(context.s.downloaded),
-          connectLeft: index != 0 &&
-              _filterWidgets
-                  .contains(sharedState.rows[rowIndex][index - 1].runtimeType),
-          connectRight: index != sharedState.rows[rowIndex].length - 1 &&
-              _filterWidgets
-                  .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+          connectLeft: index != 0 && row[index - 1] is ActionBarFilter,
+          connectRight:
+              index != row.length - 1 && row[index + 1] is ActionBarFilter,
           child: SizedBox(
             height: context.actionBarButtonSizeVertical,
             width: context.actionBarButtonSizeHorizontal,
@@ -1025,12 +1001,13 @@ class ActionBarFilterDownloaded extends ActionBarWidget {
   }
 }
 
-class ActionBarFilterDisplayVersion extends ActionBarWidget {
+class ActionBarFilterDisplayVersion extends ActionBarFilter {
   const ActionBarFilterDisplayVersion(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
     _ActionBarSharedState sharedState =
         Provider.of<_ActionBarSharedState>(context, listen: false);
+    final row = sharedState.rows[rowIndex];
     return Selector<_ActionBarSharedState, bool?>(
       selector: (_, sharedState) => sharedState.filterDisplayVersion,
       builder: (context, data, _) {
@@ -1043,12 +1020,9 @@ class ActionBarFilterDisplayVersion extends ActionBarWidget {
             sharedState.onGetEpisodeIdsChanged(sharedState.getGetEpisodes());
           },
           tooltip: context.s.filterType(context.s.displayVersion),
-          connectLeft: index != 0 &&
-              _filterWidgets
-                  .contains(sharedState.rows[rowIndex][index - 1].runtimeType),
-          connectRight: index != sharedState.rows[rowIndex].length - 1 &&
-              _filterWidgets
-                  .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+          connectLeft: index != 0 && row[index - 1] is ActionBarFilter,
+          connectRight:
+              index != row.length - 1 && row[index + 1] is ActionBarFilter,
           child: SizedBox(
             height: context.actionBarButtonSizeVertical,
             width: context.actionBarButtonSizeHorizontal,
@@ -1063,12 +1037,13 @@ class ActionBarFilterDisplayVersion extends ActionBarWidget {
   }
 }
 
-class ActionBarSwitchSortOrder extends ActionBarWidget {
+class ActionBarSwitchSortOrder extends ActionBarSort {
   const ActionBarSwitchSortOrder(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
     _ActionBarSharedState sharedState =
         Provider.of<_ActionBarSharedState>(context, listen: false);
+    final row = sharedState.rows[rowIndex];
     return Selector<_ActionBarSharedState, Tuple2<SortOrder, Sorter>>(
       selector: (_, sharedState) =>
           Tuple2(sharedState.sortOrder, sharedState.sortBy),
@@ -1088,12 +1063,9 @@ class ActionBarSwitchSortOrder extends ActionBarWidget {
             sharedState.onGetEpisodeIdsChanged(sharedState.getGetEpisodes());
           },
           tooltip: context.s.sortOrder,
-          connectLeft: index != 0 &&
-              _sortWidgets
-                  .contains(sharedState.rows[rowIndex][index - 1].runtimeType),
-          connectRight: index != sharedState.rows[rowIndex].length - 1 &&
-              _sortWidgets
-                  .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+          connectLeft: index != 0 && row[index - 1] is ActionBarSort,
+          connectRight:
+              index != row.length - 1 && row[index + 1] is ActionBarSort,
           child: SizedBox(
             height: context.actionBarButtonSizeVertical,
             width: context.actionBarButtonSizeHorizontal,
@@ -1112,7 +1084,7 @@ class ActionBarSwitchSortOrder extends ActionBarWidget {
   }
 }
 
-class ActionBarSwitchLayout extends ActionBarWidget {
+class ActionBarSwitchLayout extends ActionBarControl {
   const ActionBarSwitchLayout(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
@@ -1120,6 +1092,7 @@ class ActionBarSwitchLayout extends ActionBarWidget {
     double width = 30;
     _ActionBarSharedState sharedState =
         Provider.of<_ActionBarSharedState>(context, listen: false);
+    final row = sharedState.rows[rowIndex];
     return Selector<_ActionBarSharedState, EpisodeGridLayout>(
       selector: (_, sharedState) => sharedState.layout,
       builder: (context, data, _) {
@@ -1151,12 +1124,9 @@ class ActionBarSwitchLayout extends ActionBarWidget {
             bottom: (context.actionBarButtonSizeVertical - height) / 2,
           ),
           tooltip: context.s.changeLayout,
-          connectLeft: index != 0 &&
-              _controlWidgets
-                  .contains(sharedState.rows[rowIndex][index - 1].runtimeType),
-          connectRight: index != sharedState.rows[rowIndex].length - 1 &&
-              _controlWidgets
-                  .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+          connectLeft: index != 0 && row[index - 1] is ActionBarControl,
+          connectRight:
+              index != row.length - 1 && row[index + 1] is ActionBarControl,
           child: SizedBox(
             height: context.actionBarButtonSizeVertical,
             width: context.actionBarButtonSizeHorizontal,
@@ -1181,13 +1151,14 @@ class ActionBarSwitchLayout extends ActionBarWidget {
   }
 }
 
-class ActionBarSwitchSelectMode extends ActionBarWidget {
+class ActionBarSwitchSelectMode extends ActionBarControl {
   const ActionBarSwitchSelectMode(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
     double height = 10;
     _ActionBarSharedState sharedState =
         Provider.of<_ActionBarSharedState>(context, listen: false);
+    final row = sharedState.rows[rowIndex];
     if (Provider.of<SelectionController?>(context, listen: false) != null) {
       return Selector<SelectionController, bool>(
         selector: (_, selectionController) => selectionController.selectMode,
@@ -1208,12 +1179,9 @@ class ActionBarSwitchSelectMode extends ActionBarWidget {
             ),
             tooltip: context.s.selectMode,
             enabled: true,
-            connectLeft: index != 0 &&
-                _controlWidgets.contains(
-                    sharedState.rows[rowIndex][index - 1].runtimeType),
-            connectRight: index != sharedState.rows[rowIndex].length - 1 &&
-                _controlWidgets.contains(
-                    sharedState.rows[rowIndex][index + 1].runtimeType),
+            connectLeft: index != 0 && row[index - 1] is ActionBarControl,
+            connectRight:
+                index != row.length - 1 && row[index + 1] is ActionBarControl,
             child: SizedBox(
               height: context.actionBarButtonSizeVertical,
               width: context.actionBarButtonSizeHorizontal,
@@ -1241,12 +1209,9 @@ class ActionBarSwitchSelectMode extends ActionBarWidget {
         ),
         tooltip: context.s.selectMode,
         enabled: false,
-        connectLeft: index != 0 &&
-            _controlWidgets
-                .contains(sharedState.rows[rowIndex][index - 1].runtimeType),
-        connectRight: index != sharedState.rows[rowIndex].length - 1 &&
-            _controlWidgets
-                .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+        connectLeft: index != 0 && row[index - 1] is ActionBarControl,
+        connectRight:
+            index != row.length - 1 && row[index + 1] is ActionBarControl,
         child: SizedBox(
           height: context.actionBarButtonSizeVertical,
           width: context.actionBarButtonSizeHorizontal,
@@ -1261,12 +1226,13 @@ class ActionBarSwitchSelectMode extends ActionBarWidget {
   }
 }
 
-class ActionBarSwitchSecondRow extends ActionBarWidget {
+class ActionBarSwitchSecondRow extends ActionBarControl {
   const ActionBarSwitchSecondRow(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
     _ActionBarSharedState sharedState =
         Provider.of<_ActionBarSharedState>(context, listen: false);
+    final row = sharedState.rows[rowIndex];
     return Selector<_ActionBarSharedState, bool>(
       selector: (_, sharedState) => sharedState.expandSecondRow,
       builder: (context, data, _) {
@@ -1289,12 +1255,9 @@ class ActionBarSwitchSecondRow extends ActionBarWidget {
           },
           tooltip: context.s.moreOptions,
           animation: sharedState.switchSecondRowController,
-          connectLeft: index != 0 &&
-              _controlWidgets
-                  .contains(sharedState.rows[rowIndex][index - 1].runtimeType),
-          connectRight: index != sharedState.rows[rowIndex].length - 1 &&
-              _controlWidgets
-                  .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+          connectLeft: index != 0 && row[index - 1] is ActionBarControl,
+          connectRight:
+              index != row.length - 1 && row[index + 1] is ActionBarControl,
           child: SizedBox(
             height: context.actionBarButtonSizeVertical,
             width: context.actionBarButtonSizeHorizontal,
@@ -1307,13 +1270,13 @@ class ActionBarSwitchSecondRow extends ActionBarWidget {
   }
 }
 
-class ActionBarButtonRefresh extends ActionBarWidget {
+class ActionBarButtonRefresh extends ActionBarControl {
   const ActionBarButtonRefresh(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
     _ActionBarSharedState sharedState =
         Provider.of<_ActionBarSharedState>(context, listen: false);
-
+    final row = sharedState.rows[rowIndex];
     return ActionBarButton(
       expansionController: sharedState.expansionControllers[rowIndex],
       buttonType: ActionBarButtonType.single,
@@ -1352,12 +1315,9 @@ class ActionBarButtonRefresh extends ActionBarWidget {
       },
       tooltip: context.s.refresh,
       animation: sharedState.buttonRefreshController,
-      connectLeft: index != 0 &&
-          _controlWidgets
-              .contains(sharedState.rows[rowIndex][index - 1].runtimeType),
-      connectRight: index != sharedState.rows[rowIndex].length - 1 &&
-          _controlWidgets
-              .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+      connectLeft: index != 0 && row[index - 1] is ActionBarControl,
+      connectRight:
+          index != row.length - 1 && row[index + 1] is ActionBarControl,
       child: SizedBox(
         height: context.actionBarButtonSizeVertical,
         width: context.actionBarButtonSizeHorizontal,
@@ -1367,12 +1327,13 @@ class ActionBarButtonRefresh extends ActionBarWidget {
   }
 }
 
-class ActionBarButtonRemoveNewMark extends ActionBarWidget {
+class ActionBarButtonRemoveNewMark extends ActionBarControl {
   const ActionBarButtonRemoveNewMark(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
     _ActionBarSharedState sharedState =
         Provider.of<_ActionBarSharedState>(context, listen: false);
+    final row = sharedState.rows[rowIndex];
     return Selector<_ActionBarSharedState, (bool, List<int>)>(
       selector: (_, sharedState) {
         List<int> newEpisodes = sharedState.newEpisodeIds;
@@ -1396,12 +1357,9 @@ class ActionBarButtonRemoveNewMark extends ActionBarWidget {
           tooltip: context.s.removeNewMark,
           enabled: data.$1,
           animation: sharedState.buttonRemoveNewMarkController,
-          connectLeft: index != 0 &&
-              _controlWidgets
-                  .contains(sharedState.rows[rowIndex][index - 1].runtimeType),
-          connectRight: index != sharedState.rows[rowIndex].length - 1 &&
-              _controlWidgets
-                  .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+          connectLeft: index != 0 && row[index - 1] is ActionBarControl,
+          connectRight:
+              index != row.length - 1 && row[index + 1] is ActionBarControl,
           child: SizedBox(
             height: context.actionBarButtonSizeVertical,
             width: context.actionBarButtonSizeHorizontal,
@@ -1424,12 +1382,13 @@ class ActionBarButtonRemoveNewMark extends ActionBarWidget {
   }
 }
 
-class ActionBarSearchTitle extends ActionBarWidget {
+class ActionBarSearchTitle extends ActionBarFilter {
   const ActionBarSearchTitle(super.rowIndex, super.index, {super.key});
   @override
   Widget build(BuildContext context) {
     _ActionBarSharedState sharedState =
         Provider.of<_ActionBarSharedState>(context, listen: false);
+    final row = sharedState.rows[rowIndex];
     return Selector<_ActionBarSharedState, String>(
       selector: (_, sharedState) => sharedState.searchTitleQuery,
       builder: (context, data, _) {
@@ -1440,12 +1399,9 @@ class ActionBarSearchTitle extends ActionBarWidget {
             sharedState.searchTitleQuery = value;
             sharedState.onGetEpisodeIdsChanged(sharedState.getGetEpisodes());
           },
-          connectLeft: index != 0 &&
-              _filterWidgets
-                  .contains(sharedState.rows[rowIndex][index - 1].runtimeType),
-          connectRight: index != sharedState.rows[rowIndex].length - 1 &&
-              _filterWidgets
-                  .contains(sharedState.rows[rowIndex][index + 1].runtimeType),
+          connectLeft: index != 0 && row[index - 1] is ActionBarFilter,
+          connectRight:
+              index != row.length - 1 && row[index + 1] is ActionBarFilter,
         );
       },
     );

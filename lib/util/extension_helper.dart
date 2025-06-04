@@ -95,7 +95,8 @@ extension ContextExtension on BuildContext {
       realDark ? surface : cardColorScheme.selected;
   Color get cardColorSchemeSaturated =>
       realDark ? surface : cardColorScheme.saturated;
-  Color get cardColorSchemeFaded => realDark ? surface : cardColorScheme.faded;
+  Color get cardColorSchemeFaded =>
+      realDark ? surface : cardColorScheme.progress;
   Color get cardColorSchemeShadow =>
       realDark ? surface : cardColorScheme.shadow;
 

@@ -181,8 +181,8 @@ class EpisodeBrief extends Equatable {
     return context.realDark
         ? context.surface
         : context.brightness == Brightness.light
-            ? cardColorSchemeLight.faded
-            : cardColorSchemeDark.faded;
+            ? cardColorSchemeLight.progress
+            : cardColorSchemeDark.progress;
   }
 
   late final ColorScheme colorSchemeLight = ColorScheme.fromSeed(
