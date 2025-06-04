@@ -699,7 +699,7 @@ class ActionBarDropdownPodcasts extends ActionBarFilter {
                       child: Tooltip(
                         message: podcast.title,
                         child: Text(
-                          podcast.title!,
+                          podcast.title,
                           style: Theme.of(context).textTheme.titleMedium,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

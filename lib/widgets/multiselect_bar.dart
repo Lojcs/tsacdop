@@ -917,7 +917,7 @@ class _PlaylistList extends StatelessWidget {
                             ),
                           ),
                           SizedBox(width: 10),
-                          Text(p.name!),
+                          Text(p.name),
                         ],
                       ),
                       onTap: () => onPlaylistChanged(p),

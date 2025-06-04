@@ -876,12 +876,12 @@ class _ChaptersWidgetState extends State<ChaptersWidget> {
   }
 
   Future<List<Chapters>?> _getChapters(EpisodeBrief episode) async {
-    if (episode.chapterLink == '' || episode.chapterLink == null) {
+    if (episode.chapterLink == '') {
       return [];
     }
     try {
       final file =
-          await DefaultCacheManager().getSingleFile(episode.chapterLink!);
+          await DefaultCacheManager().getSingleFile(episode.chapterLink);
       final response = file.readAsStringSync();
       var chapterInfo = ChapterInfo.fromJson(jsonDecode(response));
       return chapterInfo.chapters;
@@ -1014,7 +1014,7 @@ class _ChaptersWidgetState extends State<ChaptersWidget> {
                   : ListView(
                       padding: EdgeInsets.zero,
                       children: <Widget>[
-                        if (episode!.episodeImage != '' &&
+                        if (episode.episodeImage != '' &&
                             episode.enclosureUrl.substring(0, 4) != "file")
                           ClipRRect(
                             borderRadius: BorderRadius.circular(10.0),
@@ -1022,7 +1022,7 @@ class _ChaptersWidgetState extends State<ChaptersWidget> {
                                 width: 100,
                                 fit: BoxFit.fitWidth,
                                 alignment: Alignment.center,
-                                imageUrl: episode.episodeImage!,
+                                imageUrl: episode.episodeImage,
                                 placeholderFadeInDuration: Duration.zero,
                                 progressIndicatorBuilder: (context, url,
                                         downloadProgress) =>
@@ -1519,7 +1519,7 @@ class _ControlPanelState extends State<ControlPanel>
                                 tp.layout(maxWidth: size.maxWidth);
                                 if (tp.didExceedMaxLines) {
                                   return Marquee(
-                                    text: title!,
+                                    text: title,
                                     style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 20),
@@ -1539,7 +1539,7 @@ class _ControlPanelState extends State<ControlPanel>
                                   );
                                 } else {
                                   return Text(
-                                    title!,
+                                    title,
                                     maxLines: 1,
                                     style: context.textTheme.titleLarge!
                                         .copyWith(fontWeight: FontWeight.bold),

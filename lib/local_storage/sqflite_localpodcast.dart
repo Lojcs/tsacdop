@@ -9,7 +9,6 @@ import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
-import '../state/episode_state.dart';
 import '../util/extension_helper.dart';
 import 'package:tuple/tuple.dart';
 import 'package:webfeed/webfeed.dart';
@@ -909,12 +908,8 @@ class DBHelper {
       episode.versions!.add(episode.id);
       return [episode];
     }
-    List<int> otherVersionIds =
-        results.map<int>((result) => result['id']).toList();
-    otherVersionIds.remove(episode.id);
-    List<EpisodeBrief> versions =
-        await getEpisodes(episodeIds: otherVersionIds);
-    versions.add(episode);
+    List<int> versionIds = results.map<int>((result) => result['id']).toList();
+    List<EpisodeBrief> versions = await getEpisodes(episodeIds: versionIds);
     versions = versions.map((e) => e.copyWith(versions: [])).toList();
     for (EpisodeBrief version1 in versions) {
       for (EpisodeBrief version2 in versions) {

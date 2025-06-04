@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 
 import '../state/audio_state.dart';
 import '../state/episode_state.dart';
-import '../type/episodebrief.dart';
 import '../type/playlist.dart';
 import '../util/extension_helper.dart';
 import 'custom_widget.dart';

@@ -10,7 +10,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
 import '../local_storage/key_value_storage.dart';
-import '../state/episode_state.dart';
 import '../util/selection_controller.dart';
 import '../widgets/action_bar.dart';
 import 'package:tuple/tuple.dart';
@@ -24,7 +23,6 @@ import '../type/episodebrief.dart';
 import '../util/extension_helper.dart';
 import '../widgets/audiopanel.dart';
 import '../widgets/custom_popupmenu.dart';
-import '../widgets/custom_widget.dart';
 import '../widgets/episodegrid.dart';
 import '../widgets/feature_discovery.dart';
 import '../widgets/multiselect_bar.dart';
@@ -556,27 +554,21 @@ class _RecentUpdateState extends State<_RecentUpdate>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return FutureBuilder<(EpisodeGridLayout, bool?)>(
-      future: getLayoutAndShowListened(layoutKey: recentLayoutKey),
-      builder: (_, snapshot) {
-        return InteractiveEpisodeGrid(
-          noEpisodesWidget: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Icon(LineIcons.alternateCloudDownload,
-                  size: 80, color: Colors.grey[500]),
-              Padding(padding: EdgeInsets.symmetric(vertical: 10)),
-              Text(
-                context.s.noEpisodeRecent,
-                style: TextStyle(color: Colors.grey[500]),
-              )
-            ],
-          ),
-          openPodcast: true,
-          actionBarFilterPlayed: snapshot.data?.$2,
-          layout: snapshot.data?.$1 ?? EpisodeGridLayout.small,
-        );
-      },
+    return InteractiveEpisodeGrid(
+      noEpisodesWidget: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Icon(LineIcons.alternateCloudDownload,
+              size: 80, color: Colors.grey[500]),
+          Padding(padding: EdgeInsets.symmetric(vertical: 10)),
+          Text(
+            context.s.noEpisodeRecent,
+            style: TextStyle(color: Colors.grey[500]),
+          )
+        ],
+      ),
+      openPodcast: true,
+      layoutKey: recentLayoutKey,
     );
   }
 
@@ -594,44 +586,41 @@ class _MyFavoriteState extends State<_MyFavorite>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return FutureBuilder<(EpisodeGridLayout, bool?)>(
-      future: getLayoutAndShowListened(layoutKey: favLayoutKey),
-      builder: (_, snapshot) {
-        return InteractiveEpisodeGrid(
-          noEpisodesWidget: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Icon(LineIcons.heartbeat, size: 80, color: Colors.grey[500]),
-              Padding(padding: EdgeInsets.symmetric(vertical: 10)),
-              Text(
-                context.s.noEpisodeFavorite,
-                style: TextStyle(color: Colors.grey[500]),
-              )
-            ],
-          ),
-          openPodcast: true,
-          actionBarWidgetsFirstRow: const [
-            ActionBarDropdownSortBy(0, 0),
-            ActionBarSwitchSortOrder(0, 1),
-            ActionBarDropdownGroups(0, 2),
-            ActionBarSpacer(0, 3),
-            ActionBarFilterLiked(0, 4),
-            ActionBarSwitchLayout(0, 5),
-            ActionBarSwitchSelectMode(0, 6),
-          ],
-          actionBarWidgetsSecondRow: [],
-          actionBarSortByItems: const [
-            Sorter.likedDate,
-            Sorter.pubDate,
-            Sorter.enclosureSize,
-            Sorter.enclosureDuration
-          ],
-          actionBarSortBy: Sorter.likedDate,
-          actionBarFilterLiked: true,
-          actionBarFilterDisplayVersion: null,
-          layout: snapshot.data?.$1 ?? EpisodeGridLayout.small,
-        );
-      },
+    return InteractiveEpisodeGrid(
+      noEpisodesWidget: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Icon(LineIcons.heartbeat, size: 80, color: Colors.grey[500]),
+          Padding(padding: EdgeInsets.symmetric(vertical: 10)),
+          Text(
+            context.s.noEpisodeFavorite,
+            style: TextStyle(color: Colors.grey[500]),
+          )
+        ],
+      ),
+      openPodcast: true,
+      actionBarWidgetsFirstRow: const [
+        ActionBarDropdownSortBy(0, 0),
+        ActionBarSwitchSortOrder(0, 1),
+        ActionBarDropdownGroups(0, 2),
+        ActionBarSpacer(0, 3),
+        ActionBarFilterLiked(0, 4),
+        ActionBarSwitchLayout(0, 5),
+        ActionBarSwitchSelectMode(0, 6),
+      ],
+      actionBarWidgetsSecondRow: [],
+      actionBarSortByItems: const [
+        Sorter.likedDate,
+        Sorter.pubDate,
+        Sorter.enclosureSize,
+        Sorter.enclosureDuration
+      ],
+      actionBarSortBy: Sorter.likedDate,
+      actionBarFilterLiked: true,
+      actionBarFilterDisplayVersion: null,
+      actionBarFilterPlayed: null,
+      actionBarFilterPlayedOverride: true,
+      layoutKey: favLayoutKey,
     );
   }
 
@@ -649,52 +638,49 @@ class _MyDownloadState extends State<_MyDownload>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return FutureBuilder<(EpisodeGridLayout, bool?)>(
-      future: getLayoutAndShowListened(layoutKey: downloadLayoutKey),
-      builder: (_, snapshot) {
-        return InteractiveEpisodeGrid(
-          additionalSliversList: [DownloadList()],
-          sliverInsertIndicies: (
-            actionBarIndex: 0,
-            loadingIndicatorIndex: 1,
-            gridIndex: 3
-          ),
-          noEpisodesWidget: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Icon(LineIcons.download, size: 80, color: Colors.grey[500]),
-              Padding(padding: EdgeInsets.symmetric(vertical: 10)),
-              Text(
-                context.s.noEpisodeDownload,
-                style: TextStyle(color: Colors.grey[500]),
-              )
-            ],
-          ),
-          openPodcast: true,
-          refreshNotifier: Provider.of<DownloadState>(context, listen: false),
-          actionBarWidgetsFirstRow: const [
-            ActionBarDropdownSortBy(0, 0),
-            ActionBarSwitchSortOrder(0, 1),
-            ActionBarDropdownGroups(0, 2),
-            ActionBarSpacer(0, 3),
-            ActionBarFilterPlayed(0, 4),
-            ActionBarFilterDownloaded(0, 5),
-            ActionBarSwitchLayout(0, 6),
-            ActionBarSwitchSelectMode(0, 7),
-          ],
-          actionBarWidgetsSecondRow: [],
-          actionBarSortByItems: const [
-            Sorter.downloadDate,
-            Sorter.pubDate,
-            Sorter.enclosureSize,
-            Sorter.enclosureDuration
-          ],
-          actionBarSortBy: Sorter.downloadDate,
-          actionBarFilterDownloaded: true,
-          actionBarFilterDisplayVersion: null,
-          layout: snapshot.data?.$1 ?? EpisodeGridLayout.small,
-        );
-      },
+    return InteractiveEpisodeGrid(
+      additionalSliversList: [DownloadList()],
+      sliverInsertIndicies: (
+        actionBarIndex: 0,
+        loadingIndicatorIndex: 1,
+        gridIndex: 3
+      ),
+      noEpisodesWidget: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Icon(LineIcons.download, size: 80, color: Colors.grey[500]),
+          Padding(padding: EdgeInsets.symmetric(vertical: 10)),
+          Text(
+            context.s.noEpisodeDownload,
+            style: TextStyle(color: Colors.grey[500]),
+          )
+        ],
+      ),
+      openPodcast: true,
+      refreshNotifier: Provider.of<DownloadState>(context, listen: false),
+      actionBarWidgetsFirstRow: const [
+        ActionBarDropdownSortBy(0, 0),
+        ActionBarSwitchSortOrder(0, 1),
+        ActionBarDropdownGroups(0, 2),
+        ActionBarSpacer(0, 3),
+        ActionBarFilterPlayed(0, 4),
+        ActionBarFilterDownloaded(0, 5),
+        ActionBarSwitchLayout(0, 6),
+        ActionBarSwitchSelectMode(0, 7),
+      ],
+      actionBarWidgetsSecondRow: [],
+      actionBarSortByItems: const [
+        Sorter.downloadDate,
+        Sorter.pubDate,
+        Sorter.enclosureSize,
+        Sorter.enclosureDuration
+      ],
+      actionBarSortBy: Sorter.downloadDate,
+      actionBarFilterDownloaded: true,
+      actionBarFilterDisplayVersion: null,
+      actionBarFilterPlayed: null,
+      actionBarFilterPlayedOverride: true,
+      layoutKey: favLayoutKey,
     );
   }
 

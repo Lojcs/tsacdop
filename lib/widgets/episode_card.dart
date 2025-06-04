@@ -134,6 +134,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
     _shadowController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 200));
     selectionController?.addListener(_selectionListener);
+    if (selected) _controller.value = 1;
   }
 
   @override
@@ -154,9 +155,9 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
       onClosed: (() {
         _shadowController.reverse();
       }),
-      closedBuilder: (context, action) => Selector2<AudioPlayerNotifier,
-          SelectionController?, (bool, bool, bool)>(
-        selector: (_, audio, select) => (
+      closedBuilder: (context, action) =>
+          Selector<AudioPlayerNotifier, (bool, bool, bool)>(
+        selector: (_, audio) => (
           audio.episodeId == widget.episodeId,
           audio.playlist.contains(widget.episodeId),
           audio.playerRunning,

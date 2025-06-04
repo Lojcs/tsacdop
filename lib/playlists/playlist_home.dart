@@ -789,7 +789,7 @@ class _PlaylistsState extends State<_Playlists> {
                                         .episodeOrPodcastImageProvider),
                               ),
                       ),
-                      title: Text(data.item1[index].name!),
+                      title: Text(data.item1[index].name),
                       subtitle: Text(
                           '${data.item1[index].length} ${s.episode(data.item1[index].length).toLowerCase()}'),
                       trailing: TextButton(

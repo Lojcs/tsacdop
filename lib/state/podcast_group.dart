@@ -581,7 +581,7 @@ Future<void> subIsolateEntryPoint(SendPort sendPort) async {
 
   Future<void> subscribe(SubscribeItem item) async {
     var dbHelper = DBHelper();
-    var rss = item.url!;
+    var rss = item.url;
     sendPort.send([item.title, item.url, 1]);
     var options = BaseOptions(
       connectTimeout: Duration(seconds: 30),
@@ -628,7 +628,7 @@ Future<void> subIsolateEntryPoint(SendPort sendPort) async {
           thumbnail = img.copyResize(image, width: 300);
         } catch (e) {
           try {
-            var imageResponse = await Dio().get<List<int>>(item.imgUrl!,
+            var imageResponse = await Dio().get<List<int>>(item.imgUrl,
                 options: Options(
                   responseType: ResponseType.bytes,
                   receiveTimeout: Duration(seconds: 90),

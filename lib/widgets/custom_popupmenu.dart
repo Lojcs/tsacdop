@@ -636,13 +636,13 @@ class MyPopupMenuButtonState<T> extends State<MyPopupMenuButton<T>> {
 
 class MyPopupMenuItem<int> extends PopupMenuEntry<int> {
   const MyPopupMenuItem({
-    Key? key,
+    super.key,
     this.value,
     this.enabled = true,
     this.height = kMinInteractiveDimension,
     this.textStyle,
     required this.child,
-  }) : super(key: key);
+  });
 
   final int? value;
 

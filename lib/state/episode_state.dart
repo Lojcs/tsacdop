@@ -120,7 +120,7 @@ class EpisodeState extends ChangeNotifier {
   Future<void> populateEpisodeVersions(int id) async {
     assert(_episodeMap.keys.contains(id), "Populate called with unknown id");
     List<EpisodeBrief> versions =
-        await _dbHelper.populateReturnVersions(_episodeMap[id]!);
+        await _dbHelper.populateReturnVersions(_episodeMap[id]!, force: true);
     for (var version in versions) {
       _episodeMap[version.id] = version;
     }
@@ -258,6 +258,7 @@ class EpisodeState extends ChangeNotifier {
 
   /// Sets the display version for all non downloaded versions of the episode
   Future<void> setDisplayVersion(int id) async {
+    print(_episodeMap[id]!.isDisplayVersion);
     assert(_episodeMap.keys.contains(id),
         "setDisplayVersion called with unknown id");
     await _dbHelper.setDisplayVersion(_episodeMap[id]!);
@@ -266,5 +267,6 @@ class EpisodeState extends ChangeNotifier {
     changedIds.addAll(_episodeMap[id]!.versions!.toList());
     globalChange = !globalChange;
     notifyListeners();
+    print(_episodeMap[id]!.isDisplayVersion);
   }
 }

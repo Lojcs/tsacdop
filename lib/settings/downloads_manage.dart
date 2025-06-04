@@ -282,15 +282,15 @@ class _DownloadsManageState extends State<DownloadsManage> {
                             subtitle: Row(
                               children: [
                                 Text(_downloadDateToString(context,
-                                    downloadDate: eState[_episodeIds[index]]
-                                        .downloadDate!,
+                                    downloadDate:
+                                        eState[_episodeIds[index]].downloadDate,
                                     pubDate:
                                         eState[_episodeIds[index]].pubDate)),
                                 SizedBox(width: 20),
                                 if (eState[_episodeIds[index]].enclosureSize !=
                                     0)
                                   Text(
-                                      '${eState[_episodeIds[index]].enclosureSize! ~/ 1000000} Mb'),
+                                      '${eState[_episodeIds[index]].enclosureSize ~/ 1000000} Mb'),
                               ],
                             ),
                             trailing: Checkbox(

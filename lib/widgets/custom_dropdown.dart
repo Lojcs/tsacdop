@@ -1458,7 +1458,7 @@ class DropdownButtonFormField<T> extends FormField<T?> {
   ///
   /// The [DropdownButton] [items] parameters must not be null.
   DropdownButtonFormField({
-    Key? key,
+    super.key,
     T? value,
     required List<DropdownMenuItem<T>> items,
     DropdownButtonBuilder? selectedItemBuilder,
@@ -1466,8 +1466,8 @@ class DropdownButtonFormField<T> extends FormField<T?> {
     required this.onChanged,
     VoidCallback? onTap,
     this.decoration = const InputDecoration(),
-    FormFieldSetter<T>? onSaved,
-    FormFieldValidator<T>? validator,
+    super.onSaved,
+    super.validator,
     bool autovalidate = false,
     Widget? disabledHint,
     int elevation = 8,
@@ -1493,10 +1493,7 @@ class DropdownButtonFormField<T> extends FormField<T?> {
         ),
         assert(itemHeight == null || itemHeight > 0),
         super(
-          key: key,
-          onSaved: onSaved,
           initialValue: value,
-          validator: validator,
           autovalidateMode: AutovalidateMode.onUserInteraction,
           builder: (field) {
             final state = field as _DropdownButtonFormFieldState<T>;

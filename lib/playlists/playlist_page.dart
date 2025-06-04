@@ -50,7 +50,7 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
           _selectedEpisodes.isEmpty
               ? widget.playlist.isQueue
                   ? s.queue
-                  : widget.playlist.name!
+                  : widget.playlist.name
               : s.selected(_selectedEpisodes.length),
           style: context.textTheme.headlineSmall,
         ),
@@ -343,7 +343,7 @@ class __PlaylistSettingState extends State<_PlaylistSetting> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (!widget.playlist.isLocal!)
+        if (!widget.playlist.isLocal)
           ListTile(
             onTap: () {
               setState(() => _clearConfirm = true);

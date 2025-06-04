@@ -567,7 +567,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                     value: e,
                     child: Selector<EpisodeState, bool>(
                       selector: (_, episodeState) =>
-                          episodeState[episodeId].isDisplayVersion,
+                          episodeState[e].isDisplayVersion,
                       builder: (context, value, _) => Text(
                         "${context.s.published(formateDate(episodeState[e].pubDate))} ${((episodeState[e].pubDate ~/ 1000) % 1440).toTime}",
                         style: TextStyle(

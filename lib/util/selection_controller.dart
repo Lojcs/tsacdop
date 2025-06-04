@@ -1,7 +1,5 @@
 import 'package:flutter/widgets.dart';
 
-import '../type/episodebrief.dart';
-
 /// Coordinates the selection behavior of [EpisodeGrid] and [MultiSelectPanel].
 ///
 /// [selectedEpisodes] is the list of episodes that are selected. Its subsets are:

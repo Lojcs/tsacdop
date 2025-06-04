@@ -154,12 +154,13 @@ class InteractiveEpisodeGrid extends StatefulWidget {
     ],
     this.actionBarWidgetsSecondRow = const [
       ActionBarDropdownPodcasts(1, 0),
-      ActionBarSearchTitle(1, 1),
-      ActionBarSpacer(1, 2),
-      ActionBarFilterDownloaded(1, 3),
-      ActionBarFilterLiked(1, 4),
-      ActionBarSwitchLayout(1, 5),
-      ActionBarButtonRefresh(1, 6),
+      ActionBarFilterDisplayVersion(1, 1),
+      ActionBarSearchTitle(1, 2),
+      ActionBarSpacer(1, 3),
+      ActionBarFilterDownloaded(1, 4),
+      ActionBarFilterLiked(1, 5),
+      ActionBarSwitchLayout(1, 6),
+      ActionBarButtonRefresh(1, 7),
     ],
     this.actionBarSortByItems = const [
       Sorter.pubDate,
@@ -246,17 +247,20 @@ class _InteractiveEpisodeGridState extends State<InteractiveEpisodeGrid> {
     return NotificationListener<ScrollNotification>(
       onNotification: (scrollInfo) {
         if (scrollInfo.metrics.pixels >=
-                scrollInfo.metrics.maxScrollExtent - context.width &&
+                scrollInfo.metrics.maxScrollExtent - (context.height * 2) &&
             _episodeIds.length == _top) {
           if (!_loadMore) {
+            setState(() => _loadMore = true);
             Future.microtask(() async {
-              _episodeIds.addAll(await _getEpisodeIds(36, offset: _top));
-              _top = _top + 36;
+              int newCount = 9 * (_top ~/ 36);
+              _episodeIds.addAll(await _getEpisodeIds(newCount, offset: _top));
+              _top = _top + newCount;
               if (mounted && context.mounted) {
                 SelectionController? selectionController =
                     Provider.of<SelectionController?>(context, listen: false);
                 if (selectionController != null) {
-                  selectionController.setSelectableEpisodes(_episodeIds);
+                  selectionController.setSelectableEpisodes(_episodeIds,
+                      compatible: true);
                 }
                 setState(() => _loadMore = false);
               }
