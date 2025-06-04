@@ -309,13 +309,20 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                 ),
                               ],
                             ),
-                          )
+                          ),
+                          Selector<AudioPlayerNotifier, (bool, PlayerHeight?)>(
+                            selector: (_, audio) =>
+                                (audio.playerRunning, audio.playerHeight),
+                            builder: (_, data, __) {
+                              var height =
+                                  kMinPlayerHeight[data.$2?.index ?? 0];
+                              return SizedBox(height: data.$1 ? height : 0);
+                            },
+                          ),
                         ],
                       ),
                     ),
-                    Container(
-                      child: PlayerWidget(playerKey: _playerKey),
-                    )
+                    PlayerWidget(playerKey: _playerKey),
                   ]),
                 ),
               ),

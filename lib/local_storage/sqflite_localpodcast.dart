@@ -640,16 +640,16 @@ class DBHelper {
     return playHistory;
   }
 
-  /// Sets the episodes as not liked
-  Future<int?> unsetLiked(List<int> ids) async {
+  /// Sets the episodes as not listened
+  Future<int?> unsetListened(List<String> urls) async {
     var dbClient = await database;
     int? count = await dbClient.rawUpdate(
-        "UPDATE OR IGNORE PlayHistory SET listen_time = 0 WHERE id IN (${(", ?" * ids.length).substring(2)})",
-        ids);
+        "UPDATE OR IGNORE PlayHistory SET listen_time = 0 WHERE enclosure_url IN (${(", ?" * urls.length).substring(2)})",
+        urls);
     await dbClient.rawDelete(
-        'DELETE FROM PlayHistory WHERE id in (${(", ?" * ids.length).substring(2)}) '
+        'DELETE FROM PlayHistory WHERE enclosure_url in (${(", ?" * urls.length).substring(2)}) '
         'AND listen_time = 0 AND seconds = 0',
-        ids);
+        urls);
     return count;
   }
 

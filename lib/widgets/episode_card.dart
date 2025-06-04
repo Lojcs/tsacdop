@@ -100,8 +100,6 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   late AnimationController _controller;
   late AnimationController _shadowController;
 
-  PlayHistory? savedPosition;
-
   late SelectionController? selectionController =
       Provider.of<SelectionController?>(context, listen: false);
   late SettingState settings =
@@ -114,6 +112,17 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
 
   double avatarSize = 0;
 
+  void _selectionListener() {
+    if (mounted) {
+      selected = selectionController!.selectedIndicies.contains(widget.index);
+      if (selected) {
+        _controller.forward();
+      } else {
+        _controller.reverse();
+      }
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -121,6 +130,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
         vsync: this, duration: const Duration(milliseconds: 200));
     _shadowController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 200));
+    selectionController?.addListener(_selectionListener);
   }
 
   @override
@@ -142,21 +152,13 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
         _shadowController.reverse();
       }),
       closedBuilder: (context, action) => Selector2<AudioPlayerNotifier,
-          SelectionController?, (bool, bool, bool, bool)>(
+          SelectionController?, (bool, bool, bool)>(
         selector: (_, audio, select) => (
           audio.episodeId == widget.episodeId,
           audio.playlist.contains(widget.episodeId),
           audio.playerRunning,
-          select?.selectedIndicies.contains(widget.index) ?? false,
         ),
         builder: (_, data, __) {
-          selected = data.$4;
-          if (selected) {
-            _controller.forward();
-          } else {
-            _controller.reverse();
-          }
-          if (data.$1) savedPosition = null;
           return _FocusedMenuHolderWrapper(
             onTapStart: () {
               if (selected) {
@@ -288,14 +290,17 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                       animator: _controller,
                     ),
                   )
-                : FutureBuilder<PlayHistory>(
-                    future: _getSavedPosition(),
-                    // initialData: PlayHistory("", "", 0, 0),
-                    builder: (context, snapshot) => _ProgressLowerlay(
-                      widget.episodeId,
-                      snapshot.hasData ? snapshot.data!.seekValue! : 0,
-                      widget.layout,
-                      animator: _controller,
+                : Selector<EpisodeState, bool>(
+                    selector: (_, eState) => eState[widget.episodeId].isPlayed,
+                    builder: (_, played, __) => FutureBuilder<PlayHistory>(
+                      future: _getSavedPosition(),
+                      // initialData: PlayHistory("", "", 0, 0),
+                      builder: (context, snapshot) => _ProgressLowerlay(
+                        widget.episodeId,
+                        snapshot.hasData ? snapshot.data!.seekValue! : 0,
+                        widget.layout,
+                        animator: _controller,
+                      ),
                     ),
                   ),
             controller: _controller,
@@ -390,12 +395,9 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
     await Vibration.cancel();
   }
 
-  Future<PlayHistory> _getSavedPosition() async {
-    if (savedPosition == null) {
-      DBHelper dbHelper = DBHelper();
-      savedPosition = await dbHelper.getPosition(eState[widget.episodeId]);
-    }
-    return savedPosition!;
+  Future<PlayHistory> _getSavedPosition() {
+    DBHelper dbHelper = DBHelper();
+    return dbHelper.getPosition(eState[widget.episodeId]);
   }
 }
 

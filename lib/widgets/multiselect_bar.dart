@@ -92,7 +92,6 @@ class _MultiSelectPanelIntegrationState
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         Container(
-          alignment: Alignment.bottomCenter,
           constraints: BoxConstraints.loose(Size(context.width, 400)),
           height: (previewHeight + multiSelectHeight + 8) *
               _slideAnimation.value.clamp(0, 1),
@@ -119,14 +118,6 @@ class _MultiSelectPanelIntegrationState
               ),
             ),
           ),
-        ),
-        Selector<AudioPlayerNotifier, Tuple2<bool, PlayerHeight?>>(
-          selector: (_, audio) =>
-              Tuple2(audio.playerRunning, audio.playerHeight),
-          builder: (_, data, __) {
-            var height = kMinPlayerHeight[data.item2!.index];
-            return SizedBox(height: data.item1 ? height : 0);
-          },
         ),
       ],
     );
@@ -173,7 +164,7 @@ class _SelectionPreviewState extends State<SelectionPreview>
         Provider.of<SelectionController>(context, listen: false);
     selectMode = selectionController.selectMode;
     selectionController.addListener(() {
-      if (selectMode != selectionController.selectMode) {
+      if (mounted && selectMode != selectionController.selectMode) {
         selectMode = selectionController.selectMode;
         if (!selectionController.selectMode) {
           expanded = false;
@@ -193,6 +184,7 @@ class _SelectionPreviewState extends State<SelectionPreview>
   Widget build(BuildContext context) {
     Widget child = SizedBox(
       height: bodyHeight + iconButtonSize + 8,
+      width: context.width,
       child: Selector<CardColorScheme, Tuple3<Color, Color, Color>>(
         selector: (_, cardColorScheme) => Tuple3(
           cardColorScheme.shadow,
@@ -203,44 +195,46 @@ class _SelectionPreviewState extends State<SelectionPreview>
           crossAxisAlignment: CrossAxisAlignment.start,
           verticalDirection: VerticalDirection.up,
           children: [
-            Container(
-              height: bodyHeight,
-              decoration: BoxDecoration(
-                color: context.realDark ? context.surface : colors.item2,
-                borderRadius:
-                    BorderRadius.only(topRight: context.radiusMedium.topRight),
-                boxShadow: _expandAnimation.value == 0
-                    ? null
-                    : context.boxShadowMedium(
-                        color: context.realDark ? colors.item1 : null),
-              ),
-              width: context.width - 48,
-              margin: EdgeInsets.symmetric(horizontal: 24),
-              clipBehavior: Clip.hardEdge,
-              child: CustomScrollView(
-                slivers: [
-                  SliverToBoxAdapter(
-                    child: SizedBox(
-                      height: 8,
+            if (bodyHeight != 0)
+              Container(
+                height: bodyHeight,
+                decoration: BoxDecoration(
+                  color: context.realDark ? context.surface : colors.item2,
+                  borderRadius: BorderRadius.only(
+                      topRight: context.radiusMedium.topRight),
+                  boxShadow: _expandAnimation.value == 0
+                      ? null
+                      : context.boxShadowMedium(
+                          color: context.realDark ? colors.item1 : null),
+                ),
+                width: context.width - 48,
+                margin: EdgeInsets.symmetric(horizontal: 24),
+                clipBehavior: Clip.hardEdge,
+                child: CustomScrollView(
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: SizedBox(
+                        height: 8,
+                      ),
                     ),
-                  ),
-                  Selector<SelectionController, (List<int>, int)>(
-                    selector: (_, selectionController) => (
-                      selectionController.selectedEpisodes,
-                      selectionController.selectedEpisodes.length,
+                    Selector<SelectionController, (List<int>, int)>(
+                      selector: (_, selectionController) => (
+                        selectionController.selectedEpisodes,
+                        selectionController.selectedEpisodes.length,
+                      ),
+                      builder: (context, data, _) {
+                        return EpisodeGrid(
+                          episodeIds: data.$1,
+                          layout: EpisodeGridLayout.medium,
+                          openPodcast: true,
+                          selectable: false,
+                          initNum: 0,
+                        );
+                      },
                     ),
-                    builder: (context, data, _) {
-                      return EpisodeGrid(
-                        episodeIds: data.$1,
-                        layout: EpisodeGridLayout.medium,
-                        openPodcast: true,
-                        selectable: false,
-                      );
-                    },
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
             Container(
               padding: EdgeInsets.only(left: 24, top: 8, right: 24),
               clipBehavior: Clip.antiAlias, // Clip the shadow on the bottom
@@ -429,7 +423,7 @@ class _MultiSelectPanelState extends State<MultiSelectPanel>
         Provider.of<SelectionController>(context, listen: false);
     selectMode = selectionController.selectMode;
     selectionController.addListener(() {
-      if (selectMode != selectionController.selectMode) {
+      if (mounted && selectMode != selectionController.selectMode) {
         selectMode = selectionController.selectMode;
         if (!selectionController.selectMode) {
           _secondRowController.reverse();

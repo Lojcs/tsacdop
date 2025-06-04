@@ -205,7 +205,8 @@ class EpisodeState extends ChangeNotifier {
   Future<void> unsetPlayed(List<int> ids) async {
     assert(ids.every((id) => _episodeMap.keys.contains(id)),
         "unsetPlayed called with unknown id");
-    await _dbHelper.unsetLiked(ids);
+    await _dbHelper
+        .unsetListened(ids.map((id) => _episodeMap[id]!.enclosureUrl).toList());
     changedIds.clear();
     for (var id in ids) {
       _episodeMap[id] = _episodeMap[id]!.copyWith(isPlayed: false);

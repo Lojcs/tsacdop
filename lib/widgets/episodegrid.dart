@@ -2,7 +2,9 @@ import 'package:auto_animated/auto_animated.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../home/audioplayer.dart';
 import '../local_storage/sqflite_localpodcast.dart';
+import '../state/audio_state.dart';
 import '../state/episode_state.dart';
 import '../state/podcast_group.dart';
 import '../type/episodebrief.dart';
