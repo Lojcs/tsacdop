@@ -80,7 +80,7 @@ class AutoDownloader {
         query: "SELECT * FROM task WHERE task_id = '${episodeTask.taskId}'");
     final filePath =
         'file://${path.join(completeTask!.first.savedDir, Uri.encodeComponent(completeTask.first.filename!))}';
-    final fileStat = await File(filePath).stat();
+    final fileStat = await File(filePath.substring(7)).stat();
     var duration = await AudioPlayer().setUrl(filePath);
     await _dbHelper.setDownloaded(episodeTask.episode.id,
         mediaId: filePath,
@@ -154,8 +154,9 @@ class DownloadState extends ChangeNotifier {
               var filePath =
                   'file://${path.join(task.savedDir, Uri.encodeComponent(task.filename!))}';
               if (episode.enclosureUrl == episode.mediaId) {
-                var fileStat = await File(filePath).stat();
+                var fileStat = await File(filePath.substring(7)).stat();
                 var duration = await AudioPlayer().setUrl(filePath);
+                await _episodeState.getEpisodes(episodeIds: [episode.id]);
                 await _episodeState.setDownloaded(episode.id,
                     mediaId: filePath,
                     taskId: task.taskId,
@@ -216,8 +217,9 @@ class DownloadState extends ChangeNotifier {
         query: "SELECT * FROM task WHERE task_id = '${episodeTask.taskId}'");
     final filePath =
         'file://${path.join(completeTask!.first.savedDir, Uri.encodeComponent(completeTask.first.filename!))}';
-    var fileStat = await File(filePath).stat();
+    var fileStat = await File(filePath.substring(7)).stat();
     var duration = await AudioPlayer().setUrl(filePath);
+    await _episodeState.getEpisodes(episodeIds: [episodeTask.episode.id]);
     await _episodeState.setDownloaded(episodeTask.episode.id,
         mediaId: filePath,
         taskId: episodeTask.taskId,
@@ -297,8 +299,8 @@ class DownloadState extends ChangeNotifier {
       if (episodeTask.taskId == task.taskId) {
         episodeTask.status = DownloadTaskStatus.undefined;
       }
-      notifyListeners();
     }
+    notifyListeners();
     _removeTask(episode);
   }
 

@@ -116,7 +116,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
               systemNavigationBarIconBrightness: context.iconBrightness,
             ),
             child: PopScope(
-              canPop: settings.openPlaylistDefault! &&
+              canPop: !settings.openPlaylistDefault! &&
                   !(_playerKey.currentState != null &&
                       _playerKey.currentState!.size! > 100) &&
                   !_tabSelectionController(_controller.index).selectMode,
@@ -129,8 +129,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                   _tabSelectionController(_controller.index).selectMode = false;
                 } else if (!settings.openPlaylistDefault! &&
                     Platform.isAndroid) {
-                  _androidAppRetain
-                      .invokeMethod('sendToBackground'); // This doesn't work
+                  // _androidAppRetain
+                  //     .invokeMethod('sendToBackground'); // This doesn't work
                 }
               },
               child: Scaffold(
@@ -259,63 +259,48 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                         ];
                         return headerSlivers!;
                       },
-                      body: Column(
-                        children: [
-                          Expanded(
-                            child: TabBarView(
-                              // TODO: Add pull to refresh?
-                              controller: _controller,
-                              children: <Widget>[
-                                KeyedSubtree(
-                                  key: Key('tab0'),
-                                  child: ChangeNotifierProvider<
-                                      SelectionController>.value(
-                                    value: _recentUpdateSelectionController,
-                                    child: Stack(
-                                      children: [
-                                        _RecentUpdate(),
-                                        MultiSelectPanelIntegration(),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                KeyedSubtree(
-                                  key: Key('tab1'),
-                                  child: ChangeNotifierProvider<
-                                      SelectionController>.value(
-                                    value: _myFavouriteSelectionController,
-                                    child: Stack(
-                                      children: [
-                                        _MyFavorite(),
-                                        MultiSelectPanelIntegration(),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                KeyedSubtree(
-                                  key: Key('tab2'),
-                                  child: ChangeNotifierProvider<
-                                      SelectionController>.value(
-                                    value: _myDownloadedSelectionController,
-                                    child: Stack(
-                                      children: [
-                                        _MyDownload(),
-                                        MultiSelectPanelIntegration(),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
+                      body: TabBarView(
+                        // TODO: Add pull to refresh?
+                        controller: _controller,
+                        children: <Widget>[
+                          KeyedSubtree(
+                            key: Key('tab0'),
+                            child: ChangeNotifierProvider<
+                                SelectionController>.value(
+                              value: _recentUpdateSelectionController,
+                              child: Stack(
+                                children: [
+                                  _RecentUpdate(),
+                                  MultiSelectPanelIntegration(),
+                                ],
+                              ),
                             ),
                           ),
-                          Selector<AudioPlayerNotifier, (bool, PlayerHeight?)>(
-                            selector: (_, audio) =>
-                                (audio.playerRunning, audio.playerHeight),
-                            builder: (_, data, __) {
-                              var height =
-                                  kMinPlayerHeight[data.$2?.index ?? 0];
-                              return SizedBox(height: data.$1 ? height : 0);
-                            },
+                          KeyedSubtree(
+                            key: Key('tab1'),
+                            child: ChangeNotifierProvider<
+                                SelectionController>.value(
+                              value: _myFavouriteSelectionController,
+                              child: Stack(
+                                children: [
+                                  _MyFavorite(),
+                                  MultiSelectPanelIntegration(),
+                                ],
+                              ),
+                            ),
+                          ),
+                          KeyedSubtree(
+                            key: Key('tab2'),
+                            child: ChangeNotifierProvider<
+                                SelectionController>.value(
+                              value: _myDownloadedSelectionController,
+                              child: Stack(
+                                children: [
+                                  _MyDownload(),
+                                  MultiSelectPanelIntegration(),
+                                ],
+                              ),
+                            ),
                           ),
                         ],
                       ),

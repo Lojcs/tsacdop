@@ -483,7 +483,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     // Set playlist
     _startPlaylist = _playlists.firstWhere((p) => p.id == lastState.item1,
         orElse: () => _playlists.first);
-    _startPlaylist.cachePlaylist(_episodeState);
+    await _startPlaylist.cachePlaylist(_episodeState);
     // Set episode index
     if (_startPlaylist.isEmpty) {
       _startEpisodeIndex = 0;
@@ -501,7 +501,8 @@ class AudioPlayerNotifier extends ChangeNotifier {
     if (_startPlaylist.isNotEmpty) {
       _historyPosition = lastState.item3;
       if (_historyPosition == 0) {
-        PlayHistory position = await _dbHelper.getPosition(_episodeBrief!);
+        PlayHistory position =
+            await _dbHelper.getPosition(_episodeState[_startEpisodeId!]);
         _historyPosition = position.seconds! * 1000;
       }
     }
@@ -537,7 +538,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
         _startEpisodeIndex < _startPlaylist.length &&
         (!_startPlaylist.isQueue || _startEpisodeIndex == 0) &&
         _startPlaylist.isNotEmpty) {
-      playlist.cachePlaylist(_episodeState);
+      await _startPlaylist.cachePlaylist(_episodeState);
       _playlist = _startPlaylist;
       _episodeIndex = _startEpisodeIndex;
       if (_playerRunning) {
@@ -586,6 +587,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
 
   /// Loads arbitrary playlist from start. Doesn't need to be saved
   Future<void> playlistLoad(Playlist playlist) async {
+    await playlist.cachePlaylist(_episodeState);
     if (playlist.isNotEmpty) {
       await saveHistory();
       _startPlaylist = playlist;
@@ -891,7 +893,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     } else if (index > playlist.length) {
       index = playlist.length;
     }
-    playlist.cachePlaylist(_episodeState);
+    await playlist.cachePlaylist(_episodeState);
     await _episodeState.unsetNew(episodeIds);
     EpisodeCollision ifExists =
         playlist.isQueue ? EpisodeCollision.replace : EpisodeCollision.ignore;
@@ -968,7 +970,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     if (episodeIds.isEmpty) return [];
     playlist ??= _playlist;
     if (playlist.isEmpty) return [];
-    playlist.cachePlaylist(_episodeState);
+    await playlist.cachePlaylist(_episodeState);
     List<int> indicies = [];
     // Find episode indexes
     for (int i = 0; i < playlist.episodeIds.length; i++) {
@@ -990,7 +992,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     if (indicies.isEmpty) return [];
     playlist ??= _playlist;
     if (playlist.isEmpty) return [];
-    playlist.cachePlaylist(_episodeState);
+    await playlist.cachePlaylist(_episodeState);
     indicies.sort();
     _batchRemoveIndexesFromPlaylistHelper(indicies, playlist: playlist);
     return indicies;
@@ -1039,7 +1041,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     if (index < 0) index += playlist.length + 1;
     final int end = index + number;
     if (end > playlist.length || number < 0) return seekFuture;
-    playlist.cachePlaylist(_episodeState);
+    await playlist.cachePlaylist(_episodeState);
 
     _playlistBeingEdited++;
     if (playlist == _playlist && _playerRunning) {
@@ -1103,7 +1105,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     if (newIndex < 0) newIndex += playlist.length;
     if (oldIndex >= playlist.length || newIndex >= playlist.length)
       return seekFuture;
-    playlist.cachePlaylist(_episodeState);
+    await playlist.cachePlaylist(_episodeState);
 
     _playlistBeingEdited++;
     if (playlist == _playlist && _playerRunning) {
@@ -1174,8 +1176,12 @@ class AudioPlayerNotifier extends ChangeNotifier {
   /// Updates the media ID of an episode with the one provided.
   /// Replaces the playing episode if its media ID changed.
   Future<void> updateEpisodeMediaID(EpisodeBrief episode) async {
-    List<int> indexes =
-        _playlist.episodeIds.where((id) => id == episode.id).toList();
+    List<int> indexes = [];
+    for (int i = 0; i < _playlist.length; i++) {
+      if (_playlist[i] == episode.id) {
+        indexes.add(i);
+      }
+    }
     if (indexes.isNotEmpty) {
       _playlistBeingEdited++;
       if (_playerRunning) {
@@ -1470,7 +1476,8 @@ class CustomAudioHandler extends BaseAudioHandler
   Duration _position = const Duration();
   bool get hasNext => queue.value.isNotEmpty;
   MediaItem? get currentMediaItem => mediaItem.value;
-  bool get playing => _player.playing && _playerReady;
+  bool get playing =>
+      _player.playing && _playerReady && _player.currentIndex != null;
   bool _playerReady = false;
 
   late StreamSubscription<PlaybackEvent> _playbackEventSubscription;
@@ -1729,7 +1736,7 @@ class CustomAudioHandler extends BaseAudioHandler
   /// Position and or index combined seek.
   /// Use this instead of calling [AudioPlayer.seek] or [_innerCombinedSeek] directly.
   Future<void> combinedSeek({final Duration? position, int? index}) async {
-    if ((position != _position) || (index != _index)) {
+    if (!playing || (position != _position) || (index != _index)) {
       seekTarget = SeekTarget(position: position, index: index);
       if (!seekOngoing) {
         seekOngoing = true;

@@ -777,17 +777,17 @@ class _PlaylistsState extends State<_Playlists> {
                         height: 50,
                         width: 50,
                         color: context.primaryColorDark,
-                        child: episodeList.isEmpty
-                            ? Center()
-                            : SizedBox(
-                                height: 50,
-                                width: 50,
-                                child: Image(
-                                    image: Provider.of<EpisodeState>(context,
-                                                listen: false)[
-                                            data.item1[index].episodeIds.first]
-                                        .episodeOrPodcastImageProvider),
-                              ),
+                        child: FutureBuilder<bool>(
+                          future: data.item1[index].cachePlaylist(eState),
+                          builder: (context, snapshot) => episodeList.isEmpty ||
+                                  !snapshot.hasData
+                              ? Center()
+                              : Image(
+                                  image: Provider.of<EpisodeState>(context,
+                                              listen: false)[
+                                          data.item1[index].episodeIds.first]
+                                      .podcastImageProvider),
+                        ),
                       ),
                       title: Text(data.item1[index].name),
                       subtitle: Text(

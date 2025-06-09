@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 
 import '../state/audio_state.dart';
 import '../state/episode_state.dart';
-import '../type/episodebrief.dart';
 import '../type/playlist.dart';
 import '../util/extension_helper.dart';
 import '../widgets/custom_widget.dart';
@@ -17,7 +16,7 @@ class PlaylistDetail extends StatefulWidget {
   const PlaylistDetail(this.playlist, {super.key});
 
   @override
-  _PlaylistDetailState createState() => _PlaylistDetailState();
+  State<PlaylistDetail> createState() => _PlaylistDetailState();
 }
 
 class _PlaylistDetailState extends State<PlaylistDetail> {
@@ -93,7 +92,7 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
           ),
         ],
       ),
-      body: FutureBuilder(
+      body: FutureBuilder<bool>(
         future: widget.playlist
             .cachePlaylist(Provider.of<EpisodeState>(context, listen: false)),
         builder: (context, snapshot) {

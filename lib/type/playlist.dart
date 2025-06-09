@@ -51,11 +51,12 @@ class Playlist {
         episodeIds = List<int>.from(json['episodeIdList']);
 
   /// Caches [episodeIds] into [eState] and removes missing ids from the playlist.
-  Future<void> cachePlaylist(EpisodeState eState) async {
-    if (cached) return;
+  Future<bool> cachePlaylist(EpisodeState eState) async {
+    if (cached) return true;
     List<int> missingIds = await eState.cacheEpisodes(episodeIds);
     episodeIds.removeWhere((id) => missingIds.contains(id));
     cached = true;
+    return true;
   }
 
   /// Adds [newEpisodes] to the playlist at [index].

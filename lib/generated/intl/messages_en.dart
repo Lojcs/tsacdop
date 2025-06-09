@@ -45,10 +45,10 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m7(host) => "Hosted on ${host}";
 
   static String m8(count) =>
-      "${Intl.plural(count, zero: 'In an hour', one: '${count} hour ago', other: '${count} hours ago')}";
+      "${Intl.plural(count, zero: 'This hour', one: '${count} hour ago', other: '${count} hours ago')}";
 
   static String m9(count) =>
-      "${Intl.plural(count, zero: '0 hour', one: '${count} hour', other: '${count} hours')}";
+      "${Intl.plural(count, zero: '0 hours', one: '${count} hour', other: '${count} hours')}";
 
   static String m10(service) => "Integrate with ${service}";
 
@@ -166,6 +166,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "downloadStart": MessageLookupByLibrary.simpleMessage("Downloading"),
     "downloaded": MessageLookupByLibrary.simpleMessage("Downloaded"),
+    "downloading": MessageLookupByLibrary.simpleMessage("Downloading"),
     "duration": MessageLookupByLibrary.simpleMessage("Duration"),
     "editGroupName": MessageLookupByLibrary.simpleMessage("Edit group name"),
     "endOfEpisode": MessageLookupByLibrary.simpleMessage("End of Episode"),

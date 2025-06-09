@@ -114,6 +114,8 @@
   },
   "downloaded": "Downloaded",
   "@downloaded": {},
+  "downloading": "Downloading",
+  "@downloading": {},
   "downloadRemovedToast": "Download removed",
   "@downloadRemovedToast": {},
   "downloadStart": "Downloading",
@@ -253,9 +255,9 @@
       "host": {}
     }
   },
-  "hoursAgo": "{count, plural, zero{In an hour} one{{count} hour ago} other{{count} hours ago}}",
+  "hoursAgo": "{count, plural, zero{This hour} one{{count} hour ago} other{{count} hours ago}}",
   "@hoursAgo": {},
-  "hoursCount": "{count, plural, zero{0 hour} one{{count} hour} other{{count} hours}}",
+  "hoursCount": "{count, plural, zero{0 hours} one{{count} hour} other{{count} hours}}",
   "@hoursCount": {},
   "import": "Import",
   "@import": {},

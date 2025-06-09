@@ -119,6 +119,13 @@ class _MultiSelectPanelIntegrationState
             ),
           ),
         ),
+        Selector<AudioPlayerNotifier, (bool, PlayerHeight?)>(
+          selector: (_, audio) => (audio.playerRunning, audio.playerHeight),
+          builder: (_, data, __) {
+            var height = kMinPlayerHeight[data.$2?.index ?? 0];
+            return SizedBox(height: data.$1 ? height : 0);
+          },
+        ),
       ],
     );
   }
@@ -1224,7 +1231,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                         onSuccess: () {
                           // TODO: Make the icon reflect this
                           Fluttertoast.showToast(
-                            msg: context.s.downloaded,
+                            msg: context.s.downloading,
                             gravity: ToastGravity.BOTTOM,
                           );
                         },

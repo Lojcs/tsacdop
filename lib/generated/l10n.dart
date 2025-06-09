@@ -411,6 +411,11 @@ class S {
     return Intl.message('Downloaded', name: 'downloaded', desc: '', args: []);
   }
 
+  /// `Downloading`
+  String get downloading {
+    return Intl.message('Downloading', name: 'downloading', desc: '', args: []);
+  }
+
   /// `Download removed`
   String get downloadRemovedToast {
     return Intl.message(
@@ -940,11 +945,11 @@ class S {
     );
   }
 
-  /// `{count, plural, zero{In an hour} one{{count} hour ago} other{{count} hours ago}}`
+  /// `{count, plural, zero{This hour} one{{count} hour ago} other{{count} hours ago}}`
   String hoursAgo(num count) {
     return Intl.plural(
       count,
-      zero: 'In an hour',
+      zero: 'This hour',
       one: '$count hour ago',
       other: '$count hours ago',
       name: 'hoursAgo',
@@ -953,11 +958,11 @@ class S {
     );
   }
 
-  /// `{count, plural, zero{0 hour} one{{count} hour} other{{count} hours}}`
+  /// `{count, plural, zero{0 hours} one{{count} hour} other{{count} hours}}`
   String hoursCount(num count) {
     return Intl.plural(
       count,
-      zero: '0 hour',
+      zero: '0 hours',
       one: '$count hour',
       other: '$count hours',
       name: 'hoursCount',

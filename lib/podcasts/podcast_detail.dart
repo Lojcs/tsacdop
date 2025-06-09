@@ -68,20 +68,11 @@ class _PodcastDetailState extends State<PodcastDetail> {
     onRefresh: () async {
       await _updateRssItem(context, widget.podcastLocal);
     },
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Expanded(
-          child: PodcastDetailBody(
-            podcastLocal: widget.podcastLocal,
-            selectionController: selectionController,
-            initIds: widget.initIds,
-            hide: widget.hide,
-          ),
-        ),
-      ],
+    child: PodcastDetailBody(
+      podcastLocal: widget.podcastLocal,
+      selectionController: selectionController,
+      initIds: widget.initIds,
+      hide: widget.hide,
     ),
   );
 
