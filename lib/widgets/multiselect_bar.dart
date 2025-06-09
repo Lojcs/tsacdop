@@ -258,6 +258,7 @@ class _SelectionPreviewState extends State<SelectionPreview>
                 height: iconButtonSize,
                 width: 260,
                 child: Material(
+                  color: Colors.transparent,
                   child: InkWell(
                     onTap: () {
                       if (expanded) {
@@ -668,13 +669,14 @@ class _SelectionOptions extends StatelessWidget {
                       Provider.of<SelectionController>(context, listen: false);
                   await selectionController.getEpisodesLimitless();
                 },
-                tooltip: context.s.finalizeSelection,
+                tooltip: context.s.loadAllSelected,
                 enabled: data,
                 connectRight: true,
-                child: Selector<CardColorScheme, Color>(
-                  selector: (context, cardColorScheme) =>
-                      cardColorScheme.colorScheme.primary,
-                  builder: (context, color, _) => Icon(Icons.all_inclusive),
+                child: Icon(
+                  Icons.all_inclusive,
+                  color: !data && context.realDark
+                      ? Colors.grey[800]
+                      : context.actionBarIconColor,
                 ),
               );
             },

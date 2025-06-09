@@ -103,6 +103,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     final height = (context.width - 20) / 3 + 145;
     final settings = Provider.of<SettingState>(context, listen: false);
     final s = context.s;
+    headerSlivers = null;
     return Selector<AudioPlayerNotifier, bool>(
         selector: (_, audio) => audio.playerRunning,
         builder: (_, playerRunning, __) {
@@ -239,6 +240,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                 indicatorSize: TabBarIndicatorSize.label,
                                 controller: _controller,
                                 labelStyle: context.textTheme.titleMedium,
+                                // labelColor: context.textColor,
                                 dividerHeight: 0,
                                 tabAlignment: TabAlignment.start,
                                 tabs: <Widget>[

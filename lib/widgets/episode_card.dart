@@ -118,10 +118,12 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   void _selectionListener() {
     if (mounted) {
       selected = selectionController!.selectedIndicies.contains(widget.index);
-      if (selected) {
-        _controller.forward();
-      } else {
-        _controller.reverse();
+      if (selectable) {
+        if (selected) {
+          _controller.forward();
+        } else {
+          _controller.reverse();
+        }
       }
     }
   }
@@ -134,7 +136,7 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
     _shadowController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 200));
     selectionController?.addListener(_selectionListener);
-    if (selected) _controller.value = 1;
+    if (selected && selectable) _controller.value = 1;
   }
 
   @override
@@ -307,16 +309,23 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                   )
                 : Selector<EpisodeState, bool>(
                     selector: (_, eState) => eState[widget.episodeId].isPlayed,
-                    builder: (_, played, __) => FutureBuilder<PlayHistory>(
-                      future: _getSavedPosition(),
-                      // initialData: PlayHistory("", "", 0, 0),
-                      builder: (context, snapshot) => _ProgressLowerlay(
-                        widget.episodeId,
-                        snapshot.hasData ? snapshot.data!.seekValue! : 0,
-                        widget.layout,
-                        animator: _controller,
-                      ),
-                    ),
+                    builder: (_, played, __) => played
+                        ? _ProgressLowerlay(
+                            widget.episodeId,
+                            1,
+                            widget.layout,
+                            animator: _controller,
+                          )
+                        : FutureBuilder<PlayHistory>(
+                            future: _getSavedPosition(),
+                            // initialData: PlayHistory("", "", 0, 0),
+                            builder: (context, snapshot) => _ProgressLowerlay(
+                              widget.episodeId,
+                              snapshot.hasData ? snapshot.data!.seekValue! : 0,
+                              widget.layout,
+                              animator: _controller,
+                            ),
+                          ),
                   ),
             controller: _controller,
             shadowController: _shadowController,

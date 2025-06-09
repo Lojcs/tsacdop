@@ -292,7 +292,7 @@ class _ActionBarButtonState extends State<ActionBarButton>
             clipBehavior: Clip.hardEdge,
             borderRadius: borderRadius,
             child: InkWell(
-              onTapDown: (details) {},
+              // onTapDown: (details) {},
               onTap: widget.enabled
                   ? () {
                       if (mounted) {

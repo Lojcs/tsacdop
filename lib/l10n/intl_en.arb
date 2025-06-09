@@ -182,10 +182,6 @@
   },
   "feedbackTelegram": "Join group",
   "@feedbackTelegram": {},
-  "finalizeSelection": "Finalize Selection",
-  "@finalizeSelection": {
-    "description": "Tooltip for button that finalizes a tentative seelction by getting all episodes included in it."
-  },
   "filter": "Filter",
   "@filter": {},
   "filterType": "{type} Filter",
@@ -305,6 +301,10 @@
     "placeholders": {
       "filePath": {}
     }
+  },
+  "loadAllSelected": "Load All Selected",
+  "@loadAllSelected": {
+    "description": "Tooltip for button that loads all episodes included in a selection."
   },
   "loading": "Loading",
   "@loading": {},

@@ -714,17 +714,6 @@ class S {
     );
   }
 
-  /// `Finalize Selection`
-  String get finalizeSelection {
-    return Intl.message(
-      'Finalize Selection',
-      name: 'finalizeSelection',
-      desc:
-          'Tooltip for button that finalizes a tentative seelction by getting all episodes included in it.',
-      args: [],
-    );
-  }
-
   /// `Filter`
   String get filter {
     return Intl.message('Filter', name: 'filter', desc: '', args: []);
@@ -1093,6 +1082,17 @@ class S {
       name: 'localEpisodeDescription',
       desc: '',
       args: [filePath],
+    );
+  }
+
+  /// `Load All Selected`
+  String get loadAllSelected {
+    return Intl.message(
+      'Load All Selected',
+      name: 'loadAllSelected',
+      desc:
+          'Tooltip for button that loads all episodes included in a selection.',
+      args: [],
     );
   }
 

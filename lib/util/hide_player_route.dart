@@ -15,7 +15,7 @@ class HidePlayerRoute extends ModalRoute<void> {
   @override
   Widget buildPage(BuildContext context, Animation<double> animation,
       Animation<double> secondaryAnimation) {
-    Key pageKey = GlobalKey();
+    Key pageKey = GlobalObjectKey(openPage);
     return Selector<AudioPlayerNotifier, tuple.Tuple2<bool, PlayerHeight?>>(
       selector: (_, audio) =>
           tuple.Tuple2(audio.playerRunning, audio.playerHeight),

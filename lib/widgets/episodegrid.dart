@@ -205,7 +205,7 @@ class _InteractiveEpisodeGridState extends State<InteractiveEpisodeGrid> {
   bool _loadMore = false;
 
   /// Layout of the grid
-  EpisodeGridLayout? _layout;
+  late EpisodeGridLayout? _layout = widget.layout;
 
   /// Default value for filter liked
   bool? _actionBarFilterLiked;
@@ -280,14 +280,14 @@ class _InteractiveEpisodeGridState extends State<InteractiveEpisodeGrid> {
           builder: (context, snapshot) {
             update |= slivers == null;
             if (snapshot.hasData) {
-              if (widget.layout != null) {
-                _layout = widget.layout;
-              } else if (widget.layoutKey != null) {
-                _layout = snapshot.data!.$1;
-              } else if (_layout == null) {
-                _layout = EpisodeGridLayout.medium;
-              } else {
-                update = true;
+              if (_layout == null) {
+                if (widget.layoutKey != null) {
+                  _layout = snapshot.data!.$1;
+                } else if (_layout == null) {
+                  _layout = EpisodeGridLayout.medium;
+                } else {
+                  update = true;
+                }
               }
               if (widget.actionBarFilterPlayedOverride ||
                   widget.actionBarFilterPlayed != null) {

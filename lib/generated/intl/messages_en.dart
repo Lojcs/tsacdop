@@ -233,9 +233,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "feedbackTelegram": MessageLookupByLibrary.simpleMessage("Join group"),
     "filter": MessageLookupByLibrary.simpleMessage("Filter"),
     "filterType": m32,
-    "finalizeSelection": MessageLookupByLibrary.simpleMessage(
-      "Finalize Selection",
-    ),
     "fontStyle": MessageLookupByLibrary.simpleMessage("Font style"),
     "fonts": MessageLookupByLibrary.simpleMessage("Fonts"),
     "from": m5,
@@ -299,6 +296,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "liked": MessageLookupByLibrary.simpleMessage("Liked"),
     "listen": MessageLookupByLibrary.simpleMessage("Listen"),
     "listened": MessageLookupByLibrary.simpleMessage("Listened"),
+    "loadAllSelected": MessageLookupByLibrary.simpleMessage(
+      "Load All Selected",
+    ),
     "loadMore": MessageLookupByLibrary.simpleMessage("Load more"),
     "loading": MessageLookupByLibrary.simpleMessage("Loading"),
     "localEpisodeDescription": m33,
