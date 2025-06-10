@@ -1407,7 +1407,7 @@ class ActionBarSearchTitle extends ActionBarFilter {
   }
 }
 
-Future<(EpisodeGridLayout, bool?)> getLayoutAndShowListened(
+Future<(EpisodeGridLayout, bool?)> getLayoutAndShowPlayed(
     {String layoutKey = podcastLayoutKey}) async {
   final layoutStorage = KeyValueStorage(layoutKey);
   final index = await layoutStorage.getInt(defaultValue: 1);

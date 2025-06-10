@@ -5,6 +5,7 @@ import 'dart:isolate';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
+import 'package:audio_service/audio_service.dart';
 import 'package:color_thief_dart/color_thief_dart.dart';
 import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
@@ -61,7 +62,7 @@ class GroupEntity {
 
 class PodcastGroup extends Equatable {
   /// Group name.
-  final String? name;
+  final String name;
 
   final String id;
 
@@ -156,13 +157,16 @@ class PodcastGroup extends Equatable {
 
   //set orderedPodcasts(list) => _orderedPodcasts = list;
 
+  late final MediaItem mediaItem =
+      MediaItem(id: "grp:$id", title: name, playable: false);
+
   GroupEntity toEntity() {
     return GroupEntity(name, id, color, podcastList);
   }
 
   static PodcastGroup fromEntity(GroupEntity entity) {
     return PodcastGroup(
-      entity.name,
+      entity.name ?? "",
       id: entity.id,
       color: entity.color,
       podcastList: entity.podcastList.toSet().toList(),

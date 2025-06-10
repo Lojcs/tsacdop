@@ -275,7 +275,7 @@ class _InteractiveEpisodeGridState extends State<InteractiveEpisodeGrid> {
       child: ScrollConfiguration(
         behavior: NoGrowBehavior(),
         child: FutureBuilder<(EpisodeGridLayout, bool?)>(
-          future: getLayoutAndShowListened(
+          future: getLayoutAndShowPlayed(
               layoutKey: widget.layoutKey ?? podcastLayoutKey),
           builder: (context, snapshot) {
             update |= slivers == null;

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:audio_service/audio_service.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 
@@ -81,6 +82,9 @@ class PodcastLocal extends Equatable {
       episodeCount: episodeCount ?? 0,
     );
   }
+
+  MediaItem get mediaItem =>
+      MediaItem(id: "pod:$id", title: title, playable: false);
 
   @override
   List<Object?> get props => [id, rssUrl];

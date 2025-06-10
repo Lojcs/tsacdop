@@ -98,6 +98,7 @@ class EpisodeBrief extends Equatable {
   late final MediaItem mediaItem = MediaItem(
       id: mediaId,
       title: title,
+      isLive: !isDownloaded,
       artist: podcastTitle,
       album: podcastTitle,
       duration: Duration(seconds: enclosureDuration),

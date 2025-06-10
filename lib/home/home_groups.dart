@@ -465,7 +465,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
 
   Future<List<int>> _getPodcastPreview(
       BuildContext context, PodcastLocal podcastLocal) async {
-    final layout = await getLayoutAndShowListened(layoutKey: podcastLayoutKey);
+    final layout = await getLayoutAndShowPlayed(layoutKey: podcastLayoutKey);
     if (context.mounted) {
       final limit = layout.$1.getVerticalCount(context.width, context.height);
       return Provider.of<EpisodeState>(context, listen: false).getEpisodes(
