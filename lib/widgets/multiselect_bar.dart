@@ -1420,15 +1420,17 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                       await selectionController.getEpisodesLimitless();
                       selectedEpisodeIds = selectionController.selectedEpisodes;
                       inPlaylist = value;
-                      if (value!) {
-                        await Provider.of<AudioPlayerNotifier>(context,
-                                listen: false)
+                      if (value! && context.mounted) {
+                        await context.audioState
                             .loadEpisodesToQueue(selectedEpisodeIds);
-                        await Fluttertoast.showToast(
-                          msg: context.s.toastAddPlaylist,
-                          gravity: ToastGravity.BOTTOM,
-                        );
                       }
+                      if (context.mounted && !context.audioState.playing) {
+                        context.audioState.resumeAudio();
+                      }
+                      await Fluttertoast.showToast(
+                        msg: context.s.toastAddPlaylist,
+                        gravity: ToastGravity.BOTTOM,
+                      );
                     }
                     setState(() => actionLock = false);
                   },

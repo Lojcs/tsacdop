@@ -106,7 +106,8 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
       Provider.of<SettingState>(context, listen: false);
   late EpisodeState eState = Provider.of<EpisodeState>(context, listen: false);
 
-  bool get selectable => widget.selectable && selectionController != null;
+  bool get selectable =>
+      widget.selectable && selectionController != null && mounted;
   late bool selected =
       selectionController?.selectedIndicies.contains(widget.index) ?? false;
 
@@ -707,7 +708,7 @@ class EpisodeCard extends StatelessWidget {
         Provider.of<EpisodeState>(context, listen: false)[episodeId];
 
     /// Episode title widget.
-    Widget title(BuildContext context) => Container(
+    Widget title() => Container(
           alignment: layout == EpisodeGridLayout.large
               ? Alignment.centerLeft
               : Alignment.topLeft,
@@ -732,13 +733,12 @@ class EpisodeCard extends StatelessWidget {
         );
 
     /// Episode title widget.
-    Widget podcastTitle(BuildContext context) => Container(
+    Widget podcastTitle() => Container(
           alignment: layout == EpisodeGridLayout.large
               ? Alignment.centerLeft
               : Alignment.topLeft,
           padding:
               EdgeInsets.only(top: layout == EpisodeGridLayout.large ? 0 : 2),
-          width: context.width / 2.25,
           child: Text(
             episode.podcastTitle,
             style: (layout == EpisodeGridLayout.small
@@ -937,7 +937,7 @@ class EpisodeCard extends StatelessWidget {
               value.toString() + (layout == EpisodeGridLayout.large ? "|" : ""),
               style: GoogleFonts.teko(
                   textStyle: layout == EpisodeGridLayout.small
-                      ? context.textTheme.bodySmall
+                      ? context.textTheme.labelMedium
                       : layout == EpisodeGridLayout.medium
                           ? context.textTheme.bodyMedium
                           : context.textTheme.bodyLarge),
@@ -997,12 +997,11 @@ class EpisodeCard extends StatelessWidget {
                           openPodcast,
                           preferEpisodeImage,
                           radius: layout == EpisodeGridLayout.small
-                              ? context.width / 20
-                              : context.width / 15,
+                              ? layout.getRowHeight(context.width) / 7
+                              : layout.getRowHeight(context.width) / 5,
                         ),
                         SizedBox(
-                          width: 5,
-                        ),
+                            width: layout == EpisodeGridLayout.small ? 2 : 5),
                         if (showNumber) numberIndicator(),
                         Spacer(),
                         pubDate(showNew),
@@ -1017,7 +1016,8 @@ class EpisodeCard extends StatelessWidget {
                             circleImage(
                               openPodcast,
                               preferEpisodeImage,
-                              radius: context.width / 6,
+                              radius:
+                                  layout.getRowHeight(context.width) * 4 / 5,
                             ),
                             SizedBox(
                               width: 5,
@@ -1030,13 +1030,13 @@ class EpisodeCard extends StatelessWidget {
                                     child: Row(
                                       children: <Widget>[
                                         if (showNumber) numberIndicator(),
-                                        podcastTitle(context),
+                                        podcastTitle(),
                                         Spacer(),
                                         pubDate(showNew),
                                       ],
                                     ),
                                   ),
-                                  Expanded(flex: 5, child: title(context)),
+                                  Expanded(flex: 5, child: title()),
                                   Expanded(
                                     flex: 2,
                                     child: Row(
@@ -1055,7 +1055,7 @@ class EpisodeCard extends StatelessWidget {
                             )
                           ],
                         )
-                      : title(context),
+                      : title(),
                 ),
                 if (layout != EpisodeGridLayout.large)
                   Expanded(

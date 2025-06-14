@@ -138,7 +138,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                 key: _scaffoldKey,
                 backgroundColor: context.surface,
                 body: SafeArea(
-                  bottom: playerRunning,
+                  // bottom: playerRunning,
                   child: Stack(children: <Widget>[
                     ExtendedNestedScrollView(
                       pinnedHeaderSliverHeightBuilder: () => 50,
@@ -225,13 +225,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                               ],
                             ),
                           ),
-                          SliverToBoxAdapter(
-                            child: SizedBox(
-                              height: height,
-                              width: context.width,
-                              child: ScrollPodcasts(),
-                            ),
-                          ),
+                          SliverToBoxAdapter(child: ScrollPodcasts()),
                           SliverPersistentHeader(
                             delegate: _SliverAppBarDelegate(
                               TabBar(

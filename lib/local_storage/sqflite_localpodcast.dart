@@ -905,7 +905,7 @@ class DBHelper {
         .rawQuery("""SELECT id FROM Episodes WHERE (feed_id = ? AND title = ?)
         ORDER BY milliseconds DESC""", [episode.podcastId, episode.title]);
     if (results.length == 1) {
-      episode.versions!.add(episode.id);
+      episode.copyWith(versions: [episode.id]);
       return [episode];
     }
     List<int> versionIds = results.map<int>((result) => result['id']).toList();

@@ -1,4 +1,5 @@
 import 'dart:developer' as developer;
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -43,6 +44,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
   late final double _titleBarMinHeight;
   late final double _titleBarMaxHeight;
   late final double _imageTopOffset;
+  late final double _sideMargin;
 
   bool lateInitComplete = false;
 
@@ -100,7 +102,9 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
 
   _lateInit() {
     if (!lateInitComplete) {
-      _titleBarMaxHeight = context.width - 30;
+      _sideMargin =
+          (context.width - min(context.height - 560, context.width - 120)) / 2;
+      _titleBarMaxHeight = context.width - _sideMargin * 2 + 90;
       _titleBarMinHeight = 56;
       _imageTopOffset = 120;
       _controller = ScrollController(initialScrollOffset: _titleBarMaxHeight);
@@ -264,7 +268,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
           builder: (context, constraints) {
             double topHeight = constraints.biggest.height;
             double expandRatio =
-                ((topHeight - _titleBarMinHeight) / (-30 + context.width))
+                ((topHeight - _titleBarMinHeight) / _titleBarMaxHeight)
                     .clamp(0, 1);
             // print(_episodeItem.episodeImage);
             return FlexibleSpaceBar(
@@ -280,34 +284,19 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
               ),
               expandedTitleScale: 1.1,
               background: Container(
-                // alignment:
-                //     Alignment.bottomCenter,
-                padding: EdgeInsets.only(
-                  left: 60,
-                  right: 60,
+                margin: EdgeInsets.only(
+                  left: _sideMargin,
+                  right: _sideMargin,
                   top: _imageTopOffset +
-                      context.width -
-                      30 -
-                      expandRatio * (context.width - 30),
+                      _titleBarMaxHeight -
+                      expandRatio * _titleBarMaxHeight,
                   bottom: 0,
                 ),
-                child: Container(
-                  clipBehavior: Clip.hardEdge,
-                  height: (context.width - 120) *
-                      ((expandRatio - 0.4).clamp(0, 0.6) + 0.4),
-                  width: (context.width - 120) *
-                      ((expandRatio - 0.4).clamp(0, 0.6) + 0.4),
-                  decoration: BoxDecoration(
-                    color: color,
-                    // border: Border.all(
-                    //     color: Colors.white,
-                    //     width: 2),
-                  ),
-                  child: Image(
-                      alignment: Alignment.topCenter,
-                      fit: BoxFit.fitWidth,
-                      image: episodeItem.episodeOrPodcastImageProvider),
-                ),
+                color: color,
+                child: Image(
+                    alignment: Alignment.topCenter,
+                    fit: BoxFit.fitWidth,
+                    image: episodeItem.episodeOrPodcastImageProvider),
               ),
               title: Row(
                 mainAxisSize: MainAxisSize.min,

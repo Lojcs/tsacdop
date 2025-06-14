@@ -668,7 +668,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     _sleepTimerMode = SleepTimerMode.unset;
     _switchValue = 0;
     _audioState = AudioProcessingState.loading;
-    _audioDuration = _episodeBrief!.enclosureDuration * 1000;
+    _audioDuration = _episodeBrief?.enclosureDuration ?? 0 * 1000;
     _skipStart = true;
     notifyListeners();
 
@@ -689,25 +689,25 @@ class AudioPlayerNotifier extends ChangeNotifier {
           'setBoostVolume', {'boostVolume': _boostVolume, 'gain': _volumeGain});
     }
 
-    //Check autoplay setting, if true only add one episode, else add playlist.
-    if (effectiveAutoPlay) {
-      await _audioHandler.replaceQueue(_playlist.episodeIds
-          .map((id) => _episodeState[id].mediaItem)
-          .toList());
-      // await _audioHandler.skipToQueueItem(_episodeIndex!);
-    } else {
-      await _audioHandler.replaceQueue([_mediaItem!]);
-    }
-    await skipToIndex(_startEpisodeIndex);
+    if (playlist.isNotEmpty) {
+      if (effectiveAutoPlay) {
+        await _audioHandler.replaceQueue(_playlist.episodeIds
+            .map((id) => _episodeState[id].mediaItem)
+            .toList());
+        // await _audioHandler.skipToQueueItem(_episodeIndex!);
+      } else {
+        await _audioHandler.replaceQueue([_mediaItem!]);
+      }
+      await skipToIndex(_startEpisodeIndex);
 
-    //Check auto sleep timer setting
-    if (_autoSleepTimer) {
-      int currentTime = DateTime.now().hour * 60 + DateTime.now().minute;
-      if ((_startTime > _endTime &&
-              (currentTime > _startTime || currentTime < _endTime)) ||
-          ((_startTime < _endTime) &&
-              (currentTime > _startTime && currentTime < _endTime))) {
-        sleepTimer(_defaultTimer);
+      if (_autoSleepTimer) {
+        int currentTime = DateTime.now().hour * 60 + DateTime.now().minute;
+        if ((_startTime > _endTime &&
+                (currentTime > _startTime || currentTime < _endTime)) ||
+            ((_startTime < _endTime) &&
+                (currentTime > _startTime && currentTime < _endTime))) {
+          sleepTimer(_defaultTimer);
+        }
       }
     }
   }
@@ -723,11 +723,12 @@ class AudioPlayerNotifier extends ChangeNotifier {
   /// Even though this should cover all cases player state (not history) is also saved every 10 seconds just in case
   /// These listeners also handle queue behavior, automatic history seeking and adding positions to undo stack.
   void _addHandlerListeners() {
-    _mediaItemSubscription ??= _audioHandler.mediaItem.distinct().listen(
-      (MediaItem? item) async {
+    _mediaItemSubscription ??=
+        _audioHandler.mediaItem.distinct().whereNotNull().listen(
+      (MediaItem item) async {
         Future<void> removeFirstFuture = Future(() {});
         // Handle episode change
-        if (item!.extras!["index"] != null) {
+        if (item.extras!["index"] != null) {
           int newIndex = item.extras!["index"];
           if (_playlistBeingEdited == 0) {
             if (item != _mediaItem) {
@@ -828,7 +829,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
       // Ignore position updates if index doesn't match current index so that history saving is consistent
       if (event['position'] != null && event['index'] == _episodeIndex) {
         _audioPosition = event['position'].inMilliseconds;
-        if (_skipStart) {
+        if (_skipStart && _episodeId != null) {
           _skipStart = false;
           if (_historyPosition / _audioDuration < 0.95 &&
               _historyPosition > 10000) {
@@ -845,7 +846,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
             await seekTo(_episodeBrief!.skipSecondsStart * 1000);
           }
         }
-        if (_skipEnd) {
+        if (_skipEnd && _episodeId != null) {
           if (_audioPosition >
               (_audioDuration - _episodeBrief!.skipSecondsEnd * 1000)) {
             _skipEnd = false;
@@ -900,7 +901,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
         playlist.isQueue ? EpisodeCollision.replace : EpisodeCollision.ignore;
 
     _playlistBeingEdited++;
-    if (playlist == _playlist) {
+    if (playlist == _playlist && playlist.isNotEmpty) {
       if (effectiveAutoPlay) {
         // Add episodes to the player
         await _audioHandler.addQueueItemsAt([

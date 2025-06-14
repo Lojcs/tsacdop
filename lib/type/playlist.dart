@@ -139,15 +139,16 @@ class BrowsableLibrary {
   static const groupsId = '7bf8bdcf-0283-4386-ac6a-956284358200';
   static const recentsId = 'b11447c7-34cb-41b1-b587-b40c64c7a544';
 
-  final EpisodeState _episodeState;
-  final AudioPlayerNotifier _audioState;
-  final GroupList _groupList;
-  final S _s;
-  BrowsableLibrary(BuildContext context)
-      : _episodeState = Provider.of<EpisodeState>(context, listen: false),
-        _audioState = Provider.of<AudioPlayerNotifier>(context, listen: false),
-        _groupList = Provider.of<GroupList>(context, listen: false),
-        _s = S.of(context);
+  BuildContext context;
+
+  late final EpisodeState _episodeState =
+      Provider.of<EpisodeState>(context, listen: false);
+  late final AudioPlayerNotifier _audioState =
+      Provider.of<AudioPlayerNotifier>(context, listen: false);
+  late final GroupList _groupList =
+      Provider.of<GroupList>(context, listen: false);
+  late final S _s = S.of(context);
+  BrowsableLibrary(this.context);
 
   late Map<String, List<MediaItem>> root = _basicRoot;
 
