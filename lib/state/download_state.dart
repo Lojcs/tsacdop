@@ -78,13 +78,15 @@ class AutoDownloader {
   Future _saveMediaId(EpisodeTask episodeTask) async {
     final completeTask = await FlutterDownloader.loadTasksWithRawQuery(
         query: "SELECT * FROM task WHERE task_id = '${episodeTask.taskId}'");
-    final filePath =
+    final fileUri =
         'file://${path.join(completeTask!.first.savedDir, Uri.encodeComponent(completeTask.first.filename!))}';
-    final fileStat = await File(filePath.substring(7)).stat();
-    var duration = await AudioPlayer().setUrl(filePath);
+    final filePath =
+        path.join(completeTask!.first.savedDir, completeTask.first.filename!);
+    var fileStat = await File(filePath).stat();
+    var duration = await AudioPlayer().setUrl(fileUri);
     await _dbHelper.setDownloaded(episodeTask.episode.id,
-        mediaId: filePath,
-        taskId: episodeTask.taskId ?? "downloaded",
+        mediaId: fileUri,
+        taskId: episodeTask.taskId,
         size: fileStat.size,
         duration: duration?.inSeconds ?? 0);
     _episodeTasks.removeWhere((element) =>
@@ -151,11 +153,12 @@ class DownloadState extends ChangeNotifier {
                   taskId: task.taskId, shouldDeleteContent: true);
               await _episodeState.unsetDownloaded(episode.id);
             } else {
-              var filePath =
+              final fileUri =
                   'file://${path.join(task.savedDir, Uri.encodeComponent(task.filename!))}';
               if (episode.enclosureUrl == episode.mediaId) {
-                var fileStat = await File(filePath.substring(7)).stat();
-                var duration = await AudioPlayer().setUrl(filePath);
+                final filePath = path.join(task.savedDir, task.filename!);
+                var fileStat = await File(filePath).stat();
+                var duration = await AudioPlayer().setUrl(fileUri);
                 await _episodeState.getEpisodes(episodeIds: [episode.id]);
                 await _episodeState.setDownloaded(episode.id,
                     mediaId: filePath,
@@ -164,7 +167,7 @@ class DownloadState extends ChangeNotifier {
                     duration: duration?.inSeconds ?? 0);
               }
               _episodeTasks.add(EpisodeTask(
-                  episode.copyWith(mediaId: filePath, isDownloaded: true),
+                  episode.copyWith(mediaId: fileUri, isDownloaded: true),
                   task.taskId,
                   progress: task.progress,
                   status: task.status));
@@ -215,13 +218,17 @@ class DownloadState extends ChangeNotifier {
     episodeTask.status = DownloadTaskStatus.complete;
     final completeTask = await FlutterDownloader.loadTasksWithRawQuery(
         query: "SELECT * FROM task WHERE task_id = '${episodeTask.taskId}'");
-    final filePath =
+    // I tried to combine these two but audioplayer only seems to work if the file name is uri encoded
+    // and file only works if it is not.
+    final fileUri =
         'file://${path.join(completeTask!.first.savedDir, Uri.encodeComponent(completeTask.first.filename!))}';
-    var fileStat = await File(filePath.substring(7)).stat();
-    var duration = await AudioPlayer().setUrl(filePath);
+    final filePath =
+        path.join(completeTask!.first.savedDir, completeTask.first.filename!);
+    var fileStat = await File(filePath).stat();
+    var duration = await AudioPlayer().setUrl(fileUri);
     await _episodeState.getEpisodes(episodeIds: [episodeTask.episode.id]);
     await _episodeState.setDownloaded(episodeTask.episode.id,
-        mediaId: filePath,
+        mediaId: fileUri,
         taskId: episodeTask.taskId,
         size: fileStat.size,
         duration: duration?.inSeconds ?? 0);
@@ -365,7 +372,7 @@ Future<void> taskStarter(EpisodeBrief episode, List<EpisodeTask> episodeTasks,
     var now = DateTime.now();
     String dateFull = now.toIso8601String();
     var fileName =
-        '${episode.title.replaceAll('/', '')},$dateFull,${episode.enclosureUrl.split('/').last.split('.').last.split('?').first}';
+        '${episode.title.replaceAll('/', '')} - $dateFull.${episode.enclosureUrl.split('/').last.split('.').last.split('?').first}';
     if (fileName.length > 100) {
       fileName = fileName.substring(fileName.length - 100);
     }
