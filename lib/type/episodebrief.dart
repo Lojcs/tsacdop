@@ -102,9 +102,10 @@ class EpisodeBrief extends Equatable {
       artist: podcastTitle,
       album: podcastTitle,
       duration: Duration(seconds: enclosureDuration),
-      artUri: Uri.parse('file://$podcastImage'),
-      // artUri:
-      //     Uri.parse(episodeImage != '' ? episodeImage : 'file://$podcastImage'),
+      // artUri: Uri.parse('file://$podcastImage'),
+      // Andoid auto can't show local images
+      artUri:
+          Uri.parse(episodeImage != '' ? episodeImage : 'file://$podcastImage'),
       extras: {
         'skipSecondsStart': skipSecondsStart,
         'skipSecondsEnd': skipSecondsEnd

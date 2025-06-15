@@ -20,7 +20,9 @@ import 'state/download_state.dart';
 import 'state/podcast_group.dart';
 import 'state/refresh_podcast.dart';
 import 'state/setting_state.dart';
+import 'type/playlist.dart';
 import 'type/theme_data.dart';
+import 'util/extension_helper.dart';
 
 ///Initial theme settings
 final SettingState themeSetting = SettingState();
@@ -70,62 +72,67 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     Provider.of<SettingState>(context, listen: false).context = context;
     Provider.of<EpisodeState>(context, listen: false).context = context;
+    final browsableLibrary = BrowsableLibrary(context);
+    context.audioState.browsableLibrary = browsableLibrary;
     return Selector<SettingState,
         Tuple4<ThemeMode?, ThemeData, ThemeData, bool?>>(
       selector: (_, setting) => Tuple4(setting.theme, setting.lightTheme,
           setting.darkTheme, setting.useWallpaperTheme),
       builder: (_, data, child) {
         return FeatureDiscovery(
-          child: DynamicColorBuilder(builder: (lightDynamic, darkDynamic) {
-            final lightTheme = data.item4! && lightDynamic != null
-                ? data.item2.copyWith(colorScheme: lightDynamic, extensions: [
-                    ActionBarTheme(
-                      iconColor: Colors.grey[800],
-                      size: 24,
-                      radius: const Radius.circular(16),
-                      padding: const EdgeInsets.all(6),
-                    ),
-                    CardColorScheme(lightDynamic),
-                  ])
-                : data.item2;
-            final darkTheme = data.item4! && darkDynamic != null
-                ? data.item3.copyWith(
-                    colorScheme: darkDynamic.copyWith(
-                      surface: Provider.of<SettingState>(context, listen: false)
-                              .realDark!
-                          ? Colors.black
-                          : null,
-                    ),
-                    extensions: [
-                        ActionBarTheme(
-                          iconColor: Colors.grey[200],
-                          size: 24,
-                          radius: const Radius.circular(16),
-                          padding: const EdgeInsets.all(6),
-                        ),
-                        CardColorScheme(darkDynamic),
-                      ])
-                : data.item3;
-            return MaterialApp(
-              themeMode: data.item1,
-              debugShowCheckedModeBanner: false,
-              title: 'Tsacdop',
-              theme: lightTheme,
-              darkTheme: darkTheme,
-              localizationsDelegates: [
-                S.delegate,
-                GlobalMaterialLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-                GlobalCupertinoLocalizations.delegate,
-              ],
-              supportedLocales: S.delegate.supportedLocales,
-              home: context.read<SettingState>().showIntro!
-                  ? SlideIntro(goto: Goto.home)
-                  : context.read<SettingState>().openPlaylistDefault!
-                      ? PlaylistHome()
-                      : Home(),
-            );
-          }),
+          child: DynamicColorBuilder(
+            builder: (lightDynamic, darkDynamic) {
+              final lightTheme = data.item4! && lightDynamic != null
+                  ? data.item2.copyWith(colorScheme: lightDynamic, extensions: [
+                      ActionBarTheme(
+                        iconColor: Colors.grey[800],
+                        size: 24,
+                        radius: const Radius.circular(16),
+                        padding: const EdgeInsets.all(6),
+                      ),
+                      CardColorScheme(lightDynamic),
+                    ])
+                  : data.item2;
+              final darkTheme = data.item4! && darkDynamic != null
+                  ? data.item3.copyWith(
+                      colorScheme: darkDynamic.copyWith(
+                        surface:
+                            Provider.of<SettingState>(context, listen: false)
+                                    .realDark!
+                                ? Colors.black
+                                : null,
+                      ),
+                      extensions: [
+                          ActionBarTheme(
+                            iconColor: Colors.grey[200],
+                            size: 24,
+                            radius: const Radius.circular(16),
+                            padding: const EdgeInsets.all(6),
+                          ),
+                          CardColorScheme(darkDynamic),
+                        ])
+                  : data.item3;
+              return MaterialApp(
+                themeMode: data.item1,
+                debugShowCheckedModeBanner: false,
+                title: 'Tsacdop',
+                theme: lightTheme,
+                darkTheme: darkTheme,
+                localizationsDelegates: [
+                  S.delegate,
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                ],
+                supportedLocales: S.delegate.supportedLocales,
+                home: context.read<SettingState>().showIntro!
+                    ? SlideIntro(goto: Goto.home)
+                    : context.read<SettingState>().openPlaylistDefault!
+                        ? PlaylistHome()
+                        : Home(),
+              );
+            },
+          ),
         );
       },
     );

@@ -66,11 +66,12 @@ class AudioPlayerNotifier extends ChangeNotifier {
   /// Episode state propogation
   late final EpisodeState _episodeState;
 
+  /// Browsable library for android auto. Needs a context with all state providers.
+  /// Set this before adding the first listener.
   late final BrowsableLibrary browsableLibrary;
 
   AudioPlayerNotifier(BuildContext context) {
     _episodeState = Provider.of<EpisodeState>(context, listen: false);
-    browsableLibrary = BrowsableLibrary(context);
   }
 
   /// Unused. (replaced by history database)
@@ -586,12 +587,12 @@ class AudioPlayerNotifier extends ChangeNotifier {
   }
 
   /// Loads arbitrary playlist from start. Doesn't need to be saved
-  Future<void> playlistLoad(Playlist playlist) async {
+  Future<void> playlistLoad(Playlist playlist, {int index = 0}) async {
     await playlist.cachePlaylist(_episodeState);
     if (playlist.isNotEmpty) {
       await saveHistory();
       _startPlaylist = playlist;
-      _startEpisodeIndex = 0;
+      _startEpisodeIndex = index;
       _historyPosition = 0;
       _lastEpisodeId = null;
       await playFromStart();
@@ -1637,23 +1638,9 @@ class CustomAudioHandler extends BaseAudioHandler
   }
 
   @override
-  ValueStream<Map<String, dynamic>> subscribeToChildren(String parentMediaId) {
-    // I don't understand what this does or what it is supposed to do
-    switch (parentMediaId) {
-      case AudioService.recentRootId:
-        final stream = mediaItem.map((_) => <String, dynamic>{});
-        return mediaItem.hasValue
-            ? stream.shareValueSeeded(<String, dynamic>{})
-            : stream.shareValue();
-      // case AudioService.browsableRootId:
-      //   return;
-      default:
-        return Stream.value(<String, dynamic>{}).shareValue();
-      // return Stream.value(_mediaLibrary.items[parentMediaId])
-      //     .map((_) => <String, dynamic>{})
-      //     .shareValue();
-      // Why map create a value only to map it to an empty map?
-    }
+  Future<void> playFromMediaId(String mediaId,
+      [Map<String, dynamic>? extras]) async {
+    await browsableRoot[mediaId];
   }
 
   /// Play/pause toggle
