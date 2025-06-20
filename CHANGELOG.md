@@ -1,6 +1,21 @@
 # Tsacdop-Fork Changelog
 
+## 0.8.3
+Release date 2025/06/20
+
+### New
+* Android auto support.
+* App performance improved.
+* On episode and podcast pages the content appears instantly.
+
+### Bugfixes
+* Misc. bugfixes
+
+### Other
+* Simplified code to make it easier and faster.
+
 ## 0.8.2
+Release date 2025/04/25
 
 ### Bugfixes
 * Misc. bugfixes
@@ -9,11 +24,13 @@
 * Option to swap tap and long press to open popup menu
 
 ## 0.8.1
+Release date 2025/04/24
 
 ### Bugfixes
 * Misc. bugfixes
 
 ## 0.8.0
+Release date 2025/04/24
 
 This is the second release and there are less changes than the first so I'm writing a more detailed changelog.
 
