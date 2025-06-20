@@ -878,5 +878,11 @@
   "settingsDiscoveryDes": "\"Keşif Özellikleri\"ni yeniden açmak istediğinizden emin misiniz?",
   "@settingsDiscoveryDes": {},
   "selectMode": "Seçim Modu",
-  "@selectMode": {}
+  "@selectMode": {},
+  "deleted": "Silindi",
+  "@deleted": {},
+  "deletedEpisodeDesc": "Bu bölüm veritabanından silindi",
+  "@deletedEpisodeDesc": {},
+  "downloading": "İndiriliyor",
+  "@downloading": {}
 }
