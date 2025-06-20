@@ -779,5 +779,82 @@
     "placeholders": {
       "version": {}
     }
-  }
+  },
+  "after": "Después",
+  "@after": {
+    "description": "Used in a button to select episodes after the selected one(s) on a list. Not used for time"
+  },
+  "before": "Antes",
+  "@before": {
+    "description": "Used in a button to select episodes before the selected one(s) on a list. Not used for time"
+  },
+  "between": "Entre",
+  "@between": {
+    "description": "Used in a button to select episodes between the selected one(s) on a list"
+  },
+  "capitalDefault": "Por defecto",
+  "@capitalDefault": {},
+  "deselectAll": "Desmarcar Todo",
+  "@deselectAll": {},
+  "downloadDate": "Fecha de descarga",
+  "@downloadDate": {
+    "description": "Download Date sort order"
+  },
+  "duration": "Duración",
+  "@duration": {
+    "description": "Duration sort order"
+  },
+  "moreOptions": "Más Opciones",
+  "@moreOptions": {},
+  "removeDownload": "Eliminar Descarga",
+  "@removeDownload": {},
+  "restartAppForEffect": "Reinicie la aplicación para que los cambios surtan efecto.",
+  "@restartAppForEffect": {
+    "description": "Notify user that the change will take effect after app restart."
+  },
+  "settingsDiscoveryDes": "¿Estás seguro de que quiere reactivar \"Descubrir Características\"?",
+  "@settingsDiscoveryDes": {},
+  "filterType": "Filtrar {type}",
+  "@filterType": {
+    "description": "To use with different episode filter types. Noun, not verb. Ex: {Downloaded} Filter, {Played} Filter, {Group} Filter...",
+    "placeholders": {
+      "type": {}
+    }
+  },
+  "localEpisodeDescription": "Episodio local en {filePath}",
+  "@localEpisodeDescription": {
+    "placeholders": {
+      "filePath": {}
+    }
+  },
+  "networkErrorDNS": "Error de red (problema de DNS)",
+  "@networkErrorDNS": {
+    "description": "Notify the user that the host address couldn't be found."
+  },
+  "newPlain": "Nuevo",
+  "@newPlain": {
+    "description": "Word to describe a new episode (and use in filterType)"
+  },
+  "random": "Aleatorio",
+  "@random": {
+    "description": "Random sort order"
+  },
+  "close": "Cerrar",
+  "@close": {},
+  "publishDate": "Fecha de publicación",
+  "@publishDate": {
+    "description": "Publish Date sort order"
+  },
+  "interaction": "Interacción",
+  "@interaction": {
+    "description": "Interaction setting menu section title"
+  },
+  "loading": "Cargando",
+  "@loading": {},
+  "selectMode": "Modo de Selección",
+  "@selectMode": {},
+  "searchInstructions": "Introduce la url de un feed rss o busca un podcast y abre su feed rss para suscribirte.",
+  "@searchInstructions": {},
+  "sortBy": "Ordenar Por",
+  "@sortBy": {}
 }
