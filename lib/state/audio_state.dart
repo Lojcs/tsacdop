@@ -68,7 +68,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
 
   /// Browsable library for android auto. Needs a context with all state providers.
   /// Set this before adding the first listener.
-  late final BrowsableLibrary browsableLibrary;
+  BrowsableLibrary? browsableLibrary;
 
   AudioPlayerNotifier(BuildContext context) {
     _episodeState = Provider.of<EpisodeState>(context, listen: false);
@@ -396,7 +396,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     int cacheMax =
         await cacheStorage.getInt(defaultValue: (1024 * 1024 * 200).toInt());
     _audioHandler = await AudioService.init(
-        builder: () => CustomAudioHandler(cacheMax, browsableLibrary),
+        builder: () => CustomAudioHandler(cacheMax, browsableLibrary!),
         config: _config);
     await _loadPlayer();
     _addHandlerListeners();

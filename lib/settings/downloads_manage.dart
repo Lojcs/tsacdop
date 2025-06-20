@@ -11,7 +11,6 @@ import 'package:provider/provider.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/download_state.dart';
 import '../state/episode_state.dart';
-import '../type/episodebrief.dart';
 import '../type/theme_data.dart';
 import '../util/extension_helper.dart';
 import '../widgets/action_bar.dart';
@@ -21,7 +20,7 @@ class DownloadsManage extends StatefulWidget {
   const DownloadsManage({super.key});
 
   @override
-  _DownloadsManageState createState() => _DownloadsManageState();
+  State<DownloadsManage> createState() => _DownloadsManageState();
 }
 
 class _DownloadsManageState extends State<DownloadsManage> {
