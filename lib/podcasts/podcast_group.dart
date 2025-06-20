@@ -517,15 +517,17 @@ class _RenameGroupState extends State<RenameGroup> {
           ),
           TextButton(
             onPressed: () async {
-              if (list.contains(_newName)) {
-                setState(() => _error = 1);
-              } else {
-                final newGroup = PodcastGroup(_newName,
-                    color: widget.group!.color,
-                    id: widget.group!.id,
-                    podcastList: widget.group!.podcastList);
-                groupList.updateGroup(newGroup);
-                Navigator.of(context).pop();
+              if (_newName != null) {
+                if (list.contains(_newName)) {
+                  setState(() => _error = 1);
+                } else {
+                  final newGroup = PodcastGroup(_newName!,
+                      color: widget.group!.color,
+                      id: widget.group!.id,
+                      podcastList: widget.group!.podcastList);
+                  groupList.updateGroup(newGroup);
+                  Navigator.of(context).pop();
+                }
               }
             },
             child: Text(

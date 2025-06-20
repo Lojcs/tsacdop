@@ -1,215 +1,300 @@
 import 'package:audio_service/audio_service.dart';
-import 'package:equatable/equatable.dart';
+import 'package:collection/collection.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
-
+import '../generated/l10n.dart';
 import '../local_storage/sqflite_localpodcast.dart';
-import 'episodebrief.dart';
+import '../state/audio_state.dart';
+import '../state/episode_state.dart';
+import '../state/podcast_group.dart';
+import '../widgets/action_bar.dart';
 
-class PlaylistEntity {
-  final String? name;
-  final String? id;
-  final bool? isLocal;
-  final List<String> episodeList;
+enum EpisodeCollision { keepExisting, replace, ignore }
 
-  PlaylistEntity(this.name, this.id, this.isLocal, this.episodeList);
+class Playlist {
+  /// Playlist name. the default playlist is named "Playlist".
+  final String name;
+
+  /// Unique id for playlist.
+  final String id;
+
+  /// Wheter playlist is from local files.
+  final bool isLocal;
+
+  /// Episode url list for playlist.
+  final List<int> episodeIds;
+
+  /// Wheter the episodes are cached in [EpisodeState].
+  bool cached = false;
+
+  /// Incremented each time playlist is modified in memory.
+  int _generation = 0;
+
+  bool get isEmpty => episodeIds.isEmpty;
+  bool get isNotEmpty => episodeIds.isNotEmpty;
+  int get length => episodeIds.length;
+  bool contains(int episodeId) => episodeIds.contains(episodeId);
+  int operator [](int i) => episodeIds[i];
+
+  bool get isQueue => name == 'Queue';
+
+  Playlist(this.name,
+      {String? id, this.isLocal = false, this.episodeIds = const []})
+      : id = id ?? Uuid().v4(),
+        assert(name != '');
 
   Map<String, Object?> toJson() {
     return {
       'name': name,
       'id': id,
       'isLocal': isLocal,
-      'episodeList': episodeList
+      'episodeIdList': episodeIds
     };
   }
 
-  static PlaylistEntity fromJson(Map<String, dynamic> json) {
-    var list = List<String>.from(json['episodeList'] as Iterable<dynamic>);
-    return PlaylistEntity(json['name'] as String?, json['id'] as String?,
-        json['isLocal'] == null ? false : json['isLocal'] as bool?, list);
-  }
-}
+  Playlist.fromJson(Map<String, dynamic> json)
+      : name = json['name'] as String,
+        id = json['id'] as String,
+        isLocal = json['isLocal'] == true,
+        episodeIds = List<int>.from(json['episodeIdList']);
 
-enum EpisodeCollision { KeepExisting, Replace, Ignore }
-
-class Playlist extends Equatable {
-  /// Playlist name. the default playlist is named "Playlist".
-  final String? name;
-
-  /// Unique id for playlist.
-  final String id;
-
-  final bool? isLocal;
-
-  /// Episode url list for playlist.
-  final List<String> episodeUrlList;
-
-  /// Episodes in playlist.
-  final List<EpisodeBrief> episodes;
-
-  List<MediaItem> get mediaItems =>
-      [for (var episode in episodes) episode.mediaItem];
-
-  bool get isEmpty => episodeUrlList.isEmpty;
-
-  bool get isNotEmpty => episodeUrlList.isNotEmpty;
-
-  int get length => episodeUrlList.length;
-
-  bool get isQueue => name == 'Queue';
-
-  bool contains(EpisodeBrief episode) => episodes.contains(episode);
-
-  Playlist(this.name,
-      {String? id,
-      this.isLocal = false,
-      List<String>? episodeUrlList,
-      List<EpisodeBrief>? episodes})
-      : id = id ?? Uuid().v4(),
-        assert(name != ''),
-        episodeUrlList = episodeUrlList ?? [],
-        episodes = episodes ?? [];
-
-  PlaylistEntity toEntity() {
-    return PlaylistEntity(name, id, isLocal, episodeUrlList.toSet().toList());
-  }
-
-  static Playlist fromEntity(PlaylistEntity entity) {
-    return Playlist(
-      entity.name,
-      id: entity.id,
-      isLocal: entity.isLocal,
-      episodeUrlList: entity.episodeList,
-    );
-  }
-
-  final DBHelper _dbHelper = DBHelper();
-//  final KeyValueStorage _playlistStorage = KeyValueStorage(playlistKey);
-
-  /// Initialises the playlist with the urls in [episodeUrlList].
-  Future<void> getPlaylist() async {
-    // Don't reload if already loaded (hope this doesn't break anything)
-    if (episodes.length == episodeUrlList.length) return;
-
-    episodes.clear();
-    if (episodeUrlList.isNotEmpty) {
-      // Single database call should be faster
-      episodes.addAll(await _dbHelper
-          .getEpisodes(episodeUrls: episodeUrlList, optionalFields: [
-        EpisodeField.enclosureDuration,
-        EpisodeField.enclosureSize,
-        EpisodeField.mediaId,
-        EpisodeField.primaryColor,
-        EpisodeField.isExplicit,
-        EpisodeField.isNew,
-        EpisodeField.skipSecondsStart,
-        EpisodeField.skipSecondsEnd,
-        EpisodeField.episodeImage,
-        EpisodeField.podcastImage,
-        EpisodeField.chapterLink
-      ]));
-    }
-    // Remove episode urls from episodeList if they are not in the database
-    if (episodes.length < episodeUrlList.length) {
-      List<bool> episodesFound =
-          List<bool>.filled(episodeUrlList.length, false);
-      for (EpisodeBrief? episode in episodes) {
-        int index = episodeUrlList.indexOf(episode!.enclosureUrl);
-        episodesFound[index] = true;
-      }
-      for (int i = episodesFound.length - 1; i >= 0; i--) {
-        if (!episodesFound[i]) {
-          episodeUrlList.removeAt(i);
-        }
-      }
-    }
-    // Sort episodes in episodeList order
-    if (episodes.length == episodeUrlList.length) {
-      List<bool> sorted = List<bool>.filled(episodes.length, false);
-      for (int i = 0; i < episodes.length; i++) {
-        if (!sorted[i]) {
-          int index = episodeUrlList.indexOf(episodes[i].enclosureUrl);
-          EpisodeBrief? temp;
-          while (index != i) {
-            temp = episodes[index];
-            episodes[index] = episodes[i];
-            episodes[i] = temp;
-            sorted[index] = true;
-            index = episodeUrlList.indexOf(episodes[i].enclosureUrl);
-          }
-          sorted[index] = true;
-        }
-      }
-    }
+  /// Caches [episodeIds] into [eState] and removes missing ids from the playlist.
+  Future<bool> cachePlaylist(EpisodeState eState) async {
+    if (cached) return true;
+    List<int> missingIds = await eState.cacheEpisodes(episodeIds);
+    episodeIds.removeWhere((id) => missingIds.contains(id));
+    cached = true;
+    return true;
   }
 
   /// Adds [newEpisodes] to the playlist at [index].
   /// Don't directly use on playlists that might be live. Use [AudioState.addToPlaylist] instead.
-  void addEpisodes(List<EpisodeBrief> newEpisodes, int index,
-      {EpisodeCollision ifExists = EpisodeCollision.Ignore}) {
+  void addEpisodes(List<int> newEpisodes, int index,
+      {EpisodeCollision ifExists = EpisodeCollision.ignore}) {
+    _generation++;
     switch (ifExists) {
-      case EpisodeCollision.KeepExisting:
-        newEpisodes.removeWhere((episode) => episodes.contains(episode));
+      case EpisodeCollision.keepExisting:
+        newEpisodes.removeWhere((episode) => episodeIds.contains(episode));
         break;
-      case EpisodeCollision.Replace:
-        episodes.removeWhere((episode) => newEpisodes.contains(episode));
-        episodeUrlList.removeWhere(
-            (url) => newEpisodes.any((episode) => episode.enclosureUrl == url));
+      case EpisodeCollision.replace:
+        episodeIds.removeWhere((episode) => newEpisodes.contains(episode));
         break;
-      case EpisodeCollision.Ignore:
+      case EpisodeCollision.ignore:
         break;
     }
-    if (index >= episodeUrlList.length) {
-      episodes.addAll(newEpisodes);
-      episodeUrlList
-          .addAll([for (var episode in newEpisodes) episode.enclosureUrl]);
+    if (index >= episodeIds.length) {
+      episodeIds.addAll(newEpisodes);
     } else {
-      episodes.insertAll(index, newEpisodes);
-      episodeUrlList.insertAll(
-          index, [for (var episode in newEpisodes) episode.enclosureUrl]);
+      episodeIds.insertAll(index, newEpisodes);
     }
   }
 
   /// Removes [number] episodes at [index] from playlist.
   /// Don't directly use on playlists that might be live. Use [AudioState.removeFromPlaylistAt] instead.
-  void removeEpisodesAt(int index, {int number = 1, bool delLocal = true}) {
+  /// [eState] is used to delete local episodes.
+  void removeEpisodesAt(EpisodeState eState, int index,
+      {int number = 1, bool delLocal = true}) {
+    _generation++;
     int end = index + number;
-    List<String> delUrls = episodeUrlList.getRange(index, end).toList();
-    episodeUrlList.removeRange(index, end);
-    episodes.removeRange(index, end);
-    if (isLocal! && delLocal) {
-      _dbHelper.deleteLocalEpisodes(delUrls);
+    List<int> delIds = episodeIds.getRange(index, end).toList();
+    episodeIds.removeRange(index, end);
+    if (isLocal && delLocal) {
+      eState.deleteLocalEpisodes(delIds);
     }
   }
 
   /// Moves episode at [oldIndex] to [newIndex].
   /// Don't directly use on playlists that might be live. Use [AudioState.reorderPlaylist] instead.
   void reorderPlaylist(int oldIndex, int newIndex) {
-    final episode = episodes.removeAt(oldIndex);
-    episodes.insert(newIndex, episode);
-    episodeUrlList.removeAt(oldIndex);
-    episodeUrlList.insert(newIndex, episode.enclosureUrl);
-  }
-
-  /// Replaces matching playlist episodes with the provided [episode].
-  /// Don't directly use on playlists that might be live. Use [AudioState.updateEpisodeMediaID] instead.
-  List<int> updateEpisode(EpisodeBrief episode) {
-    List<int> indexes = [];
-    for (int i = 0; i < episodes.length; i++) {
-      if (episodes[i] == episode) {
-        indexes.add(i);
-        episodes[i] = episode;
-      }
-    }
-    return indexes;
+    _generation++;
+    final id = episodeIds.removeAt(oldIndex);
+    episodeIds.insert(newIndex, id);
   }
 
   /// Clears all episodes in playlist.
   /// Don't directly use on playlists that might be live. Use [AudioState.clearPlaylist] instead.
   void clear() {
-    episodeUrlList.clear();
-    episodes.clear();
+    _generation++;
+    episodeIds.clear();
+  }
+
+  late final MediaItem mediaItem =
+      MediaItem(id: "lst:$id", title: name, playable: false);
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        other is Playlist && id == other.id && _generation == other._generation;
   }
 
   @override
-  List<Object?> get props => [id, name];
+  int get hashCode => [id, _generation].hashCode;
+}
+
+/// Class that provides a browsable media item
+class BrowsableLibrary {
+  static const podcastsId = '412f9d19-9f11-4aa3-b861-c203707c9af1';
+  static const playlistsId = '174a1978-c2f2-46f4-b9a3-9c4c5c018c9c';
+  static const groupsId = '7bf8bdcf-0283-4386-ac6a-956284358200';
+  static const recentsId = 'b11447c7-34cb-41b1-b587-b40c64c7a544';
+
+  BuildContext context;
+
+  late final EpisodeState episodeState =
+      Provider.of<EpisodeState>(context, listen: false);
+  late final AudioPlayerNotifier audioState =
+      Provider.of<AudioPlayerNotifier>(context, listen: false);
+  late final GroupList groupList =
+      Provider.of<GroupList>(context, listen: false);
+  late final S s = S.current;
+  BrowsableLibrary(this.context);
+
+  late Map<String, List<MediaItem>> root = _basicRoot;
+
+  Map<String, List<MediaItem>> get _basicRoot => {
+        AudioService.browsableRootId: [
+          MediaItem(
+            id: playlistsId,
+            title: s.playlists,
+            playable: false,
+          ),
+          MediaItem(
+            id: recentsId,
+            title: s.homeTabMenuRecent,
+            playable: false,
+          ),
+          MediaItem(
+            id: podcastsId,
+            title: s.podcast(2),
+            playable: false,
+          ),
+          MediaItem(
+            id: groupsId,
+            title: s.groups(2),
+            playable: false,
+          ),
+        ],
+      };
+
+  void reset() => root = _basicRoot;
+
+  Future<List<MediaItem>> operator [](String parentMediaId) async {
+    if (!root.containsKey(parentMediaId)) {
+      List<String> splitId = parentMediaId.split(':');
+      switch (splitId) {
+        case [recentsId]:
+          final (_, showPlayed) = await getLayoutAndShowPlayed();
+          final episodeIds = await episodeState.getEpisodes(
+              sortBy: Sorter.pubDate,
+              sortOrder: SortOrder.desc,
+              limit: 108,
+              offset: 0,
+              filterPlayed: showPlayed);
+          root[parentMediaId] = episodeIds.mapIndexed((i, eid) {
+            final episode = episodeState[eid];
+            final encodedId = "epi:rec:$parentMediaId:$i:${episode.id}";
+            return episode.mediaItem.copyWith(id: encodedId);
+          }).toList();
+          break;
+        case [playlistsId]:
+          root[parentMediaId] = audioState.playlists
+              .map((playlist) => playlist.mediaItem)
+              .toList();
+          break;
+        case [podcastsId]:
+          final podcasts = await DBHelper().getPodcastLocalAll();
+          root[parentMediaId] =
+              podcasts.map((podcast) => podcast.mediaItem).toList();
+          break;
+        case [groupsId]:
+          root[parentMediaId] = groupList.groups
+              .where((group) => group != null)
+              .map((group) => group!.mediaItem)
+              .toList();
+          break;
+        case ['grp', final id, ...]:
+          final group = groupList.groups
+              .firstWhere((group) => group != null && group.id == id)!;
+          final (_, showPlayed) = await getLayoutAndShowPlayed();
+          final episodeIds = await episodeState.getEpisodes(
+              feedIds: group.podcastList,
+              sortBy: Sorter.pubDate,
+              sortOrder: SortOrder.desc,
+              limit: 108,
+              offset: 0,
+              filterPlayed: showPlayed);
+          root[parentMediaId] = episodeIds.mapIndexed((i, eid) {
+            final episode = episodeState[eid];
+            final encodedId = "epi:$parentMediaId:$i:${episode.id}";
+            return episode.mediaItem.copyWith(id: encodedId);
+          }).toList();
+          break;
+        case ['pod', final id, ...]:
+          final (_, showPlayed) = await getLayoutAndShowPlayed();
+          final episodeIds = await episodeState.getEpisodes(
+              feedIds: [id],
+              sortBy: Sorter.pubDate,
+              sortOrder: SortOrder.desc,
+              limit: 108,
+              offset: 0,
+              filterPlayed: showPlayed);
+          root[parentMediaId] = episodeIds.mapIndexed((i, eid) {
+            final episode = episodeState[eid];
+            final encodedId = "epi:$parentMediaId:$i:${episode.id}";
+            return episode.mediaItem.copyWith(id: encodedId);
+          }).toList();
+          break;
+        case ['lst', final id, ...]:
+          final playlist =
+              audioState.playlists.firstWhere((playlist) => playlist.id == id);
+          await playlist.cachePlaylist(episodeState);
+          root[parentMediaId] = playlist.episodeIds.mapIndexed((i, eid) {
+            final episode = episodeState[eid];
+            final encodedId = "epi:$parentMediaId:$i:${episode.id}";
+            return episode.mediaItem.copyWith(id: encodedId);
+          }).toList();
+          break;
+        case ['epi', 'rec', final parentId, final index, ...]:
+          final List<int> episodeIds = root[parentId]!
+              .map((mItem) => int.parse(mItem.id.split(':').last))
+              .toList();
+          final playlist =
+              Playlist(s.homeTabMenuRecent, episodeIds: episodeIds);
+          audioState.addPlaylist(playlist);
+          await audioState.playlistLoad(playlist, index: int.parse(index));
+          break;
+        case ['epi', 'grp', final parentId, final index, ...]:
+          final List<int> episodeIds = root[parentId]!
+              .map((mItem) => int.parse(mItem.id.split(':').last))
+              .toList();
+          final groupTitle = root[AudioService.browsableRootId]!
+              .firstWhere((mItem) => mItem.id == parentId)
+              .title;
+          final playlist =
+              Playlist("${s.groups(1)}: $groupTitle", episodeIds: episodeIds);
+          audioState.addPlaylist(playlist);
+          await audioState.playlistLoad(playlist, index: int.parse(index));
+          break;
+        case ['epi', 'pod', final parentId, final index, ...]:
+          final List<int> episodeIds = root[parentId]!
+              .map((mItem) => int.parse(mItem.id.split(':').last))
+              .toList();
+          final podcastTitle = root[AudioService.browsableRootId]!
+              .firstWhere((mItem) => mItem.id == parentId)
+              .title;
+          final playlist = Playlist("${s.podcast(1)}: $podcastTitle",
+              episodeIds: episodeIds);
+          audioState.addPlaylist(playlist);
+          await audioState.playlistLoad(playlist, index: int.parse(index));
+          break;
+        case ['epi', 'lst', final parentId, final index, ...]:
+          final playlist = audioState.playlists
+              .firstWhere((playlist) => playlist.id == parentId);
+          await audioState.playlistLoad(playlist, index: int.parse(index));
+          break;
+      }
+    }
+    return root[parentMediaId] ?? [];
+  }
 }

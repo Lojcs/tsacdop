@@ -22,6 +22,7 @@ import 'package:uuid/uuid.dart';
 import '../home/home.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/audio_state.dart';
+import '../state/episode_state.dart';
 import '../state/setting_state.dart';
 import '../type/episodebrief.dart';
 import '../type/play_histroy.dart';
@@ -76,6 +77,7 @@ class _PlaylistHomeState extends State<PlaylistHome> {
   @override
   Widget build(BuildContext context) {
     final s = context.s;
+    final audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: context.overlay,
       child: PopScope(
@@ -90,11 +92,11 @@ class _PlaylistHomeState extends State<PlaylistHome> {
             appBar: AppBar(
               leading: CustomBackButton(),
               centerTitle: true,
-              title: Selector<AudioPlayerNotifier, EpisodeBrief?>(
-                selector: (_, audio) => audio.episode,
+              title: Selector<AudioPlayerNotifier, String?>(
+                selector: (_, audio) => audio.episodeBrief?.title,
                 builder: (_, data, __) {
                   return Text(
-                    data?.title ?? '',
+                    data ?? '',
                     maxLines: 1,
                     style: context.textTheme.headlineSmall,
                   );
@@ -108,168 +110,168 @@ class _PlaylistHomeState extends State<PlaylistHome> {
                 Container(
                   color: context.surface,
                   height: 100,
-                  child: Selector<AudioPlayerNotifier,
-                      Tuple4<Playlist?, bool, bool, EpisodeBrief?>>(
-                    selector: (_, audio) => Tuple4(audio.playlist,
-                        audio.playerRunning, audio.playing, audio.episode),
-                    builder: (_, data, __) {
-                      final running = data.item2;
-                      final playing = data.item3;
-                      final audio = context.read<AudioPlayerNotifier>();
-                      return Row(
-                        children: [
-                          Expanded(
-                              child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  IconButton(
-                                      splashRadius: 20,
-                                      icon: Icon(Icons.fast_rewind),
-                                      onPressed: () {
-                                        if (running) {
-                                          audio.rewind();
-                                        }
-                                      }),
-                                  SizedBox(width: 15),
-                                  IconButton(
-                                      padding: EdgeInsets.zero,
-                                      icon: Icon(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                IconButton(
+                                    splashRadius: 20,
+                                    icon: Icon(Icons.fast_rewind),
+                                    onPressed: () {
+                                      if (audio.playerRunning) {
+                                        audio.rewind();
+                                      }
+                                    }),
+                                SizedBox(width: 15),
+                                IconButton(
+                                    padding: EdgeInsets.zero,
+                                    icon: Selector<AudioPlayerNotifier, bool>(
+                                      selector: (_, audio) => audio.playing,
+                                      builder: (_, playing, __) => Icon(
                                           playing
                                               ? LineIcons.pauseCircle
                                               : LineIcons.play,
                                           size: 40),
-                                      onPressed: () {
-                                        if (running) {
-                                          playing
-                                              ? audio.pauseAduio()
-                                              : audio.resumeAudio();
-                                        } else if (data.item1!.isEmpty) {
-                                          Fluttertoast.showToast(
-                                              msg: 'Playlist is empty');
-                                        } else {
-                                          context
-                                              .read<AudioPlayerNotifier>()
-                                              .playFromLastPosition();
-                                        }
-                                      }),
-                                  SizedBox(width: 15),
-                                  IconButton(
-                                      splashRadius: 20,
-                                      icon: Icon(Icons.fast_forward),
-                                      onPressed: () {
-                                        if (running) {
-                                          audio.fastForward();
-                                        }
-                                      }),
-                                  IconButton(
-                                      splashRadius: 20,
-                                      icon: Icon(Icons.skip_next),
-                                      onPressed: () {
-                                        if (running &&
-                                            !(data.item1!.length == 1 &&
-                                                !data.item1!.isQueue)) {
-                                          audio.skipToNext();
-                                        }
-                                      }),
-                                ],
-                              ),
-                              SizedBox(height: 10),
-                              if (data.item2)
-                                Selector<AudioPlayerNotifier,
-                                    Tuple4<bool, int?, String?, int>>(
-                                  selector: (_, audio) => Tuple4(
-                                      audio.buffering,
-                                      audio.audioPosition,
-                                      audio.remoteErrorMessage,
-                                      audio.audioDuration),
-                                  builder: (_, info, __) {
-                                    return info.item3 != null
-                                        ? Text(info.item3!,
-                                            style: TextStyle(
-                                                color: Color(0xFFFF0000)))
-                                        : info.item1
-                                            ? Text(
-                                                s.buffering,
-                                                style: TextStyle(
-                                                    color: context.accentColor),
-                                              )
-                                            : Text(
-                                                '${(info.item2! ~/ 1000).toTime} / ${(info.item4 ~/ 1000).toTime}');
-                                  },
-                                ),
-                              if (!data.item2)
-                                Selector<AudioPlayerNotifier, int>(
-                                  selector: (_, audio) => audio.historyPosition,
-                                  builder: (_, position, __) {
-                                    return Text(
-                                        '${(position ~/ 1000).toTime} / ${(data.item4?.enclosureDuration ?? 0).toTime}');
-                                  },
-                                ),
-                            ],
-                          )),
-                          data.item4 != null
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(10),
-                                  child: Stack(
-                                    alignment: Alignment.center,
-                                    children: [
-                                      SizedBox(
-                                          width: 80,
-                                          height: 80,
-                                          child: Image(
-                                              image: data.item4!
-                                                  .episodeOrPodcastImageProvider)),
-                                      Selector<AudioPlayerNotifier, int>(
-                                        selector: (_, audio) {
-                                          if (!audio.playerRunning &&
-                                              audio.episode!
-                                                      .enclosureDuration !=
-                                                  0) {
-                                            return (audio.audioPosition ~/
-                                                (audio.episode!
-                                                        .enclosureDuration! *
-                                                    10));
-                                          } else if (audio.playerRunning &&
-                                              audio.audioDuration != 0) {
-                                            return ((audio.audioPosition *
-                                                    100) ~/
-                                                audio.audioDuration);
-                                          } else {
-                                            return 0;
-                                          }
-                                        },
-                                        builder: (_, progress, __) {
-                                          return SizedBox(
-                                            height: 80,
-                                            width: 80,
-                                            child: CustomPaint(
-                                              painter: CircleProgressIndicator(
-                                                  progress,
-                                                  color: context.primaryColor
-                                                      .withValues(alpha: 0.9)),
-                                            ),
-                                          );
-                                        },
+                                    ),
+                                    onPressed: () {
+                                      if (audio.playerRunning) {
+                                        audio.playing
+                                            ? audio.pauseAduio()
+                                            : audio.resumeAudio();
+                                      } else if (audio.playlist.isEmpty) {
+                                        Fluttertoast.showToast(
+                                            msg: 'Playlist is empty');
+                                      } else {
+                                        context
+                                            .read<AudioPlayerNotifier>()
+                                            .playFromLastPosition();
+                                      }
+                                    }),
+                                SizedBox(width: 15),
+                                IconButton(
+                                    splashRadius: 20,
+                                    icon: Icon(Icons.fast_forward),
+                                    onPressed: () {
+                                      if (audio.playerRunning) {
+                                        audio.fastForward();
+                                      }
+                                    }),
+                                IconButton(
+                                    splashRadius: 20,
+                                    icon: Icon(Icons.skip_next),
+                                    onPressed: () {
+                                      if (audio.playerRunning &&
+                                          !(audio.playlist.length == 1 &&
+                                              !audio.playlist.isQueue)) {
+                                        audio.skipToNext();
+                                      }
+                                    }),
+                              ],
+                            ),
+                            SizedBox(height: 10),
+                            Selector<AudioPlayerNotifier, bool>(
+                              selector: (_, audio) => audio.playerRunning,
+                              builder: (_, running, __) => running
+                                  ? Selector<AudioPlayerNotifier,
+                                      (bool, int?, String?, int)>(
+                                      selector: (_, audio) => (
+                                        audio.buffering,
+                                        audio.audioPosition,
+                                        audio.remoteErrorMessage,
+                                        audio.audioDuration
                                       ),
-                                    ],
-                                  ),
-                                )
-                              : Container(
-                                  decoration: BoxDecoration(
-                                      color: context.accentColor.withAlpha(70),
-                                      borderRadius: BorderRadius.circular(10)),
-                                  width: 80,
-                                  height: 80),
-                          SizedBox(
-                            width: 20,
-                          ),
-                        ],
-                      );
-                    },
+                                      builder: (_, info, __) {
+                                        return info.$3 != null
+                                            ? Text(info.$3!,
+                                                style: TextStyle(
+                                                    color: Color(0xFFFF0000)))
+                                            : info.$1
+                                                ? Text(
+                                                    s.buffering,
+                                                    style: TextStyle(
+                                                        color: context
+                                                            .accentColor),
+                                                  )
+                                                : Text(
+                                                    '${(info.$2! ~/ 1000).toTime} / ${(info.$4 ~/ 1000).toTime}');
+                                      },
+                                    )
+                                  : Selector<AudioPlayerNotifier, (int, int)>(
+                                      selector: (_, audio) => (
+                                        audio.historyPosition,
+                                        audio.episodeBrief?.enclosureDuration ??
+                                            0
+                                      ),
+                                      builder: (_, data, __) => Text(
+                                          '${(data.$1 ~/ 1000).toTime} / ${data.$2.toTime}'),
+                                    ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Selector<AudioPlayerNotifier, EpisodeBrief?>(
+                        selector: (_, audio) => audio.episodeBrief,
+                        builder: (_, episodeBrief, __) => episodeBrief != null
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    SizedBox(
+                                        width: 80,
+                                        height: 80,
+                                        child: Image(
+                                            image: episodeBrief
+                                                .episodeOrPodcastImageProvider)),
+                                    Selector<AudioPlayerNotifier, int>(
+                                      selector: (_, audio) {
+                                        if (!audio.playerRunning &&
+                                            episodeBrief.enclosureDuration !=
+                                                0) {
+                                          return (audio.audioPosition ~/
+                                              (episodeBrief.enclosureDuration *
+                                                  10));
+                                        } else if (audio.playerRunning &&
+                                            audio.audioDuration != 0) {
+                                          return ((audio.audioPosition * 100) ~/
+                                              audio.audioDuration);
+                                        } else {
+                                          return 0;
+                                        }
+                                      },
+                                      builder: (_, progress, __) {
+                                        return SizedBox(
+                                          height: 80,
+                                          width: 80,
+                                          child: CustomPaint(
+                                            painter: CircleProgressIndicator(
+                                                progress,
+                                                color: context.primaryColor
+                                                    .withValues(alpha: 0.9)),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : Container(
+                                decoration: BoxDecoration(
+                                    color: context.accentColor.withAlpha(70),
+                                    borderRadius: BorderRadius.circular(10)),
+                                width: 80,
+                                height: 80),
+                      ),
+                      SizedBox(
+                        width: 20,
+                      ),
+                    ],
                   ),
                 ),
                 Container(
@@ -332,51 +334,41 @@ class _Queue extends StatefulWidget {
 class _QueueState extends State<_Queue> {
   @override
   Widget build(BuildContext context) {
-    return Selector<AudioPlayerNotifier,
-        Tuple5<bool, int?, EpisodeBrief?, Playlist, int>>(
-      selector: (_, audio) => Tuple5(audio.playerRunning, audio.episodeIndex,
-          audio.episode, audio.playlist, audio.playlist.length),
-      builder: (_, data, __) {
-        Playlist? playlist = data.item4;
-        bool running = data.item1;
-        int? episodeIndex = data.item2;
-        if (episodeIndex == null) {
-          return Center();
-        } else {
-          List<EpisodeBrief> episodes = playlist.episodes.toList();
-          return ReorderableListView.builder(
-            itemCount: playlist.length,
-            onReorder: (oldIndex, newIndex) async {
-              if (newIndex > oldIndex) newIndex -= 1;
-              final episode = episodes.removeAt(oldIndex);
-              episodes.insert(newIndex,
-                  episode); // Without this the animation isn't smooth as the below call takes time to complete (I think)
-              await context
-                  .read<AudioPlayerNotifier>()
-                  .reorderPlaylist(oldIndex, newIndex, playlist: playlist);
-              if (mounted) setState(() {});
-            },
-            scrollDirection: Axis.vertical,
-            itemBuilder: (context, index) {
-              if (running && index == episodeIndex) {
-                return EpisodeTile(episodes[index],
-                    key: ValueKey(episodes[index].enclosureUrl),
-                    isPlaying: true,
-                    canReorder: true,
-                    havePadding: true,
-                    tileColor: context.accentBackground);
-              } else {
-                return DismissibleContainer(
-                  playlist: playlist,
-                  episode: episodes[index],
-                  index: index,
-                  onRemove: () {},
-                  key: ValueKey(episodes[index].enclosureUrl),
-                );
-              }
-            },
-          );
-        }
+    final audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
+    return Selector<AudioPlayerNotifier, Playlist>(
+      selector: (_, audio) => audio.playlist,
+      builder: (_, playlist, __) {
+        List<int> episodeIds = playlist.episodeIds.toList();
+        return ReorderableListView.builder(
+          itemCount: playlist.length,
+          onReorder: (oldIndex, newIndex) async {
+            if (newIndex > oldIndex) newIndex -= 1;
+            final episode = episodeIds.removeAt(oldIndex);
+            episodeIds.insert(newIndex,
+                episode); // Without this the animation isn't smooth as the below call takes time to complete (I think)
+            await audio.reorderPlaylist(oldIndex, newIndex);
+            if (mounted) setState(() {});
+          },
+          scrollDirection: Axis.vertical,
+          itemBuilder: (context, index) {
+            if (audio.playerRunning && index == audio.episodeIndex) {
+              return EpisodeTile(episodeIds[index],
+                  key: ValueKey(episodeIds[index]),
+                  isPlaying: true,
+                  canReorder: true,
+                  havePadding: true,
+                  tileColor: context.accentBackground);
+            } else {
+              return DismissibleContainer(
+                playlist: playlist,
+                episodeId: episodeIds[index],
+                index: index,
+                onRemove: () {},
+                key: ValueKey(episodeIds[index]),
+              );
+            }
+          },
+        );
       },
     );
   }
@@ -405,8 +397,11 @@ class _HistoryState extends State<_History> {
   Future<List<PlayHistory>> getPlayRecords(int? top) async {
     List<PlayHistory> playHistory;
     playHistory = await dbHelper.getPlayRecords(top);
-    for (var record in playHistory) {
-      await record.getEpisode();
+    if (mounted) {
+      EpisodeState eState = context.episodeState;
+      for (var record in playHistory) {
+        await record.getEpisodeId(eState);
+      }
     }
     return playHistory;
   }
@@ -439,7 +434,7 @@ class _HistoryState extends State<_History> {
   }
 
   Widget _timeTag(BuildContext context,
-      {required EpisodeBrief episode,
+      {required int episodeId,
       required int seconds,
       required double seekValue}) {
     final audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
@@ -451,7 +446,7 @@ class _HistoryState extends State<_History> {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            audio.loadEpisodeToQueue(episode,
+            audio.loadEpisodeToQueue(episodeId,
                 startPosition: (seconds * 1000).toInt());
           },
           borderRadius: BorderRadius.circular(20),
@@ -501,19 +496,19 @@ class _HistoryState extends State<_History> {
     );
   }
 
-  Widget _playlistButton(BuildContext context, {EpisodeBrief? episode}) {
+  Widget _playlistButton(BuildContext context, {required int episodeId}) {
     final audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
     final s = context.s;
     return SizedBox(
-      child: Selector<AudioPlayerNotifier, List<EpisodeBrief?>>(
-        selector: (_, audio) => audio.playlist.episodes,
+      child: Selector<AudioPlayerNotifier, Playlist>(
+        selector: (_, audio) => audio.playlist,
         builder: (_, data, __) {
-          return data.contains(episode)
+          return data.contains(episodeId)
               ? IconButton(
                   icon: Icon(Icons.playlist_add_check,
                       color: context.accentColor),
                   onPressed: () async {
-                    await audio.removeFromPlaylist([episode!]);
+                    await audio.removeFromPlaylist([episodeId]);
                     await Fluttertoast.showToast(
                       msg: s.toastRemovePlaylist,
                       gravity: ToastGravity.BOTTOM,
@@ -522,7 +517,7 @@ class _HistoryState extends State<_History> {
               : IconButton(
                   icon: Icon(Icons.playlist_add, color: Colors.grey[700]),
                   onPressed: () async {
-                    await audio.addToPlaylist([episode!]);
+                    await audio.addToPlaylist([episodeId]);
                     await Fluttertoast.showToast(
                       msg: s.toastAddPlaylist,
                       gravity: ToastGravity.BOTTOM,
@@ -566,8 +561,8 @@ class _HistoryState extends State<_History> {
                           final seconds = snapshot.data![index].seconds;
                           final date = snapshot
                               .data![index].playdate!.millisecondsSinceEpoch;
-                          final episode = snapshot.data![index].episode;
-                          return episode == null
+                          final episodeId = snapshot.data![index].episodeId;
+                          return episodeId == null
                               ? Center()
                               : SizedBox(
                                   height: 90.0,
@@ -581,7 +576,7 @@ class _HistoryState extends State<_History> {
                                             contentPadding: EdgeInsets.fromLTRB(
                                                 24, 8, 20, 8),
                                             onTap: () => audio
-                                                .loadEpisodeToQueue(episode,
+                                                .loadEpisodeToQueue(episodeId,
                                                     startPosition:
                                                         seekValue < 0.9
                                                             ? (seconds! * 1000)
@@ -591,7 +586,8 @@ class _HistoryState extends State<_History> {
                                                 backgroundColor: context
                                                     .colorScheme
                                                     .secondaryContainer,
-                                                backgroundImage: episode
+                                                backgroundImage: context
+                                                    .episodeState[episodeId]
                                                     .episodeOrPodcastImageProvider),
                                             title: Padding(
                                               padding: EdgeInsets.symmetric(
@@ -612,11 +608,11 @@ class _HistoryState extends State<_History> {
                                                 children: <Widget>[
                                                   if (seekValue! < 0.9)
                                                     _timeTag(context,
-                                                        episode: episode,
+                                                        episodeId: episodeId,
                                                         seekValue: seekValue,
                                                         seconds: seconds!),
                                                   _playlistButton(context,
-                                                      episode: episode),
+                                                      episodeId: episodeId),
                                                   Spacer(),
                                                   Text(
                                                     date.toDate(context),
@@ -655,34 +651,13 @@ class _Playlists extends StatefulWidget {
 }
 
 class _PlaylistsState extends State<_Playlists> {
-  Future<EpisodeBrief?> _getEpisode(String url) async {
-    var dbHelper = DBHelper();
-    List episodes = await dbHelper.getEpisodes(episodeUrls: [
-      url
-    ], optionalFields: [
-      EpisodeField.mediaId,
-      EpisodeField.primaryColor,
-      EpisodeField.isNew,
-      EpisodeField.skipSecondsStart,
-      EpisodeField.skipSecondsEnd,
-      EpisodeField.episodeImage,
-      EpisodeField.podcastImage,
-      EpisodeField.chapterLink
-    ]);
-    if (episodes.isEmpty)
-      return null;
-    else
-      return episodes[0];
-  }
-
   @override
   Widget build(BuildContext context) {
     final s = context.s;
+    final eState = context.episodeState;
     return Selector<AudioPlayerNotifier, Tuple2<List<Playlist>, int>>(
-        selector: (_, audio) => Tuple2(
-            audio.playlists,
-            audio.playlists
-                .length), // Getting the length seperately so the selector notices data changed
+        selector: (_, audio) => Tuple2(audio.playlists, audio.playlists.length),
+        // Getting the length seperately so the selector notices data changed
         builder: (_, data, __) {
           return ScrollConfiguration(
             behavior: NoGrowBehavior(),
@@ -711,9 +686,7 @@ class _PlaylistsState extends State<_Playlists> {
                               color: context.primaryColorDark,
                               child: FutureBuilder<Playlist>(
                                 future: Future.sync(() async {
-                                  if (queue.episodes.isEmpty) {
-                                    await queue.getPlaylist();
-                                  }
+                                  await queue.cachePlaylist(eState);
                                   return queue;
                                 }),
                                 builder: (context, snapshot) {
@@ -730,11 +703,9 @@ class _PlaylistsState extends State<_Playlists> {
                                       itemCount:
                                           math.min(queueSnapshot.length, 4),
                                       itemBuilder: (_, index) {
-                                        if (index <
-                                            queueSnapshot
-                                                .episodeUrlList.length) {
+                                        if (index < queueSnapshot.length) {
                                           return Image(
-                                            image: queueSnapshot.episodes[index]
+                                            image: eState[queueSnapshot[index]]
                                                 .episodeOrPodcastImageProvider,
                                           );
                                         }
@@ -791,7 +762,7 @@ class _PlaylistsState extends State<_Playlists> {
                     );
                   }
                   if (index < data.item2) {
-                    final episodeList = data.item1[index].episodeUrlList;
+                    final episodeList = data.item1[index].episodeIds;
                     return ListTile(
                       onTap: () async {
                         Navigator.push(
@@ -806,23 +777,19 @@ class _PlaylistsState extends State<_Playlists> {
                         height: 50,
                         width: 50,
                         color: context.primaryColorDark,
-                        child: episodeList.isEmpty
-                            ? Center()
-                            : FutureBuilder<EpisodeBrief?>(
-                                future: _getEpisode(episodeList.first),
-                                builder: (_, snapshot) {
-                                  if (snapshot.data != null) {
-                                    return SizedBox(
-                                        height: 50,
-                                        width: 50,
-                                        child: Image(
-                                            image: snapshot.data!
-                                                .episodeOrPodcastImageProvider));
-                                  }
-                                  return Center();
-                                }),
+                        child: FutureBuilder<bool>(
+                          future: data.item1[index].cachePlaylist(eState),
+                          builder: (context, snapshot) => episodeList.isEmpty ||
+                                  !snapshot.hasData
+                              ? Center()
+                              : Image(
+                                  image: Provider.of<EpisodeState>(context,
+                                              listen: false)[
+                                          data.item1[index].episodeIds.first]
+                                      .podcastImageProvider),
+                        ),
                       ),
-                      title: Text(data.item1[index].name!),
+                      title: Text(data.item1[index].name),
                       subtitle: Text(
                           '${data.item1[index].length} ${s.episode(data.item1[index].length).toLowerCase()}'),
                       trailing: TextButton(
@@ -879,7 +846,7 @@ class _PlaylistsState extends State<_Playlists> {
   }
 }
 
-enum NewPlaylistOption { blank, randon10, latest10, folder }
+enum NewPlaylistOption { blank, random10, latest10, folder }
 
 class _NewPlaylist extends StatefulWidget {
   const _NewPlaylist();
@@ -904,18 +871,16 @@ class _NewPlaylistState extends State<_NewPlaylist> {
     _option = NewPlaylistOption.blank;
   }
 
-  Future<List<EpisodeBrief>> _random() async {
-    return await _dbHelper.getEpisodes(
-        excludedFeedIds: [localFolderId], sortBy: Sorter.random, limit: 10);
-  }
+  Future<List<int>> _random() =>
+      Provider.of<EpisodeState>(context, listen: false).getEpisodes(
+          excludedFeedIds: [localFolderId], sortBy: Sorter.random, limit: 10);
 
-  Future<List<EpisodeBrief>> _recent() async {
-    return await _dbHelper.getEpisodes(
-        excludedFeedIds: [localFolderId],
-        sortBy: Sorter.pubDate,
-        sortOrder: SortOrder.desc,
-        limit: 10);
-  }
+  Future<List<int>> _recent() =>
+      Provider.of<EpisodeState>(context, listen: false).getEpisodes(
+          excludedFeedIds: [localFolderId],
+          sortBy: Sorter.pubDate,
+          sortOrder: SortOrder.desc,
+          limit: 10);
 
   Widget _createOption(NewPlaylistOption option) {
     return Padding(
@@ -945,7 +910,7 @@ class _NewPlaylistState extends State<_NewPlaylist> {
     switch (option) {
       case NewPlaylistOption.blank:
         return ['Empty', 'Add episodes later'];
-      case NewPlaylistOption.randon10:
+      case NewPlaylistOption.random10:
         return ['Randon 10', 'Add 10 random episodes to playlists'];
       case NewPlaylistOption.latest10:
         return ['Latest 10', 'Add 10 latest updated episodes to playlist'];
@@ -976,8 +941,7 @@ class _NewPlaylistState extends State<_NewPlaylist> {
     }
   }
 
-  Future<List<EpisodeBrief>> _loadLocalFolder() async {
-    var episodes = <EpisodeBrief>[];
+  Future<List<int>> _loadLocalFolder() async {
     String? dirPath;
     try {
       dirPath = await FilePicker.platform.getDirectoryPath();
@@ -1010,19 +974,22 @@ class _NewPlaylistState extends State<_NewPlaylist> {
       );
       await _dbHelper.savePodcastLocal(localPodcast);
     }
+    final episodeIds = <int>[];
     if (dirPath != null) {
       var dir = Directory(dirPath);
       for (var file in dir.listSync()) {
         if (file is File) {
           if (file.path.split('.').last == 'mp3') {
             final episode = await _getEpisodeFromFile(file.path);
-            episodes.add(episode);
-            await _dbHelper.saveLocalEpisode(episode);
+            episodeIds.add(await _dbHelper.saveLocalEpisode(episode));
           }
         }
       }
     }
-    return episodes;
+    if (mounted) {
+      context.episodeState.getEpisodes(episodeIds: episodeIds);
+    }
+    return episodeIds;
   }
 
   Future<EpisodeBrief> _getEpisodeFromFile(String path) async {
@@ -1044,15 +1011,17 @@ class _NewPlaylistState extends State<_NewPlaylist> {
       primaryColor = await _getColor(File(imagePath));
     }
     final fileName = path.split('/').last;
-    return EpisodeBrief(0, fileName, 'file://$path', localFolderId,
-        metadata.albumName ?? '', pubDate, // metadata.year ?
-        description: context.s.localEpisodeDescription(path),
-        enclosureDuration: metadata.trackDuration! ~/ 1000,
-        enclosureSize: fileLength,
-        mediaId: 'file://$path',
-        podcastImage: '',
-        episodeImage: imagePath ?? '',
-        primaryColor: primaryColor?.toColor());
+    return EpisodeBrief.local(
+      title: fileName, enclosureUrl: 'file://$path',
+      podcastTitle: metadata.albumName ?? '',
+      pubDate: pubDate, // metadata.year ?
+      description: context.s.localEpisodeDescription(path),
+      enclosureDuration: metadata.trackDuration! ~/ 1000,
+      enclosureSize: fileLength,
+      mediaId: 'file://$path',
+      episodeImage: imagePath ?? '',
+      primaryColor: primaryColor?.toColor(),
+    );
   }
 
   Future<String> _getColor(File file) async {
@@ -1066,6 +1035,7 @@ class _NewPlaylistState extends State<_NewPlaylist> {
   @override
   Widget build(BuildContext context) {
     final s = context.s;
+    final eState = context.episodeState;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
         statusBarIconBrightness: Brightness.light,
@@ -1115,16 +1085,16 @@ class _NewPlaylistState extends State<_NewPlaylist> {
                       final recent = await _recent();
                       playlist = Playlist(
                         _playlistName,
-                        episodeUrlList: [for (var e in recent) e.enclosureUrl],
+                        episodeIds: recent,
                       );
-                      await playlist.getPlaylist();
+                      await playlist.cachePlaylist(eState);
                       if (mounted) {
                         setState(() {
                           _processing = false;
                         });
                       }
                       break;
-                    case NewPlaylistOption.randon10:
+                    case NewPlaylistOption.random10:
                       if (mounted) {
                         setState(() {
                           _processing = true;
@@ -1133,9 +1103,9 @@ class _NewPlaylistState extends State<_NewPlaylist> {
                       final random = await _random();
                       playlist = Playlist(
                         _playlistName,
-                        episodeUrlList: [for (var e in random) e.enclosureUrl],
+                        episodeIds: random,
                       );
-                      await playlist.getPlaylist();
+                      await playlist.cachePlaylist(eState);
                       if (mounted) {
                         setState(() {
                           _processing = false;
@@ -1155,17 +1125,15 @@ class _NewPlaylistState extends State<_NewPlaylist> {
                       }
                       final episodes = await _loadLocalFolder();
                       if (episodes.isEmpty) {
-                        Navigator.of(context).pop();
+                        if (context.mounted) Navigator.of(context).pop();
                         return;
                       }
                       playlist = Playlist(
                         _playlistName,
                         isLocal: true,
-                        episodeUrlList: [
-                          for (var e in episodes) e.enclosureUrl
-                        ],
+                        episodeIds: episodes,
                       );
-                      await playlist.getPlaylist();
+                      await playlist.cachePlaylist(eState);
                       if (mounted) {
                         setState(() {
                           _processing = false;
@@ -1236,7 +1204,7 @@ class _NewPlaylistState extends State<_NewPlaylist> {
                   Wrap(
                     children: [
                       _createOption(NewPlaylistOption.blank),
-                      _createOption(NewPlaylistOption.randon10),
+                      _createOption(NewPlaylistOption.random10),
                       _createOption(NewPlaylistOption.latest10),
                       _createOption(NewPlaylistOption.folder)
                     ],

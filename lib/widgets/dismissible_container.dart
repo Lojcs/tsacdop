@@ -3,20 +3,20 @@ import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
 
 import '../state/audio_state.dart';
-import '../type/episodebrief.dart';
+import '../state/episode_state.dart';
 import '../type/playlist.dart';
 import '../util/extension_helper.dart';
 import 'custom_widget.dart';
 
 class DismissibleContainer extends StatefulWidget {
   final Playlist playlist;
-  final EpisodeBrief episode;
+  final int episodeId;
   final int index;
   final VoidCallback? onRemove;
   final bool selectMode;
   const DismissibleContainer(
       {required this.playlist,
-      required this.episode,
+      required this.episodeId,
       required this.index,
       this.onRemove,
       this.selectMode = false,
@@ -51,7 +51,7 @@ class _DismissibleContainerState extends State<DismissibleContainer> {
           : Column(
               children: [
                 Dismissible(
-                  key: ValueKey('${widget.episode.enclosureUrl}dis'),
+                  key: ValueKey('${widget.episodeId}dis'),
                   background: Container(
                     padding: EdgeInsets.symmetric(horizontal: 20.0),
                     height: 30,
@@ -90,7 +90,7 @@ class _DismissibleContainerState extends State<DismissibleContainer> {
                     await audio.removeFromPlaylistAt(widget.index,
                         playlist: widget.playlist);
                     widget.onRemove!();
-                    final episodeRemove = widget.episode;
+                    final episodeRemoved = widget.episodeId;
                     ScaffoldMessenger.of(context).removeCurrentSnackBar();
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       behavior: SnackBarBehavior.floating,
@@ -101,14 +101,14 @@ class _DismissibleContainerState extends State<DismissibleContainer> {
                           textColor: context.accentColor,
                           label: s.undo,
                           onPressed: () async {
-                            await audio.addToPlaylist([episodeRemove],
+                            await audio.addToPlaylist([episodeRemoved],
                                 playlist: widget.playlist, index: widget.index);
                             widget.onRemove!();
                           }),
                     ));
                   },
                   child: EpisodeTile(
-                    widget.episode,
+                    widget.episodeId,
                     isPlaying: false,
                     canReorder: true,
                     showDivider: false,
@@ -128,14 +128,14 @@ class _DismissibleContainerState extends State<DismissibleContainer> {
 }
 
 class EpisodeTile extends StatelessWidget {
-  final EpisodeBrief episode;
+  final int episodeId;
   final Color? tileColor;
   final VoidCallback? onTap;
   final bool? isPlaying;
   final bool canReorder;
   final bool showDivider;
   final bool havePadding;
-  const EpisodeTile(this.episode,
+  const EpisodeTile(this.episodeId,
       {this.tileColor,
       this.onTap,
       this.isPlaying,
@@ -146,6 +146,8 @@ class EpisodeTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final episode =
+        Provider.of<EpisodeState>(context, listen: false)[episodeId];
     // return Container(
     //   height: context.width / 4,
     //   padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -196,28 +198,31 @@ class EpisodeTile extends StatelessWidget {
                 height: 35,
                 child: Row(
                   children: <Widget>[
-                    if (episode.isExplicit == true)
+                    if (episode.isExplicit)
                       Container(
-                          decoration: BoxDecoration(
-                              color: Colors.red[800], shape: BoxShape.circle),
-                          height: 25.0,
-                          width: 25.0,
-                          margin: EdgeInsets.only(right: 10.0),
-                          alignment: Alignment.center,
-                          child:
-                              Text('E', style: TextStyle(color: Colors.white))),
-                    if (episode.enclosureDuration != 0)
-                      episodeTag(
-                          episode.enclosureDuration == 0
-                              ? ''
-                              : s.minsCount(episode.enclosureDuration! ~/ 60),
-                          Colors.cyan[300]),
-                    if (episode.enclosureSize != null)
-                      episodeTag(
-                          episode.enclosureSize == 0
-                              ? ''
-                              : '${episode.enclosureSize! ~/ 1000000}MB',
-                          Colors.lightBlue[300]),
+                        decoration: BoxDecoration(
+                            color: Colors.red[800], shape: BoxShape.circle),
+                        height: 25.0,
+                        width: 25.0,
+                        margin: EdgeInsets.only(right: 10.0),
+                        alignment: Alignment.center,
+                        child: Text('E', style: TextStyle(color: Colors.white)),
+                      ),
+                    Selector<EpisodeState, int>(
+                      selector: (_, eState) =>
+                          eState[episodeId].enclosureDuration,
+                      builder: (context, value, _) => value != 0
+                          ? episodeTag(
+                              s.minsCount(value ~/ 60), Colors.cyan[300])
+                          : Center(),
+                    ),
+                    Selector<EpisodeState, int>(
+                      selector: (_, eState) => eState[episodeId].enclosureSize,
+                      builder: (context, value, _) => value != 0
+                          ? episodeTag(
+                              '${value ~/ 1000000}MB', Colors.lightBlue[300])
+                          : Center(),
+                    ),
                   ],
                 ),
               ),

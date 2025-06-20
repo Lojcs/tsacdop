@@ -7,85 +7,64 @@ import '../state/audio_state.dart';
 import '../util/extension_helper.dart';
 
 class HidePlayerRoute extends ModalRoute<void> {
-  HidePlayerRoute(this.openPage, this.transitionPage,
-      {required Duration duration})
-      : transitionDuration = duration;
-  final openPage;
-  final transitionPage;
+  HidePlayerRoute(this.openPage, [this.transitionPage])
+      : transitionDuration = const Duration(milliseconds: 300);
+  final Widget openPage;
+  final Widget? transitionPage;
 
   @override
   Widget buildPage(BuildContext context, Animation<double> animation,
       Animation<double> secondaryAnimation) {
+    Key pageKey = GlobalObjectKey(openPage);
     return Selector<AudioPlayerNotifier, tuple.Tuple2<bool, PlayerHeight?>>(
-        selector: (_, audio) =>
-            tuple.Tuple2(audio.playerRunning, audio.playerHeight),
-        builder: (_, data, __) => Align(
-              alignment: Alignment.topLeft,
-              child: AnimatedBuilder(
-                animation: animation,
-                builder: (context, child) {
-                  if (animation.isCompleted) {
-                    return SizedBox.expand(
-                      child: Material(
-                        color: Colors.transparent,
-                        child: Builder(
-                          builder: (context) {
-                            return openPage;
-                          },
-                        ),
-                      ),
-                    );
-                  }
-                  // final Animation<double> curvedAnimation = CurvedAnimation(
-                  //   parent: animation,
-                  //   curve: Curves.fastOutSlowIn,
-                  //   reverseCurve: Curves.fastOutSlowIn.flipped,
-                  // );
-                  final playerHeight = kMinPlayerHeight[data.item2!.index];
-                  final playerRunning = data.item1;
-                  return SizedBox.expand(
-                    child: Container(
-                      child: Align(
-                        alignment: Alignment.topLeft,
-                        child: Transform.translate(
-                          offset: Offset(
-                              context.width *
-                                  (1 -
-                                      Curves.easeOut
-                                          .transform(animation.value)),
-                              0),
-                          child: SizedBox(
-                            width: context.width,
-                            height: context.height -
-                                (playerRunning
-                                    ? playerHeight +
-                                        MediaQuery.of(context).padding.bottom
-                                    : 0),
-                            child: Material(
-                              clipBehavior: Clip.antiAlias,
-                              animationDuration: Duration.zero,
-                              child: FittedBox(
-                                fit: BoxFit.fitWidth,
-                                alignment: Alignment.topLeft,
-                                child: SizedBox(
-                                  width: context.width,
-                                  height: context.height,
-                                  child: Builder(
-                                    builder: (context) {
-                                      return transitionPage;
-                                    },
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+      selector: (_, audio) =>
+          tuple.Tuple2(audio.playerRunning, audio.playerHeight),
+      builder: (_, data, __) => Align(
+        alignment: Alignment.topLeft,
+        child: AnimatedBuilder(
+          animation: animation,
+          builder: (context, child) {
+            if (animation.isCompleted) {
+              return KeyedSubtree(key: pageKey, child: openPage);
+            }
+            // final Animation<double> curvedAnimation = CurvedAnimation(
+            //   parent: animation,
+            //   curve: Curves.fastOutSlowIn,
+            //   reverseCurve: Curves.fastOutSlowIn.flipped,
+            // );
+            final playerHeight = kMinPlayerHeight[data.item2!.index];
+            final playerRunning = data.item1;
+            return Transform.translate(
+              offset: Offset(
+                  context.width *
+                      (1 - Curves.easeOut.transform(animation.value)),
+                  0),
+              child: Container(
+                width: context.width,
+                height: context.height -
+                    (playerRunning
+                        ? playerHeight + MediaQuery.of(context).padding.bottom
+                        : 0),
+                decoration: BoxDecoration(),
+                clipBehavior: Clip.hardEdge,
+                child: FittedBox(
+                  fit: BoxFit.fitWidth,
+                  alignment: Alignment.topCenter,
+                  child: SizedBox(
+                    width: context.width,
+                    height: context.height,
+                    child: KeyedSubtree(
+                      key: pageKey,
+                      child: transitionPage ?? openPage,
                     ),
-                  );
-                },
+                  ),
+                ),
               ),
-            ));
+            );
+          },
+        ),
+      ),
+    );
   }
 
   @override

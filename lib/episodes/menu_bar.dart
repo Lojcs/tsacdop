@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import '../state/episode_state.dart';
-import 'package:tuple/tuple.dart';
 import 'package:provider/provider.dart';
 import 'episode_download.dart';
 import '../state/audio_state.dart';
@@ -12,14 +11,21 @@ import '../widgets/custom_widget.dart';
 import '../util/helpers.dart';
 
 class EpisodeActionBar extends StatefulWidget {
-  final EpisodeBrief episodeItem;
+  final int episodeId;
+
+  /// Hides the avatar image
   final bool? hide;
-  const EpisodeActionBar({required this.episodeItem, this.hide, super.key});
+  const EpisodeActionBar(this.episodeId, {this.hide = false, super.key});
   @override
   EpisodeActionBarState createState() => EpisodeActionBarState();
 }
 
 class EpisodeActionBarState extends State<EpisodeActionBar> {
+  late EpisodeState episodeState =
+      Provider.of<EpisodeState>(context, listen: false);
+
+  /// Only use this for immutable properties or in callbacks.
+  EpisodeBrief get episodeItem => episodeState[widget.episodeId];
   @override
   Widget build(BuildContext context) {
     final audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
@@ -28,9 +34,8 @@ class EpisodeActionBarState extends State<EpisodeActionBar> {
     return Container(
       height: 50.0,
       decoration: BoxDecoration(
-        color: context.realDark
-            ? context.surface
-            : widget.episodeItem.cardColor(context),
+        color:
+            context.realDark ? context.surface : episodeItem.cardColor(context),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
@@ -52,105 +57,121 @@ class EpisodeActionBarState extends State<EpisodeActionBar> {
                           ? Center()
                           : CircleAvatar(
                               radius: 15,
-                              backgroundImage: widget.episodeItem.avatarImage),
+                              backgroundImage: episodeItem.avatarImage),
                     ),
                   ),
-                  (widget.episodeItem.isLiked!)
-                      ? _buttonOnMenu(
-                          child: Icon(
-                            Icons.favorite,
-                            color: Colors.red,
-                          ),
-                          onTap: () =>
-                              episodeState.unsetLiked([widget.episodeItem]))
-                      : _buttonOnMenu(
-                          child: Icon(
-                            Icons.favorite_border,
-                            color: Colors.grey[
-                                context.brightness == Brightness.light
-                                    ? 700
-                                    : 500],
-                          ),
-                          onTap: () async {
-                            episodeState.setLiked([widget.episodeItem]);
-                            OverlayEntry overlayEntry;
-                            overlayEntry =
-                                createOverlayEntry(context, leftOffset: 50);
-                            Overlay.of(context).insert(overlayEntry);
-                            await Future.delayed(Duration(seconds: 2));
-                            overlayEntry.remove();
-                          }),
-                  DownloadButton(episode: widget.episodeItem),
-                  Selector<AudioPlayerNotifier, List<EpisodeBrief?>>(
-                    selector: (_, audio) => audio.playlist.episodes,
-                    builder: (_, data, __) {
-                      final inPlaylist = data.contains(widget.episodeItem);
-                      return inPlaylist
-                          ? _buttonOnMenu(
-                              child: Icon(Icons.playlist_add_check,
-                                  color: context.accentColor),
-                              onTap: () async {
-                                await audio
-                                    .removeFromPlaylist([widget.episodeItem]);
-                                await Fluttertoast.showToast(
-                                  msg: s.toastRemovePlaylist,
-                                  gravity: ToastGravity.BOTTOM,
-                                );
-                              })
-                          : _buttonOnMenu(
-                              child: Icon(Icons.playlist_add,
-                                  color: Colors.grey[
-                                      context.brightness == Brightness.light
-                                          ? 700
-                                          : 500]),
-                              onTap: () async {
-                                await audio.addToPlaylist([widget.episodeItem]);
-                                await Fluttertoast.showToast(
-                                  msg: s.toastAddPlaylist,
-                                  gravity: ToastGravity.BOTTOM,
-                                );
-                              });
+                  _buttonOnMenu(
+                    child: Selector<EpisodeState, bool>(
+                      selector: (_, episodeState) =>
+                          episodeState[widget.episodeId].isLiked,
+                      builder: (context, value, _) => value
+                          ? Icon(
+                              Icons.favorite,
+                              color: Colors.red,
+                            )
+                          : Icon(
+                              Icons.favorite_border,
+                              color: Colors.grey[
+                                  context.brightness == Brightness.light
+                                      ? 700
+                                      : 500],
+                            ),
+                    ),
+                    onTap: () async {
+                      if (episodeItem.isLiked) {
+                        episodeState.unsetLiked([widget.episodeId]);
+                      } else {
+                        episodeState.setLiked([widget.episodeId]);
+                        OverlayEntry overlayEntry;
+                        overlayEntry =
+                            createOverlayEntry(context, leftOffset: 50);
+                        Overlay.of(context).insert(overlayEntry);
+                        await Future.delayed(Duration(seconds: 2));
+                        overlayEntry.remove();
+                      }
+                    },
+                  ),
+                  DownloadButton(episode: episodeItem),
+                  _buttonOnMenu(
+                    child: Selector<AudioPlayerNotifier, List<int?>>(
+                      selector: (_, audio) => audio.playlist.episodeIds,
+                      builder: (_, data, __) => data.contains(widget.episodeId)
+                          ? Icon(
+                              Icons.playlist_add_check,
+                              color: context.accentColor,
+                            )
+                          : Icon(
+                              Icons.playlist_add,
+                              color: Colors.grey[
+                                  context.brightness == Brightness.light
+                                      ? 700
+                                      : 500],
+                            ),
+                    ),
+                    onTap: () async {
+                      final inPlaylist = Provider.of<AudioPlayerNotifier>(
+                              context,
+                              listen: false)
+                          .playlist
+                          .contains(widget.episodeId);
+                      if (inPlaylist) {
+                        await audio.removeFromPlaylist([widget.episodeId]);
+                        await Fluttertoast.showToast(
+                          msg: s.toastRemovePlaylist,
+                          gravity: ToastGravity.BOTTOM,
+                        );
+                      } else {
+                        await audio.addToPlaylist([widget.episodeId]);
+                        await Fluttertoast.showToast(
+                          msg: s.toastAddPlaylist,
+                          gravity: ToastGravity.BOTTOM,
+                        );
+                      }
                     },
                   ),
                   _buttonOnMenu(
                     child: Padding(
                       padding: EdgeInsets.symmetric(vertical: 12),
-                      child: widget.episodeItem.isPlayed!
-                          ? CustomPaint(
-                              size: Size(25, 20),
-                              painter: ListenedAllPainter(context.accentColor,
-                                  stroke: 2.0),
-                            )
-                          : CustomPaint(
-                              size: Size(25, 20),
-                              painter: MarkListenedPainter(
-                                  Colors.grey[
-                                      context.brightness == Brightness.light
-                                          ? 700
-                                          : 500]!,
-                                  stroke: 2.0),
-                            ),
+                      child: Selector<EpisodeState, bool>(
+                        selector: (_, episodeState) =>
+                            episodeState[widget.episodeId].isPlayed,
+                        builder: (context, value, _) => value
+                            ? CustomPaint(
+                                size: Size(25, 20),
+                                painter: ListenedAllPainter(context.accentColor,
+                                    stroke: 2.0),
+                              )
+                            : CustomPaint(
+                                size: Size(25, 20),
+                                painter: MarkListenedPainter(
+                                    Colors.grey[
+                                        context.brightness == Brightness.light
+                                            ? 700
+                                            : 500]!,
+                                    stroke: 2.0),
+                              ),
+                      ),
                     ),
-                    onTap: () {
-                      widget.episodeItem.isPlayed!
-                          ? episodeState.unsetListened([widget.episodeItem])
-                          : episodeState.setListened([widget.episodeItem]);
+                    onTap: () async {
+                      episodeItem.isPlayed
+                          ? episodeState.unsetPlayed([widget.episodeId])
+                          : episodeState.setPlayed([widget.episodeId]);
                       Fluttertoast.showToast(
-                        msg: widget.episodeItem.isPlayed!
+                        msg: episodeItem.isPlayed
                             ? s.markNotListened
                             : s.markListened,
                         gravity: ToastGravity.BOTTOM,
                       );
                     },
-                  )
+                  ),
                 ],
               ),
             ),
           ),
-          Selector<AudioPlayerNotifier, Tuple2<EpisodeBrief?, bool>>(
-            selector: (_, audio) => Tuple2(audio.episode, audio.playerRunning),
+          Selector<AudioPlayerNotifier, (int?, bool)>(
+            selector: (_, audio) => (audio.episodeId, audio.playerRunning),
             builder: (_, data, __) {
-              return (widget.episodeItem == data.item1 && data.item2)
+              return (widget.episodeId == data.$1 && data.$2)
                   ? Padding(
                       padding: EdgeInsets.only(right: 30),
                       child: SizedBox(
@@ -161,7 +182,7 @@ class EpisodeActionBarState extends State<EpisodeActionBar> {
                       color: Colors.transparent,
                       child: InkWell(
                         onTap: () async {
-                          await audio.loadEpisodeToQueue(widget.episodeItem);
+                          await audio.loadEpisodeToQueue(widget.episodeId);
                           if (!audio.playing) {
                             await audio.resumeAudio();
                           }

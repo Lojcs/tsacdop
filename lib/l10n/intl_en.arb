@@ -88,6 +88,10 @@
   },
   "delete": "Delete",
   "@delete": {},
+  "deleted": "Deleted",
+  "@deleted": {},
+  "deletedEpisodeDesc": "This episode has been deleted from the database",
+  "@deletedEpisodeDesc": {},
   "deselectAll": "Deselect All",
   "@deselectAll": {},
   "developer": "Developer",
@@ -110,6 +114,8 @@
   },
   "downloaded": "Downloaded",
   "@downloaded": {},
+  "downloading": "Downloading",
+  "@downloading": {},
   "downloadRemovedToast": "Download removed",
   "@downloadRemovedToast": {},
   "downloadStart": "Downloading",
@@ -176,10 +182,6 @@
   },
   "feedbackTelegram": "Join group",
   "@feedbackTelegram": {},
-  "finalizeSelection": "Finalize Selection",
-  "@finalizeSelection": {
-    "description": "Tooltip for button that finalizes a tentative seelction by getting all episodes included in it."
-  },
   "filter": "Filter",
   "@filter": {},
   "filterType": "{type} Filter",
@@ -249,9 +251,9 @@
       "host": {}
     }
   },
-  "hoursAgo": "{count, plural, zero{In an hour} one{{count} hour ago} other{{count} hours ago}}",
+  "hoursAgo": "{count, plural, zero{This hour} one{{count} hour ago} other{{count} hours ago}}",
   "@hoursAgo": {},
-  "hoursCount": "{count, plural, zero{0 hour} one{{count} hour} other{{count} hours}}",
+  "hoursCount": "{count, plural, zero{0 hours} one{{count} hour} other{{count} hours}}",
   "@hoursCount": {},
   "import": "Import",
   "@import": {},
@@ -299,6 +301,10 @@
     "placeholders": {
       "filePath": {}
     }
+  },
+  "loadAllSelected": "Load All Selected",
+  "@loadAllSelected": {
+    "description": "Tooltip for button that loads all episodes included in a selection."
   },
   "loading": "Loading",
   "@loading": {},

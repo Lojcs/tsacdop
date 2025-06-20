@@ -1,7 +1,5 @@
 import 'package:flutter/widgets.dart';
 
-import '../type/episodebrief.dart';
-
 /// Coordinates the selection behavior of [EpisodeGrid] and [MultiSelectPanel].
 ///
 /// [selectedEpisodes] is the list of episodes that are selected. Its subsets are:
@@ -13,6 +11,10 @@ import '../type/episodebrief.dart';
 /// [_selectedEpisodes], [_selectedIndicies], [previouslySelectedEpisodes],
 /// [_explicitlySelectedIndicies] and [_explicitlySelectedIndicies] are kept
 /// in memory and should be cleared when [selectMode] changes.
+///
+/// Lists named ...Episodes contain the ids of the episodes.
+/// Lists named ...Indicies contain indicies.
+/// Index lists and episode lists with the same name contain the same episodes.
 ///
 /// Use [setSelectableEpisodes] to communicate change of [selectableEpisodes].
 /// If compatible is false current selection is moved to [previouslySelectedEpisodes].
@@ -37,7 +39,7 @@ class SelectionController extends ChangeNotifier {
   /// Called when the list of all applicable episdoes without limits is needed.
   /// It is assumed that the beginning of the list is the same as
   /// the list set by [setSelectableEpisodes].
-  ValueGetter<Future<List<EpisodeBrief>>>? onGetEpisodesLimitless;
+  ValueGetter<Future<List<int>>>? onGetEpisodesLimitless;
 
   SelectionController({
     this.onGetEpisodesLimitless,
@@ -74,18 +76,17 @@ class SelectionController extends ChangeNotifier {
   bool hasAllSelectableEpisodes = false;
 
   /// List of selectable episodes
-  List<EpisodeBrief> get selectableEpisodes => _selectableEpisodes;
-  List<EpisodeBrief> _selectableEpisodes = [];
+  List<int> get selectableEpisodes => _selectableEpisodes;
+  List<int> _selectableEpisodes = [];
 
   /// List of selectable episodes.
   /// Set [compatible] if the beginning of the list is the same as the previously set list.
-  void setSelectableEpisodes(List<EpisodeBrief> episodes,
-      {bool compatible = false}) {
-    if (episodes != _selectableEpisodes) {
+  void setSelectableEpisodes(List<int> episodeIds, {bool compatible = false}) {
+    if (episodeIds != _selectableEpisodes) {
       if (compatible) {
         if (!hasAllSelectableEpisodes) {
           _selectableEpisodes =
-              episodes.toList(); // Prevent spooky action at a distance
+              episodeIds.toList(); // Prevent spooky action at a distance
           _batchSelectController.selectableCount = _selectableEpisodes.length;
           clearCachedSelectionLists();
         }
@@ -94,7 +95,7 @@ class SelectionController extends ChangeNotifier {
         previouslySelectedEpisodes.addAll(selectedEpisodes);
         previouslySelectedEpisodes =
             previouslySelectedEpisodes.toSet().toList();
-        _selectableEpisodes = episodes.toList();
+        _selectableEpisodes = episodeIds.toList();
         _batchSelectController.selectableCount = _selectableEpisodes.length;
         _batchSelectController.trySetBatchSelect(BatchSelect.none);
         _explicitlySelectedIndicies.clear();
@@ -103,31 +104,6 @@ class SelectionController extends ChangeNotifier {
       }
       if (!_disposed && selectMode) notifyListeners();
     }
-  }
-
-  /// Flips to indicate that episodes were updated.
-  bool episodesUpdated = false;
-
-  /// Replaces stored episodes with the provided versions and notifies listeners.
-  void updateEpisodes(List<EpisodeBrief> episodes) {
-    Map<int, EpisodeBrief> episodeMap = {
-      for (var episode in episodes) episode.id: episode
-    };
-    for (int i = 0; i < selectableEpisodes.length; i++) {
-      var episode = selectableEpisodes[i];
-      if (episodeMap.containsKey(episode.id)) {
-        selectableEpisodes[i] = episodeMap[episode.id]!;
-      }
-    }
-    for (int i = 0; i < previouslySelectedEpisodes.length; i++) {
-      var episode = previouslySelectedEpisodes[i];
-      if (episodeMap.containsKey(episode.id)) {
-        previouslySelectedEpisodes[i] = episodeMap[episode.id]!;
-      }
-    }
-    clearCachedSelectionLists();
-    episodesUpdated = !episodesUpdated;
-    if (!_disposed && selectMode) notifyListeners();
   }
 
   /// Wheter the selection lists include all episodes implicitly selected by
@@ -152,7 +128,7 @@ class SelectionController extends ChangeNotifier {
   bool temporarySelect = false;
 
   /// List of selected episodes.
-  List<EpisodeBrief> get selectedEpisodes {
+  List<int> get selectedEpisodes {
     _selectedEpisodes ??= [
       ...previouslySelectedEpisodes,
       ...newlySelectedIndicies.map((i) => _selectableEpisodes[i])
@@ -160,7 +136,7 @@ class SelectionController extends ChangeNotifier {
     return _selectedEpisodes!;
   }
 
-  List<EpisodeBrief>? _selectedEpisodes;
+  List<int>? _selectedEpisodes;
 
   /// List of selected indicies
   List<int> get selectedIndicies {
@@ -185,8 +161,8 @@ class SelectionController extends ChangeNotifier {
   Iterable<int> get _previouslySelectedEpisodesToIndicies sync* {
     int? smallest;
     int? largest;
-    for (EpisodeBrief episode in previouslySelectedEpisodes) {
-      int i = selectableEpisodes.indexOf(episode);
+    for (var episodeIds in previouslySelectedEpisodes) {
+      int i = selectableEpisodes.indexOf(episodeIds);
       if (smallest != null && i < smallest) {
         smallest = i;
       } else if (largest != null && i > largest) {
@@ -200,7 +176,7 @@ class SelectionController extends ChangeNotifier {
 
   /// Episodes previously selected before [_selectableEpisodes] changed.
   /// Cleared on [selectMode] off.
-  List<EpisodeBrief> previouslySelectedEpisodes = [];
+  List<int> previouslySelectedEpisodes = [];
 
   /// Tentative list of indicies of selected selectable episodes that weren't
   /// selected previously (thus newly selected)

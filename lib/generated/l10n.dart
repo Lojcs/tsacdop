@@ -335,6 +335,21 @@ class S {
     return Intl.message('Delete', name: 'delete', desc: '', args: []);
   }
 
+  /// `Deleted`
+  String get deleted {
+    return Intl.message('Deleted', name: 'deleted', desc: '', args: []);
+  }
+
+  /// `This episode has been deleted from the database`
+  String get deletedEpisodeDesc {
+    return Intl.message(
+      'This episode has been deleted from the database',
+      name: 'deletedEpisodeDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Deselect All`
   String get deselectAll {
     return Intl.message(
@@ -394,6 +409,11 @@ class S {
   /// `Downloaded`
   String get downloaded {
     return Intl.message('Downloaded', name: 'downloaded', desc: '', args: []);
+  }
+
+  /// `Downloading`
+  String get downloading {
+    return Intl.message('Downloading', name: 'downloading', desc: '', args: []);
   }
 
   /// `Download removed`
@@ -694,17 +714,6 @@ class S {
     );
   }
 
-  /// `Finalize Selection`
-  String get finalizeSelection {
-    return Intl.message(
-      'Finalize Selection',
-      name: 'finalizeSelection',
-      desc:
-          'Tooltip for button that finalizes a tentative seelction by getting all episodes included in it.',
-      args: [],
-    );
-  }
-
   /// `Filter`
   String get filter {
     return Intl.message('Filter', name: 'filter', desc: '', args: []);
@@ -925,11 +934,11 @@ class S {
     );
   }
 
-  /// `{count, plural, zero{In an hour} one{{count} hour ago} other{{count} hours ago}}`
+  /// `{count, plural, zero{This hour} one{{count} hour ago} other{{count} hours ago}}`
   String hoursAgo(num count) {
     return Intl.plural(
       count,
-      zero: 'In an hour',
+      zero: 'This hour',
       one: '$count hour ago',
       other: '$count hours ago',
       name: 'hoursAgo',
@@ -938,11 +947,11 @@ class S {
     );
   }
 
-  /// `{count, plural, zero{0 hour} one{{count} hour} other{{count} hours}}`
+  /// `{count, plural, zero{0 hours} one{{count} hour} other{{count} hours}}`
   String hoursCount(num count) {
     return Intl.plural(
       count,
-      zero: '0 hour',
+      zero: '0 hours',
       one: '$count hour',
       other: '$count hours',
       name: 'hoursCount',
@@ -1073,6 +1082,17 @@ class S {
       name: 'localEpisodeDescription',
       desc: '',
       args: [filePath],
+    );
+  }
+
+  /// `Load All Selected`
+  String get loadAllSelected {
+    return Intl.message(
+      'Load All Selected',
+      name: 'loadAllSelected',
+      desc:
+          'Tooltip for button that loads all episodes included in a selection.',
+      args: [],
     );
   }
 

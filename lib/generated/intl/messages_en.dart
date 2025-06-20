@@ -45,10 +45,10 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m7(host) => "Hosted on ${host}";
 
   static String m8(count) =>
-      "${Intl.plural(count, zero: 'In an hour', one: '${count} hour ago', other: '${count} hours ago')}";
+      "${Intl.plural(count, zero: 'This hour', one: '${count} hour ago', other: '${count} hours ago')}";
 
   static String m9(count) =>
-      "${Intl.plural(count, zero: '0 hour', one: '${count} hour', other: '${count} hours')}";
+      "${Intl.plural(count, zero: '0 hours', one: '${count} hour', other: '${count} hours')}";
 
   static String m10(service) => "Integrate with ${service}";
 
@@ -150,6 +150,10 @@ class MessageLookup extends MessageLookupByLibrary {
       "Choose the default podcast search engine",
     ),
     "delete": MessageLookupByLibrary.simpleMessage("Delete"),
+    "deleted": MessageLookupByLibrary.simpleMessage("Deleted"),
+    "deletedEpisodeDesc": MessageLookupByLibrary.simpleMessage(
+      "This episode has been deleted from the database",
+    ),
     "deselectAll": MessageLookupByLibrary.simpleMessage("Deselect All"),
     "developer": MessageLookupByLibrary.simpleMessage("Developer"),
     "dismiss": MessageLookupByLibrary.simpleMessage("Dismiss"),
@@ -162,6 +166,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "downloadStart": MessageLookupByLibrary.simpleMessage("Downloading"),
     "downloaded": MessageLookupByLibrary.simpleMessage("Downloaded"),
+    "downloading": MessageLookupByLibrary.simpleMessage("Downloading"),
     "duration": MessageLookupByLibrary.simpleMessage("Duration"),
     "editGroupName": MessageLookupByLibrary.simpleMessage("Edit group name"),
     "endOfEpisode": MessageLookupByLibrary.simpleMessage("End of Episode"),
@@ -228,9 +233,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "feedbackTelegram": MessageLookupByLibrary.simpleMessage("Join group"),
     "filter": MessageLookupByLibrary.simpleMessage("Filter"),
     "filterType": m32,
-    "finalizeSelection": MessageLookupByLibrary.simpleMessage(
-      "Finalize Selection",
-    ),
     "fontStyle": MessageLookupByLibrary.simpleMessage("Font style"),
     "fonts": MessageLookupByLibrary.simpleMessage("Fonts"),
     "from": m5,
@@ -294,6 +296,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "liked": MessageLookupByLibrary.simpleMessage("Liked"),
     "listen": MessageLookupByLibrary.simpleMessage("Listen"),
     "listened": MessageLookupByLibrary.simpleMessage("Listened"),
+    "loadAllSelected": MessageLookupByLibrary.simpleMessage(
+      "Load All Selected",
+    ),
     "loadMore": MessageLookupByLibrary.simpleMessage("Load more"),
     "loading": MessageLookupByLibrary.simpleMessage("Loading"),
     "localEpisodeDescription": m33,

@@ -292,7 +292,7 @@ class _ActionBarButtonState extends State<ActionBarButton>
             clipBehavior: Clip.hardEdge,
             borderRadius: borderRadius,
             child: InkWell(
-              onTapDown: (details) {},
+              // onTapDown: (details) {},
               onTap: widget.enabled
                   ? () {
                       if (mounted) {
@@ -501,7 +501,7 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
       reverseCurve: Curves.easeInExpo,
     );
     if (active && !activeAnimationController.isCompleted) {
-      activeAnimationController.forward();
+      activeAnimationController.value = 1;
       expand(true);
     }
   }

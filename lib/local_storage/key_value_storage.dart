@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tuple/tuple.dart';
 
+import '../state/episode_state.dart';
 import '../state/podcast_group.dart';
 import '../type/playlist.dart';
 
@@ -91,22 +92,34 @@ class KeyValueStorage {
         }));
   }
 
-  Future<List<PlaylistEntity>> getPlaylists() async {
+  Future<List<Playlist>> getPlaylists(EpisodeState eState) async {
     var prefs = await SharedPreferences.getInstance();
     if (prefs.getString(key) == null) {
-      var episodeList = prefs.getStringList(playlistKey);
-      var playlist = Playlist('Queue', episodeUrlList: episodeList ?? []);
+      var playlist = Playlist('Queue');
       await prefs.setString(
           key,
           json.encode({
-            'playlists': [playlist.toEntity().toJson()]
+            'playlists': [playlist.toJson()]
           }));
     }
-    final playlist = json.decode(prefs.getString(key)!)['playlists'];
-    return [for (final p in playlist) PlaylistEntity.fromJson(p)];
+    final playlists = json.decode(prefs.getString(key)!)['playlists'];
+    List<Playlist> result = [];
+    for (var playlist in playlists) {
+      if (playlist.containsKey('episodeList')) {
+        final urlList = List<String>.from(playlist['episodeList']);
+        List<int> idList = await eState.getEpisodes(episodeUrls: urlList);
+        List<int> sortedList = List<int>.filled(idList.length, -1);
+        for (var id in idList) {
+          sortedList[urlList.indexOf(eState[id].enclosureUrl)] = id;
+        }
+        playlist['episodeIdList'] = sortedList;
+      }
+      result.add(Playlist.fromJson(playlist));
+    }
+    return result;
   }
 
-  Future<bool> savePlaylists(List<PlaylistEntity> playlists) async {
+  Future<bool> savePlaylists(List<Playlist> playlists) async {
     var prefs = await SharedPreferences.getInstance();
     return prefs.setString(
         key,

@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import 'package:webfeed/webfeed.dart';
 
 import '../local_storage/sqflite_localpodcast.dart';
+import '../state/episode_state.dart';
 import '../state/podcast_group.dart';
 import '../type/play_histroy.dart';
 import '../type/sub_history.dart';
@@ -317,8 +318,11 @@ class _PlayedHistoryState extends State<PlayedHistory>
     var dbHelper = DBHelper();
     List<PlayHistory> playHistory;
     playHistory = await dbHelper.getPlayHistory(top);
-    for (var record in playHistory) {
-      await record.getEpisode();
+    if (mounted) {
+      EpisodeState eState = context.episodeState;
+      for (var record in playHistory) {
+        await record.getEpisodeId(eState);
+      }
     }
     return playHistory;
   }

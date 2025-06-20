@@ -505,11 +505,13 @@ class _AddGroupState extends State<AddGroup> {
             ),
             TextButton(
               onPressed: () async {
-                if (list.contains(_newGroup)) {
-                  setState(() => _error = 1);
-                } else {
-                  groupList.addGroup(PodcastGroup(_newGroup));
-                  Navigator.of(context).pop();
+                if (_newGroup != null) {
+                  if (list.contains(_newGroup)) {
+                    setState(() => _error = 1);
+                  } else {
+                    groupList.addGroup(PodcastGroup(_newGroup!));
+                    Navigator.of(context).pop();
+                  }
                 }
               },
               child:

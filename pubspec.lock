@@ -565,7 +565,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: "60f42976ee70903fa59046b682e0672fab07916e"
+      resolved-ref: aad56b3508a16cae4189730d513627375c0def31
       url: "https://github.com/lojcs/focused_menu.git"
     source: git
     version: "1.0.7"
@@ -806,10 +806,10 @@ packages:
     dependency: transitive
     description:
       name: mime
-      sha256: "41a20518f0cb1256669420fdba0cd90d21561e560ac240f26ef8322e45bb7ed6"
+      sha256: "801fd0b26f14a4a58ccb09d5892c3fbdeff209594300a542492cf13fba9d247a"
       url: "https://pub.dev"
     source: hosted
-    version: "2.0.0"
+    version: "1.0.6"
   nested:
     dependency: transitive
     description:

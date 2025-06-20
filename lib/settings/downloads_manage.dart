@@ -10,7 +10,7 @@ import 'package:provider/provider.dart';
 
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/download_state.dart';
-import '../type/episodebrief.dart';
+import '../state/episode_state.dart';
 import '../type/theme_data.dart';
 import '../util/extension_helper.dart';
 import '../widgets/action_bar.dart';
@@ -20,7 +20,7 @@ class DownloadsManage extends StatefulWidget {
   const DownloadsManage({super.key});
 
   @override
-  _DownloadsManageState createState() => _DownloadsManageState();
+  State<DownloadsManage> createState() => _DownloadsManageState();
 }
 
 class _DownloadsManageState extends State<DownloadsManage> {
@@ -29,14 +29,14 @@ class _DownloadsManageState extends State<DownloadsManage> {
   //Downloaded files
   late int _fileNum;
   late bool _clearing;
-  late List<EpisodeBrief> _selectedList;
+  late List<int> _selectedList;
 
   /// Episodes to display
-  List<EpisodeBrief> _episodes = [];
+  List<int> _episodeIds = [];
 
   /// Function to get episodes
-  Future<List<EpisodeBrief>> Function(int count) _getEpisodes = (int _) async {
-    return <EpisodeBrief>[];
+  Future<List<int>> Function(int count) _getEpisodeIds = (int _) async {
+    return <int>[];
   };
 
   /// If true, stop grid load animation.
@@ -49,6 +49,8 @@ class _DownloadsManageState extends State<DownloadsManage> {
 
   /// Load more episodes when scroll to bottom.
   bool _loadMore = false;
+
+  late EpisodeState eState = Provider.of<EpisodeState>(context, listen: false);
 
   Future<void> _getStorageSize() async {
     _size = 0;
@@ -71,9 +73,9 @@ class _DownloadsManageState extends State<DownloadsManage> {
   Future<void> _delSelectedEpisodes() async {
     setState(() => _clearing = true);
     // await Future.forEach(_selectedList, (EpisodeBrief episode) async
-    for (var episode in _selectedList) {
+    for (var id in _selectedList) {
       var downloader = Provider.of<DownloadState>(context, listen: false);
-      await downloader.delTask(episode);
+      await downloader.delTask(eState[id]);
       if (mounted) setState(() {});
     }
     await Future.delayed(Duration(seconds: 1));
@@ -103,15 +105,7 @@ class _DownloadsManageState extends State<DownloadsManage> {
   }
 
   int sumSelected() {
-    var sum = 0;
-    if (_selectedList.isEmpty) {
-      return sum;
-    } else {
-      for (var episode in _selectedList) {
-        sum += episode.enclosureSize!;
-      }
-      return sum;
-    }
+    return _selectedList.fold(0, (size, id) => size + eState[id].enclosureSize);
   }
 
   @override
@@ -152,11 +146,11 @@ class _DownloadsManageState extends State<DownloadsManage> {
                     if (_controller.offset >=
                             _controller.position.maxScrollExtent -
                                 context.width &&
-                        _episodes.length == _top) {
+                        _episodeIds.length == _top) {
                       if (!_loadMore) {
                         if (mounted) setState(() => _loadMore = true);
                         _top = _top + 36;
-                        _episodes = await _getEpisodes(_top);
+                        _episodeIds = await _getEpisodeIds(_top);
                         if (mounted) setState(() => _loadMore = false);
                       }
                     }
@@ -240,9 +234,9 @@ class _DownloadsManageState extends State<DownloadsManage> {
                     ),
                   ),
                   ActionBar(
-                    onGetEpisodesChanged: (getEpisodes) async {
-                      _getEpisodes = getEpisodes;
-                      _episodes = await _getEpisodes(_top);
+                    onGetEpisodeIdsChanged: (getEpisodes) async {
+                      _getEpisodeIds = getEpisodes;
+                      _episodeIds = await _getEpisodeIds(_top);
                       if (mounted) setState(() {});
                     },
                     widgetsFirstRow: const [
@@ -260,29 +254,27 @@ class _DownloadsManageState extends State<DownloadsManage> {
                     ],
                     sortBy: Sorter.downloadDate,
                     filterDownloaded: true,
-                    extraFields: [EpisodeField.downloadDate],
                   ),
                   SliverList.builder(
-                    itemCount: _episodes.length,
+                    itemCount: _episodeIds.length,
                     itemBuilder: (context, index) {
                       return Column(
                         children: <Widget>[
                           ListTile(
                             onTap: () {
-                              if (_selectedList.contains(_episodes[index])) {
-                                setState(() => _selectedList.removeWhere(
-                                    (episode) =>
-                                        episode.enclosureUrl ==
-                                        _episodes[index].enclosureUrl));
+                              if (_selectedList.contains(_episodeIds[index])) {
+                                setState(() =>
+                                    _selectedList.remove(_episodeIds[index]));
                               } else {
-                                setState(
-                                    () => _selectedList.add(_episodes[index]));
+                                setState(() =>
+                                    _selectedList.add(_episodeIds[index]));
                               }
                             },
                             leading: CircleAvatar(
-                                backgroundImage: _episodes[index].avatarImage),
+                                backgroundImage:
+                                    eState[_episodeIds[index]].avatarImage),
                             title: Text(
-                              _episodes[index].title,
+                              eState[_episodeIds[index]].title,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -290,25 +282,26 @@ class _DownloadsManageState extends State<DownloadsManage> {
                               children: [
                                 Text(_downloadDateToString(context,
                                     downloadDate:
-                                        _episodes[index].downloadDate!,
-                                    pubDate: _episodes[index].pubDate)),
+                                        eState[_episodeIds[index]].downloadDate,
+                                    pubDate:
+                                        eState[_episodeIds[index]].pubDate)),
                                 SizedBox(width: 20),
-                                if (_episodes[index].enclosureSize != 0)
+                                if (eState[_episodeIds[index]].enclosureSize !=
+                                    0)
                                   Text(
-                                      '${_episodes[index].enclosureSize! ~/ 1000000} Mb'),
+                                      '${eState[_episodeIds[index]].enclosureSize ~/ 1000000} Mb'),
                               ],
                             ),
                             trailing: Checkbox(
-                              value: _selectedList.contains(_episodes[index]),
+                              value: _selectedList.contains(_episodeIds[index]),
                               onChanged: (boo) {
                                 if (boo!) {
                                   setState(() =>
-                                      _selectedList.add(_episodes[index]));
+                                      _selectedList.add(_episodeIds[index]));
                                 } else {
                                   setState(
-                                    () => _selectedList.removeWhere((episode) =>
-                                        episode.enclosureUrl ==
-                                        _episodes[index].enclosureUrl),
+                                    () => _selectedList
+                                        .remove(_episodeIds[index]),
                                   );
                                 }
                               },

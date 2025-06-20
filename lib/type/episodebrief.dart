@@ -5,7 +5,6 @@ import 'package:equatable/equatable.dart';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import 'theme_data.dart';
 import '../util/extension_helper.dart';
@@ -18,58 +17,95 @@ class EpisodeBrief extends Equatable {
   final String podcastTitle;
   final int pubDate;
 
-  final String? description;
-  final int? number;
-  final int? enclosureDuration;
-  final int? enclosureSize;
-  final bool? isDownloaded;
-  final int? downloadDate;
-  final String? mediaId;
-  final String? episodeImage;
-  final String? podcastImage;
-  final Color? primaryColor;
-  final bool? isExplicit;
-  final bool? isLiked;
-  final bool? isNew;
-  final bool? isPlayed;
-  final bool? isDisplayVersion;
-  final Set<EpisodeBrief>? versions;
+  final String description;
+  final int number;
+  final int enclosureDuration;
+  final int enclosureSize;
+  final bool isDownloaded;
+  final int downloadDate;
+  final String mediaId;
+  final String episodeImage;
+  final String podcastImage;
+  final Color primaryColor;
+  final bool isExplicit;
+  final bool isLiked;
+  final bool isNew;
+  final bool isPlayed;
+  final bool isDisplayVersion;
+  final List<int>? versions;
   final int skipSecondsStart;
   final int skipSecondsEnd;
-  final String? chapterLink;
+  final String chapterLink;
 
-  EpisodeBrief(this.id, this.title, this.enclosureUrl, this.podcastId,
-      this.podcastTitle, this.pubDate,
-      {this.description,
-      this.number,
-      this.enclosureDuration,
-      this.enclosureSize,
-      this.isDownloaded,
-      this.downloadDate,
-      this.mediaId,
-      this.episodeImage,
-      this.podcastImage,
-      this.primaryColor,
-      this.isExplicit,
-      this.isLiked,
-      this.isNew,
-      this.isPlayed,
-      this.isDisplayVersion,
-      this.versions,
-      this.skipSecondsStart = 0,
-      this.skipSecondsEnd = 0,
-      this.chapterLink});
+  EpisodeBrief({
+    required this.id,
+    required this.title,
+    required this.enclosureUrl,
+    required this.podcastId,
+    required this.podcastTitle,
+    required this.pubDate,
+    required this.description,
+    required this.number,
+    required this.enclosureDuration,
+    required this.enclosureSize,
+    required this.isDownloaded,
+    required this.downloadDate,
+    required this.mediaId,
+    required this.episodeImage,
+    required this.podcastImage,
+    required this.primaryColor,
+    required this.isExplicit,
+    required this.isLiked,
+    required this.isNew,
+    required this.isPlayed,
+    required this.isDisplayVersion,
+    this.versions,
+    this.skipSecondsStart = 0,
+    this.skipSecondsEnd = 0,
+    required this.chapterLink,
+  });
+
+  /// Use for new local episodes not yet in database
+  EpisodeBrief.local({
+    required this.title,
+    required this.enclosureUrl,
+    String? podcastTitle,
+    required this.pubDate,
+    required this.description,
+    required this.enclosureDuration,
+    required this.enclosureSize,
+    required this.mediaId,
+    required this.episodeImage,
+    Color? primaryColor,
+  })  : id = -1,
+        podcastId = localFolderId,
+        podcastTitle = podcastTitle ?? 'Local Folder',
+        number = -1,
+        isDownloaded = true,
+        downloadDate = pubDate,
+        podcastImage = '',
+        primaryColor = primaryColor ?? Colors.teal,
+        isExplicit = false,
+        isLiked = false,
+        isNew = false,
+        isPlayed = false,
+        isDisplayVersion = true,
+        versions = null,
+        skipSecondsStart = 0,
+        skipSecondsEnd = 0,
+        chapterLink = '';
 
   late final MediaItem mediaItem = MediaItem(
-      id: mediaId!,
+      id: mediaId,
       title: title,
+      isLive: !isDownloaded,
       artist: podcastTitle,
       album: podcastTitle,
-      duration: enclosureDuration != null
-          ? Duration(seconds: enclosureDuration!)
-          : Duration.zero,
-      artUri: Uri.parse(
-          episodeImage != '' ? episodeImage! : 'file://$podcastImage'),
+      duration: Duration(seconds: enclosureDuration),
+      // artUri: Uri.parse('file://$podcastImage'),
+      // Andoid auto can't show local images
+      artUri:
+          Uri.parse(episodeImage != '' ? episodeImage : 'file://$podcastImage'),
       extras: {
         'skipSecondsStart': skipSecondsStart,
         'skipSecondsEnd': skipSecondsEnd
@@ -77,31 +113,31 @@ class EpisodeBrief extends Equatable {
 
   ImageProvider get avatarImage {
     // TODO: Get rid of this
-    if (podcastImage != null) {
-      if (File(podcastImage!).existsSync()) {
-        return FileImage(File(podcastImage!));
+    if (podcastImage != '') {
+      if (File(podcastImage).existsSync()) {
+        return FileImage(File(podcastImage));
       }
-    } else if (episodeImage != null) {
-      if (File(episodeImage!).existsSync()) {
-        return FileImage(File(episodeImage!));
+    } else if (episodeImage != '') {
+      if (File(episodeImage).existsSync()) {
+        return FileImage(File(episodeImage));
       } else if (episodeImage != '') {
-        return CachedNetworkImageProvider(episodeImage!);
+        return CachedNetworkImageProvider(episodeImage);
       }
     }
     return AssetImage('assets/avatar_backup.png');
   }
 
-  late final ImageProvider _episodeImageProvider = ((episodeImage != null)
-      ? (File(episodeImage!).existsSync())
-          ? FileImage(File(episodeImage!))
+  late final ImageProvider _episodeImageProvider = ((episodeImage != '')
+      ? (File(episodeImage).existsSync())
+          ? FileImage(File(episodeImage))
           : (episodeImage != '')
-              ? CachedNetworkImageProvider(episodeImage!)
+              ? CachedNetworkImageProvider(episodeImage)
               : const AssetImage('assets/avatar_backup.png')
       : const AssetImage('assets/avatar_backup.png')) as ImageProvider;
 
-  late final ImageProvider podcastImageProvider = ((podcastImage != null)
-      ? (File(podcastImage!).existsSync())
-          ? FileImage(File(podcastImage!))
+  late final ImageProvider podcastImageProvider = ((podcastImage != '')
+      ? (File(podcastImage).existsSync())
+          ? FileImage(File(podcastImage))
           : const AssetImage('assets/avatar_backup.png')
       : const AssetImage('assets/avatar_backup.png')) as ImageProvider;
 
@@ -148,16 +184,16 @@ class EpisodeBrief extends Equatable {
     return context.realDark
         ? context.surface
         : context.brightness == Brightness.light
-            ? cardColorSchemeLight.faded
-            : cardColorSchemeDark.faded;
+            ? cardColorSchemeLight.progress
+            : cardColorSchemeDark.progress;
   }
 
   late final ColorScheme colorSchemeLight = ColorScheme.fromSeed(
-    seedColor: primaryColor!,
+    seedColor: primaryColor,
     brightness: Brightness.light,
   );
   late final ColorScheme colorSchemeDark = ColorScheme.fromSeed(
-    seedColor: primaryColor!,
+    seedColor: primaryColor,
     brightness: Brightness.dark,
   );
   late final CardColorScheme cardColorSchemeLight =
@@ -176,63 +212,6 @@ class EpisodeBrief extends Equatable {
     return context.brightness == Brightness.light
         ? colorSchemeLight
         : colorSchemeDark;
-  }
-
-  /// The list of filled fields in the form of [EpisodeField]s.
-  late final List<EpisodeField> fields = _getfields();
-
-  dynamic _getFieldValue(EpisodeField episodeField) {
-    switch (episodeField) {
-      case EpisodeField.description:
-        return description;
-      case EpisodeField.number:
-        return number;
-      case EpisodeField.enclosureDuration:
-        return enclosureDuration;
-      case EpisodeField.enclosureSize:
-        return enclosureSize;
-      case EpisodeField.isDownloaded:
-        return isDownloaded;
-      case EpisodeField.downloadDate:
-        return downloadDate;
-      case EpisodeField.mediaId:
-        return mediaId;
-      case EpisodeField.episodeImage:
-        return episodeImage;
-      case EpisodeField.podcastImage:
-        return podcastImage;
-      case EpisodeField.primaryColor:
-        return primaryColor;
-      case EpisodeField.isExplicit:
-        return isExplicit;
-      case EpisodeField.isLiked:
-        return isLiked;
-      case EpisodeField.isNew:
-        return isNew;
-      case EpisodeField.isPlayed:
-        return isPlayed;
-      case EpisodeField.isDisplayVersion:
-        return isDisplayVersion;
-      case EpisodeField.versions:
-        return null;
-      case EpisodeField.skipSecondsStart:
-        return skipSecondsStart;
-      case EpisodeField.skipSecondsEnd:
-        return skipSecondsEnd;
-      case EpisodeField.chapterLink:
-        return chapterLink;
-    }
-  }
-
-  List<EpisodeField> _getfields() {
-    List<EpisodeField> fieldList = [];
-    for (EpisodeField field in EpisodeField.values) {
-      if (_getFieldValue(field) != null) fieldList.add(field);
-    }
-    if (versions != null) {
-      fieldList.add(EpisodeField.versions);
-    }
-    return fieldList;
   }
 
   EpisodeBrief copyWith(
@@ -257,17 +236,17 @@ class EpisodeBrief extends Equatable {
           bool? isNew,
           bool? isPlayed,
           bool? isDisplayVersion,
-          Set<EpisodeBrief>? versions,
+          List<int>? versions,
           int? skipSecondsStart,
           int? skipSecondsEnd,
           String? chapterLink}) =>
       EpisodeBrief(
-          id ?? this.id,
-          title ?? this.title,
-          enclosureUrl ?? this.enclosureUrl,
-          podcastId ?? this.podcastId,
-          podcastTitle ?? this.podcastTitle,
-          pubDate ?? this.pubDate,
+          id: id ?? this.id,
+          title: title ?? this.title,
+          enclosureUrl: enclosureUrl ?? this.enclosureUrl,
+          podcastId: podcastId ?? this.podcastId,
+          podcastTitle: podcastTitle ?? this.podcastTitle,
+          pubDate: pubDate ?? this.pubDate,
           description: description ?? this.description,
           number: number ?? this.number,
           enclosureDuration: enclosureDuration ?? this.enclosureDuration,
@@ -287,86 +266,6 @@ class EpisodeBrief extends Equatable {
           skipSecondsStart: skipSecondsStart ?? this.skipSecondsStart,
           skipSecondsEnd: skipSecondsEnd ?? this.skipSecondsEnd,
           chapterLink: chapterLink ?? this.chapterLink);
-
-  /// Returns a copy with the [newFields] filled from the database.
-  /// [keepExisting] disables overwriting already existing fields.
-  /// [update] refetches all already existing fields from database.
-  Future<EpisodeBrief> copyWithFromDB(
-      {List<EpisodeField>? newFields,
-      bool keepExisting = false,
-      bool update = false}) async {
-    assert(newFields != null || update,
-        "If update is false newFields can't be null.");
-    assert(!keepExisting || !update,
-        "Can't both update and keep existing fields.");
-    Map<EpisodeField, List> fieldsMap = {
-      // I'm so sorry this is so ugly
-      EpisodeField.description: [const Symbol("description"), description],
-      EpisodeField.number: [const Symbol("number"), number],
-      EpisodeField.enclosureDuration: [
-        const Symbol("enclosureDuration"),
-        enclosureDuration
-      ],
-      EpisodeField.enclosureSize: [
-        const Symbol("enclosureSize"),
-        enclosureSize
-      ],
-      EpisodeField.isDownloaded: [const Symbol("isDownloaded"), isDownloaded],
-      EpisodeField.downloadDate: [const Symbol("downloadDate"), downloadDate],
-      EpisodeField.mediaId: [const Symbol("mediaId"), mediaId],
-      EpisodeField.episodeImage: [const Symbol("episodeImage"), episodeImage],
-      EpisodeField.podcastImage: [const Symbol("podcastImage"), podcastImage],
-      EpisodeField.primaryColor: [const Symbol("primaryColor"), primaryColor],
-      EpisodeField.isExplicit: [const Symbol("isExplicit"), isExplicit],
-      EpisodeField.isLiked: [const Symbol("isLiked"), isLiked],
-      EpisodeField.isNew: [const Symbol("isNew"), isNew],
-      EpisodeField.isPlayed: [const Symbol("isPlayed"), isPlayed],
-      EpisodeField.isDisplayVersion: [
-        const Symbol("isDisplayVersion"),
-        isDisplayVersion
-      ],
-      EpisodeField.versions: [const Symbol("versions"), versions],
-      EpisodeField.skipSecondsStart: [
-        const Symbol("skipSecondsStart"),
-        skipSecondsStart
-      ],
-      EpisodeField.skipSecondsEnd: [
-        const Symbol("skipSecondsEnd"),
-        skipSecondsEnd
-      ],
-      EpisodeField.chapterLink: [const Symbol("chapterLink"), chapterLink]
-    };
-
-    var dbHelper = DBHelper();
-    newFields ??= [];
-    if (update) {
-      newFields.addAll(this.fields);
-    }
-    Map<Symbol, dynamic> oldFieldsSymbolMap = {};
-    List<EpisodeField> oldFields = this.fields.toList();
-    if (keepExisting) {
-      for (EpisodeField field in oldFields) {
-        newFields.remove(field);
-      }
-    } else {
-      for (EpisodeField field in newFields) {
-        oldFields.remove(field);
-      }
-    }
-    EpisodeBrief newEpisode;
-    if (newFields.isEmpty) {
-      newEpisode = this.copyWith();
-    } else {
-      for (EpisodeField field in oldFields) {
-        oldFieldsSymbolMap[fieldsMap[field]![0]] = fieldsMap[field]![1];
-      }
-      newEpisode = (await dbHelper.getEpisodes(
-              episodeIds: [id], optionalFields: newFields..addAll(oldFields)))
-          .first;
-      newEpisode = Function.apply(newEpisode.copyWith, [], oldFieldsSymbolMap);
-    }
-    return newEpisode;
-  }
 
   @override
   List<Object?> get props => [id, enclosureUrl];

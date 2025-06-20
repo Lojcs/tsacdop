@@ -2,9 +2,10 @@ import 'package:flutter_downloader/flutter_downloader.dart';
 
 import 'episodebrief.dart';
 
+// TODO: Do we need episodeBrief here?
 class EpisodeTask {
-  final String? taskId;
-  final EpisodeBrief? episode;
+  final String taskId;
+  final EpisodeBrief episode;
   int? progress;
   DownloadTaskStatus? status;
   EpisodeTask(this.episode, this.taskId,

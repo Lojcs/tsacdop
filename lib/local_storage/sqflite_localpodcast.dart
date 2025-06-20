@@ -4,11 +4,11 @@ import 'dart:developer' as developer;
 
 import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
-import '../state/episode_state.dart';
 import '../util/extension_helper.dart';
 import 'package:tuple/tuple.dart';
 import 'package:webfeed/webfeed.dart';
@@ -40,28 +40,6 @@ enum Sorter {
   const Sorter({required this.sql});
 
   final String sql;
-}
-
-enum EpisodeField {
-  description,
-  number,
-  enclosureDuration,
-  enclosureSize,
-  isDownloaded,
-  downloadDate,
-  mediaId,
-  episodeImage,
-  podcastImage,
-  primaryColor,
-  isExplicit,
-  isLiked,
-  isNew,
-  isPlayed,
-  isDisplayVersion,
-  versions,
-  skipSecondsStart,
-  skipSecondsEnd,
-  chapterLink
 }
 
 const localFolderId = "46e48103-06c7-4fe1-a0b1-68aa7205b7f0";
@@ -661,31 +639,16 @@ class DBHelper {
     return playHistory;
   }
 
-  Future<int> isListened(String url) async {
+  /// Sets the episodes as not listened
+  Future<int?> unsetListened(List<String> urls) async {
     var dbClient = await database;
-    int? i = 0;
-    List<Map> list = await dbClient.rawQuery(
-        "SELECT SUM(listen_time) FROM PlayHistory WHERE enclosure_url = ?",
-        [url]);
-    if (list.isNotEmpty) {
-      i = list.first['SUM(listen_time)'];
-      return i ?? 0;
-    }
-    return 0;
-  }
-
-  Future<int?> markNotListened(List<String> urls) async {
-    var dbClient = await database;
-    int? count;
-    await dbClient.transaction((txn) async {
-      count = await txn.rawUpdate(
-          "UPDATE OR IGNORE PlayHistory SET listen_time = 0 WHERE enclosure_url IN (${(", ?" * urls.length).substring(2)})",
-          [...urls]);
-    });
+    int? count = await dbClient.rawUpdate(
+        "UPDATE OR IGNORE PlayHistory SET listen_time = 0 WHERE enclosure_url IN (${(", ?" * urls.length).substring(2)})",
+        urls);
     await dbClient.rawDelete(
         'DELETE FROM PlayHistory WHERE enclosure_url in (${(", ?" * urls.length).substring(2)}) '
         'AND listen_time = 0 AND seconds = 0',
-        [...urls]);
+        urls);
     return count;
   }
 
@@ -931,37 +894,29 @@ class DBHelper {
         [episode.id, episode.podcastId, episode.title]);
   }
 
-  /// Populates the EpisodeBrief.versions set. Expects the set to be not null.
-  /// Doesn't populate if it is not empty.
-  /// Versions have all the fields that the original episode has.
-  Future<EpisodeBrief> populateEpisodeVersions(
-      EpisodeBrief episode, EpisodeState? episodeState) async {
+  /// Populates the EpisodeBrief.versions set with ids of episode versions.
+  /// Returns the set of EpisodeBriefs of the episode versions.
+  /// Doesn't populate if it is not null unless [force] is set.
+  Future<List<EpisodeBrief>> populateReturnVersions(EpisodeBrief episode,
+      {bool force = false}) async {
     var dbClient = await database;
-    if (episode.versions!.isNotEmpty) return episode;
-    List<Map> results = await dbClient.rawQuery(
-        "SELECT id FROM Episodes WHERE (feed_id = ? AND title = ?)",
-        [episode.podcastId, episode.title]);
+    if (episode.versions != null && !force) return [episode];
+    List<Map> results = await dbClient
+        .rawQuery("""SELECT id FROM Episodes WHERE (feed_id = ? AND title = ?)
+        ORDER BY milliseconds DESC""", [episode.podcastId, episode.title]);
     if (results.length == 1) {
-      episode.versions!.add(episode);
-      return episode;
+      episode.copyWith(versions: [episode.id]);
+      return [episode];
     }
-    List<int> otherVersionIds =
-        results.map<int>((result) => result['id']).toList();
-    otherVersionIds.remove(episode.id);
-    List<EpisodeField> fields = episode.fields.toList()
-      ..remove(EpisodeField.versions);
-    List<EpisodeBrief> versions = await getEpisodes(
-        episodeIds: otherVersionIds,
-        optionalFields: fields,
-        episodeState: episodeState);
-    versions = versions.map((e) => e.copyWith(versions: {})).toList();
-    versions.add(episode);
+    List<int> versionIds = results.map<int>((result) => result['id']).toList();
+    List<EpisodeBrief> versions = await getEpisodes(episodeIds: versionIds);
+    versions = versions.map((e) => e.copyWith(versions: [])).toList();
     for (EpisodeBrief version1 in versions) {
       for (EpisodeBrief version2 in versions) {
-        version1.versions!.add(version2);
+        version1.versions!.add(version2.id);
       }
     }
-    return episode;
+    return versions;
   }
 
   /// Parses and saves episodes in an [RssFeed]. Set [update] for existing feeds.
@@ -985,21 +940,39 @@ class DBHelper {
         final milliseconds = pubDate?.millisecondsSinceEpoch ??
             DateTime.now().millisecondsSinceEpoch;
         final duration = feed.items![i].itunes!.duration?.inSeconds ?? 0;
-        final explicit = feed.items![i].itunes!.explicit;
+        final explicit = feed.items![i].itunes!.explicit ?? false;
         final chapter = feed.items![i].podcastChapters?.url ?? '';
         final image =
             feed.items![i].itunes!.image?.href ?? ''; // TODO: Maybe save these?
         episodes.add(
-          EpisodeBrief(-1, title, url, feedId, "", milliseconds,
-              description: _getDescription(
-                  feed.items![i].content?.value ?? '',
-                  feed.items![i].description ?? '',
-                  feed.items![i].itunes!.summary ?? ''),
-              enclosureDuration: duration,
-              enclosureSize: length,
-              episodeImage: image,
-              isExplicit: explicit,
-              chapterLink: chapter),
+          EpisodeBrief(
+            id: -1,
+            title: title,
+            enclosureUrl: url,
+            podcastId: feedId,
+            podcastTitle: "",
+            pubDate: milliseconds,
+            description: _getDescription(
+                feed.items![i].content?.value ?? '',
+                feed.items![i].description ?? '',
+                feed.items![i].itunes!.summary ?? ''),
+            enclosureDuration: duration,
+            enclosureSize: length,
+            episodeImage: image,
+            isExplicit: explicit,
+            chapterLink: chapter,
+            // These don't matter
+            isDownloaded: false,
+            downloadDate: 0,
+            mediaId: "",
+            podcastImage: "",
+            primaryColor: Colors.teal,
+            isLiked: false,
+            isNew: false,
+            isPlayed: false,
+            isDisplayVersion: false,
+            number: 0,
+          ),
         );
       }
     }
@@ -1124,44 +1097,42 @@ class DBHelper {
     }
   }
 
-  Future<void> saveLocalEpisode(EpisodeBrief episode) async {
+  Future<int> saveLocalEpisode(EpisodeBrief episode) async {
     var dbClient = await database;
-    await dbClient.transaction((txn) async {
-      int episodeId = await txn.rawInsert(
-          """INSERT OR REPLACE INTO Episodes(title, enclosure_url, enclosure_length, pubDate, 
+    int episodeId = await dbClient.rawInsert(
+        """INSERT OR REPLACE INTO Episodes(title, enclosure_url, enclosure_length, pubDate, 
                 description, feed_id, milliseconds, duration, explicit, media_id, episode_image) 
                 VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-          [
-            episode.title,
-            episode.enclosureUrl,
-            episode.enclosureSize,
-            '',
-            '',
-            localFolderId,
-            episode.pubDate,
-            episode.enclosureDuration,
-            0,
-            episode.enclosureUrl,
-            episode.episodeImage
-          ]);
-    });
+        [
+          episode.title,
+          episode.enclosureUrl,
+          episode.enclosureSize,
+          '',
+          '',
+          localFolderId,
+          episode.pubDate,
+          episode.enclosureDuration,
+          0,
+          episode.enclosureUrl,
+          episode.episodeImage
+        ]);
+    return episodeId;
   }
 
-  Future<void> deleteLocalEpisodes(List<String> files) async {
+  Future<void> deleteLocalEpisodes(List<int> ids) async {
     var dbClient = await database;
     await dbClient.transaction((txn) async {
       Batch batchOp = txn.batch();
-      for (String episode in files) {
-        batchOp.rawDelete(
-            'DELETE FROM Episodes WHERE enclosure_url = ? AND feed_id = ?',
-            [episode, localFolderId]);
+      for (var id in ids) {
+        batchOp.rawDelete('DELETE FROM Episodes WHERE id = ? AND feed_id = ?',
+            [id, localFolderId]);
       }
       await batchOp.commit();
     });
   }
 
   /// Queries the database with the provided options and returns found episodes.
-  /// Filters are tri-state with false being inverse
+  /// Filters are tri-state (null - no filter, true - only, false - exclude)
   Future<List<EpisodeBrief>> getEpisodes(
       // TODO: Optimize the query via indexes and intersects
       {List<String>? feedIds,
@@ -1174,11 +1145,10 @@ class DBHelper {
       List<String>? excludedEpisodeTitles,
       List<String>? likeEpisodeTitles,
       List<String>? excludedLikeEpisodeTitles,
-      List<EpisodeField>? optionalFields,
       Sorter? sortBy,
       SortOrder sortOrder = SortOrder.desc,
       List<Sorter>? rangeParameters,
-      List<Tuple2<int, int>>? rangeDelimiters,
+      List<(int, int)>? rangeDelimiters,
       int limit = -1,
       int offset = -1,
       bool? filterNew,
@@ -1188,83 +1158,18 @@ class DBHelper {
       bool? filterDisplayVersion,
       bool? filterAutoDownload,
       List<String>? customFilters,
-      List<String>? customArguements,
-      EpisodeState? episodeState}) async {
-    bool doGroup = false;
+      List<String>? customArguements}) async {
     List<String> query = [
       """SELECT E.id, E.title, E.enclosure_url, E.feed_id, P.title as feed_title,
-      E.milliseconds"""
+      E.milliseconds, E.description, E.number, E.duration, E.enclosure_length,
+      E.downloaded, E.download_date, E.media_id, E.episode_image, P.imagePath,
+      P.primaryColor, E.explicit, E.chapter_link, SUM(H.listen_time) as play_time,
+      E.is_new, E.display_version_id, P.skip_seconds, P.skip_seconds_end, E.liked"""
     ];
     List<String> filters = [];
     List arguements = [];
-    if (optionalFields != null && optionalFields.isNotEmpty) {
-      for (var field in optionalFields) {
-        switch (field) {
-          case EpisodeField.description:
-            query.add(", E.description");
-            break;
-          case EpisodeField.number:
-            query.add(", E.number");
-            break;
-          case EpisodeField.enclosureDuration:
-            query.add(", E.duration");
-            break;
-          case EpisodeField.enclosureSize:
-            query.add(", E.enclosure_length");
-            break;
-          case EpisodeField.isDownloaded:
-            query.add(", E.downloaded");
-            break;
-          case EpisodeField.downloadDate:
-            query.add(", E.download_date");
-            break;
-          case EpisodeField.mediaId:
-            query.add(", E.media_id");
-            break;
-          case EpisodeField.episodeImage:
-            query.add(", E.episode_image");
-            break;
-          case EpisodeField.podcastImage:
-            query.add(", P.imagePath");
-            break;
-          case EpisodeField.primaryColor:
-            query.add(", P.primaryColor");
-            break;
-          case EpisodeField.isExplicit:
-            query.add(", E.explicit");
-            break;
-          case EpisodeField.isLiked:
-            query.add(", E.liked");
-            break;
-          case EpisodeField.isNew:
-            query.add(", E.is_new");
-            break;
-          case EpisodeField.isPlayed:
-            doGroup = true;
-            query.add(", SUM(H.listen_time) as play_time");
-            break;
-          case EpisodeField.isDisplayVersion:
-            query.add(", E.display_version_id");
-            break;
-          case EpisodeField.versions:
-            break;
-          case EpisodeField.skipSecondsStart:
-            query.add(", P.skip_seconds");
-            break;
-          case EpisodeField.skipSecondsEnd:
-            query.add(", P.skip_seconds_end");
-            break;
-          case EpisodeField.chapterLink:
-            query.add(", E.chapter_link");
-            break;
-        }
-      }
-    }
     query.add(" FROM Episodes E INNER JOIN PodcastLocal P ON E.feed_id = P.id");
-    if (filterPlayed != null || doGroup) {
-      query
-          .add(" LEFT JOIN PlayHistory H ON E.enclosure_url = H.enclosure_url");
-    }
+    query.add(" LEFT JOIN PlayHistory H ON E.enclosure_url = H.enclosure_url");
 
     if (feedIds != null && feedIds.isNotEmpty) {
       filters.add(" P.id IN (${(", ?" * feedIds.length).substring(2)})");
@@ -1319,16 +1224,6 @@ class DBHelper {
         (e) => "%$e%",
       ));
     }
-    if (filterDisplayVersion == 2) {
-      filters.add(" E.version_info = 'NONE'");
-    } else if (filterDisplayVersion == 1) {
-      filters.add(
-          " (E.version_info = 'HAS' OR E.version_info = 'FHAS' OR E.version_info = 'NONE')");
-    } else if (filterDisplayVersion == -1) {
-      filters.add(" E.version_info = 'IS'");
-    } else if (filterDisplayVersion == -2) {
-      filters.add(" (E.version_info = 'HAS' OR E.version_info = 'FHAS')");
-    }
     if (filterNew == false) {
       filters.add(" E.is_new = 0");
     } else if (filterNew == true) {
@@ -1345,9 +1240,9 @@ class DBHelper {
       filters.add(" E.downloaded != 'ND'");
     }
     if (filterDisplayVersion == false) {
-      filters.add(" E.display_version_id != E.id");
-    } else if (filterDisplayVersion == true) {
       filters.add(" E.display_version_id = E.id");
+    } else if (filterDisplayVersion == true) {
+      filters.add(" E.display_version_id != E.id");
     }
     if (filterAutoDownload == false) {
       filters.add(" P.auto_download = 0");
@@ -1360,15 +1255,13 @@ class DBHelper {
         rangeParameters.length == rangeDelimiters.length &&
         !rangeParameters.contains(Sorter.random)) {
       for (int i = 0; i < rangeParameters.length; i++) {
-        if (rangeDelimiters[i].item1 != -1 && rangeDelimiters[i].item2 != -1) {
+        if (rangeDelimiters[i].$1 != -1 && rangeDelimiters[i].$2 != -1) {
           filters.add(
-              " ${rangeParameters[i].sql} BETWEEN ${rangeDelimiters[i].item1} AND ${rangeDelimiters[i].item2}");
-        } else if (rangeDelimiters[i].item1 != -1) {
-          filters
-              .add(" ${rangeParameters[i].sql} > ${rangeDelimiters[i].item1}");
-        } else if (rangeDelimiters[i].item2 != -1) {
-          filters
-              .add(" ${rangeParameters[i].sql} < ${rangeDelimiters[i].item2}");
+              " ${rangeParameters[i].sql} BETWEEN ${rangeDelimiters[i].$1} AND ${rangeDelimiters[i].$2}");
+        } else if (rangeDelimiters[i].$1 != -1) {
+          filters.add(" ${rangeParameters[i].sql} > ${rangeDelimiters[i].$1}");
+        } else if (rangeDelimiters[i].$2 != -1) {
+          filters.add(" ${rangeParameters[i].sql} < ${rangeDelimiters[i].$2}");
         }
       }
     }
@@ -1384,9 +1277,7 @@ class DBHelper {
       query.add(" WHERE");
     }
     query.add(filters.join(" AND"));
-    if (filterPlayed != null || doGroup) {
-      query.add(" GROUP BY E.enclosure_url");
-    }
+    query.add(" GROUP BY E.enclosure_url");
     if (filterPlayed == false) {
       query.add(" HAVING SUM(H.listen_time) IS Null OR SUM(H.listen_time) = 0");
     } else if (filterPlayed == true) {
@@ -1406,98 +1297,40 @@ class DBHelper {
       }
     }
 
-    bool populateVersions = false;
     var dbClient = await database;
     List<EpisodeBrief> episodes = [];
     List<Map> result;
     result = await dbClient.rawQuery(query.join(), arguements);
     if (result.isNotEmpty) {
       for (var i in result) {
-        Map<Symbol, dynamic> fields = {};
-        if (optionalFields != null) {
-          for (var field in optionalFields) {
-            switch (field) {
-              case EpisodeField.description:
-                fields[const Symbol("description")] = i['description'];
-                break;
-              case EpisodeField.number:
-                fields[const Symbol("number")] = i['number'];
-                break;
-              case EpisodeField.enclosureDuration:
-                fields[const Symbol("enclosureDuration")] = i['duration'];
-                break;
-              case EpisodeField.enclosureSize:
-                fields[const Symbol("enclosureSize")] = i['enclosure_length'];
-                break;
-              case EpisodeField.isDownloaded:
-                fields[const Symbol("isDownloaded")] = i['downloaded'] != 'ND';
-                break;
-              case EpisodeField.downloadDate:
-                fields[const Symbol("downloadDate")] = i['download_date'];
-                break;
-              case EpisodeField.mediaId:
-                fields[const Symbol("mediaId")] = i['media_id'];
-                break;
-              case EpisodeField.episodeImage:
-                fields[const Symbol("episodeImage")] = i['episode_image'];
-                break;
-              case EpisodeField.podcastImage:
-                fields[const Symbol("podcastImage")] = i['imagePath'];
-                break;
-              case EpisodeField.primaryColor:
-                fields[const Symbol("primaryColor")] =
-                    (i['primaryColor'] as String).toColor();
-                break;
-              case EpisodeField.isExplicit:
-                fields[const Symbol("isExplicit")] = i['explicit'] == 1;
-                break;
-              case EpisodeField.isLiked:
-                fields[const Symbol("isLiked")] = i['liked'] == 1;
-                break;
-              case EpisodeField.isNew:
-                fields[const Symbol("isNew")] = i['is_new'] == 1;
-                break;
-              case EpisodeField.isPlayed:
-                fields[const Symbol("isPlayed")] =
-                    (i['play_time'] != null && i['play_time'] != 0);
-                break;
-              case EpisodeField.isDisplayVersion:
-                fields[const Symbol("isDisplayVersion")] =
-                    i['display_version_id'] == i['id'];
-                break;
-              case EpisodeField.versions:
-                fields[const Symbol("versions")] = <EpisodeBrief>{};
-                populateVersions = true;
-                break;
-              case EpisodeField.skipSecondsStart:
-                fields[const Symbol("skipSecondsStart")] = i['skip_seconds'];
-                break;
-              case EpisodeField.skipSecondsEnd:
-                fields[const Symbol("skipSecondsEnd")] = i['skip_seconds_end'];
-                break;
-              case EpisodeField.chapterLink:
-                fields[const Symbol("chapterLink")] = i['chapter_link'];
-                break;
-            }
-          }
-        }
-        EpisodeBrief episode = Function.apply(
-            EpisodeBrief.new,
-            [
-              i['id'],
-              i['title'],
-              i['enclosure_url'],
-              i['feed_id'],
-              i['feed_title'],
-              i['milliseconds']
-            ],
-            fields);
-        if (populateVersions)
-          episode = await populateEpisodeVersions(episode, episodeState);
+        EpisodeBrief episode = EpisodeBrief(
+          id: i['id'],
+          title: i['title'],
+          enclosureUrl: i['enclosure_url'],
+          podcastId: i['feed_id'],
+          podcastTitle: i['feed_title'],
+          pubDate: i['milliseconds'],
+          description: i['description'],
+          number: i['number'],
+          enclosureDuration: i['duration'],
+          enclosureSize: i['enclosure_length'],
+          isDownloaded: i['downloaded'] != 'ND',
+          downloadDate: i['download_date'],
+          mediaId: i['media_id'],
+          episodeImage: i['episode_image'],
+          podcastImage: i['imagePath'],
+          primaryColor: (i['primaryColor'] as String).toColor(),
+          isExplicit: i['explicit'] == 1,
+          isLiked: i['liked'] == 1,
+          isNew: i['is_new'] == 1,
+          isPlayed: i['play_time'] != null && i['play_time'] != 0,
+          isDisplayVersion: i['display_version_id'] == i['id'],
+          versions: null,
+          skipSecondsStart: i['skip_seconds'],
+          skipSecondsEnd: i['skip_seconds_end'],
+          chapterLink: i['chapter_link'],
+        );
         episodes.add(episode);
-        if (episodeState != null) {
-          episodeState.addEpisode(episode);
-        }
       }
     }
     return episodes;
@@ -1553,66 +1386,43 @@ class DBHelper {
     return list.isNotEmpty;
   }
 
-  /// Saves [mediaId] and optionally [size] of an [episode]. Sets or unsets downloaded status based on [mediaId].
-  Future<int?> saveMediaId(EpisodeBrief episode, String mediaId,
-      {EpisodeState? episodeState, String? taskId, int? size}) async {
-    var dbClient = await database;
-    int? count;
-    count = await dbClient.rawUpdate(
-        "UPDATE Episodes SET media_id = ? WHERE enclosure_url = ?",
-        [mediaId, episode.enclosureUrl]);
-    if (size != null) {
-      await dbClient.rawUpdate(
-          "UPDATE Episodes SET enclosure_length = ? WHERE enclosure_url = ?",
-          [size, episode.enclosureUrl]);
-    }
-    if (episodeState != null) {
-      if (episode.enclosureUrl != mediaId) {
-        await episodeState.setDownloaded([episode], taskId!);
-      } else {
-        await episodeState.unsetDownloaded([episode]);
-      }
-    } else {
-      if (episode.enclosureUrl != mediaId) {
-        await setDownloaded(episode.id, taskId!);
-      } else {
-        await unsetDownloaded([episode.id]);
-      }
-    }
-    return count;
-  }
-
-  Future<int> setDownloaded(int episodeId, String taskId) async {
+  /// Sets the episode as downloaded and saves its mediaId, download task id
+  /// size and duration
+  Future<void> setDownloaded(int episodeId,
+      {required String mediaId,
+      required String taskId,
+      required int size,
+      required int duration}) async {
     var dbClient = await database;
     var milliseconds = DateTime.now().millisecondsSinceEpoch;
-    int count = await dbClient.rawUpdate(
-        "UPDATE Episodes SET downloaded = ?, download_date = ? WHERE id = ?",
-        [taskId, milliseconds, episodeId]);
-    return count;
+    await dbClient.rawUpdate(
+        """UPDATE Episodes SET downloaded = ?, download_date = ?, media_id = ?,
+        enclosure_length = ?, duration = ? WHERE id = ?""",
+        [taskId, milliseconds, mediaId, size, duration, episodeId]);
   }
 
-  Future<int> unsetDownloaded(List<int> ids) async {
+  /// Sets the episode as not downloaded and sets its mediaId to enclosureUrl
+  Future<void> unsetDownloaded(int episodeId,
+      {required String enclosureUrl}) async {
     var dbClient = await database;
-    int count = await dbClient.rawUpdate(
-        "UPDATE Episodes SET downloaded = 'ND' WHERE id IN (${(", ?" * ids.length).substring(2)})",
-        [...ids]);
-    return count;
+    await dbClient.rawUpdate(
+        "UPDATE Episodes SET downloaded = 'ND', media_id = ? WHERE id = ?",
+        [enclosureUrl, episodeId]);
   }
 
-  Future<String?> getDescription(String url) async {
+  Future<String?> getDescription(int id) async {
     var dbClient = await database;
-    List<Map> list = await dbClient.rawQuery(
-        'SELECT description FROM Episodes WHERE enclosure_url = ?', [url]);
+    List<Map> list = await dbClient
+        .rawQuery('SELECT description FROM Episodes WHERE id = ?', [id]);
     String? description = list[0]['description'];
     return description;
   }
 
-  Future saveEpisodeDes(String url, {String? description}) async {
+  Future saveEpisodeDes(int id, {String? description}) async {
     var dbClient = await database;
     await dbClient.transaction((txn) async {
-      await txn.rawUpdate(
-          "UPDATE Episodes SET description = ? WHERE enclosure_url = ?",
-          [description, url]);
+      await txn.rawUpdate("UPDATE Episodes SET description = ? WHERE id = ?",
+          [description, id]);
     });
   }
 

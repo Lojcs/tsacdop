@@ -84,12 +84,12 @@ class CardColorScheme extends ThemeExtension<CardColorScheme> {
                     colorScheme.primaryFixedDim, 0.6)!
                 : Color.lerp(colorScheme.surfaceContainerLow,
                     colorScheme.primaryContainer, 0.5)!),
-        faded = progress ??
+        progress = progress ??
             (colorScheme.brightness == Brightness.light
                 ? Color.lerp(colorScheme.surface,
                     colorScheme.surfaceContainerLowest, 0.25)!
                 : Color.lerp(colorScheme.surfaceContainerHighest,
-                    colorScheme.surfaceContainerLowest, 0.7)!),
+                    colorScheme.surfaceContainerLowest, 0.8)!),
         shadow = shadow ??
             (colorScheme.brightness == Brightness.light
                 ? colorScheme.tertiary
@@ -98,7 +98,7 @@ class CardColorScheme extends ThemeExtension<CardColorScheme> {
   late final Color card;
   late final Color selected;
   late final Color saturated;
-  late final Color faded;
+  late final Color progress;
   late final Color shadow;
 
   @override
@@ -115,7 +115,7 @@ class CardColorScheme extends ThemeExtension<CardColorScheme> {
       card: card ?? this.card,
       selected: selected ?? this.selected,
       saturated: saturated ?? this.saturated,
-      progress: progress ?? this.faded,
+      progress: progress ?? this.progress,
       shadow: shadow ?? this.shadow,
     );
   }

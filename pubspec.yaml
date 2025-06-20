@@ -80,7 +80,7 @@ dependency_overrides:
       url: https://github.com/lojcs/linkify.git                        # Tsacdop fork, updated to 5.0.0
   focused_menu:
     git:
-      url: https://github.com/lojcs/focused_menu.git                  # Tsacdop fork, updated to 1.0.5
+      url: https://github.com/lojcs/focused_menu.git                   # Tsacdop fork, updated to 1.0.5
   webfeed:
     git:
       url: https://github.com/lojcs/webfeed.git                        # Tsacdop fork, updated to 0.7.0. Not updated to webfeed_plus
@@ -96,7 +96,7 @@ dependency_overrides:
       path: flare_flutter
   workmanager:
     git:
-      url: https://github.com/fluttercommunity/flutter_workmanager.git
+      url: https://github.com/fluttercommunity/flutter_workmanager.git # Workmanager's latest version isn't on pub
       path: workmanager
       ref: main
 dev_dependencies:

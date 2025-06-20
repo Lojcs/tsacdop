@@ -79,7 +79,8 @@ class _MiniPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
+    final audio = context.audioState;
+    final eState = context.episodeState;
     final s = context.s;
     final bgColor = context.cardColorSchemeCard;
     return Container(
@@ -110,16 +111,14 @@ class _MiniPanel extends StatelessWidget {
               children: <Widget>[
                 Expanded(
                   flex: 4,
-                  child: Selector<AudioPlayerNotifier, String?>(
-                    selector: (_, audio) => audio.episode?.title,
-                    builder: (_, title, __) {
-                      return Text(
-                        title!,
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                        maxLines: 2,
-                        overflow: TextOverflow.clip,
-                      );
-                    },
+                  child: Selector<AudioPlayerNotifier, String>(
+                    selector: (_, audio) => eState[audio.episodeId!].title,
+                    builder: (_, title, __) => Text(
+                      title,
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                      maxLines: 2,
+                      overflow: TextOverflow.clip,
+                    ),
                   ),
                 ),
                 Expanded(
@@ -155,8 +154,8 @@ class _MiniPanel extends StatelessWidget {
                   flex: 2,
                   child: Selector<AudioPlayerNotifier,
                       Tuple3<bool, bool, EpisodeBrief?>>(
-                    selector: (_, audio) =>
-                        Tuple3(audio.buffering, audio.playing, audio.episode),
+                    selector: (_, audio) => Tuple3(
+                        audio.buffering, audio.playing, audio.episodeBrief),
                     builder: (_, data, __) {
                       return Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -248,145 +247,136 @@ class _MiniPanel extends StatelessWidget {
   }
 }
 
-class LastPosition extends StatelessWidget {
-  const LastPosition({super.key});
+class AudioActions extends StatelessWidget {
+  const AudioActions({super.key});
 
   @override
   Widget build(BuildContext context) {
     final s = context.s;
     var audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
-    return Selector<AudioPlayerNotifier, EpisodeBrief?>(
-      selector: (_, audio) => audio.episode,
-      builder: (context, episode, child) {
-        return SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Selector<AudioPlayerNotifier, bool>(
-                selector: (_, audio) => audio.skipSilence == true,
-                builder: (_, data, __) => TextButton(
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Selector<AudioPlayerNotifier, bool>(
+            selector: (_, audio) => audio.skipSilence == true,
+            builder: (_, data, __) => TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: data ? context.accentColor : null,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(100.0),
+                  side: BorderSide(
+                    color: data
+                        ? context.accentColor
+                        : Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.12),
+                  ),
+                ),
+              ),
+              onPressed: () => audio.setSkipSilence(skipSilence: !data),
+              child: Row(
+                children: [
+                  Icon(Icons.flash_on,
+                      size: 18,
+                      color: data ? context.accentColor : context.textColor),
+                  SizedBox(width: 5),
+                  Text(
+                    s.skipSilence,
+                    style: TextStyle(
+                        color: data ? context.accentColor : context.textColor),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SizedBox(width: 10),
+          Selector<AudioPlayerNotifier, bool>(
+              selector: (_, audio) => audio.boostVolume == true,
+              builder: (_, data, __) => TextButton(
                   style: TextButton.styleFrom(
                     foregroundColor: data ? context.accentColor : null,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(100.0),
-                      side: BorderSide(
-                        color: data
-                            ? context.accentColor
-                            : Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.12),
-                      ),
-                    ),
+                        borderRadius: BorderRadius.circular(100.0),
+                        side: BorderSide(
+                            color: data
+                                ? context.accentColor
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withValues(alpha: 0.12))),
+                    padding: EdgeInsets.symmetric(horizontal: 10),
                   ),
-                  onPressed: () => audio.setSkipSilence(skipSilence: !data),
+                  onPressed: () => audio.setBoostVolume(boostVolume: !data),
                   child: Row(
                     children: [
-                      Icon(Icons.flash_on,
+                      Icon(Icons.volume_up,
                           size: 18,
                           color:
                               data ? context.accentColor : context.textColor),
                       SizedBox(width: 5),
                       Text(
-                        s.skipSilence,
+                        s.boostVolume,
                         style: TextStyle(
                             color:
                                 data ? context.accentColor : context.textColor),
                       ),
                     ],
-                  ),
-                ),
-              ),
-              SizedBox(width: 10),
-              Selector<AudioPlayerNotifier, bool>(
-                  selector: (_, audio) => audio.boostVolume == true,
-                  builder: (_, data, __) => TextButton(
-                      style: TextButton.styleFrom(
-                        foregroundColor: data ? context.accentColor : null,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(100.0),
-                            side: BorderSide(
-                                color: data
-                                    ? context.accentColor
-                                    : Theme.of(context)
-                                        .colorScheme
-                                        .onSurface
-                                        .withValues(alpha: 0.12))),
-                        padding: EdgeInsets.symmetric(horizontal: 10),
-                      ),
-                      onPressed: () => audio.setBoostVolume(boostVolume: !data),
-                      child: Row(
-                        children: [
-                          Icon(Icons.volume_up,
-                              size: 18,
-                              color: data
-                                  ? context.accentColor
-                                  : context.textColor),
-                          SizedBox(width: 5),
-                          Text(
-                            s.boostVolume,
-                            style: TextStyle(
-                                color: data
-                                    ? context.accentColor
-                                    : context.textColor),
-                          ),
-                        ],
-                      ))),
-              SizedBox(width: 10),
-              Selector<AudioPlayerNotifier, int?>(
-                  selector: (_, audio) => audio.undoButtonPosition,
-                  builder: (_, data, __) {
-                    return data != null
-                        ? TextButton(
-                            style: TextButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(100.0),
-                                  side: BorderSide(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface
-                                          .withValues(alpha: 0.12))),
+                  ))),
+          SizedBox(width: 10),
+          Selector<AudioPlayerNotifier, int?>(
+              selector: (_, audio) => audio.undoButtonPosition,
+              builder: (_, data, __) {
+                return data != null
+                    ? TextButton(
+                        style: TextButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(100.0),
+                              side: BorderSide(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withValues(alpha: 0.12))),
+                        ),
+                        // highlightedBorderColor: Colors.green[700],
+                        onPressed: audio.undoSeek,
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CustomPaint(
+                                painter: ListenedPainter(context.textColor,
+                                    stroke: 2.0),
+                              ),
                             ),
-                            // highlightedBorderColor: Colors.green[700],
-                            onPressed: audio.undoSeek,
-                            child: Row(
-                              children: [
-                                SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CustomPaint(
-                                    painter: ListenedPainter(context.textColor,
-                                        stroke: 2.0),
-                                  ),
-                                ),
-                                SizedBox(width: 5),
-                                Text(
-                                  (data ~/ 1000).toTime,
-                                  style: TextStyle(color: context.textColor),
-                                ),
-                              ],
+                            SizedBox(width: 5),
+                            Text(
+                              (data ~/ 1000).toTime,
+                              style: TextStyle(color: context.textColor),
                             ),
-                          )
-                        : Center();
-                  }),
-              Selector<AudioPlayerNotifier, double>(
-                selector: (_, audio) => audio.switchValue,
-                builder: (_, data, __) => data == 1
-                    ? SizedBox(
-                        height: 20,
-                        width: 40,
-                        child: Transform.rotate(
-                            angle: math.pi * 0.7,
-                            child: Icon(Icons.brightness_2,
-                                size: 18, color: context.accentColor)))
-                    : Center(),
-              )
-            ],
-          ),
-        );
-      },
+                          ],
+                        ),
+                      )
+                    : Center();
+              }),
+          Selector<AudioPlayerNotifier, double>(
+            selector: (_, audio) => audio.switchValue,
+            builder: (_, data, __) => data == 1
+                ? SizedBox(
+                    height: 20,
+                    width: 40,
+                    child: Transform.rotate(
+                        angle: math.pi * 0.7,
+                        child: Icon(Icons.brightness_2,
+                            size: 18, color: context.accentColor)))
+                : Center(),
+          )
+        ],
+      ),
     );
   }
 }
@@ -395,166 +385,178 @@ class PlaylistWidget extends StatefulWidget {
   const PlaylistWidget({super.key});
 
   @override
-  _PlaylistWidgetState createState() => _PlaylistWidgetState();
+  State<PlaylistWidget> createState() => _PlaylistWidgetState();
 }
 
 class _PlaylistWidgetState extends State<PlaylistWidget> {
   final GlobalKey<AnimatedListState> miniPlaylistKey = GlobalKey();
 
+  /// Map to hold ListView tiles between rebuilds due to playlist change.
+  final Map<int, Widget> listItems = {};
+
   @override
   Widget build(BuildContext context) {
-    var audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
-    return Selector<AudioPlayerNotifier,
-        Tuple4<Playlist, EpisodeBrief?, int?, bool>>(
-      selector: (_, audio) => Tuple4(
-          audio.playlist, audio.episode, audio.episodeIndex, audio.playing),
-      // Both of are needed since the widget should rebuild on reorder and playlist is mutable.
-      builder: (_, data, __) {
-        var episodes = data.item1.episodes;
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[
-            Expanded(
-              child: ListView.builder(
-                padding: EdgeInsets.zero,
-                itemCount: episodes.length,
-                itemBuilder: (context, index) {
-                  final isPlaying = index == data.item3;
-                  return Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () async {
-                        if (!isPlaying) {
-                          audio.loadEpisodeFromCurrentPlaylist(index);
-                        }
-                      },
-                      child: Container(
-                        color: isPlaying
-                            ? context.accentColor
-                            : Colors.transparent,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: <Widget>[
-                            Padding(
-                              padding: EdgeInsets.all(10.0),
-                              child: CircleAvatar(
-                                  radius: 15,
-                                  backgroundImage: episodes[index]
-                                      .episodeOrPodcastImageProvider),
-                            ),
-                            Expanded(
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  episodes[index].title,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+    var audio = context.audioState;
+    var eState = context.episodeState;
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: <Widget>[
+        Expanded(
+          child: Selector<AudioPlayerNotifier, Playlist>(
+            selector: (_, audio) => audio.playlist,
+            builder: (_, playlist, __) => ListView.builder(
+              padding: EdgeInsets.zero,
+              itemCount: playlist.length,
+              itemBuilder: (context, index) {
+                int episodeId = playlist[index];
+                if (!listItems.containsKey(episodeId)) {
+                  listItems[episodeId] = Selector<AudioPlayerNotifier, bool>(
+                    selector: (_, audio) => index == audio.episodeIndex,
+                    builder: (_, isPlaying, __) => Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () async {
+                          if (!isPlaying) {
+                            audio.loadEpisodeFromCurrentPlaylist(index);
+                          }
+                        },
+                        child: Container(
+                          height: 50,
+                          color: isPlaying
+                              ? context.accentColor
+                              : Colors.transparent,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              Padding(
+                                padding: EdgeInsets.all(10.0),
+                                child: CircleAvatar(
+                                    radius: 15,
+                                    backgroundImage: eState[episodeId]
+                                        .episodeOrPodcastImageProvider),
+                              ),
+                              Expanded(
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    eState[episodeId].title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                               ),
-                            ),
-                            if (isPlaying)
-                              Container(
+                              if (isPlaying)
+                                Container(
                                   height: 20,
                                   width: 20,
                                   margin: EdgeInsets.symmetric(horizontal: 10),
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                   ),
-                                  child: WaveLoader(
-                                      animate: data.item4,
-                                      color: context.cardColorSchemeSaturated)),
-                          ],
+                                  child: Selector<AudioPlayerNotifier, bool>(
+                                      selector: (_, audio) => audio.playing,
+                                      builder: (_, playing, __) => WaveLoader(
+                                          animate: playing,
+                                          color: context
+                                              .cardColorSchemeSaturated)),
+                                ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   );
-                },
-              ),
+                }
+                return listItems[episodeId];
+              },
             ),
-            SizedBox(
-              height: 60.0,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  children: <Widget>[
-                    Text(
-                      data.item1.name == 'Queue'
-                          ? context.s.queue
-                          : '${context.s.homeMenuPlaylist}${'-${data.item1.name}'}',
-                      overflow: TextOverflow.fade,
-                      style: TextStyle(
-                          color: context.accentColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16),
-                    ),
-                    Spacer(),
-                    Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(100),
-                        boxShadow: context.boxShadowSmall(),
-                        color: context.cardColorSchemeCard,
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.all(Radius.circular(15)),
-                          onTap: () {
-                            audio.skipToNext();
-                            // miniPlaylistKey.currentState.removeItem(
-                            //     0, (context, animation) => Container());
-                            // miniPlaylistKey.currentState.insertItem(0);
-                          },
-                          child: SizedBox(
-                            height: 30,
-                            width: 60,
-                            child: Icon(
-                              Icons.skip_next,
-                              size: 30,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 20),
-                    Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(100),
-                        boxShadow: context.boxShadowSmall(),
-                        color: context.cardColorSchemeCard,
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(15.0),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              SlideLeftRoute(page: PlaylistHome()),
-                            );
-                          },
-                          child: SizedBox(
-                            height: 30.0,
-                            width: 30.0,
-                            child: Transform.rotate(
-                              angle: math.pi,
-                              child: Icon(
-                                LineIcons.database,
-                                size: 20.0,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+          ),
+        ),
+        SizedBox(
+          height: 60.0,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: <Widget>[
+                Selector<AudioPlayerNotifier, Playlist>(
+                  selector: (_, audio) => audio.playlist,
+                  builder: (_, playlist, __) => Text(
+                    playlist.name == 'Queue'
+                        ? context.s.queue
+                        : '${context.s.homeMenuPlaylist}${'-${playlist.name}'}',
+                    overflow: TextOverflow.fade,
+                    style: TextStyle(
+                        color: context.accentColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16),
+                  ),
                 ),
-              ),
+                Spacer(),
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(100),
+                    boxShadow: context.boxShadowSmall(),
+                    color: context.cardColorSchemeCard,
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.all(Radius.circular(15)),
+                      onTap: () {
+                        audio.skipToNext();
+                        // miniPlaylistKey.currentState.removeItem(
+                        //     0, (context, animation) => Container());
+                        // miniPlaylistKey.currentState.insertItem(0);
+                      },
+                      child: SizedBox(
+                        height: 30,
+                        width: 60,
+                        child: Icon(
+                          Icons.skip_next,
+                          size: 30,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 20),
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(100),
+                    boxShadow: context.boxShadowSmall(),
+                    color: context.cardColorSchemeCard,
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(15.0),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          SlideLeftRoute(page: PlaylistHome()),
+                        );
+                      },
+                      child: SizedBox(
+                        height: 30.0,
+                        width: 30.0,
+                        child: Transform.rotate(
+                          angle: math.pi,
+                          child: Icon(
+                            LineIcons.database,
+                            size: 20.0,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        );
-      },
+          ),
+        ),
+      ],
     );
   }
 }
@@ -874,12 +876,12 @@ class _ChaptersWidgetState extends State<ChaptersWidget> {
   }
 
   Future<List<Chapters>?> _getChapters(EpisodeBrief episode) async {
-    if (episode.chapterLink == '' || episode.chapterLink == null) {
+    if (episode.chapterLink == '') {
       return [];
     }
     try {
       final file =
-          await DefaultCacheManager().getSingleFile(episode.chapterLink!);
+          await DefaultCacheManager().getSingleFile(episode.chapterLink);
       final response = file.readAsStringSync();
       var chapterInfo = ChapterInfo.fromJson(jsonDecode(response));
       return chapterInfo.chapters;
@@ -979,15 +981,15 @@ class _ChaptersWidgetState extends State<ChaptersWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<AudioPlayerNotifier, EpisodeBrief?>(
-      selector: (_, audio) => audio.episode,
+    return Selector<AudioPlayerNotifier, EpisodeBrief>(
+      selector: (_, audio) => audio.episodeBrief!,
       builder: (_, episode, __) => Scrollbar(
         child: Column(
           children: [
             Expanded(
               child: _showChapter
                   ? FutureBuilder<List<Chapters>?>(
-                      future: _getChapters(episode!),
+                      future: _getChapters(episode),
                       builder: (context, snapshot) {
                         if (snapshot.hasData) {
                           final data = snapshot.data!;
@@ -1012,7 +1014,7 @@ class _ChaptersWidgetState extends State<ChaptersWidget> {
                   : ListView(
                       padding: EdgeInsets.zero,
                       children: <Widget>[
-                        if (episode!.episodeImage != '' &&
+                        if (episode.episodeImage != '' &&
                             episode.enclosureUrl.substring(0, 4) != "file")
                           ClipRRect(
                             borderRadius: BorderRadius.circular(10.0),
@@ -1020,7 +1022,7 @@ class _ChaptersWidgetState extends State<ChaptersWidget> {
                                 width: 100,
                                 fit: BoxFit.fitWidth,
                                 alignment: Alignment.center,
-                                imageUrl: episode.episodeImage!,
+                                imageUrl: episode.episodeImage,
                                 placeholderFadeInDuration: Duration.zero,
                                 progressIndicatorBuilder: (context, url,
                                         downloadProgress) =>
@@ -1037,7 +1039,7 @@ class _ChaptersWidgetState extends State<ChaptersWidget> {
                                     ),
                                 errorWidget: (context, url, error) => Center()),
                           ),
-                        ShowNote(episode: episode)
+                        ShowNote(episodeId: episode.id)
                       ],
                     ),
             ),
@@ -1495,68 +1497,65 @@ class _ControlPanelState extends State<ControlPanel>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Expanded(
-                      child: Selector<AudioPlayerNotifier, String?>(
-                        selector: (_, audio) => audio.episode!.title,
-                        builder: (_, title, __) {
-                          return Container(
-                            padding: EdgeInsets.only(left: 50, right: 50),
-                            child: NotificationListener<ScrollNotification>(
-                              onNotification: (notification) => true,
-                              child: LayoutBuilder(
-                                builder: (context, size) {
-                                  final span = TextSpan(
-                                      text: title,
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 20)
-                                        ..merge(DefaultTextStyle.of(context)
-                                            .style));
-                                  final tp = TextPainter(
-                                      text: span,
-                                      maxLines: 1,
-                                      textDirection: TextDirection.ltr);
-                                  tp.layout(maxWidth: size.maxWidth);
-                                  if (tp.didExceedMaxLines) {
-                                    return Marquee(
-                                      text: title!,
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 20),
-                                      scrollAxis: Axis.horizontal,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      blankSpace: 30.0,
-                                      velocity: 50.0,
-                                      pauseAfterRound: Duration.zero,
-                                      startPadding: 0,
-                                      accelerationDuration:
-                                          Duration(milliseconds: 100),
-                                      accelerationCurve: Curves.linear,
-                                      decelerationDuration:
-                                          Duration(milliseconds: 100),
-                                      decelerationCurve: Curves.linear,
-                                    );
-                                  } else {
-                                    return Text(
-                                      title!,
-                                      maxLines: 1,
-                                      style: context.textTheme.titleLarge!
-                                          .copyWith(
-                                              fontWeight: FontWeight.bold),
-                                    );
-                                  }
-                                },
-                              ),
+                      child: Container(
+                        padding: EdgeInsets.only(left: 50, right: 50),
+                        child: NotificationListener<ScrollNotification>(
+                          onNotification: (notification) => true,
+                          child: Selector<AudioPlayerNotifier, String>(
+                            selector: (_, audio) => audio.episodeBrief!.title,
+                            builder: (_, title, __) => LayoutBuilder(
+                              builder: (context, size) {
+                                final span = TextSpan(
+                                    text: title,
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 20)
+                                      ..merge(
+                                          DefaultTextStyle.of(context).style));
+                                final tp = TextPainter(
+                                    text: span,
+                                    maxLines: 1,
+                                    textDirection: TextDirection.ltr);
+                                tp.layout(maxWidth: size.maxWidth);
+                                if (tp.didExceedMaxLines) {
+                                  return Marquee(
+                                    text: title,
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 20),
+                                    scrollAxis: Axis.horizontal,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    blankSpace: 30.0,
+                                    velocity: 50.0,
+                                    pauseAfterRound: Duration.zero,
+                                    startPadding: 0,
+                                    accelerationDuration:
+                                        Duration(milliseconds: 100),
+                                    accelerationCurve: Curves.linear,
+                                    decelerationDuration:
+                                        Duration(milliseconds: 100),
+                                    decelerationCurve: Curves.linear,
+                                  );
+                                } else {
+                                  return Text(
+                                    title,
+                                    maxLines: 1,
+                                    style: context.textTheme.titleLarge!
+                                        .copyWith(fontWeight: FontWeight.bold),
+                                  );
+                                }
+                              },
                             ),
-                          );
-                        },
+                          ),
+                        ),
                       ),
                     ),
                     if (height <= widget.maxHeight! + 20)
                       Opacity(
                         opacity: ((widget.maxHeight! + 20 - height) / 20)
                             .clamp(0, 1),
-                        child: LastPosition(),
+                        child: AudioActions(),
                       ),
                   ],
                 ),
@@ -1621,176 +1620,148 @@ class _ControlPanelState extends State<ControlPanel>
                       Opacity(
                         opacity: ((widget.maxHeight! + 25 - height) / 25)
                             .clamp(0, 1),
-                        child: Selector<AudioPlayerNotifier,
-                            Tuple4<EpisodeBrief?, bool, bool, double?>>(
-                          selector: (_, audio) => Tuple4(
-                              audio.episode,
-                              audio.stopOnComplete,
-                              audio.sleepTimerActive,
-                              audio.currentSpeed),
-                          builder: (_, data, __) {
-                            final currentSpeed = data.item4 ?? 1.0;
-                            return Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 20.0),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: <Widget>[
-                                  if (_setSpeed == 0)
-                                    Expanded(
-                                      child: InkWell(
-                                        onTap: () async {
-                                          widget.onClose!();
-                                          if (!widget.isPlayingPage) {
-                                            Navigator.push(
-                                                context,
-                                                FadeRoute(
-                                                    page: FutureBuilder(
-                                                        future: data.item1!
-                                                            .copyWithFromDB(
-                                                                newFields: [
-                                                              EpisodeField
-                                                                  .description,
-                                                              EpisodeField
-                                                                  .number,
-                                                              EpisodeField
-                                                                  .enclosureDuration,
-                                                              EpisodeField
-                                                                  .enclosureSize,
-                                                              EpisodeField
-                                                                  .episodeImage,
-                                                              EpisodeField
-                                                                  .podcastImage,
-                                                              EpisodeField
-                                                                  .primaryColor,
-                                                              EpisodeField
-                                                                  .isLiked,
-                                                              EpisodeField
-                                                                  .isNew,
-                                                              EpisodeField
-                                                                  .isPlayed,
-                                                              EpisodeField
-                                                                  .isDisplayVersion
-                                                            ]),
-                                                        builder: ((context,
-                                                                snapshot) =>
-                                                            snapshot.hasData
-                                                                ? EpisodeDetail(
-                                                                    episodeItem:
-                                                                        snapshot.data
-                                                                            as EpisodeBrief)
-                                                                : Center()))));
-                                          }
-                                        },
-                                        child: Row(
-                                          children: [
-                                            SizedBox(
-                                              height: 30.0,
-                                              width: 30.0,
-                                              child: CircleAvatar(
-                                                backgroundImage: data.item1!
-                                                    .episodeOrPodcastImageProvider,
-                                              ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              if (_setSpeed == 0)
+                                Expanded(
+                                  child: InkWell(
+                                    onTap: () async {
+                                      widget.onClose!();
+                                      if (!widget.isPlayingPage) {
+                                        Navigator.push(
+                                          context,
+                                          FadeRoute(
+                                            page:
+                                                EpisodeDetail(audio.episodeId!),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    child: Selector<AudioPlayerNotifier,
+                                        (String, ImageProvider)>(
+                                      selector: (_, audio) => (
+                                        audio.episodeBrief!.title,
+                                        audio.episodeBrief!
+                                            .episodeOrPodcastImageProvider
+                                      ),
+                                      builder: (_, data, __) => Row(
+                                        children: [
+                                          SizedBox(
+                                            height: 30.0,
+                                            width: 30.0,
+                                            child: CircleAvatar(
+                                              backgroundImage: data.$2,
                                             ),
-                                            SizedBox(width: 5),
-                                            SizedBox(
-                                              width: context.width - 130,
-                                              child: Text(
-                                                data.item1!.podcastTitle,
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
+                                          ),
+                                          SizedBox(width: 5),
+                                          SizedBox(
+                                            width: context.width - 130,
+                                            child: Text(
+                                              data.$1,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
-                                          ],
-                                        ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                  if (_setSpeed > 0)
-                                    Expanded(
-                                      child: Opacity(
-                                        opacity: _setSpeed,
-                                        child: SingleChildScrollView(
-                                          scrollDirection: Axis.horizontal,
-                                          child: FutureBuilder<List<double>>(
-                                            future: _getSpeedList(),
-                                            initialData: [],
-                                            builder: (context, snapshot) => Row(
-                                              children: snapshot.data!
-                                                  .map<Widget>((e) => InkWell(
-                                                        onTap: () {
-                                                          if (_setSpeed == 1) {
-                                                            audio.setSpeed(e);
-                                                          }
-                                                        },
-                                                        child: Container(
-                                                          height: 30,
-                                                          width: 30,
-                                                          margin: EdgeInsets
-                                                              .symmetric(
-                                                                  horizontal:
-                                                                      5),
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color: e == currentSpeed &&
-                                                                    _setSpeed >
-                                                                        0
-                                                                ? context
-                                                                    .accentColor
-                                                                : context
-                                                                    .cardColorSchemeSaturated,
-                                                            shape:
-                                                                BoxShape.circle,
-                                                            boxShadow: context
-                                                                .boxShadowSmall(),
-                                                          ),
-                                                          alignment:
-                                                              Alignment.center,
-                                                          child: _setSpeed > 0
-                                                              ? Text(
-                                                                  e.toString(),
-                                                                  style: TextStyle(
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .bold,
-                                                                      color: e ==
-                                                                              currentSpeed
-                                                                          ? Colors
-                                                                              .white
-                                                                          : null))
-                                                              : Center(),
+                                  ),
+                                ),
+                              if (_setSpeed > 0)
+                                Expanded(
+                                  child: Opacity(
+                                    opacity: _setSpeed,
+                                    child: SingleChildScrollView(
+                                      scrollDirection: Axis.horizontal,
+                                      child: FutureBuilder<List<double>>(
+                                        future: _getSpeedList(),
+                                        initialData: [],
+                                        builder: (context, snapshot) =>
+                                            Selector<AudioPlayerNotifier,
+                                                double>(
+                                          selector: (_, audio) =>
+                                              audio.currentSpeed,
+                                          builder: (_, currentSpeed, __) => Row(
+                                            children: snapshot.data!
+                                                .map<Widget>((e) => InkWell(
+                                                      onTap: () {
+                                                        if (_setSpeed == 1) {
+                                                          audio.setSpeed(e);
+                                                        }
+                                                      },
+                                                      child: Container(
+                                                        height: 30,
+                                                        width: 30,
+                                                        margin: EdgeInsets
+                                                            .symmetric(
+                                                                horizontal: 5),
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: e == currentSpeed &&
+                                                                  _setSpeed > 0
+                                                              ? context
+                                                                  .accentColor
+                                                              : context
+                                                                  .cardColorSchemeSaturated,
+                                                          shape:
+                                                              BoxShape.circle,
+                                                          boxShadow: context
+                                                              .boxShadowSmall(),
                                                         ),
-                                                      ))
-                                                  .toList(),
-                                            ),
+                                                        alignment:
+                                                            Alignment.center,
+                                                        child: _setSpeed > 0
+                                                            ? Text(e.toString(),
+                                                                style: TextStyle(
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                    color: e ==
+                                                                            currentSpeed
+                                                                        ? Colors
+                                                                            .white
+                                                                        : null))
+                                                            : Center(),
+                                                      ),
+                                                    ))
+                                                .toList(),
                                           ),
                                         ),
                                       ),
                                     ),
-                                  IconButton(
-                                    padding: EdgeInsets.zero,
-                                    onPressed: () {
-                                      if (_setSpeed == 0) {
-                                        _controller.forward();
-                                      } else {
-                                        _controller.reverse();
-                                      }
-                                    },
-                                    icon: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
-                                      children: <Widget>[
-                                        Transform.rotate(
-                                            angle: math.pi * _setSpeed,
-                                            child: Text('X')),
-                                        Text(currentSpeed.toStringAsFixed(1)),
-                                      ],
-                                    ),
                                   ),
-                                ],
+                                ),
+                              IconButton(
+                                padding: EdgeInsets.zero,
+                                onPressed: () {
+                                  if (_setSpeed == 0) {
+                                    _controller.forward();
+                                  } else {
+                                    _controller.reverse();
+                                  }
+                                },
+                                icon: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: <Widget>[
+                                    Transform.rotate(
+                                        angle: math.pi * _setSpeed,
+                                        child: Text('X')),
+                                    Selector<AudioPlayerNotifier, double>(
+                                      selector: (_, audio) =>
+                                          audio.currentSpeed,
+                                      builder: (_, currentSpeed, __) =>
+                                          Text(currentSpeed.toStringAsFixed(1)),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            );
-                          },
+                            ],
+                          ),
                         ),
                       ),
                     if (_setSpeed == 0)
