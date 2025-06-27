@@ -12,11 +12,16 @@ import '../state/podcast_group.dart';
 import '../util/extension_helper.dart';
 
 enum SearchEngine {
-  ecosia(url: "https://www.ecosia.org/search?q="),
-  duckduckgo(url: "https://duckduckgo.com/?q="),
+  brave(url: "https://search.brave.com/search?q="),
+  yandex(url: "https://yandex.com/search/?text="),
   google(url: "https://www.google.com/search?q="),
-  bing(url: "https://www.bing.com/search?q="),
-  yandex(url: "https://yandex.com/search/?text=");
+  duckduckgo(url: "https://duckduckgo.com/?q="),
+  qwant(url: "https://qwant.com/search?q="),
+  startpage(url: "https://eu.startpage.com/search?q="),
+  librey(url: "https://librey.org/search.php?q="),
+  yahoo(url: "https://search.yahoo.com/search?q="),
+  ecosia(url: "https://www.ecosia.org/search?q="),
+  bing(url: "https://www.bing.com/search?q=");
 
   const SearchEngine({required this.url});
 
