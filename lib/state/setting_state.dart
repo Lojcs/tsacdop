@@ -158,7 +158,7 @@ class SettingState extends ChangeNotifier {
         headlineSmall: TextStyle(
             fontSize: 20.0, color: Colors.black, fontWeight: FontWeight.normal),
       ),
-      tabBarTheme: TabBarTheme(
+      tabBarTheme: TabBarThemeData(
         labelColor: Colors.black,
         unselectedLabelColor: Colors.grey[400],
       ),
@@ -177,7 +177,7 @@ class SettingState extends ChangeNotifier {
         ),
         CardColorScheme(colorScheme),
       ],
-      dialogTheme: DialogTheme(backgroundColor: Colors.white),
+      dialogTheme: DialogThemeData(backgroundColor: Colors.white),
     );
   }
 
@@ -236,7 +236,7 @@ class SettingState extends ChangeNotifier {
         CardColorScheme(colorScheme),
       ],
       dialogTheme:
-          DialogTheme(backgroundColor: _realDark! ? Colors.black : null),
+          DialogThemeData(backgroundColor: _realDark! ? Colors.black : null),
     );
   }
 

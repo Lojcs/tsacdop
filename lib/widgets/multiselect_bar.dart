@@ -122,8 +122,8 @@ class _MultiSelectPanelIntegrationState
         Selector<AudioPlayerNotifier, (bool, PlayerHeight?)>(
           selector: (_, audio) => (audio.playerRunning, audio.playerHeight),
           builder: (_, data, __) {
-            var height = kMinPlayerHeight[data.$2?.index ?? 0];
-            return SizedBox(height: data.$1 ? height : 0);
+            return SizedBox(
+                height: data.$1 && data.$2 != null ? data.$2!.height : 0);
           },
         ),
       ],

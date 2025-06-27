@@ -17,7 +17,6 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
 import '../episodes/episode_detail.dart';
 import '../local_storage/key_value_storage.dart';
-import '../local_storage/sqflite_localpodcast.dart';
 import '../playlists/playlist_home.dart';
 import '../state/audio_state.dart';
 import '../type/chapter.dart';
@@ -29,7 +28,6 @@ import '../widgets/audiopanel.dart';
 import '../widgets/custom_widget.dart';
 
 const List kMinsToSelect = [10, 15, 20, 25, 30, 45, 60, 70, 80, 90, 99];
-const List kMinPlayerHeight = <double>[70.0, 75.0, 80.0];
 const List kMaxPlayerHeight = <double>[300.0, 325.0, 350.0];
 
 class PlayerWidget extends StatelessWidget {
@@ -45,7 +43,7 @@ class PlayerWidget extends StatelessWidget {
         if (!data.item1) {
           return Center();
         } else {
-          final minHeight = kMinPlayerHeight[data.item2!.index];
+          final minHeight = data.item2!.height;
           final maxHeight = math.min(
               kMaxPlayerHeight[data.item2!.index] as double,
               context.height - 20);

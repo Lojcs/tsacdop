@@ -49,3 +49,5 @@ android/app/.cxx/
 lib/.env.dart
 devtools_options.yaml
 android/build/reports/problems/problems-report.html
+*key.properties
+ios/Flutter/ephemeral

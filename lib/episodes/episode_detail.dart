@@ -214,8 +214,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                         audio.playerRunning,
                                         audio.playerHeight!),
                                     builder: (_, data, __) {
-                                      final height =
-                                          kMinPlayerHeight[data.item2.index];
+                                      final height = data.item2.height;
                                       return SizedBox(
                                         height: data.item1 ? height : 0,
                                       );
@@ -233,9 +232,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                         return Container(
                           alignment: Alignment.bottomCenter,
                           padding: EdgeInsets.only(
-                              bottom: data.item1
-                                  ? kMinPlayerHeight[data.item2.index]
-                                  : 0),
+                              bottom: data.item1 ? data.item2.height : 0),
                           child: SizedBox(
                             height: 50,
                             child: SingleChildScrollView(

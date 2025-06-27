@@ -10,6 +10,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
 import '../local_storage/key_value_storage.dart';
+import '../search/search_page.dart';
+import '../search/search_widgets.dart';
 import '../util/selection_controller.dart';
 import '../widgets/action_bar.dart';
 import 'package:tuple/tuple.dart';
@@ -26,7 +28,6 @@ import '../widgets/custom_popupmenu.dart';
 import '../widgets/episodegrid.dart';
 import '../widgets/feature_discovery.dart';
 import '../widgets/multiselect_bar.dart';
-import '../widgets/web_podcast_search.dart';
 import 'audioplayer.dart';
 import 'download_list.dart';
 import 'home_groups.dart';
@@ -41,8 +42,8 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final GlobalKey<AudioPanelState> _playerKey = GlobalKey<AudioPanelState>();
+  final GlobalKey searchKey = GlobalKey();
   late TabController _controller;
   Decoration _getIndicator(BuildContext context) {
     return UnderlineTabIndicator(
@@ -135,7 +136,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                 }
               },
               child: Scaffold(
-                key: _scaffoldKey,
                 backgroundColor: context.surface,
                 body: SafeArea(
                   // bottom: playerRunning,
@@ -158,31 +158,13 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                       featureDiscoveryOverlay(
                                         context,
                                         featureId: addFeature,
-                                        tapTarget:
-                                            Icon(Icons.add_circle_outline),
+                                        tapTarget: Icon(Icons.search),
                                         title: s.featureDiscoverySearch,
                                         backgroundColor: Colors.cyan[600],
                                         buttonColor: Colors.cyan[500],
                                         description:
                                             s.featureDiscoverySearchDes,
-                                        child: IconButton(
-                                          tooltip: s.add,
-                                          splashRadius: 20,
-                                          icon: Icon(Icons.add_circle_outline),
-                                          onPressed: () async {
-                                            Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        WebPodcastSearch()));
-                                            // await showSearch<int?>(
-                                            //   context: context,
-                                            //   delegate: MyHomePageDelegate(
-                                            //       searchFieldLabel:
-                                            //           s.searchPodcast),
-                                            // );
-                                          },
-                                        ),
+                                        child: SearchButton(searchKey),
                                       ),
                                       GestureDetector(
                                         onTap: () {

@@ -451,7 +451,7 @@ class _OpenContainerWrapper extends StatelessWidget {
       selector: (_, audio) => (audio.playerRunning, audio.playerHeight),
       builder: (_, data, __) => OpenContainer(
         playerRunning: data.$1,
-        playerHeight: kMinPlayerHeight[data.$2!.index],
+        playerHeight: data.$2!.height,
         flightWidget: CircleAvatar(
             backgroundImage: preferEpisodeImage
                 ? eState[episodeId].episodeOrPodcastImageProvider
@@ -467,7 +467,7 @@ class _OpenContainerWrapper extends StatelessWidget {
         flightWidgetEndOffsetX: 10,
         flightWidgetEndOffsetY: data.$1
             ? context.height -
-                kMinPlayerHeight[data.$2!.index]! -
+                data.$2!.height -
                 40 -
                 context.originalPadding.bottom
             : context.height - 40 - context.originalPadding.bottom,

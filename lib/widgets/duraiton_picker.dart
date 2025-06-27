@@ -575,7 +575,7 @@ class _DurationPickerDialogState extends State<_DurationPickerDialog> {
 
     return Theme(
       data: theme.copyWith(
-        dialogTheme: DialogTheme(backgroundColor: Colors.transparent),
+        dialogTheme: DialogThemeData(backgroundColor: Colors.transparent),
       ),
       child: dialog,
     );

@@ -32,7 +32,7 @@ class HidePlayerRoute extends ModalRoute<void> {
             //   curve: Curves.fastOutSlowIn,
             //   reverseCurve: Curves.fastOutSlowIn.flipped,
             // );
-            final playerHeight = kMinPlayerHeight[data.item2!.index];
+            final playerHeight = data.item2!.height;
             final playerRunning = data.item1;
             return Transform.translate(
               offset: Offset(
