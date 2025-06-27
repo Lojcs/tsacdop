@@ -35,6 +35,8 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m4(count) =>
       "${Intl.plural(count, zero: '', one: 'Episodio', other: 'Episodios')}";
 
+  static String m32(type) => "Filtrar ${type}";
+
   static String m5(time) => "De ${time}";
 
   static String m6(count) =>
@@ -49,6 +51,8 @@ class MessageLookup extends MessageLookupByLibrary {
       "${Intl.plural(count, zero: 'Cero horas', one: '${count} hora', other: '${count} horas')}";
 
   static String m10(service) => "Integrar con ${service}";
+
+  static String m33(filePath) => "Episodio local en ${filePath}";
 
   static String m11(userName) => "Sesión iniciado como ${userName}";
 
@@ -107,12 +111,16 @@ class MessageLookup extends MessageLookupByLibrary {
       "Añade nuevos episodios a la lista de reproducción",
     ),
     "addSomeGroups": MessageLookupByLibrary.simpleMessage("Añade algún grupo"),
+    "after": MessageLookupByLibrary.simpleMessage("Después"),
     "all": MessageLookupByLibrary.simpleMessage("Todos"),
     "autoDownload": MessageLookupByLibrary.simpleMessage("Auto-descargar"),
     "back": MessageLookupByLibrary.simpleMessage("Atras"),
+    "before": MessageLookupByLibrary.simpleMessage("Antes"),
+    "between": MessageLookupByLibrary.simpleMessage("Entre"),
     "boostVolume": MessageLookupByLibrary.simpleMessage("Aumentar volumen"),
     "buffering": MessageLookupByLibrary.simpleMessage("Cargando "),
     "cancel": MessageLookupByLibrary.simpleMessage("CANCELAR"),
+    "capitalDefault": MessageLookupByLibrary.simpleMessage("Por defecto"),
     "cellularConfirm": MessageLookupByLibrary.simpleMessage(
       "Alerta de datos móviles ",
     ),
@@ -124,6 +132,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "chooseA": MessageLookupByLibrary.simpleMessage("Escoger un"),
     "clear": MessageLookupByLibrary.simpleMessage("Limpiar"),
     "clearAll": MessageLookupByLibrary.simpleMessage("Limipar todo"),
+    "close": MessageLookupByLibrary.simpleMessage("Cerrar"),
     "color": MessageLookupByLibrary.simpleMessage("color"),
     "confirm": MessageLookupByLibrary.simpleMessage("ACEPTAR"),
     "createNewPlaylist": MessageLookupByLibrary.simpleMessage("Nueva playlist"),
@@ -140,15 +149,18 @@ class MessageLookup extends MessageLookupByLibrary {
       "Escoge el motor de busqueda de podcasts por defecto ",
     ),
     "delete": MessageLookupByLibrary.simpleMessage("Eliminar"),
+    "deselectAll": MessageLookupByLibrary.simpleMessage("Desmarcar Todo"),
     "developer": MessageLookupByLibrary.simpleMessage("Desarrollador"),
     "dismiss": MessageLookupByLibrary.simpleMessage("Minimizar"),
     "done": MessageLookupByLibrary.simpleMessage("Hecho"),
     "download": MessageLookupByLibrary.simpleMessage("Descargar"),
+    "downloadDate": MessageLookupByLibrary.simpleMessage("Fecha de descarga"),
     "downloadRemovedToast": MessageLookupByLibrary.simpleMessage(
       "Descarga removida",
     ),
     "downloadStart": MessageLookupByLibrary.simpleMessage("Descargando"),
     "downloaded": MessageLookupByLibrary.simpleMessage("Descargados"),
+    "duration": MessageLookupByLibrary.simpleMessage("Duración"),
     "editGroupName": MessageLookupByLibrary.simpleMessage(
       "Editar nombre del grupo",
     ),
@@ -215,6 +227,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "feedbackTelegram": MessageLookupByLibrary.simpleMessage("Unirse a grupo"),
     "filter": MessageLookupByLibrary.simpleMessage("Filtrar"),
+    "filterType": m32,
     "fontStyle": MessageLookupByLibrary.simpleMessage("Estilo de fuente"),
     "fonts": MessageLookupByLibrary.simpleMessage("Tipografías"),
     "from": m5,
@@ -254,6 +267,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "hoursAgo": m8,
     "hoursCount": m9,
     "import": MessageLookupByLibrary.simpleMessage("Importar"),
+    "interaction": MessageLookupByLibrary.simpleMessage("Interacción"),
     "intergateWith": m10,
     "introFourthPage": MessageLookupByLibrary.simpleMessage(
       "Puedes mantener presionado un episodio para realizar acciones rápidas",
@@ -276,6 +290,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "listen": MessageLookupByLibrary.simpleMessage("Escuchar"),
     "listened": MessageLookupByLibrary.simpleMessage("Escuchado"),
     "loadMore": MessageLookupByLibrary.simpleMessage("Cargar mas"),
+    "loading": MessageLookupByLibrary.simpleMessage("Cargando"),
+    "localEpisodeDescription": m33,
     "loggedInAs": m11,
     "login": MessageLookupByLibrary.simpleMessage("Iniciar sesión"),
     "loginFailed": MessageLookupByLibrary.simpleMessage(
@@ -302,11 +318,16 @@ class MessageLookup extends MessageLookupByLibrary {
     "menuVisitSite": MessageLookupByLibrary.simpleMessage("Visitar sitio web"),
     "minsAgo": m12,
     "minsCount": m13,
+    "moreOptions": MessageLookupByLibrary.simpleMessage("Más Opciones"),
     "network": MessageLookupByLibrary.simpleMessage("Red"),
+    "networkErrorDNS": MessageLookupByLibrary.simpleMessage(
+      "Error de red (problema de DNS)",
+    ),
     "neverAutoUpdate": MessageLookupByLibrary.simpleMessage(
       "Desactivar actualizaciones automaticas ",
     ),
     "newGroup": MessageLookupByLibrary.simpleMessage("Crear grupo nuevo"),
+    "newPlain": MessageLookupByLibrary.simpleMessage("Nuevo"),
     "newestFirst": MessageLookupByLibrary.simpleMessage(
       "Mas recientes primero",
     ),
@@ -383,6 +404,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "privacyPolicy": MessageLookupByLibrary.simpleMessage(
       "Política de privacidad",
     ),
+    "publishDate": MessageLookupByLibrary.simpleMessage("Fecha de publicación"),
     "published": m22,
     "publishedDaily": MessageLookupByLibrary.simpleMessage(
       "Publicado diariamente",
@@ -397,6 +419,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Publicado anualmente",
     ),
     "queue": MessageLookupByLibrary.simpleMessage("Cola"),
+    "random": MessageLookupByLibrary.simpleMessage("Aleatorio"),
     "recoverSubscribe": MessageLookupByLibrary.simpleMessage(
       "Recuperar suscripcion",
     ),
@@ -409,11 +432,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "removeConfirm": MessageLookupByLibrary.simpleMessage(
       "Confirma la remoción ",
     ),
+    "removeDownload": MessageLookupByLibrary.simpleMessage("Eliminar Descarga"),
     "removeNewMark": MessageLookupByLibrary.simpleMessage("Remover marca"),
     "removePodcastDes": MessageLookupByLibrary.simpleMessage(
       "¿Estas seguro de que deseas desuscribirte?",
     ),
     "removedAt": m23,
+    "restartAppForEffect": MessageLookupByLibrary.simpleMessage(
+      "Reinicie la aplicación para que los cambios surtan efecto.",
+    ),
     "save": MessageLookupByLibrary.simpleMessage("Guardar"),
     "schedule": MessageLookupByLibrary.simpleMessage("Horario"),
     "search": MessageLookupByLibrary.simpleMessage("Buscar"),
@@ -421,12 +448,16 @@ class MessageLookup extends MessageLookupByLibrary {
     "searchHelper": MessageLookupByLibrary.simpleMessage(
       "Escribe el nombre del podcast, palabras clave o un feed url",
     ),
+    "searchInstructions": MessageLookupByLibrary.simpleMessage(
+      "Introduce la url de un feed rss o busca un podcast y abre su feed rss para suscribirte.",
+    ),
     "searchInvalidRss": MessageLookupByLibrary.simpleMessage(
       "Enlace RSS invalido ",
     ),
     "searchPodcast": MessageLookupByLibrary.simpleMessage("Buscar podcast"),
     "secCount": m24,
     "secondsAgo": m25,
+    "selectMode": MessageLookupByLibrary.simpleMessage("Modo de Selección"),
     "selected": m26,
     "settingStorage": MessageLookupByLibrary.simpleMessage("Almacenamiento"),
     "settings": MessageLookupByLibrary.simpleMessage("Ajustes"),
@@ -483,6 +514,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "settingsDiscovery": MessageLookupByLibrary.simpleMessage(
       "Reiniciar tutorial",
+    ),
+    "settingsDiscoveryDes": MessageLookupByLibrary.simpleMessage(
+      "¿Estás seguro de que quiere reactivar \"Descubrir Características\"?",
     ),
     "settingsDownloadPosition": MessageLookupByLibrary.simpleMessage(
       "Posicion de descarga",
@@ -628,6 +662,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "skipSilence": MessageLookupByLibrary.simpleMessage("Saltar silencios"),
     "skipToNext": MessageLookupByLibrary.simpleMessage("Saltar a la siguiente"),
     "sleepTimer": MessageLookupByLibrary.simpleMessage("Temporizador de sueño"),
+    "sortBy": MessageLookupByLibrary.simpleMessage("Ordenar Por"),
     "status": MessageLookupByLibrary.simpleMessage("Estatus"),
     "statusAuthError": MessageLookupByLibrary.simpleMessage(
       " Error de autenticación",

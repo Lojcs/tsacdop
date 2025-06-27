@@ -35,22 +35,26 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m4(count) =>
       "${Intl.plural(count, zero: '', one: 'Bölüm', other: 'Bölümler')}";
 
+  static String m32(type) => "${type} Filtresi";
+
   static String m5(time) => "${time} e kadar";
 
   static String m6(count) =>
-      "${Intl.plural(count, zero: 'Liste', one: 'Liste', other: 'Listeler')}";
+      "${Intl.plural(count, zero: 'Grup', one: 'Grup', other: 'Gruplar')}";
 
   static String m7(host) => "${host} da depolanır";
 
   static String m8(count) =>
-      "${Intl.plural(count, zero: 'Bir saat içinde', one: '${count} saat önce', other: '${count} saat önce')}";
+      "${Intl.plural(count, zero: 'Geçen saat', one: '${count} saat önce', other: '${count} saat önce')}";
 
   static String m9(count) =>
       "${Intl.plural(count, zero: '0 saat', one: '${count} saat', other: '${count} saat')}";
 
   static String m10(service) => "${service} ile bağlantı kur";
 
-  static String m11(userName) => "${userName} olarak giriş yapıldı ";
+  static String m33(filePath) => "${filePath} adresindeki yerel bölüm";
+
+  static String m11(userName) => "${userName} olarak giriş yapıldı";
 
   static String m12(count) =>
       "${Intl.plural(count, zero: 'Şimdi', one: '${count} dakika önce', other: '${count} dakika önce')}";
@@ -68,14 +72,14 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m17(title) =>
       "Abonelik başarısız oldu, podcast zaten mevcut ${title}";
 
-  static String m18(title) => "Başarıyla abone olundu";
+  static String m18(title) => "${title}\'a başarıyla abone olundu";
 
   static String m19(title) => "Güncelleme ${title}";
 
   static String m20(title) => "Güncelleme hatası ${title}";
 
   static String m21(count) =>
-      "${Intl.plural(count, zero: '', one: 'Bölüm', other: 'Bölümler')}";
+      "${Intl.plural(count, zero: '', one: 'Podcast', other: 'Podcast\'ler')}";
 
   static String m22(date) => "${date} tarihinde yayınlandı";
 
@@ -91,9 +95,9 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m27(time) => "En son ${time}";
 
-  static String m28(time) => "${time} kaldı";
+  static String m28(time) => "${time} Kaldı";
 
-  static String m29(time) => "${time} den";
+  static String m29(time) => "${time} \'a";
 
   static String m30(count) =>
       "${Intl.plural(count, zero: 'Güncelleme yok', one: '${count} bölüm güncellendi', other: '${count} bölüm güncellendi')}";
@@ -108,13 +112,17 @@ class MessageLookup extends MessageLookupByLibrary {
     "addNewEpisodeTooltip": MessageLookupByLibrary.simpleMessage(
       "Çalma listesine yeni bölüm ekle",
     ),
-    "addSomeGroups": MessageLookupByLibrary.simpleMessage("Liste eklel"),
+    "addSomeGroups": MessageLookupByLibrary.simpleMessage("Grup ekle"),
+    "after": MessageLookupByLibrary.simpleMessage("Sonrası"),
     "all": MessageLookupByLibrary.simpleMessage("Hepsi"),
     "autoDownload": MessageLookupByLibrary.simpleMessage("Otomatik indirme"),
     "back": MessageLookupByLibrary.simpleMessage("Geri"),
+    "before": MessageLookupByLibrary.simpleMessage("Öncesi"),
+    "between": MessageLookupByLibrary.simpleMessage("Arası"),
     "boostVolume": MessageLookupByLibrary.simpleMessage("Sesi yükselt"),
-    "buffering": MessageLookupByLibrary.simpleMessage("Yükleniyor"),
+    "buffering": MessageLookupByLibrary.simpleMessage("Arabelleğe alınıyor"),
     "cancel": MessageLookupByLibrary.simpleMessage("İPTAL"),
+    "capitalDefault": MessageLookupByLibrary.simpleMessage("Varsayılan"),
     "cellularConfirm": MessageLookupByLibrary.simpleMessage(
       "Hücresel veri uyarısı",
     ),
@@ -122,10 +130,11 @@ class MessageLookup extends MessageLookupByLibrary {
       "İndirmek için hücresel veri kullanmak istediğinden emin misin?",
     ),
     "changeLayout": MessageLookupByLibrary.simpleMessage("Görünümü değiştir"),
-    "changelog": MessageLookupByLibrary.simpleMessage("Neler yeni?"),
+    "changelog": MessageLookupByLibrary.simpleMessage("Değişenler"),
     "chooseA": MessageLookupByLibrary.simpleMessage("Seç"),
     "clear": MessageLookupByLibrary.simpleMessage("Temizle"),
     "clearAll": MessageLookupByLibrary.simpleMessage("Hepsini sil"),
+    "close": MessageLookupByLibrary.simpleMessage("Kapat"),
     "color": MessageLookupByLibrary.simpleMessage("renk"),
     "confirm": MessageLookupByLibrary.simpleMessage("ONAY"),
     "createNewPlaylist": MessageLookupByLibrary.simpleMessage(
@@ -144,48 +153,57 @@ class MessageLookup extends MessageLookupByLibrary {
       "Varsayılan podcast arama motorunu seçin",
     ),
     "delete": MessageLookupByLibrary.simpleMessage("Sil"),
+    "deleted": MessageLookupByLibrary.simpleMessage("Silindi"),
+    "deletedEpisodeDesc": MessageLookupByLibrary.simpleMessage(
+      "Bu bölüm veritabanından silindi",
+    ),
+    "deselectAll": MessageLookupByLibrary.simpleMessage("Tüm Seçimi Kaldır"),
     "developer": MessageLookupByLibrary.simpleMessage("Geliştirici"),
     "dismiss": MessageLookupByLibrary.simpleMessage("Kaybol"),
+    "displayVersion": MessageLookupByLibrary.simpleMessage("Gösterilen Sürüm"),
     "done": MessageLookupByLibrary.simpleMessage("Bitti"),
     "download": MessageLookupByLibrary.simpleMessage("İndirilen"),
+    "downloadDate": MessageLookupByLibrary.simpleMessage("İndirme Tarihi"),
     "downloadRemovedToast": MessageLookupByLibrary.simpleMessage(
       "İndirme kaldırıldı",
     ),
     "downloadStart": MessageLookupByLibrary.simpleMessage("İndiriliyor"),
     "downloaded": MessageLookupByLibrary.simpleMessage("İndirilenler"),
+    "downloading": MessageLookupByLibrary.simpleMessage("İndiriliyor"),
+    "duration": MessageLookupByLibrary.simpleMessage("Süre"),
     "editGroupName": MessageLookupByLibrary.simpleMessage(
-      "Liste adını değiştir",
+      "Grubun adını değiştir",
     ),
     "endOfEpisode": MessageLookupByLibrary.simpleMessage("Bölüm sonu"),
     "episode": m4,
     "fastForward": MessageLookupByLibrary.simpleMessage("İleri sar"),
     "fastRewind": MessageLookupByLibrary.simpleMessage("Geri sar"),
     "featureDiscoveryEditGroup": MessageLookupByLibrary.simpleMessage(
-      "Grupları düzenlemek için tıkla",
+      "Grubu düzenlemek için tıkla",
     ),
     "featureDiscoveryEditGroupDes": MessageLookupByLibrary.simpleMessage(
-      "Buradan liste ismini değiştirebilir ya da silebilirsin, ancak Başlangıç sayfası değiştirilemez.",
+      "Buradan grup ismini değiştirebilir ya da silebilirsin, ancak \'Home\' grubu değiştirilemez",
     ),
     "featureDiscoveryEpisode": MessageLookupByLibrary.simpleMessage(
       "Bölüm görünümü",
     ),
     "featureDiscoveryEpisodeDes": MessageLookupByLibrary.simpleMessage(
-      "Bölümü oynatmak için uzun dokun veya bir çalma listesine ekle. ",
+      "Bölümü oynatmak veya çalma listesine eklemek için uzun dokun.",
     ),
     "featureDiscoveryEpisodeTitle": MessageLookupByLibrary.simpleMessage(
       "Bölümü hemen oynatmak için uzun bas",
     ),
     "featureDiscoveryGroup": MessageLookupByLibrary.simpleMessage(
-      "Listeyi düzenlemek için tıkla",
+      "Grup eklemek için dokun",
     ),
     "featureDiscoveryGroupDes": MessageLookupByLibrary.simpleMessage(
-      "Başlangıç sayfası yeni podcastler için ön tanımlı sayfadır. Yeni listeler oluşturabilir ve podcastleri içine koyabilirsin. Bir podcasti birden çok listeye koyabilirsin. ",
+      "Yeni podcastler varsayılan olarak \"Home\" grubuna eklenir. Yeni gruplar oluşturabilir, podcastleri başka gruplara taşıyabilir veya birden fazla gruba ekleyebilirsin.",
     ),
     "featureDiscoveryGroupPodcast": MessageLookupByLibrary.simpleMessage(
       "Podcastleri sıralamak için uzun bas",
     ),
     "featureDiscoveryGroupPodcastDes": MessageLookupByLibrary.simpleMessage(
-      "Daha fazla seçenek için tıklayabilirsin ya da uzunca basarak listedeki podcastleri sıralayabilirsin.",
+      "Daha fazla seçenek için tıklayabilirsin ya da uzunca basarak grupdaki podcastleri sıralayabilirsin.",
     ),
     "featureDiscoveryOMPL": MessageLookupByLibrary.simpleMessage(
       "OPML dosyasını içe aktarmak için dokun",
@@ -197,16 +215,16 @@ class MessageLookup extends MessageLookupByLibrary {
       "Çalma listesini açmak için dokun",
     ),
     "featureDiscoveryPlaylistDes": MessageLookupByLibrary.simpleMessage(
-      "Çalma listelerine bölüm ekleyebilirsin. Bölümler oynatıldığında çalma listelerinden otomatik olarak silinir. ",
+      "Çalma listelerine bölüm ekleyebilirsin. Bölümler oynatıldığında çalma listelerinden otomatik olarak silinir.",
     ),
     "featureDiscoveryPodcast": MessageLookupByLibrary.simpleMessage(
       "Podcast görünümü",
     ),
     "featureDiscoveryPodcastDes": MessageLookupByLibrary.simpleMessage(
-      "Liste eklemek için Hepsini Göster\'e dokun ya da podcastleri düzenle.",
+      "Grup eklemek veya düzenlemek için Hepsini Gör\'e dokun.",
     ),
     "featureDiscoveryPodcastTitle": MessageLookupByLibrary.simpleMessage(
-      "Listeler arasında dolaşmak için sağa sola kaydır",
+      "Grup değiştirmek için dikey kaydır",
     ),
     "featureDiscoverySearch": MessageLookupByLibrary.simpleMessage(
       "Podcast aramak için buraya dokun",
@@ -217,8 +235,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "feedbackEmail": MessageLookupByLibrary.simpleMessage("İletişim"),
     "feedbackGithub": MessageLookupByLibrary.simpleMessage("Sorun bildir"),
     "feedbackPlay": MessageLookupByLibrary.simpleMessage("Play Store\'da oyla"),
-    "feedbackTelegram": MessageLookupByLibrary.simpleMessage("Telegram Grubu"),
+    "feedbackTelegram": MessageLookupByLibrary.simpleMessage("Gruba katıl"),
     "filter": MessageLookupByLibrary.simpleMessage("Filtrele"),
+    "filterType": m32,
     "fontStyle": MessageLookupByLibrary.simpleMessage("Yazı tipi stili"),
     "fonts": MessageLookupByLibrary.simpleMessage("Yazı tipleri"),
     "from": m5,
@@ -226,11 +245,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "gpodderLoginDes": MessageLookupByLibrary.simpleMessage(
       "Tebrikler! Gpodder.net hesabınızla bağlantı kuruldu.Tsacdop aboneliklerinizi gpodder.net  hesabınızla otomatik olarak eşitleyecek.",
     ),
-    "groupExisted": MessageLookupByLibrary.simpleMessage("Liste zaten mevcut"),
+    "groupExisted": MessageLookupByLibrary.simpleMessage("Grup zaten mevcut"),
     "groupRemoveConfirm": MessageLookupByLibrary.simpleMessage(
-      "Bu listeyi silmek istediğine emin misin? Podcastler Başlangıç sayfasına aktarılacaktır.",
+      "Bu grubu silmek istediğine emin misin? Podcastler \'Home\' grubuna aktarılacaktır.",
     ),
     "groups": m6,
+    "haptics": MessageLookupByLibrary.simpleMessage("Dokunsal Geribildirim"),
+    "hapticsDes": MessageLookupByLibrary.simpleMessage(
+      "Dokunsal geri bildirimi aç ve yoğunluğunu ayarla. (Cihaz desteği gerektirir)",
+    ),
     "hideListenedSetting": MessageLookupByLibrary.simpleMessage(
       "Oynatılanları gizle",
     ),
@@ -240,11 +263,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "hidePodcastDiscoveryDes": MessageLookupByLibrary.simpleMessage(
       "Podcast önerilerini arama sayfasında gösterme",
     ),
-    "homeGroupsSeeAll": MessageLookupByLibrary.simpleMessage("Hepsini gör"),
+    "homeGroupsSeeAll": MessageLookupByLibrary.simpleMessage("Hepsini Gör"),
     "homeMenuPlaylist": MessageLookupByLibrary.simpleMessage("Çalma listesi"),
     "homeSubMenuSortBy": MessageLookupByLibrary.simpleMessage("Sıralama"),
     "homeTabMenuFavotite": MessageLookupByLibrary.simpleMessage("Favori"),
-    "homeTabMenuRecent": MessageLookupByLibrary.simpleMessage("Son çalınan"),
+    "homeTabMenuRecent": MessageLookupByLibrary.simpleMessage("Son yayınlar"),
     "homeToprightMenuAbout": MessageLookupByLibrary.simpleMessage("Hakkında"),
     "homeToprightMenuImportOMPL": MessageLookupByLibrary.simpleMessage(
       "OPML içe aktar",
@@ -256,6 +279,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "hoursAgo": m8,
     "hoursCount": m9,
     "import": MessageLookupByLibrary.simpleMessage("İçe aktar"),
+    "interaction": MessageLookupByLibrary.simpleMessage("Etkileşim"),
     "intergateWith": m10,
     "introFourthPage": MessageLookupByLibrary.simpleMessage(
       "Bölüm resmine uzun basarak hızlı menüyü açabilirsin.",
@@ -269,7 +293,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "invalidName": MessageLookupByLibrary.simpleMessage(
       "Geçersiz kullanıcı adı",
     ),
-    "lastUpdate": MessageLookupByLibrary.simpleMessage("Son güncelleme\n"),
+    "lastUpdate": MessageLookupByLibrary.simpleMessage("Son güncelleme"),
     "later": MessageLookupByLibrary.simpleMessage("Sonra"),
     "lightMode": MessageLookupByLibrary.simpleMessage("Aydınlık mod"),
     "like": MessageLookupByLibrary.simpleMessage("Beğen"),
@@ -277,10 +301,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "liked": MessageLookupByLibrary.simpleMessage("Beğenilen"),
     "listen": MessageLookupByLibrary.simpleMessage("Dinle"),
     "listened": MessageLookupByLibrary.simpleMessage("Oynatılan"),
+    "loadAllSelected": MessageLookupByLibrary.simpleMessage(
+      "Tüm Seçilenleri Yükle",
+    ),
     "loadMore": MessageLookupByLibrary.simpleMessage("Daha fazla göster"),
+    "loading": MessageLookupByLibrary.simpleMessage("Yükleniyor"),
+    "localEpisodeDescription": m33,
     "loggedInAs": m11,
     "login": MessageLookupByLibrary.simpleMessage("Giriş"),
-    "loginFailed": MessageLookupByLibrary.simpleMessage("Giriş başarısız "),
+    "loginFailed": MessageLookupByLibrary.simpleMessage("Giriş başarısız"),
     "logout": MessageLookupByLibrary.simpleMessage("Çıkış yap"),
     "mark": MessageLookupByLibrary.simpleMessage("İşaretle"),
     "markConfirm": MessageLookupByLibrary.simpleMessage("Seçimi onayla"),
@@ -304,11 +333,16 @@ class MessageLookup extends MessageLookupByLibrary {
     "menuVisitSite": MessageLookupByLibrary.simpleMessage("Siteyi ziyaret et"),
     "minsAgo": m12,
     "minsCount": m13,
+    "moreOptions": MessageLookupByLibrary.simpleMessage("Daha Çok Seçenek"),
     "network": MessageLookupByLibrary.simpleMessage("Bağlantı"),
+    "networkErrorDNS": MessageLookupByLibrary.simpleMessage(
+      "Ağ hatası (DNS sorunu)",
+    ),
     "neverAutoUpdate": MessageLookupByLibrary.simpleMessage(
       "Otomatik güncellemeyi kapat",
     ),
-    "newGroup": MessageLookupByLibrary.simpleMessage("Yeni liste oluştur"),
+    "newGroup": MessageLookupByLibrary.simpleMessage("Yeni grup oluştur"),
+    "newPlain": MessageLookupByLibrary.simpleMessage("Yeni"),
     "newestFirst": MessageLookupByLibrary.simpleMessage("Önce yeniler"),
     "next": MessageLookupByLibrary.simpleMessage("Sonraki"),
     "noEpisodeDownload": MessageLookupByLibrary.simpleMessage(
@@ -321,10 +355,10 @@ class MessageLookup extends MessageLookupByLibrary {
       "Henüz hiç bir bölüm alınmadı",
     ),
     "noPodcastGroup": MessageLookupByLibrary.simpleMessage(
-      "Bu listede hiç podcast yok",
+      "Bu grupta hiç podcast yok",
     ),
     "noShownote": MessageLookupByLibrary.simpleMessage(
-      "Bu bölüm için her hangi bir not mevcut değil",
+      "Bu bölüm için her hangi bir not mevcut değil.",
     ),
     "notificaitonFatch": m14,
     "notificationNetworkError": m15,
@@ -346,13 +380,13 @@ class MessageLookup extends MessageLookupByLibrary {
       "Çalma listesinin başına ekle",
     ),
     "playback": MessageLookupByLibrary.simpleMessage("Playback kontrol"),
-    "player": MessageLookupByLibrary.simpleMessage("Player"),
+    "player": MessageLookupByLibrary.simpleMessage("Oynatıcı"),
     "playerHeightMed": MessageLookupByLibrary.simpleMessage("Orta"),
     "playerHeightShort": MessageLookupByLibrary.simpleMessage("Kısa"),
     "playerHeightTall": MessageLookupByLibrary.simpleMessage("Uzun"),
     "playing": MessageLookupByLibrary.simpleMessage("Oynatılıyor"),
     "playlistExisted": MessageLookupByLibrary.simpleMessage(
-      "Bu isimde bir çalma listesi mevcut.",
+      "Bu isimde bir çalma listesi mevcut",
     ),
     "playlistNameEmpty": MessageLookupByLibrary.simpleMessage(
       "İsimsiz çalma listesi",
@@ -370,7 +404,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Bölümü çalma listesine ekle",
     ),
     "popupMenuLikeDes": MessageLookupByLibrary.simpleMessage(
-      "Bölümü favorilere  ekle",
+      "Bölümü favorilere ekle",
     ),
     "popupMenuMarkDes": MessageLookupByLibrary.simpleMessage(
       "Böümü oynatıdı olarak işaretle",
@@ -379,12 +413,14 @@ class MessageLookup extends MessageLookupByLibrary {
     "privacyPolicy": MessageLookupByLibrary.simpleMessage(
       "Gizlilik sözleşmesi",
     ),
+    "publishDate": MessageLookupByLibrary.simpleMessage("Yayın Tarihi"),
     "published": m22,
     "publishedDaily": MessageLookupByLibrary.simpleMessage("Günlük"),
     "publishedMonthly": MessageLookupByLibrary.simpleMessage("Aylık"),
     "publishedWeekly": MessageLookupByLibrary.simpleMessage("Haftalık"),
     "publishedYearly": MessageLookupByLibrary.simpleMessage("Yıllık"),
     "queue": MessageLookupByLibrary.simpleMessage("Kuyruk"),
+    "random": MessageLookupByLibrary.simpleMessage("Rastgele"),
     "recoverSubscribe": MessageLookupByLibrary.simpleMessage(
       "Aboneliği kurtar",
     ),
@@ -392,9 +428,13 @@ class MessageLookup extends MessageLookupByLibrary {
     "refreshArtwork": MessageLookupByLibrary.simpleMessage(
       "Albüm kapağını güncelle",
     ),
+    "refreshFinished": MessageLookupByLibrary.simpleMessage(
+      "Yenileme Tamamlandı",
+    ),
     "refreshStarted": MessageLookupByLibrary.simpleMessage("Yenileniyor"),
     "remove": MessageLookupByLibrary.simpleMessage("Kaldır"),
     "removeConfirm": MessageLookupByLibrary.simpleMessage("İptal teyidi"),
+    "removeDownload": MessageLookupByLibrary.simpleMessage("İndirmeyi Sil"),
     "removeNewMark": MessageLookupByLibrary.simpleMessage(
       "Yeni işaretini kaldır",
     ),
@@ -402,6 +442,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Aboneliği sonlandırmak istediğine emin misin?",
     ),
     "removedAt": m23,
+    "restartAppForEffect": MessageLookupByLibrary.simpleMessage(
+      "Değişiklerin etki göstermesi için uygulamayı yeniden başlatın.",
+    ),
     "save": MessageLookupByLibrary.simpleMessage("Kaydet"),
     "schedule": MessageLookupByLibrary.simpleMessage("Program"),
     "search": MessageLookupByLibrary.simpleMessage("Ara"),
@@ -409,16 +452,20 @@ class MessageLookup extends MessageLookupByLibrary {
     "searchHelper": MessageLookupByLibrary.simpleMessage(
       "Bir podcast ismi, bir link ya da bir kaç kelime girin.",
     ),
+    "searchInstructions": MessageLookupByLibrary.simpleMessage(
+      "Bir podcast\'e abone olmak için rss akışı url\'sini girin veya adı ile arama yapıp rss akışını açın.",
+    ),
     "searchInvalidRss": MessageLookupByLibrary.simpleMessage(
       "Geçersiz RSS linki",
     ),
     "searchPodcast": MessageLookupByLibrary.simpleMessage("Podcast ara"),
     "secCount": m24,
     "secondsAgo": m25,
+    "selectMode": MessageLookupByLibrary.simpleMessage("Seçim Modu"),
     "selected": m26,
     "settingStorage": MessageLookupByLibrary.simpleMessage("Depolama"),
     "settings": MessageLookupByLibrary.simpleMessage("Ayarlar"),
-    "settingsAccentColor": MessageLookupByLibrary.simpleMessage("Ara renk "),
+    "settingsAccentColor": MessageLookupByLibrary.simpleMessage("Ara renk"),
     "settingsAccentColorDes": MessageLookupByLibrary.simpleMessage(
       "Katman rengini seç",
     ),
@@ -456,19 +503,22 @@ class MessageLookup extends MessageLookupByLibrary {
       "Varsayılan ızgara görünümü",
     ),
     "settingsDefaultGridDownload": MessageLookupByLibrary.simpleMessage(
-      "İndirilenler",
+      "İndirilenler sekmesi",
     ),
     "settingsDefaultGridFavorite": MessageLookupByLibrary.simpleMessage(
-      "Favoriler",
+      "Favoriler sekmesi",
     ),
     "settingsDefaultGridPodcast": MessageLookupByLibrary.simpleMessage(
       "Podcastler",
     ),
     "settingsDefaultGridRecent": MessageLookupByLibrary.simpleMessage(
-      "En son oynatılanlar",
+      "Son yayınlar sekmesi",
     ),
     "settingsDiscovery": MessageLookupByLibrary.simpleMessage(
       "Keşfet özelliğini yeniden aktifleştir",
+    ),
+    "settingsDiscoveryDes": MessageLookupByLibrary.simpleMessage(
+      "\"Keşif Özellikleri\"ni yeniden açmak istediğinizden emin misiniz?",
     ),
     "settingsDownloadPosition": MessageLookupByLibrary.simpleMessage(
       "İndirme konumu",
@@ -483,12 +533,12 @@ class MessageLookup extends MessageLookupByLibrary {
       "Uygulama ayarlarıını içe ya da dışa aktar",
     ),
     "settingsFastForwardSec": MessageLookupByLibrary.simpleMessage(
-      "İleri sarma hızı",
+      "İleri sarma saniyesi",
     ),
     "settingsFastForwardSecDes": MessageLookupByLibrary.simpleMessage(
       "Oynatıcıda ileri sarma saniyesini belirle",
     ),
-    "settingsFeedback": MessageLookupByLibrary.simpleMessage("Geribildirim "),
+    "settingsFeedback": MessageLookupByLibrary.simpleMessage("Geribildirim"),
     "settingsFeedbackDes": MessageLookupByLibrary.simpleMessage(
       "Hata bildirimi ve istekler",
     ),
@@ -515,10 +565,10 @@ class MessageLookup extends MessageLookupByLibrary {
       "İndirilen ses dosyalarını yönet",
     ),
     "settingsMarkListenedSkip": MessageLookupByLibrary.simpleMessage(
-      "Atladığında oynatıldı olarak işaretle.",
+      "Atladığında oynatıldı olarak işaretle",
     ),
     "settingsMarkListenedSkipDes": MessageLookupByLibrary.simpleMessage(
-      "Sonrakine atladığımda bu bölümü oynatıldı olarak işaretle.",
+      "Sonrakine atlandığında şuanki bölümü oynatıldı olarak işaretle",
     ),
     "settingsMenuAutoPlay": MessageLookupByLibrary.simpleMessage(
       "Sonrakini otomatik oynat",
@@ -530,7 +580,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Hücresel (mobil) veri kullanarak otomatik indir",
     ),
     "settingsNetworkCellularAutoDes": MessageLookupByLibrary.simpleMessage(
-      "Liste yönetimi sayfasında podcast otomatik indirme seçeneklerini ayarlayabilirsin",
+      "Grup yönetimi sayfasında podcast otomatik indirme seçeneklerini ayarlayabilirsin",
     ),
     "settingsNetworkCellularDes": MessageLookupByLibrary.simpleMessage(
       "Hücresel veri ile bölüm indirmek için sor",
@@ -556,7 +606,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Sadece koyu mod yeterli gelmediğinde...",
     ),
     "settingsRewindSec": MessageLookupByLibrary.simpleMessage(
-      "Geri sarma hızı",
+      "Geri sarma saniyesi",
     ),
     "settingsRewindSecDes": MessageLookupByLibrary.simpleMessage(
       "Oynatıcıda geri sarma saniyesini belirle",
@@ -606,14 +656,16 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "size": MessageLookupByLibrary.simpleMessage("Boyut"),
     "skipSecondsAtEnd": MessageLookupByLibrary.simpleMessage(
-      "Sondaki saniyeleri atla",
+      "Sonda atlanacak saniye",
     ),
     "skipSecondsAtStart": MessageLookupByLibrary.simpleMessage(
-      "Başlangıçta saniyeleri atla",
+      "Başta atlanacak saniye",
     ),
     "skipSilence": MessageLookupByLibrary.simpleMessage("Boşlukları atla"),
     "skipToNext": MessageLookupByLibrary.simpleMessage("Sonrakine geç"),
     "sleepTimer": MessageLookupByLibrary.simpleMessage("Uyku zamanlayıcısı"),
+    "sortBy": MessageLookupByLibrary.simpleMessage("Sıralandırma Ölçütü"),
+    "sortOrder": MessageLookupByLibrary.simpleMessage("Sıralandırma Yönü"),
     "status": MessageLookupByLibrary.simpleMessage("Durum"),
     "statusAuthError": MessageLookupByLibrary.simpleMessage("Doğrulama hatası"),
     "statusFail": MessageLookupByLibrary.simpleMessage("Başarısız oldu"),
@@ -632,20 +684,20 @@ class MessageLookup extends MessageLookupByLibrary {
       "Çalma listesine eklendi",
     ),
     "toastDiscovery": MessageLookupByLibrary.simpleMessage(
-      "Keşfet seçeneği tekrar etkinleştirildi, lütfen uygulamayı baştan başlatın.",
+      "Keşfet özelliği tekrar etkinleştirildi, lütfen uygulamayı kapatıp açın",
     ),
     "toastFileError": MessageLookupByLibrary.simpleMessage(
       "Dosya hatası, abonelik başarısız",
     ),
     "toastFileNotValid": MessageLookupByLibrary.simpleMessage("Dosya geçersiz"),
     "toastHomeGroupNotSupport": MessageLookupByLibrary.simpleMessage(
-      "Başlangıç sayfası desteklenmemekte",
+      "\'Home\' grubu desteklenmiyor",
     ),
     "toastImportSettingsSuccess": MessageLookupByLibrary.simpleMessage(
       "Ayarlar başarıyla aktarıldı",
     ),
     "toastOneGroup": MessageLookupByLibrary.simpleMessage(
-      "En az bir liste seçin",
+      "En az bir grup seçin",
     ),
     "toastPodcastRecovering": MessageLookupByLibrary.simpleMessage(
       "Kurtarılıyor, lütfen bekleyin",
@@ -663,10 +715,10 @@ class MessageLookup extends MessageLookupByLibrary {
       "Ayarlar kaydedildi",
     ),
     "toastTimeEqualEnd": MessageLookupByLibrary.simpleMessage(
-      "Zaman bitiş zamanına eşit olmalıdır",
+      "Zaman bitiş zamanına eşit",
     ),
     "toastTimeEqualStart": MessageLookupByLibrary.simpleMessage(
-      "Zaman başlangıç zamanına eşit olmalıdır",
+      "Zaman başlangıç zamanına eşit",
     ),
     "translators": MessageLookupByLibrary.simpleMessage("Çevirmenler"),
     "understood": MessageLookupByLibrary.simpleMessage("Anlaşıldı"),
@@ -680,8 +732,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "updateFailed": MessageLookupByLibrary.simpleMessage(
       "Güncelleme başarısız, bağlantı hatası",
     ),
-    "useWallpaperTheme": MessageLookupByLibrary.simpleMessage(""),
-    "useWallpaperThemeDes": MessageLookupByLibrary.simpleMessage(""),
+    "useWallpaperTheme": MessageLookupByLibrary.simpleMessage(
+      "Temayı arkaplandan seç",
+    ),
+    "useWallpaperThemeDes": MessageLookupByLibrary.simpleMessage(
+      "Temayı arkaplandan seç.",
+    ),
     "username": MessageLookupByLibrary.simpleMessage("Kullanıcı adı"),
     "usernameRequired": MessageLookupByLibrary.simpleMessage(
       "Kullanıcı adı gerekli",

@@ -725,7 +725,7 @@ class S {
       '$type Filter',
       name: 'filterType',
       desc:
-          'To use with different episode filter types. Ex: {Downloaded} Filter, {Played} Filter, {Group} Filter...',
+          'To use with different episode filter types. Noun, not verb. Ex: {Downloaded} Filter, {Played} Filter, {Group} Filter...',
       args: [type],
     );
   }
@@ -804,10 +804,10 @@ class S {
     );
   }
 
-  /// `Toggle and adjust the intensity of haptics. (Requires device support)`
+  /// `Toggle haptic feedback and adjust its intensity. (Requires device support)`
   String get hapticsDes {
     return Intl.message(
-      'Toggle and adjust the intensity of haptics. (Requires device support)',
+      'Toggle haptic feedback and adjust its intensity. (Requires device support)',
       name: 'hapticsDes',
       desc: 'Haptic Feedback settings item description',
       args: [],
@@ -3105,6 +3105,7 @@ class AppLocalizationDelegate extends LocalizationsDelegate<S> {
   List<Locale> get supportedLocales {
     return const <Locale>[
       Locale.fromSubtags(languageCode: 'en'),
+      Locale.fromSubtags(languageCode: 'cs'),
       Locale.fromSubtags(languageCode: 'el'),
       Locale.fromSubtags(languageCode: 'es'),
       Locale.fromSubtags(languageCode: 'fr'),

@@ -249,7 +249,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "groups": m6,
     "haptics": MessageLookupByLibrary.simpleMessage("Haptic Feedback"),
     "hapticsDes": MessageLookupByLibrary.simpleMessage(
-      "Toggle and adjust the intensity of haptics. (Requires device support)",
+      "Toggle haptic feedback and adjust its intensity. (Requires device support)",
     ),
     "hideListenedSetting": MessageLookupByLibrary.simpleMessage(
       "Hide listened",

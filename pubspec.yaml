@@ -12,7 +12,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   auto_animated: ^3.0.0
-  audio_session: ^0.1.0
+  audio_session: ^0.2.2
   cached_network_image: ^3.1.0
   color_thief_dart: ^0.1.0
   confetti: ^0.8.0
@@ -29,7 +29,7 @@ dependencies:
   flutter_linkify: ^6.0.0
   flutter_file_dialog: ^3.0.2
   flare_flutter: ^3.0.2
-  fl_chart: ^0.70.2
+  fl_chart: ^1.0.0
   line_icons: ^2.0.1
   flutter_media_metadata: ^1.0.0+1
   marquee: ^2.0.0
@@ -44,9 +44,9 @@ dependencies:
   tuple: ^2.0.0
   url_launcher: ^6.0.3
   uuid: ^4.5.1
-  workmanager: ^0.5.0
+  workmanager: ^0.7.0
   audio_service: ^0.18.0
-  just_audio: ^0.9.23
+  just_audio: ^0.10.4
   equatable: ^2.0.0
   path_provider: ^2.0.1
   http_parser: ^4.0.0
@@ -67,7 +67,7 @@ dependencies:
   rxdart: any
   connectivity_plus: ^6.1.0
   device_info_plus: ^11.1.1
-  share_plus: ^10.1.2
+  share_plus: ^11.0.0
   flutter_downloader: ^1.11.8
   intl: any
   xml: any
@@ -94,11 +94,6 @@ dependency_overrides:
     git:
       url: https://github.com/ykh09242/Flare-Flutter                   # Updated fork, new version of flare is rive
       path: flare_flutter
-  workmanager:
-    git:
-      url: https://github.com/fluttercommunity/flutter_workmanager.git # Workmanager's latest version isn't on pub
-      path: workmanager
-      ref: main
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -110,5 +105,6 @@ flutter:
     - assets/
     - assets/google_fonts/
   uses-material-design: true
+  generate: true
 flutter_intl:
   enabled: true
