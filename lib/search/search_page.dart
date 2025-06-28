@@ -32,12 +32,12 @@ class SearchPanelRoute extends ModalRoute {
                 .localToGlobal(Offset(-6, -12)),
         finalHeroOffset = Offset(
             context.actionBarButtonSizeVertical * 3 / 2,
-            (context.audioState.playerRunning
-                    ? context.height -
-                        context.audioState.playerHeight!.height -
-                        105 -
-                        context.originalPadding.bottom
-                    : context.height - 105 - context.originalPadding.bottom) -
+            context.height -
+                105 -
+                context.originalPadding.bottom -
+                (context.audioState.playerRunning
+                    ? context.audioState.playerHeight!.height
+                    : 0) -
                 12),
         heroWidthTween = Tween(
             begin: context.actionBarButtonSizeVertical,
@@ -94,7 +94,6 @@ class SearchPanelRoute extends ModalRoute {
         Padding(
           padding: MediaQuery.of(context).viewInsets,
           child: SafeArea(
-            maintainBottomViewPadding: true,
             child: Align(
               alignment: Alignment.bottomCenter,
               child: AnimatedBuilder(
@@ -192,7 +191,9 @@ class SearchPanelRoute extends ModalRoute {
         ),
         Material(
           type: MaterialType.transparency,
-          child: PlayerWidget(playerKey: GlobalKey<AudioPanelState>()),
+          child: SafeArea(
+            child: PlayerWidget(playerKey: GlobalKey<AudioPanelState>()),
+          ),
         ),
       ],
     );

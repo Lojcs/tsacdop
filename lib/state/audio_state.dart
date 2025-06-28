@@ -405,6 +405,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     _audioHandler = await AudioService.init(
         builder: () => CustomAudioHandler(cacheMax, browsableLibrary!),
         config: _config);
+    await _audioHandler.initPlayer();
     await _loadPlayer();
     _addHandlerListeners();
     super.addListener(listener);
@@ -699,9 +700,10 @@ class AudioPlayerNotifier extends ChangeNotifier {
 
     if (playlist.isNotEmpty) {
       if (effectiveAutoPlay) {
-        await _audioHandler.replaceQueue(_playlist.episodeIds
+        final list = _playlist.episodeIds
             .map((id) => _episodeState[id].mediaItem)
-            .toList());
+            .toList();
+        await _audioHandler.replaceQueue(list);
         // await _audioHandler.skipToQueueItem(_episodeIndex!);
       } else {
         await _audioHandler.replaceQueue([_mediaItem!]);
@@ -1297,17 +1299,16 @@ class AudioPlayerNotifier extends ChangeNotifier {
   }
 
   Future<void> fastForward() async {
-    await _audioHandler.fastForward();
+    _audioHandler.fastForward();
   }
 
   Future<void> rewind() async {
-    await _audioHandler.rewind();
+    _audioHandler.rewind();
   }
 
   Future<void> seekTo(int position) async {
     _audioPosition = position;
-    await _audioHandler.combinedSeek(
-        position: Duration(milliseconds: position));
+    _audioHandler.combinedSeek(position: Duration(milliseconds: position));
   }
 
   /// Changes the visual value of the seekbar
@@ -1467,13 +1468,6 @@ class CustomAudioHandler extends BaseAudioHandler
   /// Media notification layout
   int? _layoutIndex;
 
-  /// Audio player audio source
-  ConcatenatingAudioSource _playlist = ConcatenatingAudioSource(
-    useLazyPreparation: true,
-    shuffleOrder: DefaultShuffleOrder(),
-    children: [],
-  );
-
   int get _index => _player.currentIndex!;
   Duration _position = const Duration();
   bool get hasNext => queue.value.isNotEmpty;
@@ -1494,17 +1488,17 @@ class CustomAudioHandler extends BaseAudioHandler
 
   SeekTarget seekTarget = SeekTarget();
   bool seekOngoing = false;
+  bool seekInputBuffer = false;
 
   BrowsableLibrary browsableRoot;
 
   CustomAudioHandler(this._cacheMax, this.browsableRoot) {
     _handleInterruption();
-    initPlayer();
   }
 
-  /// Initialises player and its listeners
-  void initPlayer() {
-    _player.setAudioSource(_playlist, preload: false);
+  /// Initialises player and its listeners. Call this after construction!
+  Future<void> initPlayer() async {
+    await _player.setAudioSources([], preload: false);
     // _player.cacheMax = cacheMax;
     // Transmit events received from player
     playbackState.add(PlaybackState(
@@ -1570,8 +1564,8 @@ class CustomAudioHandler extends BaseAudioHandler
     if (_playerReady) {
       _playerReady = false;
       await _player.stop();
+      await _player.clearAudioSources();
       await _player.dispose();
-      await _playlist.clear();
       await _playbackEventSubscription.cancel();
       await _currentIndexSubscription.cancel();
       await _positionSubscription.cancel();
@@ -1714,7 +1708,7 @@ class CustomAudioHandler extends BaseAudioHandler
               //   await pause();
               // }
               queueItems.removeAt(i);
-              _playlist.removeAt(i);
+              await _player.removeAudioSourceAt(i);
               i--;
             }
           }
@@ -1725,10 +1719,10 @@ class CustomAudioHandler extends BaseAudioHandler
       }
       if (index >= queue.value.length) {
         queue.value.addAll(items);
-        await _playlist.addAll(sources);
+        await _player.addAudioSources(sources);
       } else {
         queue.value.insertAll(index, items);
-        await _playlist.insertAll(index, sources);
+        await _player.insertAudioSources(index, sources);
       }
       queue.add(queue.value);
     }
@@ -1738,7 +1732,7 @@ class CustomAudioHandler extends BaseAudioHandler
   Future<void> removeQueueItemsAt(int index, {int number = 1}) async {
     int end = index + number;
     queue.add(queue.value..removeRange(index, end));
-    await _playlist.removeRange(
+    await _player.removeAudioSourceRange(
         index, end); // TODO: What happens if current is removed?
   }
 
@@ -1749,7 +1743,7 @@ class CustomAudioHandler extends BaseAudioHandler
       MediaItem reorderItem = reorderedQueue.removeAt(oldIndex);
       reorderedQueue.insert(newIndex, reorderItem);
       queue.add(reorderedQueue);
-      await _playlist.move(oldIndex, newIndex);
+      await _player.moveAudioSource(oldIndex, newIndex);
     }
   }
 
@@ -1763,9 +1757,10 @@ class CustomAudioHandler extends BaseAudioHandler
   Future<void> combinedSeek({final Duration? position, int? index}) async {
     if (!playing || (position != _position) || (index != _index)) {
       seekTarget = SeekTarget(position: position, index: index);
+      seekInputBuffer = true;
       if (!seekOngoing) {
         seekOngoing = true;
-        _innerCombinedSeek();
+        await _innerCombinedSeek();
         seekOngoing = false;
       }
     }
@@ -1779,7 +1774,12 @@ class CustomAudioHandler extends BaseAudioHandler
     Duration? position;
     int? index;
     Duration preSeekPosition = _position;
+    DateTime preSeekTime = DateTime.now();
     customEvent.add({'preSeekPosition': _position.inMilliseconds});
+    while (seekInputBuffer) {
+      seekInputBuffer = false;
+      await Future.delayed(Duration(milliseconds: 300));
+    }
     while (seekTarget.isValid) {
       position = seekTarget.position;
       index = seekTarget.index;
@@ -1789,10 +1789,11 @@ class CustomAudioHandler extends BaseAudioHandler
     }
     // Retry failed seek.
     if (position != null) {
+      Duration timeSpan = DateTime.now().difference(preSeekTime);
       Duration errorMargin = Duration(seconds: 1);
-      while (_player.position - position > errorMargin ||
+      while (_player.position - position > timeSpan + errorMargin ||
           _player.position - position < -errorMargin) {
-        log("Seek unsucessful! Before seek: $preSeekPosition, seek target: $position, seek result: ${_player.position}. Trying again...");
+        log("Seek unsucessful & took $timeSpan. Before seek: $preSeekPosition, seek target: $position, seek result: ${_player.position}. Trying again...");
         preSeekPosition = _position;
         errorMargin = errorMargin * 2;
         await _player.seek(position, index: index);
@@ -1816,7 +1817,7 @@ class CustomAudioHandler extends BaseAudioHandler
         newPosition >= mediaItem.value!.duration!) {
       newPosition = mediaItem.value!.duration!;
     }
-    await combinedSeek(position: newPosition);
+    combinedSeek(position: newPosition);
   }
 
   @override
@@ -1892,13 +1893,7 @@ class CustomAudioHandler extends BaseAudioHandler
     List<AudioSource> sources = [
       for (var item in newQueue) _itemToSource(item)
     ];
-    _playlist = ConcatenatingAudioSource(
-      useLazyPreparation: false,
-      shuffleOrder: DefaultShuffleOrder(),
-      children: sources,
-    );
-    await _player.setAudioSource(_playlist, preload: false);
-    // await play();
+    await _player.setAudioSources(sources, preload: false);
   }
 
   Future<void> _setSkipSilence(bool boo) async {

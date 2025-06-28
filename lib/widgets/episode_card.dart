@@ -484,8 +484,15 @@ class EpisodeCardDetailRoute extends ModalRoute {
                     40 -
                     context.originalPadding.bottom
                 : context.height - 40 - context.originalPadding.bottom) {
-    sizeTween =
-        Tween(begin: cardBox.size, end: Size(context.width, context.height));
+    sizeTween = Tween(
+        begin: cardBox.size,
+        end: Size(
+            context.width,
+            context.height -
+                (context.audioState.playerRunning
+                    ? context.audioState.playerHeight!.height
+                    : 0) -
+                context.originalPadding.bottom));
     final cardOffset = cardBox.localToGlobal(Offset.zero);
     offsetTween = Tween(begin: cardOffset, end: Offset.zero);
 

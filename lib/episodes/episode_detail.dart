@@ -139,6 +139,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
             backgroundColor: color,
             extendBody: true,
             body: SafeArea(
+              bottom: !widget.hide,
               child: ColoredBox(
                 color: context.realDark
                     ? context.surface
@@ -208,17 +209,6 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 ShowNote(episodeId: widget.episodeId),
-                                Selector<AudioPlayerNotifier,
-                                        Tuple2<bool, PlayerHeight>>(
-                                    selector: (_, audio) => Tuple2(
-                                        audio.playerRunning,
-                                        audio.playerHeight!),
-                                    builder: (_, data, __) {
-                                      final height = data.item2.height;
-                                      return SizedBox(
-                                        height: data.item1 ? height : 0,
-                                      );
-                                    }),
                               ],
                             ),
                           ),
@@ -232,7 +222,9 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                         return Container(
                           alignment: Alignment.bottomCenter,
                           padding: EdgeInsets.only(
-                              bottom: data.item1 ? data.item2.height : 0),
+                              bottom: data.item1 && !widget.hide
+                                  ? data.item2.height
+                                  : 0),
                           child: SizedBox(
                             height: 50,
                             child: SingleChildScrollView(
@@ -244,12 +236,13 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                         );
                       },
                     ),
-                    Selector<AudioPlayerNotifier, int?>(
-                      selector: (_, audio) => audio.episodeId,
-                      builder: (_, data, __) => PlayerWidget(
-                          playerKey: GlobalKey<AudioPanelState>(),
-                          isPlayingPage: data == widget.episodeId),
-                    ),
+                    if (!widget.hide)
+                      Selector<AudioPlayerNotifier, int?>(
+                        selector: (_, audio) => audio.episodeId,
+                        builder: (_, data, __) => PlayerWidget(
+                            playerKey: GlobalKey<AudioPanelState>(),
+                            isPlayingPage: data == widget.episodeId),
+                      ),
                   ],
                 ),
               ),
