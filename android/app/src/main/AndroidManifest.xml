@@ -38,6 +38,9 @@
         <meta-data
             android:name="com.google.android.gms.car.application"
             android:resource="@xml/automotive_app_desc" />
+        <meta-data
+            android:name="io.flutter.embedding.android.DisableMergedPlatformUIThread"
+            android:value="true" />
     </application>
     <queries>
         <intent>

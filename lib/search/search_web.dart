@@ -105,6 +105,7 @@ class _WebPodcastSearchState extends State<WebPodcastSearch> {
           children: [
             if (url.isNotEmpty) webView,
             SearchPanel(
+              searchFocusNode: FocusNode(),
               // delegate: CustomSearchDelegate(
               //   onSearch: (query) {
               //     if (query.isEmpty) return;

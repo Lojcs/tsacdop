@@ -36,7 +36,7 @@ class SearchButtonState extends State<SearchButton> {
               onPressed: () async {
                 Navigator.push(
                   context,
-                  SearchRoute(
+                  SearchPanelRoute(
                     context,
                     widget.searchKey,
                     showIcon: () => setState(() => hideIcon = false),

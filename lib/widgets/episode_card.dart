@@ -9,7 +9,6 @@ import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:vibration/vibration.dart';
 import '../episodes/episode_detail.dart';
-import '../home/audioplayer.dart';
 import '../state/episode_state.dart';
 import '../state/setting_state.dart';
 import '../type/episodebrief.dart';
@@ -23,7 +22,6 @@ import '../state/audio_state.dart';
 import '../type/play_histroy.dart';
 import '../type/podcastlocal.dart';
 import '../util/helpers.dart';
-import '../util/open_container.dart';
 import '../util/selection_controller.dart';
 import 'custom_widget.dart';
 import 'episodegrid.dart';
@@ -92,11 +90,13 @@ class InteractiveEpisodeCard extends StatefulWidget {
         super(key: Key(episodeId.toString()));
 
   @override
-  State<InteractiveEpisodeCard> createState() => _InteractiveEpisodeCardState();
+  State<InteractiveEpisodeCard> createState() => InteractiveEpisodeCardState();
 }
 
-class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
+class InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
     with TickerProviderStateMixin {
+  final GlobalKey cardKey = GlobalKey();
+
   late AnimationController _controller;
   late AnimationController _shadowController;
 
@@ -111,11 +111,12 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   late bool selected =
       selectionController?.selectedIndicies.contains(widget.index) ?? false;
 
-  double avatarSize = 0;
+  GlobalKey avatarKey = GlobalKey();
 
   bool avatarHasFocus = false;
   Future<void> waitForAvatar = Future(() {});
 
+  bool hideCard = false;
   void _selectionListener() {
     if (mounted) {
       selected = selectionController!.selectedIndicies.contains(widget.index);
@@ -147,210 +148,224 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
     super.dispose();
   }
 
+  Widget _cardBuilder(bool hideImage) => EpisodeCard(
+        widget.episodeId,
+        widget.layout,
+        openPodcast: widget.openPodcast,
+        showImage: widget.showImage,
+        preferEpisodeImage: widget.preferEpisodeImage,
+        showNumber: widget.showNumber,
+        showLiked: widget.showLiked,
+        showNew: widget.showNew,
+        showLengthAndSize: widget.showLengthAndSize,
+        showPlayedAndDownloaded: widget.showPlayedAndDownloaded,
+        showDate: widget.showDate,
+        decorate: false,
+        avatarKey: avatarKey,
+        onTapDown: () => avatarHasFocus = true,
+        onTapUp: () => Future.delayed(
+            Duration(milliseconds: 6), () => avatarHasFocus = false),
+        hideImage: hideImage,
+      );
+
+  void openDetails(BuildContext context) => Navigator.push(
+        context,
+        EpisodeCardDetailRoute(
+          context,
+          widget.episodeId,
+          cardKey: cardKey,
+          layout: widget.layout,
+          cardBuilder: _cardBuilder,
+          preferEpisodeImage: widget.preferEpisodeImage,
+          heroKey: avatarKey,
+          showCard: () {
+            setState(() => hideCard = false);
+          },
+          hideCard: () {
+            setState(() => hideCard = true);
+          },
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     List<FocusedMenuItem> menuItemList = [];
-    return _OpenContainerWrapper(
-      layout: widget.layout,
-      getAvatarSize: () => avatarSize,
-      episodeId: widget.episodeId,
-      preferEpisodeImage: widget.preferEpisodeImage,
-      onClosed: (() {
-        _shadowController.reverse();
-      }),
-      closedBuilder: (context, action) =>
-          Selector<AudioPlayerNotifier, (bool, bool, bool)>(
-        selector: (_, audio) => (
-          audio.episodeId == widget.episodeId,
-          audio.playlist.contains(widget.episodeId),
-          audio.playerRunning,
-        ),
-        builder: (_, data, __) {
-          return _FocusedMenuHolderWrapper(
-            onTapStart: () async {
-              waitForAvatar = Future.delayed(Duration(milliseconds: 1));
-              await waitForAvatar;
-              if (avatarHasFocus) return;
+    if (hideCard) return Center();
+    return Selector<AudioPlayerNotifier, (bool, bool, bool)>(
+      key: cardKey,
+      selector: (_, audio) => (
+        audio.episodeId == widget.episodeId,
+        audio.playlist.contains(widget.episodeId),
+        audio.playerRunning,
+      ),
+      builder: (_, data, __) {
+        return _FocusedMenuHolderWrapper(
+          onTapStart: () async {
+            waitForAvatar = Future.delayed(Duration(milliseconds: 1));
+            await waitForAvatar;
+            if (avatarHasFocus) return;
+            if (selected) {
+              _vibrateTapSelected();
+            } else {
+              _vibrateTapNormal();
+            }
+          },
+          onTapEnd: () {
+            if (avatarHasFocus) return;
+            _vibrateEnd();
+          },
+          onTap: () async {
+            await waitForAvatar;
+            if (avatarHasFocus) return;
+            if (selectable && selectionController!.selectMode) {
+              selected = selectionController!.select(widget.index!);
               if (selected) {
-                _vibrateTapSelected();
-              } else {
-                _vibrateTapNormal();
-              }
-            },
-            onTapEnd: () {
-              if (avatarHasFocus) return;
-              _vibrateEnd();
-            },
-            onTap: () async {
-              await waitForAvatar;
-              if (avatarHasFocus) return;
-              if (selectable && selectionController!.selectMode) {
-                selected = selectionController!.select(widget.index!);
-                if (selected) {
-                  _vibrateTapFinishedSelect();
-                  _controller.forward();
-                } else {
-                  _vibrateTapFinishedRelease();
-                  _controller.reverse();
-                }
-              } else {
-                _shadowController.forward();
-                action();
-              }
-            },
-            onShortTapHold: () {
-              if (avatarHasFocus) return;
-              if (selectable && !selected) {
-                _vibrateLongTap();
-                if (!selectionController!.selectMode) {
-                  selectionController!.selectMode = true;
-                  selectionController!.temporarySelect = true;
-                }
-                selected = selectionController!.select(widget.index!);
-
+                _vibrateTapFinishedSelect();
                 _controller.forward();
+              } else {
+                _vibrateTapFinishedRelease();
+                _controller.reverse();
               }
-            },
-            onPrimaryClick: () {
-              if (avatarHasFocus) return;
-              if (selectable) {
-                if (selectionController!.selectMode) {
-                  selected = selectionController!.select(widget.index!);
-                } else {
-                  selectionController!.deselectAll();
-                  selected = selectionController!.select(widget.index!);
-                }
-                if (selected) {
-                  _controller.forward();
-                } else {
-                  _controller.reverse();
-                }
-              }
-            },
-            onDoubleClick: () {
-              if (avatarHasFocus) return;
+            } else {
               _shadowController.forward();
-              action();
-            },
-            onAddSelect: () {
-              if (avatarHasFocus) return;
-              if (selectable) {
-                if (!selectionController!.selectMode) {
-                  selectionController!.selectMode = true;
-                  selectionController!.temporarySelect = true;
-                }
+              if (context.mounted) openDetails(context);
+            }
+          },
+          onShortTapHold: () {
+            if (avatarHasFocus) return;
+            if (selectable && !selected) {
+              _vibrateLongTap();
+              if (!selectionController!.selectMode) {
+                selectionController!.selectMode = true;
+                selectionController!.temporarySelect = true;
+              }
+              selected = selectionController!.select(widget.index!);
+
+              _controller.forward();
+            }
+          },
+          onPrimaryClick: () {
+            if (avatarHasFocus) return;
+            if (selectable) {
+              if (selectionController!.selectMode) {
                 selected = selectionController!.select(widget.index!);
-                if (selected) {
-                  _controller.forward();
-                } else {
-                  _controller.reverse();
-                }
+              } else {
+                selectionController!.deselectAll();
+                selected = selectionController!.select(widget.index!);
               }
-            },
-            onRangeSelect: () {
-              if (avatarHasFocus) return;
-              if (selectable) {
-                if (!selectionController!.selectMode) {
-                  selectionController!.selectMode = true;
-                  selectionController!.temporarySelect = true;
-                }
-                selectionController!.batchSelect = BatchSelect.none;
-                if (!selected) {
-                  selected = selectionController!.select(widget.index!);
-                }
-                selectionController!.batchSelect = BatchSelect.between;
-                if (selected) {
-                  _controller.forward();
-                } else {
-                  _controller.reverse();
-                }
+              if (selected) {
+                _controller.forward();
+              } else {
+                _controller.reverse();
               }
-            },
-            onTapDrag: () {},
-            episodeId: widget.episodeId,
-            layout: widget.layout,
-            menuItemList: () async {
-              if (context.mounted) {
-                final menulist = await _getEpisodeMenu();
-                menuItemList = _menuItemList(context, widget.episodeId, data.$1,
-                    data.$2, data.$3, menulist,
-                    applyToAllSelected: widget.applyActionToAllSelected);
+            }
+          },
+          onDoubleClick: () {
+            if (avatarHasFocus) return;
+            _shadowController.forward();
+            openDetails(context);
+          },
+          onAddSelect: () {
+            if (avatarHasFocus) return;
+            if (selectable) {
+              if (!selectionController!.selectMode) {
+                selectionController!.selectMode = true;
+                selectionController!.temporarySelect = true;
               }
-              return menuItemList;
-            },
-            menuItemExtent: () async {
+              selected = selectionController!.select(widget.index!);
+              if (selected) {
+                _controller.forward();
+              } else {
+                _controller.reverse();
+              }
+            }
+          },
+          onRangeSelect: () {
+            if (avatarHasFocus) return;
+            if (selectable) {
+              if (!selectionController!.selectMode) {
+                selectionController!.selectMode = true;
+                selectionController!.temporarySelect = true;
+              }
+              selectionController!.batchSelect = BatchSelect.none;
+              if (!selected) {
+                selected = selectionController!.select(widget.index!);
+              }
+              selectionController!.batchSelect = BatchSelect.between;
+              if (selected) {
+                _controller.forward();
+              } else {
+                _controller.reverse();
+              }
+            }
+          },
+          onTapDrag: () {},
+          episodeId: widget.episodeId,
+          layout: widget.layout,
+          menuItemList: () async {
+            if (context.mounted) {
               final menulist = await _getEpisodeMenu();
-              return widget.layout == EpisodeGridLayout.small
-                  ? 41.5
-                  : widget.layout == EpisodeGridLayout.medium
-                      ? 42.5
-                      : 100 / menulist.where((i) => i < 10).length;
-            },
-            menuBoxDecoration: BoxDecoration(
-              color: context.accentBackground,
-              border: Border.all(
-                color: context.accentColor,
-                width: 1.0,
-              ),
-              borderRadius: widget.layout == EpisodeGridLayout.small
-                  ? context.radiusSmall
-                  : widget.layout == EpisodeGridLayout.medium
-                      ? context.radiusMedium
-                      : context.radiusLarge,
+              menuItemList = _menuItemList(context, widget.episodeId, data.$1,
+                  data.$2, data.$3, menulist,
+                  applyToAllSelected: widget.applyActionToAllSelected);
+            }
+            return menuItemList;
+          },
+          menuItemExtent: () async {
+            final menulist = await _getEpisodeMenu();
+            return widget.layout == EpisodeGridLayout.small
+                ? 41.5
+                : widget.layout == EpisodeGridLayout.medium
+                    ? 42.5
+                    : 100 / menulist.where((i) => i < 10).length;
+          },
+          menuBoxDecoration: BoxDecoration(
+            color: context.accentBackground,
+            border: Border.all(
+              color: context.accentColor,
+              width: 1.0,
             ),
-            childLowerlay: data.$1 && data.$3
-                ? Selector<AudioPlayerNotifier, double>(
-                    selector: (_, audio) => audio.seekSliderValue,
-                    builder: (_, seekValue, __) => _ProgressLowerlay(
-                      widget.episodeId,
-                      seekValue,
-                      widget.layout,
-                      animator: _controller,
-                    ),
-                  )
-                : Selector<EpisodeState, bool>(
-                    selector: (_, eState) => eState[widget.episodeId].isPlayed,
-                    builder: (_, played, __) => played
-                        ? _ProgressLowerlay(
+            borderRadius: widget.layout == EpisodeGridLayout.small
+                ? context.radiusSmall
+                : widget.layout == EpisodeGridLayout.medium
+                    ? context.radiusMedium
+                    : context.radiusLarge,
+          ),
+          childLowerlay: data.$1 && data.$3
+              ? Selector<AudioPlayerNotifier, double>(
+                  selector: (_, audio) => audio.seekSliderValue,
+                  builder: (_, seekValue, __) => _ProgressLowerlay(
+                    widget.episodeId,
+                    seekValue,
+                    widget.layout,
+                    animator: _controller,
+                  ),
+                )
+              : Selector<EpisodeState, bool>(
+                  selector: (_, eState) => eState[widget.episodeId].isPlayed,
+                  builder: (_, played, __) => played
+                      ? _ProgressLowerlay(
+                          widget.episodeId,
+                          1,
+                          widget.layout,
+                          animator: _controller,
+                        )
+                      : FutureBuilder<PlayHistory>(
+                          future: _getSavedPosition(),
+                          // initialData: PlayHistory("", "", 0, 0),
+                          builder: (context, snapshot) => _ProgressLowerlay(
                             widget.episodeId,
-                            1,
+                            snapshot.hasData ? snapshot.data!.seekValue! : 0,
                             widget.layout,
                             animator: _controller,
-                          )
-                        : FutureBuilder<PlayHistory>(
-                            future: _getSavedPosition(),
-                            // initialData: PlayHistory("", "", 0, 0),
-                            builder: (context, snapshot) => _ProgressLowerlay(
-                              widget.episodeId,
-                              snapshot.hasData ? snapshot.data!.seekValue! : 0,
-                              widget.layout,
-                              animator: _controller,
-                            ),
                           ),
-                  ),
-            controller: _controller,
-            shadowController: _shadowController,
-            child: EpisodeCard(
-              widget.episodeId,
-              widget.layout,
-              openPodcast: widget.openPodcast,
-              showImage: widget.showImage,
-              preferEpisodeImage: widget.preferEpisodeImage,
-              showNumber: widget.showNumber,
-              showLiked: widget.showLiked,
-              showNew: widget.showNew,
-              showLengthAndSize: widget.showLengthAndSize,
-              showPlayedAndDownloaded: widget.showPlayedAndDownloaded,
-              showDate: widget.showDate,
-              decorate: false,
-              avatarSizeCallback: (size) => avatarSize = size,
-              onTapDown: () => avatarHasFocus = true,
-              onTapUp: () => Future.delayed(
-                  Duration(milliseconds: 6), () => avatarHasFocus = false),
-            ),
-          );
-        },
-      ),
+                        ),
+                ),
+          controller: _controller,
+          shadowController: _shadowController,
+          child: _cardBuilder(false),
+        );
+      },
     );
   }
 
@@ -427,82 +442,185 @@ class _InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   }
 }
 
-class _OpenContainerWrapper extends StatelessWidget {
-  const _OpenContainerWrapper(
-      {required this.closedBuilder,
-      required this.episodeId,
-      this.getAvatarSize,
-      required this.preferEpisodeImage,
-      required this.layout,
-      this.onClosed});
-
-  final Widget Function(BuildContext context, VoidCallback action)
-      closedBuilder;
+class EpisodeCardDetailRoute extends ModalRoute {
   final int episodeId;
-  final double? Function()? getAvatarSize;
-  final bool preferEpisodeImage;
+  final GlobalKey cardKey;
   final EpisodeGridLayout layout;
-  final VoidCallback? onClosed;
+  final Widget Function(bool hideImage) cardBuilder;
+
+  final VoidCallback showCard;
+  final VoidCallback hideCard;
+  final VoidCallback? onDispose;
+
+  final RenderBox cardBox;
+
+  final bool preferEpisodeImage;
+  final GlobalKey heroKey;
+
+  late final Offset initialHeroOffset;
+  final Offset finalHeroOffset;
+
+  late final Tween<Size> sizeTween;
+  late final Tween<Offset> offsetTween;
+
+  late final Tween<Offset> heroOffsetTween;
+  late final Tween<double> heroSizeTween;
+
+  EpisodeCardDetailRoute(BuildContext context, this.episodeId,
+      {required this.cardKey,
+      required this.layout,
+      required this.cardBuilder,
+      required this.showCard,
+      required this.hideCard,
+      required this.preferEpisodeImage,
+      required this.heroKey,
+      this.onDispose})
+      : cardBox = cardKey.currentContext!.findRenderObject() as RenderBox,
+        finalHeroOffset = Offset(
+            10,
+            context.audioState.playerRunning
+                ? context.height -
+                    context.audioState.playerHeight!.height -
+                    40 -
+                    context.originalPadding.bottom
+                : context.height - 40 - context.originalPadding.bottom) {
+    sizeTween =
+        Tween(begin: cardBox.size, end: Size(context.width, context.height));
+    final cardOffset = cardBox.localToGlobal(Offset.zero);
+    offsetTween = Tween(begin: cardOffset, end: Offset.zero);
+
+    final RenderBox heroBox =
+        heroKey.currentContext!.findRenderObject() as RenderBox;
+    initialHeroOffset = heroBox.localToGlobal(Offset.zero);
+    heroOffsetTween = Tween(begin: initialHeroOffset, end: finalHeroOffset);
+    heroSizeTween = Tween(begin: heroBox.size.width, end: 30);
+  }
 
   @override
-  Widget build(BuildContext context) {
+  void dispose() {
+    showCard();
+    if (onDispose != null) onDispose!();
+    super.dispose();
+  }
+
+  @override
+  Color? get barrierColor => null;
+
+  @override
+  bool get barrierDismissible => false;
+
+  @override
+  String? get barrierLabel => null;
+
+  @override
+  Widget buildPage(BuildContext context, Animation<double> animation,
+      Animation<double> secondaryAnimation) {
+    Future.microtask(hideCard);
     EpisodeState eState = Provider.of<EpisodeState>(context, listen: false);
-    return Selector<AudioPlayerNotifier, (bool, PlayerHeight?)>(
-      selector: (_, audio) => (audio.playerRunning, audio.playerHeight),
-      builder: (_, data, __) => OpenContainer(
-        playerRunning: data.$1,
-        playerHeight: data.$2!.height,
-        flightWidget: CircleAvatar(
-            backgroundImage: preferEpisodeImage
-                ? eState[episodeId].episodeOrPodcastImageProvider
-                : eState[episodeId].podcastImageProvider),
-        getFlightWidgetBeginSize: getAvatarSize,
-        flightWidgetEndSize: 30,
-        flightWidgetBeginOffsetX: layout == EpisodeGridLayout.small ? 6 : 8,
-        flightWidgetBeginOffsetY: layout == EpisodeGridLayout.small
-            ? 7
-            : layout == EpisodeGridLayout.medium
-                ? 8
-                : 15,
-        flightWidgetEndOffsetX: 10,
-        flightWidgetEndOffsetY: data.$1
-            ? context.height -
-                data.$2!.height -
-                40 -
-                context.originalPadding.bottom
-            : context.height - 40 - context.originalPadding.bottom,
-        transitionDuration: Duration(milliseconds: 400),
-        beginColor: Theme.of(context).primaryColor,
-        endColor: Theme.of(context).primaryColor,
-        closedColor: Theme.of(context).brightness == Brightness.light
-            ? context.primaryColor
-            : context.surface,
-        openColor: context.surface,
-        openElevation: 0,
-        closedElevation: 0,
-        openShape: RoundedRectangleBorder(borderRadius: context.radiusSmall),
-        closedShape: RoundedRectangleBorder(
-            borderRadius: layout == EpisodeGridLayout.small
-                ? context.radiusSmall
-                : layout == EpisodeGridLayout.medium
-                    ? context.radiusMedium
-                    : context.radiusLarge),
-        transitionType: ContainerTransitionType.fadeThrough,
-        openBuilder: (context, _, boo) {
-          return EpisodeDetail(
-            episodeId,
-            hide: boo,
-          );
-        },
-        tappable: false,
-        closedBuilder: (context, action, hide) => Provider.value(
-          value: hide,
-          child: closedBuilder(context, action),
-        ),
-        onDispose: onClosed,
-      ),
+    final sizeAnimation =
+        CurvedAnimation(parent: animation, curve: Curves.easeInOutCirc);
+    final cardFadeAnimation =
+        CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+    final detailFadeAnimation =
+        CurvedAnimation(parent: animation, curve: Curves.easeInOutCubic);
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, child) {
+        final size = sizeTween.evaluate(sizeAnimation);
+        final heroSize = heroSizeTween.evaluate(sizeAnimation);
+        return Stack(
+          children: [
+            animation.isCompleted
+                ? PopScope(
+                    onPopInvokedWithResult: (didPop, result) {
+                      if (didPop) {
+                        Future.delayed(Duration(milliseconds: 400), showCard);
+                      }
+                    },
+                    child: EpisodeDetail(episodeId),
+                  )
+                : Transform.translate(
+                    offset: offsetTween.evaluate(sizeAnimation),
+                    child: Container(
+                      decoration:
+                          _cardDecoration(context, episodeId, layout).copyWith(
+                        border:
+                            BoxBorder.all(width: 0, color: Colors.transparent),
+                      ),
+                      clipBehavior: Clip.hardEdge,
+                      height: size.height,
+                      width: size.width,
+                      child: Stack(
+                        fit: StackFit.passthrough,
+                        children: [
+                          Opacity(
+                            opacity: 1 - cardFadeAnimation.value,
+                            child: FittedBox(
+                              alignment: Alignment.topCenter,
+                              fit: BoxFit.fitWidth,
+                              child: SizedBox(
+                                height: cardBox.size.height,
+                                width: cardBox.size.width,
+                                child: cardBuilder(true),
+                              ),
+                            ),
+                          ),
+                          Opacity(
+                            opacity: detailFadeAnimation.value,
+                            child: FittedBox(
+                              fit: BoxFit.contain,
+                              child: SizedBox(
+                                height:
+                                    context.width * size.height / size.width,
+                                width: context.width,
+                                child: PopScope(
+                                  onPopInvokedWithResult: (didPop, result) {
+                                    if (didPop) {
+                                      Future.delayed(
+                                          Duration(milliseconds: 400),
+                                          showCard);
+                                    }
+                                  },
+                                  child: EpisodeDetail(
+                                    episodeId,
+                                    hide: true,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+            Transform.translate(
+              offset: heroOffsetTween.evaluate(sizeAnimation),
+              child: animation.isCompleted
+                  ? Center()
+                  : SizedBox(
+                      height: heroSize,
+                      width: heroSize,
+                      child: CircleAvatar(
+                        backgroundImage: preferEpisodeImage
+                            ? eState[episodeId].episodeOrPodcastImageProvider
+                            : eState[episodeId].podcastImageProvider,
+                      ),
+                    ),
+            ),
+          ],
+        );
+      },
     );
   }
+
+  @override
+  bool get maintainState => false;
+
+  @override
+  bool get opaque => true;
+
+  @override
+  Duration get transitionDuration => const Duration(milliseconds: 400);
 }
 
 class _FocusedMenuHolderWrapper extends StatefulWidget {
@@ -672,14 +790,16 @@ class EpisodeCard extends StatelessWidget {
   /// Applies card decorations
   final bool decorate;
 
-  /// Callback that sends back the actual size of the avatar.
-  final void Function(double)? avatarSizeCallback;
+  /// Key for the avatar image
+  final GlobalKey? avatarKey;
 
   /// Callback that disables card gesture callbacks
   final VoidCallback? onTapDown;
 
   /// Callback that reenables card gesture callbacks
   final VoidCallback? onTapUp;
+
+  final bool hideImage;
 
   const EpisodeCard(
     this.episodeId,
@@ -696,9 +816,10 @@ class EpisodeCard extends StatelessWidget {
     this.showDate = false,
     this.selected = false,
     this.decorate = true,
-    this.avatarSizeCallback,
+    this.avatarKey,
     this.onTapDown,
     this.onTapUp,
+    this.hideImage = false,
   });
 
   @override
@@ -739,6 +860,9 @@ class EpisodeCard extends StatelessWidget {
               : Alignment.topLeft,
           padding:
               EdgeInsets.only(top: layout == EpisodeGridLayout.large ? 0 : 2),
+          width: (context.width / layout.getHorizontalCount(context.width)) -
+              layout.getRowHeight(context.width) * 2 -
+              30,
           child: Text(
             episode.podcastTitle,
             style: (layout == EpisodeGridLayout.small
@@ -760,58 +884,45 @@ class EpisodeCard extends StatelessWidget {
       bool preferEpisodeImage, {
       required double radius,
     }) =>
-        LayoutBuilder(
-          builder: (context, constraints) {
-            double actualSize = math.min(
-                math.min(radius, constraints.maxHeight), constraints.maxWidth);
-            avatarSizeCallback?.call(
-              math.min(math.min(radius, constraints.maxHeight),
-                  constraints.maxWidth),
-            );
-            return SizedBox(
-              height: actualSize,
-              width: actualSize,
-              child: Consumer<bool?>(
-                builder: (context, hideImage, _) => showImage &&
-                        (hideImage == null || !hideImage)
-                    ? Stack(
-                        children: [
-                          CircleAvatar(
-                            radius: actualSize,
-                            backgroundColor:
-                                episode.colorScheme(context).primary,
-                            backgroundImage: preferEpisodeImage
-                                ? episode.episodeOrPodcastImageProvider
-                                : episode.podcastImageProvider,
-                          ),
-                          if (openPodcast)
-                            Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(actualSize),
-                                onTapDown: (details) => onTapDown?.call(),
-                                onTapUp: (details) => onTapUp?.call(),
-                                onTap: () async {
-                                  DBHelper dbHelper = DBHelper();
-                                  PodcastLocal? podcast = await dbHelper
-                                      .getPodcastWithUrl(episode.enclosureUrl);
-                                  if (podcast != null && context.mounted) {
-                                    Navigator.push(
-                                      context,
-                                      HidePlayerRoute(
-                                        PodcastDetail(podcastLocal: podcast),
-                                      ),
-                                    );
-                                  }
-                                },
-                              ),
-                            ),
-                        ],
-                      )
-                    : Center(),
-              ),
-            );
-          },
+        SizedBox(
+          height: radius,
+          width: radius,
+          child: !hideImage
+              ? Stack(
+                  children: [
+                    CircleAvatar(
+                      key: avatarKey,
+                      radius: radius,
+                      backgroundColor: episode.colorScheme(context).primary,
+                      backgroundImage: preferEpisodeImage
+                          ? episode.episodeOrPodcastImageProvider
+                          : episode.podcastImageProvider,
+                    ),
+                    if (openPodcast)
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(radius),
+                          onTapDown: (details) => onTapDown?.call(),
+                          onTapUp: (details) => onTapUp?.call(),
+                          onTap: () async {
+                            DBHelper dbHelper = DBHelper();
+                            PodcastLocal? podcast = await dbHelper
+                                .getPodcastWithUrl(episode.enclosureUrl);
+                            if (podcast != null && context.mounted) {
+                              Navigator.push(
+                                context,
+                                HidePlayerRoute(
+                                  PodcastDetail(podcastLocal: podcast),
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                      ),
+                  ],
+                )
+              : Center(),
         );
 
     /// Widget that shows the length, size properties and optionally the

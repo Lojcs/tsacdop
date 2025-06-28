@@ -168,7 +168,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
 
   int? _fastForwardSeconds = 0;
   int? _rewindSeconds = 0;
-  late PlayerHeight _playerHeight;
+  PlayerHeight? _playerHeight;
   double _currentSpeed = 1;
   bool? _skipSilence;
   bool? _boostVolume;
@@ -332,7 +332,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
   bool? get autoSleepTimer => _autoSleepTimer;
   int? get fastForwardSeconds => _fastForwardSeconds;
   int? get rewindSeconds => _rewindSeconds;
-  PlayerHeight get playerHeight => _playerHeight;
+  PlayerHeight? get playerHeight => _playerHeight;
   double get currentSpeed => _currentSpeed;
   bool? get skipSilence => _skipSilence;
   bool? get boostVolume => _boostVolume;
@@ -392,7 +392,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
   set setPlayerHeight(PlayerHeight mode) {
     _playerHeight = mode;
     notifyListeners();
-    _playerHeightStorage.saveInt(_playerHeight.index);
+    _playerHeightStorage.saveInt(_playerHeight!.index);
   }
 
   @override

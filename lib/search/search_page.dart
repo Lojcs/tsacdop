@@ -2,30 +2,29 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../home/audioplayer.dart';
 import '../state/audio_state.dart';
 import '../util/extension_helper.dart';
+import '../widgets/audiopanel.dart';
 import 'search_widgets.dart';
 
-class SearchRoute extends ModalRoute {
+class SearchPanelRoute extends ModalRoute {
   final String? barrierLabelText;
 
   final VoidCallback showIcon;
-
   final VoidCallback hideIcon;
 
   final GlobalKey heroKey;
-
   final Offset initialHeroOffset;
-
   final Offset finalHeroOffset;
 
+  late final Tween<Offset> heroOffsetTween;
+  final Tween<double> heroWidthTween;
   final Tween<double> heightTween;
 
-  final TweenSequence<double> heroWidthTween;
+  final FocusNode searchFocusNode = FocusNode();
 
-  late final TweenSequence<Offset> heroTween;
-
-  SearchRoute(BuildContext context, this.heroKey,
+  SearchPanelRoute(BuildContext context, this.heroKey,
       {required this.showIcon, required this.hideIcon})
       : barrierLabelText = context.s.back,
         initialHeroOffset =
@@ -40,59 +39,27 @@ class SearchRoute extends ModalRoute {
                         context.originalPadding.bottom
                     : context.height - 105 - context.originalPadding.bottom) -
                 12),
+        heroWidthTween = Tween(
+            begin: context.actionBarButtonSizeVertical,
+            end: context.width - context.actionBarButtonSizeVertical * 3),
         heightTween = Tween(
             begin: 0,
             end: 120 +
                 context.actionBarIconPadding.vertical +
                 (context.audioState.playerRunning
-                    ? context.audioState.playerHeight.height
-                    : 0)),
-        heroWidthTween = TweenSequence([
-          TweenSequenceItem(
-              tween: Tween(
-                  begin: context.actionBarButtonSizeVertical,
-                  end: context.width - context.actionBarButtonSizeVertical * 3),
-              weight: 4),
-          TweenSequenceItem(
-              tween: Tween(
-                  begin:
-                      context.width - context.actionBarButtonSizeVertical * 3,
-                  end: context.width - context.actionBarButtonSizeVertical * 3),
-              weight: 6),
-        ]) {
-    heroTween = TweenSequence([
-      TweenSequenceItem(
-          tween: Tween(
-              begin: Offset(initialHeroOffset.dx, initialHeroOffset.dy),
-              end: Offset(
-                  initialHeroOffset.dx +
-                      (finalHeroOffset.dx - initialHeroOffset.dx) * 2 / 5,
-                  initialHeroOffset.dy)),
-          weight: 2),
-      TweenSequenceItem(
-          tween: Tween(
-              begin: Offset(
-                  initialHeroOffset.dx +
-                      (finalHeroOffset.dx - initialHeroOffset.dx) * 2 / 5,
-                  initialHeroOffset.dy),
-              end: Offset(
-                  finalHeroOffset.dx,
-                  initialHeroOffset.dy +
-                      (finalHeroOffset.dy - initialHeroOffset.dy) * 3 / 8)),
-          weight: 3),
-      TweenSequenceItem(
-          tween: Tween(
-              begin: Offset(
-                  finalHeroOffset.dx,
-                  initialHeroOffset.dy +
-                      (finalHeroOffset.dy - initialHeroOffset.dy) * 3 / 8),
-              end: Offset(finalHeroOffset.dx, finalHeroOffset.dy)),
-          weight: 5),
-    ]);
+                    ? context.audioState.playerHeight!.height
+                    : 0)) {
+    heroOffsetTween =
+        Tween<Offset>(begin: initialHeroOffset, end: finalHeroOffset);
+  }
+  @override
+  void dispose() {
+    showIcon();
+    super.dispose();
   }
 
   @override
-  Color? get barrierColor => Colors.transparent;
+  Color? get barrierColor => null;
 
   @override
   bool get barrierDismissible => true;
@@ -103,51 +70,45 @@ class SearchRoute extends ModalRoute {
   @override
   Widget buildPage(
       BuildContext context, Animation<double> animation, Animation<double> _) {
-    final cAnimation =
-        CurvedAnimation(parent: animation, curve: Curves.easeInOut);
+    final panelAnimation =
+        CurvedAnimation(parent: animation, curve: Curves.easeInOutCirc);
+    final heroOffsetAnimation = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeInOut,
+        reverseCurve: Curves.fastEaseInToSlowEaseOut);
+    final heroWidthAnimation = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOutQuart,
+        reverseCurve: Curves.easeInQuad);
     bool reversed = true;
     double lastAnimationValue = 0;
     return Stack(
       children: [
-        GestureDetector(onTap: () => Navigator.of(context).pop()),
-        SafeArea(
-          child: Align(
-            alignment: Alignment.bottomCenter,
-            child: AnimatedBuilder(
-              animation: animation,
-              builder: (context, child) => animation.isCompleted
-                  ? Material(
-                      color: Colors.transparent,
-                      child: SingleChildScrollView(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            SearchPanel(hideSearchBar: !cAnimation.isCompleted),
-                            Selector<AudioPlayerNotifier,
-                                (bool, PlayerHeight?)>(
-                              selector: (_, audio) =>
-                                  (audio.playerRunning, audio.playerHeight),
-                              builder: (_, data, __) {
-                                return SizedBox(
-                                    height: data.$1 && data.$2 != null
-                                        ? data.$2!.height
-                                        : 0);
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  : SizedBox(
-                      height: heightTween.evaluate(cAnimation),
-                      child: Material(
-                        color: Colors.transparent,
+        GestureDetector(onTap: () {
+          if (searchFocusNode.hasFocus) {
+            searchFocusNode.unfocus();
+          } else {
+            Navigator.of(context).pop();
+          }
+        }),
+        Padding(
+          padding: MediaQuery.of(context).viewInsets,
+          child: SafeArea(
+            maintainBottomViewPadding: true,
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: AnimatedBuilder(
+                animation: animation,
+                builder: (context, child) => animation.isCompleted
+                    ? Material(
+                        type: MaterialType.transparency,
                         child: SingleChildScrollView(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               SearchPanel(
-                                  hideSearchBar: !cAnimation.isCompleted),
+                                  searchFocusNode: searchFocusNode,
+                                  hideSearchBar: !panelAnimation.isCompleted),
                               Selector<AudioPlayerNotifier,
                                   (bool, PlayerHeight?)>(
                                 selector: (_, audio) =>
@@ -162,48 +123,76 @@ class SearchRoute extends ModalRoute {
                             ],
                           ),
                         ),
-                      ),
-                    ),
-            ),
-          ),
-        ),
-        Align(
-          alignment: Alignment.topLeft,
-          child: AnimatedBuilder(
-            animation: animation,
-            builder: (context, child) {
-              if (lastAnimationValue - animation.value > 0) {
-                if (!reversed) {
-                  reversed = true;
-                  Future.delayed(transitionDuration, () {
-                    if (reversed) showIcon();
-                  });
-                }
-              } else if (reversed) {
-                reversed = false;
-                Future.microtask(hideIcon);
-              }
-              lastAnimationValue = animation.value;
-              if (animation.value == 0 && reversed) {
-                Future.microtask(showIcon);
-              }
-              return animation.isCompleted
-                  ? Center()
-                  : Transform.translate(
-                      offset: heroTween.evaluate(cAnimation),
-                      child: SizedBox(
-                        width: heroWidthTween.evaluate(cAnimation),
+                      )
+                    : SizedBox(
+                        height: heightTween.evaluate(panelAnimation),
                         child: Material(
-                          color: Colors.transparent,
-                          child: SearchBar(
-                            (_) {},
-                            colorAnimation: animation,
+                          type: MaterialType.transparency,
+                          child: SingleChildScrollView(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                SearchPanel(
+                                    searchFocusNode: searchFocusNode,
+                                    hideSearchBar: !panelAnimation.isCompleted),
+                                Selector<AudioPlayerNotifier,
+                                    (bool, PlayerHeight?)>(
+                                  selector: (_, audio) =>
+                                      (audio.playerRunning, audio.playerHeight),
+                                  builder: (_, data, __) {
+                                    return SizedBox(
+                                        height: data.$1 && data.$2 != null
+                                            ? data.$2!.height
+                                            : 0);
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    );
-            },
+              ),
+            ),
           ),
+        ),
+        AnimatedBuilder(
+          animation: animation,
+          builder: (context, child) {
+            if (lastAnimationValue - animation.value > 0) {
+              if (!reversed) {
+                reversed = true;
+              }
+            } else if (reversed) {
+              reversed = false;
+              Future.microtask(hideIcon);
+            }
+            lastAnimationValue = animation.value;
+            if (animation.value < 0.1 && reversed) {
+              Future.microtask(showIcon);
+            }
+            return animation.isCompleted
+                ? Center()
+                : Transform.translate(
+                    // offset: heroTween.evaluate(cAnimation),
+                    offset: heroOffsetTween.evaluate(heroOffsetAnimation),
+                    child: SizedBox(
+                      // width: heroWTween.evaluate(cAnimation),
+                      width: heroWidthTween.evaluate(heroWidthAnimation),
+                      child: Material(
+                        type: MaterialType.transparency,
+                        child: SearchBar(
+                          (_) {},
+                          searchFocusNode,
+                          colorAnimation: animation,
+                        ),
+                      ),
+                    ),
+                  );
+          },
+        ),
+        Material(
+          type: MaterialType.transparency,
+          child: PlayerWidget(playerKey: GlobalKey<AudioPanelState>()),
         ),
       ],
     );
@@ -216,14 +205,18 @@ class SearchRoute extends ModalRoute {
   bool get opaque => false;
 
   @override
-  Duration get transitionDuration => const Duration(milliseconds: 600);
+  Duration get transitionDuration => const Duration(milliseconds: 400);
 }
 
 class SearchPanel extends StatefulWidget {
+  final FocusNode searchFocusNode;
   final List<String> urls;
   final bool hideSearchBar;
   const SearchPanel(
-      {this.urls = const [], this.hideSearchBar = false, super.key});
+      {required this.searchFocusNode,
+      this.urls = const [],
+      this.hideSearchBar = false,
+      super.key});
 
   @override
   State<SearchPanel> createState() => SearchPanelState();
@@ -290,6 +283,7 @@ class SearchPanelState extends State<SearchPanel> {
             short: true,
             child: Controls(
               onSearch: (query) {},
+              searchFocusNode: widget.searchFocusNode,
               hideSearchBar: widget.hideSearchBar,
             ),
           ),
@@ -307,9 +301,11 @@ class SearchPanelState extends State<SearchPanel> {
 
 class Controls extends StatefulWidget {
   final void Function(String query) onSearch;
+  final FocusNode searchFocusNode;
   final bool hideSearchBar;
   const Controls({
     required this.onSearch,
+    required this.searchFocusNode,
     this.hideSearchBar = false,
     super.key,
   });
@@ -330,7 +326,8 @@ class ControlsState extends State<Controls> {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (!widget.hideSearchBar) SearchBar(widget.onSearch),
+              if (!widget.hideSearchBar)
+                SearchBar(widget.onSearch, widget.searchFocusNode),
             ],
           ),
           SizedBox(
@@ -360,7 +357,7 @@ class WebControls extends StatelessWidget {
         Padding(
           padding: context.actionBarIconPadding.copyWith(right: 0),
           child: Material(
-            color: Colors.transparent,
+            type: MaterialType.transparency,
             borderRadius: context.radiusMedium,
             clipBehavior: Clip.hardEdge,
             child: InkWell(
@@ -383,7 +380,7 @@ class WebControls extends StatelessWidget {
         Padding(
           padding: context.actionBarIconPadding.copyWith(left: 0),
           child: Material(
-            color: Colors.transparent,
+            type: MaterialType.transparency,
             borderRadius: context.radiusMedium,
             clipBehavior: Clip.hardEdge,
             child: InkWell(
@@ -410,12 +407,13 @@ class WebControls extends StatelessWidget {
 
 class SearchBar extends StatelessWidget {
   final void Function(String query) onSearch;
-  final Animation<double>? colorAnimation;
+  final FocusNode searchFocusNode;
+  final Animation<double> colorAnimation;
 
-  const SearchBar(this.onSearch, {this.colorAnimation, super.key});
+  const SearchBar(this.onSearch, this.searchFocusNode,
+      {this.colorAnimation = const DummyAnimation(), super.key});
   @override
   Widget build(BuildContext context) {
-    final FocusNode searchFocusNode = FocusNode();
     final TextEditingController searchController = TextEditingController();
     final ColorTween background =
         ColorTween(begin: context.surface, end: context.cardColorSchemeCard);
@@ -425,73 +423,44 @@ class SearchBar extends StatelessWidget {
         SizedBox(
           width: context.width - context.actionBarButtonSizeVertical * 3,
           height: 48,
-          child: colorAnimation != null
-              ? AnimatedBuilder(
-                  animation: colorAnimation!,
-                  builder: (context, _) => TextField(
-                    focusNode: searchFocusNode,
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: background.evaluate(colorAnimation!),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 10),
-                      hintText: context.s.searchPodcast,
-                      hintStyle: TextStyle(fontSize: 18),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: context.accentColor),
-                        borderRadius: context.radiusLarge,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.transparent),
-                          borderRadius: context.radiusLarge),
-                    ),
-                    controller: searchController,
-                    onSubmitted: (query) {
-                      searchFocusNode.unfocus();
-                      onSearch(query);
-                    },
-                    onTap: () {
-                      if (!searchFocusNode.hasFocus) {
-                        searchController.selection = TextSelection(
-                            baseOffset: 0,
-                            extentOffset: searchController.text.length);
-                      }
-                    },
-                  ),
-                )
-              : TextField(
-                  focusNode: searchFocusNode,
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: background.end,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 10),
-                    hintText: context.s.searchPodcast,
-                    hintStyle: TextStyle(fontSize: 18),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: context.accentColor),
-                      borderRadius: context.radiusLarge,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.transparent),
-                        borderRadius: context.radiusLarge),
-                  ),
-                  controller: searchController,
-                  onSubmitted: (query) {
-                    searchFocusNode.unfocus();
-                    onSearch(query);
-                  },
-                  onTap: () {
-                    if (!searchFocusNode.hasFocus) {
-                      searchController.selection = TextSelection(
-                          baseOffset: 0,
-                          extentOffset: searchController.text.length);
-                    }
-                  },
+          child: AnimatedBuilder(
+            animation: colorAnimation,
+            builder: (context, _) => TextField(
+              autofocus: false,
+              focusNode: searchFocusNode,
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: background.evaluate(colorAnimation),
+                contentPadding: EdgeInsets.symmetric(horizontal: 10),
+                hintText: context.s.searchPodcast,
+                hintStyle: TextStyle(fontSize: 18),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: context.accentColor),
+                  borderRadius: context.radiusLarge,
                 ),
+                enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.transparent),
+                    borderRadius: context.radiusLarge),
+              ),
+              controller: searchController,
+              onSubmitted: (query) {
+                searchFocusNode.unfocus();
+                onSearch(query);
+              },
+              onTap: () {
+                if (!searchFocusNode.hasFocus) {
+                  searchController.selection = TextSelection(
+                      baseOffset: 0,
+                      extentOffset: searchController.text.length);
+                }
+              },
+            ),
+          ),
         ),
         Padding(
           padding: context.actionBarIconPadding,
           child: Material(
-            color: Colors.transparent,
+            type: MaterialType.transparency,
             borderRadius: context.radiusMedium,
             clipBehavior: Clip.hardEdge,
             child: InkWell(
@@ -514,6 +483,28 @@ class SearchBar extends StatelessWidget {
       ],
     );
   }
+}
+
+class DummyAnimation extends Animation<double> {
+  const DummyAnimation();
+
+  @override
+  void addListener(VoidCallback listener) {}
+
+  @override
+  void addStatusListener(AnimationStatusListener listener) {}
+
+  @override
+  void removeListener(VoidCallback listener) {}
+
+  @override
+  void removeStatusListener(AnimationStatusListener listener) {}
+
+  @override
+  AnimationStatus get status => AnimationStatus.completed;
+
+  @override
+  get value => 1.0;
 }
 
 class CustomSearchDelegate {

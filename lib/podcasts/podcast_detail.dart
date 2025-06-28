@@ -77,7 +77,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
   );
 
   late Widget multiSelect = MultiSelectPanelIntegration();
-  late Widget player = Container(child: PlayerWidget(playerKey: _playerKey));
+  late Widget player = PlayerWidget(playerKey: _playerKey);
 
   @override
   void initState() {
