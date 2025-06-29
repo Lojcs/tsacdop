@@ -1,22 +1,28 @@
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:audio_service/audio_service.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
+import 'package:webfeed/webfeed.dart';
 
+import '../state/podcast_group.dart';
 import '../util/extension_helper.dart';
 
-class PodcastLocal extends Equatable {
-  final String title;
-  final String? imageUrl;
-  final String rssUrl;
-  final String? author;
+enum PodcastSource { local, saved, remote }
 
-  final String? primaryColor;
+class PodcastBrief extends Equatable {
+  final String title;
+  final String imageUrl;
+  final String rssUrl;
+  final String author;
+
+  final String primaryColor;
   final String id;
-  final String? imagePath;
+  final String imagePath;
   final String provider;
-  final String? link;
+  final String link;
 
   final String description;
 
@@ -25,11 +31,13 @@ class PodcastLocal extends Equatable {
 
   final List<String> funding;
 
+  final PodcastSource source;
+
   //set setUpdateCount(i) => updateCount = i;
 
   //set setEpisodeCount(i) => episodeCount = i;
 
-  const PodcastLocal(
+  const PodcastBrief(
     this.title,
     this.imageUrl,
     this.rssUrl,
@@ -43,7 +51,30 @@ class PodcastLocal extends Equatable {
     this.description = '',
     this.updateCount = 0,
     this.episodeCount = 0,
+    this.source = PodcastSource.saved,
   });
+
+  PodcastBrief.fromFeed(RssFeed feed, this.rssUrl)
+      : title = feed.title ?? "",
+        imageUrl = feed.image?.url ??
+            feed.itunes?.image?.href ??
+            "https://ui-avatars.com/api/?size=300&background="
+                "${avatarColors[math.Random().nextInt(3)]}"
+                "&color=fff&name=${feed.title}&length=2&bold=true",
+        primaryColor = "",
+        author = feed.author ?? feed.itunes?.author ?? "",
+        id = Uuid().v4(),
+        imagePath = "",
+        provider = feed.generator ?? "",
+        link = feed.link ?? "",
+        funding = [for (var f in (feed.podcastFunding ?? [])) f.url],
+        description = feed.description ??
+            feed.itunes?.summary ??
+            feed.itunes?.subtitle ??
+            "",
+        updateCount = 0,
+        episodeCount = feed.items?.length ?? 0,
+        source = PodcastSource.remote;
 
   ImageProvider get avatarImage {
     return (File(imagePath!).existsSync()
@@ -65,22 +96,26 @@ class PodcastLocal extends Equatable {
     ).secondaryContainer;
   }
 
-  PodcastLocal copyWith({int? updateCount, int? episodeCount}) {
-    return PodcastLocal(
-      title,
-      imageUrl,
-      rssUrl,
-      primaryColor,
-      author,
-      id,
-      imagePath,
-      provider,
-      link,
-      funding,
-      description: description,
-      updateCount: updateCount ?? 0,
-      episodeCount: episodeCount ?? 0,
-    );
+  PodcastBrief copyWith(
+      {String? primaryColor,
+      int? updateCount,
+      int? episodeCount,
+      PodcastSource? source}) {
+    return PodcastBrief(
+        title,
+        imageUrl,
+        rssUrl,
+        primaryColor ?? this.primaryColor,
+        author,
+        id,
+        imagePath,
+        provider,
+        link,
+        funding,
+        description: description,
+        updateCount: updateCount ?? this.updateCount,
+        episodeCount: episodeCount ?? this.episodeCount,
+        source: source ?? this.source);
   }
 
   MediaItem get mediaItem =>

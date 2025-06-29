@@ -104,29 +104,29 @@ class _WebPodcastSearchState extends State<WebPodcastSearch> {
         child: Stack(
           children: [
             if (url.isNotEmpty) webView,
-            SearchPanel(
-              searchFocusNode: FocusNode(),
-              // delegate: CustomSearchDelegate(
-              //   onSearch: (query) {
-              //     if (query.isEmpty) return;
-              //     try {
-              //       webViewController.loadRequest(Uri.parse(query));
-              //       if (mounted) setState(() {});
-              //     } catch (e) {
-              //       if (e is! FormatException && e is! ArgumentError) rethrow;
-              //       query = query.replaceAll(" ", "+");
-              //       if (!query.contains("rss")) query = "$query+rss+feed";
-              //       // query = Provider.of<SettingState>(context).searchEngine.url + query;
-              //       query = SearchEngine.ecosia.url + query;
-              //       webViewController.loadRequest(Uri.parse(query));
-              //       if (mounted) setState(() {});
-              //     }
-              //   },
-              //   onBack: () => webViewController.goBack(),
-              //   onForward: () => webViewController.goForward(),
-              // ),
-              urls: foundUrls,
-            ),
+            // SearchPanel(
+            //   searchFocusNode: FocusNode(),
+            //   delegate: CustomSearchDelegate(
+            //     onSearch: (query) {
+            //       if (query.isEmpty) return;
+            //       try {
+            //         webViewController.loadRequest(Uri.parse(query));
+            //         if (mounted) setState(() {});
+            //       } catch (e) {
+            //         if (e is! FormatException && e is! ArgumentError) rethrow;
+            //         query = query.replaceAll(" ", "+");
+            //         if (!query.contains("rss")) query = "$query+rss+feed";
+            //         // query = Provider.of<SettingState>(context).searchEngine.url + query;
+            //         query = SearchEngine.ecosia.url + query;
+            //         webViewController.loadRequest(Uri.parse(query));
+            //         if (mounted) setState(() {});
+            //       }
+            //     },
+            //     onBack: () => webViewController.goBack(),
+            //     onForward: () => webViewController.goForward(),
+            //   ),
+            //   urls: foundUrls,
+            // ),
           ],
         ),
       ),

@@ -960,7 +960,7 @@ class _NewPlaylistState extends State<_NewPlaylist> {
         file.writeAsBytesSync(byteData.buffer
             .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
       }
-      final localPodcast = PodcastLocal(
+      final localPodcast = PodcastBrief(
         'Local Folder',
         '',
         '',

@@ -17,6 +17,11 @@ class EpisodeState extends ChangeNotifier {
 
   /// episode id : EpisodeBrief
   final Map<int, EpisodeBrief> _episodeMap = {};
+
+  /// episode id : EpisodeBrief
+  final Map<int, EpisodeBrief> _remoteEpisodeMap = {};
+
+  int _remoteId = -1;
   // using Id here to reduce memory footprint.
 
   /// List of deleted episode ids.
@@ -35,6 +40,7 @@ class EpisodeState extends ChangeNotifier {
   /// Convenience operator for .episodeMap[id]!
   EpisodeBrief operator [](int id) =>
       _episodeMap[id] ??
+      _remoteEpisodeMap[id] ??
       (_deletedIds.contains(id) ? deletedEpisode : _episodeMap[id]!);
 
   /// Indicates something changed
@@ -132,6 +138,20 @@ class EpisodeState extends ChangeNotifier {
       if (_episodeMap.remove(id) != null) _deletedIds.add(id);
     }
     _dbHelper.deleteLocalEpisodes(ids);
+  }
+
+  List<int> addRemoteEpisodes(Iterable<EpisodeBrief> episodes) {
+    List<int> ids = [];
+    for (var episode in episodes) {
+      int id = _remoteId--;
+      ids.add(id);
+      _remoteEpisodeMap[id] = episode.copyWith(id: id);
+    }
+    return ids;
+  }
+
+  void removeRemoteEpisodes(List<int> episodeIds) {
+    _remoteEpisodeMap.removeWhere((id, _) => episodeIds.contains(id));
   }
 
   /// Sets the episodes as liked

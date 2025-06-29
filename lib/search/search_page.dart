@@ -1,4 +1,3 @@
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -6,6 +5,7 @@ import '../home/audioplayer.dart';
 import '../state/audio_state.dart';
 import '../util/extension_helper.dart';
 import '../widgets/audiopanel.dart';
+import 'search_api_helper.dart';
 import 'search_widgets.dart';
 
 class SearchPanelRoute extends ModalRoute {
@@ -15,10 +15,11 @@ class SearchPanelRoute extends ModalRoute {
   final VoidCallback hideIcon;
 
   final GlobalKey heroKey;
+  final GlobalKey villainKey = GlobalKey();
   final Offset initialHeroOffset;
   final Offset finalHeroOffset;
 
-  late final Tween<Offset> heroOffsetTween;
+  late Tween<Offset> heroOffsetTween;
   final Tween<double> heroWidthTween;
   final Tween<double> heightTween;
 
@@ -84,13 +85,23 @@ class SearchPanelRoute extends ModalRoute {
     double lastAnimationValue = 0;
     return Stack(
       children: [
-        GestureDetector(onTap: () {
-          if (searchFocusNode.hasFocus) {
-            searchFocusNode.unfocus();
-          } else {
-            Navigator.of(context).pop();
-          }
-        }),
+        GestureDetector(
+          onTap: () {
+            if (searchFocusNode.hasFocus) {
+              searchFocusNode.unfocus();
+            } else {
+              Navigator.of(context).pop();
+            }
+          },
+          child: AnimatedBuilder(
+            animation: animation,
+            child: Container(color: context.surface.withAlpha(64)),
+            builder: (context, child) => Opacity(
+              opacity: animation.value,
+              child: child,
+            ),
+          ),
+        ),
         Padding(
           padding: MediaQuery.of(context).viewInsets,
           child: SafeArea(
@@ -98,58 +109,39 @@ class SearchPanelRoute extends ModalRoute {
               alignment: Alignment.bottomCenter,
               child: AnimatedBuilder(
                 animation: animation,
-                builder: (context, child) => animation.isCompleted
-                    ? Material(
-                        type: MaterialType.transparency,
-                        child: SingleChildScrollView(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              SearchPanel(
-                                  searchFocusNode: searchFocusNode,
-                                  hideSearchBar: !panelAnimation.isCompleted),
-                              Selector<AudioPlayerNotifier,
-                                  (bool, PlayerHeight?)>(
-                                selector: (_, audio) =>
-                                    (audio.playerRunning, audio.playerHeight),
-                                builder: (_, data, __) {
-                                  return SizedBox(
-                                      height: data.$1 && data.$2 != null
-                                          ? data.$2!.height
-                                          : 0);
-                                },
-                              ),
-                            ],
+                builder: (context, child) {
+                  final panel = Material(
+                    type: MaterialType.transparency,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          SearchPanel(
+                            searchFocusNode: searchFocusNode,
+                            hide: !panelAnimation.isCompleted,
+                            searchBarKey: villainKey,
                           ),
-                        ),
-                      )
-                    : SizedBox(
-                        height: heightTween.evaluate(panelAnimation),
-                        child: Material(
-                          type: MaterialType.transparency,
-                          child: SingleChildScrollView(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                SearchPanel(
-                                    searchFocusNode: searchFocusNode,
-                                    hideSearchBar: !panelAnimation.isCompleted),
-                                Selector<AudioPlayerNotifier,
-                                    (bool, PlayerHeight?)>(
-                                  selector: (_, audio) =>
-                                      (audio.playerRunning, audio.playerHeight),
-                                  builder: (_, data, __) {
-                                    return SizedBox(
-                                        height: data.$1 && data.$2 != null
-                                            ? data.$2!.height
-                                            : 0);
-                                  },
-                                ),
-                              ],
-                            ),
+                          Selector<AudioPlayerNotifier, (bool, PlayerHeight?)>(
+                            selector: (_, audio) =>
+                                (audio.playerRunning, audio.playerHeight),
+                            builder: (_, data, __) {
+                              return SizedBox(
+                                  height: data.$1 && data.$2 != null
+                                      ? data.$2!.height
+                                      : 0);
+                            },
                           ),
-                        ),
+                        ],
                       ),
+                    ),
+                  );
+                  return animation.isCompleted
+                      ? panel
+                      : SizedBox(
+                          height: heightTween.evaluate(panelAnimation),
+                          child: panel,
+                        );
+                },
               ),
             ),
           ),
@@ -180,9 +172,9 @@ class SearchPanelRoute extends ModalRoute {
                       child: Material(
                         type: MaterialType.transparency,
                         child: SearchBar(
-                          (_) {},
                           searchFocusNode,
                           colorAnimation: animation,
+                          key: villainKey,
                         ),
                       ),
                     ),
@@ -212,11 +204,13 @@ class SearchPanelRoute extends ModalRoute {
 class SearchPanel extends StatefulWidget {
   final FocusNode searchFocusNode;
   final List<String> urls;
-  final bool hideSearchBar;
+  final bool hide;
+  final GlobalKey searchBarKey;
   const SearchPanel(
       {required this.searchFocusNode,
       this.urls = const [],
-      this.hideSearchBar = false,
+      this.hide = false,
+      required this.searchBarKey,
       super.key});
 
   @override
@@ -224,90 +218,46 @@ class SearchPanel extends StatefulWidget {
 }
 
 class SearchPanelState extends State<SearchPanel> {
-  ScrollController scrollController = ScrollController();
-  int floatCount = 0;
-  int urlCount = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    scrollController.addListener(() {
-      if (mounted) {
-        if (scrollController.offset > 0) {
-          if (scrollController.offset <= 0) {
-            setState(() => floatCount = 1);
-          } else {
-            double previewSize = 140 + context.actionBarIconPadding.vertical;
-            setState(
-                () => floatCount = 1 + scrollController.offset ~/ previewSize);
-          }
-        } else {
-          setState(() => floatCount = 0);
-        }
-      }
-    });
-  }
-
-  @override
-  void didUpdateWidget(SearchPanel oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (urlCount < widget.urls.length) {
-      urlCount = widget.urls.length;
-      Future.delayed(
-        Duration(milliseconds: 100),
-        () {
-          if (mounted) {
-            scrollController.animateTo(
-              scrollController.offset +
-                  140 +
-                  context.actionBarIconPadding.vertical,
-              duration: Duration(milliseconds: 200),
-              curve: Curves.easeOutCirc,
-            );
-          }
-        },
-      );
-    }
-  }
+  late Search searchProvider = PodcastIndexSearch(context.episodeState);
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: ListView(
-        hitTestBehavior: HitTestBehavior.deferToChild,
-        controller: scrollController,
-        shrinkWrap: true,
-        children: [
-          PodcastSearchCard(
-            floating: true,
-            short: true,
-            child: Controls(
-              onSearch: (query) {},
-              searchFocusNode: widget.searchFocusNode,
-              hideSearchBar: widget.hideSearchBar,
-            ),
-          ),
-          ...widget.urls.mapIndexed(
-            (i, e) => PodcastSearchCard(
-              floating: floatCount > i + 1,
-              child: SearchPodcastPreview(e),
-            ),
-          ),
-        ],
+    return ChangeNotifierProvider.value(
+      value: searchProvider,
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: Consumer<Search>(
+          builder: (context, search, _) => ListView.builder(
+              hitTestBehavior: HitTestBehavior.deferToChild,
+              shrinkWrap: true,
+              itemCount: search.maxPodcastLength + 1,
+              itemExtentBuilder: (index, dimensions) =>
+                  (index == 0 ? 120 : 140) +
+                  context.actionBarIconPadding.vertical,
+              itemBuilder: (context, index) => switch (index) {
+                    0 => SearchPanelCard(
+                        short: true,
+                        child: Controls(
+                            searchFocusNode: widget.searchFocusNode,
+                            hideSearchBar: widget.hide,
+                            searchBarKey: widget.searchBarKey),
+                      ),
+                    _ => search[index - 1],
+                  }),
+        ),
       ),
     );
   }
 }
 
 class Controls extends StatefulWidget {
-  final void Function(String query) onSearch;
   final FocusNode searchFocusNode;
   final bool hideSearchBar;
+  final GlobalKey searchBarKey;
   const Controls({
-    required this.onSearch,
     required this.searchFocusNode,
     this.hideSearchBar = false,
+    required this.searchBarKey,
     super.key,
   });
   @override
@@ -328,7 +278,10 @@ class ControlsState extends State<Controls> {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (!widget.hideSearchBar)
-                SearchBar(widget.onSearch, widget.searchFocusNode),
+                SearchBar(
+                  widget.searchFocusNode,
+                  key: widget.searchBarKey,
+                ),
             ],
           ),
           SizedBox(
@@ -407,12 +360,14 @@ class WebControls extends StatelessWidget {
 }
 
 class SearchBar extends StatelessWidget {
-  final void Function(String query) onSearch;
   final FocusNode searchFocusNode;
   final Animation<double> colorAnimation;
 
-  const SearchBar(this.onSearch, this.searchFocusNode,
+  const SearchBar(this.searchFocusNode,
       {this.colorAnimation = const DummyAnimation(), super.key});
+  void search(BuildContext context, String query) =>
+      Provider.of<Search>(context, listen: false).query(query);
+
   @override
   Widget build(BuildContext context) {
     final TextEditingController searchController = TextEditingController();
@@ -446,7 +401,7 @@ class SearchBar extends StatelessWidget {
               controller: searchController,
               onSubmitted: (query) {
                 searchFocusNode.unfocus();
-                onSearch(query);
+                search(context, query);
               },
               onTap: () {
                 if (!searchFocusNode.hasFocus) {
@@ -467,7 +422,7 @@ class SearchBar extends StatelessWidget {
             child: InkWell(
               onTap: () {
                 searchFocusNode.unfocus();
-                onSearch(searchController.text);
+                search(context, searchController.text);
               },
               child: SizedBox(
                 width: context.actionBarButtonSizeVertical,

@@ -5,6 +5,7 @@ import 'package:equatable/equatable.dart';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
+import 'package:webfeed/webfeed.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import 'theme_data.dart';
 import '../util/extension_helper.dart';
@@ -94,6 +95,44 @@ class EpisodeBrief extends Equatable {
         skipSecondsStart = 0,
         skipSecondsEnd = 0,
         chapterLink = '';
+
+  /// Use for new local episodes not yet in database
+  EpisodeBrief.fromRssItem(RssItem item, this.podcastId, this.podcastTitle,
+      this.number, this.podcastImage, this.primaryColor)
+      : id = -1,
+        title = item.title ?? item.itunes?.title ?? "",
+        enclosureUrl = item.enclosure != null && item.enclosure!.url != null
+            ? (item.enclosure!.url!.isXimalaya()
+                ? item.enclosure!.url!.split('=').last
+                : item.enclosure!.url!)
+            : "",
+        pubDate = item.pubDate?.millisecondsSinceEpoch ??
+            DateTime.now().millisecondsSinceEpoch,
+        description = [
+          item.content?.value ?? "",
+          item.description ?? "",
+          item.itunes?.summary ?? ""
+        ].reduce((s1, s2) => s1.length > s2.length ? s1 : s2),
+        enclosureDuration = item.itunes?.duration?.inSeconds ?? 0,
+        enclosureSize = item.enclosure?.length ?? 0,
+        isDownloaded = false,
+        downloadDate = 0,
+        mediaId = item.enclosure != null && item.enclosure!.url != null
+            ? (item.enclosure!.url!.isXimalaya()
+                ? item.enclosure!.url!.split('=').last
+                : item.enclosure!.url!)
+            : "",
+        episodeImage = item.itunes?.image?.href ?? '',
+        isExplicit = item.itunes?.explicit ?? false,
+        isLiked = false,
+        isNew = DateTime.now().difference(item.pubDate ?? DateTime(0)) <
+            Duration(days: 1),
+        isPlayed = false,
+        isDisplayVersion = true,
+        versions = [],
+        skipSecondsStart = 0,
+        skipSecondsEnd = 0,
+        chapterLink = item.podcastChapters?.url ?? '';
 
   late final MediaItem mediaItem = MediaItem(
       id: mediaId,

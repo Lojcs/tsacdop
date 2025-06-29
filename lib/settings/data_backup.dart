@@ -507,7 +507,7 @@ class __LoginGpodderState extends State<_LoginGpodder> {
           if (rssLink != null) {
             final dbHelper = DBHelper();
             final exist = await dbHelper.checkPodcast(rssLink);
-            if (exist == '') {
+            if (exist == null) {
               var item = SubscribeItem(rssLink,
                   (rss.text == null || rss.text == '') ? rssLink : rss.text!,
                   group: 'Home');
@@ -855,7 +855,7 @@ class __GpodderInfoState extends State<_GpodderInfo> {
             if (rssLink != null) {
               final dbHelper = DBHelper();
               final exist = await dbHelper.checkPodcast(rssLink);
-              if (exist == '') {
+              if (exist == null) {
                 var item = SubscribeItem(rssLink,
                     (rss.text == null || rss.text == '') ? rssLink : rss.text!,
                     group: 'Home');

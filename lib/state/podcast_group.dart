@@ -72,13 +72,13 @@ class PodcastGroup extends Equatable {
   /// Id lists of podcasts in group.
   final List<String> podcastList;
 
-  final List<PodcastLocal> podcasts;
+  final List<PodcastBrief> podcasts;
 
   PodcastGroup(this.name,
       {this.color = '#000000',
       String? id,
       List<String>? podcastList,
-      List<PodcastLocal>? podcasts})
+      List<PodcastBrief>? podcasts})
       : id = id ?? Uuid().v4(),
         podcastList = podcastList ?? [],
         podcasts = podcasts ?? [];
@@ -103,7 +103,7 @@ class PodcastGroup extends Equatable {
     }
   }
 
-  Future<PodcastGroup> updatePodcast(PodcastLocal podcast) async {
+  Future<PodcastGroup> updatePodcast(PodcastBrief podcast) async {
     var count = await _dbHelper.getPodcastCounts(podcast.id);
     var list = [
       for (var p in podcasts)
@@ -123,21 +123,21 @@ class PodcastGroup extends Equatable {
     podcastList.insert(newIndex, podcast.id);
   }
 
-  void addToGroup(PodcastLocal podcast) {
+  void addToGroup(PodcastBrief podcast) {
     if (!podcasts.contains(podcast)) {
       podcasts.add(podcast);
       podcastList.add(podcast.id);
     }
   }
 
-  void addToGroupAt(PodcastLocal podcast, {int index = 0}) {
+  void addToGroupAt(PodcastBrief podcast, {int index = 0}) {
     if (!podcasts.contains(podcast)) {
       podcasts.insert(index, podcast);
       podcastList.insert(index, podcast.id);
     }
   }
 
-  void deleteFromGroup(PodcastLocal podcast) {
+  void deleteFromGroup(PodcastBrief podcast) {
     podcasts.remove(podcast);
     podcastList.remove(podcast.id);
   }
@@ -341,7 +341,7 @@ class GroupList extends ChangeNotifier {
     if (removeList.isNotEmpty) {
       for (var rssLink in removeList) {
         final exist = await _dbHelper.checkPodcast(rssLink);
-        if (exist != '') {
+        if (exist != null) {
           var podcast = await _dbHelper.getPodcastWithUrl(rssLink);
           await _unsubscribe(podcast!);
         }
@@ -351,7 +351,7 @@ class GroupList extends ChangeNotifier {
     if (addList.isNotEmpty) {
       for (var rssLink in addList) {
         final exist = await _dbHelper.checkPodcast(rssLink);
-        if (exist == '') {
+        if (exist == null) {
           var item = SubscribeItem(rssLink, rssLink, group: 'Home');
           _subscribeItem = item;
           await _start();
@@ -466,7 +466,7 @@ class GroupList extends ChangeNotifier {
   }
 
   /// Subscribe podcast from search result.
-  Future subscribe(PodcastLocal podcast) async {
+  Future subscribe(PodcastBrief podcast) async {
     await _dbHelper.savePodcastLocal(podcast);
     _groups.first!.addToGroupAt(podcast);
     _updateGroups();
@@ -509,7 +509,7 @@ class GroupList extends ChangeNotifier {
 
   //Change podcast groups
   Future<void> changeGroup(
-      PodcastLocal podcast, List<PodcastGroup?> list) async {
+      PodcastBrief podcast, List<PodcastGroup?> list) async {
     for (var group in getPodcastGroup(podcast.id)) {
       if (list.contains(group)) {
         list.remove(group);
@@ -531,7 +531,7 @@ class GroupList extends ChangeNotifier {
     }
   }
 
-  Future<void> _unsubscribe(PodcastLocal podcast) async {
+  Future<void> _unsubscribe(PodcastBrief podcast) async {
     for (var group in _groups) {
       group!.deleteFromGroup(podcast);
     }
@@ -541,7 +541,7 @@ class GroupList extends ChangeNotifier {
 
   /// Delete podcsat from device.
   Future<void> removePodcast(
-    PodcastLocal podcast,
+    PodcastBrief podcast,
   ) async {
     _syncRemove(podcast.rssUrl);
     await _unsubscribe(podcast);
@@ -560,18 +560,19 @@ class GroupList extends ChangeNotifier {
   }
 }
 
+final avatarColors = <String>[
+  '388E3C',
+  '1976D2',
+  'D32F2F',
+  '00796B',
+];
+
 @pragma('vm:entry-point')
 Future<void> subIsolateEntryPoint(SendPort sendPort) async {
   if (Platform.isAndroid) SharedPreferencesAndroid.registerWith();
   if (Platform.isAndroid) PathProviderAndroid.registerWith();
   var items = <SubscribeItem>[];
   var running = false;
-  final listColor = <String>[
-    '388E3C',
-    '1976D2',
-    'D32F2F',
-    '00796B',
-  ];
   var subReceivePort = ReceivePort();
   sendPort.send(subReceivePort.sendPort);
 
@@ -618,7 +619,7 @@ Future<void> subIsolateEntryPoint(SendPort sendPort) async {
       final checkUrl = await dbHelper.checkPodcast(realUrl);
 
       /// If url not existe in database.
-      if (checkUrl == '') {
+      if (checkUrl == null) {
         img.Image? thumbnail;
         String? imageUrl;
         try {
@@ -647,10 +648,10 @@ Future<void> subIsolateEntryPoint(SendPort sendPort) async {
               var index = math.Random().nextInt(3);
               var imageResponse = await Dio().get<List<int>>(
                   "https://ui-avatars.com/api/?size=300&background="
-                  "${listColor[index]}&color=fff&name=${item.title}&length=2&bold=true",
+                  "${avatarColors[index]}&color=fff&name=${item.title}&length=2&bold=true",
                   options: Options(responseType: ResponseType.bytes));
               imageUrl = "https://ui-avatars.com/api/?size=300&background="
-                  "${listColor[index]}&color=fff&name=${item.title}&length=2&bold=true";
+                  "${avatarColors[index]}&color=fff&name=${item.title}&length=2&bold=true";
               thumbnail =
                   img.decodeImage(Uint8List.fromList(imageResponse.data!));
             } catch (e) {
@@ -678,7 +679,7 @@ Future<void> subIsolateEntryPoint(SendPort sendPort) async {
         var funding = p.podcastFunding!.isNotEmpty
             ? [for (var f in p.podcastFunding!) f!.url]
             : <String>[];
-        var podcastLocal = PodcastLocal(p.title ?? "", imageUrl, realUrl,
+        var podcastLocal = PodcastBrief(p.title ?? "", imageUrl ?? "", realUrl,
             primaryColor, author, uuid, imagePath, provider, link, funding,
             description: p.description!);
 

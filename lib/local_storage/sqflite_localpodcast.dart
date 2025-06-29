@@ -270,10 +270,10 @@ class DBHelper {
     await Future.wait(futures);
   }
 
-  Future<List<PodcastLocal>> getPodcastLocal(List<String?> podcasts,
+  Future<List<PodcastBrief>> getPodcastLocal(List<String?> podcasts,
       {bool updateOnly = false}) async {
     var dbClient = await database;
-    var podcastLocal = <PodcastLocal>[];
+    var podcastLocal = <PodcastBrief>[];
 
     for (var s in podcasts) {
       List<Map> list;
@@ -289,7 +289,7 @@ class DBHelper {
             [s]);
       }
       if (list.isNotEmpty) {
-        podcastLocal.add(PodcastLocal(
+        podcastLocal.add(PodcastBrief(
             list.first['title'],
             list.first['imageUrl'],
             list.first['rssUrl'],
@@ -308,7 +308,7 @@ class DBHelper {
     return podcastLocal;
   }
 
-  Future<List<PodcastLocal>> getPodcastLocalAll(
+  Future<List<PodcastBrief>> getPodcastLocalAll(
       {bool updateOnly = false}) async {
     var dbClient = await database;
 
@@ -324,11 +324,11 @@ class DBHelper {
          provider, link, funding, description FROM PodcastLocal ORDER BY add_date DESC""");
     }
 
-    var podcastLocal = <PodcastLocal>[];
+    var podcastLocal = <PodcastBrief>[];
 
     for (var i in list) {
       if (i['id'] != localFolderId) {
-        podcastLocal.add(PodcastLocal(
+        podcastLocal.add(PodcastBrief(
           i['title'],
           i['imageUrl'],
           i['rssUrl'],
@@ -346,14 +346,14 @@ class DBHelper {
     return podcastLocal;
   }
 
-  Future<PodcastLocal?> getPodcastWithUrl(String? url) async {
+  Future<PodcastBrief?> getPodcastWithUrl(String? url) async {
     var dbClient = await database;
     List<Map> list = await dbClient.rawQuery(
         """SELECT P.id, P.title, P.imageUrl, P.rssUrl, P.primaryColor, P.author, P.imagePath,
          P.provider, P.link ,P.update_count, P.episode_count, P.funding, P.description FROM PodcastLocal P INNER JOIN 
          Episodes E ON P.id = E.feed_id WHERE E.enclosure_url = ?""", [url]);
     if (list.isNotEmpty) {
-      return PodcastLocal(
+      return PodcastBrief(
           list.first['title'],
           list.first['imageUrl'],
           list.first['rssUrl'],
@@ -475,18 +475,18 @@ class DBHelper {
     var dbClient = await database;
     List<Map> list = await dbClient
         .rawQuery('SELECT id FROM PodcastLocal WHERE rssUrl = ?', [url]);
-    if (list.isEmpty) return '';
+    if (list.isEmpty) return null;
     return list.first['id'];
   }
 
-  Future<PodcastLocal?> getPodcast(String id) async {
+  Future<PodcastBrief?> getPodcast(String id) async {
     var dbClient = await database;
     List<Map> list = await dbClient.rawQuery(
         """SELECT id, title, imageUrl, rssUrl, primaryColor, author, imagePath , provider, 
           link ,update_count, episode_count, funding, description FROM PodcastLocal WHERE id = ?""",
         [id]);
     if (list.isNotEmpty) {
-      return PodcastLocal(
+      return PodcastBrief(
           list.first['title'],
           list.first['imageUrl'],
           list.first['rssUrl'],
@@ -504,7 +504,7 @@ class DBHelper {
     return null;
   }
 
-  Future savePodcastLocal(PodcastLocal podcastLocal) async {
+  Future savePodcastLocal(PodcastBrief podcastLocal) async {
     var milliseconds = DateTime.now().millisecondsSinceEpoch;
     var dbClient = await database;
     await dbClient.transaction((txn) async {
@@ -782,11 +782,6 @@ class DBHelper {
     }
   }
 
-  bool _isXimalaya(String input) {
-    var ximalaya = RegExp(r"ximalaya.com");
-    return ximalaya.hasMatch(input);
-  }
-
   String _getDescription(String content, String description, String summary) {
     if (content.length >= description.length) {
       if (content.length >= summary.length) {
@@ -928,7 +923,7 @@ class DBHelper {
     for (var i = 0; i < feed.items!.length; i++) {
       String? url;
       if (feed.items![i].enclosure != null) {
-        _isXimalaya(feed.items![i].enclosure!.url!)
+        feed.items![i].enclosure!.url!.isXimalaya()
             ? url = feed.items![i].enclosure!.url!.split('=').last
             : url = feed.items![i].enclosure!.url;
       }
@@ -1067,7 +1062,7 @@ class DBHelper {
     }
   }
 
-  Future<int> updatePodcastRss(PodcastLocal podcastLocal,
+  Future<int> updatePodcastRss(PodcastBrief podcastLocal,
       {int? keepNewMark = 0}) async {
     final options = BaseOptions(
       connectTimeout: Duration(seconds: 20),

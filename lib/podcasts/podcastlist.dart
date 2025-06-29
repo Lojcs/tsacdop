@@ -24,7 +24,7 @@ class PodcastList extends StatefulWidget {
 }
 
 class _PodcastListState extends State<PodcastList> {
-  Future<List<PodcastLocal>> _getPodcastLocal() async {
+  Future<List<PodcastBrief>> _getPodcastLocal() async {
     var dbHelper = DBHelper();
     var podcastList = await dbHelper.getPodcastLocalAll();
     return podcastList;
@@ -63,7 +63,7 @@ class _PodcastListState extends State<PodcastList> {
           ),
           body: Container(
             color: context.surface,
-            child: FutureBuilder<List<PodcastLocal>>(
+            child: FutureBuilder<List<PodcastBrief>>(
               future: _getPodcastLocal(),
               builder: (context, snapshot) {
                 if (snapshot.hasData) {

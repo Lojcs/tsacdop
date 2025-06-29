@@ -90,7 +90,7 @@ Future<void> refreshIsolateEntryPoint(SendPort sendPort) async {
   var dbHelper = DBHelper();
 
   Future<void> refreshAll(List<String> podcasts) async {
-    List<PodcastLocal> podcastList;
+    List<PodcastBrief> podcastList;
     if (podcasts.isEmpty) {
       podcastList = await dbHelper.getPodcastLocalAll(updateOnly: true);
     } else {
@@ -107,9 +107,9 @@ Future<void> refreshIsolateEntryPoint(SendPort sendPort) async {
   });
 }
 
-Future<void> podcastSync({List<PodcastLocal>? podcasts}) async {
+Future<void> podcastSync({List<PodcastBrief>? podcasts}) async {
   final dbHelper = DBHelper();
-  final List<PodcastLocal> podcastList;
+  final List<PodcastBrief> podcastList;
   if (podcasts == null || podcasts.isEmpty) {
     podcastList = await dbHelper.getPodcastLocalAll(updateOnly: true);
   } else {

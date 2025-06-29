@@ -201,6 +201,11 @@ extension StringExtension on String {
     var color = json.decode(this);
     return Color.fromRGBO(color[0], color[1], color[2], 1);
   }
+
+  bool isXimalaya() {
+    var ximalaya = RegExp(r"ximalaya.com");
+    return ximalaya.hasMatch(this);
+  }
 }
 
 extension ColorExtension on Color {

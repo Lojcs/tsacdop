@@ -35,7 +35,7 @@ import 'podcast_settings.dart';
 class PodcastDetail extends StatefulWidget {
   const PodcastDetail(
       {super.key, required this.podcastLocal, this.initIds, this.hide = false});
-  final PodcastLocal podcastLocal;
+  final PodcastBrief podcastLocal;
   final bool hide;
 
   /// Prefetched episode ids to display at first
@@ -97,7 +97,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
   }
 
   Future<void> _updateRssItem(
-      BuildContext context, PodcastLocal podcastLocal) async {
+      BuildContext context, PodcastBrief podcastLocal) async {
     final result = await _dbHelper.updatePodcastRss(podcastLocal);
     if (result >= 0) {
       Fluttertoast.showToast(
@@ -200,7 +200,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
 
 class PodcastDetailBody extends StatefulWidget {
   final SelectionController selectionController;
-  final PodcastLocal podcastLocal;
+  final PodcastBrief podcastLocal;
 
   /// Prefetched episode ids to display at first
   final List<int>? initIds;
@@ -325,7 +325,7 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
 }
 
 class _PodcastDetailAppBar extends StatefulWidget {
-  final PodcastLocal podcastLocal;
+  final PodcastBrief podcastLocal;
   final Color color;
   final Color textColor;
   final double infoHeight;
@@ -564,7 +564,7 @@ class __PodcastDetailAppBarState extends State<_PodcastDetailAppBar>
   Future<void> _checkPodcast() async {
     DBHelper dbHelper = DBHelper();
     final exist = await dbHelper.checkPodcast(widget.podcastLocal.rssUrl);
-    if (exist == '') {
+    if (exist == null) {
       Navigator.of(context).pop();
     }
   }
@@ -572,7 +572,7 @@ class __PodcastDetailAppBarState extends State<_PodcastDetailAppBar>
 
 class HostsList extends StatelessWidget {
   final BuildContext context;
-  final PodcastLocal podcastLocal;
+  final PodcastBrief podcastLocal;
   const HostsList(this.context, this.podcastLocal, {super.key});
 
   @override
@@ -696,7 +696,7 @@ class HostsList extends StatelessWidget {
 }
 
 Future<Tuple2<String?, List<PodcastHost>?>> _getHosts(
-    PodcastLocal podcastLocal) async {
+    PodcastBrief podcastLocal) async {
   if (!podcastLocal.provider.contains('fireside')) return Tuple2('', []);
   var data = FiresideData(podcastLocal.id, podcastLocal.link);
   await data.getData();
@@ -740,7 +740,7 @@ Widget _podcastLink(BuildContext context,
 }
 
 class AboutPodcast extends StatefulWidget {
-  final PodcastLocal? podcastLocal;
+  final PodcastBrief? podcastLocal;
   final Color? accentColor;
   const AboutPodcast({this.podcastLocal, this.accentColor, super.key});
 

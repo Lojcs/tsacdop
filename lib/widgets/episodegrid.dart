@@ -93,7 +93,7 @@ class InteractiveEpisodeGrid extends StatefulWidget {
   final PodcastGroup? actionBarGroup;
 
   /// Default podcast
-  final PodcastLocal? actionBarPodcast;
+  final PodcastBrief? actionBarPodcast;
 
   /// Default sorter
   final Sorter actionBarSortBy;

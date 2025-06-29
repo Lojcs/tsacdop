@@ -27,7 +27,7 @@ enum RefreshCoverStatus { start, complete, error, none }
 
 class PodcastSetting extends StatefulWidget {
   const PodcastSetting({required this.podcastLocal, super.key});
-  final PodcastLocal? podcastLocal;
+  final PodcastBrief? podcastLocal;
 
   @override
   _PodcastSettingState createState() => _PodcastSettingState();

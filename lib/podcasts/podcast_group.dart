@@ -66,7 +66,7 @@ class _PodcastGroupListState extends State<PodcastGroupList> {
 }
 
 class _PodcastCard extends StatefulWidget {
-  final PodcastLocal? podcastLocal;
+  final PodcastBrief? podcastLocal;
   final PodcastGroup? group;
   const _PodcastCard({this.podcastLocal, this.group});
   @override

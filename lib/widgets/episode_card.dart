@@ -914,7 +914,7 @@ class EpisodeCard extends StatelessWidget {
                           onTapUp: (details) => onTapUp?.call(),
                           onTap: () async {
                             DBHelper dbHelper = DBHelper();
-                            PodcastLocal? podcast = await dbHelper
+                            PodcastBrief? podcast = await dbHelper
                                 .getPodcastWithUrl(episode.enclosureUrl);
                             if (podcast != null && context.mounted) {
                               Navigator.push(

@@ -474,7 +474,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
             BoxDecoration(shape: BoxShape.circle, color: context.primaryColor),
       );
 
-  Widget _updateIndicator(PodcastLocal podcastLocal) => FutureBuilder<int?>(
+  Widget _updateIndicator(PodcastBrief podcastLocal) => FutureBuilder<int?>(
         future: _getPodcastUpdateCounts(podcastLocal.id),
         initialData: 0,
         builder: (context, snapshot) {
@@ -496,7 +496,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
       );
 
   Future<List<int>> _getPodcastPreview(
-      PodcastLocal podcastLocal, int limit) async {
+      PodcastBrief podcastLocal, int limit) async {
     if (context.mounted) {
       return Provider.of<EpisodeState>(context, listen: false).getEpisodes(
         feedIds: [podcastLocal.id],
@@ -512,7 +512,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
 }
 
 class PodcastPreview extends StatelessWidget {
-  final PodcastLocal podcastLocal;
+  final PodcastBrief podcastLocal;
 
   /// Episodes to preview (only the first row is shown)
   final List<int> previewIds;

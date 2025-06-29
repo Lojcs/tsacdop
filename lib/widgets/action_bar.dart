@@ -52,7 +52,7 @@ class ActionBar extends StatefulWidget {
   final PodcastGroup? group;
 
   /// Default podcast
-  final PodcastLocal? podcast;
+  final PodcastBrief? podcast;
 
   /// Default sorter
   final Sorter sortBy;
@@ -385,9 +385,9 @@ class _ActionBarSharedState extends ChangeNotifier {
     notifyListeners();
   }
 
-  PodcastLocal _podcast;
-  PodcastLocal get podcast => _podcast;
-  set podcast(PodcastLocal? podcastLocal) {
+  PodcastBrief _podcast;
+  PodcastBrief get podcast => _podcast;
+  set podcast(PodcastBrief? podcastLocal) {
     _podcast = podcastLocal ?? podcastAll;
     notifyListeners();
   }
@@ -461,7 +461,7 @@ class _ActionBarSharedState extends ChangeNotifier {
     required this.sortByItems,
     required bool expandSecondRow,
     required PodcastGroup? group,
-    required PodcastLocal? podcast,
+    required PodcastBrief? podcast,
     required Sorter sortBy,
     required bool? filterNew,
     required bool? filterLiked,
@@ -477,7 +477,7 @@ class _ActionBarSharedState extends ChangeNotifier {
         _group =
             group ?? PodcastGroup(context.s.all, podcastList: [], id: "All"),
         _podcast = podcast ??
-            PodcastLocal(context.s.all, '', '', '', '', 'All', '', '', '', []),
+            PodcastBrief(context.s.all, '', '', '', '', 'All', '', '', '', []),
         _sortBy = sortBy,
         _filterNew = filterNew,
         _filterLiked = filterLiked,
@@ -504,9 +504,9 @@ class _ActionBarSharedState extends ChangeNotifier {
       ];
   double? maxGroupTitleWidth;
 
-  late final PodcastLocal podcastAll =
-      PodcastLocal(context.s.all, '', '', '', '', 'All', '', '', '', []);
-  Future<List<PodcastLocal>> get podcasts async =>
+  late final PodcastBrief podcastAll =
+      PodcastBrief(context.s.all, '', '', '', '', 'All', '', '', '', []);
+  Future<List<PodcastBrief>> get podcasts async =>
       [podcastAll, ...await DBHelper().getPodcastLocalAll()];
   double? maxPodcastTitleWidth;
 
@@ -659,10 +659,10 @@ class ActionBarDropdownPodcasts extends ActionBarFilter {
     _ActionBarSharedState sharedState =
         Provider.of<_ActionBarSharedState>(context, listen: false);
     final row = sharedState.rows[rowIndex];
-    return Selector<_ActionBarSharedState, PodcastLocal>(
+    return Selector<_ActionBarSharedState, PodcastBrief>(
       selector: (_, sharedState) => sharedState.podcast,
       builder: (context, data, _) {
-        return FutureBuilder<List<PodcastLocal>>(
+        return FutureBuilder<List<PodcastBrief>>(
           future: sharedState.podcasts,
           initialData: [],
           builder: (context, snapshot) {
@@ -681,7 +681,7 @@ class ActionBarDropdownPodcasts extends ActionBarFilter {
             }
             sharedState.maxPodcastTitleWidth =
                 expandedWidth; // It's tricky to update this after the fact.
-            return ActionBarDropdownButton<PodcastLocal>(
+            return ActionBarDropdownButton<PodcastBrief>(
               selected: data,
               expansionController: sharedState.expansionControllers[rowIndex],
               expandedChild: Text(
@@ -691,7 +691,7 @@ class ActionBarDropdownPodcasts extends ActionBarFilter {
                 overflow: TextOverflow.ellipsis,
               ),
               itemBuilder: () => snapshot.data!
-                  .map<PopupMenuItem<PodcastLocal>>(
+                  .map<PopupMenuItem<PodcastBrief>>(
                     (podcast) => PopupMenuItem(
                       padding: context.actionBarIconPadding,
                       height: context.actionBarButtonSizeVertical,
