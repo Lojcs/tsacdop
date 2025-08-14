@@ -1,13 +1,11 @@
-import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import '../local_storage/sqflite_localpodcast.dart';
+import '../state/podcast_state.dart';
 import '../state/setting_state.dart';
-import '../type/podcastlocal.dart';
 import '../util/extension_helper.dart';
 import '../util/pageroute.dart';
 import '../widgets/custom_widget.dart';
@@ -20,16 +18,10 @@ class PodcastList extends StatefulWidget {
   const PodcastList({super.key});
 
   @override
-  _PodcastListState createState() => _PodcastListState();
+  State<PodcastList> createState() => _PodcastListState();
 }
 
 class _PodcastListState extends State<PodcastList> {
-  Future<List<PodcastBrief>> _getPodcastLocal() async {
-    var dbHelper = DBHelper();
-    var podcastList = await dbHelper.getPodcastLocalAll();
-    return podcastList;
-  }
-
   @override
   Widget build(BuildContext context) {
     final width = context.width;
@@ -63,8 +55,8 @@ class _PodcastListState extends State<PodcastList> {
           ),
           body: Container(
             color: context.surface,
-            child: FutureBuilder<List<PodcastBrief>>(
-              future: _getPodcastLocal(),
+            child: FutureBuilder<List<String>>(
+              future: context.podcastState.getPodcasts(),
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   return CustomScrollView(
@@ -84,21 +76,20 @@ class _PodcastListState extends State<PodcastList> {
                                   Navigator.push(
                                     context,
                                     SlideLeftRoute(
-                                        page: PodcastDetail(
-                                      podcastLocal: snapshot.data![index],
-                                    )),
+                                      page: PodcastDetail(
+                                        podcastId: snapshot.data![index],
+                                      ),
+                                    ),
                                   );
                                 },
-                                onLongPress: () async {
-                                  generalSheet(
-                                    context,
-                                    title: snapshot.data![index].title,
-                                    child: PodcastSetting(
-                                        podcastLocal: snapshot.data![index]),
-                                  ).then((value) {
-                                    if (mounted) setState(() {});
-                                  });
-                                },
+                                onLongPress: () => generalSheet(
+                                  context,
+                                  title: context
+                                      .podcastState[snapshot.data![index]]
+                                      .title,
+                                  child: PodcastSetting(
+                                      podcastId: snapshot.data![index]),
+                                ),
                                 child: Align(
                                   alignment: Alignment.center,
                                   child: Column(
@@ -113,17 +104,28 @@ class _PodcastListState extends State<PodcastList> {
                                         child: SizedBox(
                                           height: width / 4,
                                           width: width / 4,
-                                          child: Image.file(File(
-                                              "${snapshot.data![index].imagePath}")),
+                                          child: Selector<PodcastState, String>(
+                                            selector: (_, pState) =>
+                                                pState[snapshot.data![index]]
+                                                    .imagePath,
+                                            builder: (context, imagePath, _) =>
+                                                Image.file(File(imagePath)),
+                                          ),
                                         ),
                                       ),
                                       Padding(
                                         padding: const EdgeInsets.all(4.0),
-                                        child: Text(
-                                          snapshot.data![index].title,
-                                          textAlign: TextAlign.center,
-                                          style: context.textTheme.bodyMedium!,
-                                          maxLines: 2,
+                                        child: Selector<PodcastState, String>(
+                                          selector: (_, pState) =>
+                                              pState[snapshot.data![index]]
+                                                  .title,
+                                          builder: (context, title, _) => Text(
+                                            title,
+                                            textAlign: TextAlign.center,
+                                            style:
+                                                context.textTheme.bodyMedium!,
+                                            maxLines: 2,
+                                          ),
                                         ),
                                       ),
                                     ],

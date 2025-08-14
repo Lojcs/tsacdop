@@ -14,8 +14,8 @@ import 'package:webfeed/webfeed.dart';
 
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/podcast_group.dart';
+import '../state/podcast_state.dart';
 import '../type/play_histroy.dart';
-import '../type/podcastlocal.dart';
 import '../util/extension_helper.dart';
 import '../util/helpers.dart';
 import '../widgets/custom_widget.dart';
@@ -26,15 +26,16 @@ enum MarkStatus { start, complete, none }
 enum RefreshCoverStatus { start, complete, error, none }
 
 class PodcastSetting extends StatefulWidget {
-  const PodcastSetting({required this.podcastLocal, super.key});
-  final PodcastBrief? podcastLocal;
+  const PodcastSetting({required this.podcastId, super.key});
+  final String podcastId;
 
   @override
-  _PodcastSettingState createState() => _PodcastSettingState();
+  State<PodcastSetting> createState() => _PodcastSettingState();
 }
 
 class _PodcastSettingState extends State<PodcastSetting> {
   final _dbHelper = DBHelper();
+  late final _pState = context.podcastState;
   MarkStatus _markStatus = MarkStatus.none;
   RefreshCoverStatus _coverStatus = RefreshCoverStatus.none;
   int _secondsStart = 0;
@@ -58,357 +59,330 @@ class _PodcastSettingState extends State<PodcastSetting> {
     final s = context.s;
     final groupList = context.watch<GroupList>();
     final textStyle = context.textTheme.bodyMedium!;
-    final colorScheme = ColorScheme.fromSeed(
-        seedColor: widget.podcastLocal!.primaryColor!.toColor(),
-        brightness: context.brightness);
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        FutureBuilder<bool>(
-            future: _getAutoDownload(widget.podcastLocal!.id),
-            initialData: false,
-            builder: (context, snapshot) {
-              return ListTile(
-                onTap: () => _setAutoDownload(!snapshot.data!),
-                dense: true,
-                title: Row(
-                  children: [
-                    SizedBox(
-                      height: 18,
-                      width: 18,
-                      child: CustomPaint(
-                        painter: DownloadPainter(
-                          color: context.textColor,
-                          fraction: 0,
-                          progressColor: colorScheme.primary,
-                        ),
+    return Selector<PodcastState, ColorScheme>(
+      selector: (context, pState) =>
+          pState[widget.podcastId].colorScheme(context),
+      builder: (context, colorScheme, _) => Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Selector<PodcastState, bool>(
+            selector: (_, pState) => pState[widget.podcastId].autoDownload,
+            builder: (context, autoDownload, _) => ListTile(
+              onTap: () => _setAutoDownload(!autoDownload),
+              dense: true,
+              title: Row(
+                children: [
+                  SizedBox(
+                    height: 18,
+                    width: 18,
+                    child: CustomPaint(
+                      painter: DownloadPainter(
+                        color: context.textColor,
+                        fraction: 0,
+                        progressColor: colorScheme.primary,
                       ),
                     ),
-                    SizedBox(width: 20),
-                    Text(s.autoDownload, style: textStyle),
-                  ],
-                ),
-                trailing: Transform.scale(
-                  scale: 0.8,
-                  child: Switch(
-                      value: snapshot.data!,
-                      activeColor: colorScheme.primary,
-                      onChanged: _setAutoDownload),
-                ),
-              );
-            }),
-        FutureBuilder<bool>(
-            future: _getNeverUpdate(widget.podcastLocal!.id),
-            initialData: false,
-            builder: (context, snapshot) {
-              return ListTile(
-                dense: true,
-                onTap: () => _setNeverUpdate(!snapshot.data!),
-                title: Row(
-                  children: [
-                    Icon(Icons.lock_outlined, size: 18),
-                    SizedBox(width: 20),
-                    Text(s.neverAutoUpdate, style: textStyle),
-                  ],
-                ),
-                trailing: Transform.scale(
-                  scale: 0.8,
-                  child: Switch(
-                      value: snapshot.data!,
-                      activeColor: colorScheme.primary,
-                      onChanged: _setNeverUpdate),
-                ),
-              );
-            }),
-        FutureBuilder<bool>(
-            future: _getHideNewMark(widget.podcastLocal!.id),
-            initialData: false,
-            builder: (context, snapshot) {
-              return ListTile(
-                dense: true,
-                onTap: () => _setHideNewMark(!snapshot.data!),
-                title: Row(
-                  children: [
-                    Icon(LineIcons.eraser, size: 18),
-                    SizedBox(width: 20),
-                    Text('Always hide new mark', style: textStyle),
-                  ],
-                ),
-                trailing: Transform.scale(
-                  scale: 0.8,
-                  child: Switch(
-                      value: snapshot.data!,
-                      activeColor: colorScheme.primary,
-                      onChanged: _setHideNewMark),
-                ),
-              );
-            }),
-        FutureBuilder<int?>(
-          future: _getSkipSecondStart(widget.podcastLocal!.id),
-          initialData: 0,
-          builder: (context, snapshot) => ListTile(
+                  ),
+                  SizedBox(width: 20),
+                  Text(s.autoDownload, style: textStyle),
+                ],
+              ),
+              trailing: Transform.scale(
+                scale: 0.8,
+                child: Switch(
+                    value: autoDownload,
+                    activeColor: colorScheme.primary,
+                    onChanged: _setAutoDownload),
+              ),
+            ),
+          ),
+          Selector<PodcastState, bool>(
+            selector: (_, pState) => pState[widget.podcastId].noAutoSync,
+            builder: (context, noAutoSync, _) => ListTile(
+              dense: true,
+              onTap: () => _setNeverUpdate(!noAutoSync),
+              title: Row(
+                children: [
+                  Icon(Icons.lock_outlined, size: 18),
+                  SizedBox(width: 20),
+                  Text(s.neverAutoUpdate, style: textStyle),
+                ],
+              ),
+              trailing: Transform.scale(
+                scale: 0.8,
+                child: Switch(
+                    value: noAutoSync,
+                    activeColor: colorScheme.primary,
+                    onChanged: _setNeverUpdate),
+              ),
+            ),
+          ),
+          Selector<PodcastState, bool>(
+            selector: (_, pState) => pState[widget.podcastId].hideNewMark,
+            builder: (context, hideNewMark, _) => ListTile(
+              dense: true,
+              onTap: () => _setHideNewMark(!hideNewMark),
+              title: Row(
+                children: [
+                  Icon(LineIcons.eraser, size: 18),
+                  SizedBox(width: 20),
+                  Text('Always hide new mark', style: textStyle),
+                ],
+              ),
+              trailing: Transform.scale(
+                scale: 0.8,
+                child: Switch(
+                    value: hideNewMark,
+                    activeColor: colorScheme.primary,
+                    onChanged: _setHideNewMark),
+              ),
+            ),
+          ),
+          Selector<PodcastState, int>(
+            selector: (_, pState) => pState[widget.podcastId].skipSecondsStart,
+            builder: (context, skipSecondsStart, _) => ListTile(
+              onTap: () {
+                _secondsStart = 0;
+                setState(() {
+                  _removeConfirm = false;
+                  _markConfirm = false;
+                  _showEndTimePicker = false;
+                  _showStartTimePicker = !_showStartTimePicker;
+                });
+              },
+              dense: true,
+              title: Row(
+                children: [
+                  Icon(Icons.fast_forward_outlined, size: 18),
+                  SizedBox(width: 20),
+                  Text(s.skipSecondsAtStart, style: textStyle),
+                ],
+              ),
+              trailing: Padding(
+                padding: const EdgeInsets.only(right: 10.0),
+                child: Text(skipSecondsStart.toTime),
+              ),
+            ),
+          ),
+          if (_showStartTimePicker)
+            _TimePicker(
+                color: colorScheme.primary,
+                onCancel: () {
+                  _secondsStart = 0;
+                  setState(() => _showStartTimePicker = false);
+                },
+                onConfirm: () async {
+                  await _saveSkipSecondsStart(_secondsStart);
+                  if (mounted) setState(() => _showStartTimePicker = false);
+                },
+                onChange: (value) => _secondsStart = value.inSeconds),
+          Selector<PodcastState, int>(
+            selector: (_, pState) => pState[widget.podcastId].skipSecondsEnd,
+            builder: (context, skipSecondsEnd, _) => ListTile(
+              onTap: () {
+                _secondsStart = 0;
+                setState(() {
+                  _removeConfirm = false;
+                  _markConfirm = false;
+                  _showStartTimePicker = false;
+                  _showEndTimePicker = !_showEndTimePicker;
+                });
+              },
+              dense: true,
+              title: Row(
+                children: [
+                  Icon(Icons.fast_rewind_outlined, size: 18),
+                  SizedBox(width: 20),
+                  Text(s.skipSecondsAtEnd, style: textStyle),
+                ],
+              ),
+              trailing: Padding(
+                padding: const EdgeInsets.only(right: 10.0),
+                child: Text(skipSecondsEnd.toTime),
+              ),
+            ),
+          ),
+          if (_showEndTimePicker)
+            _TimePicker(
+                color: colorScheme.primary,
+                onCancel: () {
+                  _secondsEnd = 0;
+                  setState(() => _showEndTimePicker = false);
+                },
+                onConfirm: () async {
+                  await _saveSkipSecondsEnd(_secondsEnd);
+                  if (mounted) setState(() => _showEndTimePicker = false);
+                },
+                onChange: (value) => _secondsEnd = value.inSeconds),
+          ListTile(
             onTap: () {
-              _secondsStart = 0;
+              if (_coverStatus != RefreshCoverStatus.start) {
+                _refreshArtWork();
+              }
+            },
+            dense: true,
+            title: Row(
+              children: [
+                Icon(Icons.refresh, size: 18),
+                SizedBox(width: 20),
+                Text(s.refreshArtwork, style: textStyle),
+              ],
+            ),
+            trailing: Padding(
+              padding: const EdgeInsets.only(right: 15.0),
+              child: SizedBox(
+                height: 20,
+                width: 20,
+                child: _getRefreshStatusIcon(_coverStatus,
+                    color: colorScheme.primary),
+              ),
+            ),
+          ),
+          Divider(height: 1),
+          ListTile(
+            onTap: () {
               setState(() {
                 _removeConfirm = false;
-                _markConfirm = false;
+                _showStartTimePicker = false;
                 _showEndTimePicker = false;
-                _showStartTimePicker = !_showStartTimePicker;
+                _markConfirm = !_markConfirm;
               });
             },
             dense: true,
             title: Row(
               children: [
-                Icon(Icons.fast_forward_outlined, size: 18),
+                SizedBox(
+                  height: 18,
+                  width: 18,
+                  child: CustomPaint(
+                    painter: ListenedAllPainter(
+                        colorScheme.onSecondaryContainer,
+                        stroke: 2),
+                  ),
+                ),
                 SizedBox(width: 20),
-                Text(s.skipSecondsAtStart, style: textStyle),
+                Text(s.menuMarkAllListened,
+                    style: textStyle.copyWith(
+                        color: colorScheme.onSecondaryContainer,
+                        fontWeight: FontWeight.bold)),
               ],
             ),
             trailing: Padding(
               padding: const EdgeInsets.only(right: 10.0),
-              child: Text(snapshot.data!.toTime),
+              child: SizedBox(
+                height: 20,
+                width: 20,
+                child: _markStatus == MarkStatus.none
+                    ? Center()
+                    : _markStatus == MarkStatus.start
+                        ? CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: colorScheme.primary,
+                          )
+                        : Icon(Icons.done),
+              ),
             ),
           ),
-        ),
-        if (_showStartTimePicker)
-          _TimePicker(
-              color: colorScheme.primary,
-              onCancel: () {
-                _secondsStart = 0;
-                setState(() => _showStartTimePicker = false);
-              },
-              onConfirm: () async {
-                await _saveSkipSecondsStart(_secondsStart);
-                if (mounted) setState(() => _showStartTimePicker = false);
-              },
-              onChange: (value) => _secondsStart = value.inSeconds),
-        FutureBuilder<int?>(
-          future: _getSkipSecondEnd(widget.podcastLocal!.id),
-          initialData: 0,
-          builder: (context, snapshot) => ListTile(
+          if (_markConfirm)
+            Container(
+              width: double.infinity,
+              color: colorScheme.primary.toStrongBackround(context),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  TextButton(
+                      onPressed: () => setState(() {
+                            _markConfirm = false;
+                          }),
+                      child: Text(
+                        s.cancel,
+                        style: TextStyle(color: Colors.grey[600]),
+                      )),
+                  TextButton(
+                      onPressed: () {
+                        if (_markStatus != MarkStatus.start) {
+                          _markListened(widget.podcastId);
+                        }
+                        setState(() {
+                          _markConfirm = false;
+                        });
+                      },
+                      child: Text(s.confirm,
+                          style: TextStyle(color: colorScheme.primary))),
+                ],
+              ),
+            ),
+          ListTile(
             onTap: () {
-              _secondsStart = 0;
               setState(() {
-                _removeConfirm = false;
                 _markConfirm = false;
                 _showStartTimePicker = false;
-                _showEndTimePicker = !_showEndTimePicker;
+                _showEndTimePicker = false;
+                _removeConfirm = !_removeConfirm;
               });
             },
             dense: true,
             title: Row(
               children: [
-                Icon(Icons.fast_rewind_outlined, size: 18),
+                Icon(Icons.delete_outlined, color: Colors.red, size: 18),
                 SizedBox(width: 20),
-                Text(s.skipSecondsAtEnd, style: textStyle),
+                Text(s.remove,
+                    style: textStyle.copyWith(
+                        color: Colors.red, fontWeight: FontWeight.bold)),
               ],
             ),
-            trailing: Padding(
-              padding: const EdgeInsets.only(right: 10.0),
-              child: Text(snapshot.data!.toTime),
-            ),
           ),
-        ),
-        if (_showEndTimePicker)
-          _TimePicker(
-              color: colorScheme.primary,
-              onCancel: () {
-                _secondsEnd = 0;
-                setState(() => _showEndTimePicker = false);
-              },
-              onConfirm: () async {
-                await _saveSkipSecondsEnd(_secondsEnd);
-                if (mounted) setState(() => _showEndTimePicker = false);
-              },
-              onChange: (value) => _secondsEnd = value.inSeconds),
-        ListTile(
-          onTap: () {
-            if (_coverStatus != RefreshCoverStatus.start) {
-              _refreshArtWork();
-            }
-          },
-          dense: true,
-          title: Row(
-            children: [
-              Icon(Icons.refresh, size: 18),
-              SizedBox(width: 20),
-              Text(s.refreshArtwork, style: textStyle),
-            ],
-          ),
-          trailing: Padding(
-            padding: const EdgeInsets.only(right: 15.0),
-            child: SizedBox(
-              height: 20,
-              width: 20,
-              child: _getRefreshStatusIcon(_coverStatus,
-                  color: colorScheme.primary),
-            ),
-          ),
-        ),
-        Divider(height: 1),
-        ListTile(
-          onTap: () {
-            setState(() {
-              _removeConfirm = false;
-              _showStartTimePicker = false;
-              _showEndTimePicker = false;
-              _markConfirm = !_markConfirm;
-            });
-          },
-          dense: true,
-          title: Row(
-            children: [
-              SizedBox(
-                height: 18,
-                width: 18,
-                child: CustomPaint(
-                  painter: ListenedAllPainter(colorScheme.onSecondaryContainer,
-                      stroke: 2),
-                ),
-              ),
-              SizedBox(width: 20),
-              Text(s.menuMarkAllListened,
-                  style: textStyle.copyWith(
-                      color: colorScheme.onSecondaryContainer,
-                      fontWeight: FontWeight.bold)),
-            ],
-          ),
-          trailing: Padding(
-            padding: const EdgeInsets.only(right: 10.0),
-            child: SizedBox(
-              height: 20,
-              width: 20,
-              child: _markStatus == MarkStatus.none
-                  ? Center()
-                  : _markStatus == MarkStatus.start
-                      ? CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: colorScheme.primary,
-                        )
-                      : Icon(Icons.done),
-            ),
-          ),
-        ),
-        if (_markConfirm)
-          Container(
-            width: double.infinity,
-            color: colorScheme.primary.toStrongBackround(context),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                TextButton(
+          if (_removeConfirm)
+            Container(
+              width: double.infinity,
+              color: context.primaryColorDark,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  TextButton(
                     onPressed: () => setState(() {
-                          _markConfirm = false;
-                        }),
-                    child: Text(
-                      s.cancel,
-                      style: TextStyle(color: Colors.grey[600]),
-                    )),
-                TextButton(
-                    onPressed: () {
-                      if (_markStatus != MarkStatus.start) {
-                        _markListened(widget.podcastLocal!.id);
-                      }
-                      setState(() {
-                        _markConfirm = false;
-                      });
-                    },
-                    child: Text(s.confirm,
-                        style: TextStyle(color: colorScheme.primary))),
-              ],
+                      _removeConfirm = false;
+                    }),
+                    child: Text(s.cancel,
+                        style: TextStyle(color: Colors.grey[600])),
+                  ),
+                  TextButton(
+                      onPressed: () async {
+                        await groupList.removePodcast(
+                            context.podcastState[widget.podcastId]);
+                        if (context.mounted) Navigator.of(context).pop();
+                      },
+                      child:
+                          Text(s.confirm, style: TextStyle(color: Colors.red))),
+                ],
+              ),
             ),
-          ),
-        ListTile(
-          onTap: () {
-            setState(() {
-              _markConfirm = false;
-              _showStartTimePicker = false;
-              _showEndTimePicker = false;
-              _removeConfirm = !_removeConfirm;
-            });
-          },
-          dense: true,
-          title: Row(
-            children: [
-              Icon(Icons.delete_outlined, color: Colors.red, size: 18),
-              SizedBox(width: 20),
-              Text(s.remove,
-                  style: textStyle.copyWith(
-                      color: Colors.red, fontWeight: FontWeight.bold)),
-            ],
-          ),
-        ),
-        if (_removeConfirm)
-          Container(
-            width: double.infinity,
-            color: context.primaryColorDark,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                TextButton(
-                  onPressed: () => setState(() {
-                    _removeConfirm = false;
-                  }),
-                  child:
-                      Text(s.cancel, style: TextStyle(color: Colors.grey[600])),
-                ),
-                TextButton(
-                    onPressed: () async {
-                      await groupList.removePodcast(widget.podcastLocal!);
-                      Navigator.of(context).pop();
-                    },
-                    child:
-                        Text(s.confirm, style: TextStyle(color: Colors.red))),
-              ],
-            ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 
   Future<void> _setAutoDownload(bool boo) async {
-    // We don't need storage permission to download to app storage
-    await _dbHelper.saveAutoDownload(widget.podcastLocal!.id, boo: boo);
-    if (mounted) setState(() {});
+    await _pState.changePodcastProperty([widget.podcastId], autoDownload: boo);
   }
 
   Future<void> _setNeverUpdate(bool boo) async {
-    await _dbHelper.saveNeverUpdate(widget.podcastLocal!.id, boo: boo);
-    if (mounted) setState(() {});
+    await _pState.changePodcastProperty([widget.podcastId], noAutoSync: boo);
   }
 
   Future<void> _setHideNewMark(bool boo) async {
-    await _dbHelper.saveHideNewMark(widget.podcastLocal!.id, boo: boo);
-    if (mounted) setState(() {});
+    await _pState.changePodcastProperty([widget.podcastId], hideNewMark: boo);
   }
 
   Future<void> _saveSkipSecondsStart(int seconds) async {
-    await _dbHelper.saveSkipSecondsStart(widget.podcastLocal!.id, seconds);
+    await _pState
+        .changePodcastProperty([widget.podcastId], skipSecondsStart: seconds);
   }
 
   Future<void> _saveSkipSecondsEnd(int seconds) async {
-    await _dbHelper.saveSkipSecondsEnd(widget.podcastLocal!.id, seconds);
-  }
-
-  Future<bool> _getAutoDownload(String? id) async {
-    return await _dbHelper.getAutoDownload(id);
-  }
-
-  Future<bool> _getNeverUpdate(String? id) async {
-    return await _dbHelper.getNeverUpdate(id);
-  }
-
-  Future<bool> _getHideNewMark(String? id) async {
-    return await _dbHelper.getHideNewMark(id);
-  }
-
-  Future<int?> _getSkipSecondStart(String? id) async {
-    return await _dbHelper.getSkipSecondsStart(id);
-  }
-
-  Future<int?> _getSkipSecondEnd(String id) async {
-    return await _dbHelper.getSkipSecondsEnd(id);
+    await _pState
+        .changePodcastProperty([widget.podcastId], skipSecondsEnd: seconds);
   }
 
   Future<void> _markListened(String? podcastId) async {
@@ -436,12 +410,13 @@ class _PodcastSettingState extends State<PodcastSetting> {
       receiveTimeout: Duration(seconds: 90),
     );
     var dir = await getApplicationDocumentsDirectory();
-    var filePath = "${dir.path}/${widget.podcastLocal!.id}.png";
+    var filePath = "${dir.path}/${widget.podcastId}.png";
     var dio = Dio(options);
     String? imageUrl;
 
     try {
-      var response = await dio.get(widget.podcastLocal!.rssUrl);
+      var response =
+          await dio.get(context.podcastState[widget.podcastId].rssUrl);
       try {
         var p = RssFeed.parse(response.data);
         imageUrl = p.itunes!.image!.href ?? p.image!.url;
@@ -468,9 +443,7 @@ class _PodcastSettingState extends State<PodcastSetting> {
         var color = await getColorFromImage(colorImage);
         var primaryColor = color.toString();
         _dbHelper.updatePodcastImage(
-            id: widget.podcastLocal!.id,
-            filePath: filePath,
-            color: primaryColor);
+            id: widget.podcastId, filePath: filePath, color: primaryColor);
         if (mounted) {
           Fluttertoast.showToast(
             msg: context.s.restartAppForEffect,

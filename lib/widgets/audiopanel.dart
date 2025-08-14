@@ -261,7 +261,7 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
 }
 
 class _AudioPanelRoute extends StatefulWidget {
-  const _AudioPanelRoute({super.key});
+  const _AudioPanelRoute();
   @override
   __AudioPanelRouteState createState() => __AudioPanelRouteState();
 }

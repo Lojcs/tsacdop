@@ -3,11 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 
-import '../local_storage/sqflite_localpodcast.dart';
 import '../state/podcast_group.dart';
-import '../type/podcastlocal.dart';
+import '../state/podcast_state.dart';
 import '../util/extension_helper.dart';
-import '../widgets/duraiton_picker.dart';
 import '../widgets/general_dialog.dart';
 import 'podcast_settings.dart';
 
@@ -54,7 +52,7 @@ class _PodcastGroupListState extends State<PodcastGroupList> {
                     decoration: BoxDecoration(color: context.surface),
                     key: ObjectKey(podcastLocal.title),
                     child: _PodcastCard(
-                      podcastLocal: podcastLocal,
+                      podcastId: podcastLocal.id,
                       group: _group,
                     ),
                   );
@@ -66,11 +64,11 @@ class _PodcastGroupListState extends State<PodcastGroupList> {
 }
 
 class _PodcastCard extends StatefulWidget {
-  final PodcastBrief? podcastLocal;
+  final String podcastId;
   final PodcastGroup? group;
-  const _PodcastCard({this.podcastLocal, this.group});
+  const _PodcastCard({required this.podcastId, this.group});
   @override
-  __PodcastCardState createState() => __PodcastCardState();
+  State<_PodcastCard> createState() => __PodcastCardState();
 }
 
 class __PodcastCardState extends State<_PodcastCard>
@@ -81,9 +79,10 @@ class __PodcastCardState extends State<_PodcastCard>
   late AnimationController _controller;
   late Animation _animation;
   double? _value;
-  int _seconds = 0;
+  final int _seconds = 0;
   int? _skipSeconds;
 
+  late final PodcastState pState = context.podcastState;
   @override
   void initState() {
     super.initState();
@@ -104,10 +103,9 @@ class __PodcastCardState extends State<_PodcastCard>
 
   @override
   Widget build(BuildContext context) {
-    final c = widget.podcastLocal!.backgroudColor(context);
     final s = context.s;
     final groupList = context.watch<GroupList>();
-    _belongGroups = groupList.getPodcastGroup(widget.podcastLocal!.id);
+    _belongGroups = groupList.getPodcastGroup(widget.podcastId);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
@@ -118,344 +116,161 @@ class __PodcastCardState extends State<_PodcastCard>
             child: SizedBox(
               height: 100,
               child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Icon(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Selector<PodcastState, Color>(
+                    selector: (_, pState) =>
+                        pState[widget.podcastId].primaryColor,
+                    builder: (context, color, _) => Icon(
                       Icons.unfold_more,
-                      color: c,
+                      color: color,
                     ),
-                    SizedBox(width: 5),
-                    CircleAvatar(
+                  ),
+                  SizedBox(width: 5),
+                  Selector<PodcastState, ImageProvider>(
+                    selector: (_, pState) =>
+                        pState[widget.podcastId].avatarImage,
+                    builder: (context, avatarImage, _) => CircleAvatar(
                       radius: 25,
-                      backgroundImage: widget.podcastLocal!.avatarImage,
+                      backgroundImage: avatarImage,
                     ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          Text(
-                            widget.podcastLocal!.title,
+                  ),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Selector<PodcastState, String>(
+                          selector: (_, pState) =>
+                              pState[widget.podcastId].title,
+                          builder: (context, title, _) => Text(
+                            title,
                             maxLines: 2,
                             overflow: TextOverflow.fade,
                             style: TextStyle(
                                 fontWeight: FontWeight.bold, fontSize: 15),
                           ),
-                          Row(
-                            children: _belongGroups.map((group) {
-                              return Container(
-                                  padding: EdgeInsets.only(right: 5.0),
-                                  child: Text(group!.name!));
-                            }).toList(),
-                          ),
-                        ],
-                      ),
+                        ),
+                        Row(
+                          children: _belongGroups.map((group) {
+                            return Container(
+                                padding: EdgeInsets.only(right: 5.0),
+                                child: Text(group!.name));
+                          }).toList(),
+                        ),
+                      ],
                     ),
-                    IconButton(
-                        icon: Icon(Icons.add),
-                        splashRadius: 20,
-                        tooltip: s.menu,
-                        onPressed: () =>
-                            setState(() => _addGroup = !_addGroup)),
-                    IconButton(
-                        icon: Icon(Icons.more_vert),
-                        splashRadius: 20,
-                        tooltip: s.menu,
-                        onPressed: () => generalSheet(
-                              context,
-                              title: widget.podcastLocal!.title,
-                              child: PodcastSetting(
-                                  podcastLocal: widget.podcastLocal),
-                            ).then((value) {
-                              if (mounted) setState(() {});
-                            })),
-                  ]),
+                  ),
+                  IconButton(
+                      icon: Icon(Icons.add),
+                      splashRadius: 20,
+                      tooltip: s.menu,
+                      onPressed: () => setState(() => _addGroup = !_addGroup)),
+                  IconButton(
+                    icon: Icon(Icons.more_vert),
+                    splashRadius: 20,
+                    tooltip: s.menu,
+                    onPressed: () => generalSheet(
+                      context,
+                      title: pState[widget.podcastId].title,
+                      child: PodcastSetting(podcastId: widget.podcastId),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
         !_addGroup
             ? Center()
             : Container(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: context.surface,
-                  ),
-                  // border: Border(
-                  //     bottom: BorderSide(
-                  //         color: Theme.of(context).primaryColorDark),
-                  //     top: BorderSide(
-                  //         color: Theme.of(context).primaryColorDark))),
-                  height: 50,
-                  child: _addGroup
-                      ? Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: <Widget>[
-                            Expanded(
-                              child: SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: Row(
-                                    children:
-                                        groupList.groups.map<Widget>((group) {
-                                  return Container(
-                                    padding: EdgeInsets.only(left: 5.0),
-                                    child: FilterChip(
-                                      backgroundColor: context.accentBackground,
-                                      selectedColor: context.accentColor,
-                                      key: ValueKey<String>(group!.id),
-                                      label: Text(group.name!),
-                                      selected: _selectedGroups.contains(group),
-                                      onSelected: (value) {
-                                        setState(() {
-                                          if (!value) {
-                                            _selectedGroups.remove(group);
-                                          } else {
-                                            _selectedGroups.add(group);
-                                          }
-                                        });
-                                      },
-                                    ),
-                                  );
-                                }).toList()),
-                              ),
-                            ),
-                            Material(
-                              color: Colors.transparent,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: <Widget>[
-                                  IconButton(
-                                    icon: Icon(Icons.clear),
-                                    splashRadius: 20,
-                                    onPressed: () => setState(() {
-                                      _addGroup = false;
-                                    }),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.done),
-                                    splashRadius: 20,
-                                    onPressed: () async {
-                                      if (_selectedGroups.isNotEmpty) {
-                                        setState(() {
-                                          _addGroup = false;
-                                        });
-                                        await groupList.changeGroup(
-                                          widget.podcastLocal!,
-                                          _selectedGroups,
-                                        );
-                                        Fluttertoast.showToast(
-                                          msg: s.toastSettingSaved,
-                                          gravity: ToastGravity.BOTTOM,
-                                        );
-                                      } else {
-                                        Fluttertoast.showToast(
-                                          msg: s.toastOneGroup,
-                                          gravity: ToastGravity.BOTTOM,
-                                        );
-                                      }
-                                    },
-                                  ),
-                                ],
-                              ),
-                            )
-                          ],
-                        )
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: <Widget>[
-                            _buttonOnMenu(
-                                icon: Icon(Icons.add,
-                                    size: _value == 0 ? 1 : 20 * _value!),
-                                onTap: () {
-                                  setState(() {
-                                    _addGroup = true;
-                                  });
-                                },
-                                tooltip: s.groups(0)),
-                            FutureBuilder<bool>(
-                              future: _getAutoDownload(widget.podcastLocal!.id),
-                              initialData: false,
-                              builder: (context, snapshot) {
-                                return _buttonOnMenu(
-                                  icon: Container(
-                                    height: _value == 0 ? 1 : 20 * _value!,
-                                    width: _value == 0 ? 1 : 20 * _value!,
-                                    decoration: BoxDecoration(
-                                        border: snapshot.data!
-                                            ? Border.all(
-                                                width: 1,
-                                                color: snapshot.data!
-                                                    ? context.accentColor
-                                                    : context.textTheme
-                                                        .titleMedium!.color!)
-                                            : null,
-                                        shape: BoxShape.circle,
-                                        color: snapshot.data!
-                                            ? context.accentColor
-                                            : null),
-                                    child: Icon(Icons.file_download,
-                                        size: _value! * 15,
-                                        color: snapshot.data!
-                                            ? Colors.white
-                                            : null),
-                                  ),
-                                  tooltip: s.autoDownload,
-                                  onTap: () async {
-                                    await _setAutoDownload(
-                                        widget.podcastLocal!.id,
-                                        !snapshot.data!);
-                                    setState(() {});
-                                  },
-                                );
-                              },
-                            ),
-                            FutureBuilder<int?>(
-                                future: _getSkipSecond(widget.podcastLocal!.id),
-                                initialData: 0,
-                                builder: (context, snapshot) {
-                                  return _buttonOnMenu(
-                                      icon: Icon(
-                                        Icons.fast_forward,
-                                        size: _value == 0 ? 1 : 20 * _value!,
-                                      ),
-                                      tooltip:
-                                          'Skip${snapshot.data == 0 ? '' : snapshot.data!.toTime}',
-                                      onTap: () {
-                                        generalDialog(
-                                          context,
-                                          title: Text(s.skipSecondsAtStart,
-                                              maxLines: 2),
-                                          content: DurationPicker(
-                                            duration: Duration(
-                                                seconds: _skipSeconds ?? 0),
-                                            onChange: (value) =>
-                                                _seconds = value.inSeconds,
-                                          ),
-                                          actions: <Widget>[
-                                            TextButton(
-                                              onPressed: () {
-                                                Navigator.of(context).pop();
-                                                _seconds = 0;
-                                              },
-                                              child: Text(
-                                                s.cancel,
-                                                style: TextStyle(
-                                                    color: Colors.grey[600]),
-                                              ),
-                                            ),
-                                            TextButton(
-                                              onPressed: () {
-                                                Navigator.of(context).pop();
-                                                _saveSkipSeconds(
-                                                    widget.podcastLocal!.id,
-                                                    _seconds);
-                                              },
-                                              child: Text(
-                                                s.confirm,
-                                                style: TextStyle(
-                                                    color: context.accentColor),
-                                              ),
-                                            )
-                                          ],
-                                        );
-                                      });
-                                }),
-                            _buttonOnMenu(
-                              icon: Icon(
-                                Icons.delete,
-                                color: Colors.red,
-                                size: _value == 0 ? 1 : 20 * _value!,
-                              ),
-                              tooltip: s.remove,
-                              onTap: () {
-                                generalDialog(
-                                  context,
-                                  title: Text(s.removeConfirm),
-                                  content: Text(s.removePodcastDes),
-                                  actions: <Widget>[
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(),
-                                      child: Text(
-                                        s.cancel,
-                                        style:
-                                            TextStyle(color: Colors.grey[600]),
-                                      ),
-                                    ),
-                                    TextButton(
-                                      onPressed: () {
-                                        groupList.removePodcast(
-                                            widget.podcastLocal!);
-                                        Navigator.of(context).pop();
-                                      },
-                                      child: Text(
-                                        s.confirm,
-                                        style: TextStyle(color: Colors.red),
-                                      ),
-                                    )
-                                  ],
-                                );
-                              },
-                            ),
-                          ],
-                        ),
+                decoration: BoxDecoration(
+                  color: context.surface,
                 ),
-              ),
+                // border: Border(
+                //     bottom: BorderSide(
+                //         color: Theme.of(context).primaryColorDark),
+                //     top: BorderSide(
+                //         color: Theme.of(context).primaryColorDark))),
+                height: 50,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: <Widget>[
+                    Expanded(
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                            children: groupList.groups.map<Widget>((group) {
+                          return Container(
+                            padding: EdgeInsets.only(left: 5.0),
+                            child: FilterChip(
+                              backgroundColor: context.accentBackground,
+                              selectedColor: context.accentColor,
+                              key: ValueKey<String>(group!.id),
+                              label: Text(group.name),
+                              selected: _selectedGroups.contains(group),
+                              onSelected: (value) {
+                                setState(() {
+                                  if (!value) {
+                                    _selectedGroups.remove(group);
+                                  } else {
+                                    _selectedGroups.add(group);
+                                  }
+                                });
+                              },
+                            ),
+                          );
+                        }).toList()),
+                      ),
+                    ),
+                    Material(
+                      color: Colors.transparent,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          IconButton(
+                            icon: Icon(Icons.clear),
+                            splashRadius: 20,
+                            onPressed: () => setState(() {
+                              _addGroup = false;
+                            }),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.done),
+                            splashRadius: 20,
+                            onPressed: () async {
+                              if (_selectedGroups.isNotEmpty) {
+                                setState(() {
+                                  _addGroup = false;
+                                });
+                                await groupList.changeGroup(
+                                  pState[widget.podcastId],
+                                  _selectedGroups,
+                                );
+                                Fluttertoast.showToast(
+                                  msg: s.toastSettingSaved,
+                                  gravity: ToastGravity.BOTTOM,
+                                );
+                              } else {
+                                Fluttertoast.showToast(
+                                  msg: s.toastOneGroup,
+                                  gravity: ToastGravity.BOTTOM,
+                                );
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    )
+                  ],
+                )),
       ],
     );
-  }
-
-  Widget _buttonOnMenu(
-          {required Widget icon,
-          VoidCallback? onTap,
-          required String tooltip}) =>
-      Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          child: Container(
-            height: 50.0,
-            padding: EdgeInsets.symmetric(horizontal: 5.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: icon,
-                ),
-                Text(tooltip, style: context.textTheme.titleSmall),
-              ],
-            ),
-          ),
-        ),
-      );
-
-  Future<int?> _getSkipSecond(String? id) async {
-    final dbHelper = DBHelper();
-    final seconds = await dbHelper.getSkipSecondsStart(id);
-    _skipSeconds = seconds;
-    return seconds;
-  }
-
-  _saveSkipSeconds(String? id, int seconds) async {
-    final dbHelper = DBHelper();
-    await dbHelper.saveSkipSecondsStart(id, seconds);
-  }
-
-  _setAutoDownload(String? id, bool boo) async {
-    // We don't need storage permission to download to app storage
-    final dbHelper = DBHelper();
-    await dbHelper.saveAutoDownload(id, boo: boo);
-  }
-
-  Future<bool> _getAutoDownload(String? id) async {
-    final dbHelper = DBHelper();
-    return await dbHelper.getAutoDownload(id);
   }
 }
 
@@ -463,7 +278,7 @@ class RenameGroup extends StatefulWidget {
   final PodcastGroup? group;
   const RenameGroup({this.group, super.key});
   @override
-  _RenameGroupState createState() => _RenameGroupState();
+  State<RenameGroup> createState() => _RenameGroupState();
 }
 
 class _RenameGroupState extends State<RenameGroup> {

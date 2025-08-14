@@ -218,7 +218,7 @@ class SearchPanel extends StatefulWidget {
 }
 
 class SearchPanelState extends State<SearchPanel> {
-  late Search searchProvider = PodcastIndexSearch(context.episodeState);
+  late Search searchProvider = PodcastIndexSearch(context.podcastState);
 
   @override
   Widget build(BuildContext context) {

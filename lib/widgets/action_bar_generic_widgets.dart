@@ -1,10 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:vibration/vibration.dart';
-import 'package:vibration/vibration_presets.dart';
 import '../type/theme_data.dart';
 import '../util/extension_helper.dart';
 import 'package:tuple/tuple.dart';
@@ -828,8 +825,9 @@ class _ActionBarExpandingSearchButtonState
                 (!widget.connectRight
                     ? context.actionBarIconPadding.right / 2
                     : 0));
-        if (widget.expands)
+        if (widget.expands) {
           _expand = widget.expansionController!.addItem(expandableItem);
+        }
       }
     }
     BorderRadius borderRadius = BorderRadius.horizontal(
@@ -910,8 +908,9 @@ class _ActionBarExpandingSearchButtonState
                                         SearchEpisode(
                                   onSearch: (value) {
                                     if (value != query) {
-                                      if (mounted)
+                                      if (mounted) {
                                         setState(() => query = value);
+                                      }
                                       widget.onQueryChanged(query);
                                     }
                                   },
@@ -988,8 +987,9 @@ class _ActionBarExpandingSearchButtonState
                                           SearchEpisode(
                                         onSearch: (value) {
                                           if (value != query) {
-                                            if (mounted)
+                                            if (mounted) {
                                               setState(() => query = value);
+                                            }
                                             widget.onQueryChanged(query);
                                           }
                                         },
@@ -1019,8 +1019,9 @@ class _ActionBarExpandingSearchButtonState
                                   maxLines: 1,
                                   onFieldSubmitted: (value) {
                                     if (value != query) {
-                                      if (mounted)
+                                      if (mounted) {
                                         setState(() => query = value);
+                                      }
                                       widget.onQueryChanged(query);
                                     }
                                   },

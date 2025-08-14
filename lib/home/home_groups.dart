@@ -12,9 +12,10 @@ import '../podcasts/podcast_manage.dart';
 import '../podcasts/podcastlist.dart';
 import '../state/episode_state.dart';
 import '../state/podcast_group.dart';
+import '../state/podcast_state.dart';
 import '../state/refresh_podcast.dart';
 import '../state/setting_state.dart';
-import '../type/podcastlocal.dart';
+import '../type/podcastbrief.dart';
 import '../util/extension_helper.dart';
 import '../util/hide_player_route.dart';
 import '../util/pageroute.dart';
@@ -139,7 +140,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                                     padding:
                                         EdgeInsets.symmetric(horizontal: 15.0),
                                     child: Text(
-                                      groups[_groupIndex]!.name!,
+                                      groups[_groupIndex]!.name,
                                       style: context.textTheme.bodyLarge!
                                           .copyWith(color: context.accentColor),
                                     ),
@@ -297,7 +298,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 15.0),
                                     child: Text(
-                                      groups[_groupIndex]!.name!,
+                                      groups[_groupIndex]!.name,
                                       style: context.textTheme.bodyLarge!
                                           .copyWith(color: context.accentColor),
                                     )),
@@ -371,13 +372,12 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                                         maxHeight: 50,
                                         maxWidth: 50,
                                         child: CircleAvatar(
-                                          backgroundColor: podcastLocal
-                                              .primaryColor!
-                                              .toColor(),
+                                          backgroundColor:
+                                              podcastLocal.primaryColor,
                                           backgroundImage:
                                               podcastLocal.avatarImage,
-                                          child: _updateIndicator(
-                                              podcastLocal), // TODO: This doesn't update currently
+                                          child:
+                                              _updateIndicator(podcastLocal.id),
                                         ),
                                       ),
                                     ),
@@ -422,7 +422,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                                           context,
                                           HidePlayerRoute(
                                             PodcastDetail(
-                                              podcastLocal: podcastLocal,
+                                              podcastId: podcastLocal.id,
                                               initIds: snapshot.hasData
                                                   ? snapshot.data!
                                                   : null,
@@ -460,12 +460,6 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
     );
   }
 
-  Future<int?> _getPodcastUpdateCounts(String? id) async {
-    final dbHelper = DBHelper();
-    updateCount ??= await dbHelper.getPodcastUpdateCounts(id);
-    return updateCount;
-  }
-
   Widget _circleContainer() => Container(
         margin: EdgeInsets.symmetric(horizontal: 10),
         height: 50,
@@ -474,25 +468,22 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
             BoxDecoration(shape: BoxShape.circle, color: context.primaryColor),
       );
 
-  Widget _updateIndicator(PodcastBrief podcastLocal) => FutureBuilder<int?>(
-        future: _getPodcastUpdateCounts(podcastLocal.id),
-        initialData: 0,
-        builder: (context, snapshot) {
-          return snapshot.data! > 0
-              ? Align(
-                  alignment: Alignment.bottomRight,
-                  child: Container(
-                    alignment: Alignment.center,
-                    height: 10,
-                    width: 10,
-                    decoration: BoxDecoration(
-                        color: Colors.red,
-                        border: Border.all(color: context.surface, width: 2),
-                        shape: BoxShape.circle),
-                  ),
-                )
-              : Center();
-        },
+  Widget _updateIndicator(String podcastId) => Selector<PodcastState, int>(
+        selector: (_, pState) => pState[podcastId].syncEpisodeCount,
+        builder: (context, count, _) => count > 0
+            ? Align(
+                alignment: Alignment.bottomRight,
+                child: Container(
+                  alignment: Alignment.center,
+                  height: 10,
+                  width: 10,
+                  decoration: BoxDecoration(
+                      color: context.accentColor,
+                      border: Border.all(color: context.surface, width: 2),
+                      shape: BoxShape.circle),
+                ),
+              )
+            : Center(),
       );
 
   Future<List<int>> _getPodcastPreview(

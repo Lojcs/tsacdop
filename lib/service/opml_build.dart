@@ -32,8 +32,8 @@ class PodcastsBackup {
       builder.element('body', nest: () {
         for (var group in groups) {
           builder.element('outline', nest: () {
-            builder.attribute('text', '${group!.name}');
-            builder.attribute('title', '${group.name}');
+            builder.attribute('text', group!.name);
+            builder.attribute('title', group.name);
             for (var e in group.podcasts) {
               builder.element(
                 'outline',

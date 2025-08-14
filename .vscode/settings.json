@@ -7,4 +7,7 @@
         ".flutter/*": true
     },
     "dart.flutterSdkPath": "~/Development/git/tsacdop/.flutter",
+    "files.watcherExclude": {
+        "**/target": true
+    },
 }

@@ -10,7 +10,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
 import '../local_storage/key_value_storage.dart';
-import '../search/search_page.dart';
 import '../search/search_widgets.dart';
 import '../util/selection_controller.dart';
 import '../widgets/action_bar.dart';

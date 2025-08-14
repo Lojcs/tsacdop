@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'state/episode_state.dart';
 import 'package:tuple/tuple.dart';
@@ -18,6 +19,7 @@ import 'playlists/playlist_home.dart';
 import 'state/audio_state.dart';
 import 'state/download_state.dart';
 import 'state/podcast_group.dart';
+import 'state/podcast_state.dart';
 import 'state/refresh_podcast.dart';
 import 'state/setting_state.dart';
 import 'type/playlist.dart';
@@ -37,11 +39,13 @@ Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await themeSetting.initData();
   await FlutterDownloader.initialize();
+  final documents = await getApplicationDocumentsDirectory();
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: themeSetting),
         ChangeNotifierProvider(create: (_) => EpisodeState()),
+        ChangeNotifierProvider(create: (_) => PodcastState(documents)),
         ChangeNotifierProvider(
           lazy: false,
           create: (context) => AudioPlayerNotifier(context),
@@ -72,6 +76,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     Provider.of<SettingState>(context, listen: false).context = context;
     Provider.of<EpisodeState>(context, listen: false).context = context;
+    Provider.of<PodcastState>(context, listen: false).context = context;
     final browsableLibrary = BrowsableLibrary(context);
     context.audioState.browsableLibrary = browsableLibrary;
     return Selector<SettingState,

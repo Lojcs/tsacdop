@@ -24,7 +24,7 @@ class ShowNote extends StatelessWidget {
           description = snapshot.data!;
         } else {
           // description = "";
-          description = eState[episodeId].description;
+          description = eState[episodeId].showNotes;
         }
         if (description.isNotEmpty) {
           return Selector<AudioPlayerNotifier, int?>(

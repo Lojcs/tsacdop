@@ -142,7 +142,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
   /// Settings varibales
 
   /// Unused (only takes value 0). Record plyaer position.
-  int _lastPosition = 0;
+  final int _lastPosition = 0;
 
   /// Auto play next episode in playlist
   late bool _autoPlay;
@@ -827,7 +827,9 @@ class AudioPlayerNotifier extends ChangeNotifier {
         Duration seekAmount = Duration(
             milliseconds: (event['preSeekPosition'] - _audioPosition).abs());
         if (seekAmount < AudioService.config.fastForwardInterval ||
-            seekAmount < AudioService.config.rewindInterval) return;
+            seekAmount < AudioService.config.rewindInterval) {
+          return;
+        }
         _undoButtonPositionsStack.add(event['preSeekPosition']);
         if (_clearUndoSeekTimer != null) _clearUndoSeekTimer!.cancel();
         _clearUndoSeekTimer = Timer(Duration(seconds: 30), () {
@@ -1111,8 +1113,9 @@ class AudioPlayerNotifier extends ChangeNotifier {
     if (playlist.isEmpty) return seekFuture;
     if (oldIndex < 0) oldIndex += playlist.length;
     if (newIndex < 0) newIndex += playlist.length;
-    if (oldIndex >= playlist.length || newIndex >= playlist.length)
+    if (oldIndex >= playlist.length || newIndex >= playlist.length) {
       return seekFuture;
+    }
     await playlist.cachePlaylist(_episodeState);
 
     _playlistBeingEdited++;
@@ -1447,7 +1450,7 @@ class CustomAudioHandler extends BaseAudioHandler
   final _equalizer = AndroidEqualizer();
   final _loudnessEnhancer = AndroidLoudnessEnhancer();
 
-  int _cacheMax;
+  final int _cacheMax;
 
   /// JustAudio audio player
   late final AudioPlayer _player = AudioPlayer(

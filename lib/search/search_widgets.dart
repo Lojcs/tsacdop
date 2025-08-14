@@ -1,12 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:webfeed/webfeed.dart';
 
-import '../local_storage/sqflite_localpodcast.dart';
 import '../state/podcast_group.dart';
-import '../type/podcastlocal.dart';
+import '../state/podcast_state.dart';
+import '../type/podcastbrief.dart';
 import '../util/extension_helper.dart';
 import 'search_page.dart';
 
@@ -146,19 +144,19 @@ class SearchPanelCardState extends State<SearchPanelCard>
   bool get wantKeepAlive => true;
 }
 
+/// Preview
 class SearchPodcastPreview extends StatefulWidget {
-  final PodcastBrief podcast;
+  final String podcastId;
   final List<int> episodeIdList;
   final bool floating;
 
-  const SearchPodcastPreview(this.podcast, this.episodeIdList,
+  const SearchPodcastPreview(this.podcastId, this.episodeIdList,
       {this.floating = true, super.key});
   @override
   State<SearchPodcastPreview> createState() => SearchPodcastPreviewState();
 }
 
 class SearchPodcastPreviewState extends State<SearchPodcastPreview> {
-  late PodcastBrief podcast = widget.podcast;
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -178,21 +176,27 @@ class SearchPodcastPreviewState extends State<SearchPodcastPreview> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    widget.podcast.title,
-                    maxLines: 2,
-                    style: context.textTheme.titleLarge,
+                  Selector<PodcastState, String>(
+                    selector: (_, pState) => pState[widget.podcastId].title,
+                    builder: (context, title, _) => Text(
+                      title,
+                      maxLines: 2,
+                      style: context.textTheme.titleLarge,
+                    ),
                   ),
-                  ElevatedButton(
-                    onPressed: subscribe,
-                    child: Text(
-                      widget.podcast.source == PodcastSource.remote
-                          ? context.s.subscribe
-                          : context.s.podcastSubscribed,
-                      style: widget.podcast.source == PodcastSource.remote
-                          ? context.textTheme.bodyLarge!
-                              .copyWith(color: context.accentColor)
-                          : context.textTheme.bodyLarge,
+                  Selector<PodcastState, DataSource>(
+                    selector: (_, pState) => pState[widget.podcastId].source,
+                    builder: (context, source, _) => ElevatedButton(
+                      onPressed: subscribe,
+                      child: Text(
+                        source == DataSource.remote
+                            ? context.s.subscribe
+                            : context.s.podcastSubscribed,
+                        style: source == DataSource.remote
+                            ? context.textTheme.bodyLarge!
+                                .copyWith(color: context.accentColor)
+                            : context.textTheme.bodyLarge,
+                      ),
                     ),
                   ),
                 ],
@@ -203,18 +207,21 @@ class SearchPodcastPreviewState extends State<SearchPodcastPreview> {
               clipBehavior: Clip.antiAlias,
               width: 100,
               height: 100,
-              child: CachedNetworkImage(
-                imageUrl: widget.podcast.imageUrl,
-                progressIndicatorBuilder: (context, url, downloadProgress) =>
-                    Container(
-                  height: 50,
-                  width: 50,
-                  alignment: Alignment.center,
-                  child: SizedBox(
-                    width: 20,
-                    height: 2,
-                    child: LinearProgressIndicator(
-                        value: downloadProgress.progress),
+              child: Selector<PodcastState, String>(
+                selector: (_, pState) => pState[widget.podcastId].imageUrl,
+                builder: (context, imageUrl, _) => CachedNetworkImage(
+                  imageUrl: imageUrl,
+                  progressIndicatorBuilder: (context, url, downloadProgress) =>
+                      Container(
+                    height: 50,
+                    width: 50,
+                    alignment: Alignment.center,
+                    child: SizedBox(
+                      width: 20,
+                      height: 2,
+                      child: LinearProgressIndicator(
+                          value: downloadProgress.progress),
+                    ),
                   ),
                 ),
               ),
@@ -227,15 +234,16 @@ class SearchPodcastPreviewState extends State<SearchPodcastPreview> {
 
   void subscribe() {
     final subscribeWorker = Provider.of<GroupList>(context, listen: false);
+    final podcast = context.podcastState[widget.podcastId];
     var item = SubscribeItem(
-      widget.podcast.rssUrl,
-      widget.podcast.title,
-      id: widget.podcast.id,
-      imgUrl: widget.podcast.imageUrl,
+      podcast.rssUrl,
+      podcast.title,
+      id: podcast.id,
+      imgUrl: podcast.imageUrl,
       group: 'Home',
     );
     subscribeWorker.setSubscribeItem(item);
-    setState(() => podcast.copyWith(source: PodcastSource.saved));
+    setState(() => podcast.copyWith(source: DataSource.database));
   }
 }
 

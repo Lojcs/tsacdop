@@ -6,17 +6,21 @@ import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
+import 'package:html/parser.dart' show parse;
 import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
+import '../state/podcast_group.dart';
+import '../type/fireside_data.dart';
 import '../util/extension_helper.dart';
 import 'package:tuple/tuple.dart';
 import 'package:webfeed/webfeed.dart';
 
 import '../type/episodebrief.dart';
 import '../type/play_histroy.dart';
-import '../type/podcastlocal.dart';
+import '../type/podcastbrief.dart';
 import '../type/sub_history.dart';
+import 'key_value_storage.dart';
 
 enum Filter { downloaded, liked, search, all }
 
@@ -62,14 +66,19 @@ class DBHelper {
 
   void _onCreate(Database db, int version) async {
     await db
-        .execute("""CREATE TABLE PodcastLocal(id TEXT PRIMARY KEY,title TEXT, 
-        imageUrl TEXT,rssUrl TEXT UNIQUE, primaryColor TEXT, author TEXT, 
+        .execute("""CREATE TABLE PodcastLocal(id TEXT PRIMARY KEY, title TEXT, 
+        imageUrl TEXT, rssUrl TEXT UNIQUE, primaryColor TEXT, author TEXT, 
         description TEXT, add_date INTEGER, imagePath TEXT, provider TEXT, link TEXT, 
-        background_image TEXT DEFAULT '', hosts TEXT DEFAULT '',update_count INTEGER DEFAULT 0,
+        background_image TEXT DEFAULT '', hosts TEXT DEFAULT '', update_count INTEGER DEFAULT 0,
         episode_count INTEGER DEFAULT 0, skip_seconds INTEGER DEFAULT 0, 
         auto_download INTEGER DEFAULT 0, skip_seconds_end INTEGER DEFAULT 0,
         never_update INTEGER DEFAULT 0, funding TEXT DEFAULT '[]', 
-        hide_new_mark INTEGER DEFAULT 0)""");
+        hide_new_mark INTEGER DEFAULT 0, rss_hash TEXT DEFAULT '')""");
+    await db.execute("""CREATE TABLE Group(id TEXT PRIMARY KEY, name TEXT,
+        color TEXT)""");
+    await db.execute("""CREATE TABLE Podcast_Group(podcast_id TEXT REFERENCES
+        PodcastLocal(id), group_id TEXT REFERENCES Group(id),
+        PRIMARY KEY (podcast_id, group_id))""");
     await db
         .execute("""CREATE TABLE Episodes(id INTEGER PRIMARY KEY,title TEXT, 
         enclosure_url TEXT UNIQUE, enclosure_length INTEGER, pubDate TEXT, 
@@ -128,51 +137,23 @@ class DBHelper {
   }
 
   void _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    switch (oldVersion) {
-      case (1):
-        await _v2Update(db);
-        await _v3Update(db);
-        await _v4Update(db);
-        await _v5Update(db);
-        await _v6Update(db);
-        await _v7Update(db);
-        await _v8Update(db);
-        break;
-      case (2):
-        await _v3Update(db);
-        await _v4Update(db);
-        await _v5Update(db);
-        await _v6Update(db);
-        await _v7Update(db);
-        await _v8Update(db);
-        break;
-      case (3):
-        await _v4Update(db);
-        await _v5Update(db);
-        await _v6Update(db);
-        await _v7Update(db);
-        await _v8Update(db);
-        break;
-      case (4):
-        await _v5Update(db);
-        await _v6Update(db);
-        await _v7Update(db);
-        await _v8Update(db);
-        break;
-      case (5):
-        await _v6Update(db);
-        await _v7Update(db);
-        await _v8Update(db);
-        break;
-      case (6):
-        await _v7Update(db);
-        await _v8Update(db);
-        break;
-      case (7):
-        await _v7Fix(db);
-        await _v8Update(db);
+    if (oldVersion == 7) await _v7Fix(db);
+    for (int i = oldVersion; i < newVersion; i++) {
+      updaters[i](db);
     }
   }
+
+  late List<Future<void> Function(Database db)> updaters = [
+    (_) async {},
+    _v2Update,
+    _v3Update,
+    _v4Update,
+    _v5Update,
+    _v6Update,
+    _v7Update,
+    _v8Update,
+    _v9Update,
+  ];
 
   Future<void> _v2Update(Database db) async {
     await db.execute(
@@ -270,205 +251,154 @@ class DBHelper {
     await Future.wait(futures);
   }
 
-  Future<List<PodcastBrief>> getPodcastLocal(List<String?> podcasts,
-      {bool updateOnly = false}) async {
-    var dbClient = await database;
-    var podcastLocal = <PodcastBrief>[];
-
-    for (var s in podcasts) {
-      List<Map> list;
-      if (updateOnly) {
-        list = await dbClient.rawQuery(
-            """SELECT id, title, imageUrl, rssUrl, primaryColor, author, imagePath , provider, 
-          link ,update_count, episode_count, funding, description FROM PodcastLocal WHERE id = ? AND 
-          never_update = 0""", [s]);
-      } else {
-        list = await dbClient.rawQuery(
-            """SELECT id, title, imageUrl, rssUrl, primaryColor, author, imagePath , provider, 
-          link ,update_count, episode_count, funding, description FROM PodcastLocal WHERE id = ?""",
-            [s]);
-      }
-      if (list.isNotEmpty) {
-        podcastLocal.add(PodcastBrief(
-            list.first['title'],
-            list.first['imageUrl'],
-            list.first['rssUrl'],
-            list.first['primaryColor'],
-            list.first['author'],
-            list.first['id'],
-            list.first['imagePath'],
-            list.first['provider'],
-            list.first['link'],
-            List<String>.from(jsonDecode(list.first['funding'])),
-            description: list.first['description'],
-            updateCount: list.first['update_count'],
-            episodeCount: list.first['episode_count']));
+  Future<void> _v9Update(Database db) async {
+    await db.execute("""CREATE TABLE Group(id TEXT PRIMARY KEY, name TEXT,
+        color TEXT)""");
+    await db.execute("""CREATE TABLE Podcast_Group(podcast_id TEXT REFERENCES
+        PodcastLocal(id), group_id TEXT REFERENCES Group(id),
+        PRIMARY KEY (podcast_id, group_id))""");
+    final KeyValueStorage groupStorage = KeyValueStorage(groupsKey);
+    final loadGroups = await groupStorage.getGroups();
+    final groups = loadGroups!.map(PodcastGroup.fromEntity);
+    for (final group in groups) {
+      await db.rawUpdate("INSERT INTO Group(id, name, color) VALUES (?, ?, ?)",
+          [group.id, group.name, group.color]);
+      for (final podcastId in group.podcastList) {
+        await db.rawUpdate(
+            "INSERT INTO Podcast_Group(podcast_id, group_id) VALUES (?, ?)",
+            [podcastId, group.id]);
       }
     }
-    return podcastLocal;
+    await db.execute("ALTER TABLE PodcastLocal ADD rss_hash TEXT DEFAULT ''");
   }
 
-  Future<List<PodcastBrief>> getPodcastLocalAll(
-      {bool updateOnly = false}) async {
-    var dbClient = await database;
-
-    List<Map> list;
-    if (updateOnly) {
-      list = await dbClient.rawQuery(
-          """SELECT id, title, imageUrl, rssUrl, primaryColor, author, imagePath,
-         provider, link, funding, description FROM PodcastLocal WHERE never_update = 0 ORDER BY 
-         add_date DESC""");
-    } else {
-      list = await dbClient.rawQuery(
-          """SELECT id, title, imageUrl, rssUrl, primaryColor, author, imagePath,
-         provider, link, funding, description FROM PodcastLocal ORDER BY add_date DESC""");
+  /// Queries the database with the provided options and returns found podcasts.
+  /// Filters are tri-state (null - no filter, true - only, false - exclude)
+  /// Don't use directly, use [PodcastState].getPodcasts instad.
+  Future<List<PodcastBrief>> getPodcasts(
+      {List<String>? groupIds,
+      List<String>? podcastIds,
+      List<String>? rssUrls,
+      bool? filterNoAutoSync}) async {
+    List<String> query = [
+      """SELECT P.id, P.title, P.rssUrl, P.author, P.provider, P.hosts, P.description, P.link, P.funding,
+      P.imageUrl, P.imagePath, P.background_image, P.primaryColor, P.update_count, P.episode_count,
+      P.hide_new_mark, P.never_update, P.auto_download, P.skip_seconds, P.skip_seconds_end
+      FROM PodcastLocal P"""
+    ];
+    List<String> filters = [];
+    List arguements = [];
+    if (groupIds != null && groupIds.isNotEmpty) {
+      query.add(" LEFT JOIN Podcast_Group PD ON P.id = PD.podcast_id");
+      filters
+          .add(" PD.group_id IN (${(", ?" * groupIds.length).substring(2)})");
+      arguements.addAll(groupIds);
     }
+    if (podcastIds != null && podcastIds.isNotEmpty) {
+      filters.add(" P.id IN (${(", ?" * podcastIds.length).substring(2)})");
+      arguements.addAll(podcastIds);
+    }
+    if (podcastIds != null && podcastIds.isNotEmpty) {
+      filters.add(" P.rssUrl IN (${(", ?" * podcastIds.length).substring(2)})");
+      arguements.addAll(podcastIds);
+    }
+    if (filterNoAutoSync == false) {
+      filters.add(" P.never_update = 0");
+    } else if (filterNoAutoSync == true) {
+      filters.add(" P.never_update = 1");
+    }
+    query.add("WHERE ");
+    query.add(filters.join(" AND"));
 
-    var podcastLocal = <PodcastBrief>[];
-
-    for (var i in list) {
-      if (i['id'] != localFolderId) {
-        podcastLocal.add(PodcastBrief(
-          i['title'],
-          i['imageUrl'],
-          i['rssUrl'],
-          i['primaryColor'],
-          i['author'],
-          i['id'],
-          i['imagePath'],
-          i['provider'],
-          i['link'],
-          List<String>.from(jsonDecode(list.first['funding'])),
-          description: i['description'],
-        ));
+    var dbClient = await database;
+    List<PodcastBrief> podcasts = [];
+    List<Map> result;
+    result = await dbClient.rawQuery(query.join(), arguements);
+    if (result.isNotEmpty) {
+      for (var item in result) {
+        PodcastBrief podcast = PodcastBrief(
+            id: item['id'],
+            title: item['title'],
+            rssUrl: item['rssUrl'],
+            author: item['author'],
+            provider: item['provider'],
+            firesideHosts: item['hosts'] != ""
+                ? json
+                    .decode(item['hosts'])['hosts']
+                    .cast<Map<String, Object>>()
+                    .map<PodcastHost>(PodcastHost.fromJson)
+                    .toList()
+                : [],
+            description: item['description'],
+            webpage: item['link'],
+            funding: List<String>.from(jsonDecode(item['funding'])),
+            imageUrl: item['imageUrl'],
+            imagePath: item['imagePath'],
+            firesideBackgroundImage: item['background_image'],
+            primaryColor: (item['primaryColor'] as String).toColor(),
+            syncEpisodeCount: item['update_count'],
+            episodeCount: item['episode_count'],
+            hideNewMark: item['hide_new_mark'],
+            noAutoSync: item['never_update'],
+            autoDownload: item['auto_download'],
+            skipSecondsStart: item['skip_seconds'],
+            skipSecondsEnd: item['skip_seconds_end'],
+            source: DataSource.database);
+        podcasts.add(podcast);
       }
     }
-    return podcastLocal;
+    return podcasts;
   }
 
-  Future<PodcastBrief?> getPodcastWithUrl(String? url) async {
+  Future<void> savePodcastProperties(
+    List<String> ids, {
+    bool? hideNewMark,
+    bool? noAutoSync,
+    bool? autoDownload,
+    int? skipSecondsStart,
+    int? skipSecondsEnd,
+  }) async {
+    bool go = false;
     var dbClient = await database;
-    List<Map> list = await dbClient.rawQuery(
-        """SELECT P.id, P.title, P.imageUrl, P.rssUrl, P.primaryColor, P.author, P.imagePath,
-         P.provider, P.link ,P.update_count, P.episode_count, P.funding, P.description FROM PodcastLocal P INNER JOIN 
-         Episodes E ON P.id = E.feed_id WHERE E.enclosure_url = ?""", [url]);
-    if (list.isNotEmpty) {
-      return PodcastBrief(
-          list.first['title'],
-          list.first['imageUrl'],
-          list.first['rssUrl'],
-          list.first['primaryColor'],
-          list.first['author'],
-          list.first['id'],
-          list.first['imagePath'],
-          list.first['provider'],
-          list.first['link'],
-          List<String>.from(jsonDecode(list.first['funding'])),
-          description: list.first['description'],
-          updateCount: list.first['update_count'],
-          episodeCount: list.first['episode_count']);
+    List<String> update = ["UPDATE PodcastLocal SET"];
+    List<String> changes = [];
+    List arguements = [];
+    if (hideNewMark == false) {
+      go = true;
+      changes.add(" hide_new_mark = 0");
+    } else if (hideNewMark == true) {
+      go = true;
+      changes.add(" hide_new_mark = 1");
     }
-    return null;
-  }
-
-  Future<int?> getPodcastCounts(String? id) async {
-    var dbClient = await database;
-    List<Map> list = await dbClient
-        .rawQuery('SELECT episode_count FROM PodcastLocal WHERE id = ?', [id]);
-    if (list.isNotEmpty) return list.first['episode_count'];
-    return 0;
-  }
-
-  Future<void> removePodcastNewMark(String? id) async {
-    var dbClient = await database;
-    await dbClient.transaction((txn) async {
-      await txn.rawUpdate(
-          "UPDATE Episodes SET is_new = 0 WHERE feed_id = ? AND is_new = 1",
-          [id]);
-    });
-  }
-
-  Future<bool> getNeverUpdate(String? id) async {
-    var dbClient = await database;
-    List<Map> list = await dbClient
-        .rawQuery('SELECT never_update FROM PodcastLocal WHERE id = ?', [id]);
-    if (list.isNotEmpty) return list.first['never_update'] == 1;
-    return false;
-  }
-
-  Future<int> saveNeverUpdate(String? id, {required bool boo}) async {
-    var dbClient = await database;
-    return await dbClient.rawUpdate(
-        "UPDATE PodcastLocal SET never_update = ? WHERE id = ?",
-        [boo ? 1 : 0, id]);
-  }
-
-  Future<bool> getHideNewMark(String? id) async {
-    var dbClient = await database;
-    List<Map> list = await dbClient
-        .rawQuery('SELECT hide_new_mark FROM PodcastLocal WHERE id = ?', [id]);
-    if (list.isNotEmpty) return list.first['hide_new_mark'] == 1;
-    return false;
-  }
-
-  Future<int> saveHideNewMark(String? id, {required bool boo}) async {
-    var dbClient = await database;
-    return await dbClient.rawUpdate(
-        "UPDATE PodcastLocal SET hide_new_mark = ? WHERE id = ?",
-        [boo ? 1 : 0, id]);
-  }
-
-  Future<int?> getPodcastUpdateCounts(String? id) async {
-    var dbClient = await database;
-    List<Map> list = await dbClient.rawQuery(
-        'SELECt count(*) as count FROM Episodes WHERE feed_id = ? AND is_new = 1',
-        [id]);
-    if (list.isNotEmpty) return list.first['count'];
-    return 0;
-  }
-
-  Future<int?> getSkipSecondsStart(String? id) async {
-    var dbClient = await database;
-    List<Map> list = await dbClient
-        .rawQuery('SELECT skip_seconds FROM PodcastLocal WHERE id = ?', [id]);
-    if (list.isNotEmpty) return list.first['skip_seconds'];
-    return 0;
-  }
-
-  Future<int> saveSkipSecondsStart(String? id, int seconds) async {
-    var dbClient = await database;
-    return await dbClient.rawUpdate(
-        "UPDATE PodcastLocal SET skip_seconds = ? WHERE id = ?", [seconds, id]);
-  }
-
-  Future<int?> getSkipSecondsEnd(String id) async {
-    var dbClient = await database;
-    List<Map> list = await dbClient.rawQuery(
-        'SELECT skip_seconds_end FROM PodcastLocal WHERE id = ?', [id]);
-    if (list.isNotEmpty) return list.first['skip_seconds_end'];
-    return 0;
-  }
-
-  Future<int> saveSkipSecondsEnd(String? id, int seconds) async {
-    var dbClient = await database;
-    return await dbClient.rawUpdate(
-        "UPDATE PodcastLocal SET skip_seconds_end = ? WHERE id = ?",
-        [seconds, id]);
-  }
-
-  Future<bool> getAutoDownload(String? id) async {
-    var dbClient = await database;
-    List<Map> list = await dbClient
-        .rawQuery('SELECT auto_download FROM PodcastLocal WHERE id = ?', [id]);
-    if (list.isNotEmpty) return list.first['auto_download'] == 1;
-    return false;
-  }
-
-  Future<int> saveAutoDownload(String? id, {required bool boo}) async {
-    var dbClient = await database;
-    return await dbClient.rawUpdate(
-        "UPDATE PodcastLocal SET auto_download = ? WHERE id = ?",
-        [boo ? 1 : 0, id]);
+    if (noAutoSync == false) {
+      go = true;
+      changes.add(" never_update = 0");
+    } else if (noAutoSync == true) {
+      go = true;
+      changes.add(" never_update = 1");
+    }
+    if (autoDownload == false) {
+      go = true;
+      changes.add(" auto_download = 0");
+    } else if (autoDownload == true) {
+      go = true;
+      changes.add(" auto_download = 1");
+    }
+    if (skipSecondsStart != null) {
+      go = true;
+      changes.add(" skip_seconds = ?");
+      arguements.add(skipSecondsStart);
+    }
+    if (skipSecondsEnd != null) {
+      go = true;
+      changes.add(" skip_seconds_end = ?");
+      arguements.add(skipSecondsStart);
+    }
+    if (go) {
+      update.add(changes.join(", "));
+      update.add("WHERE id IN (${(", ?" * ids.length).substring(2)})");
+      await dbClient.rawUpdate(update.join(), [...arguements, ...ids]);
+    }
   }
 
   Future<String?> checkPodcast(String? url) async {
@@ -477,31 +407,6 @@ class DBHelper {
         .rawQuery('SELECT id FROM PodcastLocal WHERE rssUrl = ?', [url]);
     if (list.isEmpty) return null;
     return list.first['id'];
-  }
-
-  Future<PodcastBrief?> getPodcast(String id) async {
-    var dbClient = await database;
-    List<Map> list = await dbClient.rawQuery(
-        """SELECT id, title, imageUrl, rssUrl, primaryColor, author, imagePath , provider, 
-          link ,update_count, episode_count, funding, description FROM PodcastLocal WHERE id = ?""",
-        [id]);
-    if (list.isNotEmpty) {
-      return PodcastBrief(
-          list.first['title'],
-          list.first['imageUrl'],
-          list.first['rssUrl'],
-          list.first['primaryColor'],
-          list.first['author'],
-          list.first['id'],
-          list.first['imagePath'],
-          list.first['provider'],
-          list.first['link'],
-          List<String>.from(jsonDecode(list.first['funding'])),
-          description: list.first['description'],
-          updateCount: list.first['update_count'],
-          episodeCount: list.first['episode_count']);
-    }
-    return null;
   }
 
   Future savePodcastLocal(PodcastBrief podcastLocal) async {
@@ -523,7 +428,7 @@ class DBHelper {
             milliseconds,
             podcastLocal.imagePath,
             podcastLocal.provider,
-            podcastLocal.link,
+            podcastLocal.webpage,
             jsonEncode(podcastLocal.funding)
           ]);
       if (podcastLocal.id != localFolderId) {
@@ -555,20 +460,11 @@ class DBHelper {
     return result;
   }
 
-  Future<List<String?>> getFiresideData(String? id) async {
-    var dbClient = await database;
-    List<Map> list = await dbClient.rawQuery(
-        'SELECT background_image, hosts FROM PodcastLocal WHERE id = ?', [id]);
-    if (list.isNotEmpty) {
-      var data = <String?>[list.first['background_image'], list.first['hosts']];
-      return data;
-    }
-    return ['', ''];
-  }
-
   Future<void> delPodcastLocal(String? id) async {
     var dbClient = await database;
     await dbClient.rawDelete('DELETE FROM PodcastLocal WHERE id =?', [id]);
+    await dbClient
+        .rawDelete('DELETE FROM Podcast_Group WHERE podcast_id =?', [id]);
     List<Map> list = await dbClient.rawQuery(
         """SELECT downloaded FROM Episodes WHERE downloaded != 'ND' AND feed_id = ?""",
         [id]);
@@ -947,7 +843,7 @@ class DBHelper {
             podcastId: feedId,
             podcastTitle: "",
             pubDate: milliseconds,
-            description: _getDescription(
+            showNotes: _getDescription(
                 feed.items![i].content?.value ?? '',
                 feed.items![i].description ?? '',
                 feed.items![i].itunes!.summary ?? ''),
@@ -967,6 +863,7 @@ class DBHelper {
             isPlayed: false,
             isDisplayVersion: false,
             number: 0,
+            source: DataSource.database,
           ),
         );
       }
@@ -990,7 +887,7 @@ class DBHelper {
                 episode.enclosureUrl,
                 episode.enclosureSize,
                 '',
-                episode.description,
+                episode.showNotes,
                 feedId,
                 episode.pubDate,
                 episode.enclosureDuration,
@@ -1018,7 +915,9 @@ class DBHelper {
       });
     } else {
       developer.log("Updating ${feed.title}");
-      final hideNewMark = await getHideNewMark(feedId);
+      List<Map> hideNew = await dbClient.rawQuery(
+          'SELECT hide_new_mark FROM PodcastLocal WHERE id = ?', [feedId]);
+      final hideNewMark = hideNew.first['hide_new_mark'] == 1;
       return await dbClient.transaction<int>((txn) async {
         Batch batchOp = txn.batch();
         for (var episode in episodes) {
@@ -1031,7 +930,7 @@ class DBHelper {
                 episode.enclosureUrl,
                 episode.enclosureSize,
                 '',
-                episode.description,
+                episode.showNotes,
                 feedId,
                 episode.pubDate,
                 episode.enclosureDuration,
@@ -1305,7 +1204,8 @@ class DBHelper {
           podcastId: i['feed_id'],
           podcastTitle: i['feed_title'],
           pubDate: i['milliseconds'],
-          description: i['description'],
+          showNotes:
+              parse(parse(i['description']).body!.text).documentElement!.text,
           number: i['number'],
           enclosureDuration: i['duration'],
           enclosureSize: i['enclosure_length'],
@@ -1324,6 +1224,7 @@ class DBHelper {
           skipSecondsStart: i['skip_seconds'],
           skipSecondsEnd: i['skip_seconds_end'],
           chapterLink: i['chapter_link'],
+          source: DataSource.database,
         );
         episodes.add(episode);
       }

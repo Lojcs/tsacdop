@@ -350,6 +350,16 @@ class S {
     );
   }
 
+  /// `This podcast has been deleted from the database`
+  String get deletedPodcastDesc {
+    return Intl.message(
+      'This podcast has been deleted from the database',
+      name: 'deletedPodcastDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Deselect All`
   String get deselectAll {
     return Intl.message(
@@ -366,6 +376,16 @@ class S {
       'Developer',
       name: 'developer',
       desc: 'Can also translate to About me',
+      args: [],
+    );
+  }
+
+  /// `Device Storage`
+  String get deviceStorage {
+    return Intl.message(
+      'Device Storage',
+      name: 'deviceStorage',
+      desc: 'Refers to files stored on user\'s device.',
       args: [],
     );
   }
@@ -1082,6 +1102,26 @@ class S {
       name: 'localEpisodeDescription',
       desc: '',
       args: [filePath],
+    );
+  }
+
+  /// `Local Folder`
+  String get localFolder {
+    return Intl.message(
+      'Local Folder',
+      name: 'localFolder',
+      desc: 'Podcast name for episodes imported from audio files on device',
+      args: [],
+    );
+  }
+
+  /// `Dummy podcast that collects imported local audio files.`
+  String get localFolderDescription {
+    return Intl.message(
+      'Dummy podcast that collects imported local audio files.',
+      name: 'localFolderDescription',
+      desc: '',
+      args: [],
     );
   }
 

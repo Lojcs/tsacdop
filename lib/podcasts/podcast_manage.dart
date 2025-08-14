@@ -149,7 +149,7 @@ class _PodcastManageState extends State<PodcastManage>
                               borderRadius: BorderRadius.circular(15),
                             ),
                             child: Text(
-                              groups[index]!.name!,
+                              groups[index]!.name,
                             ),
                           ),
                         ),

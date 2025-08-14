@@ -150,7 +150,7 @@ class Gpodder {
     final deviceId = loginInfo[1];
     await _initDio();
     final dbHelper = DBHelper();
-    final podcasts = await dbHelper.getPodcastLocalAll();
+    final podcasts = await dbHelper.getPodcasts();
     var subscriptions = '';
     for (var podcast in podcasts) {
       subscriptions += '${podcast.rssUrl}\n';

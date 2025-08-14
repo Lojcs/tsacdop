@@ -20,7 +20,7 @@ import '../local_storage/sqflite_localpodcast.dart';
 import '../podcasts/podcast_detail.dart';
 import '../state/audio_state.dart';
 import '../type/play_histroy.dart';
-import '../type/podcastlocal.dart';
+import '../type/podcastbrief.dart';
 import '../util/helpers.dart';
 import '../util/selection_controller.dart';
 import 'custom_widget.dart';
@@ -913,14 +913,11 @@ class EpisodeCard extends StatelessWidget {
                           onTapDown: (details) => onTapDown?.call(),
                           onTapUp: (details) => onTapUp?.call(),
                           onTap: () async {
-                            DBHelper dbHelper = DBHelper();
-                            PodcastBrief? podcast = await dbHelper
-                                .getPodcastWithUrl(episode.enclosureUrl);
-                            if (podcast != null && context.mounted) {
+                            if (context.mounted) {
                               Navigator.push(
                                 context,
                                 HidePlayerRoute(
-                                  PodcastDetail(podcastLocal: podcast),
+                                  PodcastDetail(podcastId: episode.podcastId),
                                 ),
                               );
                             }

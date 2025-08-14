@@ -154,8 +154,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "deletedEpisodeDesc": MessageLookupByLibrary.simpleMessage(
       "This episode has been deleted from the database",
     ),
+    "deletedPodcastDesc": MessageLookupByLibrary.simpleMessage(
+      "This podcast has been deleted from the database",
+    ),
     "deselectAll": MessageLookupByLibrary.simpleMessage("Deselect All"),
     "developer": MessageLookupByLibrary.simpleMessage("Developer"),
+    "deviceStorage": MessageLookupByLibrary.simpleMessage("Device Storage"),
     "dismiss": MessageLookupByLibrary.simpleMessage("Dismiss"),
     "displayVersion": MessageLookupByLibrary.simpleMessage("Display Version"),
     "done": MessageLookupByLibrary.simpleMessage("Done"),
@@ -302,6 +306,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "loadMore": MessageLookupByLibrary.simpleMessage("Load more"),
     "loading": MessageLookupByLibrary.simpleMessage("Loading"),
     "localEpisodeDescription": m33,
+    "localFolder": MessageLookupByLibrary.simpleMessage("Local Folder"),
+    "localFolderDescription": MessageLookupByLibrary.simpleMessage(
+      "Dummy podcast that collects imported local audio files.",
+    ),
     "loggedInAs": m11,
     "login": MessageLookupByLibrary.simpleMessage("Login"),
     "loginFailed": MessageLookupByLibrary.simpleMessage("Login failed"),

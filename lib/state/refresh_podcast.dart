@@ -8,7 +8,7 @@ import 'package:flutter_isolate/flutter_isolate.dart';
 
 import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
-import '../type/podcastlocal.dart';
+import '../type/podcastbrief.dart';
 import 'download_state.dart';
 
 enum RefreshState { none, fetch, error, artwork }

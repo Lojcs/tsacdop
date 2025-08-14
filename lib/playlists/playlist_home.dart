@@ -27,7 +27,7 @@ import '../state/setting_state.dart';
 import '../type/episodebrief.dart';
 import '../type/play_histroy.dart';
 import '../type/playlist.dart';
-import '../type/podcastlocal.dart';
+import '../type/podcastbrief.dart';
 import '../util/extension_helper.dart';
 import '../util/helpers.dart';
 import '../util/pageroute.dart';
@@ -943,14 +943,15 @@ class _NewPlaylistState extends State<_NewPlaylist> {
 
   Future<List<int>> _loadLocalFolder() async {
     String? dirPath;
+    final s = context.s;
     try {
       dirPath = await FilePicker.platform.getDirectoryPath();
     } catch (e) {
       developer.log(e.toString(), name: 'Failed to load dir.');
     }
-    final localFolder = await _dbHelper.getPodcastLocal([localFolderId]);
+    final localFolder =
+        await _dbHelper.getPodcasts(podcastIds: [localFolderId]);
     if (localFolder.isEmpty || true) {
-      String defaultColor = "[28, 204, 196]"; // Color of avatar_backup
       final dir = await getApplicationDocumentsDirectory();
       if (!File("${dir.path}/avatar_backup.png").existsSync()) {
         final byteData = await rootBundle.load('assets/avatar_backup.png');
@@ -960,18 +961,7 @@ class _NewPlaylistState extends State<_NewPlaylist> {
         file.writeAsBytesSync(byteData.buffer
             .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
       }
-      final localPodcast = PodcastBrief(
-        'Local Folder',
-        '',
-        '',
-        defaultColor,
-        'Local Folder',
-        localFolderId,
-        "${dir.path}/assets/avatar_backup.png",
-        '',
-        '',
-        [],
-      );
+      final localPodcast = PodcastBrief.localFolder(s, dir);
       await _dbHelper.savePodcastLocal(localPodcast);
     }
     final episodeIds = <int>[];
@@ -993,6 +983,7 @@ class _NewPlaylistState extends State<_NewPlaylist> {
   }
 
   Future<EpisodeBrief> _getEpisodeFromFile(String path) async {
+    final s = context.s;
     final fileLength = File(path).statSync().size;
     final pubDate = DateTime.now().millisecondsSinceEpoch;
     String? primaryColor;
@@ -1011,11 +1002,12 @@ class _NewPlaylistState extends State<_NewPlaylist> {
       primaryColor = await _getColor(File(imagePath));
     }
     final fileName = path.split('/').last;
-    return EpisodeBrief.local(
+    return EpisodeBrief.user(
+      s,
       title: fileName, enclosureUrl: 'file://$path',
       podcastTitle: metadata.albumName ?? '',
       pubDate: pubDate, // metadata.year ?
-      description: context.s.localEpisodeDescription(path),
+      showNotes: context.s.localEpisodeDescription(path),
       enclosureDuration: metadata.trackDuration! ~/ 1000,
       enclosureSize: fileLength,
       mediaId: 'file://$path',

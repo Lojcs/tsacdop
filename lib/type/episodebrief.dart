@@ -6,7 +6,9 @@ import 'package:equatable/equatable.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:webfeed/webfeed.dart';
+import '../generated/l10n.dart';
 import '../local_storage/sqflite_localpodcast.dart';
+import 'podcastbrief.dart';
 import 'theme_data.dart';
 import '../util/extension_helper.dart';
 
@@ -18,7 +20,7 @@ class EpisodeBrief extends Equatable {
   final String podcastTitle;
   final int pubDate;
 
-  final String description;
+  final String showNotes;
   final int number;
   final int enclosureDuration;
   final int enclosureSize;
@@ -38,6 +40,7 @@ class EpisodeBrief extends Equatable {
   final int skipSecondsEnd;
   final String chapterLink;
 
+  final DataSource source;
   EpisodeBrief({
     required this.id,
     required this.title,
@@ -45,7 +48,7 @@ class EpisodeBrief extends Equatable {
     required this.podcastId,
     required this.podcastTitle,
     required this.pubDate,
-    required this.description,
+    required this.showNotes,
     required this.number,
     required this.enclosureDuration,
     required this.enclosureSize,
@@ -64,15 +67,17 @@ class EpisodeBrief extends Equatable {
     this.skipSecondsStart = 0,
     this.skipSecondsEnd = 0,
     required this.chapterLink,
+    required this.source,
   });
 
-  /// Use for new local episodes not yet in database
-  EpisodeBrief.local({
+  /// Use for new user episodes not yet in database
+  EpisodeBrief.user(
+    S s, {
     required this.title,
     required this.enclosureUrl,
     String? podcastTitle,
     required this.pubDate,
-    required this.description,
+    required this.showNotes,
     required this.enclosureDuration,
     required this.enclosureSize,
     required this.mediaId,
@@ -80,7 +85,7 @@ class EpisodeBrief extends Equatable {
     Color? primaryColor,
   })  : id = -1,
         podcastId = localFolderId,
-        podcastTitle = podcastTitle ?? 'Local Folder',
+        podcastTitle = podcastTitle ?? s.localFolder,
         number = -1,
         isDownloaded = true,
         downloadDate = pubDate,
@@ -94,9 +99,10 @@ class EpisodeBrief extends Equatable {
         versions = null,
         skipSecondsStart = 0,
         skipSecondsEnd = 0,
-        chapterLink = '';
+        chapterLink = '',
+        source = DataSource.user;
 
-  /// Use for new local episodes not yet in database
+  /// Use for new remote episodes not yet in database
   EpisodeBrief.fromRssItem(RssItem item, this.podcastId, this.podcastTitle,
       this.number, this.podcastImage, this.primaryColor)
       : id = -1,
@@ -108,7 +114,7 @@ class EpisodeBrief extends Equatable {
             : "",
         pubDate = item.pubDate?.millisecondsSinceEpoch ??
             DateTime.now().millisecondsSinceEpoch,
-        description = [
+        showNotes = [
           item.content?.value ?? "",
           item.description ?? "",
           item.itunes?.summary ?? ""
@@ -132,7 +138,8 @@ class EpisodeBrief extends Equatable {
         versions = [],
         skipSecondsStart = 0,
         skipSecondsEnd = 0,
-        chapterLink = item.podcastChapters?.url ?? '';
+        chapterLink = item.podcastChapters?.url ?? '',
+        source = DataSource.remote;
 
   late final MediaItem mediaItem = MediaItem(
       id: mediaId,
@@ -195,27 +202,19 @@ class EpisodeBrief extends Equatable {
 
   /// Convenience method to get the card color for current theme
   Color cardColor(BuildContext context) {
-    return context.realDark
-        ? context.surface
-        : context.brightness == Brightness.light
-            ? cardColorSchemeLight.card
-            : cardColorSchemeDark.card;
+    return context.realDark ? context.surface : cardColorScheme(context).card;
   }
 
   /// Convenience method to get the selected card color for current theme
   Color selectedCardColor(BuildContext context) {
     return context.realDark
         ? context.surface
-        : context.brightness == Brightness.light
-            ? cardColorSchemeLight.selected
-            : cardColorSchemeDark.selected;
+        : cardColorScheme(context).selected;
   }
 
   /// Convenience method to get the card shadow color for current theme
   Color cardShadowColor(BuildContext context) {
-    return context.brightness == Brightness.light
-        ? cardColorSchemeLight.shadow
-        : cardColorSchemeDark.shadow;
+    return cardColorScheme(context).shadow;
   }
 
   /// Convenience method to get the card progress indicator color for current theme
@@ -253,6 +252,14 @@ class EpisodeBrief extends Equatable {
         : colorSchemeDark;
   }
 
+  /// Gets the episode card color sceme for the provided [context].brightness.
+  /// Caches its results so can be used freely.
+  CardColorScheme cardColorScheme(BuildContext context) {
+    return context.brightness == Brightness.light
+        ? cardColorSchemeLight
+        : cardColorSchemeDark;
+  }
+
   EpisodeBrief copyWith(
           {int? id,
           String? title,
@@ -260,7 +267,7 @@ class EpisodeBrief extends Equatable {
           String? podcastId,
           String? podcastTitle,
           int? pubDate,
-          String? description,
+          String? showNotes,
           int? number,
           int? enclosureDuration,
           int? enclosureSize,
@@ -278,7 +285,8 @@ class EpisodeBrief extends Equatable {
           List<int>? versions,
           int? skipSecondsStart,
           int? skipSecondsEnd,
-          String? chapterLink}) =>
+          String? chapterLink,
+          DataSource? source}) =>
       EpisodeBrief(
           id: id ?? this.id,
           title: title ?? this.title,
@@ -286,7 +294,7 @@ class EpisodeBrief extends Equatable {
           podcastId: podcastId ?? this.podcastId,
           podcastTitle: podcastTitle ?? this.podcastTitle,
           pubDate: pubDate ?? this.pubDate,
-          description: description ?? this.description,
+          showNotes: showNotes ?? this.showNotes,
           number: number ?? this.number,
           enclosureDuration: enclosureDuration ?? this.enclosureDuration,
           enclosureSize: enclosureSize ?? this.enclosureSize,
@@ -304,7 +312,8 @@ class EpisodeBrief extends Equatable {
           versions: versions ?? this.versions,
           skipSecondsStart: skipSecondsStart ?? this.skipSecondsStart,
           skipSecondsEnd: skipSecondsEnd ?? this.skipSecondsEnd,
-          chapterLink: chapterLink ?? this.chapterLink);
+          chapterLink: chapterLink ?? this.chapterLink,
+          source: source ?? this.source);
 
   @override
   List<Object?> get props => [id, enclosureUrl];

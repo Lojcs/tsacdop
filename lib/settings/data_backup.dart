@@ -707,10 +707,11 @@ class __LoginGpodderState extends State<_LoginGpodder> {
                                   labelText: s.password,
                                   validator: _validatePassword,
                                   onSaved: (value) {
-                                    if (value == null)
+                                    if (value == null) {
                                       return setState(() {
                                         _password = value!;
                                       });
+                                    }
                                   },
                                 ),
                               ),

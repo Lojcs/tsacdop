@@ -27,11 +27,11 @@ class EpisodeState extends ChangeNotifier {
   /// List of deleted episode ids.
   final List<int> _deletedIds = [];
 
-  late final EpisodeBrief deletedEpisode = EpisodeBrief.local(
+  late final EpisodeBrief deletedEpisode = EpisodeBrief.user(_context.s,
       title: _context.s.deleted,
       enclosureUrl: "",
       pubDate: 0,
-      description: _context.s.deletedEpisodeDesc,
+      showNotes: _context.s.deletedEpisodeDesc,
       enclosureDuration: 0,
       enclosureSize: 0,
       mediaId: "",

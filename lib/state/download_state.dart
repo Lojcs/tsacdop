@@ -81,7 +81,7 @@ class AutoDownloader {
     final fileUri =
         'file://${path.join(completeTask!.first.savedDir, Uri.encodeComponent(completeTask.first.filename!))}';
     final filePath =
-        path.join(completeTask!.first.savedDir, completeTask.first.filename!);
+        path.join(completeTask.first.savedDir, completeTask.first.filename!);
     var fileStat = await File(filePath).stat();
     var duration = await AudioPlayer().setUrl(fileUri);
     await _dbHelper.setDownloaded(episodeTask.episode.id,
@@ -223,7 +223,7 @@ class DownloadState extends ChangeNotifier {
     final fileUri =
         'file://${path.join(completeTask!.first.savedDir, Uri.encodeComponent(completeTask.first.filename!))}';
     final filePath =
-        path.join(completeTask!.first.savedDir, completeTask.first.filename!);
+        path.join(completeTask.first.savedDir, completeTask.first.filename!);
     var fileStat = await File(filePath).stat();
     var duration = await AudioPlayer().setUrl(fileUri);
     await _episodeState.getEpisodes(episodeIds: [episodeTask.episode.id]);

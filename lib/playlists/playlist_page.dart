@@ -374,12 +374,15 @@ class __PlaylistSettingState extends State<_PlaylistSetting> {
                     style: ButtonStyle(
                       overlayColor: WidgetStateProperty.resolveWith<Color?>(
                           (Set<WidgetState> states) {
-                        if (states.contains(WidgetState.focused))
+                        if (states.contains(WidgetState.focused)) {
                           return Colors.red[300]!;
-                        if (states.contains(WidgetState.hovered))
+                        }
+                        if (states.contains(WidgetState.hovered)) {
                           return Colors.red[300]!;
-                        if (states.contains(WidgetState.pressed))
+                        }
+                        if (states.contains(WidgetState.pressed)) {
                           return Colors.red;
+                        }
                         return null;
                       }),
                     ),
@@ -428,12 +431,15 @@ class __PlaylistSettingState extends State<_PlaylistSetting> {
                     style: ButtonStyle(
                       overlayColor: WidgetStateProperty.resolveWith<Color?>(
                           (Set<WidgetState> states) {
-                        if (states.contains(WidgetState.focused))
+                        if (states.contains(WidgetState.focused)) {
                           return Colors.red[300]!;
-                        if (states.contains(WidgetState.hovered))
+                        }
+                        if (states.contains(WidgetState.hovered)) {
                           return Colors.red[300]!;
-                        if (states.contains(WidgetState.pressed))
+                        }
+                        if (states.contains(WidgetState.pressed)) {
                           return Colors.red;
+                        }
                         return null;
                       }),
                     ),

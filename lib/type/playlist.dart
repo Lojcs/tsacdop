@@ -8,6 +8,7 @@ import '../local_storage/sqflite_localpodcast.dart';
 import '../state/audio_state.dart';
 import '../state/episode_state.dart';
 import '../state/podcast_group.dart';
+import '../util/extension_helper.dart';
 import '../widgets/action_bar.dart';
 
 enum EpisodeCollision { keepExisting, replace, ignore }
@@ -203,9 +204,10 @@ class BrowsableLibrary {
               .toList();
           break;
         case [podcastsId]:
-          final podcasts = await DBHelper().getPodcastLocalAll();
-          root[parentMediaId] =
-              podcasts.map((podcast) => podcast.mediaItem).toList();
+          final podcastIds = await context.podcastState.getPodcasts();
+          root[parentMediaId] = podcastIds
+              .map((podcast) => context.podcastState[podcast].mediaItem)
+              .toList();
           break;
         case [groupsId]:
           root[parentMediaId] = groupList.groups

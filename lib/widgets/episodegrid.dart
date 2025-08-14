@@ -7,7 +7,6 @@ import 'package:provider/provider.dart';
 import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/podcast_group.dart';
-import '../type/podcastlocal.dart';
 import '../util/extension_helper.dart';
 import '../util/selection_controller.dart';
 import 'action_bar.dart';
@@ -93,7 +92,7 @@ class InteractiveEpisodeGrid extends StatefulWidget {
   final PodcastGroup? actionBarGroup;
 
   /// Default podcast
-  final PodcastBrief? actionBarPodcast;
+  final String? actionBarPodcastId;
 
   /// Default sorter
   final Sorter actionBarSortBy;
@@ -169,7 +168,7 @@ class InteractiveEpisodeGrid extends StatefulWidget {
       Sorter.random
     ],
     this.actionBarGroup,
-    this.actionBarPodcast,
+    this.actionBarPodcastId,
     this.actionBarSortBy = Sorter.pubDate,
     this.actionBarFilterNew,
     this.actionBarFilterLiked,
@@ -332,7 +331,7 @@ class _InteractiveEpisodeGridState extends State<InteractiveEpisodeGrid> {
               widgetsSecondRow: widget.actionBarWidgetsSecondRow,
               sortByItems: widget.actionBarSortByItems,
               group: widget.actionBarGroup,
-              podcast: widget.actionBarPodcast,
+              podcastId: widget.actionBarPodcastId,
               sortBy: widget.actionBarSortBy,
               filterNew: widget.actionBarFilterNew,
               filterLiked: widget.actionBarFilterLiked,

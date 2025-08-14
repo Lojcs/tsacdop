@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart' as tuple;
 
-import '../home/audioplayer.dart';
 import '../state/audio_state.dart';
 import '../util/extension_helper.dart';
 

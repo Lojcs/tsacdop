@@ -8,10 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:html/parser.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
-import '../state/episode_state.dart';
+import '../state/podcast_state.dart';
 import '../type/theme_data.dart';
 import '../widgets/action_bar.dart';
 import 'package:tuple/tuple.dart';
@@ -22,7 +21,7 @@ import '../local_storage/sqflite_localpodcast.dart';
 import '../state/audio_state.dart';
 import '../state/download_state.dart';
 import '../type/fireside_data.dart';
-import '../type/podcastlocal.dart';
+import '../type/podcastbrief.dart';
 import '../util/extension_helper.dart';
 import '../util/selection_controller.dart';
 import '../widgets/audiopanel.dart';
@@ -34,8 +33,8 @@ import 'podcast_settings.dart';
 
 class PodcastDetail extends StatefulWidget {
   const PodcastDetail(
-      {super.key, required this.podcastLocal, this.initIds, this.hide = false});
-  final PodcastBrief podcastLocal;
+      {super.key, required this.podcastId, this.initIds, this.hide = false});
+  final String podcastId;
   final bool hide;
 
   /// Prefetched episode ids to display at first
@@ -50,12 +49,9 @@ class _PodcastDetailState extends State<PodcastDetail> {
 
   final GlobalKey<AudioPanelState> _playerKey = GlobalKey<AudioPanelState>();
   final _dbHelper = DBHelper();
-  late final CardColorScheme cardColorScheme = CardColorScheme(
-    ColorScheme.fromSeed(
-      seedColor: widget.podcastLocal.primaryColor!.toColor(),
-      brightness: context.brightness,
-    ),
-  );
+  CardColorScheme get cardColorScheme =>
+      context.select<PodcastState, CardColorScheme>(
+          (pState) => pState[widget.podcastId].cardColorScheme(context));
 
   late ScrollController _controller;
 
@@ -66,10 +62,10 @@ class _PodcastDetailState extends State<PodcastDetail> {
     displacement: context.paddingTop + 40,
     color: cardColorScheme.colorScheme.primary,
     onRefresh: () async {
-      await _updateRssItem(context, widget.podcastLocal);
+      await _updateRssItem(context, context.podcastState[widget.podcastId]);
     },
     child: PodcastDetailBody(
-      podcastLocal: widget.podcastLocal,
+      podcastId: widget.podcastId,
       selectionController: selectionController,
       initIds: widget.initIds,
       hide: widget.hide,
@@ -106,8 +102,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
       );
     }
     if (result > 0) {
-      final autoDownload = await _dbHelper.getAutoDownload(podcastLocal.id);
-      if (autoDownload) {
+      if (podcastLocal.autoDownload) {
         final downloader = Provider.of<DownloadState>(context, listen: false);
         final result = await Connectivity().checkConnectivity();
         final autoDownloadStorage = KeyValueStorage(autoDownloadNetworkKey);
@@ -200,7 +195,7 @@ class _PodcastDetailState extends State<PodcastDetail> {
 
 class PodcastDetailBody extends StatefulWidget {
   final SelectionController selectionController;
-  final PodcastBrief podcastLocal;
+  final String podcastId;
 
   /// Prefetched episode ids to display at first
   final List<int>? initIds;
@@ -208,7 +203,7 @@ class PodcastDetailBody extends StatefulWidget {
 
   const PodcastDetailBody(
       {super.key,
-      required this.podcastLocal,
+      required this.podcastId,
       required this.selectionController,
       this.initIds,
       this.hide = false});
@@ -262,7 +257,7 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
                           : cardColorScheme.saturated,
                       cardColorScheme.colorScheme.onPrimaryContainer),
                   builder: (context, data, _) => _PodcastDetailAppBar(
-                    podcastLocal: widget.podcastLocal,
+                    podcastId: widget.podcastId,
                     color: data.item1,
                     textColor: data.item2,
                     infoHeight: _infoHeight,
@@ -277,7 +272,7 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
                       ? Opacity(
                           opacity: 0,
                           key: _infoKey,
-                          child: HostsList(context, widget.podcastLocal),
+                          child: HostsList(context, widget.podcastId),
                         )
                       : Center(),
                 ],
@@ -316,7 +311,7 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
             Sorter.enclosureSize,
             Sorter.enclosureDuration
           ],
-          actionBarPodcast: widget.podcastLocal,
+          actionBarPodcastId: widget.podcastId,
           layoutKey: podcastLayoutKey,
           initNum: widget.initIds != null ? 0 : 1 << 32,
           initIds: widget.initIds,
@@ -325,13 +320,13 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
 }
 
 class _PodcastDetailAppBar extends StatefulWidget {
-  final PodcastBrief podcastLocal;
+  final String podcastId;
   final Color color;
   final Color textColor;
   final double infoHeight;
 
   const _PodcastDetailAppBar({
-    required this.podcastLocal,
+    required this.podcastId,
     required this.color,
     required this.textColor,
     required this.infoHeight,
@@ -343,6 +338,8 @@ class _PodcastDetailAppBar extends StatefulWidget {
 class __PodcastDetailAppBarState extends State<_PodcastDetailAppBar>
     with SingleTickerProviderStateMixin {
   double _topHeight = 0;
+
+  late final PodcastState pState = context.podcastState;
 
   ///Show podcast info.
   bool _showInfo = false;
@@ -390,15 +387,18 @@ class __PodcastDetailAppBarState extends State<_PodcastDetailAppBar>
           icon: Icon(Icons.more_vert),
           splashRadius: 20,
           tooltip: context.s.menu,
-          onPressed: () => generalSheet(
-            context,
-            title: widget.podcastLocal.title,
-            color: widget.podcastLocal.primaryColor!.toColor(),
-            child: PodcastSetting(podcastLocal: widget.podcastLocal),
-          ).then((value) async {
-            await _checkPodcast();
-            if (mounted) setState(() {});
-          }),
+          onPressed: () async {
+            await generalSheet(
+              context,
+              title: pState[widget.podcastId].title,
+              color: pState[widget.podcastId].primaryColor,
+              child: PodcastSetting(podcastId: widget.podcastId),
+            );
+            if (pState.deletedIds.contains(widget.podcastId) &&
+                context.mounted) {
+              Navigator.of(context).pop();
+            }
+          },
         ),
       ],
       elevation: 0,
@@ -422,7 +422,7 @@ class __PodcastDetailAppBarState extends State<_PodcastDetailAppBar>
               (1 - ((context.paddingTop - _topHeight + 180) / 124)).clamp(0, 1);
           final titleLineTest = TextPainter(
               text: TextSpan(
-                  text: widget.podcastLocal.title,
+                  text: pState[widget.podcastId].title,
                   style: context.textTheme.headlineSmall!),
               textDirection: TextDirection.ltr);
           titleLineTest.layout(maxWidth: context.width - 185);
@@ -480,17 +480,28 @@ class __PodcastDetailAppBarState extends State<_PodcastDetailAppBar>
                                 mainAxisSize: MainAxisSize.min,
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: <Widget>[
-                                  Text(widget.podcastLocal.author ?? '',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: context.textTheme.titleMedium),
-                                  if (widget.podcastLocal.provider.isNotEmpty)
-                                    Text(
-                                      widget.podcastLocal.provider,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: context.textTheme.titleSmall,
-                                    ),
+                                  Selector<PodcastState, String>(
+                                    selector: (_, pState) =>
+                                        pState[widget.podcastId].author,
+                                    builder: (context, author, _) => Text(
+                                        author,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: context.textTheme.titleMedium),
+                                  ),
+                                  Selector<PodcastState, String>(
+                                    selector: (_, pState) =>
+                                        pState[widget.podcastId].provider,
+                                    builder: (context, provider, _) => provider
+                                            .isNotEmpty
+                                        ? Text(
+                                            provider,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: context.textTheme.titleSmall,
+                                          )
+                                        : Center(),
+                                  ),
                                 ],
                               ),
                             ),
@@ -511,12 +522,16 @@ class __PodcastDetailAppBarState extends State<_PodcastDetailAppBar>
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.white, width: 2),
                     ),
-                    child: Image.file(
-                      File("${widget.podcastLocal.imagePath}"),
-                      errorBuilder: (context, _, __) {
-                        return ColoredBox(
-                            color: widget.color, child: Icon(Icons.error));
-                      },
+                    child: Selector<PodcastState, String>(
+                      selector: (_, pState) =>
+                          pState[widget.podcastId].imagePath,
+                      builder: (context, imagePath, _) => Image.file(
+                        File(imagePath),
+                        errorBuilder: (context, _, __) => ColoredBox(
+                          color: widget.color,
+                          child: Icon(Icons.error),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -528,30 +543,33 @@ class __PodcastDetailAppBarState extends State<_PodcastDetailAppBar>
                       height: currentInfoHeight,
                       child: SingleChildScrollView(
                         clipBehavior: Clip.hardEdge,
-                        child: HostsList(context, widget.podcastLocal),
+                        child: HostsList(context, widget.podcastId),
                       ),
                     ),
-                  )
+                  ),
               ],
             ),
             title: Opacity(
               opacity: 1,
-              child: Tooltip(
-                message: widget.podcastLocal.title,
-                child: Text(
-                  widget.podcastLocal.title,
-                  maxLines: titleLineCount < 3
-                      ? expandRatio < 0.2
-                          ? 1
-                          : 2
-                      : expandRatio < 0.2
-                          ? 1
-                          : expandRatio < 0.4
-                              ? 2
-                              : 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.textTheme.headlineSmall?.copyWith(
-                      color: context.realDark ? widget.textColor : null),
+              child: Selector<PodcastState, String>(
+                selector: (_, pState) => pState[widget.podcastId].title,
+                builder: (context, title, _) => Tooltip(
+                  message: title,
+                  child: Text(
+                    title,
+                    maxLines: titleLineCount < 3
+                        ? expandRatio < 0.2
+                            ? 1
+                            : 2
+                        : expandRatio < 0.2
+                            ? 1
+                            : expandRatio < 0.4
+                                ? 2
+                                : 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.textTheme.headlineSmall?.copyWith(
+                        color: context.realDark ? widget.textColor : null),
+                  ),
                 ),
               ),
             ),
@@ -560,149 +578,145 @@ class __PodcastDetailAppBarState extends State<_PodcastDetailAppBar>
       ),
     );
   }
-
-  Future<void> _checkPodcast() async {
-    DBHelper dbHelper = DBHelper();
-    final exist = await dbHelper.checkPodcast(widget.podcastLocal.rssUrl);
-    if (exist == null) {
-      Navigator.of(context).pop();
-    }
-  }
 }
 
 class HostsList extends StatelessWidget {
   final BuildContext context;
-  final PodcastBrief podcastLocal;
-  const HostsList(this.context, this.podcastLocal, {super.key});
+  final String podcastId;
+  const HostsList(this.context, this.podcastId, {super.key});
 
   @override
   Widget build(BuildContext context) {
+    final PodcastState pState = context.podcastState;
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        FutureBuilder<Tuple2<String?, List<PodcastHost>?>>(
-            future: _getHosts(podcastLocal),
-            builder: (context, snapshot) {
-              return Container(
-                width: double.infinity,
-                alignment: Alignment.centerLeft,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _podcastLink(context,
-                            title: 'Link',
-                            child: Icon(
-                              Icons.link,
-                              size: 30,
-                              color: Colors.white,
-                            ),
-                            backgroundColor: Colors.green[600]!,
-                            onTap: () => podcastLocal.link!.launchUrl),
-                        _podcastLink(context,
-                            title: 'Rss',
-                            child: Icon(
-                              LineIcons.rssSquare,
-                              size: 30,
-                              color: Colors.white,
-                            ),
-                            backgroundColor: Colors.blue[600]!,
-                            onTap: () => podcastLocal.rssUrl.launchUrl),
-                        if (podcastLocal.funding.isNotEmpty)
-                          for (var funding in podcastLocal.funding)
-                            _podcastLink(context,
-                                title: 'Donate',
-                                child: Icon(
-                                    funding.contains(
-                                      'paypal',
-                                    )
-                                        ? LineIcons.paypal
-                                        : LineIcons.donate,
-                                    size: 30),
-                                backgroundColor: Colors.red[600]!,
-                                onTap: () => funding.launchUrl),
-                        if (snapshot.hasData)
-                          ...snapshot.data!.item2!
-                              .map<Widget>((host) {
-                                return Container(
-                                  padding: EdgeInsets.fromLTRB(5, 10, 5, 0),
-                                  width: 60.0,
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: <Widget>[
-                                      CachedNetworkImage(
-                                        imageUrl: host.image!,
-                                        progressIndicatorBuilder:
-                                            (context, url, downloadProgress) =>
-                                                CircleAvatar(
-                                          backgroundColor: Colors.cyan[600]!
-                                              .withValues(alpha: 0.5),
-                                          child: SizedBox(
-                                            width: 30,
-                                            height: 2,
-                                            child: LinearProgressIndicator(
-                                                value:
-                                                    downloadProgress.progress),
-                                          ),
-                                        ),
-                                        errorWidget: (context, url, error) =>
-                                            CircleAvatar(
-                                          backgroundColor: Colors.grey[400],
-                                          backgroundImage:
-                                              AssetImage('assets/fireside.jpg'),
-                                        ),
-                                        imageBuilder: (context, hostImage) =>
-                                            CircleAvatar(
-                                                backgroundColor:
-                                                    Colors.grey[400],
-                                                backgroundImage: hostImage),
-                                      ),
-                                      SizedBox(height: 4),
-                                      Text(
-                                        host.name!,
-                                        style: context.textTheme.titleSmall,
-                                        textAlign: TextAlign.center,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.fade,
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              })
-                              .toList()
-                              .cast<Widget>()
-                      ]),
+        Container(
+          width: double.infinity,
+          alignment: Alignment.centerLeft,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _podcastLink(context,
+                    title: 'Link',
+                    child: Icon(
+                      Icons.link,
+                      size: 30,
+                      color: Colors.white,
+                    ),
+                    backgroundColor: Colors.green[600]!,
+                    onTap: () => pState[podcastId].webpage.launchUrl),
+                _podcastLink(context,
+                    title: 'Rss',
+                    child: Icon(
+                      LineIcons.rssSquare,
+                      size: 30,
+                      color: Colors.white,
+                    ),
+                    backgroundColor: Colors.blue[600]!,
+                    onTap: () => pState[podcastId].rssUrl.launchUrl),
+                Selector<PodcastState, List<String>>(
+                  selector: (_, pState) => pState[podcastId].funding,
+                  builder: (context, fundings, _) => fundings.isNotEmpty
+                      ? Row(
+                          children: fundings
+                              .map(
+                                (funding) => _podcastLink(context,
+                                    title: 'Donate',
+                                    child: Icon(
+                                        funding.contains('paypal')
+                                            ? LineIcons.paypal
+                                            : LineIcons.donate,
+                                        size: 30),
+                                    backgroundColor: Colors.red[600]!,
+                                    onTap: () => funding.launchUrl),
+                              )
+                              .toList(),
+                        )
+                      : Center(),
                 ),
-              );
-            }),
+                Selector<PodcastState, List<PodcastHost>>(
+                  selector: (_, pState) => pState[podcastId].firesideHosts,
+                  builder: (context, hosts, _) => Row(
+                    children: hosts
+                        .map<Widget>(
+                          (host) => Container(
+                            padding: EdgeInsets.fromLTRB(5, 10, 5, 0),
+                            width: 60.0,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                CachedNetworkImage(
+                                  imageUrl: host.image!,
+                                  progressIndicatorBuilder:
+                                      (context, url, downloadProgress) =>
+                                          CircleAvatar(
+                                    backgroundColor: Colors.cyan[600]!
+                                        .withValues(alpha: 0.5),
+                                    child: SizedBox(
+                                      width: 30,
+                                      height: 2,
+                                      child: LinearProgressIndicator(
+                                          value: downloadProgress.progress),
+                                    ),
+                                  ),
+                                  errorWidget: (context, url, error) =>
+                                      CircleAvatar(
+                                    backgroundColor: Colors.grey[400],
+                                    backgroundImage:
+                                        AssetImage('assets/fireside.jpg'),
+                                  ),
+                                  imageBuilder: (context, hostImage) =>
+                                      CircleAvatar(
+                                          backgroundColor: Colors.grey[400],
+                                          backgroundImage: hostImage),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  host.name!,
+                                  style: context.textTheme.titleSmall,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.fade,
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
         Container(
           padding: EdgeInsets.fromLTRB(15, 10, 15, 10),
           alignment: Alignment.topLeft,
           color: Colors.transparent,
-          child: AboutPodcast(
-            podcastLocal: podcastLocal,
-            accentColor: ColorScheme.fromSeed(
-                    seedColor: podcastLocal.primaryColor!.toColor(),
-                    brightness: context.brightness)
-                .primary,
+          child: Selector<PodcastState, (String, Color)>(
+            selector: (_, pState) =>
+                (pState[podcastId].description, pState[podcastId].primaryColor),
+            builder: (context, data, _) => Linkify(
+              text: data.$1,
+              style: context.textTheme.bodyMedium,
+              onOpen: (link) {
+                link.url.launchUrl;
+              },
+              linkStyle: TextStyle(
+                  color: data.$2,
+                  decoration: TextDecoration.underline,
+                  textBaseline: TextBaseline.ideographic),
+            ),
           ),
         ),
       ],
     );
   }
-}
-
-Future<Tuple2<String?, List<PodcastHost>?>> _getHosts(
-    PodcastBrief podcastLocal) async {
-  if (!podcastLocal.provider.contains('fireside')) return Tuple2('', []);
-  var data = FiresideData(podcastLocal.id, podcastLocal.link);
-  await data.getData();
-  var backgroundImage = data.background;
-  var hosts = data.hosts;
-  return Tuple2(backgroundImage, hosts);
 }
 
 Widget _podcastLink(BuildContext context,
@@ -737,58 +751,4 @@ Widget _podcastLink(BuildContext context,
       ],
     ),
   );
-}
-
-class AboutPodcast extends StatefulWidget {
-  final PodcastBrief? podcastLocal;
-  final Color? accentColor;
-  const AboutPodcast({this.podcastLocal, this.accentColor, super.key});
-
-  @override
-  _AboutPodcastState createState() => _AboutPodcastState();
-}
-
-class _AboutPodcastState extends State<AboutPodcast> {
-  late String _description;
-  late bool _load;
-
-  @override
-  void initState() {
-    super.initState();
-    _load = false;
-    getDescription(widget.podcastLocal!.id);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_load)
-      return Linkify(
-        text: _description,
-        style: context.textTheme.bodyMedium,
-        onOpen: (link) {
-          link.url.launchUrl;
-        },
-        linkStyle: TextStyle(
-            color: widget.accentColor ?? context.accentColor,
-            decoration: TextDecoration.underline,
-            textBaseline: TextBaseline.ideographic),
-      );
-    return Center();
-  }
-
-  void getDescription(String? id) async {
-    final dbHelper = DBHelper();
-    if (widget.podcastLocal!.description == "") {
-      final description = await dbHelper.getFeedDescription(id);
-      if (description == null || description.isEmpty) {
-        _description = '';
-      } else {
-        final doc = parse(description);
-        _description = parse(doc.body!.text).documentElement!.text;
-      }
-    } else {
-      _description = widget.podcastLocal!.description;
-    }
-    if (mounted) setState(() => _load = true);
-  }
 }

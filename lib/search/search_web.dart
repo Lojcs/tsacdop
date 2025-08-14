@@ -4,8 +4,6 @@ import 'package:webfeed/webfeed.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:xml/xml.dart';
 
-import 'search_page.dart';
-
 enum SearchEngine {
   brave(url: "https://search.brave.com/search?q="),
   yandex(url: "https://yandex.com/search/?text="),

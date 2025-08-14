@@ -92,11 +92,17 @@
   "@deleted": {},
   "deletedEpisodeDesc": "This episode has been deleted from the database",
   "@deletedEpisodeDesc": {},
+  "deletedPodcastDesc": "This podcast has been deleted from the database",
+  "@deletedPodcastDesc": {},
   "deselectAll": "Deselect All",
   "@deselectAll": {},
   "developer": "Developer",
   "@developer": {
     "description": "Can also translate to About me"
+  },
+  "deviceStorage": "Device Storage",
+  "@deviceStorage": {
+    "description": "Refers to files stored on user's device."
   },
   "dismiss": "Dismiss",
   "@dismiss": {},
@@ -302,6 +308,12 @@
       "filePath": {}
     }
   },
+  "localFolder": "Local Folder",
+  "@localFolder": {
+    "description": "Podcast name for episodes imported from audio files on device"
+  },
+  "localFolderDescription": "Dummy podcast that collects imported local audio files.",
+  "@localFolderDescription": {},
   "loadAllSelected": "Load All Selected",
   "@loadAllSelected": {
     "description": "Tooltip for button that loads all episodes included in a selection."

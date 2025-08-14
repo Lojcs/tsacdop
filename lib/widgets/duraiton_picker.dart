@@ -286,7 +286,9 @@ class _DialState extends State<_Dial> with SingleTickerProviderStateMixin {
       if (angle >= _kCircleTop &&
           _theta.value <= _kCircleTop &&
           _theta.value >= 0.1 && // to allow the radians sign change at 15mins.
-          _minutes == 0) return;
+          _minutes == 0) {
+        return;
+      }
 
       _thetaTween!
         ..begin = angle

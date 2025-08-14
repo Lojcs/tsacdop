@@ -11,6 +11,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 import '../generated/l10n.dart';
 import '../state/audio_state.dart';
 import '../state/episode_state.dart';
+import '../state/podcast_state.dart';
 import '../state/setting_state.dart';
 import '../type/theme_data.dart';
 
@@ -154,6 +155,8 @@ extension IntExtension on int {
 extension StateExtension on BuildContext {
   EpisodeState get episodeState =>
       Provider.of<EpisodeState>(this, listen: false);
+  PodcastState get podcastState =>
+      Provider.of<PodcastState>(this, listen: false);
   AudioPlayerNotifier get audioState =>
       Provider.of<AudioPlayerNotifier>(this, listen: false);
 }

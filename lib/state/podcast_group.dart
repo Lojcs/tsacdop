@@ -23,7 +23,7 @@ import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../service/gpodder_api.dart';
 import '../type/fireside_data.dart';
-import '../type/podcastlocal.dart';
+import '../type/podcastbrief.dart';
 import '../util/helpers.dart';
 
 @pragma('vm:entry-point')
@@ -101,16 +101,6 @@ class PodcastGroup extends Equatable {
         }
       }
     }
-  }
-
-  Future<PodcastGroup> updatePodcast(PodcastBrief podcast) async {
-    var count = await _dbHelper.getPodcastCounts(podcast.id);
-    var list = [
-      for (var p in podcasts)
-        p == podcast ? podcast.copyWith(updateCount: count) : p
-    ];
-    return PodcastGroup(name,
-        id: id, color: color, podcastList: podcastList, podcasts: list);
   }
 
   void reorderGroup(int oldIndex, int newIndex) {
@@ -545,7 +535,7 @@ class GroupList extends ChangeNotifier {
   ) async {
     _syncRemove(podcast.rssUrl);
     await _unsubscribe(podcast);
-    await File(podcast.imagePath!).delete();
+    await File(podcast.imagePath).delete();
   }
 
   Future<void> saveOrder(PodcastGroup? group) async {

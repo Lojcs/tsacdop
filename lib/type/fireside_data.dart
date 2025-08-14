@@ -62,20 +62,6 @@ class FiresideData {
       await _dbHelper.saveFiresideData(data);
     }
   }
-
-  Future getData() async {
-    var data = await _dbHelper.getFiresideData(id);
-    _background = data[0];
-    if (data[1] != '') {
-      _hosts = json
-          .decode(data[1]!)['hosts']
-          .cast<Map<String, Object>>()
-          .map<PodcastHost>(PodcastHost.fromJson)
-          .toList();
-    } else {
-      _hosts = null;
-    }
-  }
 }
 
 class PodcastHost {
