@@ -447,8 +447,6 @@ class AudioPlayerNotifier extends ChangeNotifier {
   Future<void> initPlaylists() async {
     if (_playlists.isEmpty) {
       _playlists = await _playlistsStorage.getPlaylists(_episodeState);
-      // Seems unused
-      await KeyValueStorage(lastWorkKey).saveInt(0);
     }
   }
 

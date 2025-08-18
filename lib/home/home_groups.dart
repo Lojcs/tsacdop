@@ -494,7 +494,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
         sortBy: Sorter.pubDate,
         sortOrder: SortOrder.desc,
         limit: limit,
-        filterDisplayVersion: false,
+        filterDuplicateVersions: false,
       );
     } else {
       return Future.value([]);

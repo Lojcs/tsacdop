@@ -12,6 +12,13 @@ import 'podcastbrief.dart';
 import 'theme_data.dart';
 import '../util/extension_helper.dart';
 
+String urlFromRssItem(RssItem item) =>
+    item.enclosure != null && item.enclosure!.url != null
+        ? (item.enclosure!.url!.isXimalaya()
+            ? item.enclosure!.url!.split('=').last
+            : item.enclosure!.url!)
+        : "";
+
 class EpisodeBrief extends Equatable {
   final int id;
   final String title;
@@ -27,8 +34,8 @@ class EpisodeBrief extends Equatable {
   final bool isDownloaded;
   final int downloadDate;
   final String mediaId;
-  final String episodeImage;
-  final String podcastImage;
+  final String episodeImageUrl;
+  final String podcastImagePath;
   final Color primaryColor;
   final bool isExplicit;
   final bool isLiked;
@@ -55,8 +62,8 @@ class EpisodeBrief extends Equatable {
     required this.isDownloaded,
     required this.downloadDate,
     required this.mediaId,
-    required this.episodeImage,
-    required this.podcastImage,
+    required this.episodeImageUrl,
+    required this.podcastImagePath,
     required this.primaryColor,
     required this.isExplicit,
     required this.isLiked,
@@ -81,7 +88,6 @@ class EpisodeBrief extends Equatable {
     required this.enclosureDuration,
     required this.enclosureSize,
     required this.mediaId,
-    required this.episodeImage,
     Color? primaryColor,
   })  : id = -1,
         podcastId = localFolderId,
@@ -89,7 +95,8 @@ class EpisodeBrief extends Equatable {
         number = -1,
         isDownloaded = true,
         downloadDate = pubDate,
-        podcastImage = '',
+        episodeImageUrl = '',
+        podcastImagePath = '',
         primaryColor = primaryColor ?? Colors.teal,
         isExplicit = false,
         isLiked = false,
@@ -104,14 +111,10 @@ class EpisodeBrief extends Equatable {
 
   /// Use for new remote episodes not yet in database
   EpisodeBrief.fromRssItem(RssItem item, this.podcastId, this.podcastTitle,
-      this.number, this.podcastImage, this.primaryColor)
+      this.number, this.podcastImagePath, this.primaryColor)
       : id = -1,
         title = item.title ?? item.itunes?.title ?? "",
-        enclosureUrl = item.enclosure != null && item.enclosure!.url != null
-            ? (item.enclosure!.url!.isXimalaya()
-                ? item.enclosure!.url!.split('=').last
-                : item.enclosure!.url!)
-            : "",
+        enclosureUrl = urlFromRssItem(item),
         pubDate = item.pubDate?.millisecondsSinceEpoch ??
             DateTime.now().millisecondsSinceEpoch,
         showNotes = [
@@ -128,7 +131,7 @@ class EpisodeBrief extends Equatable {
                 ? item.enclosure!.url!.split('=').last
                 : item.enclosure!.url!)
             : "",
-        episodeImage = item.itunes?.image?.href ?? '',
+        episodeImageUrl = item.itunes?.image?.href ?? '',
         isExplicit = item.itunes?.explicit ?? false,
         isLiked = false,
         isNew = DateTime.now().difference(item.pubDate ?? DateTime(0)) <
@@ -150,8 +153,8 @@ class EpisodeBrief extends Equatable {
       duration: Duration(seconds: enclosureDuration),
       // artUri: Uri.parse('file://$podcastImage'),
       // Andoid auto can't show local images
-      artUri:
-          Uri.parse(episodeImage != '' ? episodeImage : 'file://$podcastImage'),
+      artUri: Uri.parse(
+          episodeImageUrl != '' ? episodeImageUrl : 'file://$podcastImagePath'),
       extras: {
         'skipSecondsStart': skipSecondsStart,
         'skipSecondsEnd': skipSecondsEnd
@@ -159,31 +162,31 @@ class EpisodeBrief extends Equatable {
 
   ImageProvider get avatarImage {
     // TODO: Get rid of this
-    if (podcastImage != '') {
-      if (File(podcastImage).existsSync()) {
-        return FileImage(File(podcastImage));
+    if (podcastImagePath != '') {
+      if (File(podcastImagePath).existsSync()) {
+        return FileImage(File(podcastImagePath));
       }
-    } else if (episodeImage != '') {
-      if (File(episodeImage).existsSync()) {
-        return FileImage(File(episodeImage));
-      } else if (episodeImage != '') {
-        return CachedNetworkImageProvider(episodeImage);
+    } else if (episodeImageUrl != '') {
+      if (File(episodeImageUrl).existsSync()) {
+        return FileImage(File(episodeImageUrl));
+      } else if (episodeImageUrl != '') {
+        return CachedNetworkImageProvider(episodeImageUrl);
       }
     }
     return AssetImage('assets/avatar_backup.png');
   }
 
-  late final ImageProvider _episodeImageProvider = ((episodeImage != '')
-      ? (File(episodeImage).existsSync())
-          ? FileImage(File(episodeImage))
-          : (episodeImage != '')
-              ? CachedNetworkImageProvider(episodeImage)
+  late final ImageProvider _episodeImageProvider = ((episodeImageUrl != '')
+      ? (File(episodeImageUrl).existsSync())
+          ? FileImage(File(episodeImageUrl))
+          : (episodeImageUrl != '')
+              ? CachedNetworkImageProvider(episodeImageUrl)
               : const AssetImage('assets/avatar_backup.png')
       : const AssetImage('assets/avatar_backup.png')) as ImageProvider;
 
-  late final ImageProvider podcastImageProvider = ((podcastImage != '')
-      ? (File(podcastImage).existsSync())
-          ? FileImage(File(podcastImage))
+  late final ImageProvider podcastImageProvider = ((podcastImagePath != '')
+      ? (File(podcastImagePath).existsSync())
+          ? FileImage(File(podcastImagePath))
           : const AssetImage('assets/avatar_backup.png')
       : const AssetImage('assets/avatar_backup.png')) as ImageProvider;
 
@@ -274,8 +277,9 @@ class EpisodeBrief extends Equatable {
           bool? isDownloaded,
           int? downloadDate,
           String? mediaId,
-          String? episodeImage,
-          String? podcastImage,
+          String? episodeImageUrl,
+          String? episodeImagePath,
+          String? podcastImagePath,
           Color? primaryColor,
           bool? isExplicit,
           bool? isLiked,
@@ -301,8 +305,8 @@ class EpisodeBrief extends Equatable {
           isDownloaded: isDownloaded ?? this.isDownloaded,
           downloadDate: downloadDate ?? this.downloadDate,
           mediaId: mediaId ?? this.mediaId,
-          episodeImage: episodeImage ?? this.episodeImage,
-          podcastImage: podcastImage ?? this.podcastImage,
+          episodeImageUrl: episodeImageUrl ?? this.episodeImageUrl,
+          podcastImagePath: podcastImagePath ?? this.podcastImagePath,
           primaryColor: primaryColor ?? this.primaryColor,
           isExplicit: isExplicit ?? this.isExplicit,
           isLiked: isLiked ?? this.isLiked,

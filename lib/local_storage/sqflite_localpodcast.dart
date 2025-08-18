@@ -60,7 +60,7 @@ class DBHelper {
     var documentsDirectory = await getDatabasesPath();
     var path = join(documentsDirectory, "podcasts.db");
     var theDb = await openDatabase(path,
-        version: 8, onCreate: _onCreate, onUpgrade: _onUpgrade);
+        version: 9, onCreate: _onCreate, onUpgrade: _onUpgrade);
     return theDb;
   }
 
@@ -320,6 +320,7 @@ class DBHelper {
             id: item['id'],
             title: item['title'],
             rssUrl: item['rssUrl'],
+            rssHash: item['rss_hash'],
             author: item['author'],
             provider: item['provider'],
             firesideHosts: item['hosts'] != ""
@@ -611,62 +612,6 @@ class DBHelper {
     return list.isNotEmpty;
   }
 
-  DateTime _parsePubDate(String? pubDate) {
-    if (pubDate == null) return DateTime.now();
-    DateTime date;
-    var yyyy = RegExp(r'[1-2][0-9]{3}');
-    var hhmm = RegExp(r'[0-2][0-9]\:[0-5][0-9]');
-    var ddmmm = RegExp(r'[0-3][0-9]\s[A-Z][a-z]{2}');
-    var mmDd = RegExp(r'([1-2][0-9]{3}\-[0-1]|\s)[0-9]\-[0-3][0-9]');
-    // RegExp timezone
-    var z = RegExp(r'(\+|\-)[0-1][0-9]00');
-    var timezone = z.stringMatch(pubDate);
-    var timezoneInt = 0;
-    if (timezone != null) {
-      if (timezone.substring(0, 1) == '-') {
-        timezoneInt = int.parse(timezone.substring(1, 2));
-      } else {
-        timezoneInt = -int.parse(timezone.substring(1, 2));
-      }
-    }
-    try {
-      date = DateFormat('EEE, dd MMM yyyy HH:mm:ss Z', 'en_US').parse(pubDate);
-    } catch (e) {
-      try {
-        date = DateFormat('dd MMM yyyy HH:mm:ss Z', 'en_US').parse(pubDate);
-      } catch (e) {
-        try {
-          date = DateFormat('EEE, dd MMM yyyy HH:mm Z', 'en_US').parse(pubDate);
-        } catch (e) {
-          var year = yyyy.stringMatch(pubDate);
-          var time = hhmm.stringMatch(pubDate);
-          var month = ddmmm.stringMatch(pubDate);
-          if (year != null && time != null && month != null) {
-            try {
-              date = DateFormat('dd MMM yyyy HH:mm', 'en_US')
-                  .parse('$month $year $time');
-            } catch (e) {
-              date = DateTime.now();
-            }
-          } else if (year != null && time != null && month == null) {
-            var month = mmDd.stringMatch(pubDate);
-            try {
-              date =
-                  DateFormat('yyyy-MM-dd HH:mm', 'en_US').parse('$month $time');
-            } catch (e) {
-              date = DateTime.now();
-            }
-          } else {
-            date = DateTime.now();
-          }
-        }
-      }
-    }
-    date.add(Duration(hours: timezoneInt)).add(DateTime.now().timeZoneOffset);
-    developer.log(date.toString());
-    return date;
-  }
-
   int _getExplicit(bool? b) {
     int result;
     if (b == true) {
@@ -740,7 +685,7 @@ class DBHelper {
   /// a) Manually set version / newsest downloaded version (whichever is newer)
   /// b) The version all other undownloaded versions point to (newest on rescan)
   /// c) Itself
-  Future<void> _rescanPodcastEpisodesVersionsDart(
+  Future<void> rescanPodcastEpisodesVersionsDart(
       DatabaseExecutor dbClient, String feedId) async {
     List<Map<String, dynamic>> episodes = (await dbClient.rawQuery(
             "SELECT id, title, milliseconds, downloaded FROM Episodes WHERE feed_id = ?",
@@ -849,14 +794,14 @@ class DBHelper {
                 feed.items![i].itunes!.summary ?? ''),
             enclosureDuration: duration,
             enclosureSize: length,
-            episodeImage: image,
+            episodeImageUrl: image,
             isExplicit: explicit,
             chapterLink: chapter,
             // These don't matter
             isDownloaded: false,
             downloadDate: 0,
             mediaId: "",
-            podcastImage: "",
+            podcastImagePath: "",
             primaryColor: Colors.teal,
             isLiked: false,
             isNew: false,
@@ -894,14 +839,14 @@ class DBHelper {
                 _getExplicit(episode.isExplicit),
                 episode.enclosureUrl,
                 episode.chapterLink,
-                episode.episodeImage,
+                episode.episodeImageUrl,
                 episode.number,
                 0 // To disable the triggers
               ]);
         }
         await batchOp.commit();
         developer.log("Versioning ${feed.title}");
-        await _rescanPodcastEpisodesVersionsDart(txn, feedId);
+        await rescanPodcastEpisodesVersionsDart(txn, feedId);
         int count = Sqflite.firstIntValue(await txn.rawQuery(
                 'SELECT COUNT(*) FROM Episodes WHERE feed_id = ?', [feedId])) ??
             0;
@@ -937,7 +882,7 @@ class DBHelper {
                 _getExplicit(episode.isExplicit),
                 episode.enclosureUrl,
                 episode.chapterLink,
-                episode.episodeImage,
+                episode.episodeImageUrl,
                 hideNewMark ? 0 : 1
               ]);
         }
@@ -959,6 +904,67 @@ class DBHelper {
         return count;
       });
     }
+  }
+
+  /// Saves episodes to the database. It is assumed that all episodes belong to
+  /// the same podcast. Set [update] for existing feeds.
+  Future<void> savePodcastEpisodes(
+      DatabaseExecutor dbClient, List<EpisodeBrief> episodes,
+      {bool update = true}) async {
+    final hideNew = Sqflite.firstIntValue(await dbClient.rawQuery(
+        'SELECT hide_new_mark FROM PodcastLocal WHERE id = ?',
+        [episodes.first.podcastId]));
+    final newMark = update && hideNew == 0;
+    Batch batchOp = dbClient.batch();
+    for (var episode in episodes) {
+      batchOp.rawInsert(
+          """INSERT OR REPLACE INTO Episodes(title, enclosure_url, enclosure_length,
+              pubDate, description, feed_id, milliseconds, duration, explicit, media_id,
+              chapter_link, episode_image, number, display_version_id, is_new)
+              VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+          [
+            episode.title,
+            episode.enclosureUrl,
+            episode.enclosureSize,
+            '',
+            episode.showNotes,
+            episode.podcastId,
+            episode.pubDate,
+            episode.enclosureDuration,
+            _getExplicit(episode.isExplicit),
+            episode.enclosureUrl,
+            episode.chapterLink,
+            episode.episodeImageUrl,
+            update ? -1 : episode.number,
+            update ? -1 : 0,
+            newMark ? 1 : 0
+          ]);
+    }
+    await batchOp.commit();
+  }
+
+  Future<void> saveNewPodcastEpisodes(List<EpisodeBrief> episodes) async {
+    var dbClient = await database;
+    final feedId = episodes.first.podcastId;
+    await dbClient.transaction<void>((txn) async {
+      await savePodcastEpisodes(txn, episodes, update: false);
+      await rescanPodcastEpisodesVersionsDart(txn, episodes.first.podcastId);
+      int? count = Sqflite.firstIntValue(await txn.rawQuery(
+          'SELECT COUNT(*) FROM Episodes WHERE feed_id = ?', [feedId]));
+      await txn.rawUpdate(
+          """UPDATE PodcastLocal SET episode_count = ? WHERE id = ?""",
+          [count ?? 0, feedId]);
+    });
+  }
+
+  Future<void> unmarkNewOldEpisodes(String podcastId) async {
+    var dbClient = await database;
+    await dbClient.rawUpdate(
+        "UPDATE Episodes SET is_new = 0 WHERE feed_id = ? AND milliseconds < ?",
+        [
+          podcastId,
+          DateTime.now().subtract(Duration(days: 1)).millisecondsSinceEpoch
+        ]);
   }
 
   Future<int> updatePodcastRss(PodcastBrief podcastLocal,
@@ -1008,7 +1014,7 @@ class DBHelper {
           episode.enclosureDuration,
           0,
           episode.enclosureUrl,
-          episode.episodeImage
+          episode.episodeImageUrl
         ]);
     return episodeId;
   }
@@ -1049,7 +1055,7 @@ class DBHelper {
       bool? filterLiked,
       bool? filterPlayed,
       bool? filterDownloaded,
-      bool? filterDisplayVersion,
+      bool? filterDuplicateVersions,
       bool? filterAutoDownload,
       List<String>? customFilters,
       List<String>? customArguements}) async {
@@ -1133,9 +1139,9 @@ class DBHelper {
     } else if (filterDownloaded == true) {
       filters.add(" E.downloaded != 'ND'");
     }
-    if (filterDisplayVersion == false) {
+    if (filterDuplicateVersions == false) {
       filters.add(" E.display_version_id = E.id");
-    } else if (filterDisplayVersion == true) {
+    } else if (filterDuplicateVersions == true) {
       filters.add(" E.display_version_id != E.id");
     }
     if (filterAutoDownload == false) {
@@ -1212,8 +1218,8 @@ class DBHelper {
           isDownloaded: i['downloaded'] != 'ND',
           downloadDate: i['download_date'],
           mediaId: i['media_id'],
-          episodeImage: i['episode_image'],
-          podcastImage: i['imagePath'],
+          episodeImageUrl: i['episode_image'],
+          podcastImagePath: i['imagePath'],
           primaryColor: (i['primaryColor'] as String).toColor(),
           isExplicit: i['explicit'] == 1,
           isLiked: i['liked'] == 1,

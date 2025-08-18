@@ -115,8 +115,8 @@ Future<void> podcastSync({List<PodcastBrief>? podcasts}) async {
   } else {
     podcastList = podcasts;
   }
-  //lastWork is a indicator for if the app was opened since last backgroundwork
-  //if the app wes opend,then the old marked new episode would be marked not new.
+  //lastWork is an indicator for if the app was opened since last backgroundwork
+  //if the app was opened,then the old marked new episode would be marked not new.
   final lastWorkStorage = KeyValueStorage(lastWorkKey);
   final lastWork = await lastWorkStorage.getInt();
   for (var podcastLocal in podcastList) {
@@ -133,7 +133,7 @@ Future<void> podcastSync({List<PodcastBrief>? podcasts}) async {
     final episodes = await dbHelper.getEpisodes(
         filterNew: true,
         filterDownloaded: false,
-        filterDisplayVersion: false,
+        filterDuplicateVersions: false,
         filterAutoDownload: true);
     // For safety
     if (episodes.length < 100 && episodes.isNotEmpty) {

@@ -34,8 +34,7 @@ class EpisodeState extends ChangeNotifier {
       showNotes: _context.s.deletedEpisodeDesc,
       enclosureDuration: 0,
       enclosureSize: 0,
-      mediaId: "",
-      episodeImage: "");
+      mediaId: "");
 
   /// Convenience operator for .episodeMap[id]!
   EpisodeBrief operator [](int id) =>
@@ -87,7 +86,7 @@ class EpisodeState extends ChangeNotifier {
       bool? filterLiked,
       bool? filterPlayed,
       bool? filterDownloaded,
-      bool? filterDisplayVersion,
+      bool? filterDuplicateVersions,
       bool? filterAutoDownload,
       List<String>? customFilters,
       List<String>? customArguements}) async {
@@ -112,7 +111,7 @@ class EpisodeState extends ChangeNotifier {
       filterLiked: filterLiked,
       filterPlayed: filterPlayed,
       filterDownloaded: filterDownloaded,
-      filterDisplayVersion: filterDisplayVersion,
+      filterDuplicateVersions: filterDuplicateVersions,
       filterAutoDownload: filterAutoDownload,
       customFilters: customFilters,
     );

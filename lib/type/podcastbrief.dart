@@ -26,6 +26,7 @@ class PodcastBrief extends Equatable {
   final String id;
   final String title;
   final String rssUrl;
+  final String rssHash;
 
   final String author;
   final String provider;
@@ -60,6 +61,7 @@ class PodcastBrief extends Equatable {
     required this.id,
     required this.title,
     required this.rssUrl,
+    this.rssHash = "",
     required this.author,
     required this.provider,
     this.firesideHosts = const [],
@@ -86,6 +88,7 @@ class PodcastBrief extends Equatable {
       : id = id ?? localFolderId,
         title = title ?? s.localFolder,
         rssUrl = "",
+        rssHash = "",
         author = s.deviceStorage,
         provider = "",
         firesideHosts = [],
@@ -109,9 +112,9 @@ class PodcastBrief extends Equatable {
   /// Construct a [PodcastBrief] from an [RssFeed].
   /// This is callable from a background isolate, and so doesn't parse its color.
   /// Use [withColorFromImage] to fill the correct color.
-  PodcastBrief.fromFeed(RssFeed feed, this.rssUrl)
+  PodcastBrief.fromFeed(RssFeed feed, this.rssUrl, this.rssHash)
       : id = Uuid().v4(),
-        title = feed.title ?? "",
+        title = feed.title ?? feed.itunes?.title ?? "",
         author = feed.author ?? feed.itunes?.author ?? "",
         provider = feed.generator ?? "",
         firesideHosts = [],
@@ -201,6 +204,7 @@ class PodcastBrief extends Equatable {
     String? id,
     String? title,
     String? rssUrl,
+    String? rssHash,
     String? author,
     String? provider,
     List<PodcastHost>? firesideHosts,
@@ -224,6 +228,7 @@ class PodcastBrief extends Equatable {
           id: id ?? this.id,
           title: title ?? this.title,
           rssUrl: rssUrl ?? this.rssUrl,
+          rssHash: rssHash ?? this.rssHash,
           author: author ?? this.author,
           provider: provider ?? this.provider,
           firesideHosts: firesideHosts ?? this.firesideHosts,

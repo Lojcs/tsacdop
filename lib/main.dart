@@ -9,6 +9,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'local_storage/key_value_storage.dart';
 import 'state/episode_state.dart';
 import 'package:tuple/tuple.dart';
 
@@ -39,6 +40,7 @@ Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await themeSetting.initData();
   await FlutterDownloader.initialize();
+  await KeyValueStorage(lastWorkKey).saveInt(0);
   final documents = await getApplicationDocumentsDirectory();
   runApp(
     MultiProvider(

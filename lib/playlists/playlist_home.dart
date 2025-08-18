@@ -1011,7 +1011,7 @@ class _NewPlaylistState extends State<_NewPlaylist> {
       enclosureDuration: metadata.trackDuration! ~/ 1000,
       enclosureSize: fileLength,
       mediaId: 'file://$path',
-      episodeImage: imagePath ?? '',
+      episodeImageUrl: imagePath ?? '',
       primaryColor: primaryColor?.toColor(),
     );
   }

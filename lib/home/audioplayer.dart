@@ -1012,7 +1012,7 @@ class _ChaptersWidgetState extends State<ChaptersWidget> {
                   : ListView(
                       padding: EdgeInsets.zero,
                       children: <Widget>[
-                        if (episode.episodeImage != '' &&
+                        if (episode.episodeImageUrl != '' &&
                             episode.enclosureUrl.substring(0, 4) != "file")
                           ClipRRect(
                             borderRadius: BorderRadius.circular(10.0),
@@ -1020,7 +1020,7 @@ class _ChaptersWidgetState extends State<ChaptersWidget> {
                                 width: 100,
                                 fit: BoxFit.fitWidth,
                                 alignment: Alignment.center,
-                                imageUrl: episode.episodeImage,
+                                imageUrl: episode.episodeImageUrl,
                                 placeholderFadeInDuration: Duration.zero,
                                 progressIndicatorBuilder: (context, url,
                                         downloadProgress) =>

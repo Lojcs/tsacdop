@@ -17,6 +17,91 @@ import '../type/episode_task.dart';
 import '../type/episodebrief.dart';
 import 'episode_state.dart';
 
+class SuperDownloadState extends ChangeNotifier {
+  final DBHelper _dbHelper = DBHelper();
+  late final EpisodeState _episodeState;
+  final List<SuperEpisodeTask> _episodeTasks = [];
+  final List<SuperEpisodeTask> _cancelingEpisodeTasks = [];
+  final bool background;
+
+  @pragma('vm:entry-point')
+  static void downloadCallback(String id, int status, int progress) {
+    developer.log(
+        'Flutter downloader task with id $id : (${DownloadTaskStatus.fromInt(status)}) $progress');
+    final send =
+        IsolateNameServer.lookupPortByName('super_downloader_send_port')!;
+    send.send([id, status, progress]);
+  }
+
+  SuperDownloadState(BuildContext context) : background = false {
+    _episodeState = Provider.of<EpisodeState>(context, listen: false);
+    _autoDelete();
+    _bindBackgroundIsolate();
+    FlutterDownloader.registerCallback(downloadCallback);
+  }
+
+  SuperDownloadState.background() : background = true {
+    _bindBackgroundIsolate();
+    FlutterDownloader.registerCallback(autoDownloadCallback);
+  }
+
+  void _bindBackgroundIsolate() {
+    final port = ReceivePort();
+    final isSuccess = IsolateNameServer.registerPortWithName(
+        port.sendPort, 'super_downloader_send_port');
+    if (!isSuccess) {
+      IsolateNameServer.removePortNameMapping('super_downloader_send_port');
+      _bindBackgroundIsolate();
+      return;
+    }
+
+    port.listen((dynamic data) {
+      String id = data[0];
+      int status = data[1];
+      int progress = data[2];
+
+      final episodeTask = _episodeTasks.firstWhere((task) => task.taskId == id);
+      episodeTask.status = DownloadTaskStatus.fromInt(status);
+      episodeTask.progress = progress;
+      switch (episodeTask.status) {
+        case DownloadTaskStatus.complete:
+          _saveMediaId(episodeTask);
+          break;
+        case DownloadTaskStatus.undefined:
+          break;
+        case DownloadTaskStatus.enqueued ||
+              DownloadTaskStatus.running ||
+              DownloadTaskStatus.failed ||
+              DownloadTaskStatus.canceled ||
+              DownloadTaskStatus.paused:
+          break;
+      }
+      if (!background) notifyListeners();
+    });
+  }
+
+  bindBackgroundIsolate() {
+    port.listen((dynamic data) async {
+      String id = data[0];
+      int status = data[1];
+      int progress = data[2];
+      EpisodeTask episodeTask =
+          _episodeTasks.firstWhere((task) => task.taskId == id);
+
+      episodeTask.status = DownloadTaskStatus.fromInt(status);
+      episodeTask.progress = progress;
+      if (episodeTask.status == DownloadTaskStatus.complete) {
+        await _saveMediaId(episodeTask);
+      } else if (episodeTask.status == DownloadTaskStatus.failed ||
+          episodeTask.status == DownloadTaskStatus.canceled) {
+        _episodeTasks.removeWhere((element) =>
+            element.episode.enclosureUrl == episodeTask.episode.enclosureUrl);
+        if (_episodeTasks.isEmpty) _unbindBackgroundIsolate();
+      }
+    });
+  }
+}
+
 @pragma('vm:entry-point')
 void downloadCallback(String id, int status, int progress) {
   developer.log('Homepage callback task in $id  status ($status) $progress');

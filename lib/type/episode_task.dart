@@ -17,3 +17,18 @@ class EpisodeTask {
         progress: progress ?? this.progress, status: status ?? this.status);
   }
 }
+
+class SuperEpisodeTask {
+  final String taskId;
+  final String episodeId;
+  int progress;
+  DownloadTaskStatus status;
+  SuperEpisodeTask(this.episodeId, this.taskId,
+      {this.progress = 0, this.status = DownloadTaskStatus.undefined});
+
+  SuperEpisodeTask copyWith(
+      {String? taskId, int? progress, DownloadTaskStatus? status}) {
+    return SuperEpisodeTask(episodeId, taskId ?? this.taskId,
+        progress: progress ?? this.progress, status: status ?? this.status);
+  }
+}

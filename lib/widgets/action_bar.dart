@@ -547,7 +547,7 @@ class _ActionBarSharedState extends ChangeNotifier {
               filterLiked: filterLiked,
               filterPlayed: filterPlayed,
               filterDownloaded: filterDownloaded,
-              filterDisplayVersion: filterDisplayVersion);
+              filterDuplicateVersions: filterDisplayVersion);
       return episodeIds;
     };
   }
