@@ -19,9 +19,7 @@ import 'intro_slider/app_intro.dart';
 import 'playlists/playlist_home.dart';
 import 'state/audio_state.dart';
 import 'state/download_state.dart';
-import 'state/podcast_group.dart';
 import 'state/podcast_state.dart';
-import 'state/refresh_podcast.dart';
 import 'state/setting_state.dart';
 import 'type/playlist.dart';
 import 'type/theme_data.dart';
@@ -39,25 +37,26 @@ Future main() async {
   timeDilation = 1.0;
   WidgetsFlutterBinding.ensureInitialized();
   await themeSetting.initData();
-  await FlutterDownloader.initialize();
   await KeyValueStorage(lastWorkKey).saveInt(0);
   final documents = await getApplicationDocumentsDirectory();
+  final podcastState = PodcastState(documents);
+  print("bbb");
+  await podcastState.ready;
+  print("aaa");
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: themeSetting),
         ChangeNotifierProvider(create: (_) => EpisodeState()),
-        ChangeNotifierProvider(create: (_) => PodcastState(documents)),
+        ChangeNotifierProvider.value(value: podcastState),
         ChangeNotifierProvider(
-          lazy: false,
-          create: (context) => AudioPlayerNotifier(context),
+          lazy: false, // TODO: Check if these are actually needed.
+          create: (_) => SuperDownloadState(),
         ),
-        ChangeNotifierProvider(create: (_) => GroupList()),
-        ChangeNotifierProvider(create: (_) => RefreshWorker()),
         ChangeNotifierProvider(
           lazy: false,
-          create: (context) => DownloadState(context),
-        )
+          create: (_) => AudioPlayerNotifier(),
+        ),
       ],
       child: MyApp(),
     ),
@@ -76,8 +75,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Provider.of<SettingState>(context, listen: false).context = context;
-    Provider.of<EpisodeState>(context, listen: false).context = context;
+    // These are to allow access to other state objects and S.of(context).
+    // They are assigned here instead of at construction to allow quick reloading. // TODO: Is that really true?
+    context.settingState.context = context;
+    context.episodeState.context = context;
+    context.podcastState.context = context;
+    context.downloadState.context = context;
+    context.audioState.context = context;
     Provider.of<PodcastState>(context, listen: false).context = context;
     final browsableLibrary = BrowsableLibrary(context);
     context.audioState.browsableLibrary = browsableLibrary;

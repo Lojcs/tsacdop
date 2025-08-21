@@ -74,8 +74,7 @@ class _DownloadsManageState extends State<DownloadsManage> {
     setState(() => _clearing = true);
     // await Future.forEach(_selectedList, (EpisodeBrief episode) async
     for (var id in _selectedList) {
-      var downloader = Provider.of<DownloadState>(context, listen: false);
-      await downloader.delTask(eState[id]);
+      await context.downloadState.removeDownload(id);
       if (mounted) setState(() {});
     }
     await Future.delayed(Duration(seconds: 1));

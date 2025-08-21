@@ -5,107 +5,66 @@ import 'package:provider/provider.dart';
 
 import '../state/podcast_group.dart';
 import '../state/podcast_state.dart';
+import '../type/podcastgroup.dart';
 import '../util/extension_helper.dart';
 import '../widgets/general_dialog.dart';
 import 'podcast_settings.dart';
 
-class PodcastGroupList extends StatefulWidget {
-  final PodcastGroup? group;
-  const PodcastGroupList({this.group, super.key});
-  @override
-  _PodcastGroupListState createState() => _PodcastGroupListState();
-}
-
-class _PodcastGroupListState extends State<PodcastGroupList> {
-  PodcastGroup? _group;
-  @override
-  void initState() {
-    super.initState();
-    _group = widget.group;
-  }
-
-  @override
-  void didUpdateWidget(PodcastGroupList oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.group != widget.group) setState(() => _group = widget.group);
-  }
+class PodcastGroupList extends StatelessWidget {
+  final String groupId;
+  const PodcastGroupList({required this.groupId, super.key});
 
   @override
   Widget build(BuildContext context) {
-    return _group!.podcastList.isEmpty
-        ? Container(
-            color: context.primaryColor,
-          )
-        : Container(
-            color: context.accentBackgroundWeak,
-            child: ReorderableListView(
-              onReorder: (oldIndex, newIndex) {
-                setState(() {
-                  _group!.reorderGroup(oldIndex, newIndex);
-                });
-                context.read<GroupList>().addToOrderChanged(_group);
-              },
-              children: _group!.podcasts.map<Widget>(
-                (podcastLocal) {
-                  return Container(
-                    margin: EdgeInsets.only(top: 0.5, bottom: 0.5),
-                    decoration: BoxDecoration(color: context.surface),
-                    key: ObjectKey(podcastLocal.title),
-                    child: _PodcastCard(
-                      podcastId: podcastLocal.id,
-                      group: _group,
-                    ),
-                  );
-                },
-              ).toList(),
-            ),
-          );
+    return Container(
+      color: context.accentBackgroundWeak,
+      child: Selector<PodcastState, List<String>>(
+        selector: (_, pState) => pState.getGroupById(groupId).podcastIds,
+        builder: (context, podcastIds, _) => ReorderableListView(
+          onReorder: (oldIndex, newIndex) {
+            if (newIndex > oldIndex) newIndex -= 1;
+            context.podcastState
+                .getGroupById(groupId)
+                .reorderGroup(oldIndex, newIndex);
+            Fluttertoast.showToast(
+              msg: context.s.toastSettingSaved,
+              gravity: ToastGravity.BOTTOM,
+            );
+          },
+          children: podcastIds.map<Widget>(
+            (podcastId) {
+              return Container(
+                margin: EdgeInsets.only(top: 0.5, bottom: 0.5),
+                decoration: BoxDecoration(color: context.surface),
+                key: ObjectKey(podcastId),
+                child: _PodcastCard(
+                  podcastId: podcastId,
+                  groupId: groupId,
+                ),
+              );
+            },
+          ).toList(),
+        ),
+      ),
+    );
   }
 }
 
 class _PodcastCard extends StatefulWidget {
   final String podcastId;
-  final PodcastGroup? group;
-  const _PodcastCard({required this.podcastId, this.group});
+  final String? groupId;
+  const _PodcastCard({required this.podcastId, this.groupId});
   @override
   State<_PodcastCard> createState() => __PodcastCardState();
 }
 
 class __PodcastCardState extends State<_PodcastCard>
     with SingleTickerProviderStateMixin {
-  late bool _addGroup;
-  late List<PodcastGroup?> _selectedGroups;
-  late List<PodcastGroup?> _belongGroups;
-  late AnimationController _controller;
-  late Animation _animation;
-  double? _value;
-  final int _seconds = 0;
-  int? _skipSeconds;
-
+  bool _addGroup = false;
   late final PodcastState pState = context.podcastState;
-  @override
-  void initState() {
-    super.initState();
-    _addGroup = false;
-    _selectedGroups = [widget.group];
-    _value = 0;
-    _controller =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 300));
-    _animation = Tween<double>(begin: 0.0, end: 1.0).animate(_controller)
-      ..addListener(
-        () {
-          setState(() {
-            _value = _animation.value;
-          });
-        },
-      );
-  }
-
   @override
   Widget build(BuildContext context) {
     final s = context.s;
-    final groupList = context.watch<GroupList>();
-    _belongGroups = groupList.getPodcastGroup(widget.podcastId);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
@@ -155,21 +114,26 @@ class __PodcastCardState extends State<_PodcastCard>
                                 fontWeight: FontWeight.bold, fontSize: 15),
                           ),
                         ),
-                        Row(
-                          children: _belongGroups.map((group) {
-                            return Container(
+                        Selector<PodcastState, List<String>>(
+                          selector: (_, pState) =>
+                              pState.findPodcastGroups(widget.podcastId),
+                          builder: (context, groupIds, _) => Row(
+                            children: groupIds.map((groupId) {
+                              return Container(
                                 padding: EdgeInsets.only(right: 5.0),
-                                child: Text(group!.name));
-                          }).toList(),
+                                child: Selector<PodcastState, String>(
+                                  selector: (_, pState) =>
+                                      pState.getGroupById(groupId).name,
+                                  builder: (context, name, _) => Text(name),
+                                ),
+                              );
+                            }).toList(),
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  IconButton(
-                      icon: Icon(Icons.add),
-                      splashRadius: 20,
-                      tooltip: s.menu,
-                      onPressed: () => setState(() => _addGroup = !_addGroup)),
+                  Icon(Icons.add),
                   IconButton(
                     icon: Icon(Icons.more_vert),
                     splashRadius: 20,
@@ -185,112 +149,102 @@ class __PodcastCardState extends State<_PodcastCard>
             ),
           ),
         ),
-        !_addGroup
-            ? Center()
-            : Container(
-                decoration: BoxDecoration(
-                  color: context.surface,
-                ),
-                // border: Border(
-                //     bottom: BorderSide(
-                //         color: Theme.of(context).primaryColorDark),
-                //     top: BorderSide(
-                //         color: Theme.of(context).primaryColorDark))),
-                height: 50,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: <Widget>[
-                    Expanded(
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                            children: groupList.groups.map<Widget>((group) {
+        AnimatedContainer(
+          duration: Duration(milliseconds: 300),
+          decoration: BoxDecoration(
+            color: context.surface,
+          ),
+          // border: Border(
+          //     bottom: BorderSide(
+          //         color: Theme.of(context).primaryColorDark),
+          //     top: BorderSide(
+          //         color: Theme.of(context).primaryColorDark))),
+          height: _addGroup ? 50 : 0,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Selector<PodcastState, List<String>>(
+                    selector: (_, pState) => pState.groupIds,
+                    builder: (context, groupIds, _) => Row(
+                      children: groupIds.map<Widget>(
+                        (groupId) {
                           return Container(
                             padding: EdgeInsets.only(left: 5.0),
-                            child: FilterChip(
-                              backgroundColor: context.accentBackground,
-                              selectedColor: context.accentColor,
-                              key: ValueKey<String>(group!.id),
-                              label: Text(group.name),
-                              selected: _selectedGroups.contains(group),
-                              onSelected: (value) {
-                                setState(() {
-                                  if (!value) {
-                                    _selectedGroups.remove(group);
+                            child: Selector<PodcastState, bool>(
+                              selector: (_, pState) => pState
+                                  .getGroupById(groupId)
+                                  .podcastIds
+                                  .contains(widget.podcastId),
+                              builder: (context, contains, _) => FilterChip(
+                                backgroundColor: context.accentBackground,
+                                selectedColor: context.accentColor,
+                                key: ValueKey<String>(groupId),
+                                label: Selector<PodcastState, String>(
+                                  selector: (_, pState) =>
+                                      pState.getGroupById(groupId).name,
+                                  builder: (context, name, _) => Text(name),
+                                ),
+                                selected: contains,
+                                onSelected: (value) {
+                                  if (value) {
+                                    pState.addPodcastToGroup(
+                                        podcastId: widget.podcastId,
+                                        groupId: groupId);
                                   } else {
-                                    _selectedGroups.add(group);
+                                    final groupIds = pState
+                                        .findPodcastGroups(widget.podcastId);
+                                    if (groupIds.length != 1) {
+                                      pState.removePodcastFromGroup(
+                                          podcastId: widget.podcastId,
+                                          groupId: groupId);
+                                      Fluttertoast.showToast(
+                                        msg: s.toastSettingSaved,
+                                        gravity: ToastGravity.BOTTOM,
+                                      );
+                                    } else {
+                                      Fluttertoast.showToast(
+                                        msg: s.toastOneGroup,
+                                        gravity: ToastGravity.BOTTOM,
+                                      );
+                                    }
                                   }
-                                });
-                              },
+                                },
+                              ),
                             ),
                           );
-                        }).toList()),
-                      ),
+                        },
+                      ).toList(),
                     ),
-                    Material(
-                      color: Colors.transparent,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          IconButton(
-                            icon: Icon(Icons.clear),
-                            splashRadius: 20,
-                            onPressed: () => setState(() {
-                              _addGroup = false;
-                            }),
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.done),
-                            splashRadius: 20,
-                            onPressed: () async {
-                              if (_selectedGroups.isNotEmpty) {
-                                setState(() {
-                                  _addGroup = false;
-                                });
-                                await groupList.changeGroup(
-                                  pState[widget.podcastId],
-                                  _selectedGroups,
-                                );
-                                Fluttertoast.showToast(
-                                  msg: s.toastSettingSaved,
-                                  gravity: ToastGravity.BOTTOM,
-                                );
-                              } else {
-                                Fluttertoast.showToast(
-                                  msg: s.toastOneGroup,
-                                  gravity: ToastGravity.BOTTOM,
-                                );
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                    )
-                  ],
-                )),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
 }
 
 class RenameGroup extends StatefulWidget {
-  final PodcastGroup? group;
-  const RenameGroup({this.group, super.key});
+  final String groupId;
+  const RenameGroup({required this.groupId, super.key});
   @override
   State<RenameGroup> createState() => _RenameGroupState();
 }
 
 class _RenameGroupState extends State<RenameGroup> {
-  TextEditingController? _controller;
+  late final TextEditingController _controller = TextEditingController(
+      text: context.podcastState.getGroupById(widget.groupId)!.name);
   String? _newName;
-  int? _error;
 
   @override
   void initState() {
     super.initState();
-    _error = 0;
-    _controller = TextEditingController(text: widget.group!.name);
+    _controller;
   }
 
   @override
@@ -301,8 +255,6 @@ class _RenameGroupState extends State<RenameGroup> {
 
   @override
   Widget build(BuildContext context) {
-    var groupList = Provider.of<GroupList>(context, listen: false);
-    List list = groupList.groups.map((e) => e!.name).toList();
     final s = context.s;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
@@ -333,16 +285,10 @@ class _RenameGroupState extends State<RenameGroup> {
           TextButton(
             onPressed: () async {
               if (_newName != null) {
-                if (list.contains(_newName)) {
-                  setState(() => _error = 1);
-                } else {
-                  final newGroup = PodcastGroup(_newName!,
-                      color: widget.group!.color,
-                      id: widget.group!.id,
-                      podcastList: widget.group!.podcastList);
-                  groupList.updateGroup(newGroup);
-                  Navigator.of(context).pop();
-                }
+                context.podcastState.modifyGroup(
+                    widget.groupId, (group) => group.copyWith(name: _newName));
+
+                Navigator.of(context).pop();
               }
             },
             child: Text(
@@ -382,12 +328,10 @@ class _RenameGroupState extends State<RenameGroup> {
             ),
             Align(
               alignment: Alignment.centerLeft,
-              child: (_error == 1)
-                  ? Text(
-                      s.groupExisted,
-                      style: TextStyle(color: Colors.red[400]),
-                    )
-                  : Center(),
+              child: Text(
+                s.groupExisted,
+                style: TextStyle(color: Colors.red[400]),
+              ),
             ),
           ],
         ),

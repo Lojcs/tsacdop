@@ -1222,34 +1222,31 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                     await selectionController.getEpisodesLimitless();
                     selectedEpisodeIds = selectionController.selectedEpisodes;
                     downloaded = value;
-                    List<EpisodeBrief> selectedEpisodes = selectedEpisodeIds
-                        .map((i) => Provider.of<EpisodeState>(context,
-                            listen: false)[i])
-                        .toList();
-                    if (value!) {
-                      await requestDownload(
-                        selectedEpisodes,
-                        context,
-                        onSuccess: () {
-                          // TODO: Make the icon reflect this
-                          Fluttertoast.showToast(
-                            msg: context.s.downloading,
-                            gravity: ToastGravity.BOTTOM,
-                          );
-                        },
-                      );
-                    } else {
-                      List<Future<void>> futures = [];
-                      for (var episode in selectedEpisodes) {
-                        futures.add(
-                            Provider.of<DownloadState>(context, listen: false)
-                                .delTask(episode));
+                    if (context.mounted) {
+                      if (value!) {
+                        await context.downloadState.requestDownload(
+                          context,
+                          selectedEpisodeIds,
+                          onSuccess: () {
+                            // TODO: Make the icon reflect this
+                            Fluttertoast.showToast(
+                              msg: context.s.downloading,
+                              gravity: ToastGravity.BOTTOM,
+                            );
+                          },
+                        );
+                      } else {
+                        List<Future<void>> futures = [];
+                        for (var episode in selectedEpisodeIds) {
+                          futures.add(
+                              context.downloadState.removeDownload(episode));
+                        }
+                        Future.wait(futures);
+                        Fluttertoast.showToast(
+                          msg: context.s.downloadRemovedToast,
+                          gravity: ToastGravity.BOTTOM,
+                        );
                       }
-                      Future.wait(futures);
-                      Fluttertoast.showToast(
-                        msg: context.s.downloadRemovedToast,
-                        gravity: ToastGravity.BOTTOM,
-                      );
                     }
                   }
                   setState(() => actionLock = false);

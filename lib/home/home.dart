@@ -31,7 +31,7 @@ import 'audioplayer.dart';
 import 'download_list.dart';
 import 'home_groups.dart';
 import 'home_menu.dart';
-import 'import_opml.dart';
+import 'status_bar.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -202,7 +202,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                     ],
                                   ),
                                 ),
-                                Import(),
+                                // StatusBar(),
                               ],
                             ),
                           ),
@@ -619,7 +619,7 @@ class _MyDownloadState extends State<_MyDownload>
         ],
       ),
       openPodcast: true,
-      refreshNotifier: Provider.of<DownloadState>(context, listen: false),
+      refreshNotifier: context.downloadState,
       actionBarWidgetsFirstRow: const [
         ActionBarDropdownSortBy(0, 0),
         ActionBarSwitchSortOrder(0, 1),

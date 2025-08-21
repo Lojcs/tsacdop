@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../util/extension_helper.dart';
 import 'audio_state.dart';
 import '../type/episodebrief.dart';
 
 import '../type/play_histroy.dart';
+import 'download_state.dart';
 
 /// Global class to manage [EpisodeBrief] field updates.
 class EpisodeState extends ChangeNotifier {
   final DBHelper _dbHelper = DBHelper();
-  late BuildContext _context;
-  late final AudioPlayerNotifier _audio =
-      Provider.of<AudioPlayerNotifier>(_context, listen: false);
-  set context(BuildContext context) => _context = context;
+  BuildContext? _nullableContext;
+  set context(BuildContext context) => _nullableContext = context;
+  bool get background => _nullableContext == null;
+  BuildContext get _context => _nullableContext!;
 
   /// episode id : EpisodeBrief
   final Map<int, EpisodeBrief> _episodeMap = {};
@@ -24,8 +24,8 @@ class EpisodeState extends ChangeNotifier {
   int _remoteId = -1;
   // using Id here to reduce memory footprint.
 
-  /// List of deleted episode ids.
-  final List<int> _deletedIds = [];
+  /// Set of deleted episode ids.
+  final Set<int> deletedIds = {};
 
   late final EpisodeBrief deletedEpisode = EpisodeBrief.user(_context.s,
       title: _context.s.deleted,
@@ -36,17 +36,17 @@ class EpisodeState extends ChangeNotifier {
       enclosureSize: 0,
       mediaId: "");
 
-  /// Convenience operator for .episodeMap[id]!
+  /// Convenience operator for getting the [EpisodeBrief] of an episode.
   EpisodeBrief operator [](int id) =>
       _episodeMap[id] ??
       _remoteEpisodeMap[id] ??
-      (_deletedIds.contains(id) ? deletedEpisode : _episodeMap[id]!);
+      (deletedIds.contains(id) ? deletedEpisode : _episodeMap[id]!);
 
   /// Indicates something changed
   bool globalChange = false;
 
   /// Ids changed in last update
-  List<int> changedIds = [];
+  Set<int> changedIds = {};
 
   EpisodeState();
 
@@ -131,12 +131,21 @@ class EpisodeState extends ChangeNotifier {
     }
   }
 
-  /// Call this only when an episode is removed from the database // TODO: Actually do this
-  void deleteLocalEpisodes(List<int> ids) {
-    for (var id in ids) {
-      if (_episodeMap.remove(id) != null) _deletedIds.add(id);
+  /// Call this only when an episode is removed from the database
+  Future<void> deleteEpisodes(List<int> ids,
+      {bool deleteFromDatabase = true}) async {
+    final dState = background
+        ? SuperDownloadState(background: true)
+        : _context.downloadState;
+    final downloaded =
+        await getEpisodes(episodeIds: ids, filterDownloaded: true);
+    for (var id in downloaded) {
+      await dState.removeDownload(id);
     }
-    _dbHelper.deleteLocalEpisodes(ids);
+    for (var id in ids) {
+      if (_episodeMap.remove(id) != null) deletedIds.add(id);
+    }
+    if (deleteFromDatabase) await _dbHelper.deleteLocalEpisodes(ids);
   }
 
   List<int> addRemoteEpisodes(Iterable<EpisodeBrief> episodes) {
@@ -256,7 +265,9 @@ class EpisodeState extends ChangeNotifier {
         _episodeMap[episodeId]!.copyWith(mediaId: mediaId, isDownloaded: true);
     changedIds.add(episodeId);
     globalChange = !globalChange;
-    _audio.updateEpisodeMediaID(_episodeMap[episodeId]!);
+    if (!background && _context.mounted) {
+      _context.audioState.updateEpisodeMediaID(_episodeMap[episodeId]!);
+    }
     notifyListeners();
   }
 
@@ -271,7 +282,9 @@ class EpisodeState extends ChangeNotifier {
         mediaId: _episodeMap[episodeId]!.enclosureUrl, isDownloaded: false);
     changedIds.add(episodeId);
     globalChange = !globalChange;
-    _audio.updateEpisodeMediaID(_episodeMap[episodeId]!);
+    if (!background && _context.mounted) {
+      _context.audioState.updateEpisodeMediaID(_episodeMap[episodeId]!);
+    }
     notifyListeners();
   }
 

@@ -808,7 +808,7 @@ class _DialPainter extends CustomPainter {
       final labelThetaIncrement = -_kTwoPi / labels.length;
       var labelTheta = math.pi / 2.0;
 
-      for (final label in labels) {
+      for (var label in labels) {
         final labelPainter = label.painter;
         final labelOffset =
             Offset(-labelPainter.width / 2.0, -labelPainter.height / 2.0);
@@ -1134,7 +1134,7 @@ class _DialState extends State<_Dial> with SingleTickerProviderStateMixin {
 
   List<_TappableLabel> _build24HourRing(TextTheme textTheme, Color? color) =>
       <_TappableLabel>[
-        for (final TimeOfDay timeOfDay in _twentyFourHours)
+        for (var timeOfDay in _twentyFourHours)
           _buildTappableLabel(
             textTheme,
             color,
@@ -1149,7 +1149,7 @@ class _DialState extends State<_Dial> with SingleTickerProviderStateMixin {
 
   List<_TappableLabel> _build12HourRing(TextTheme textTheme, Color? color) =>
       <_TappableLabel>[
-        for (final TimeOfDay timeOfDay in _amHours)
+        for (var timeOfDay in _amHours)
           _buildTappableLabel(
             textTheme,
             color,
@@ -1179,7 +1179,7 @@ class _DialState extends State<_Dial> with SingleTickerProviderStateMixin {
     ];
 
     return <_TappableLabel>[
-      for (final TimeOfDay timeOfDay in minuteMarkerValues)
+      for (var timeOfDay in minuteMarkerValues)
         _buildTappableLabel(
           textTheme,
           color,

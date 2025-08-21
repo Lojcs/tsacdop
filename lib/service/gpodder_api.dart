@@ -10,8 +10,61 @@ import 'package:uuid/uuid.dart';
 
 import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
+import '../state/podcast_state.dart';
+import '../type/podcastbrief.dart';
 
 enum GpodderSyncStatus { none, success, fail, authError }
+
+/// Remnants from old GroupList that deal with gpodder sync. For future reference.
+/// Some are rewritten for compatibility with [PodcastState].
+class GroupListRemnants {
+  GroupListRemnants() {
+    gpodderSyncNow();
+  }
+  late PodcastState _pState;
+
+  final _loginInfp = KeyValueStorage(gpodderApiKey);
+  final _addStorage = KeyValueStorage(gpodderAddKey);
+  final _removeStorage = KeyValueStorage(gpodderRemoveKey);
+  final _remoteAddStorage = KeyValueStorage(gpodderRemoteAddKey);
+  final _remoteRemoveStorage = KeyValueStorage(gpodderRemoteRemoveKey);
+  Future<void> gpodderSyncNow() async {
+    final addList = await _remoteAddStorage.getStringList();
+    final removeList = await _remoteRemoveStorage.getStringList();
+
+    if (removeList.isNotEmpty) {
+      List<Future<void>> futures = [];
+      for (var rssLink in removeList) {
+        var podcasts = await _pState.getPodcasts(rssUrls: [rssLink]);
+        if (podcasts.isNotEmpty) {
+          futures.add(_pState.unsubscribePodcast(podcasts.first));
+        }
+      }
+      await Future.wait(futures);
+      await _remoteAddStorage.clearList();
+    }
+    if (addList.isNotEmpty) {
+      List<Future<void>> futures = [];
+      for (var rssLink in addList) {
+        futures.add(_pState.subscribePodcastByUrl(rssLink));
+      }
+      await Future.wait(futures);
+      await _remoteRemoveStorage.clearList();
+    }
+  }
+
+  Future<void> _syncAdd(String? rssUrl) async {
+    final check = await _checkGpodderLoggedin();
+    if (check) {
+      await _addStorage.addList([rssUrl]);
+    }
+  }
+
+  Future<bool> _checkGpodderLoggedin() async {
+    final loginInfo = await _loginInfp.getStringList();
+    return loginInfo.isNotEmpty;
+  }
+}
 
 class Gpodder {
   final _dio = Dio(BaseOptions(

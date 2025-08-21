@@ -6,6 +6,7 @@ import '../state/podcast_group.dart';
 import '../state/podcast_state.dart';
 import '../type/podcastbrief.dart';
 import '../util/extension_helper.dart';
+import 'search_api_helper.dart';
 import 'search_page.dart';
 
 class SearchButton extends StatefulWidget {
@@ -187,7 +188,9 @@ class SearchPodcastPreviewState extends State<SearchPodcastPreview> {
                   Selector<PodcastState, DataSource>(
                     selector: (_, pState) => pState[widget.podcastId].source,
                     builder: (context, source, _) => ElevatedButton(
-                      onPressed: subscribe,
+                      onPressed: () =>
+                          Provider.of<ApiSearch>(context, listen: false)
+                              .subscribe(widget.podcastId),
                       child: Text(
                         source == DataSource.remote
                             ? context.s.subscribe
@@ -230,20 +233,6 @@ class SearchPodcastPreviewState extends State<SearchPodcastPreview> {
         ),
       ),
     );
-  }
-
-  void subscribe() {
-    final subscribeWorker = Provider.of<GroupList>(context, listen: false);
-    final podcast = context.podcastState[widget.podcastId];
-    var item = SubscribeItem(
-      podcast.rssUrl,
-      podcast.title,
-      id: podcast.id,
-      imgUrl: podcast.imageUrl,
-      group: 'Home',
-    );
-    subscribeWorker.setSubscribeItem(item);
-    setState(() => podcast.copyWith(source: DataSource.database));
   }
 }
 

@@ -22,6 +22,9 @@ enum DataSource {
   remote, // Temp from rss feed
 }
 
+const localFolderId = "46e48103-06c7-4fe1-a0b1-68aa7205b7f0";
+const podcastAllId = "74c638a9-5021-4b1e-ba51-3deab5028905";
+
 class PodcastBrief extends Equatable {
   final String id;
   final String title;

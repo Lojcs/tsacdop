@@ -127,7 +127,7 @@ class ShowNote extends StatelessWidget {
     final linkList = linkify(description,
         options: LinkifyOptions(humanize: false),
         linkifiers: [TimeStampLinkifier()]);
-    for (final element in linkList) {
+    for (var element in linkList) {
       if (element is TimeStampElement) {
         final time = element.timeStamp;
         description = description.replaceFirst(

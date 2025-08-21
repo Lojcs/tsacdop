@@ -69,6 +69,15 @@ class SearchPanelRoute extends ModalRoute {
   String? get barrierLabel => barrierLabelText;
 
   @override
+  bool get maintainState => false;
+
+  @override
+  bool get opaque => false;
+
+  @override
+  Duration get transitionDuration => const Duration(milliseconds: 400);
+
+  @override
   Widget buildPage(
       BuildContext context, Animation<double> animation, Animation<double> _) {
     final panelAnimation =
@@ -190,15 +199,6 @@ class SearchPanelRoute extends ModalRoute {
       ],
     );
   }
-
-  @override
-  bool get maintainState => false;
-
-  @override
-  bool get opaque => false;
-
-  @override
-  Duration get transitionDuration => const Duration(milliseconds: 400);
 }
 
 class SearchPanel extends StatefulWidget {
@@ -218,7 +218,8 @@ class SearchPanel extends StatefulWidget {
 }
 
 class SearchPanelState extends State<SearchPanel> {
-  late Search searchProvider = PodcastIndexSearch(context.podcastState);
+  late Search searchProvider =
+      PodcastIndexSearch(context.podcastState, context.episodeState);
 
   @override
   Widget build(BuildContext context) {

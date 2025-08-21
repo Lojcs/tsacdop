@@ -10,35 +10,22 @@ import '../state/download_state.dart';
 import '../type/episode_task.dart';
 import '../type/episodebrief.dart';
 import '../util/extension_helper.dart';
-import '../util/helpers.dart';
 import '../widgets/custom_widget.dart';
 
 class DownloadButton extends StatefulWidget {
-  final EpisodeBrief episode;
-  const DownloadButton({required this.episode, super.key});
+  final int episodeId;
+  const DownloadButton({required this.episodeId, super.key});
   @override
-  _DownloadButtonState createState() => _DownloadButtonState();
+  State<DownloadButton> createState() => _DownloadButtonState();
 }
 
 class _DownloadButtonState extends State<DownloadButton> {
-  void _deleteDownload(EpisodeBrief episode) async {
-    Provider.of<DownloadState>(context, listen: false).delTask(episode);
+  void _deleteDownload(int episodeId) async {
+    context.downloadState.removeDownload(episodeId);
     Fluttertoast.showToast(
       msg: context.s.downloadRemovedToast,
       gravity: ToastGravity.BOTTOM,
     );
-  }
-
-  Future<void> _pauseDownload(EpisodeBrief episode) async {
-    Provider.of<DownloadState>(context, listen: false).pauseTask(episode);
-  }
-
-  Future<void> _resumeDownload(EpisodeBrief episode) async {
-    Provider.of<DownloadState>(context, listen: false).resumeTask(episode);
-  }
-
-  Future<void> _retryDownload(EpisodeBrief episode) async {
-    Provider.of<DownloadState>(context, listen: false).retryTask(episode);
   }
 
   Widget _buttonOnMenu(Widget widget, Function() onTap) => Material(
@@ -54,37 +41,41 @@ class _DownloadButtonState extends State<DownloadButton> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<DownloadState>(builder: (_, downloader, __) {
-      var task = Provider.of<DownloadState>(context, listen: false)
-          .episodeToTask(widget.episode);
-      return Row(
-        // TODO: On emulator this is sometimes unresponsive as _task.status returns undefined even though the task is enqueued. Test real device.
-        children: <Widget>[
-          _downloadButton(task, context),
-          AnimatedContainer(
+    return Selector<SuperDownloadState, SuperEpisodeTask?>(
+      selector: (_, dState) => dState[widget.episodeId],
+      builder: (context, task, _) {
+        return Row(
+          children: <Widget>[
+            _downloadButton(task, context),
+            AnimatedContainer(
               duration: Duration(seconds: 1),
+              curve: Curves.ease,
               decoration: BoxDecoration(
                   color: context.accentColor,
                   borderRadius: BorderRadius.all(Radius.circular(15.0))),
               height: 20.0,
-              width: (task.status == DownloadTaskStatus.running ||
-                      task.status == DownloadTaskStatus.enqueued)
+              width: (task?.status == DownloadTaskStatus.running ||
+                      task?.status == DownloadTaskStatus.enqueued)
                   ? 50.0
                   : 0,
               alignment: Alignment.center,
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                child: Text('${math.max<int>(task.progress!, 0)}%',
-                    style: TextStyle(color: Colors.white)),
-              )),
-        ],
-      );
-    });
+                child: Text(
+                  '${math.max<int>(task?.progress ?? 0, 0)}%',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
-  Widget _downloadButton(EpisodeTask task, BuildContext context) {
-    switch (task.status) {
-      case DownloadTaskStatus.undefined:
+  Widget _downloadButton(SuperEpisodeTask? task, BuildContext context) {
+    switch (task?.status) {
+      case null || DownloadTaskStatus.undefined:
         return _buttonOnMenu(
             Center(
               child: SizedBox(
@@ -100,14 +91,13 @@ class _DownloadButtonState extends State<DownloadButton> {
                 ),
               ),
             ),
-            () => requestDownload([task.episode], context));
-      case DownloadTaskStatus.enqueued:
+            () => context.downloadState
+                .requestDownload(context, [task!.episodeId]));
+      case DownloadTaskStatus.enqueued || DownloadTaskStatus.running:
         return Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: () {
-              if (task.progress! > 0) _pauseDownload(task.episode);
-            },
+            onTap: () => context.downloadState.pauseDownload(task!.episodeId),
             child: Container(
               height: 50.0,
               alignment: Alignment.center,
@@ -123,36 +113,7 @@ class _DownloadButtonState extends State<DownloadButton> {
                         color: context.accentColor,
                         fraction: fraction,
                         progressColor: context.accentColor,
-                        progress: task.progress! / 100),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      case DownloadTaskStatus.running:
-        return Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () {
-              if (task.progress! > 0) _pauseDownload(task.episode);
-            },
-            child: Container(
-              height: 50.0,
-              alignment: Alignment.center,
-              padding: EdgeInsets.symmetric(horizontal: 15.0),
-              child: TweenAnimationBuilder(
-                duration: Duration(milliseconds: 1000),
-                tween: Tween(begin: 0.0, end: 1.0),
-                builder: (context, dynamic fraction, child) => SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CustomPaint(
-                    painter: DownloadPainter(
-                        color: context.accentColor,
-                        fraction: fraction,
-                        progressColor: context.accentColor,
-                        progress: task.progress! / 100),
+                        progress: task!.progress / 100),
                   ),
                 ),
               ),
@@ -163,9 +124,7 @@ class _DownloadButtonState extends State<DownloadButton> {
         return Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: () {
-              _deleteDownload(task.episode);
-            },
+            onTap: () => _deleteDownload(task!.episodeId),
             child: Container(
               height: 50.0,
               alignment: Alignment.center,
@@ -185,19 +144,14 @@ class _DownloadButtonState extends State<DownloadButton> {
             ),
           ),
         );
-      case DownloadTaskStatus.failed:
+      case DownloadTaskStatus.failed || DownloadTaskStatus.canceled:
         return _buttonOnMenu(Icon(Icons.refresh, color: Colors.red),
-            () => _retryDownload(task.episode));
-      case DownloadTaskStatus.canceled:
-        return _buttonOnMenu(Icon(Icons.refresh, color: Colors.red),
-            () => _retryDownload(task.episode));
+            () => context.downloadState.pauseDownload(task!.episodeId));
       case DownloadTaskStatus.paused:
         return Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: () {
-              _resumeDownload(task.episode);
-            },
+            onTap: () => context.downloadState.resumeDownload(task!.episodeId),
             child: Container(
               height: 50.0,
               alignment: Alignment.center,
@@ -213,7 +167,7 @@ class _DownloadButtonState extends State<DownloadButton> {
                         color: context.accentColor,
                         fraction: 1,
                         progressColor: context.accentColor,
-                        progress: task.progress! / 100,
+                        progress: task!.progress / 100,
                         pauseProgress: fraction),
                   ),
                 ),
@@ -221,8 +175,6 @@ class _DownloadButtonState extends State<DownloadButton> {
             ),
           ),
         );
-      default: //
-        return Center();
     }
   }
 }

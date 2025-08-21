@@ -15,6 +15,7 @@ import '../local_storage/sqflite_localpodcast.dart';
 import '../type/episodebrief.dart';
 import '../type/play_histroy.dart';
 import '../type/playlist.dart';
+import '../util/extension_helper.dart';
 import 'episode_state.dart';
 
 const MediaControl playControl = MediaControl(
@@ -71,15 +72,15 @@ class AudioPlayerNotifier extends ChangeNotifier {
   final DBHelper _dbHelper = DBHelper();
 
   /// Episode state propogation
-  late final EpisodeState _episodeState;
+  late EpisodeState _episodeState;
+
+  set context(BuildContext context) => _episodeState = context.episodeState;
 
   /// Browsable library for android auto. Needs a context with all state providers.
   /// Set this before adding the first listener.
   BrowsableLibrary? browsableLibrary;
 
-  AudioPlayerNotifier(BuildContext context) {
-    _episodeState = Provider.of<EpisodeState>(context, listen: false);
-  }
+  AudioPlayerNotifier();
 
   /// Unused. (replaced by history database)
   final _positionStorage = const KeyValueStorage(audioPositionKey);
@@ -1228,7 +1229,7 @@ class AudioPlayerNotifier extends ChangeNotifier {
     notifyListeners();
     _savePlaylists();
     if (playlist.isLocal) {
-      _dbHelper.deleteLocalEpisodes(playlist.episodeIds);
+      _episodeState.deleteEpisodes(playlist.episodeIds);
     }
   }
 

@@ -57,7 +57,6 @@ class _PodcastSettingState extends State<PodcastSetting> {
   @override
   Widget build(BuildContext context) {
     final s = context.s;
-    final groupList = context.watch<GroupList>();
     final textStyle = context.textTheme.bodyMedium!;
     return Selector<PodcastState, ColorScheme>(
       selector: (context, pState) =>
@@ -349,8 +348,7 @@ class _PodcastSettingState extends State<PodcastSetting> {
                   ),
                   TextButton(
                       onPressed: () async {
-                        await groupList.removePodcast(
-                            context.podcastState[widget.podcastId]);
+                        await _pState.unsubscribePodcast(widget.podcastId);
                         if (context.mounted) Navigator.of(context).pop();
                       },
                       child:

@@ -8,8 +8,11 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../local_storage/key_value_storage.dart';
+import '../service/opml_build.dart';
 import '../state/download_state.dart';
+import '../state/podcast_state.dart';
 import '../type/episodebrief.dart';
+import '../type/podcastgroup.dart';
 import '../util/extension_helper.dart';
 import '../widgets/custom_widget.dart';
 import '../widgets/general_dialog.dart';
@@ -33,55 +36,6 @@ String formateDate(int timeStamp) {
   return DateFormat.yMMMd().format(
     DateTime.fromMillisecondsSinceEpoch(timeStamp),
   );
-}
-
-Future<void> requestDownload(List<EpisodeBrief> episodes, BuildContext context,
-    {VoidCallback? onSuccess}) async {
-  final downloadUsingData = await KeyValueStorage(downloadUsingDataKey)
-      .getBool(defaultValue: true, reverse: true);
-  // We don't need storage permission to download to app storage
-  final result = await Connectivity().checkConnectivity();
-  final usingData = !result.contains(ConnectivityResult.wifi);
-  var useData = false;
-  final s = context.s;
-  if (downloadUsingData && usingData) {
-    await generalDialog(
-      context,
-      title: Text(s.cellularConfirm),
-      content: Text(s.cellularConfirmDes),
-      actions: <Widget>[
-        TextButton(
-          onPressed: Navigator.of(context).pop,
-          child: Text(
-            s.cancel,
-            style: TextStyle(color: context.colorScheme.onSecondaryContainer),
-          ),
-        ),
-        TextButton(
-          onPressed: () {
-            useData = true;
-            Navigator.of(context).pop();
-          },
-          child: Text(
-            s.confirm,
-            style: TextStyle(color: context.error),
-          ),
-        )
-      ],
-    );
-  }
-  if (useData || !usingData) {
-    for (var episode in episodes) {
-      Provider.of<DownloadState>(context, listen: false).startTask(episode);
-    }
-    Fluttertoast.showToast(
-      msg: context.s.downloadStart,
-      gravity: ToastGravity.BOTTOM,
-    );
-    if (onSuccess != null) {
-      onSuccess();
-    }
-  }
 }
 
 OverlayEntry createOverlayEntry(BuildContext context,

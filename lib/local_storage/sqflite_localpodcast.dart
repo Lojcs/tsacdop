@@ -12,6 +12,7 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import '../state/podcast_group.dart';
 import '../type/fireside_data.dart';
+import '../type/podcastgroup.dart';
 import '../util/extension_helper.dart';
 import 'package:tuple/tuple.dart';
 import 'package:webfeed/webfeed.dart';
@@ -45,8 +46,6 @@ enum Sorter {
 
   final String sql;
 }
-
-const localFolderId = "46e48103-06c7-4fe1-a0b1-68aa7205b7f0";
 
 class DBHelper {
   Database? _db;
@@ -258,12 +257,11 @@ class DBHelper {
         PodcastLocal(id), group_id TEXT REFERENCES Group(id),
         PRIMARY KEY (podcast_id, group_id))""");
     final KeyValueStorage groupStorage = KeyValueStorage(groupsKey);
-    final loadGroups = await groupStorage.getGroups();
-    final groups = loadGroups!.map(PodcastGroup.fromEntity);
-    for (final group in groups) {
+    final groups = await groupStorage.getGroups();
+    for (var group in groups!) {
       await db.rawUpdate("INSERT INTO Group(id, name, color) VALUES (?, ?, ?)",
           [group.id, group.name, group.color]);
-      for (final podcastId in group.podcastList) {
+      for (var podcastId in group.podcastIds) {
         await db.rawUpdate(
             "INSERT INTO Podcast_Group(podcast_id, group_id) VALUES (?, ?)",
             [podcastId, group.id]);
@@ -461,18 +459,11 @@ class DBHelper {
     return result;
   }
 
-  Future<void> delPodcastLocal(String? id) async {
+  Future<void> delPodcast(String? id) async {
     var dbClient = await database;
-    await dbClient.rawDelete('DELETE FROM PodcastLocal WHERE id =?', [id]);
+    await dbClient.rawDelete('DELETE FROM PodcastLocal WHERE id = ?', [id]);
     await dbClient
-        .rawDelete('DELETE FROM Podcast_Group WHERE podcast_id =?', [id]);
-    List<Map> list = await dbClient.rawQuery(
-        """SELECT downloaded FROM Episodes WHERE downloaded != 'ND' AND feed_id = ?""",
-        [id]);
-    for (var i in list) {
-      await FlutterDownloader.remove(
-          taskId: i['downloaded'], shouldDeleteContent: true);
-    }
+        .rawDelete('DELETE FROM Podcast_Group WHERE podcast_id = ?', [id]);
     await dbClient.rawDelete('DELETE FROM Episodes WHERE feed_id=?', [id]);
     var milliseconds = DateTime.now().millisecondsSinceEpoch;
     await dbClient.rawUpdate(
@@ -908,14 +899,14 @@ class DBHelper {
 
   /// Saves episodes to the database. It is assumed that all episodes belong to
   /// the same podcast. Set [update] for existing feeds.
-  Future<void> savePodcastEpisodes(
-      DatabaseExecutor dbClient, List<EpisodeBrief> episodes,
+  Future<void> _savePodcastEpisodes(
+      Transaction txn, List<EpisodeBrief> episodes,
       {bool update = true}) async {
-    final hideNew = Sqflite.firstIntValue(await dbClient.rawQuery(
+    final hideNew = Sqflite.firstIntValue(await txn.rawQuery(
         'SELECT hide_new_mark FROM PodcastLocal WHERE id = ?',
         [episodes.first.podcastId]));
     final newMark = update && hideNew == 0;
-    Batch batchOp = dbClient.batch();
+    Batch batchOp = txn.batch();
     for (var episode in episodes) {
       batchOp.rawInsert(
           """INSERT OR REPLACE INTO Episodes(title, enclosure_url, enclosure_length,
@@ -941,19 +932,26 @@ class DBHelper {
           ]);
     }
     await batchOp.commit();
+    final feedId = episodes.first.podcastId;
+    int? count = Sqflite.firstIntValue(await txn
+        .rawQuery('SELECT COUNT(*) FROM Episodes WHERE feed_id = ?', [feedId]));
+    await txn.rawUpdate(
+        """UPDATE PodcastLocal SET episode_count = ? WHERE id = ?""",
+        [count ?? 0, feedId]);
   }
 
   Future<void> saveNewPodcastEpisodes(List<EpisodeBrief> episodes) async {
     var dbClient = await database;
-    final feedId = episodes.first.podcastId;
     await dbClient.transaction<void>((txn) async {
-      await savePodcastEpisodes(txn, episodes, update: false);
+      await _savePodcastEpisodes(txn, episodes, update: false);
       await rescanPodcastEpisodesVersionsDart(txn, episodes.first.podcastId);
-      int? count = Sqflite.firstIntValue(await txn.rawQuery(
-          'SELECT COUNT(*) FROM Episodes WHERE feed_id = ?', [feedId]));
-      await txn.rawUpdate(
-          """UPDATE PodcastLocal SET episode_count = ? WHERE id = ?""",
-          [count ?? 0, feedId]);
+    });
+  }
+
+  Future<void> saveUpdatedPodcastEpisodes(List<EpisodeBrief> episodes) async {
+    var dbClient = await database;
+    await dbClient.transaction<void>((txn) async {
+      await _savePodcastEpisodes(txn, episodes, update: true);
     });
   }
 
@@ -1019,13 +1017,14 @@ class DBHelper {
     return episodeId;
   }
 
-  Future<void> deleteLocalEpisodes(List<int> ids) async {
+  Future<void> deleteLocalEpisodes(List<int> ids,
+      {String podcastId = localFolderId}) async {
     var dbClient = await database;
     await dbClient.transaction((txn) async {
       Batch batchOp = txn.batch();
       for (var id in ids) {
         batchOp.rawDelete('DELETE FROM Episodes WHERE id = ? AND feed_id = ?',
-            [id, localFolderId]);
+            [id, podcastId]);
       }
       await batchOp.commit();
     });

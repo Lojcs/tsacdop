@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:developer' as developer;
 import 'dart:io';
 
@@ -13,8 +14,9 @@ import '../local_storage/key_value_storage.dart';
 import '../service/opml_build.dart';
 import '../settings/settting.dart';
 import '../state/podcast_group.dart';
-import '../state/refresh_podcast.dart';
+import '../type/podcastgroup.dart';
 import '../util/extension_helper.dart';
+import '../util/helpers.dart';
 import 'about.dart';
 
 class PopupMenu extends StatefulWidget {
@@ -27,7 +29,6 @@ class PopupMenu extends StatefulWidget {
 class _PopupMenuState extends State<PopupMenu> {
   @override
   Widget build(BuildContext context) {
-    var refreshWorker = Provider.of<RefreshWorker>(context, listen: false);
     final s = context.s;
     return Material(
       color: Colors.transparent,
@@ -126,14 +127,14 @@ class _PopupMenuState extends State<PopupMenu> {
               ),
             ),
           ],
-          onSelected: (value) {
+          onSelected: (value) async {
             if (value == 5) {
               Navigator.push(
                   context, MaterialPageRoute(builder: (context) => AboutApp()));
             } else if (value == 2) {
               _getFilePath();
             } else if (value == 1) {
-              refreshWorker.start([]);
+              context.podcastState.syncAllPodcasts();
             } else if (value == 3) {
               //  setting.theme != 2 ? setting.setTheme(2) : setting.setTheme(1);
             } else if (value == 4) {
@@ -161,25 +162,11 @@ class _PopupMenuState extends State<PopupMenu> {
   }
 
   void _saveOmpl(String path) async {
-    final subscribeWorker = Provider.of<GroupList>(context, listen: false);
-    final rssExp = RegExp(r'^(https?):\/\/(.*)');
     final s = context.s;
     final file = File(path);
     try {
       final opml = file.readAsStringSync();
-      Map<String, List<OmplOutline>> data = PodcastsBackup.parseOPML(opml);
-      for (final entry in data.entries) {
-        var title = entry.key;
-        var list = entry.value.reversed;
-        for (var rss in list) {
-          var rssLink = rssExp.stringMatch(rss.xmlUrl!);
-          if (rssLink != null) {
-            var item = SubscribeItem(rssLink, rss.text ?? "", group: title);
-            await subscribeWorker.setSubscribeItem(item);
-            await Future.delayed(Duration(milliseconds: 200));
-          }
-        }
-      }
+      context.podcastState.subscribeOpml(opml);
     } catch (e) {
       developer.log(e.toString(), name: 'OMPL parse error');
       Fluttertoast.showToast(

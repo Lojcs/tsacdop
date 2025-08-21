@@ -1442,15 +1442,13 @@ List<FocusedMenuItem> _menuItemList(BuildContext context, int episodeId,
           trailing: Icon(LineIcons.download, color: Colors.green),
           onPressed: () async {
             if (!eState[episodeId].isDownloaded) {
-              List<int> episodes = [episodeId];
+              List<int> episodeIds = [episodeId];
               SelectionController? selectionController =
                   Provider.of<SelectionController?>(context, listen: false);
               if (selectionController != null && applyToAllSelected) {
-                episodes = selectionController.selectedEpisodes;
+                episodeIds = selectionController.selectedEpisodes;
               }
-              List<EpisodeBrief> selectedEpisodes =
-                  episodes.map((i) => eState[i]).toList();
-              await requestDownload(selectedEpisodes, context);
+              await context.downloadState.requestDownload(context, episodeIds);
             }
           }),
     if (menuList.contains(5))

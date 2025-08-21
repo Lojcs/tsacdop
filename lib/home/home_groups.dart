@@ -13,9 +13,9 @@ import '../podcasts/podcastlist.dart';
 import '../state/episode_state.dart';
 import '../state/podcast_group.dart';
 import '../state/podcast_state.dart';
-import '../state/refresh_podcast.dart';
 import '../state/setting_state.dart';
 import '../type/podcastbrief.dart';
+import '../type/podcastgroup.dart';
 import '../util/extension_helper.dart';
 import '../util/hide_player_route.dart';
 import '../util/pageroute.dart';
@@ -75,382 +75,301 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
         if (snapshot.hasData) {
           final layout = snapshot.data!.$1;
           double previewHeight = layout.getRowHeight(context.width);
-          return Selector2<GroupList, RefreshWorker,
-              tuple.Tuple3<List<PodcastGroup?>, bool, bool>>(
-            selector: (_, groupList, refreshWorker) => tuple.Tuple3(
-                groupList.groups, groupList.created, refreshWorker.created),
-            builder: (_, data, __) {
-              final groups = data.item1;
-              final import = data.item2;
-              if (groups.isEmpty) {
-                return SizedBox(
-                  height: previewHeight + 140,
-                );
-              }
-              if (groups[_groupIndex]!.podcastList.isEmpty) {
-                return SizedBox(
-                  height: previewHeight + 140,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      GestureDetector(
-                        onVerticalDragEnd: (event) {
-                          if (event.primaryVelocity! > 200) {
-                            if (groups.length == 1) {
-                              Fluttertoast.showToast(
-                                msg: s.addSomeGroups,
-                                gravity: ToastGravity.BOTTOM,
-                              );
-                            } else {
-                              if (mounted) {
-                                setState(() {
-                                  (_groupIndex != 0)
-                                      ? _groupIndex--
-                                      : _groupIndex = groups.length - 1;
-                                });
-                              }
-                            }
-                          } else if (event.primaryVelocity! < -200) {
-                            if (groups.length == 1) {
-                              Fluttertoast.showToast(
-                                msg: s.addSomeGroups,
-                                gravity: ToastGravity.BOTTOM,
-                              );
-                            } else {
-                              if (mounted) {
-                                setState(
-                                  () {
-                                    (_groupIndex < groups.length - 1)
-                                        ? _groupIndex++
-                                        : _groupIndex = 0;
-                                  },
-                                );
-                              }
-                            }
-                          }
-                        },
-                        child: Column(
-                          children: <Widget>[
-                            SizedBox(
-                              height: 30,
-                              child: Row(
-                                children: <Widget>[
-                                  Padding(
-                                    padding:
-                                        EdgeInsets.symmetric(horizontal: 15.0),
-                                    child: Text(
-                                      groups[_groupIndex]!.name,
-                                      style: context.textTheme.bodyLarge!
-                                          .copyWith(color: context.accentColor),
-                                    ),
-                                  ),
-                                  Spacer(),
-                                  Padding(
-                                    padding:
-                                        EdgeInsets.symmetric(horizontal: 15),
-                                    child: InkWell(
-                                      borderRadius: BorderRadius.circular(15),
-                                      onTap: () {
-                                        if (!import) {
-                                          Navigator.push(
-                                            context,
-                                            SlideLeftRoute(
-                                              page: context
-                                                      .read<SettingState>()
-                                                      .openAllPodcastDefalt!
-                                                  ? PodcastList()
-                                                  : PodcastManage(),
-                                            ),
-                                          );
+          return Selector<PodcastState, (String, List<String>, bool)>(
+            selector: (_, pState) {
+              final group = pState.getGroupById(pState.groupIds[_groupIndex]);
+              return (group.name, group.podcastIds, pState.groupsChange);
+            },
+            builder: (context, data, _) {
+              final groupName = data.$1;
+              final podcastIds = data.$2;
+              bool empty = podcastIds.isEmpty;
+              return FutureBuilder(
+                future: context.podcastState.cachePodcasts(podcastIds),
+                builder: (context, snapshot) => !snapshot.hasData
+                    ? Center()
+                    : SizedBox(
+                        height: previewHeight + 140,
+                        child: DefaultTabController(
+                          length: empty ? 3 : podcastIds.length,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              GestureDetector(
+                                onVerticalDragEnd: (event) async {
+                                  final groupCount =
+                                      context.podcastState.groupIds.length;
+                                  if (event.primaryVelocity! > 200) {
+                                    if (groupCount == 1) {
+                                      Fluttertoast.showToast(
+                                        msg: s.addSomeGroups,
+                                        gravity: ToastGravity.BOTTOM,
+                                      );
+                                    } else {
+                                      if (mounted) {
+                                        setState(() =>
+                                            _slideTween = _getSlideTween(20));
+                                        _controller.forward();
+                                        await Future.delayed(
+                                            Duration(milliseconds: 50));
+                                        if (mounted) {
+                                          setState(() {
+                                            (_groupIndex != 0)
+                                                ? _groupIndex--
+                                                : _groupIndex = groupCount - 1;
+                                          });
                                         }
-                                      },
-                                      onLongPress: () {
-                                        if (!import) {
-                                          Navigator.push(
-                                            context,
-                                            SlideLeftRoute(page: PodcastList()),
-                                          );
-                                        }
-                                      },
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(5.0),
-                                        child: Text(
-                                          s.homeGroupsSeeAll,
-                                          style: context.textTheme.bodyLarge!
-                                              .copyWith(
-                                            color: import
-                                                ? context.primaryColorDark
-                                                : context.accentColor,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                                height: 70,
-                                color: Colors.transparent,
-                                child: Row(
-                                  children: <Widget>[
-                                    _circleContainer(),
-                                    _circleContainer(),
-                                    _circleContainer()
-                                  ],
-                                )),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        height: previewHeight + 40,
-                        color: Colors.transparent,
-                        margin: EdgeInsets.symmetric(horizontal: 15),
-                        child: Center(
-                            child: _groupIndex == 0
-                                ? Text.rich(TextSpan(
-                                    style: context.textTheme.titleLarge!
-                                        .copyWith(height: 2),
-                                    children: [
-                                      TextSpan(
-                                          text: 'Welcome to Tsacdop\n',
-                                          style: context.textTheme.titleLarge!
-                                              .copyWith(
-                                                  color: context.accentColor)),
-                                      TextSpan(
-                                          text: 'Get started\n',
-                                          style: context.textTheme.titleLarge!
-                                              .copyWith(
-                                                  color: context.accentColor)),
-                                      TextSpan(text: 'Tap '),
-                                      WidgetSpan(
-                                          child:
-                                              Icon(Icons.add_circle_outline)),
-                                      TextSpan(text: ' to search podcasts')
-                                    ],
-                                  ))
-                                : Text(s.noPodcastGroup,
-                                    style: TextStyle(
-                                        color: context
-                                            .textTheme.bodyMedium!.color!
-                                            .withValues(alpha: 0.5)))),
-                      ),
-                    ],
-                  ),
-                );
-              }
-              return DefaultTabController(
-                length: groups[_groupIndex]!.podcasts.length,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    GestureDetector(
-                      onVerticalDragEnd: (event) async {
-                        if (event.primaryVelocity! > 200) {
-                          if (groups.length == 1) {
-                            Fluttertoast.showToast(
-                              msg: s.addSomeGroups,
-                              gravity: ToastGravity.BOTTOM,
-                            );
-                          } else {
-                            if (mounted) {
-                              setState(() => _slideTween = _getSlideTween(20));
-                              _controller.forward();
-                              await Future.delayed(Duration(milliseconds: 50));
-                              if (mounted) {
-                                setState(() {
-                                  (_groupIndex != 0)
-                                      ? _groupIndex--
-                                      : _groupIndex = groups.length - 1;
-                                });
-                              }
-                            }
-                          }
-                        } else if (event.primaryVelocity! < -200) {
-                          if (groups.length == 1) {
-                            Fluttertoast.showToast(
-                              msg: s.addSomeGroups,
-                              gravity: ToastGravity.BOTTOM,
-                            );
-                          } else {
-                            setState(() => _slideTween = _getSlideTween(-20));
-                            await Future.delayed(Duration(milliseconds: 50));
-                            _controller.forward();
-                            if (mounted) {
-                              setState(() {
-                                (_groupIndex < groups.length - 1)
-                                    ? _groupIndex++
-                                    : _groupIndex = 0;
-                              });
-                            }
-                          }
-                        }
-                      },
-                      child: Column(
-                        children: <Widget>[
-                          SizedBox(
-                            height: 30,
-                            child: Row(
-                              children: <Widget>[
-                                Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 15.0),
-                                    child: Text(
-                                      groups[_groupIndex]!.name,
-                                      style: context.textTheme.bodyLarge!
-                                          .copyWith(color: context.accentColor),
-                                    )),
-                                Spacer(),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 15),
-                                  child: InkWell(
-                                    onTap: () {
-                                      if (!import) {
-                                        Navigator.push(
-                                          context,
-                                          SlideLeftRoute(
-                                              page: context
-                                                      .read<SettingState>()
-                                                      .openAllPodcastDefalt!
-                                                  ? PodcastList()
-                                                  : PodcastManage()),
-                                        );
                                       }
-                                    },
-                                    onLongPress: () {
-                                      if (!import) {
-                                        Navigator.push(
-                                          context,
-                                          SlideLeftRoute(page: PodcastList()),
-                                        );
+                                    }
+                                  } else if (event.primaryVelocity! < -200) {
+                                    if (groupCount == 1) {
+                                      Fluttertoast.showToast(
+                                        msg: s.addSomeGroups,
+                                        gravity: ToastGravity.BOTTOM,
+                                      );
+                                    } else {
+                                      setState(() =>
+                                          _slideTween = _getSlideTween(-20));
+                                      await Future.delayed(
+                                          Duration(milliseconds: 50));
+                                      _controller.forward();
+                                      if (mounted) {
+                                        setState(() {
+                                          (_groupIndex < groupCount - 1)
+                                              ? _groupIndex++
+                                              : _groupIndex = 0;
+                                        });
                                       }
-                                    },
-                                    borderRadius: BorderRadius.circular(5),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(5.0),
-                                      child: Text(
-                                        s.homeGroupsSeeAll,
-                                        style: context.textTheme.bodyLarge!
-                                            .copyWith(
-                                                color: import
-                                                    ? context.primaryColorDark
-                                                    : context.accentColor),
-                                      ),
-                                    ),
-                                  ),
-                                )
-                              ],
-                            ),
-                          ),
-                          Container(
-                            height: 70,
-                            alignment: Alignment.centerLeft,
-                            color: Colors.transparent,
-                            child: TabBar(
-                              enableFeedback: false,
-                              splashFactory: NoSplash.splashFactory,
-                              labelPadding:
-                                  EdgeInsets.fromLTRB(6.0, 5.0, 6.0, 10.0),
-                              indicator: CircleTabIndicator(
-                                  color: context.accentColor, radius: 3),
-                              isScrollable: true,
-                              dividerHeight: 0,
-                              tabAlignment: TabAlignment.start,
-                              tabs: groups[_groupIndex]!.podcasts.map<Widget>(
-                                (podcastLocal) {
-                                  return Tab(
-                                    child: Transform.translate(
-                                      offset: Offset(
-                                          0,
-                                          _slideTween
-                                              .animate(_controller)
-                                              .value),
-                                      child: LimitedBox(
-                                        maxHeight: 50,
-                                        maxWidth: 50,
-                                        child: CircleAvatar(
-                                          backgroundColor:
-                                              podcastLocal.primaryColor,
-                                          backgroundImage:
-                                              podcastLocal.avatarImage,
-                                          child:
-                                              _updateIndicator(podcastLocal.id),
-                                        ),
-                                      ),
-                                    ),
-                                  );
+                                    }
+                                  }
                                 },
-                              ).toList(),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      height: previewHeight + 45,
-                      decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: TabBarView(
-                        children: groups[_groupIndex]!.podcasts.map<Widget>(
-                          (podcastLocal) {
-                            return Container(
-                              margin: EdgeInsets.symmetric(horizontal: 5.0),
-                              key: ObjectKey(podcastLocal.title),
-                              child: Material(
-                                color: Colors.transparent,
-                                child: Selector2<RefreshWorker, GroupList,
-                                    (bool, bool)>(
-                                  selector: (_, refreshWorker, groupWorker) => (
-                                    refreshWorker.created,
-                                    groupWorker.created
-                                  ),
-                                  builder: (_, data, __) =>
-                                      FutureBuilder<List<int>>(
-                                    future: _getPodcastPreview(
-                                        podcastLocal,
-                                        layout.getVerticalCount(
-                                            context.width, context.height)),
-                                    builder: (context, snapshot) => InkWell(
-                                      borderRadius: BorderRadius.circular(20),
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          HidePlayerRoute(
-                                            PodcastDetail(
-                                              podcastId: podcastLocal.id,
-                                              initIds: snapshot.hasData
-                                                  ? snapshot.data!
-                                                  : null,
+                                child: Column(
+                                  children: <Widget>[
+                                    SizedBox(
+                                      height: 30,
+                                      child: Row(
+                                        children: <Widget>[
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 15.0),
+                                            child: Text(
+                                              groupName,
+                                              style: context
+                                                  .textTheme.bodyLarge!
+                                                  .copyWith(
+                                                      color:
+                                                          context.accentColor),
                                             ),
                                           ),
-                                        );
-                                      },
-                                      child: PodcastPreview(
-                                        podcastLocal: podcastLocal,
-                                        previewIds: snapshot.hasData
-                                            ? snapshot.data!.sublist(
-                                                0,
-                                                layout.getHorizontalCount(
-                                                    context.width))
-                                            : [],
-                                        layout: layout,
+                                          Spacer(),
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 15),
+                                            child: InkWell(
+                                              onTap: () {
+                                                Navigator.push(
+                                                  context,
+                                                  SlideLeftRoute(
+                                                      page: context
+                                                              .read<
+                                                                  SettingState>()
+                                                              .openAllPodcastDefalt!
+                                                          ? PodcastList()
+                                                          : PodcastManage()),
+                                                );
+                                              },
+                                              onLongPress: () {
+                                                Navigator.push(
+                                                  context,
+                                                  SlideLeftRoute(
+                                                      page: PodcastList()),
+                                                );
+                                              },
+                                              borderRadius: context.radiusTiny,
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(5.0),
+                                                child: Text(
+                                                  s.homeGroupsSeeAll,
+                                                  style: context
+                                                      .textTheme.bodyLarge!
+                                                      .copyWith(
+                                                          color: context
+                                                              .accentColor),
+                                                ),
+                                              ),
+                                            ),
+                                          )
+                                        ],
                                       ),
                                     ),
-                                  ),
+                                    Container(
+                                      height: 70,
+                                      alignment: Alignment.centerLeft,
+                                      color: Colors.transparent,
+                                      child: TabBar(
+                                        enableFeedback: false,
+                                        splashFactory: NoSplash.splashFactory,
+                                        labelPadding: EdgeInsets.fromLTRB(
+                                            6.0, 5.0, 6.0, 10.0),
+                                        indicator: CircleTabIndicator(
+                                            color: context.accentColor,
+                                            radius: 3),
+                                        isScrollable: true,
+                                        dividerHeight: 0,
+                                        tabAlignment: TabAlignment.start,
+                                        tabs: empty
+                                            ? [
+                                                _circleContainer(),
+                                                _circleContainer(),
+                                                _circleContainer()
+                                              ]
+                                            : podcastIds.map<Widget>(
+                                                (podcastId) {
+                                                  final podcast = context
+                                                      .podcastState[podcastId];
+                                                  return Tab(
+                                                    child: Transform.translate(
+                                                      offset: Offset(
+                                                          0,
+                                                          _slideTween
+                                                              .animate(
+                                                                  _controller)
+                                                              .value),
+                                                      child: LimitedBox(
+                                                        maxHeight: 50,
+                                                        maxWidth: 50,
+                                                        child: CircleAvatar(
+                                                          backgroundColor:
+                                                              podcast
+                                                                  .primaryColor,
+                                                          backgroundImage:
+                                                              podcast
+                                                                  .avatarImage,
+                                                          child:
+                                                              _updateIndicator(
+                                                                  podcastId),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  );
+                                                },
+                                              ).toList(),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            );
-                          },
-                        ).toList(),
+                              Container(
+                                height: previewHeight + 45,
+                                decoration: BoxDecoration(
+                                  color: Colors.transparent,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: empty
+                                    ? Center(
+                                        child: _groupIndex == 0
+                                            ? Text.rich(
+                                                TextSpan(
+                                                  style: context
+                                                      .textTheme.titleLarge!
+                                                      .copyWith(height: 2),
+                                                  children: [
+                                                    TextSpan(
+                                                        text:
+                                                            'Welcome to Tsacdop\n',
+                                                        style: context.textTheme
+                                                            .titleLarge!
+                                                            .copyWith(
+                                                                color: context
+                                                                    .accentColor)),
+                                                    TextSpan(
+                                                        text: 'Get started\n',
+                                                        style: context.textTheme
+                                                            .titleLarge!
+                                                            .copyWith(
+                                                                color: context
+                                                                    .accentColor)),
+                                                    TextSpan(text: 'Tap '),
+                                                    WidgetSpan(
+                                                        child: Icon(Icons
+                                                            .add_circle_outline)),
+                                                    TextSpan(
+                                                        text:
+                                                            ' to search podcasts')
+                                                  ],
+                                                ),
+                                              )
+                                            : Text(
+                                                s.noPodcastGroup,
+                                                style: TextStyle(
+                                                  color: context.textTheme
+                                                      .bodyMedium!.color!
+                                                      .withValues(alpha: 0.5),
+                                                ),
+                                              ),
+                                      )
+                                    : TabBarView(
+                                        children: podcastIds.map<Widget>(
+                                          (podcastId) {
+                                            return Container(
+                                              margin: EdgeInsets.symmetric(
+                                                  horizontal: 5.0),
+                                              key: ObjectKey(podcastId),
+                                              child: Material(
+                                                color: Colors.transparent,
+                                                child: FutureBuilder<List<int>>(
+                                                  future: _getPodcastPreview(
+                                                      podcastId,
+                                                      layout.getVerticalCount(
+                                                          context.width,
+                                                          context.height)),
+                                                  builder:
+                                                      (context, snapshot) =>
+                                                          InkWell(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            20),
+                                                    onTap: () {
+                                                      Navigator.push(
+                                                        context,
+                                                        HidePlayerRoute(
+                                                          PodcastDetail(
+                                                            podcastId:
+                                                                podcastId,
+                                                            initIds: snapshot
+                                                                    .hasData
+                                                                ? snapshot.data!
+                                                                : null,
+                                                          ),
+                                                        ),
+                                                      );
+                                                    },
+                                                    child: PodcastPreview(
+                                                      podcastId: podcastId,
+                                                      previewIds: snapshot
+                                                              .hasData
+                                                          ? snapshot.data!.sublist(
+                                                              0,
+                                                              layout.getHorizontalCount(
+                                                                  context
+                                                                      .width))
+                                                          : [],
+                                                      layout: layout,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ).toList(),
+                                      ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
               );
             },
           );
@@ -460,12 +379,17 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
     );
   }
 
-  Widget _circleContainer() => Container(
-        margin: EdgeInsets.symmetric(horizontal: 10),
-        height: 50,
-        width: 50,
-        decoration:
-            BoxDecoration(shape: BoxShape.circle, color: context.primaryColor),
+  Widget _circleContainer() => Tab(
+        child: Transform.translate(
+          offset: Offset(0, _slideTween.animate(_controller).value),
+          child: Container(
+            margin: EdgeInsets.symmetric(horizontal: 10),
+            height: 50,
+            width: 50,
+            decoration: BoxDecoration(
+                shape: BoxShape.circle, color: context.primaryColor),
+          ),
+        ),
       );
 
   Widget _updateIndicator(String podcastId) => Selector<PodcastState, int>(
@@ -486,11 +410,10 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
             : Center(),
       );
 
-  Future<List<int>> _getPodcastPreview(
-      PodcastBrief podcastLocal, int limit) async {
+  Future<List<int>> _getPodcastPreview(String podcastId, int limit) async {
     if (context.mounted) {
       return Provider.of<EpisodeState>(context, listen: false).getEpisodes(
-        feedIds: [podcastLocal.id],
+        feedIds: [podcastId],
         sortBy: Sorter.pubDate,
         sortOrder: SortOrder.desc,
         limit: limit,
@@ -503,21 +426,20 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
 }
 
 class PodcastPreview extends StatelessWidget {
-  final PodcastBrief podcastLocal;
+  final String podcastId;
 
   /// Episodes to preview (only the first row is shown)
   final List<int> previewIds;
   final EpisodeGridLayout layout;
 
   const PodcastPreview(
-      {required this.podcastLocal,
+      {required this.podcastId,
       required this.previewIds,
       required this.layout,
       super.key});
 
   @override
   Widget build(BuildContext context) {
-    final c = podcastLocal.backgroudColor(context);
     return Column(
       children: <Widget>[
         Container(
@@ -548,11 +470,18 @@ class PodcastPreview extends StatelessWidget {
             children: <Widget>[
               Expanded(
                 flex: 4,
-                child: Text(
-                  podcastLocal.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontWeight: FontWeight.bold, color: c),
+                child: Selector<PodcastState, (String, Color)>(
+                  selector: (_, pState) => (
+                    pState[podcastId].title,
+                    pState[podcastId].backgroudColor(context)
+                  ),
+                  builder: (context, data, _) => Text(
+                    data.$1,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, color: data.$2),
+                  ),
                 ),
               ),
               Expanded(

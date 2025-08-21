@@ -366,25 +366,16 @@ class _PlayedHistoryState extends State<PlayedHistory>
   }
 
   Future recoverSub(BuildContext context, String url) async {
+    final s = context.s;
     Fluttertoast.showToast(
-      msg: context.s.toastPodcastRecovering,
+      msg: s.toastPodcastRecovering,
       gravity: ToastGravity.BOTTOM,
     );
-    var subscribeWorker = context.read<GroupList>();
-    try {
-      var options = BaseOptions(
-        connectTimeout: Duration(seconds: 10),
-        receiveTimeout: Duration(seconds: 10),
-      );
-      var response = await Dio(options).get(url);
-      var p = RssFeed.parse(response.data);
-      var item = SubscribeItem(url, p.title ?? url,
-          imgUrl: p.itunes?.image?.href ?? p.image?.url ?? "", group: 'Home');
-      subscribeWorker.setSubscribeItem(item);
-    } catch (e) {
-      developer.log(e.toString(), name: 'Recover podcast error');
+    final id = await context.podcastState.subscribePodcastByUrl(url);
+    if (id == null) {
+      developer.log('Recover podcast error');
       Fluttertoast.showToast(
-        msg: context.s.toastRecoverFailed,
+        msg: s.toastRecoverFailed,
         gravity: ToastGravity.BOTTOM,
       );
     }

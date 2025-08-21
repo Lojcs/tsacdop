@@ -1,8 +1,13 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
 import '../state/podcast_group.dart';
+import '../state/podcast_state.dart';
+import '../type/podcastbrief.dart';
+import '../type/podcastgroup.dart';
 import '../type/theme_data.dart';
 import '../util/extension_helper.dart';
 import '../util/selection_controller.dart';
@@ -11,7 +16,6 @@ import 'package:tuple/tuple.dart';
 import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/episode_state.dart';
-import '../state/refresh_podcast.dart';
 import 'custom_widget.dart';
 import 'episodegrid.dart';
 
@@ -48,7 +52,7 @@ class ActionBar extends StatefulWidget {
   final bool pinned;
 
   /// Default podcast group
-  final PodcastGroup? group;
+  final String? group;
 
   /// Default podcast
   final String? podcastId;
@@ -165,7 +169,7 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
       _sharedState.expandSecondRow = widget.expandSecondRow;
     }
     if (oldWidget.group != widget.group) {
-      _sharedState.group = widget.group;
+      _sharedState.groupId = widget.group;
     }
     if (oldWidget.podcastId != widget.podcastId) {
       _sharedState.podcastId = widget.podcastId;
@@ -353,8 +357,6 @@ class __ActionBarOuterState extends State<_ActionBarOuter>
   }
 }
 
-const podcastAllId = "74c638a9-5021-4b1e-ba51-3deab5028905";
-
 class _ActionBarSharedState extends ChangeNotifier {
   final BuildContext context;
   final ValueSetter<Future<List<int>> Function(int count, {int offset})>
@@ -379,17 +381,17 @@ class _ActionBarSharedState extends ChangeNotifier {
     }
   }
 
-  PodcastGroup _group;
-  PodcastGroup get group => _group;
-  set group(PodcastGroup? podcastGroup) {
-    _group = podcastGroup ?? groupAll;
+  String _groupId;
+  String get groupId => _groupId;
+  set groupId(String? podcastGroup) {
+    _groupId = podcastGroup ?? allGroupId;
     notifyListeners();
   }
 
   String _podcastId;
   String get podcastId => _podcastId;
-  set podcastId(String? podcastLocal) {
-    _podcastId = podcastLocal ?? podcastAllId;
+  set podcastId(String? podcastBrief) {
+    _podcastId = podcastBrief ?? podcastAllId;
     notifyListeners();
   }
 
@@ -461,7 +463,7 @@ class _ActionBarSharedState extends ChangeNotifier {
     required this.widgetsSecondRow,
     required this.sortByItems,
     required bool expandSecondRow,
-    required PodcastGroup? group,
+    required String? group,
     required String? podcastId,
     required Sorter sortBy,
     required bool? filterNew,
@@ -475,8 +477,7 @@ class _ActionBarSharedState extends ChangeNotifier {
     required this.buttonRefreshController,
     required this.buttonRemoveNewMarkController,
   })  : _expandSecondRow = expandSecondRow,
-        _group =
-            group ?? PodcastGroup(context.s.all, podcastList: [], id: "All"),
+        _groupId = group ?? allGroupId,
         _podcastId = podcastId ?? podcastAllId,
         _sortBy = sortBy,
         _filterNew = filterNew,
@@ -496,12 +497,7 @@ class _ActionBarSharedState extends ChangeNotifier {
     _disposed = true;
   }
 
-  late final PodcastGroup groupAll =
-      PodcastGroup(context.s.all, podcastList: [], id: "All");
-  List<PodcastGroup> get groups => [
-        groupAll,
-        ...Provider.of<GroupList>(context, listen: false).groups.nonNulls
-      ];
+  List<String> get groups => [allGroupId, ...context.podcastState.groupIds];
   double? maxGroupTitleWidth;
 
   Future<List<String>> get podcasts async =>
@@ -529,14 +525,17 @@ class _ActionBarSharedState extends ChangeNotifier {
 
   Future<List<int>> Function(int count, {int offset}) getGetEpisodes() {
     return (int count, {int offset = -1}) async {
+      final groupPodcastIds = groupId == allGroupId
+          ? <String>[]
+          : context.podcastState.getGroupById(groupId).podcastIds;
       episodeIds = await Provider.of<EpisodeState>(context, listen: false)
           .getEpisodes(
               feedIds: podcastId != podcastAllId
-                  ? group.podcastList.isEmpty ||
-                          group.podcastList.contains(podcastId)
+                  ? groupPodcastIds.isEmpty ||
+                          groupPodcastIds.contains(podcastId)
                       ? [podcastId]
                       : []
-                  : group.podcastList,
+                  : groupPodcastIds,
               likeEpisodeTitles:
                   searchTitleQuery == "" ? null : [searchTitleQuery],
               sortBy: sortBy,
@@ -586,15 +585,18 @@ class ActionBarDropdownGroups extends ActionBarFilter {
     _ActionBarSharedState sharedState =
         Provider.of<_ActionBarSharedState>(context, listen: false);
     final row = sharedState.rows[rowIndex];
-    return Selector<_ActionBarSharedState, PodcastGroup>(
-      selector: (_, sharedState) => sharedState.group,
+    return Selector<_ActionBarSharedState, String>(
+      selector: (_, sharedState) => sharedState.groupId,
       builder: (context, data, _) {
         if (sharedState.maxGroupTitleWidth == null) {
           double expandedWidth = context.actionBarButtonSizeHorizontal;
-          for (var group in sharedState.groups) {
+          for (var groupId in sharedState.groups) {
+            final name = groupId == allGroupId
+                ? context.s.all
+                : context.podcastState.getGroupById(groupId).name;
             final groupNameTest = TextPainter(
                 text: TextSpan(
-                  text: group.name,
+                  text: name,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 textDirection: TextDirection.ltr);
@@ -606,40 +608,43 @@ class ActionBarDropdownGroups extends ActionBarFilter {
           sharedState.maxGroupTitleWidth =
               expandedWidth; // It's tricky to update this after the fact.
         }
-        return ActionBarDropdownButton<PodcastGroup>(
+        return ActionBarDropdownButton<String>(
           selected: data,
           expansionController: sharedState.expansionControllers[rowIndex],
           expandedChild: Text(
-            data.name,
+            data == allGroupId
+                ? context.s.all
+                : context.podcastState.getGroupById(data).name,
             style: Theme.of(context).textTheme.titleMedium,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          itemBuilder: () => sharedState.groups
-              .map<PopupMenuItem<PodcastGroup>>(
-                (podcastGroup) => PopupMenuItem(
-                  padding: context.actionBarIconPadding,
-                  height: context.actionBarButtonSizeVertical,
-                  value: podcastGroup,
-                  child: Tooltip(
-                    message: podcastGroup.name,
-                    child: Text(
-                      podcastGroup.name,
-                      style: Theme.of(context).textTheme.titleMedium,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+          itemBuilder: () => sharedState.groups.map<PopupMenuItem<String>>(
+            (groupId) {
+              final name = context.podcastState.getGroupById(groupId).name;
+              return PopupMenuItem(
+                padding: context.actionBarIconPadding,
+                height: context.actionBarButtonSizeVertical,
+                value: groupId,
+                child: Tooltip(
+                  message: name,
+                  child: Text(
+                    name,
+                    style: Theme.of(context).textTheme.titleMedium,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              )
-              .toList(),
+              );
+            },
+          ).toList(),
           onSelected: (value) {
-            sharedState.group = value;
+            sharedState.groupId = value;
             sharedState.onGetEpisodeIdsChanged(sharedState.getGetEpisodes());
           },
           maxExpandedWidth: sharedState.maxGroupTitleWidth,
           tooltip: context.s.filterType(context.s.groups(1)),
-          active: (value) => value != sharedState.groupAll,
+          active: (value) => value != allGroupId,
           connectLeft: index != 0 && row[index - 1] is ActionBarFilter,
           connectRight:
               index != row.length - 1 && row[index + 1] is ActionBarFilter,
@@ -761,7 +766,7 @@ List<PopupMenuEntry<Sorter>> _getSortBy(
     BuildContext context, List<Sorter> sortByItems) {
   List<PopupMenuEntry<Sorter>> items = [];
   var s = context.s;
-  for (final sorter in sortByItems) {
+  for (var sorter in sortByItems) {
     switch (sorter) {
       case Sorter.pubDate:
         items.add(PopupMenuItem(
@@ -1268,6 +1273,22 @@ class ActionBarSwitchSecondRow extends ActionBarControl {
   }
 }
 
+void Function() _refreshListener(
+    PodcastState pState, _ActionBarSharedState sharedState) {
+  int lastGen = pState.syncGeneneration;
+  return () {
+    if (pState.syncGeneneration != lastGen) {
+      if (!sharedState.disposed) {
+        sharedState.buttonRefreshController.reverse();
+        // Calling this in the listener messes up provider.
+        Future.microtask(() =>
+            sharedState.onGetEpisodeIdsChanged(sharedState.getGetEpisodes()));
+        pState.removeListener(_refreshListener(pState, sharedState));
+      }
+    }
+  };
+}
+
 class ActionBarButtonRefresh extends ActionBarControl {
   const ActionBarButtonRefresh(super.rowIndex, super.index, {super.key});
   @override
@@ -1280,33 +1301,33 @@ class ActionBarButtonRefresh extends ActionBarControl {
       buttonType: ActionBarButtonType.single,
       onPressed: (value) async {
         if (sharedState.buttonRefreshController.value == 0) {
-          final refreshWorker = context.read<RefreshWorker>();
+          final pState = context.podcastState;
           if (sharedState.podcastId != podcastAllId) {
-            refreshWorker.start([sharedState.podcastId]);
-          } else {
-            refreshWorker.start(sharedState.group.podcastList);
-          }
-          sharedState.buttonRefreshController.forward();
-          Fluttertoast.showToast(
-            msg: context.s.refreshStarted,
-            gravity: ToastGravity.BOTTOM,
-          );
-          String refreshFinished = context.s.refreshFinished;
-          refreshWorker.addListener(() {
-            if (refreshWorker.complete) {
-              Fluttertoast.cancel();
+            pState.syncPodcast(sharedState.podcastId, showToast: true);
+          } else if (sharedState.groupId != allGroupId) {
+            if (context.mounted) {
               Fluttertoast.showToast(
-                msg: refreshFinished,
+                msg: context.s.refreshStarted,
                 gravity: ToastGravity.BOTTOM,
               );
-              if (!sharedState.disposed) {
-                sharedState.buttonRefreshController.reverse();
-                // Calling this in the listener messes up provider.
-                Future.microtask(() => sharedState
-                    .onGetEpisodeIdsChanged(sharedState.getGetEpisodes()));
-              }
             }
-          });
+            final ids = pState.getGroupById(sharedState.groupId).podcastIds;
+            Queue<Future<int?>> futures = Queue();
+            for (var id in ids) {
+              if (futures.length >= 4) await futures.removeFirst();
+              futures.add(pState.syncPodcast(id));
+            }
+            if (context.mounted) {
+              Fluttertoast.showToast(
+                msg: context.s.refreshFinished,
+                gravity: ToastGravity.BOTTOM,
+              );
+            }
+          } else {
+            await pState.syncAllPodcasts();
+          }
+          sharedState.buttonRefreshController.forward();
+          pState.addListener(_refreshListener(pState, sharedState));
         }
       },
       tooltip: context.s.refresh,

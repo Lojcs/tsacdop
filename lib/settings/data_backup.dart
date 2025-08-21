@@ -15,6 +15,7 @@ import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:workmanager/workmanager.dart';
 
 import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
@@ -24,6 +25,7 @@ import '../state/podcast_group.dart';
 import '../state/setting_state.dart';
 import '../type/settings_backup.dart';
 import '../util/extension_helper.dart';
+import '../util/helpers.dart';
 import '../widgets/custom_widget.dart';
 
 class DataBackup extends StatefulWidget {
@@ -253,8 +255,7 @@ class _DataBackupState extends State<DataBackup> {
   }
 
   Future<File> _exportOmpl(BuildContext context) async {
-    final groups = context.read<GroupList>().groups;
-    final opml = PodcastsBackup(groups).omplBuilder();
+    final opml = PodcastsBackup.omplBuilder(context.podcastState);
     final tempdir = await getTemporaryDirectory();
     final now = DateTime.now();
     final datePlus = now.year.toString() +
@@ -345,8 +346,7 @@ class _DataBackupState extends State<DataBackup> {
 
   Future<void> _logout() async {
     await _gpodder.logout();
-    final subscribeWorker = context.read<GroupList>();
-    subscribeWorker.cancelWork();
+    // Stop sync also
     Fluttertoast.showToast(
       msg: 'Logout successfully',
       gravity: ToastGravity.BOTTOM,
@@ -414,6 +414,21 @@ class __OpenEyeState extends State<_OpenEye>
   @override
   Widget build(BuildContext context) {
     return DotIndicator(radius: 8 * _radius + 0.5, color: Colors.white);
+  }
+}
+
+@pragma('vm:entry-point')
+void callbackDispatcher() {
+  if (Platform.isAndroid) {
+    Workmanager().executeTask((task, inputData) async {
+      final gpodder = Gpodder();
+      final status = await gpodder.getChanges();
+      if (status == 200) {
+        await gpodder.updateChange();
+        developer.log('Gpodder sync successfully');
+      }
+      return Future.value(true);
+    });
   }
 }
 
@@ -495,31 +510,24 @@ class __LoginGpodderState extends State<_LoginGpodder> {
   }
 
   Future<void> _getSubscriptions(Gpodder gpodder) async {
-    var subscribeWorker = context.read<GroupList>();
-    var rssExp = RegExp(r'^(https?):\/\/(.*)');
+    await Workmanager().cancelByUniqueName('2');
+    developer.log('work job cancelled');
+    var pState = context.podcastState;
     final opml = await gpodder.getAllPodcast();
-    if (opml != '') {
-      Map<String, List<OmplOutline>> data = PodcastsBackup.parseOPML(opml!);
-      for (var entry in data.entries) {
-        var list = entry.value.reversed;
-        for (var rss in list) {
-          var rssLink = rssExp.stringMatch(rss.xmlUrl!);
-          if (rssLink != null) {
-            final dbHelper = DBHelper();
-            final exist = await dbHelper.checkPodcast(rssLink);
-            if (exist == null) {
-              var item = SubscribeItem(rssLink,
-                  (rss.text == null || rss.text == '') ? rssLink : rss.text!,
-                  group: 'Home');
-              await subscribeWorker.setSubscribeItem(item, syncGpodder: false);
-              await Future.delayed(Duration(milliseconds: 200));
-            }
-          }
-        }
-      }
+    if (opml != null && opml != '') {
+      pState.subscribeOpml(opml);
     }
-    await subscribeWorker.cancelWork();
-    subscribeWorker.setWorkManager();
+    await Workmanager().initialize(
+      callbackDispatcher,
+      isInDebugMode: false,
+    );
+    await Workmanager().registerPeriodicTask("2", "gpodder_sync",
+        frequency: Duration(hours: 4),
+        initialDelay: Duration(seconds: 10),
+        constraints: Constraints(
+          networkType: NetworkType.connected,
+        ));
+    developer.log('work manager init done + (gpodder sync)');
   }
 
   String? _validateName(String? value) {
@@ -837,6 +845,7 @@ class __GpodderInfoState extends State<_GpodderInfo> {
   }
 
   Future<void> _fullSync() async {
+    final pState = context.podcastState;
     if (mounted) {
       setState(() {
         _syncing = true;
@@ -844,29 +853,9 @@ class __GpodderInfoState extends State<_GpodderInfo> {
     }
     final uploadStatus = await _gpodder.uploadSubscriptions();
     if (uploadStatus == 200) {
-      var subscribeWorker = context.read<GroupList>();
-      var rssExp = RegExp(r'^(https?):\/\/(.*)');
       final opml = await _gpodder.getAllPodcast();
-      if (opml != '') {
-        Map<String, List<OmplOutline>> data = PodcastsBackup.parseOPML(opml!);
-        for (var entry in data.entries) {
-          var list = entry.value.reversed;
-          for (var rss in list) {
-            var rssLink = rssExp.stringMatch(rss.xmlUrl!);
-            if (rssLink != null) {
-              final dbHelper = DBHelper();
-              final exist = await dbHelper.checkPodcast(rssLink);
-              if (exist == null) {
-                var item = SubscribeItem(rssLink,
-                    (rss.text == null || rss.text == '') ? rssLink : rss.text!,
-                    group: 'Home');
-                await subscribeWorker.setSubscribeItem(item,
-                    syncGpodder: false);
-                await Future.delayed(Duration(milliseconds: 200));
-              }
-            }
-          }
-        }
+      if (opml != null && opml != '') {
+        pState.subscribeOpml(opml);
       }
     }
     //await _syncNow();

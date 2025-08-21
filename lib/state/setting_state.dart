@@ -6,20 +6,23 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/intl_standalone.dart';
-import 'refresh_podcast.dart';
+import 'package:path_provider/path_provider.dart';
+import '../util/extension_helper.dart';
 import 'package:workmanager/workmanager.dart';
 
 import '../generated/l10n.dart';
 import '../local_storage/key_value_storage.dart';
 import '../type/settings_backup.dart';
 import '../type/theme_data.dart';
+import 'podcast_state.dart';
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     if (task == "update_podcasts") {
-      await podcastSync();
-    }
+      await PodcastState(await getApplicationDocumentsDirectory())
+          .syncAllPodcasts();
+    } else if (task == "gpodder_sync") {}
     return Future.value(true);
   });
 }
@@ -532,15 +535,7 @@ class SettingState extends ChangeNotifier {
   }
 
   Future<void> _saveAccentSetColor() async {
-    // // color.toString() is different in debug mode vs release!
-    // String colorString =
-    //     _accentSetColor!.value.toRadixString(16).substring(2, 8);
-    int red = (_accentSetColor!.r * 255.0).round() & 0xff;
-    int green = (_accentSetColor!.g * 255.0).round() & 0xff;
-    int blue = (_accentSetColor!.b * 255.0).round() & 0xff;
-    String colorString =
-        (red << 16 | green << 8 | blue).toRadixString(16).padLeft(6, "0");
-    await _accentStorage.saveString(colorString);
+    await _accentStorage.saveString(_accentSetColor!.torgbString());
   }
 
   Future<void> _setRealDark() async {

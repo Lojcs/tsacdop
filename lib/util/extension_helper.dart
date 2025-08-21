@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import '../generated/l10n.dart';
 import '../state/audio_state.dart';
+import '../state/download_state.dart';
 import '../state/episode_state.dart';
 import '../state/podcast_state.dart';
 import '../state/setting_state.dart';
@@ -72,7 +73,6 @@ extension ContextExtension on BuildContext {
         systemNavigationBarColor: surface,
         systemNavigationBarIconBrightness: iconBrightness,
       );
-  S get s => S.of(this);
   bool get realDark =>
       Provider.of<SettingState>(this, listen: false).realDark! &&
       brightness == Brightness.dark;
@@ -153,12 +153,17 @@ extension IntExtension on int {
 /// Convenience getters for state objects.
 /// Still do assign these to local vars since Provider.of isn't free.
 extension StateExtension on BuildContext {
+  S get s => S.of(this);
+  SettingState get settingState =>
+      Provider.of<SettingState>(this, listen: false);
   EpisodeState get episodeState =>
       Provider.of<EpisodeState>(this, listen: false);
   PodcastState get podcastState =>
       Provider.of<PodcastState>(this, listen: false);
   AudioPlayerNotifier get audioState =>
       Provider.of<AudioPlayerNotifier>(this, listen: false);
+  SuperDownloadState get downloadState =>
+      Provider.of<SuperDownloadState>(this, listen: false);
 }
 
 extension StringExtension on String {
@@ -212,6 +217,16 @@ extension StringExtension on String {
 }
 
 extension ColorExtension on Color {
+  String torgbString() {
+    // // color.toString() is different in debug mode vs release! // TODO: Is this still the case?
+    // String colorString =
+    //     _accentSetColor!.value.toRadixString(16).substring(2, 8);
+    int red = (r * 255.0).round() & 0xff;
+    int green = (g * 255.0).round() & 0xff;
+    int blue = (b * 255.0).round() & 0xff;
+    return (red << 16 | green << 8 | blue).toRadixString(16).padLeft(6, "0");
+  }
+
   /// Blend the color with background, less accent
   Color toWeakBackround(BuildContext context) {
     return context.realDark

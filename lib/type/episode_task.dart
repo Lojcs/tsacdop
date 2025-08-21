@@ -1,34 +1,34 @@
 import 'package:flutter_downloader/flutter_downloader.dart';
 
-import 'episodebrief.dart';
-
-// TODO: Do we need episodeBrief here?
-class EpisodeTask {
-  final String taskId;
-  final EpisodeBrief episode;
-  int? progress;
-  DownloadTaskStatus? status;
-  EpisodeTask(this.episode, this.taskId,
-      {this.progress = 0, this.status = DownloadTaskStatus.undefined});
-
-  EpisodeTask copyWith(
-      {String? taskId, int? progress, DownloadTaskStatus? status}) {
-    return EpisodeTask(episode, taskId ?? this.taskId,
-        progress: progress ?? this.progress, status: status ?? this.status);
-  }
-}
-
+/// Class that holds information about an episode download task.
 class SuperEpisodeTask {
+  /// [FlutterDownloader] download task id.
   final String taskId;
-  final String episodeId;
+
+  /// Database episode id.
+  final int episodeId;
+
+  /// Download progress.
   int progress;
+
+  /// Download status.
   DownloadTaskStatus status;
+
+  /// Signals that a request has been sent to the downloader and the answer is pending.
+  bool pendingAction;
   SuperEpisodeTask(this.episodeId, this.taskId,
-      {this.progress = 0, this.status = DownloadTaskStatus.undefined});
+      {this.progress = -1,
+      this.status = DownloadTaskStatus.undefined,
+      this.pendingAction = false});
 
   SuperEpisodeTask copyWith(
-      {String? taskId, int? progress, DownloadTaskStatus? status}) {
+      {String? taskId,
+      int? progress,
+      DownloadTaskStatus? status,
+      bool? pendingAction}) {
     return SuperEpisodeTask(episodeId, taskId ?? this.taskId,
-        progress: progress ?? this.progress, status: status ?? this.status);
+        progress: progress ?? this.progress,
+        status: status ?? this.status,
+        pendingAction: pendingAction ?? this.pendingAction);
   }
 }

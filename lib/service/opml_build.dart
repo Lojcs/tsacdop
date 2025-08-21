@@ -1,7 +1,10 @@
 import 'dart:developer' as developer;
 
+import 'package:flutter/material.dart';
 import 'package:xml/xml.dart' as xml;
 import '../state/podcast_group.dart';
+import '../state/podcast_state.dart';
+import '../type/podcastgroup.dart';
 
 class OmplOutline {
   final String? text;
@@ -17,11 +20,8 @@ class OmplOutline {
 }
 
 class PodcastsBackup {
-  ///Group list for backup.
-  final List<PodcastGroup?> groups;
-  PodcastsBackup(this.groups) : assert(groups.isNotEmpty);
-
-  xml.XmlNode omplBuilder() {
+  static xml.XmlNode omplBuilder(PodcastState podcastState) {
+    final groupIds = podcastState.groupIds;
     var builder = xml.XmlBuilder();
     builder.processing('xml', 'version="1.0" encoding="UTF-8"');
     builder.element('ompl', nest: () {
@@ -30,11 +30,12 @@ class PodcastsBackup {
         builder.element('title', nest: 'Tsacdop Feed Groups');
       });
       builder.element('body', nest: () {
-        for (var group in groups) {
+        for (var groupId in groupIds) {
+          final group = podcastState.getGroupById(groupId);
           builder.element('outline', nest: () {
-            builder.attribute('text', group!.name);
+            builder.attribute('text', group.name);
             builder.attribute('title', group.name);
-            for (var e in group.podcasts) {
+            for (var e in group.podcastIds.map((id) => podcastState[id])) {
               builder.element(
                 'outline',
                 nest: () {

@@ -13,45 +13,53 @@ import 'search_widgets.dart';
 
 abstract class Search extends ChangeNotifier {
   /// List of ids of search results that are podcasts.
-  List<(String, List<int>)> get podcasts => [];
+  List<String> get podcastIds => [];
+
+  /// List of ids of the episodes of a podcast search result.
+  List<int> getPodcastEpisodes(String podcastId) => [];
 
   /// List of ids of search results that are episodes.
-  List<int> get episodes => [];
+  List<int> get episodeIds => [];
 
   /// Searches the query and readies the results.
   /// Episodes are loaded immediately, podcasts can be loaded in the background
   Future<void> query(String query);
 
-  /// Maximum length of [podcasts]. (it can be less due to results failing to load / parse)
+  /// Maximum length of [podcastIds]. (it can be less due to results not having loaded in)
   int maxPodcastLength = 0;
 
   /// Returns the [i]th card widget
   Widget? operator [](int i) {
-    if (episodes.isNotEmpty) {
-      if (i == 0) return SearchPanelCard(child: SearchEpisodeGrid(episodes));
+    if (episodeIds.isNotEmpty) {
+      if (i == 0) return SearchPanelCard(child: SearchEpisodeGrid(episodeIds));
       i--;
     }
-    if (i < podcasts.length) {
-      return SearchPanelCard(
-          child: SearchPodcastPreview(podcasts[i].$1, podcasts[i].$2));
-    } else if (podcasts.length < maxPodcastLength) {
-      return Selector<Search, bool>(
-        selector: (_, search) => search.podcasts.length > i,
-        builder: (context, value, _) => value
-            ? SearchPanelCard(
-                child: SearchPodcastPreview(podcasts[i].$1, podcasts[i].$2),
-              )
-            : SearchPanelCard(
-                child: Container(
-                  decoration: BoxDecoration(borderRadius: context.radiusSmall),
-                  clipBehavior: Clip.antiAlias,
-                  child: LinearProgressIndicator(),
+
+    if (i < maxPodcastLength) {
+      final podcastId = podcastIds[i];
+      final podcastEpisodes = getPodcastEpisodes(podcastId);
+      if (i < podcastIds.length) {
+        return SearchPanelCard(
+            child: SearchPodcastPreview(podcastId, podcastEpisodes));
+      } else {
+        return Selector<Search, bool>(
+          selector: (_, search) => search.podcastIds.length > i,
+          builder: (context, value, _) => value
+              ? SearchPanelCard(
+                  child: SearchPodcastPreview(podcastId, podcastEpisodes),
+                )
+              : SearchPanelCard(
+                  child: Container(
+                    decoration:
+                        BoxDecoration(borderRadius: context.radiusSmall),
+                    clipBehavior: Clip.antiAlias,
+                    child: LinearProgressIndicator(),
+                  ),
                 ),
-              ),
-      );
-    } else {
-      return null;
+        );
+      }
     }
+    return null;
   }
 
   /// Widget to be placed behind the search panel
@@ -61,14 +69,27 @@ abstract class Search extends ChangeNotifier {
 /// Abtract class for api helpers
 abstract class ApiSearch extends Search {
   final PodcastState pState;
+  final EpisodeState eState;
 
-  ApiSearch(this.pState);
+  ApiSearch(this.pState, this.eState);
 
   @override
-  final List<(String, List<int>)> podcasts = [];
+  final List<String> podcastIds = [];
+  @override
+  final List<int> episodeIds = [];
+
+  final Map<String, List<int>> podcastEpisodes = {};
+  @override
+  List<int> getPodcastEpisodes(String podcastId) => podcastEpisodes[podcastId]!;
 
   /// Call this when exiting to remove the remote data from [PodcastState] and [EpisodeState]
-  void release() => podcasts.forEach(pState.removeRemotePodcast);
+  void release() {
+    for (var podcastId in podcastIds) {
+      pState.removeRemotePodcast(podcastId);
+      eState.removeRemoteEpisodes(getPodcastEpisodes(podcastId));
+    }
+    eState.removeRemoteEpisodes(episodeIds);
+  }
 
   @override
   void dispose() {
@@ -78,9 +99,11 @@ abstract class ApiSearch extends Search {
 
   /// Helper to add feeds to the podcasts list.
   Future<void> _addFeed(String feedUrl) async {
-    final remotePodcast = await pState.addRemotePodcast(feedUrl);
-    if (remotePodcast != null) {
-      podcasts.add(remotePodcast);
+    final result = await pState.addPodcastByUrl(feedUrl);
+    if (result != null) {
+      final (podcastId, episodeIds) = result;
+      podcastIds.add(podcastId);
+      podcastEpisodes[podcastId] = episodeIds;
       notifyListeners();
     }
   }
@@ -89,15 +112,19 @@ abstract class ApiSearch extends Search {
   Future<void> addFeeds(Iterable<String> feedUrls) async {
     maxPodcastLength = feedUrls.length;
     Queue<Future> futures = Queue();
-    for (final feed in feedUrls) {
-      if (futures.length >= 5) await futures.removeFirst();
+    for (var feed in feedUrls) {
+      if (futures.length >= 4) await futures.removeFirst();
       futures.add(_addFeed(feed)); // Don't await
     }
   }
+
+  /// Subscribe to the remote podcast with id [podcastId].
+  Future<void> subscribe(String podcastId) =>
+      pState.subscribeRemotePodcast(podcastId, episodeIds);
 }
 
 class PodcastIndexSearch extends ApiSearch {
-  PodcastIndexSearch(super.eState);
+  PodcastIndexSearch(super.pState, super.eState);
 
   @override
   Future<void> query(String query) async {

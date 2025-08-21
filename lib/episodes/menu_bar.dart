@@ -91,7 +91,7 @@ class EpisodeActionBarState extends State<EpisodeActionBar> {
                       }
                     },
                   ),
-                  DownloadButton(episode: episodeItem),
+                  DownloadButton(episodeId: widget.episodeId),
                   _buttonOnMenu(
                     child: Selector<AudioPlayerNotifier, List<int?>>(
                       selector: (_, audio) => audio.playlist.episodeIds,

@@ -6,6 +6,7 @@ import 'package:tuple/tuple.dart';
 import '../state/episode_state.dart';
 import '../state/podcast_group.dart';
 import '../type/playlist.dart';
+import '../type/podcastgroup.dart';
 
 const String groupsKey = 'groups';
 const String playlistKey = 'playlist';
@@ -17,6 +18,8 @@ const String themesKey = 'themes';
 const String accentsKey = 'accents';
 const String autoUpdateKey = 'autoAdd';
 const String updateIntervalKey = 'updateInterval';
+
+/// This is 'ask before foreground downloading using data'! (unused)
 const String downloadUsingDataKey = 'downloadUsingData';
 const String introKey = 'intro';
 const String realDarkKey = 'realDark';
@@ -25,6 +28,8 @@ const String podcastLayoutKey = 'podcastLayoutKey';
 const String recentLayoutKey = 'recentLayoutKey';
 const String favLayoutKey = 'favLayoutKey';
 const String downloadLayoutKey = 'downloadLayoutKey';
+
+/// This is 'background download using data'!
 const String autoDownloadNetworkKey = 'autoDownloadNetwork';
 const String episodePopupMenuKey = 'episodePopupMenuKey';
 const String autoDeleteKey = 'autoDeleteKey';
@@ -69,21 +74,26 @@ const String hapticsStrengthKey = 'hapticsStrengthKey';
 class KeyValueStorage {
   final String key;
   const KeyValueStorage(this.key);
-  Future<List<GroupEntity>?> getGroups() async {
+  Future<List<SuperPodcastGroup>> getGroups() async {
     final prefs = await SharedPreferences.getInstance();
     if (prefs.getString(key) == null) {
-      final home = PodcastGroup('Home');
+      final home = SuperPodcastGroup.create(id: homeGroupId, name: 'Home');
       await prefs.setString(
           key,
           json.encode({
-            'groups': [home.toEntity().toJson()]
+            'groups': [home.toJson()]
           }));
     }
-    final groups = json.decode(prefs.getString(key)!)['groups'];
-    return [for (final g in groups) GroupEntity.fromJson(g)];
+    final groups =
+        json.decode(prefs.getString(key)!)['groups'] as List<dynamic>;
+    for (int i = 0; i < groups.length; i++) {
+      final color = groups[i]['color'] as String;
+      if (color == "#000000") groups[i]['color'] = "009688";
+    }
+    return [for (var g in groups) SuperPodcastGroup.fromJson(g)];
   }
 
-  Future<bool> saveGroup(List<GroupEntity> groupList) async {
+  Future<bool> saveGroup(List<SuperPodcastGroup> groupList) async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.setString(
         key,

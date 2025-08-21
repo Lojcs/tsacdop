@@ -48,7 +48,6 @@ class _PodcastDetailState extends State<PodcastDetail> {
       GlobalKey<RefreshIndicatorState>();
 
   final GlobalKey<AudioPanelState> _playerKey = GlobalKey<AudioPanelState>();
-  final _dbHelper = DBHelper();
   CardColorScheme get cardColorScheme =>
       context.select<PodcastState, CardColorScheme>(
           (pState) => pState[widget.podcastId].cardColorScheme(context));
@@ -62,7 +61,15 @@ class _PodcastDetailState extends State<PodcastDetail> {
     displacement: context.paddingTop + 40,
     color: cardColorScheme.colorScheme.primary,
     onRefresh: () async {
-      await _updateRssItem(context, context.podcastState[widget.podcastId]);
+      final count = await context.podcastState.syncPodcast(widget.podcastId);
+      if (mounted) {
+        Fluttertoast.showToast(
+          msg: count != null
+              ? context.s.updateEpisodesCount(count)
+              : context.s.updateFailed,
+          gravity: ToastGravity.TOP,
+        );
+      }
     },
     child: PodcastDetailBody(
       podcastId: widget.podcastId,
@@ -90,46 +97,6 @@ class _PodcastDetailState extends State<PodcastDetail> {
   void dispose() {
     _controller.dispose();
     super.dispose();
-  }
-
-  Future<void> _updateRssItem(
-      BuildContext context, PodcastBrief podcastLocal) async {
-    final result = await _dbHelper.updatePodcastRss(podcastLocal);
-    if (result >= 0) {
-      Fluttertoast.showToast(
-        msg: context.s.updateEpisodesCount(result),
-        gravity: ToastGravity.TOP,
-      );
-    }
-    if (result > 0) {
-      if (podcastLocal.autoDownload) {
-        final downloader = Provider.of<DownloadState>(context, listen: false);
-        final result = await Connectivity().checkConnectivity();
-        final autoDownloadStorage = KeyValueStorage(autoDownloadNetworkKey);
-        final autoDownloadNetwork = await autoDownloadStorage.getInt();
-        if (autoDownloadNetwork == 1 ||
-            result.contains(ConnectivityResult.wifi)) {
-          var episodes = await _dbHelper.getEpisodes(
-              feedIds: [podcastLocal.id],
-              filterNew: true,
-              filterDownloaded: false,
-              filterDuplicateVersions: false,
-              filterAutoDownload: true);
-          // For safety
-          if (episodes.length < 100) {
-            for (var episode in episodes) {
-              downloader.startTask(episode, showNotification: false);
-            }
-          }
-        }
-      }
-    } else if (result != 0) {
-      Fluttertoast.showToast(
-        msg: context.s.updateFailed,
-        gravity: ToastGravity.TOP,
-      );
-    }
-    if (mounted && result > 0) setState(() {});
   }
 
   @override

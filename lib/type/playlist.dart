@@ -8,6 +8,7 @@ import '../local_storage/sqflite_localpodcast.dart';
 import '../state/audio_state.dart';
 import '../state/episode_state.dart';
 import '../state/podcast_group.dart';
+import '../state/podcast_state.dart';
 import '../util/extension_helper.dart';
 import '../widgets/action_bar.dart';
 
@@ -101,7 +102,7 @@ class Playlist {
     List<int> delIds = episodeIds.getRange(index, end).toList();
     episodeIds.removeRange(index, end);
     if (isLocal && delLocal) {
-      eState.deleteLocalEpisodes(delIds);
+      eState.deleteEpisodes(delIds);
     }
   }
 
@@ -142,12 +143,9 @@ class BrowsableLibrary {
 
   BuildContext context;
 
-  late final EpisodeState episodeState =
-      Provider.of<EpisodeState>(context, listen: false);
-  late final AudioPlayerNotifier audioState =
-      Provider.of<AudioPlayerNotifier>(context, listen: false);
-  late final GroupList groupList =
-      Provider.of<GroupList>(context, listen: false);
+  late final EpisodeState episodeState = context.episodeState;
+  late final AudioPlayerNotifier audioState = context.audioState;
+  late final PodcastState podcastState = context.podcastState;
   late final S s = S.current;
   BrowsableLibrary(this.context);
 
@@ -210,17 +208,14 @@ class BrowsableLibrary {
               .toList();
           break;
         case [groupsId]:
-          root[parentMediaId] = groupList.groups
-              .where((group) => group != null)
-              .map((group) => group!.mediaItem)
+          root[parentMediaId] = podcastState.groupIds
+              .map((id) => podcastState.getGroupById(id).mediaItem)
               .toList();
           break;
         case ['grp', final id, ...]:
-          final group = groupList.groups
-              .firstWhere((group) => group != null && group.id == id)!;
           final (_, showPlayed) = await getLayoutAndShowPlayed();
           final episodeIds = await episodeState.getEpisodes(
-              feedIds: group.podcastList,
+              feedIds: podcastState.getGroupById(id).podcastIds,
               sortBy: Sorter.pubDate,
               sortOrder: SortOrder.desc,
               limit: 108,
