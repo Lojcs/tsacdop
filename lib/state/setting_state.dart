@@ -434,13 +434,8 @@ class SettingState extends ChangeNotifier {
 
   Future _getAccentSetColor() async {
     final colorString = await _accentStorage.getString();
-    if (colorString.isNotEmpty) {
-      var color = int.parse('FF${colorString.toUpperCase()}', radix: 16);
-      _accentSetColor = Color(color).withValues(alpha: 1.0);
-    } else {
-      _accentSetColor = Colors.teal[500];
-      await _saveAccentSetColor();
-    }
+    _accentSetColor = colorString.torgbColor();
+    await _saveAccentSetColor();
   }
 
   Future _getAutoUpdate() async {

@@ -1,8 +1,10 @@
+import 'dart:isolate';
 import 'dart:ui' as ui;
 import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -69,3 +71,19 @@ Widget buttonOnMenu(BuildContext context,
         ),
       ),
     );
+
+/// Launders [Isolate.run] so it doesn't capture unnecessary variables.
+/// Also ensures [BackgroundIsolateBinaryMessenger] is initialized.
+class Isolater<R, I> {
+  Future<R> Function(I input) computation;
+  final rootIsolateToken = ServicesBinding.rootIsolateToken!;
+  Isolater(this.computation);
+  Future<R> run(I input) =>
+      Isolate.run(() => runner(rootIsolateToken, computation, input));
+  @pragma('vm:entry-point')
+  static Future<R> runner<R, I>(RootIsolateToken token,
+      Future<R> Function(I input) computation, I input) {
+    BackgroundIsolateBinaryMessenger.ensureInitialized(token);
+    return computation(input);
+  }
+}

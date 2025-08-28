@@ -28,50 +28,16 @@ abstract class Search extends ChangeNotifier {
   /// Maximum length of [podcastIds]. (it can be less due to results not having loaded in)
   int maxPodcastLength = 0;
 
-  /// Returns the [i]th card widget
-  Widget? operator [](int i) {
-    if (episodeIds.isNotEmpty) {
-      if (i == 0) return SearchPanelCard(child: SearchEpisodeGrid(episodeIds));
-      i--;
-    }
-
-    if (i < maxPodcastLength) {
-      final podcastId = podcastIds[i];
-      final podcastEpisodes = getPodcastEpisodes(podcastId);
-      if (i < podcastIds.length) {
-        return SearchPanelCard(
-            child: SearchPodcastPreview(podcastId, podcastEpisodes));
-      } else {
-        return Selector<Search, bool>(
-          selector: (_, search) => search.podcastIds.length > i,
-          builder: (context, value, _) => value
-              ? SearchPanelCard(
-                  child: SearchPodcastPreview(podcastId, podcastEpisodes),
-                )
-              : SearchPanelCard(
-                  child: Container(
-                    decoration:
-                        BoxDecoration(borderRadius: context.radiusSmall),
-                    clipBehavior: Clip.antiAlias,
-                    child: LinearProgressIndicator(),
-                  ),
-                ),
-        );
-      }
-    }
-    return null;
-  }
-
   /// Widget to be placed behind the search panel
   static const Widget background = Center();
 }
 
 /// Abtract class for api helpers
-abstract class ApiSearch extends Search {
+abstract class RemoteSearch extends Search {
   final PodcastState pState;
   final EpisodeState eState;
 
-  ApiSearch(this.pState, this.eState);
+  RemoteSearch(this.pState, this.eState);
 
   @override
   final List<String> podcastIds = [];
@@ -119,11 +85,19 @@ abstract class ApiSearch extends Search {
   }
 
   /// Subscribe to the remote podcast with id [podcastId].
-  Future<void> subscribe(String podcastId) =>
-      pState.subscribeRemotePodcast(podcastId, episodeIds);
+  Future<void> subscribe(String podcastId) async {
+    final index = podcastIds.indexOf(podcastId);
+    final result = await pState.subscribeRemotePodcast(
+        podcastId, podcastEpisodes[podcastId]!);
+    if (result != null) {
+      podcastEpisodes.remove(podcastId);
+      podcastIds[index] = result.$1;
+      podcastEpisodes[result.$1] = result.$2;
+    }
+  }
 }
 
-class PodcastIndexSearch extends ApiSearch {
+class PodcastIndexSearch extends RemoteSearch {
   PodcastIndexSearch(super.pState, super.eState);
 
   @override

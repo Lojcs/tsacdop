@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -262,7 +263,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                                 ),
                               ),
                               Container(
-                                height: previewHeight + 45,
+                                height: previewHeight + 40,
                                 decoration: BoxDecoration(
                                   color: Colors.transparent,
                                   borderRadius: BorderRadius.circular(10),
@@ -352,9 +353,12 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                                                               .hasData
                                                           ? snapshot.data!.sublist(
                                                               0,
-                                                              layout.getHorizontalCount(
-                                                                  context
-                                                                      .width))
+                                                              math.min(
+                                                                  layout.getHorizontalCount(
+                                                                      context
+                                                                          .width),
+                                                                  snapshot.data!
+                                                                      .length))
                                                           : [],
                                                       layout: layout,
                                                     ),

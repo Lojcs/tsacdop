@@ -210,6 +210,15 @@ extension StringExtension on String {
     return Color.fromRGBO(color[0], color[1], color[2], 1);
   }
 
+  Color torgbColor() {
+    if (isNotEmpty) {
+      var color = int.parse('FF${toUpperCase()}', radix: 16);
+      return Color(color).withValues(alpha: 1.0);
+    } else {
+      return Colors.teal[500]!;
+    }
+  }
+
   bool isXimalaya() {
     var ximalaya = RegExp(r"ximalaya.com");
     return ximalaya.hasMatch(this);

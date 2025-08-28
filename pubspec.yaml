@@ -44,7 +44,7 @@ dependencies:
   tuple: ^2.0.0
   url_launcher: ^6.0.3
   uuid: ^4.5.1
-  workmanager: ^0.7.0
+  workmanager: ^0.9.0+2
   audio_service: ^0.18.0
   just_audio: ^0.10.4
   equatable: ^2.0.0
@@ -77,22 +77,22 @@ dependencies:
 dependency_overrides:
   linkify:
     git:
-      url: https://github.com/lojcs/linkify.git                        # Tsacdop fork, updated to 5.0.0
+      url: https://github.com/lojcs/linkify.git # Tsacdop fork, updated to 5.0.0
   focused_menu:
     git:
-      url: https://github.com/lojcs/focused_menu.git                   # Tsacdop fork, updated to 1.0.5
+      url: https://github.com/lojcs/focused_menu.git # Tsacdop fork, updated to 1.0.5
   webfeed:
     git:
-      url: https://github.com/lojcs/webfeed.git                        # Tsacdop fork, updated to 0.7.0. Not updated to webfeed_plus
+      url: https://github.com/lojcs/webfeed.git # Tsacdop fork, updated to 0.7.0. Not updated to webfeed_plus
   flutter_media_metadata:
     git:
       url: https://github.com/MihMihai/flutter_media_metadata_enhanced # Updated fork, original stale
   feature_discovery:
     git:
-      url: https://github.com/JahezAcademy/feature_discovery           # Updated fork, original stale
+      url: https://github.com/JahezAcademy/feature_discovery # Updated fork, original stale
   flare_flutter:
     git:
-      url: https://github.com/ykh09242/Flare-Flutter                   # Updated fork, new version of flare is rive
+      url: https://github.com/ykh09242/Flare-Flutter # Updated fork, new version of flare is rive
       path: flare_flutter
 dev_dependencies:
   flutter_test:

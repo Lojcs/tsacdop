@@ -59,7 +59,7 @@ class DBHelper {
     var documentsDirectory = await getDatabasesPath();
     var path = join(documentsDirectory, "podcasts.db");
     var theDb = await openDatabase(path,
-        version: 9, onCreate: _onCreate, onUpgrade: _onUpgrade);
+        version: 10, onCreate: _onCreate, onUpgrade: _onUpgrade);
     return theDb;
   }
 
@@ -73,10 +73,10 @@ class DBHelper {
         auto_download INTEGER DEFAULT 0, skip_seconds_end INTEGER DEFAULT 0,
         never_update INTEGER DEFAULT 0, funding TEXT DEFAULT '[]', 
         hide_new_mark INTEGER DEFAULT 0, rss_hash TEXT DEFAULT '')""");
-    await db.execute("""CREATE TABLE Group(id TEXT PRIMARY KEY, name TEXT,
+    await db.execute("""CREATE TABLE Groups(id TEXT PRIMARY KEY, name TEXT,
         color TEXT)""");
     await db.execute("""CREATE TABLE Podcast_Group(podcast_id TEXT REFERENCES
-        PodcastLocal(id), group_id TEXT REFERENCES Group(id),
+        PodcastLocal(id), group_id TEXT REFERENCES Groups(id),
         PRIMARY KEY (podcast_id, group_id))""");
     await db
         .execute("""CREATE TABLE Episodes(id INTEGER PRIMARY KEY,title TEXT, 
@@ -133,6 +133,8 @@ class DBHelper {
     //     "CREATE INDEX episode_names ON Episodes (title, milliseconds ASC, feed_id);");
     // await db.execute(
     //     "CREATE INDEX episode_display ON Episodes (feed_id, version_info, is_new);");
+    await db.rawInsert("INSERT INTO Groups(id, name, color) VALUES(?, ?, ?)",
+        [homeGroupId, 'Home', Colors.teal.torgbString()]);
   }
 
   void _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -251,15 +253,15 @@ class DBHelper {
   }
 
   Future<void> _v9Update(Database db) async {
-    await db.execute("""CREATE TABLE Group(id TEXT PRIMARY KEY, name TEXT,
+    await db.execute("""CREATE TABLE Groups(id TEXT PRIMARY KEY, name TEXT,
         color TEXT)""");
     await db.execute("""CREATE TABLE Podcast_Group(podcast_id TEXT REFERENCES
-        PodcastLocal(id), group_id TEXT REFERENCES Group(id),
+        PodcastLocal(id), group_id TEXT REFERENCES Groups(id),
         PRIMARY KEY (podcast_id, group_id))""");
     final KeyValueStorage groupStorage = KeyValueStorage(groupsKey);
     final groups = await groupStorage.getGroups();
     for (var group in groups!) {
-      await db.rawUpdate("INSERT INTO Group(id, name, color) VALUES (?, ?, ?)",
+      await db.rawUpdate("INSERT INTO Groups(id, name, color) VALUES (?, ?, ?)",
           [group.id, group.name, group.color]);
       for (var podcastId in group.podcastIds) {
         await db.rawUpdate(
@@ -281,37 +283,39 @@ class DBHelper {
     List<String> query = [
       """SELECT P.id, P.title, P.rssUrl, P.author, P.provider, P.hosts, P.description, P.link, P.funding,
       P.imageUrl, P.imagePath, P.background_image, P.primaryColor, P.update_count, P.episode_count,
-      P.hide_new_mark, P.never_update, P.auto_download, P.skip_seconds, P.skip_seconds_end
+      P.hide_new_mark, P.never_update, P.auto_download, P.skip_seconds, P.skip_seconds_end, P.rss_hash
       FROM PodcastLocal P"""
     ];
     List<String> filters = [];
-    List arguements = [];
+    List arguments = [];
     if (groupIds != null && groupIds.isNotEmpty) {
       query.add(" LEFT JOIN Podcast_Group PD ON P.id = PD.podcast_id");
       filters
           .add(" PD.group_id IN (${(", ?" * groupIds.length).substring(2)})");
-      arguements.addAll(groupIds);
+      arguments.addAll(groupIds);
     }
     if (podcastIds != null && podcastIds.isNotEmpty) {
       filters.add(" P.id IN (${(", ?" * podcastIds.length).substring(2)})");
-      arguements.addAll(podcastIds);
+      arguments.addAll(podcastIds);
     }
-    if (podcastIds != null && podcastIds.isNotEmpty) {
-      filters.add(" P.rssUrl IN (${(", ?" * podcastIds.length).substring(2)})");
-      arguements.addAll(podcastIds);
+    if (rssUrls != null && rssUrls.isNotEmpty) {
+      filters.add(" P.rssUrl IN (${(", ?" * rssUrls.length).substring(2)})");
+      arguments.addAll(rssUrls);
     }
     if (filterNoAutoSync == false) {
       filters.add(" P.never_update = 0");
     } else if (filterNoAutoSync == true) {
       filters.add(" P.never_update = 1");
     }
-    query.add("WHERE ");
-    query.add(filters.join(" AND"));
+    if (filters.isNotEmpty) {
+      query.add(" WHERE");
+      query.add(filters.join(" AND"));
+    }
 
     var dbClient = await database;
     List<PodcastBrief> podcasts = [];
     List<Map> result;
-    result = await dbClient.rawQuery(query.join(), arguements);
+    result = await dbClient.rawQuery(query.join(), arguments);
     if (result.isNotEmpty) {
       for (var item in result) {
         PodcastBrief podcast = PodcastBrief(
@@ -334,12 +338,12 @@ class DBHelper {
             imageUrl: item['imageUrl'],
             imagePath: item['imagePath'],
             firesideBackgroundImage: item['background_image'],
-            primaryColor: (item['primaryColor'] as String).toColor(),
+            primaryColor: (item['primaryColor'] as String).torgbColor(),
             syncEpisodeCount: item['update_count'],
             episodeCount: item['episode_count'],
-            hideNewMark: item['hide_new_mark'],
-            noAutoSync: item['never_update'],
-            autoDownload: item['auto_download'],
+            hideNewMark: item['hide_new_mark'] == 1,
+            noAutoSync: item['never_update'] == 1,
+            autoDownload: item['auto_download'] == 1,
             skipSecondsStart: item['skip_seconds'],
             skipSecondsEnd: item['skip_seconds_end'],
             source: DataSource.database);
@@ -408,7 +412,7 @@ class DBHelper {
     return list.first['id'];
   }
 
-  Future savePodcastLocal(PodcastBrief podcastLocal) async {
+  Future<void> savePodcastLocal(PodcastBrief podcastLocal) async {
     var milliseconds = DateTime.now().millisecondsSinceEpoch;
     var dbClient = await database;
     await dbClient.transaction((txn) async {
@@ -421,7 +425,7 @@ class DBHelper {
             podcastLocal.title,
             podcastLocal.imageUrl,
             podcastLocal.rssUrl,
-            podcastLocal.primaryColor,
+            podcastLocal.primaryColor.torgbString(),
             podcastLocal.author,
             podcastLocal.description,
             milliseconds,
@@ -443,12 +447,56 @@ class DBHelper {
     });
   }
 
-  Future<int> updatePodcastImage(
-      {String? id, String? filePath, String? color}) async {
+  Future<List<SuperPodcastGroup>> getGroups() async {
     var dbClient = await database;
-    return await dbClient.rawUpdate(
-        "UPDATE PodcastLocal SET primaryColor = ?, imagePath = ? WHERE id = ?",
-        [color, filePath, id]);
+    List<Map> result;
+    result = await dbClient.rawQuery("SELECT id, name, color FROM Groups");
+    final List<SuperPodcastGroup> groups = [];
+    if (result.isNotEmpty) {
+      for (var item in result) {
+        final podcastResults = await dbClient.rawQuery(
+            "SELECT podcast_id FROM Podcast_Group WHERE group_id = ?",
+            [item['id']]);
+        final podcasts =
+            podcastResults.map((item) => item['podcast_id'] as String).toList();
+        final group = SuperPodcastGroup(
+            id: item['id'],
+            name: item['name'],
+            color: (item['color'] as String).torgbColor(),
+            podcastIds: podcasts);
+        groups.add(group);
+      }
+    }
+    return groups;
+  }
+
+  Future<void> addGroup(SuperPodcastGroup podcastGroup) async {
+    var dbClient = await database;
+    await dbClient.rawInsert(
+        "INSERT OR REPLACE INTO Groups(id, name, color) VALUES(?, ?, ?)",
+        [podcastGroup.id, podcastGroup.name, podcastGroup.color.torgbString()]);
+  }
+
+  Future<void> removeGroup(String groupId) async {
+    var dbClient = await database;
+    await dbClient
+        .rawDelete("DELETE FROM PodcastLocal WHERE id = ?", [groupId]);
+  }
+
+  Future<void> addPodcastToGroup(
+      {required String podcastId, required String groupId}) async {
+    var dbClient = await database;
+    await dbClient.rawInsert(
+        "INSERT OR IGNORE INTO Podcast_Group(podcast_id, group_id) VALUES (?, ?)",
+        [podcastId, groupId]);
+  }
+
+  Future<void> removePodcastFromGroup(
+      {required String podcastId, required String groupId}) async {
+    var dbClient = await database;
+    await dbClient.rawDelete(
+        "DELETE FROM Podcast_Group WHERE podcast_id = ? AND group_id = ?",
+        [podcastId, groupId]);
   }
 
   Future<int> saveFiresideData(List<String?> list) async {
@@ -1219,7 +1267,7 @@ class DBHelper {
           mediaId: i['media_id'],
           episodeImageUrl: i['episode_image'],
           podcastImagePath: i['imagePath'],
-          primaryColor: (i['primaryColor'] as String).toColor(),
+          primaryColor: (i['primaryColor'] as String).torgbColor(),
           isExplicit: i['explicit'] == 1,
           isLiked: i['liked'] == 1,
           isNew: i['is_new'] == 1,

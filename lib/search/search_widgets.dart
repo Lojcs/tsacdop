@@ -160,76 +160,78 @@ class SearchPodcastPreview extends StatefulWidget {
 class SearchPodcastPreviewState extends State<SearchPodcastPreview> {
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: context.actionBarIconPadding * 2,
-      child: Center(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            AnimatedContainer(
-              duration: Duration(milliseconds: 200),
-              curve: Curves.easeInOutQuad,
-              width: context.width -
-                  110 -
-                  context.actionBarIconPadding.horizontal *
-                      (widget.floating ? 5 : 3),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Selector<PodcastState, String>(
-                    selector: (_, pState) => pState[widget.podcastId].title,
-                    builder: (context, title, _) => Text(
-                      title,
-                      maxLines: 2,
-                      style: context.textTheme.titleLarge,
+    return SearchPanelCard(
+      child: Padding(
+        padding: context.actionBarIconPadding * 2,
+        child: Center(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              AnimatedContainer(
+                duration: Duration(milliseconds: 200),
+                curve: Curves.easeInOutQuad,
+                width: context.width -
+                    110 -
+                    context.actionBarIconPadding.horizontal *
+                        (widget.floating ? 5 : 3),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Selector<PodcastState, String>(
+                      selector: (_, pState) => pState[widget.podcastId].title,
+                      builder: (context, title, _) => Text(
+                        title,
+                        maxLines: 2,
+                        style: context.textTheme.titleLarge,
+                      ),
                     ),
-                  ),
-                  Selector<PodcastState, DataSource>(
-                    selector: (_, pState) => pState[widget.podcastId].source,
-                    builder: (context, source, _) => ElevatedButton(
-                      onPressed: () =>
-                          Provider.of<ApiSearch>(context, listen: false)
-                              .subscribe(widget.podcastId),
-                      child: Text(
-                        source == DataSource.remote
-                            ? context.s.subscribe
-                            : context.s.podcastSubscribed,
-                        style: source == DataSource.remote
-                            ? context.textTheme.bodyLarge!
-                                .copyWith(color: context.accentColor)
-                            : context.textTheme.bodyLarge,
+                    Selector<PodcastState, DataSource>(
+                      selector: (_, pState) => pState[widget.podcastId].source,
+                      builder: (context, source, _) => ElevatedButton(
+                        onPressed: () =>
+                            Provider.of<RemoteSearch>(context, listen: false)
+                                .subscribe(widget.podcastId),
+                        child: Text(
+                          source == DataSource.remote
+                              ? context.s.subscribe
+                              : context.s.podcastSubscribed,
+                          style: source == DataSource.remote
+                              ? context.textTheme.bodyLarge!
+                                  .copyWith(color: context.accentColor)
+                              : context.textTheme.bodyLarge,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                decoration: BoxDecoration(borderRadius: context.radiusMedium),
+                clipBehavior: Clip.antiAlias,
+                width: 100,
+                height: 100,
+                child: Selector<PodcastState, String>(
+                  selector: (_, pState) => pState[widget.podcastId].imageUrl,
+                  builder: (context, imageUrl, _) => CachedNetworkImage(
+                    imageUrl: imageUrl,
+                    progressIndicatorBuilder:
+                        (context, url, downloadProgress) => Container(
+                      height: 50,
+                      width: 50,
+                      alignment: Alignment.center,
+                      child: SizedBox(
+                        width: 20,
+                        height: 2,
+                        child: LinearProgressIndicator(
+                            value: downloadProgress.progress),
                       ),
                     ),
                   ),
-                ],
-              ),
-            ),
-            Container(
-              decoration: BoxDecoration(borderRadius: context.radiusMedium),
-              clipBehavior: Clip.antiAlias,
-              width: 100,
-              height: 100,
-              child: Selector<PodcastState, String>(
-                selector: (_, pState) => pState[widget.podcastId].imageUrl,
-                builder: (context, imageUrl, _) => CachedNetworkImage(
-                  imageUrl: imageUrl,
-                  progressIndicatorBuilder: (context, url, downloadProgress) =>
-                      Container(
-                    height: 50,
-                    width: 50,
-                    alignment: Alignment.center,
-                    child: SizedBox(
-                      width: 20,
-                      height: 2,
-                      child: LinearProgressIndicator(
-                          value: downloadProgress.progress),
-                    ),
-                  ),
                 ),
-              ),
-            )
-          ],
+              )
+            ],
+          ),
         ),
       ),
     );
@@ -246,6 +248,9 @@ class SearchEpisodeGrid extends StatefulWidget {
 class SearchEpisodeGridState extends State<SearchEpisodeGrid> {
   @override
   Widget build(BuildContext context) {
+    // SearchPanelCard(
+    //                 short: true,
+    //                 child: );
     // TODO: implement build
     throw UnimplementedError();
   }

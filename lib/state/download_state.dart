@@ -375,7 +375,7 @@ class SuperDownloadState extends ChangeNotifier {
                 DownloadTaskStatus.paused:
             break;
         }
-        _checkConnectivityCallback(Connectivity().checkConnectivity());
+        _checkConnectivityCallback(await Connectivity().checkConnectivity());
       }
     });
     await FlutterDownloader.registerCallback(downloadCallback);
@@ -408,7 +408,7 @@ class SuperDownloadState extends ChangeNotifier {
 
   /// Listens to network changes to pause or unpause downloads.
   Future<void> _startNetworkListener() async {
-    await _checkConnectivityCallback(Connectivity().checkConnectivity());
+    await _checkConnectivityCallback(await Connectivity().checkConnectivity());
     _connectivityStream = Connectivity()
         .onConnectivityChanged
         .distinct()
@@ -416,7 +416,8 @@ class SuperDownloadState extends ChangeNotifier {
   }
 
   /// Pauses and unpauses downloads based on network state.
-  Future<void> _checkConnectivityCallback(connectivity) async {
+  Future<void> _checkConnectivityCallback(
+      List<ConnectivityResult> connectivity) async {
     final autoDownload = await autoDownloadStorage.getInt();
     if (autoDownload == 0 && !connectivity.contains(ConnectivityResult.wifi)) {
       if (!downloadOnMobile) {

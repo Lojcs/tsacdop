@@ -25,6 +25,16 @@ enum DataSource {
 const localFolderId = "46e48103-06c7-4fe1-a0b1-68aa7205b7f0";
 const podcastAllId = "74c638a9-5021-4b1e-ba51-3deab5028905";
 
+class TestClass extends Equatable {
+  final String id;
+
+  const TestClass(this.id);
+
+  @override
+  // TODO: implement props
+  List<Object?> get props => throw UnimplementedError();
+}
+
 class PodcastBrief extends Equatable {
   final String id;
   final String title;
@@ -41,7 +51,9 @@ class PodcastBrief extends Equatable {
   final String imageUrl;
   final String imagePath;
   final String firesideBackgroundImage;
-  final Color primaryColor;
+
+  final String _primaryColor;
+  Color get primaryColor => _primaryColor.torgbColor();
 
   /// Number of episodes added in the last sync
   final int syncEpisodeCount;
@@ -67,14 +79,14 @@ class PodcastBrief extends Equatable {
     this.rssHash = "",
     required this.author,
     required this.provider,
-    this.firesideHosts = const [],
+    List<PodcastHost>? firesideHosts,
     required this.description,
     required this.webpage,
     required this.funding,
     required this.imageUrl,
     required this.imagePath,
     this.firesideBackgroundImage = "",
-    required this.primaryColor,
+    required Color primaryColor,
     required this.syncEpisodeCount,
     required this.episodeCount,
     required this.hideNewMark,
@@ -83,7 +95,8 @@ class PodcastBrief extends Equatable {
     this.skipSecondsStart = 0,
     this.skipSecondsEnd = 0,
     this.source = DataSource.database,
-  });
+  })  : firesideHosts = firesideHosts ?? [],
+        _primaryColor = primaryColor.torgbString();
 
   /// Black local folder podcast object.
   PodcastBrief.localFolder(S s, Directory applicationDocumentsDirectory,
@@ -102,7 +115,32 @@ class PodcastBrief extends Equatable {
         imagePath =
             "${applicationDocumentsDirectory.path}/assets/avatar_backup.png",
         firesideBackgroundImage = "",
-        primaryColor = Colors.teal,
+        _primaryColor = Colors.teal.torgbString(),
+        syncEpisodeCount = 0,
+        episodeCount = 0,
+        hideNewMark = true,
+        noAutoSync = true,
+        autoDownload = false,
+        skipSecondsStart = 0,
+        skipSecondsEnd = 0,
+        source = DataSource.user;
+
+  /// Black local folder podcast object.
+  PodcastBrief.d({String? id, String? title, String? description})
+      : id = id ?? localFolderId,
+        title = title ?? "s.localFolder",
+        rssUrl = "",
+        rssHash = "",
+        author = "s.deviceStorage",
+        provider = "",
+        firesideHosts = [],
+        description = description ?? "s.localFolderDescription",
+        webpage = "",
+        funding = [],
+        imageUrl = "",
+        imagePath = "/assets/avatar_backup.png",
+        firesideBackgroundImage = "",
+        _primaryColor = Colors.teal.torgbString(),
         syncEpisodeCount = 0,
         episodeCount = 0,
         hideNewMark = true,
@@ -134,7 +172,7 @@ class PodcastBrief extends Equatable {
                 "&color=fff&name=${feed.title}&length=2&bold=true",
         imagePath = "",
         firesideBackgroundImage = "",
-        primaryColor = Colors.teal,
+        _primaryColor = Colors.teal.torgbString(),
         syncEpisodeCount = 0,
         episodeCount = feed.items?.length ?? 0,
         hideNewMark = false,

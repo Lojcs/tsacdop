@@ -41,9 +41,9 @@ class Playlist {
 
   bool get isQueue => name == 'Queue';
 
-  Playlist(this.name,
-      {String? id, this.isLocal = false, this.episodeIds = const []})
+  Playlist(this.name, {String? id, this.isLocal = false, List<int>? episodeIds})
       : id = id ?? Uuid().v4(),
+        episodeIds = episodeIds ?? [],
         assert(name != '');
 
   Map<String, Object?> toJson() {

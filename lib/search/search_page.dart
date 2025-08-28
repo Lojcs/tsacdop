@@ -203,12 +203,10 @@ class SearchPanelRoute extends ModalRoute {
 
 class SearchPanel extends StatefulWidget {
   final FocusNode searchFocusNode;
-  final List<String> urls;
   final bool hide;
   final GlobalKey searchBarKey;
   const SearchPanel(
       {required this.searchFocusNode,
-      this.urls = const [],
       this.hide = false,
       required this.searchBarKey,
       super.key});
@@ -218,7 +216,7 @@ class SearchPanel extends StatefulWidget {
 }
 
 class SearchPanelState extends State<SearchPanel> {
-  late Search searchProvider =
+  late RemoteSearch searchProvider =
       PodcastIndexSearch(context.podcastState, context.episodeState);
 
   @override
@@ -227,24 +225,44 @@ class SearchPanelState extends State<SearchPanel> {
       value: searchProvider,
       child: Align(
         alignment: Alignment.topCenter,
-        child: Consumer<Search>(
+        child: Consumer<RemoteSearch>(
           builder: (context, search, _) => ListView.builder(
-              hitTestBehavior: HitTestBehavior.deferToChild,
-              shrinkWrap: true,
-              itemCount: search.maxPodcastLength + 1,
-              itemExtentBuilder: (index, dimensions) =>
-                  (index == 0 ? 120 : 140) +
-                  context.actionBarIconPadding.vertical,
-              itemBuilder: (context, index) => switch (index) {
-                    0 => SearchPanelCard(
-                        short: true,
-                        child: Controls(
-                            searchFocusNode: widget.searchFocusNode,
-                            hideSearchBar: widget.hide,
-                            searchBarKey: widget.searchBarKey),
-                      ),
-                    _ => search[index - 1],
-                  }),
+            hitTestBehavior: HitTestBehavior.deferToChild,
+            shrinkWrap: true,
+            itemCount: search.maxPodcastLength + 1,
+            itemExtentBuilder: (index, dimensions) =>
+                (index == 0 ? 120 : 140) +
+                context.actionBarIconPadding.vertical,
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return Controls(
+                    searchFocusNode: widget.searchFocusNode,
+                    hideSearchBar: widget.hide,
+                    searchBarKey: widget.searchBarKey);
+              } else {
+                // Offset podcast index to account for other cards.
+                index += search.episodeIds.isNotEmpty ? -2 : -1;
+                if (index == -1) {
+                  return SearchEpisodeGrid(search.episodeIds);
+                } else if (index < search.maxPodcastLength) {
+                  return Selector<RemoteSearch, bool>(
+                    selector: (_, search) => search.podcastIds.length > index,
+                    builder: (context, value, _) => value
+                        ? SearchPodcastPreview(
+                            search.podcastIds[index],
+                            search.getPodcastEpisodes(search.podcastIds[index]),
+                          )
+                        : Container(
+                            decoration: BoxDecoration(
+                                borderRadius: context.radiusSmall),
+                            clipBehavior: Clip.antiAlias,
+                            child: LinearProgressIndicator(),
+                          ),
+                  );
+                }
+              }
+            },
+          ),
         ),
       ),
     );
@@ -268,33 +286,36 @@ class Controls extends StatefulWidget {
 class ControlsState extends State<Controls> {
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding:
-          EdgeInsets.symmetric(vertical: context.actionBarIconPadding.vertical),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (!widget.hideSearchBar)
-                SearchBar(
-                  widget.searchFocusNode,
-                  key: widget.searchBarKey,
-                ),
-            ],
-          ),
-          SizedBox(
-            width: context.width - 80,
-            child: Text(
-              context.s.searchInstructions,
-              style: context.textTheme.bodySmall!
-                  .copyWith(color: Colors.grey[600]),
-              textAlign: TextAlign.center,
+    return SearchPanelCard(
+      short: true,
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+            vertical: context.actionBarIconPadding.vertical),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (!widget.hideSearchBar)
+                  SearchBar(
+                    widget.searchFocusNode,
+                    key: widget.searchBarKey,
+                  ),
+              ],
             ),
-          ),
-        ],
+            SizedBox(
+              width: context.width - 80,
+              child: Text(
+                context.s.searchInstructions,
+                style: context.textTheme.bodySmall!
+                    .copyWith(color: Colors.grey[600]),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -367,7 +388,7 @@ class SearchBar extends StatelessWidget {
   const SearchBar(this.searchFocusNode,
       {this.colorAnimation = const DummyAnimation(), super.key});
   void search(BuildContext context, String query) =>
-      Provider.of<Search>(context, listen: false).query(query);
+      Provider.of<RemoteSearch>(context, listen: false).query(query);
 
   @override
   Widget build(BuildContext context) {

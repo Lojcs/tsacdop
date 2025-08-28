@@ -657,6 +657,11 @@ class ActionBarDropdownGroups extends ActionBarFilter {
 
 class ActionBarDropdownPodcasts extends ActionBarFilter {
   const ActionBarDropdownPodcasts(super.rowIndex, super.index, {super.key});
+
+  String titleOf(BuildContext context, String podcastId) =>
+      podcastId == podcastAllId
+          ? context.s.all
+          : context.podcastState[podcastId].title;
   @override
   Widget build(BuildContext context) {
     _ActionBarSharedState sharedState =
@@ -673,7 +678,7 @@ class ActionBarDropdownPodcasts extends ActionBarFilter {
             for (var podcastId in snapshot.data!) {
               final podcastNameTest = TextPainter(
                   text: TextSpan(
-                    text: context.podcastState[podcastId].title,
+                    text: titleOf(context, podcastId),
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   textDirection: TextDirection.ltr);
@@ -688,14 +693,14 @@ class ActionBarDropdownPodcasts extends ActionBarFilter {
               selected: data,
               expansionController: sharedState.expansionControllers[rowIndex],
               expandedChild: Text(
-                context.podcastState[data].title,
+                titleOf(context, data),
                 style: Theme.of(context).textTheme.titleMedium,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
               itemBuilder: () => snapshot.data!.map<PopupMenuItem<String>>(
                 (podcastId) {
-                  final title = context.podcastState[podcastId].title;
+                  final title = titleOf(context, podcastId);
                   return PopupMenuItem(
                     padding: context.actionBarIconPadding,
                     height: context.actionBarButtonSizeVertical,

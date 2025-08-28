@@ -53,7 +53,7 @@ android {
 
     defaultConfig {
         applicationId "dev.lojcs.tsacdop"
-        minSdkVersion 21
+        minSdkVersion flutter.minSdkVersion
         targetSdkVersion 33
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName

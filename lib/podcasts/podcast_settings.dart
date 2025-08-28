@@ -90,9 +90,10 @@ class _PodcastSettingState extends State<PodcastSetting> {
               trailing: Transform.scale(
                 scale: 0.8,
                 child: Switch(
-                    value: autoDownload,
-                    activeColor: colorScheme.primary,
-                    onChanged: _setAutoDownload),
+                  value: autoDownload,
+                  activeThumbColor: colorScheme.primary,
+                  onChanged: _setAutoDownload,
+                ),
               ),
             ),
           ),
@@ -111,9 +112,10 @@ class _PodcastSettingState extends State<PodcastSetting> {
               trailing: Transform.scale(
                 scale: 0.8,
                 child: Switch(
-                    value: noAutoSync,
-                    activeColor: colorScheme.primary,
-                    onChanged: _setNeverUpdate),
+                  value: noAutoSync,
+                  activeThumbColor: colorScheme.primary,
+                  onChanged: _setNeverUpdate,
+                ),
               ),
             ),
           ),
@@ -132,9 +134,10 @@ class _PodcastSettingState extends State<PodcastSetting> {
               trailing: Transform.scale(
                 scale: 0.8,
                 child: Switch(
-                    value: hideNewMark,
-                    activeColor: colorScheme.primary,
-                    onChanged: _setHideNewMark),
+                  value: hideNewMark,
+                  activeThumbColor: colorScheme.primary,
+                  onChanged: _setHideNewMark,
+                ),
               ),
             ),
           ),
@@ -166,16 +169,17 @@ class _PodcastSettingState extends State<PodcastSetting> {
           ),
           if (_showStartTimePicker)
             _TimePicker(
-                color: colorScheme.primary,
-                onCancel: () {
-                  _secondsStart = 0;
-                  setState(() => _showStartTimePicker = false);
-                },
-                onConfirm: () async {
-                  await _saveSkipSecondsStart(_secondsStart);
-                  if (mounted) setState(() => _showStartTimePicker = false);
-                },
-                onChange: (value) => _secondsStart = value.inSeconds),
+              color: colorScheme.primary,
+              onCancel: () {
+                _secondsStart = 0;
+                setState(() => _showStartTimePicker = false);
+              },
+              onConfirm: () async {
+                await _saveSkipSecondsStart(_secondsStart);
+                if (mounted) setState(() => _showStartTimePicker = false);
+              },
+              onChange: (value) => _secondsStart = value.inSeconds,
+            ),
           Selector<PodcastState, int>(
             selector: (_, pState) => pState[widget.podcastId].skipSecondsEnd,
             builder: (context, skipSecondsEnd, _) => ListTile(
@@ -204,40 +208,17 @@ class _PodcastSettingState extends State<PodcastSetting> {
           ),
           if (_showEndTimePicker)
             _TimePicker(
-                color: colorScheme.primary,
-                onCancel: () {
-                  _secondsEnd = 0;
-                  setState(() => _showEndTimePicker = false);
-                },
-                onConfirm: () async {
-                  await _saveSkipSecondsEnd(_secondsEnd);
-                  if (mounted) setState(() => _showEndTimePicker = false);
-                },
-                onChange: (value) => _secondsEnd = value.inSeconds),
-          ListTile(
-            onTap: () {
-              if (_coverStatus != RefreshCoverStatus.start) {
-                _refreshArtWork();
-              }
-            },
-            dense: true,
-            title: Row(
-              children: [
-                Icon(Icons.refresh, size: 18),
-                SizedBox(width: 20),
-                Text(s.refreshArtwork, style: textStyle),
-              ],
+              color: colorScheme.primary,
+              onCancel: () {
+                _secondsEnd = 0;
+                setState(() => _showEndTimePicker = false);
+              },
+              onConfirm: () async {
+                await _saveSkipSecondsEnd(_secondsEnd);
+                if (mounted) setState(() => _showEndTimePicker = false);
+              },
+              onChange: (value) => _secondsEnd = value.inSeconds,
             ),
-            trailing: Padding(
-              padding: const EdgeInsets.only(right: 15.0),
-              child: SizedBox(
-                height: 20,
-                width: 20,
-                child: _getRefreshStatusIcon(_coverStatus,
-                    color: colorScheme.primary),
-              ),
-            ),
-          ),
           Divider(height: 1),
           ListTile(
             onTap: () {
@@ -256,15 +237,19 @@ class _PodcastSettingState extends State<PodcastSetting> {
                   width: 18,
                   child: CustomPaint(
                     painter: ListenedAllPainter(
-                        colorScheme.onSecondaryContainer,
-                        stroke: 2),
+                      colorScheme.onSecondaryContainer,
+                      stroke: 2,
+                    ),
                   ),
                 ),
                 SizedBox(width: 20),
-                Text(s.menuMarkAllListened,
-                    style: textStyle.copyWith(
-                        color: colorScheme.onSecondaryContainer,
-                        fontWeight: FontWeight.bold)),
+                Text(
+                  s.menuMarkAllListened,
+                  style: textStyle.copyWith(
+                    color: colorScheme.onSecondaryContainer,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
             trailing: Padding(
@@ -291,24 +276,28 @@ class _PodcastSettingState extends State<PodcastSetting> {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   TextButton(
-                      onPressed: () => setState(() {
-                            _markConfirm = false;
-                          }),
-                      child: Text(
-                        s.cancel,
-                        style: TextStyle(color: Colors.grey[600]),
-                      )),
+                    onPressed: () => setState(() {
+                      _markConfirm = false;
+                    }),
+                    child: Text(
+                      s.cancel,
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                  ),
                   TextButton(
-                      onPressed: () {
-                        if (_markStatus != MarkStatus.start) {
-                          _markListened(widget.podcastId);
-                        }
-                        setState(() {
-                          _markConfirm = false;
-                        });
-                      },
-                      child: Text(s.confirm,
-                          style: TextStyle(color: colorScheme.primary))),
+                    onPressed: () {
+                      if (_markStatus != MarkStatus.start) {
+                        _markListened(widget.podcastId);
+                      }
+                      setState(() {
+                        _markConfirm = false;
+                      });
+                    },
+                    child: Text(
+                      s.confirm,
+                      style: TextStyle(color: colorScheme.primary),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -326,9 +315,13 @@ class _PodcastSettingState extends State<PodcastSetting> {
               children: [
                 Icon(Icons.delete_outlined, color: Colors.red, size: 18),
                 SizedBox(width: 20),
-                Text(s.remove,
-                    style: textStyle.copyWith(
-                        color: Colors.red, fontWeight: FontWeight.bold)),
+                Text(
+                  s.remove,
+                  style: textStyle.copyWith(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
           ),
@@ -343,16 +336,18 @@ class _PodcastSettingState extends State<PodcastSetting> {
                     onPressed: () => setState(() {
                       _removeConfirm = false;
                     }),
-                    child: Text(s.cancel,
-                        style: TextStyle(color: Colors.grey[600])),
+                    child: Text(
+                      s.cancel,
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
                   ),
                   TextButton(
-                      onPressed: () async {
-                        await _pState.unsubscribePodcast(widget.podcastId);
-                        if (context.mounted) Navigator.of(context).pop();
-                      },
-                      child:
-                          Text(s.confirm, style: TextStyle(color: Colors.red))),
+                    onPressed: () async {
+                      await _pState.unsubscribePodcast(widget.podcastId);
+                      if (context.mounted) Navigator.of(context).pop();
+                    },
+                    child: Text(s.confirm, style: TextStyle(color: Colors.red)),
+                  ),
                 ],
               ),
             ),
@@ -374,13 +369,15 @@ class _PodcastSettingState extends State<PodcastSetting> {
   }
 
   Future<void> _saveSkipSecondsStart(int seconds) async {
-    await _pState
-        .changePodcastProperty([widget.podcastId], skipSecondsStart: seconds);
+    await _pState.changePodcastProperty([
+      widget.podcastId,
+    ], skipSecondsStart: seconds);
   }
 
   Future<void> _saveSkipSecondsEnd(int seconds) async {
-    await _pState
-        .changePodcastProperty([widget.podcastId], skipSecondsEnd: seconds);
+    await _pState.changePodcastProperty([
+      widget.podcastId,
+    ], skipSecondsEnd: seconds);
   }
 
   Future<void> _markListened(String? podcastId) async {
@@ -388,8 +385,10 @@ class _PodcastSettingState extends State<PodcastSetting> {
       _markStatus = MarkStatus.start;
     });
     final eState = context.episodeState;
-    final episodes =
-        await eState.getEpisodes(feedIds: [podcastId!], filterPlayed: false);
+    final episodes = await eState.getEpisodes(
+      feedIds: [podcastId!],
+      filterPlayed: false,
+    );
     for (var episode in episodes.map((id) => eState[id])) {
       final history = PlayHistory(episode.title, episode.enclosureUrl, 0, 1);
       await _dbHelper.saveHistory(history);
@@ -398,75 +397,6 @@ class _PodcastSettingState extends State<PodcastSetting> {
       setState(() {
         _markStatus = MarkStatus.complete;
       });
-    }
-  }
-
-  Future<void> _refreshArtWork() async {
-    setState(() => _coverStatus = RefreshCoverStatus.start);
-    var options = BaseOptions(
-      connectTimeout: Duration(seconds: 30),
-      receiveTimeout: Duration(seconds: 90),
-    );
-    var dir = await getApplicationDocumentsDirectory();
-    var filePath = "${dir.path}/${widget.podcastId}.png";
-    var dio = Dio(options);
-    String? imageUrl;
-
-    try {
-      var response =
-          await dio.get(context.podcastState[widget.podcastId].rssUrl);
-      try {
-        var p = RssFeed.parse(response.data);
-        imageUrl = p.itunes!.image!.href ?? p.image!.url;
-      } catch (e) {
-        developer.log(e.toString());
-        if (mounted) setState(() => _coverStatus = RefreshCoverStatus.error);
-      }
-    } catch (e) {
-      developer.log(e.toString());
-      if (mounted) setState(() => _coverStatus = RefreshCoverStatus.error);
-    }
-    if (imageUrl != null && imageUrl.contains('http')) {
-      try {
-        img.Image thumbnail;
-        var imageResponse = await dio.get<List<int>>(imageUrl,
-            options: Options(
-              responseType: ResponseType.bytes,
-            ));
-        var image = img.decodeImage(Uint8List.fromList(imageResponse.data!))!;
-        thumbnail = img.copyResize(image, width: 300);
-        File(filePath).writeAsBytesSync(img.encodePng(thumbnail));
-        final imageProvider = FileImage(File(filePath));
-        var colorImage = await getImageFromProvider(imageProvider);
-        var color = await getColorFromImage(colorImage);
-        var primaryColor = color.toString();
-        _dbHelper.updatePodcastImage(
-            id: widget.podcastId, filePath: filePath, color: primaryColor);
-        if (mounted) {
-          Fluttertoast.showToast(
-            msg: context.s.restartAppForEffect,
-            gravity: ToastGravity.TOP,
-          );
-          setState(() => _coverStatus = RefreshCoverStatus.complete);
-        }
-      } catch (e) {
-        developer.log(e.toString());
-        if (mounted) {
-          if (e is DioException &&
-              e.error is SocketException &&
-              e.message?.substring(17, 35) == "Failed host lookup") {
-            Fluttertoast.showToast(
-              msg: context.s.networkErrorDNS,
-              gravity: ToastGravity.TOP,
-            );
-          }
-          setState(() => _coverStatus = RefreshCoverStatus.error);
-        }
-      }
-    } else if (_coverStatus == RefreshCoverStatus.start) {
-      if (mounted) {
-        setState(() => _coverStatus = RefreshCoverStatus.complete);
-      }
     }
   }
 
@@ -499,10 +429,7 @@ class _TimePicker extends StatelessWidget {
       child: Column(
         children: [
           SizedBox(height: 10),
-          DurationPicker(
-            color: color,
-            onChange: onChange,
-          ),
+          DurationPicker(color: color, onChange: onChange),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -515,15 +442,16 @@ class _TimePicker extends StatelessWidget {
               ),
               TextButton(
                 style: TextButton.styleFrom(
-                    surfaceTintColor: context.priamryContainer),
+                  surfaceTintColor: context.priamryContainer,
+                ),
                 onPressed: onConfirm,
                 child: Text(
                   s.confirm,
                   style: TextStyle(color: color ?? context.accentColor),
                 ),
-              )
+              ),
             ],
-          )
+          ),
         ],
       ),
     );

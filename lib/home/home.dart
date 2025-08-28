@@ -100,6 +100,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    StatefulBuilder;
     final height = (context.width - 20) / 3 + 145;
     final settings = Provider.of<SettingState>(context, listen: false);
     final s = context.s;

@@ -32,8 +32,9 @@ class SuperPodcastGroup extends Equatable {
     String? id,
     required this.name,
     this.color = Colors.teal,
-    this.podcastIds = const [],
-  }) : id = id ?? Uuid().v4();
+    List<String>? podcastIds,
+  })  : id = id ?? Uuid().v4(),
+        podcastIds = podcastIds ?? [];
 
   Map<String, Object?> toJson() => {
         'name': name,

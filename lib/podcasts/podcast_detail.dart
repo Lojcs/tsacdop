@@ -48,39 +48,10 @@ class _PodcastDetailState extends State<PodcastDetail> {
       GlobalKey<RefreshIndicatorState>();
 
   final GlobalKey<AudioPanelState> _playerKey = GlobalKey<AudioPanelState>();
-  CardColorScheme get cardColorScheme =>
-      context.select<PodcastState, CardColorScheme>(
-          (pState) => pState[widget.podcastId].cardColorScheme(context));
 
   late ScrollController _controller;
 
   late SelectionController selectionController;
-
-  late Widget body = RefreshIndicator(
-    key: _refreshIndicatorKey,
-    displacement: context.paddingTop + 40,
-    color: cardColorScheme.colorScheme.primary,
-    onRefresh: () async {
-      final count = await context.podcastState.syncPodcast(widget.podcastId);
-      if (mounted) {
-        Fluttertoast.showToast(
-          msg: count != null
-              ? context.s.updateEpisodesCount(count)
-              : context.s.updateFailed,
-          gravity: ToastGravity.TOP,
-        );
-      }
-    },
-    child: PodcastDetailBody(
-      podcastId: widget.podcastId,
-      selectionController: selectionController,
-      initIds: widget.initIds,
-      hide: widget.hide,
-    ),
-  );
-
-  late Widget multiSelect = MultiSelectPanelIntegration();
-  late Widget player = PlayerWidget(playerKey: _playerKey);
 
   @override
   void initState() {
@@ -101,6 +72,8 @@ class _PodcastDetailState extends State<PodcastDetail> {
 
   @override
   Widget build(BuildContext context) {
+    final cardColorScheme =
+        context.podcastState[widget.podcastId].cardColorScheme(context);
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<SelectionController>(
@@ -143,9 +116,31 @@ class _PodcastDetailState extends State<PodcastDetail> {
                     body: SafeArea(
                       child: Stack(
                         children: <Widget>[
-                          body,
-                          multiSelect,
-                          player,
+                          RefreshIndicator(
+                            key: _refreshIndicatorKey,
+                            displacement: context.paddingTop + 40,
+                            color: cardColorScheme.colorScheme.primary,
+                            onRefresh: () async {
+                              final count = await context.podcastState
+                                  .syncPodcast(widget.podcastId);
+                              if (mounted) {
+                                Fluttertoast.showToast(
+                                  msg: count != null
+                                      ? context.s.updateEpisodesCount(count)
+                                      : context.s.updateFailed,
+                                  gravity: ToastGravity.TOP,
+                                );
+                              }
+                            },
+                            child: PodcastDetailBody(
+                              podcastId: widget.podcastId,
+                              selectionController: selectionController,
+                              initIds: widget.initIds,
+                              hide: widget.hide,
+                            ),
+                          ),
+                          MultiSelectPanelIntegration(),
+                          PlayerWidget(playerKey: _playerKey),
                         ],
                       ),
                     ),
@@ -202,11 +197,12 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
 
   @override
   Widget build(BuildContext context) {
+    final cardColorScheme =
+        context.podcastState[widget.podcastId].cardColorScheme(context);
     return ColoredBox(
         color: context.realDark
             ? context.surface
-            : context.select<CardColorScheme, Color>(
-                (colors) => colors.colorScheme.surface),
+            : cardColorScheme.colorScheme.surface,
         child: InteractiveEpisodeGrid(
           additionalSliversList: [
             Builder(
@@ -217,18 +213,13 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
                           .size
                           .height;
                 }
-                return Selector<CardColorScheme, Tuple2<Color, Color>>(
-                  selector: (context, cardColorScheme) => Tuple2(
-                      context.realDark
-                          ? context.surface
-                          : cardColorScheme.saturated,
-                      cardColorScheme.colorScheme.onPrimaryContainer),
-                  builder: (context, data, _) => _PodcastDetailAppBar(
-                    podcastId: widget.podcastId,
-                    color: data.item1,
-                    textColor: data.item2,
-                    infoHeight: _infoHeight,
-                  ),
+                return _PodcastDetailAppBar(
+                  podcastId: widget.podcastId,
+                  color: context.realDark
+                      ? context.surface
+                      : cardColorScheme.saturated,
+                  textColor: cardColorScheme.colorScheme.onPrimaryContainer,
+                  infoHeight: _infoHeight,
                 );
               },
             ), // Hidden widget to get the height of [HostsList]

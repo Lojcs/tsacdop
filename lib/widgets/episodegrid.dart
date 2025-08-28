@@ -50,7 +50,7 @@ class InteractiveEpisodeGrid extends StatefulWidget {
   final Widget? noEpisodesWidget;
 
   /// Slivers to display in addition to the 3 included here
-  final List<Widget> additionalSliversList;
+  final List<Widget>? additionalSliversList;
 
   /// Indicies to insert included slivers at the [additionalSliversList]
   final ({
@@ -128,7 +128,7 @@ class InteractiveEpisodeGrid extends StatefulWidget {
   const InteractiveEpisodeGrid({
     super.key,
     this.noEpisodesWidget,
-    this.additionalSliversList = const [],
+    this.additionalSliversList,
     this.sliverInsertIndicies = (
       actionBarIndex: 0,
       loadingIndicatorIndex: 1,
@@ -307,7 +307,7 @@ class _InteractiveEpisodeGridState extends State<InteractiveEpisodeGrid> {
   }
 
   void buildSlivers() {
-    slivers = widget.additionalSliversList.toList();
+    slivers = widget.additionalSliversList?.toList() ?? [];
     slivers!.insert(
       widget.sliverInsertIndicies.actionBarIndex,
       _layout != null

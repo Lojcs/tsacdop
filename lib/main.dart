@@ -40,9 +40,7 @@ Future main() async {
   await KeyValueStorage(lastWorkKey).saveInt(0);
   final documents = await getApplicationDocumentsDirectory();
   final podcastState = PodcastState(documents);
-  print("bbb");
   await podcastState.ready;
-  print("aaa");
   runApp(
     MultiProvider(
       providers: [
