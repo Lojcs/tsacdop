@@ -53,7 +53,7 @@ class PodcastBrief extends Equatable {
   final String firesideBackgroundImage;
 
   final String _primaryColor;
-  Color get primaryColor => _primaryColor.torgbColor();
+  Color get primaryColor => _primaryColor.toargbColor();
 
   /// Number of episodes added in the last sync
   final int syncEpisodeCount;
@@ -96,7 +96,7 @@ class PodcastBrief extends Equatable {
     this.skipSecondsEnd = 0,
     this.source = DataSource.database,
   })  : firesideHosts = firesideHosts ?? [],
-        _primaryColor = primaryColor.torgbString();
+        _primaryColor = primaryColor.toargbString();
 
   /// Black local folder podcast object.
   PodcastBrief.localFolder(S s, Directory applicationDocumentsDirectory,
@@ -115,7 +115,7 @@ class PodcastBrief extends Equatable {
         imagePath =
             "${applicationDocumentsDirectory.path}/assets/avatar_backup.png",
         firesideBackgroundImage = "",
-        _primaryColor = Colors.teal.torgbString(),
+        _primaryColor = Colors.teal.toargbString(),
         syncEpisodeCount = 0,
         episodeCount = 0,
         hideNewMark = true,
@@ -140,7 +140,7 @@ class PodcastBrief extends Equatable {
         imageUrl = "",
         imagePath = "/assets/avatar_backup.png",
         firesideBackgroundImage = "",
-        _primaryColor = Colors.teal.torgbString(),
+        _primaryColor = Colors.teal.toargbString(),
         syncEpisodeCount = 0,
         episodeCount = 0,
         hideNewMark = true,
@@ -172,7 +172,7 @@ class PodcastBrief extends Equatable {
                 "&color=fff&name=${feed.title}&length=2&bold=true",
         imagePath = "",
         firesideBackgroundImage = "",
-        _primaryColor = Colors.teal.torgbString(),
+        _primaryColor = Colors.teal.toargbString(),
         syncEpisodeCount = 0,
         episodeCount = feed.items?.length ?? 0,
         hideNewMark = false,
@@ -193,7 +193,7 @@ class PodcastBrief extends Equatable {
     }
     final image = await getImageFromProvider(imageProvider);
     final colorString = (await getColorFromImage(image)).toString();
-    final color = colorString.toColor();
+    final color = colorString.toJsonColor();
     return copyWith(primaryColor: color);
   }
 

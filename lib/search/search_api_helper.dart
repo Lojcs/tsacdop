@@ -77,9 +77,9 @@ abstract class RemoteSearch extends Search {
   /// Helper to add feeds to the podcasts list.
   Future<void> addFeeds(Iterable<String> feedUrls) async {
     maxPodcastLength = feedUrls.length;
-    Queue<Future> futures = Queue();
+    Queue<Future<void>> futures = Queue();
     for (var feed in feedUrls) {
-      if (futures.length >= 4) await futures.removeFirst();
+      if (futures.length >= 8) await futures.removeFirst();
       futures.add(_addFeed(feed)); // Don't await
     }
   }

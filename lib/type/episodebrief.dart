@@ -37,7 +37,7 @@ class EpisodeBrief extends Equatable {
   final String episodeImageUrl;
   final String podcastImagePath;
   final String _primaryColor;
-  Color get primaryColor => _primaryColor.torgbColor();
+  Color get primaryColor => _primaryColor.toargbColor();
 
   final bool isExplicit;
   final bool isLiked;
@@ -77,7 +77,7 @@ class EpisodeBrief extends Equatable {
     this.skipSecondsEnd = 0,
     required this.chapterLink,
     required this.source,
-  }) : _primaryColor = primaryColor.torgbString();
+  }) : _primaryColor = primaryColor.toargbString();
 
   /// Use for new user episodes not yet in database
   EpisodeBrief.user(
@@ -99,7 +99,7 @@ class EpisodeBrief extends Equatable {
         isDownloaded = true,
         downloadDate = pubDate,
         podcastImagePath = '',
-        _primaryColor = (primaryColor ?? Colors.teal).torgbString(),
+        _primaryColor = (primaryColor ?? Colors.teal).toargbString(),
         isExplicit = false,
         isLiked = false,
         isNew = false,
@@ -134,7 +134,7 @@ class EpisodeBrief extends Equatable {
                 : item.enclosure!.url!)
             : "",
         episodeImageUrl = item.itunes?.image?.href ?? '',
-        _primaryColor = primaryColor.torgbString(),
+        _primaryColor = primaryColor.toargbString(),
         isExplicit = item.itunes?.explicit ?? false,
         isLiked = false,
         isNew = DateTime.now().difference(item.pubDate ?? DateTime(0)) <

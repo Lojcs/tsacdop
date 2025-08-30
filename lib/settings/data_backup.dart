@@ -19,8 +19,8 @@ import 'package:workmanager/workmanager.dart';
 
 import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
-import '../service/gpodder_api.dart';
-import '../service/opml_build.dart';
+import '../backup/gpodder_api.dart';
+import '../backup/opml_helper.dart';
 import '../state/podcast_group.dart';
 import '../state/setting_state.dart';
 import '../type/settings_backup.dart';
@@ -273,7 +273,7 @@ class _DataBackupState extends State<DataBackup> {
   }
 
   Future<void> _shareFile(File file) async {
-    await Share.shareXFiles([XFile(file.path)]);
+    await SharePlus.instance.share(ShareParams(files: [XFile(file.path)]));
   }
 
   Future<File> _exportSetting(BuildContext context) async {

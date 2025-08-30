@@ -1012,7 +1012,7 @@ class _NewPlaylistState extends State<_NewPlaylist> {
       enclosureSize: fileLength,
       mediaId: 'file://$path',
       episodeImageUrl: imagePath ?? '',
-      primaryColor: primaryColor?.toColor(),
+      primaryColor: primaryColor?.toJsonColor(),
     );
   }
 

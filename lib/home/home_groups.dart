@@ -391,7 +391,8 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
             height: 50,
             width: 50,
             decoration: BoxDecoration(
-                shape: BoxShape.circle, color: context.primaryColor),
+                shape: BoxShape.circle,
+                color: context.colorScheme.surfaceContainer),
           ),
         ),
       );

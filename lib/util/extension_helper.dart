@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer' as developer;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -32,7 +33,6 @@ extension ContextExtension on BuildContext {
   Color get shadowColor => colorScheme.shadow;
   Color get primaryColorDark => Theme.of(this).primaryColorDark;
   Color get textColor => textTheme.bodyLarge!.color!;
-  Color get dialogBackgroundColor => Theme.of(this).dialogBackgroundColor;
   Color get accentBackgroundWeak => accentColor.toWeakBackround(this);
   Color get accentBackground => accentColor.toStrongBackround(this);
   Color get accentBackgroundHighlight => accentColor.toHighlightBackround(this);
@@ -205,19 +205,13 @@ extension StringExtension on String {
     return c;
   }
 
-  Color toColor() {
+  Color toJsonColor() {
     var color = json.decode(this);
     return Color.fromRGBO(color[0], color[1], color[2], 1);
   }
 
-  Color torgbColor() {
-    if (isNotEmpty) {
-      var color = int.parse('FF${toUpperCase()}', radix: 16);
-      return Color(color).withValues(alpha: 1.0);
-    } else {
-      return Colors.teal[500]!;
-    }
-  }
+  Color toargbColor() =>
+      isNotEmpty ? Color(int.parse(this, radix: 16)) : Colors.teal[500]!;
 
   bool isXimalaya() {
     var ximalaya = RegExp(r"ximalaya.com");
@@ -226,15 +220,7 @@ extension StringExtension on String {
 }
 
 extension ColorExtension on Color {
-  String torgbString() {
-    // // color.toString() is different in debug mode vs release! // TODO: Is this still the case?
-    // String colorString =
-    //     _accentSetColor!.value.toRadixString(16).substring(2, 8);
-    int red = (r * 255.0).round() & 0xff;
-    int green = (g * 255.0).round() & 0xff;
-    int blue = (b * 255.0).round() & 0xff;
-    return (red << 16 | green << 8 | blue).toRadixString(16).padLeft(6, "0");
-  }
+  String toargbString() => toARGB32().toRadixString(16).padLeft(8, "0");
 
   /// Blend the color with background, less accent
   Color toWeakBackround(BuildContext context) {

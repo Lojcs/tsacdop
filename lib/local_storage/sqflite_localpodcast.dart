@@ -59,7 +59,7 @@ class DBHelper {
     var documentsDirectory = await getDatabasesPath();
     var path = join(documentsDirectory, "podcasts.db");
     var theDb = await openDatabase(path,
-        version: 10, onCreate: _onCreate, onUpgrade: _onUpgrade);
+        version: 9, onCreate: _onCreate, onUpgrade: _onUpgrade);
     return theDb;
   }
 
@@ -134,13 +134,13 @@ class DBHelper {
     // await db.execute(
     //     "CREATE INDEX episode_display ON Episodes (feed_id, version_info, is_new);");
     await db.rawInsert("INSERT INTO Groups(id, name, color) VALUES(?, ?, ?)",
-        [homeGroupId, 'Home', Colors.teal.torgbString()]);
+        [homeGroupId, 'Home', Colors.teal.toargbString()]);
   }
 
   void _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion == 7) await _v7Fix(db);
     for (int i = oldVersion; i < newVersion; i++) {
-      updaters[i](db);
+      await updaters[i](db);
     }
   }
 
@@ -260,15 +260,25 @@ class DBHelper {
         PRIMARY KEY (podcast_id, group_id))""");
     final KeyValueStorage groupStorage = KeyValueStorage(groupsKey);
     final groups = await groupStorage.getGroups();
-    for (var group in groups!) {
-      await db.rawUpdate("INSERT INTO Groups(id, name, color) VALUES (?, ?, ?)",
-          [group.id, group.name, group.color]);
+    for (var group in groups) {
+      await db.rawInsert("INSERT INTO Groups(id, name, color) VALUES (?, ?, ?)",
+          [group.id, group.name, group.color.toargbString()]);
       for (var podcastId in group.podcastIds) {
-        await db.rawUpdate(
+        await db.rawInsert(
             "INSERT INTO Podcast_Group(podcast_id, group_id) VALUES (?, ?)",
             [podcastId, group.id]);
       }
     }
+    final podcasts =
+        await db.rawQuery("SELECT id, primaryColor FROM PodcastLocal");
+    for (var podcast in podcasts) {
+      final newColor =
+          (podcast['primaryColor'] as String).toJsonColor().toargbString();
+      await db.rawUpdate(
+          "UPDATE PodcastLocal SET primaryColor = ? WHERE id = ?",
+          [newColor, podcast['id']]);
+    }
+
     await db.execute("ALTER TABLE PodcastLocal ADD rss_hash TEXT DEFAULT ''");
   }
 
@@ -338,7 +348,7 @@ class DBHelper {
             imageUrl: item['imageUrl'],
             imagePath: item['imagePath'],
             firesideBackgroundImage: item['background_image'],
-            primaryColor: (item['primaryColor'] as String).torgbColor(),
+            primaryColor: (item['primaryColor'] as String).toargbColor(),
             syncEpisodeCount: item['update_count'],
             episodeCount: item['episode_count'],
             hideNewMark: item['hide_new_mark'] == 1,
@@ -425,7 +435,7 @@ class DBHelper {
             podcastLocal.title,
             podcastLocal.imageUrl,
             podcastLocal.rssUrl,
-            podcastLocal.primaryColor.torgbString(),
+            podcastLocal.primaryColor.toargbString(),
             podcastLocal.author,
             podcastLocal.description,
             milliseconds,
@@ -462,7 +472,7 @@ class DBHelper {
         final group = SuperPodcastGroup(
             id: item['id'],
             name: item['name'],
-            color: (item['color'] as String).torgbColor(),
+            color: (item['color'] as String).toargbColor(),
             podcastIds: podcasts);
         groups.add(group);
       }
@@ -473,8 +483,11 @@ class DBHelper {
   Future<void> addGroup(SuperPodcastGroup podcastGroup) async {
     var dbClient = await database;
     await dbClient.rawInsert(
-        "INSERT OR REPLACE INTO Groups(id, name, color) VALUES(?, ?, ?)",
-        [podcastGroup.id, podcastGroup.name, podcastGroup.color.torgbString()]);
+        "INSERT OR REPLACE INTO Groups(id, name, color) VALUES(?, ?, ?)", [
+      podcastGroup.id,
+      podcastGroup.name,
+      podcastGroup.color.toargbString()
+    ]);
   }
 
   Future<void> removeGroup(String groupId) async {
@@ -1267,7 +1280,7 @@ class DBHelper {
           mediaId: i['media_id'],
           episodeImageUrl: i['episode_image'],
           podcastImagePath: i['imagePath'],
-          primaryColor: (i['primaryColor'] as String).torgbColor(),
+          primaryColor: (i['primaryColor'] as String).toargbColor(),
           isExplicit: i['explicit'] == 1,
           isLiked: i['liked'] == 1,
           isNew: i['is_new'] == 1,

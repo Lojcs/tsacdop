@@ -11,7 +11,7 @@ import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
 
 import '../local_storage/key_value_storage.dart';
-import '../service/opml_build.dart';
+import '../backup/opml_helper.dart';
 import '../settings/settting.dart';
 import '../state/podcast_group.dart';
 import '../type/podcastgroup.dart';
@@ -167,6 +167,10 @@ class _PopupMenuState extends State<PopupMenu> {
     try {
       final opml = file.readAsStringSync();
       context.podcastState.subscribeOpml(opml);
+      showDialog(
+        context: context,
+        builder: (context) => OpmlImportPopup(),
+      );
     } catch (e) {
       developer.log(e.toString(), name: 'OMPL parse error');
       Fluttertoast.showToast(

@@ -8,6 +8,7 @@ import 'dart:isolate';
 import 'package:collection/collection.dart';
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
+import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -15,7 +16,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:webfeed/webfeed.dart';
 import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
-import '../service/opml_build.dart';
+import '../backup/opml_helper.dart';
 import '../type/episodebrief.dart';
 import 'package:image/image.dart' as img;
 import '../type/fireside_data.dart';
@@ -88,6 +89,13 @@ class PodcastState extends ChangeNotifier {
 
   /// Ids changed in last update
   Set<String> changedIds = {};
+
+  late OpmlProgress _opmlProgress = OpmlProgress(_setOpmlProgress, done: true);
+  OpmlProgress get opmlProgress => _opmlProgress;
+  void _setOpmlProgress(OpmlProgress progress) {
+    _opmlProgress = progress;
+    notifyListeners();
+  }
 
   /// Ensures the podcasts with the given ids are cached.
   /// Returns the ids not found in database.
@@ -330,9 +338,9 @@ class PodcastState extends ChangeNotifier {
 
   /// Subscribes to podcasts stored in an opml file. Safe to call from the background.
   Future<void> subscribeOpml(String opml) async {
+    opmlProgress.reset();
     var rssExp = RegExp(r'^(https?):\/\/(.*)');
     Map<String, List<OmplOutline>> data = PodcastsBackup.parseOPML(opml);
-    List<Future<String?>> futures = [];
     List<(String, List<String>)> groups = [];
     for (var entry in data.entries) {
       final group = (entry.key, <String>[]);
@@ -344,14 +352,25 @@ class PodcastState extends ChangeNotifier {
       groups.add(group);
     }
     final rssUrls = {for (var (_, urls) in groups) ...urls}.toList();
+    opmlProgress.begin(rssUrls.length, groups.length);
+    final futures = Queue<Future<String?>>();
+    final ids = <String?>[];
     for (var rssUrl in rssUrls) {
-      futures.add(subscribePodcastByUrl(rssUrl));
+      if (futures.length >= 8) ids.add(await futures.removeFirst());
+      futures.add(Future(() async {
+        final result = await subscribePodcastByUrl(rssUrl);
+        opmlProgress.subscribe();
+        return result;
+      }));
     }
-    final ids = await Future.wait(futures);
+    ids.addAll(await Future.wait(futures));
+    opmlProgress.beginAddingGroups();
     for (var (name, urls) in groups) {
-      final groupId = name == "Home"
-          ? homeGroupId
-          : await addGroup(SuperPodcastGroup.create(name: name));
+      if (name == "Home") {
+        opmlProgress.addGroup();
+        continue;
+      }
+      final groupId = await addGroup(SuperPodcastGroup.create(name: name));
       final indicies = urls.map((url) => rssUrls.indexOf(url));
       for (var i in indicies) {
         String? podcastId = ids[i];
@@ -359,7 +378,9 @@ class PodcastState extends ChangeNotifier {
           await addPodcastToGroup(podcastId: podcastId, groupId: groupId);
         }
       }
+      opmlProgress.addGroup();
     }
+    opmlProgress.finish();
   }
 
   /// Isolateable function that refetches a podcast and returns

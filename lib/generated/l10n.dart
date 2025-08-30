@@ -985,6 +985,16 @@ class S {
     return Intl.message('Import', name: 'import', desc: '', args: []);
   }
 
+  /// `Importing OPML file.`
+  String get importingOpml {
+    return Intl.message(
+      'Importing OPML file.',
+      name: 'importingOpml',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Interaction`
   String get interaction {
     return Intl.message(
@@ -1437,6 +1447,16 @@ class S {
     );
   }
 
+  /// `Adding and organizing groups.`
+  String get notificationAddingGroups {
+    return Intl.message(
+      'Adding and organizing groups.',
+      name: 'notificationAddingGroups',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Subscribing failed, network error {title}`
   String notificationNetworkError(Object title) {
     return Intl.message(
@@ -1464,6 +1484,16 @@ class S {
       name: 'notificationSubscribe',
       desc: '',
       args: [title],
+    );
+  }
+
+  /// `Subscribing to podcasts.`
+  String get notificationSubscribing {
+    return Intl.message(
+      'Subscribing to podcasts.',
+      name: 'notificationSubscribing',
+      desc: '',
+      args: [],
     );
   }
 

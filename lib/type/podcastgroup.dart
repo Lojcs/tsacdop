@@ -39,15 +39,14 @@ class SuperPodcastGroup extends Equatable {
   Map<String, Object?> toJson() => {
         'name': name,
         'id': id,
-        'color': color.torgbString(),
+        'color': color.toargbString().substring(2, 8),
         'podcastList': podcastIds
       };
 
   SuperPodcastGroup.fromJson(Map<String, dynamic> json)
       : id = json['id'] as String,
         name = json['name'] as String,
-        color = Color(int.parse('FF${(json['color'] as String).toUpperCase()}',
-            radix: 16)),
+        color = 'FF${json['color'] as String}'.toargbColor(),
         podcastIds = List<String>.from(json['podcastList'] as List<dynamic>);
 
   SuperPodcastGroup copyWith(

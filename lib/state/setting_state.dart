@@ -433,9 +433,14 @@ class SettingState extends ChangeNotifier {
   }
 
   Future _getAccentSetColor() async {
-    final colorString = await _accentStorage.getString();
-    _accentSetColor = colorString.torgbColor();
-    await _saveAccentSetColor();
+    var colorString = await _accentStorage.getString(
+        defaultValue: Colors.teal.toargbString());
+    if (colorString.length == 6) {
+      _accentSetColor = "ff$colorString".toargbColor();
+      await _saveAccentSetColor();
+    } else {
+      _accentSetColor = colorString.toargbColor();
+    }
   }
 
   Future _getAutoUpdate() async {
@@ -530,7 +535,7 @@ class SettingState extends ChangeNotifier {
   }
 
   Future<void> _saveAccentSetColor() async {
-    await _accentStorage.saveString(_accentSetColor!.torgbString());
+    await _accentStorage.saveString(_accentSetColor!.toargbString());
   }
 
   Future<void> _setRealDark() async {

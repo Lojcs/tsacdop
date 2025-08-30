@@ -10,7 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../local_storage/key_value_storage.dart';
-import '../service/opml_build.dart';
+import '../backup/opml_helper.dart';
 import '../state/download_state.dart';
 import '../state/podcast_state.dart';
 import '../type/episodebrief.dart';

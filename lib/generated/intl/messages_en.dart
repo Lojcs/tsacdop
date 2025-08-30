@@ -280,6 +280,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "hoursAgo": m8,
     "hoursCount": m9,
     "import": MessageLookupByLibrary.simpleMessage("Import"),
+    "importingOpml": MessageLookupByLibrary.simpleMessage(
+      "Importing OPML file.",
+    ),
     "interaction": MessageLookupByLibrary.simpleMessage("Interaction"),
     "intergateWith": m10,
     "introFourthPage": MessageLookupByLibrary.simpleMessage(
@@ -360,12 +363,18 @@ class MessageLookup extends MessageLookupByLibrary {
       "No show notes available for this episode.",
     ),
     "notificaitonFatch": m14,
+    "notificationAddingGroups": MessageLookupByLibrary.simpleMessage(
+      "Adding and organizing groups.",
+    ),
     "notificationNetworkError": m15,
     "notificationSetting": MessageLookupByLibrary.simpleMessage(
       "Notification  panel",
     ),
     "notificationSubscribe": m16,
     "notificationSubscribeExisted": m17,
+    "notificationSubscribing": MessageLookupByLibrary.simpleMessage(
+      "Subscribing to podcasts.",
+    ),
     "notificationSuccess": m18,
     "notificationUpdate": m19,
     "notificationUpdateError": m20,

@@ -263,6 +263,8 @@
   "@hoursCount": {},
   "import": "Import",
   "@import": {},
+  "importingOpml": "Importing OPML file.",
+  "@importingOpml": {},
   "interaction": "Interaction",
   "@interaction": {
     "description": "Interaction setting menu section title"
@@ -401,6 +403,8 @@
   },
   "notificaitonFatch": "Fetch data {title}",
   "@notificaitonFatch": {},
+  "notificationAddingGroups": "Adding and organizing groups.",
+  "@notificationAddingGroups": {},
   "notificationNetworkError": "Subscribing failed, network error {title}",
   "@notificationNetworkError": {
     "placeholders": {
@@ -415,6 +419,8 @@
       "title": {}
     }
   },
+  "notificationSubscribing": "Subscribing to podcasts.",
+  "@notificationSubscribing": {},
   "notificationSubscribeExisted": "Subscribing failed, podcast already exists {title}",
   "@notificationSubscribeExisted": {
     "placeholders": {
