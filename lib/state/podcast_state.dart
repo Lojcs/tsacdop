@@ -45,6 +45,7 @@ class PodcastState extends ChangeNotifier {
     for (var group in groups) {
       _groupMap[group.id] = group;
     }
+    await cachePodcasts(_groupMap[homeGroupId]!.podcastIds);
   }
 
   late Future<void> ready;
@@ -111,8 +112,12 @@ class PodcastState extends ChangeNotifier {
         missingIds.add(id);
       }
     }
-    List<String> foundIds = await getPodcasts(podcastIds: missingIds);
-    return missingIds.where((id) => !foundIds.contains(id)).toList();
+    if (missingIds.isNotEmpty) {
+      List<String> foundIds = await getPodcasts(podcastIds: missingIds);
+      return missingIds.where((id) => !foundIds.contains(id)).toList();
+    } else {
+      return [];
+    }
   }
 
   /// Queries the database with the provided options and returns found podcasts.

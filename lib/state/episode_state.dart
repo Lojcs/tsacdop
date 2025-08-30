@@ -67,8 +67,12 @@ class EpisodeState extends ChangeNotifier {
         missingIds.add(id);
       }
     }
-    List<int> foundIds = await getEpisodes(episodeIds: missingIds);
-    return missingIds.where((id) => !foundIds.contains(id)).toList();
+    if (missingIds.isNotEmpty) {
+      List<int> foundIds = await getEpisodes(episodeIds: missingIds);
+      return missingIds.where((id) => !foundIds.contains(id)).toList();
+    } else {
+      return [];
+    }
   }
 
   /// Queries the database with the provided options and returns found episodes.

@@ -261,12 +261,13 @@ class DBHelper {
     final KeyValueStorage groupStorage = KeyValueStorage(groupsKey);
     final groups = await groupStorage.getGroups();
     for (var group in groups) {
+      final groupId = group.name == "Home" ? homeGroupId : group.id;
       await db.rawInsert("INSERT INTO Groups(id, name, color) VALUES (?, ?, ?)",
-          [group.id, group.name, group.color.toargbString()]);
+          [groupId, group.name, group.color.toargbString()]);
       for (var podcastId in group.podcastIds) {
         await db.rawInsert(
             "INSERT INTO Podcast_Group(podcast_id, group_id) VALUES (?, ?)",
-            [podcastId, group.id]);
+            [podcastId, groupId]);
       }
     }
     final podcasts =

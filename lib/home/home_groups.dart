@@ -88,7 +88,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
               return FutureBuilder(
                 future: context.podcastState.cachePodcasts(podcastIds),
                 builder: (context, snapshot) => !snapshot.hasData
-                    ? SizedBox(height: previewHeight + 140)
+                    ? SizedBox(height: 0)
                     : SizedBox(
                         height: previewHeight + 140,
                         child: DefaultTabController(
