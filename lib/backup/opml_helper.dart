@@ -89,11 +89,21 @@ class OpmlImportPopup extends StatelessWidget {
                 LinearProgressIndicator(
                   value: progress.ratio,
                 ),
-                Text(progress.done
-                    ? context.s.done
-                    : progress.addingGroups
-                        ? "${context.s.notificationAddingGroups} ${progress.addedGroups}/${progress.totalGroups}"
-                        : "${context.s.notificationSubscribing} ${progress.subscribedPodcasts}/${progress.totalPodcasts}")
+                Text(switch (progress) {
+                  OpmlProgress(done: true) => context.s.done,
+                  OpmlProgress(
+                    addingGroups: true,
+                    addedGroups: var added,
+                    totalGroups: var total
+                  ) =>
+                    "${context.s.notificationAddingGroups} $added/$total",
+                  OpmlProgress(
+                    addingGroups: false,
+                    subscribedPodcasts: var added,
+                    totalPodcasts: var total
+                  ) =>
+                    "${context.s.notificationSubscribing} $added/$total",
+                })
               ],
             ),
           ),

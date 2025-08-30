@@ -1003,11 +1003,10 @@ class _NewPlaylistState extends State<_NewPlaylist> {
     }
     final fileName = path.split('/').last;
     return EpisodeBrief.user(
-      s,
       title: fileName, enclosureUrl: 'file://$path',
       podcastTitle: metadata.albumName ?? '',
       pubDate: pubDate, // metadata.year ?
-      showNotes: context.s.localEpisodeDescription(path),
+      showNotes: s.localEpisodeDescription(path),
       enclosureDuration: metadata.trackDuration! ~/ 1000,
       enclosureSize: fileLength,
       mediaId: 'file://$path',

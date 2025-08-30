@@ -80,8 +80,7 @@ class EpisodeBrief extends Equatable {
   }) : _primaryColor = primaryColor.toargbString();
 
   /// Use for new user episodes not yet in database
-  EpisodeBrief.user(
-    S s, {
+  EpisodeBrief.user({
     required this.title,
     required this.enclosureUrl,
     String? podcastTitle,
@@ -94,7 +93,7 @@ class EpisodeBrief extends Equatable {
     Color? primaryColor,
   })  : id = -1,
         podcastId = localFolderId,
-        podcastTitle = podcastTitle ?? s.localFolder,
+        podcastTitle = podcastTitle ?? S.current.localFolder,
         number = -1,
         isDownloaded = true,
         downloadDate = pubDate,

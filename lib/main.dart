@@ -73,14 +73,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // These are to allow access to other state objects and S.of(context).
+    // These are to allow access to other state objects.
     // They are assigned here instead of at construction to allow quick reloading. // TODO: Is that really true?
-    context.settingState.context = context;
     context.episodeState.context = context;
     context.podcastState.context = context;
     context.downloadState.context = context;
     context.audioState.context = context;
-    Provider.of<PodcastState>(context, listen: false).context = context;
     final browsableLibrary = BrowsableLibrary(context);
     context.audioState.browsableLibrary = browsableLibrary;
     return Selector<SettingState,

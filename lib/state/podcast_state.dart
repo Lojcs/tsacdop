@@ -14,6 +14,7 @@ import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:webfeed/webfeed.dart';
+import '../generated/l10n.dart';
 import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../backup/opml_helper.dart';
@@ -49,10 +50,17 @@ class PodcastState extends ChangeNotifier {
   late Future<void> ready;
 
   final DBHelper _dbHelper = DBHelper();
-  BuildContext? _nullableContext;
-  set context(BuildContext context) => _nullableContext = context;
-  bool get background => _nullableContext == null;
-  BuildContext get _context => _nullableContext!;
+
+  late EpisodeState _episodeState;
+  late SuperDownloadState _downloadState;
+  bool _background = true;
+  set context(BuildContext context) {
+    _episodeState = context.episodeState;
+    _downloadState = context.downloadState;
+    _background = false;
+  }
+
+  bool get background => _background;
 
   /// podcast id : PodcastBrief
   final Map<String, PodcastBrief> _podcastMap = {};
@@ -83,9 +91,6 @@ class PodcastState extends ChangeNotifier {
 
   /// Flips to indicate some group property changed.
   bool groupsChange = false;
-
-  /// Increments to indicate that sync happened.
-  int syncGeneneration = 0;
 
   /// Ids changed in last update
   Set<String> changedIds = {};
@@ -130,7 +135,7 @@ class PodcastState extends ChangeNotifier {
 
   /// Unsubscibes from podcast and deletes local data. Safe to call from the background.
   Future<void> unsubscribePodcast(String podcastId) async {
-    final eState = background ? EpisodeState() : _context.episodeState;
+    final eState = background ? EpisodeState() : _episodeState;
 
     for (var groupId in _groupMap.keys) {
       _groupMap[groupId]!.removeFromGroup(podcastId);
@@ -183,7 +188,8 @@ class PodcastState extends ChangeNotifier {
   }
 
   /// Adds a podcast and its episodes dentoed by its rss feed url.
-  /// If the podcast is already subscribed to, uses data from the database.
+  /// Not safe to call from the background.
+  /// If the podcast is already subscribed to, uses data from [EpisodeState].
   /// Otherwise tries to fetch the rss feed and parse it.
   /// Episodes kept only as temp ids, [EpisodeBrief]s are kept in [EpisodeState]
   Future<(String, List<int>)?> addPodcastByUrl(String feedUrl) async {
@@ -191,11 +197,10 @@ class PodcastState extends ChangeNotifier {
     switch (await _dbHelper.checkPodcast(feedUrl)) {
       case String id:
         await cachePodcasts([id]);
-        if (_context.mounted) {
-          final episodeIds = await _context.episodeState
-              .getEpisodes(feedIds: [id], limit: 100);
-          ret = (id, episodeIds);
-        }
+        final episodeIds =
+            await _episodeState.getEpisodes(feedIds: [id], limit: 100);
+        ret = (id, episodeIds);
+
       case null:
         var (podcast, episodes) = await Isolater(_fetchFeed).run(feedUrl);
         if (podcast != null) {
@@ -203,12 +208,9 @@ class PodcastState extends ChangeNotifier {
           episodes = episodes
               .map((e) => e.copyWith(primaryColor: podcast!.primaryColor))
               .toList();
-          if (_context.mounted) {
-            final episodeIds =
-                _context.episodeState.addRemoteEpisodes(episodes);
-            _remotePodcastMap[podcast.id] = podcast;
-            ret = (podcast.id, episodeIds);
-          }
+          final episodeIds = _episodeState.addRemoteEpisodes(episodes);
+          _remotePodcastMap[podcast.id] = podcast;
+          ret = (podcast.id, episodeIds);
         }
     }
     notifyListeners();
@@ -268,16 +270,14 @@ class PodcastState extends ChangeNotifier {
     return (podcast, episodes);
   }
 
-  /// Subscribes to a remote podcast.
+  /// Subscribes to a remote podcast. Not safe to call from the background.
   Future<(String, List<int>)?> subscribeRemotePodcast(
       String podcastId, List<int> episodeIds) async {
     (String, List<int>)? ret;
     if (_remotePodcastMap.containsKey(podcastId)) {
-      final eState = _context.episodeState;
       final podcastRemote = _remotePodcastMap[podcastId]!;
-      final episodesRemote = episodeIds
-          .map((episodeId) => _context.episodeState[episodeId])
-          .toList();
+      final episodesRemote =
+          episodeIds.map((episodeId) => _episodeState[episodeId]).toList();
       if (podcastRemote.provider.contains('fireside')) {
         var data = FiresideData(podcastId,
             podcastRemote.webpage); // TODO: Move this into the isolate
@@ -294,13 +294,12 @@ class PodcastState extends ChangeNotifier {
       await addPodcastToGroup(podcastId: podcastId, groupId: homeGroupId);
 
       await cachePodcasts([podcastId]);
-      if (_context.mounted) {
-        final episodeIds = await _context.episodeState
-            .getEpisodes(feedIds: [podcastId], limit: 100);
-        ret = (podcastId, episodeIds);
-      }
+      final newEpisodeIds =
+          await _episodeState.getEpisodes(feedIds: [podcastId], limit: 100);
+      ret = (podcastId, newEpisodeIds);
+
       removeRemotePodcast(podcastId);
-      eState.removeRemoteEpisodes(episodeIds);
+      _episodeState.removeRemoteEpisodes(episodeIds);
     }
     return ret;
   }
@@ -433,13 +432,7 @@ class PodcastState extends ChangeNotifier {
 
   /// Syncs a podcast already in the database. Returns the number of new episodes.
   /// Safe to call from the background.
-  Future<int?> syncPodcast(String podcastId, {bool showToast = false}) async {
-    if (_context.mounted && showToast) {
-      Fluttertoast.showToast(
-        msg: _context.s.refreshStarted,
-        gravity: ToastGravity.BOTTOM,
-      );
-    }
+  Future<int?> syncPodcast(String podcastId) async {
     final episodes = await _dbHelper.getEpisodes(feedIds: [podcastId]);
     await cachePodcasts([podcastId]);
     var result =
@@ -454,50 +447,31 @@ class PodcastState extends ChangeNotifier {
         await _dbHelper.unmarkNewOldEpisodes(podcastId);
       }
       await startDownload(episodes);
-      syncGeneneration++;
       var refreshstorage = KeyValueStorage(refreshdateKey);
       await refreshstorage.saveInt(DateTime.now().millisecondsSinceEpoch);
       notifyListeners();
-      if (_context.mounted && showToast) {
-        Fluttertoast.showToast(
-          msg: _context.s.refreshFinished,
-          gravity: ToastGravity.BOTTOM,
-        );
-      }
       return episodes.length;
     }
     return null;
   }
 
   Future<int> syncAllPodcasts() async {
-    if (_context.mounted) {
-      Fluttertoast.showToast(
-        msg: _context.s.refreshStarted,
-        gravity: ToastGravity.BOTTOM,
-      );
-    }
     var total = 0;
     final ids = await getPodcasts();
     Queue<Future<int?>> futures = Queue();
     for (var id in ids) {
-      if (futures.length >= 4) total += await futures.removeFirst() ?? 0;
+      if (futures.length >= 8) total += await futures.removeFirst() ?? 0;
       futures.add(syncPodcast(id));
     }
-    if (_context.mounted) {
-      Fluttertoast.showToast(
-        msg: _context.s.refreshFinished,
-        gravity: ToastGravity.BOTTOM,
-      );
-    }
+    await Future.wait(futures);
     return total;
   }
 
   /// Starts downloading the episodes. Safe to call from the background.
   Future<void> startDownload(List<EpisodeBrief> episodes) async {
     if (episodes.length < 100 && episodes.isNotEmpty) {
-      final downloader = background
-          ? _context.downloadState
-          : SuperDownloadState(background: true);
+      final downloader =
+          background ? SuperDownloadState(background: true) : _downloadState;
       final lastWorkStorage = KeyValueStorage(lastWorkKey);
       await lastWorkStorage.saveInt(1);
       for (var episode in episodes) {

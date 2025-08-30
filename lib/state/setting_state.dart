@@ -43,7 +43,6 @@ final showNotesFontStyles = <TextStyle>[
 ];
 
 class SettingState extends ChangeNotifier {
-  BuildContext? context; // late final causes problem when hot reloading
   final _themeStorage = KeyValueStorage(themesKey);
   final _accentStorage = KeyValueStorage(accentsKey);
   final _autoupdateStorage = KeyValueStorage(autoUpdateKey);

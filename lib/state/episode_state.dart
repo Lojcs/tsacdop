@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../generated/l10n.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../util/extension_helper.dart';
 import 'audio_state.dart';
@@ -10,10 +11,17 @@ import 'download_state.dart';
 /// Global class to manage [EpisodeBrief] field updates.
 class EpisodeState extends ChangeNotifier {
   final DBHelper _dbHelper = DBHelper();
-  BuildContext? _nullableContext;
-  set context(BuildContext context) => _nullableContext = context;
-  bool get background => _nullableContext == null;
-  BuildContext get _context => _nullableContext!;
+
+  late AudioPlayerNotifier _audioState;
+  late SuperDownloadState _downloadState;
+  bool _background = true;
+  set context(BuildContext context) {
+    _audioState = context.audioState;
+    _downloadState = context.downloadState;
+    _background = false;
+  }
+
+  bool get background => _background;
 
   /// episode id : EpisodeBrief
   final Map<int, EpisodeBrief> _episodeMap = {};
@@ -27,11 +35,11 @@ class EpisodeState extends ChangeNotifier {
   /// Set of deleted episode ids.
   final Set<int> deletedIds = {};
 
-  late final EpisodeBrief deletedEpisode = EpisodeBrief.user(_context.s,
-      title: _context.s.deleted,
+  late final EpisodeBrief deletedEpisode = EpisodeBrief.user(
+      title: S.current.deleted,
       enclosureUrl: "",
       pubDate: 0,
-      showNotes: _context.s.deletedEpisodeDesc,
+      showNotes: S.current.deletedEpisodeDesc,
       enclosureDuration: 0,
       enclosureSize: 0,
       mediaId: "");
@@ -134,9 +142,8 @@ class EpisodeState extends ChangeNotifier {
   /// Call this only when an episode is removed from the database
   Future<void> deleteEpisodes(List<int> ids,
       {bool deleteFromDatabase = true}) async {
-    final dState = background
-        ? SuperDownloadState(background: true)
-        : _context.downloadState;
+    final dState =
+        background ? SuperDownloadState(background: true) : _downloadState;
     final downloaded =
         await getEpisodes(episodeIds: ids, filterDownloaded: true);
     for (var id in downloaded) {
@@ -265,8 +272,8 @@ class EpisodeState extends ChangeNotifier {
         _episodeMap[episodeId]!.copyWith(mediaId: mediaId, isDownloaded: true);
     changedIds.add(episodeId);
     globalChange = !globalChange;
-    if (!background && _context.mounted) {
-      _context.audioState.updateEpisodeMediaID(_episodeMap[episodeId]!);
+    if (!background) {
+      _audioState.updateEpisodeMediaID(_episodeMap[episodeId]!);
     }
     notifyListeners();
   }
@@ -282,8 +289,8 @@ class EpisodeState extends ChangeNotifier {
         mediaId: _episodeMap[episodeId]!.enclosureUrl, isDownloaded: false);
     changedIds.add(episodeId);
     globalChange = !globalChange;
-    if (!background && _context.mounted) {
-      _context.audioState.updateEpisodeMediaID(_episodeMap[episodeId]!);
+    if (!background) {
+      _audioState.updateEpisodeMediaID(_episodeMap[episodeId]!);
     }
     notifyListeners();
   }

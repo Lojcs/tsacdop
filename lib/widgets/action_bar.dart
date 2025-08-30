@@ -1278,22 +1278,6 @@ class ActionBarSwitchSecondRow extends ActionBarControl {
   }
 }
 
-void Function() _refreshListener(
-    PodcastState pState, _ActionBarSharedState sharedState) {
-  int lastGen = pState.syncGeneneration;
-  return () {
-    if (pState.syncGeneneration != lastGen) {
-      if (!sharedState.disposed) {
-        sharedState.buttonRefreshController.reverse();
-        // Calling this in the listener messes up provider.
-        Future.microtask(() =>
-            sharedState.onGetEpisodeIdsChanged(sharedState.getGetEpisodes()));
-        pState.removeListener(_refreshListener(pState, sharedState));
-      }
-    }
-  };
-}
-
 class ActionBarButtonRefresh extends ActionBarControl {
   const ActionBarButtonRefresh(super.rowIndex, super.index, {super.key});
   @override
@@ -1307,32 +1291,33 @@ class ActionBarButtonRefresh extends ActionBarControl {
       onPressed: (value) async {
         if (sharedState.buttonRefreshController.value == 0) {
           final pState = context.podcastState;
+          sharedState.buttonRefreshController.forward();
+          if (context.mounted) {
+            Fluttertoast.showToast(
+              msg: context.s.refreshStarted,
+              gravity: ToastGravity.BOTTOM,
+            );
+          }
           if (sharedState.podcastId != podcastAllId) {
-            pState.syncPodcast(sharedState.podcastId, showToast: true);
+            await pState.syncPodcast(sharedState.podcastId);
           } else if (sharedState.groupId != allGroupId) {
-            if (context.mounted) {
-              Fluttertoast.showToast(
-                msg: context.s.refreshStarted,
-                gravity: ToastGravity.BOTTOM,
-              );
-            }
             final ids = pState.getGroupById(sharedState.groupId).podcastIds;
             Queue<Future<int?>> futures = Queue();
             for (var id in ids) {
-              if (futures.length >= 4) await futures.removeFirst();
+              if (futures.length >= 8) await futures.removeFirst();
               futures.add(pState.syncPodcast(id));
             }
-            if (context.mounted) {
-              Fluttertoast.showToast(
-                msg: context.s.refreshFinished,
-                gravity: ToastGravity.BOTTOM,
-              );
-            }
+            await Future.wait(futures);
           } else {
             await pState.syncAllPodcasts();
           }
-          sharedState.buttonRefreshController.forward();
-          pState.addListener(_refreshListener(pState, sharedState));
+          if (context.mounted) {
+            Fluttertoast.showToast(
+              msg: context.s.refreshFinished,
+              gravity: ToastGravity.BOTTOM,
+            );
+          }
+          sharedState.buttonRefreshController.reverse();
         }
       },
       tooltip: context.s.refresh,
