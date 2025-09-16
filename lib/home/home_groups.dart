@@ -76,17 +76,23 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
         if (snapshot.hasData) {
           final layout = snapshot.data!.$1;
           double previewHeight = layout.getRowHeight(context.width);
-          return Selector<PodcastState, (String, List<String>, bool)>(
+          return Selector<PodcastState, (String, String, List<String>, bool)>(
             selector: (_, pState) {
-              final group = pState.getGroupById(pState.groupIds[_groupIndex]);
-              return (group.name, group.podcastIds, pState.groupsChange);
+              final groupId = pState.groupIds[_groupIndex];
+              final group = pState.getGroupById(groupId);
+              return (
+                groupId,
+                group.name,
+                group.podcastIds,
+                pState.groupsChange
+              );
             },
             builder: (context, data, _) {
-              final groupName = data.$1;
-              final podcastIds = data.$2;
+              final groupName = data.$2;
+              final podcastIds = data.$3;
               bool empty = podcastIds.isEmpty;
               return FutureBuilder(
-                future: context.podcastState.cachePodcasts(podcastIds),
+                future: context.podcastState.cacheGroup(data.$1),
                 builder: (context, snapshot) => !snapshot.hasData
                     ? SizedBox(height: 0)
                     : SizedBox(

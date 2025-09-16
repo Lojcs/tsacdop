@@ -418,7 +418,7 @@ class DBHelper {
     }
     if (go) {
       update.add(changes.join(", "));
-      update.add("WHERE id IN (${(", ?" * ids.length).substring(2)})");
+      update.add(" WHERE id IN (${(", ?" * ids.length).substring(2)})");
       await dbClient.rawUpdate(update.join(), [...arguements, ...ids]);
     }
   }
