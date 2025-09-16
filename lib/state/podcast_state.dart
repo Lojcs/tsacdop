@@ -395,39 +395,44 @@ class PodcastState extends ChangeNotifier {
     final dir = await getApplicationDocumentsDirectory();
     try {
       final dio = Dio();
-      final response = await dio.get(podcast.rssUrl); // Does dynamic work?
-      final digest = sha256.convert(response.data);
-      if (digest.toString() != podcast.rssHash) {
-        final feed = RssFeed.parse(response.data);
-        var podcastNew = PodcastBrief.fromFeed(
-            feed,
-            response.redirects.isEmpty
-                ? podcast.rssUrl
-                : response.realUri.toString(),
-            digest.toString());
-        if (podcastNew.imageUrl != podcast.imageUrl) {
-          var imageResponse = await Dio().get<List<int>>(podcast.rssUrl,
-              options: Options(
-                  responseType: ResponseType.bytes,
-                  receiveTimeout: Duration(seconds: 90)));
-          var image = img.decodeImage(Uint8List.fromList(imageResponse.data!))!;
-          img.Image? thumbnail = img.copyResize(image, width: 300);
-          final imagePath = "${dir.path}/${podcast.id}.png";
-          File(imagePath).writeAsBytesSync(img.encodePng(thumbnail));
-          podcast = podcast.copyWith(imagePath: imagePath);
+      final response = await dio.get<List<int>>(podcast.rssUrl,
+          options:
+              Options(responseType: ResponseType.bytes)); // Does dynamic work?
+      if (response.data != null) {
+        final digest = sha256.convert(response.data!);
+        if (digest.toString() != podcast.rssHash) {
+          final feed = RssFeed.parse(String.fromCharCodes(response.data!));
+          var podcastNew = PodcastBrief.fromFeed(
+              feed,
+              response.redirects.isEmpty
+                  ? podcast.rssUrl
+                  : response.realUri.toString(),
+              digest.toString());
+          if (podcastNew.imageUrl != podcast.imageUrl) {
+            var imageResponse = await Dio().get<List<int>>(podcast.rssUrl,
+                options: Options(
+                    responseType: ResponseType.bytes,
+                    receiveTimeout: Duration(seconds: 90)));
+            var image =
+                img.decodeImage(Uint8List.fromList(imageResponse.data!))!;
+            img.Image? thumbnail = img.copyResize(image, width: 300);
+            final imagePath = "${dir.path}/${podcast.id}.png";
+            File(imagePath).writeAsBytesSync(img.encodePng(thumbnail));
+            podcast = podcast.copyWith(imagePath: imagePath);
+          }
+          final items = feed.items ?? [];
+          final enclosureUrls = episodes.map((e) => e.enclosureUrl).toSet();
+          final newEnclosureUrls =
+              items.map(urlFromRssItem).whereNot((url) => url == "").toSet();
+          final onlyNew = newEnclosureUrls.difference(enclosureUrls);
+          final onlyNewEpisodes = items
+              .where((i) => onlyNew.contains(urlFromRssItem(i)))
+              .map((item) => EpisodeBrief.fromRssItem(
+                  item, podcast.id, podcast.title, -1, "", Colors.teal))
+              .toList();
+          onlyNewEpisodes.sortBy<num>((episode) => episode.pubDate);
+          return (podcastNew, onlyNewEpisodes);
         }
-        final items = feed.items ?? [];
-        final enclosureUrls = episodes.map((e) => e.enclosureUrl).toSet();
-        final newEnclosureUrls =
-            items.map(urlFromRssItem).whereNot((url) => url == "").toSet();
-        final onlyNew = newEnclosureUrls.difference(enclosureUrls);
-        final onlyNewEpisodes = items
-            .where((i) => onlyNew.contains(urlFromRssItem(i)))
-            .map((item) => EpisodeBrief.fromRssItem(
-                item, podcast.id, podcast.title, -1, "", Colors.teal))
-            .toList();
-        onlyNewEpisodes.sortBy<num>((episode) => episode.pubDate);
-        return (podcastNew, onlyNewEpisodes);
       }
       return null;
     } catch (e) {
@@ -440,13 +445,16 @@ class PodcastState extends ChangeNotifier {
   Future<int?> syncPodcast(String podcastId) async {
     final episodes = await _dbHelper.getEpisodes(feedIds: [podcastId]);
     await cachePodcasts([podcastId]);
-    var result =
-        await Isolater(_syncFeed).run((_podcastMap[podcastId]!, episodes));
+    var result = await _syncFeed((_podcastMap[podcastId]!, episodes));
+    // var result =
+    //     await Isolater(_syncFeed).run((_podcastMap[podcastId]!, episodes));
     if (result != null) {
       final (podcast, episodes) = result;
       _podcastMap[podcastId] = podcast;
-      _dbHelper.savePodcastLocal(podcast);
-      await _dbHelper.saveUpdatedPodcastEpisodes(episodes);
+      await _dbHelper.savePodcastLocal(podcast);
+      if (episodes.isNotEmpty) {
+        await _dbHelper.saveUpdatedPodcastEpisodes(episodes);
+      }
       final lastWorkStorage = KeyValueStorage(lastWorkKey);
       if (await lastWorkStorage.getInt() == 0) {
         await _dbHelper.unmarkNewOldEpisodes(podcastId);

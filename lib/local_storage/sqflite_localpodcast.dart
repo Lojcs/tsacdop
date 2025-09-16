@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:html/parser.dart' show parse;
 import 'package:intl/intl.dart';
+import 'package:linkify/linkify.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import '../state/podcast_group.dart';
@@ -279,8 +280,15 @@ class DBHelper {
           "UPDATE PodcastLocal SET primaryColor = ? WHERE id = ?",
           [newColor, podcast['id']]);
     }
-
     await db.execute("ALTER TABLE PodcastLocal ADD rss_hash TEXT DEFAULT ''");
+    final episodes =
+        await db.rawQuery("""SELECT id, description FROM Episodes""");
+    for (var episode in episodes) {
+      final newDescription =
+          EpisodeBrief.linkifyShownotes(episode['description'] as String);
+      await db.rawUpdate("UPDATE Episodes SET description = ? WHERE id = ?",
+          [newDescription, episode['id']]);
+    }
   }
 
   /// Queries the database with the provided options and returns found podcasts.

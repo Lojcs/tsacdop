@@ -5,6 +5,7 @@ import 'package:equatable/equatable.dart';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
+import 'package:linkify/linkify.dart';
 import 'package:webfeed/webfeed.dart';
 import '../generated/l10n.dart';
 import '../local_storage/sqflite_localpodcast.dart';
@@ -118,11 +119,11 @@ class EpisodeBrief extends Equatable {
         enclosureUrl = urlFromRssItem(item),
         pubDate = item.pubDate?.millisecondsSinceEpoch ??
             DateTime.now().millisecondsSinceEpoch,
-        showNotes = [
+        showNotes = linkifyShownotes([
           item.content?.value ?? "",
           item.description ?? "",
           item.itunes?.summary ?? ""
-        ].reduce((s1, s2) => s1.length > s2.length ? s1 : s2),
+        ].reduce((s1, s2) => s1.length > s2.length ? s1 : s2)),
         enclosureDuration = item.itunes?.duration?.inSeconds ?? 0,
         enclosureSize = item.enclosure?.length ?? 0,
         isDownloaded = false,
@@ -145,6 +146,35 @@ class EpisodeBrief extends Equatable {
         skipSecondsEnd = 0,
         chapterLink = item.podcastChapters?.url ?? '',
         source = DataSource.remote;
+
+  /// Linkifies shownotes for html rendering.
+  /// [update] is for updating old format that had url and email saved but timestamp not.
+  static String linkifyShownotes(String shownotes, [bool update = false]) {
+    shownotes = shownotes
+        .replaceAll(RegExp(r'\s?<p>(<br>)?</p>\s?'), '')
+        .replaceAll('\r', '')
+        .trim();
+    final noLinks = !shownotes.contains('<');
+    if (noLinks || update) {
+      final linkList = linkify(shownotes,
+          options: LinkifyOptions(humanize: false),
+          linkifiers: [UrlLinkifier(), EmailLinkifier(), TimeStampLinkifier()]);
+      for (var element in linkList) {
+        switch ((noLinks, element)) {
+          case (true, UrlElement(:var url, :var text)):
+            shownotes = shownotes.replaceAll(
+                url, '<a rel="nofollow" href = $url>$text</a>');
+          case (true, EmailElement(:var emailAddress)):
+            shownotes = shownotes.replaceAll(emailAddress,
+                '<a rel="nofollow" href = "mailto:$emailAddress">$emailAddress</a>');
+          case (_, TimeStampElement(:var timeStamp)):
+            shownotes = shownotes.replaceFirst(timeStamp,
+                '<a rel="nofollow" href = "#t=$timeStamp">$timeStamp</a>');
+        }
+      }
+    }
+    return shownotes;
+  }
 
   late final MediaItem mediaItem = MediaItem(
       id: mediaId,

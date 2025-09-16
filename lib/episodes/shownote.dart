@@ -16,73 +16,62 @@ class ShowNote extends StatelessWidget {
     final audio = context.audioState;
     final eState = context.episodeState;
     final s = context.s;
-    return FutureBuilder<String?>(
-      future: _getSDescription(),
-      builder: (context, snapshot) {
-        final String description;
-        if (snapshot.hasData) {
-          description = snapshot.data!;
-        } else {
-          // description = "";
-          description = eState[episodeId].showNotes;
-        }
-        if (description.isNotEmpty) {
-          return Selector<AudioPlayerNotifier, int?>(
-            selector: (_, audio) => audio.episodeId,
-            builder: (_, playEpisodeId, __) {
-              return Selector<SettingState, TextStyle>(
-                selector: (_, settings) => settings.showNoteFontStyle,
-                builder: (_, data, __) => SelectionArea(
-                  child: Html(
-                    style: {
-                      'html': Style.fromTextStyle(data.copyWith(fontSize: 14))
-                          .copyWith(
-                        padding: HtmlPaddings.symmetric(horizontal: 12),
-                        color: eState[episodeId].colorScheme(context).onSurface,
-                      ),
-                      'a': Style(
-                        color: context.accentColor,
-                        textDecoration: TextDecoration.none,
-                      ),
-                    },
-                    data: description,
-                    onLinkTap: (url, _, __) {
-                      if (url!.substring(0, 3) == '#t=') {
-                        final seconds = _getTimeStamp(url);
-                        if (playEpisodeId == episodeId) {
-                          audio.seekTo(seconds! * 1000);
-                        }
-                      } else {
-                        url.launchUrl;
-                      }
-                    },
+    final description = eState[episodeId].showNotes;
+    if (description.isNotEmpty) {
+      return Selector<AudioPlayerNotifier, int?>(
+        selector: (_, audio) => audio.episodeId,
+        builder: (_, playEpisodeId, __) {
+          return Selector<SettingState, TextStyle>(
+            selector: (_, settings) => settings.showNoteFontStyle,
+            builder: (_, data, __) => SelectionArea(
+              child: Html(
+                style: {
+                  'html':
+                      Style.fromTextStyle(data.copyWith(fontSize: 14)).copyWith(
+                    padding: HtmlPaddings.symmetric(horizontal: 12),
+                    color: eState[episodeId].colorScheme(context).onSurface,
                   ),
-                ),
-              );
-            },
-          );
-        } else {
-          return Container(
-            height: context.width,
-            alignment: Alignment.center,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Image(
-                  image: AssetImage('assets/shownote.png'),
-                  height: 100.0,
-                ),
-                Padding(padding: EdgeInsets.all(5.0)),
-                Text(s.noShownote,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        color: context.textColor.withValues(alpha: 0.5))),
-              ],
+                  'a': Style(
+                    color: context.accentColor,
+                    textDecoration: TextDecoration.none,
+                  ),
+                },
+                data: description,
+                onLinkTap: (url, _, __) {
+                  if (url!.substring(0, 3) == '#t=') {
+                    final seconds = _getTimeStamp(url);
+                    if (playEpisodeId == episodeId) {
+                      audio.seekTo(seconds! * 1000);
+                    }
+                  } else {
+                    url.launchUrl;
+                  }
+                },
+              ),
             ),
           );
-        }
-      },
-    );
+        },
+      );
+    } else {
+      return Container(
+        height: context.width,
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Image(
+              image: AssetImage('assets/shownote.png'),
+              height: 100.0,
+            ),
+            Padding(padding: EdgeInsets.all(5.0)),
+            Text(s.noShownote,
+                textAlign: TextAlign.center,
+                style:
+                    TextStyle(color: context.textColor.withValues(alpha: 0.5))),
+          ],
+        ),
+      );
+    }
   }
 
   int? _getTimeStamp(String url) {
@@ -97,43 +86,5 @@ class ShowNote extends StatelessWidget {
       seconds = int.tryParse(data[0])! * 60 + int.tryParse(data[1])!;
     }
     return seconds;
-  }
-
-  // TODO: Do this on episode sync
-  Future<String> _getSDescription() async {
-    final dbHelper = DBHelper();
-    String description;
-    description = (await dbHelper.getDescription(episodeId))!
-        .replaceAll(RegExp(r'\s?<p>(<br>)?</p>\s?'), '')
-        .replaceAll('\r', '')
-        .trim();
-    if (!description.contains('<')) {
-      final linkList = linkify(description,
-          options: LinkifyOptions(humanize: false),
-          linkifiers: [UrlLinkifier(), EmailLinkifier()]);
-      for (var element in linkList) {
-        if (element is UrlElement) {
-          description = description.replaceAll(element.url,
-              '<a rel="nofollow" href = ${element.url}>${element.text}</a>');
-        }
-        if (element is EmailElement) {
-          final address = element.emailAddress;
-          description = description.replaceAll(address,
-              '<a rel="nofollow" href = "mailto:$address">$address</a>');
-        }
-      }
-      await dbHelper.saveEpisodeDes(episodeId, description: description);
-    }
-    final linkList = linkify(description,
-        options: LinkifyOptions(humanize: false),
-        linkifiers: [TimeStampLinkifier()]);
-    for (var element in linkList) {
-      if (element is TimeStampElement) {
-        final time = element.timeStamp;
-        description = description.replaceFirst(
-            time, '<a rel="nofollow" href = "#t=$time">$time</a>');
-      }
-    }
-    return description;
   }
 }
