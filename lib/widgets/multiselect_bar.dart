@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:line_icons/line_icons.dart';
@@ -9,9 +8,7 @@ import 'package:tuple/tuple.dart';
 
 import '../home/audioplayer.dart';
 import '../state/audio_state.dart';
-import '../state/download_state.dart';
 import '../state/episode_state.dart';
-import '../type/episodebrief.dart';
 import '../type/playlist.dart';
 import '../type/theme_data.dart';
 import '../util/extension_helper.dart';

@@ -1,14 +1,11 @@
 import 'dart:developer' as developer;
 
-import 'package:dio/dio.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:line_icons/line_icons.dart';
-import 'package:provider/provider.dart';
-import 'package:webfeed/webfeed.dart';
 
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/episode_state.dart';

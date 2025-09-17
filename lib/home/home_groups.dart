@@ -4,7 +4,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
-import 'package:tuple/tuple.dart' as tuple;
 
 import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
@@ -14,8 +13,6 @@ import '../podcasts/podcastlist.dart';
 import '../state/episode_state.dart';
 import '../state/podcast_state.dart';
 import '../state/setting_state.dart';
-import '../type/podcastbrief.dart';
-import '../type/podcastgroup.dart';
 import '../util/extension_helper.dart';
 import '../util/hide_player_route.dart';
 import '../util/pageroute.dart';

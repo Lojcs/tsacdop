@@ -1,9 +1,7 @@
-import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
@@ -13,15 +11,12 @@ import 'package:provider/provider.dart';
 import '../state/podcast_state.dart';
 import '../type/theme_data.dart';
 import '../widgets/action_bar.dart';
-import 'package:tuple/tuple.dart';
 
 import '../home/audioplayer.dart';
 import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/audio_state.dart';
-import '../state/download_state.dart';
 import '../type/fireside_data.dart';
-import '../type/podcastbrief.dart';
 import '../util/extension_helper.dart';
 import '../util/selection_controller.dart';
 import '../widgets/audiopanel.dart';

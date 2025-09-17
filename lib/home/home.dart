@@ -18,7 +18,6 @@ import 'package:tuple/tuple.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../playlists/playlist_home.dart';
 import '../state/audio_state.dart';
-import '../state/download_state.dart';
 import '../state/setting_state.dart';
 import '../type/episodebrief.dart';
 import '../util/extension_helper.dart';
@@ -31,7 +30,6 @@ import 'audioplayer.dart';
 import 'download_list.dart';
 import 'home_groups.dart';
 import 'home_menu.dart';
-import 'status_bar.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});

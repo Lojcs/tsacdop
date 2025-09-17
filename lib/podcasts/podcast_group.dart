@@ -237,7 +237,7 @@ class RenameGroup extends StatefulWidget {
 
 class _RenameGroupState extends State<RenameGroup> {
   late final TextEditingController _controller = TextEditingController(
-      text: context.podcastState.getGroupById(widget.groupId)!.name);
+      text: context.podcastState.getGroupById(widget.groupId).name);
   String? _newName;
 
   @override
@@ -248,7 +248,7 @@ class _RenameGroupState extends State<RenameGroup> {
 
   @override
   void dispose() {
-    _controller!.dispose();
+    _controller.dispose();
     super.dispose();
   }
 

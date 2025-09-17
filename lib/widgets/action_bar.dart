@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
-import '../state/podcast_state.dart';
 import '../type/podcastbrief.dart';
 import '../type/podcastgroup.dart';
 import '../type/theme_data.dart';

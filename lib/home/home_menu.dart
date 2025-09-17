@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:collection';
 import 'dart:developer' as developer;
 import 'dart:io';
 
@@ -8,14 +7,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:line_icons/line_icons.dart';
-import 'package:provider/provider.dart';
 
 import '../local_storage/key_value_storage.dart';
 import '../backup/opml_helper.dart';
 import '../settings/settting.dart';
-import '../type/podcastgroup.dart';
 import '../util/extension_helper.dart';
-import '../util/helpers.dart';
 import 'about.dart';
 
 class PopupMenu extends StatefulWidget {

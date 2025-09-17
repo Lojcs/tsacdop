@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
-import 'package:linkify/linkify.dart';
 import 'package:provider/provider.dart';
-import '../local_storage/sqflite_localpodcast.dart';
 import '../state/audio_state.dart';
 import '../state/setting_state.dart';
 import '../util/extension_helper.dart';

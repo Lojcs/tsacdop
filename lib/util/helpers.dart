@@ -2,22 +2,12 @@ import 'dart:isolate';
 import 'dart:ui' as ui;
 import 'dart:async';
 
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 
-import '../local_storage/key_value_storage.dart';
-import '../backup/opml_helper.dart';
-import '../state/download_state.dart';
-import '../state/podcast_state.dart';
-import '../type/episodebrief.dart';
-import '../type/podcastgroup.dart';
 import '../util/extension_helper.dart';
 import '../widgets/custom_widget.dart';
-import '../widgets/general_dialog.dart';
 
 Future<ui.Image> getImageFromProvider(ImageProvider imageProvider) async {
   final ImageStream stream = imageProvider.resolve(

@@ -4,12 +4,9 @@ import 'dart:developer' as developer;
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 import '../state/episode_state.dart';
 import '../state/podcast_state.dart';
-import '../util/extension_helper.dart';
-import 'search_widgets.dart';
 
 abstract class Search extends ChangeNotifier {
   /// List of ids of search results that are podcasts.

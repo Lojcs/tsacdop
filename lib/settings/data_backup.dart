@@ -18,13 +18,11 @@ import 'package:share_plus/share_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
 import '../local_storage/key_value_storage.dart';
-import '../local_storage/sqflite_localpodcast.dart';
 import '../backup/gpodder_api.dart';
 import '../backup/opml_helper.dart';
 import '../state/setting_state.dart';
 import '../type/settings_backup.dart';
 import '../util/extension_helper.dart';
-import '../util/helpers.dart';
 import '../widgets/custom_widget.dart';
 
 class DataBackup extends StatefulWidget {

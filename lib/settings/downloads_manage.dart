@@ -9,7 +9,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 import '../local_storage/sqflite_localpodcast.dart';
-import '../state/download_state.dart';
 import '../state/episode_state.dart';
 import '../type/theme_data.dart';
 import '../util/extension_helper.dart';

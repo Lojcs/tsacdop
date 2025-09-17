@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -8,7 +7,6 @@ import 'package:provider/provider.dart';
 
 import '../state/download_state.dart';
 import '../type/episode_task.dart';
-import '../type/episodebrief.dart';
 import '../util/extension_helper.dart';
 import '../widgets/custom_widget.dart';
 

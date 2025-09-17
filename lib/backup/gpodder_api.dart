@@ -11,7 +11,6 @@ import 'package:uuid/uuid.dart';
 import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/podcast_state.dart';
-import '../type/podcastbrief.dart';
 
 enum GpodderSyncStatus { none, success, fail, authError }
 

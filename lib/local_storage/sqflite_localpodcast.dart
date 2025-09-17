@@ -1,21 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer' as developer;
 
-import 'package:collection/collection.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:html/parser.dart' show parse;
-import 'package:intl/intl.dart';
-import 'package:linkify/linkify.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import '../type/fireside_data.dart';
 import '../type/podcastgroup.dart';
 import '../util/extension_helper.dart';
 import 'package:tuple/tuple.dart';
-import 'package:webfeed/webfeed.dart';
 
 import '../type/episodebrief.dart';
 import '../type/play_histroy.dart';

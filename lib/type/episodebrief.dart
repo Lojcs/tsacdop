@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:linkify/linkify.dart';
 import 'package:webfeed/webfeed.dart';
 import '../generated/l10n.dart';
-import '../local_storage/sqflite_localpodcast.dart';
 import 'podcastbrief.dart';
 import 'theme_data.dart';
 import '../util/extension_helper.dart';
