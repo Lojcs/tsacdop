@@ -1341,7 +1341,8 @@ class AudioPlayerNotifier extends ChangeNotifier {
       _undoSeekOngoing = true;
       await _audioHandler.combinedSeek(
           position:
-              Duration(milliseconds: _undoButtonPositionsStack.removeLast()));
+              Duration(milliseconds: _undoButtonPositionsStack.removeLast()),
+          inputBuffer: true);
       _undoSeekOngoing = false;
     }
   }
@@ -1485,8 +1486,6 @@ class CustomAudioHandler extends BaseAudioHandler
   late StreamSubscription<Duration?> _durationSubscription;
 
   bool get playerReady => _playerReady;
-  @override
-  PublishSubject<Map<String, dynamic>> customEvent = PublishSubject()..add({});
 
   SeekTarget seekTarget = SeekTarget();
   bool seekOngoing = false;
@@ -1500,6 +1499,7 @@ class CustomAudioHandler extends BaseAudioHandler
 
   /// Initialises player and its listeners. Call this after construction!
   Future<void> initPlayer() async {
+    await _player.setAudioSources([], preload: false);
     await _player.setAudioSources([], preload: false);
     // _player.cacheMax = cacheMax;
     // Transmit events received from player
@@ -1756,10 +1756,11 @@ class CustomAudioHandler extends BaseAudioHandler
 
   /// Position and or index combined seek.
   /// Use this instead of calling [AudioPlayer.seek] or [_innerCombinedSeek] directly.
-  Future<void> combinedSeek({final Duration? position, int? index}) async {
+  Future<void> combinedSeek(
+      {final Duration? position, int? index, bool inputBuffer = false}) async {
     if (!playing || (position != _position) || (index != _index)) {
       seekTarget = SeekTarget(position: position, index: index);
-      seekInputBuffer = true;
+      if (inputBuffer) seekInputBuffer = true;
       if (!seekOngoing) {
         seekOngoing = true;
         await _innerCombinedSeek();
@@ -1819,7 +1820,7 @@ class CustomAudioHandler extends BaseAudioHandler
         newPosition >= mediaItem.value!.duration!) {
       newPosition = mediaItem.value!.duration!;
     }
-    combinedSeek(position: newPosition);
+    combinedSeek(position: newPosition, inputBuffer: true);
   }
 
   @override

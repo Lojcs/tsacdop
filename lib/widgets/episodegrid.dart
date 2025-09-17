@@ -215,22 +215,34 @@ class _InteractiveEpisodeGridState extends State<InteractiveEpisodeGrid> {
 
   List<Widget>? slivers;
 
+  Future<void>? _delayedRefreshFuture;
   @override
   void initState() {
     super.initState();
     if (widget.refreshNotifier != null) {
-      widget.refreshNotifier!.addListener(() async {
-        _episodeIds = await _getEpisodeIds(_top);
-        if (mounted && context.mounted) {
-          SelectionController? selectionController =
-              Provider.of<SelectionController?>(context, listen: false);
-          if (selectionController != null) {
-            selectionController.setSelectableEpisodes(_episodeIds);
-          }
-          setState(() {});
-        }
+      widget.refreshNotifier!.addListener(() {
+        _delayedRefreshFuture ??=
+            Future.delayed(Duration(milliseconds: 500), _onNotified);
       });
     }
+  }
+
+  void _onNotified() async {
+    final newEpisodeIds = await _getEpisodeIds(_top);
+    final newSet = newEpisodeIds.toSet();
+    final oldSet = _episodeIds.toSet();
+    if ((newSet.difference(oldSet).isNotEmpty ||
+            oldSet.difference(newSet).isNotEmpty) &&
+        mounted) {
+      _episodeIds = newEpisodeIds;
+      SelectionController? selectionController =
+          Provider.of<SelectionController?>(context, listen: false);
+      if (selectionController != null) {
+        selectionController.setSelectableEpisodes(_episodeIds);
+      }
+      setState(() {});
+    }
+    _delayedRefreshFuture = null;
   }
 
   @override

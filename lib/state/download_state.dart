@@ -21,6 +21,14 @@ import '../util/extension_helper.dart';
 import '../widgets/general_dialog.dart';
 import 'episode_state.dart';
 
+@pragma('vm:entry-point')
+void downloadCallback(String id, int status, int progress) {
+  developer.log(
+      'Flutter downloader task with id $id : (${DownloadTaskStatus.fromInt(status)}) $progress');
+  final send = IsolateNameServer.lookupPortByName('downloader_send_port')!;
+  send.send([id, status, progress]);
+}
+
 /// State object that manages episode downloads. [EpisodeState] aware.
 class SuperDownloadState extends ChangeNotifier {
   final autoDownloadStorage = KeyValueStorage(autoDownloadNetworkKey);
@@ -111,14 +119,6 @@ class SuperDownloadState extends ChangeNotifier {
     return ret;
   }
 
-  @pragma('vm:entry-point')
-  static void downloadCallback(String id, int status, int progress) {
-    developer.log(
-        'Flutter downloader task with id $id : (${DownloadTaskStatus.fromInt(status)}) $progress');
-    final send = IsolateNameServer.lookupPortByName('downloader_send_port')!;
-    send.send([id, status, progress]);
-  }
-
   /// Create download state. Foreground mode requires the assignment of [context]
   /// and updates [EpisodeState] with download status and notifies its listeners.
   /// Background mode updates the database directly and doesn't notify.
@@ -152,7 +152,7 @@ class SuperDownloadState extends ChangeNotifier {
     if (initDone) {
       if (_ongoingEpisodeTasks.isEmpty) {
         downloadOnMobile = false;
-        downloadsComplete.complete();
+        if (!downloadsComplete.isCompleted) downloadsComplete.complete();
       } else {
         downloadsComplete = Completer();
       }
@@ -360,7 +360,6 @@ class SuperDownloadState extends ChangeNotifier {
         episodeTask.status = DownloadTaskStatus.fromInt(status);
         episodeTask.progress = progress;
         episodeTask.pendingAction = false;
-        _addTask(episodeTask);
 
         switch (episodeTask.status) {
           case DownloadTaskStatus.undefined:
@@ -375,7 +374,7 @@ class SuperDownloadState extends ChangeNotifier {
                 DownloadTaskStatus.paused:
             break;
         }
-        _checkConnectivityCallback(await Connectivity().checkConnectivity());
+        _addTask(episodeTask);
       }
     });
     await FlutterDownloader.registerCallback(downloadCallback);
@@ -436,6 +435,7 @@ class SuperDownloadState extends ChangeNotifier {
 
   /// Saves the finished download to the database.
   Future<void> _onDownloadFinished(SuperEpisodeTask episodeTask) async {
+    listsUpdate = !listsUpdate;
     final completeTask = await FlutterDownloader.loadTasksWithRawQuery(
         query: "SELECT * FROM task WHERE task_id = '${episodeTask.taskId}'");
     // I tried to combine these two but audioplayer only seems to work if the

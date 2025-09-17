@@ -24,19 +24,19 @@ import 'package:flutter/widgets.dart';
 /// If batch selection options are used [_explicitlySelectedIndicies] is cleared.
 /// Sorting of [newlySelectedIndicies] is then based on their order on [selectableEpisodes].
 ///
-/// [batchSelectedIndicies] selected due [after] or [all] are tentative
+/// [batchSelectedIndicies] selected due to [after] or [all] are tentative
 /// unless [getEpisodesLimitless] has been called since the last incomatible
 /// [selectableEpisodes] change.
 ///
 /// Only one batch selection option can be enabled at once. More simpler selections
 /// can be activated after more complex ones but not vice versa. Complexity hierarchy:
 ///
-/// explicitlySelected(>=2) > [between] > explicitlySelected(2)
-/// explicitlySelected(>=1) > [after] = [before] > explicitlySelected(1)
-/// explicitlySelected > [all] > noneSelected
+/// explicitlySelected(>=2) -> [between] -> explicitlySelected(2)
+/// explicitlySelected(>=1) -> [after] = [before] -> explicitlySelected(1)
+/// explicitlySelected -> [all] -> noneSelected
 ///
 class SelectionController extends ChangeNotifier {
-  /// Called when the list of all applicable episdoes without limits is needed.
+  /// Called when the list of all applicable episodes without limits is needed.
   /// It is assumed that the beginning of the list is the same as
   /// the list set by [setSelectableEpisodes].
   ValueGetter<Future<List<int>>>? onGetEpisodesLimitless;
@@ -202,8 +202,6 @@ class SelectionController extends ChangeNotifier {
     },
     clearIndividualSelection: () {
       _explicitlySelectedIndicies.clear();
-      previouslySelectedEpisodes
-          .removeWhere((e) => selectableEpisodes.contains(e));
     },
   );
   set batchSelect(BatchSelect select) {
@@ -300,15 +298,16 @@ class SelectionController extends ChangeNotifier {
           } else {
             // Index is a delimeter, set next non explicitly deselected index as the
             // delimiter and remove explicit deselection of the indicies in between
+            var newDelimiter = i;
             do {
               if (delimiter == _BatchSelectDelimiter.first ||
                   batchSelect == BatchSelect.after) {
-                i++;
+                newDelimiter++;
               } else {
-                i--;
+                newDelimiter--;
               }
-            } while (_explicitlyDeselectedIndicies.remove(i));
-            _batchSelectController.replaceDelimiter(delimiter, i);
+            } while (_explicitlyDeselectedIndicies.remove(newDelimiter));
+            _batchSelectController.replaceDelimiter(delimiter, newDelimiter);
           }
         }
       }

@@ -735,85 +735,74 @@ class __NewPlaylistState extends State<_NewPlaylist> {
   @override
   Widget build(BuildContext context) {
     final s = context.s;
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor:
-            Theme.of(context).brightness == Brightness.light
-                ? Color.fromRGBO(113, 113, 113, 1)
-                : Color.fromRGBO(5, 5, 5, 1),
-      ),
-      child: AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        elevation: 1,
-        backgroundColor: widget.color?.toWeakBackround(context) ??
-            context.accentBackgroundWeak,
-        contentPadding: EdgeInsets.symmetric(horizontal: 20),
-        titlePadding: EdgeInsets.all(20),
-        actionsPadding: EdgeInsets.zero,
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              s.cancel,
-              style: TextStyle(color: Colors.grey[600]),
-            ),
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: context.radiusMedium),
+      elevation: 1,
+      backgroundColor: widget.color?.toWeakBackround(context) ??
+          context.accentBackgroundWeak,
+      titlePadding: EdgeInsets.all(20),
+      actionsPadding: EdgeInsets.zero,
+      actions: <Widget>[
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(
+            s.cancel,
+            style: TextStyle(color: Colors.grey[600]),
           ),
-          TextButton(
-            onPressed: () async {
-              if (context
-                  .read<AudioPlayerNotifier>()
-                  .playlistExists(_playlistName)) {
-                if (mounted) setState(() => _error = 1);
-              } else {
-                final playlist =
-                    Playlist(_playlistName, episodeIds: widget.episodeIds);
-                context.read<AudioPlayerNotifier>().addPlaylist(playlist);
-                Navigator.of(context).pop();
-              }
-            },
-            child: Text(s.confirm,
-                style: TextStyle(color: widget.color ?? context.accentColor)),
-          )
-        ],
-        title:
-            SizedBox(width: context.width - 160, child: Text('New playlist')),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            TextField(
-              decoration: InputDecoration(
-                contentPadding: EdgeInsets.symmetric(horizontal: 10),
-                hintText: 'New playlist',
-                hintStyle: TextStyle(fontSize: 18),
-                filled: true,
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(
-                      color: widget.color ?? context.accentColor, width: 2.0),
-                ),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(
-                      color: widget.color ?? context.accentColor, width: 2.0),
-                ),
-              ),
-              cursorRadius: Radius.circular(2),
-              autofocus: true,
-              maxLines: 1,
-              onChanged: (value) {
-                _playlistName = value;
-              },
-            ),
-            Container(
-              alignment: Alignment.centerLeft,
-              child: (_error == 1)
-                  ? Text(
-                      'Playlist existed',
-                      style: TextStyle(color: Colors.red[400]),
-                    )
-                  : Center(),
-            ),
-          ],
         ),
+        TextButton(
+          onPressed: () async {
+            if (context
+                .read<AudioPlayerNotifier>()
+                .playlistExists(_playlistName)) {
+              if (mounted) setState(() => _error = 1);
+            } else {
+              final playlist =
+                  Playlist(_playlistName, episodeIds: widget.episodeIds);
+              context.read<AudioPlayerNotifier>().addPlaylist(playlist);
+              Navigator.of(context).pop();
+            }
+          },
+          child: Text(s.confirm,
+              style: TextStyle(color: widget.color ?? context.accentColor)),
+        )
+      ],
+      title: SizedBox(width: context.width - 160, child: Text('New playlist')),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          TextField(
+            decoration: InputDecoration(
+              contentPadding: EdgeInsets.symmetric(horizontal: 10),
+              hintText: 'New playlist',
+              hintStyle: TextStyle(fontSize: 18),
+              filled: true,
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(
+                    color: widget.color ?? context.accentColor, width: 2.0),
+              ),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(
+                    color: widget.color ?? context.accentColor, width: 2.0),
+              ),
+            ),
+            cursorRadius: Radius.circular(2),
+            autofocus: true,
+            maxLines: 1,
+            onChanged: (value) {
+              _playlistName = value;
+            },
+          ),
+          Container(
+            alignment: Alignment.centerLeft,
+            child: (_error == 1)
+                ? Text(
+                    'Playlist existed',
+                    style: TextStyle(color: Colors.red[400]),
+                  )
+                : Center(),
+          ),
+        ],
       ),
     );
   }
@@ -916,10 +905,13 @@ class _PlaylistList extends StatelessWidget {
                                       : Center(),
                                 ),
                                 if (p == playlist)
-                                  Center(
-                                    child: Icon(
-                                      Icons.check,
-                                      size: 30,
+                                  ColoredBox(
+                                    color: context.surface.withAlpha(64),
+                                    child: Center(
+                                      child: Icon(
+                                        Icons.check,
+                                        size: 30,
+                                      ),
                                     ),
                                   ),
                               ],
