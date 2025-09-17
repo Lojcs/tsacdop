@@ -13,7 +13,7 @@ class EpisodeState extends ChangeNotifier {
   final DBHelper _dbHelper = DBHelper();
 
   late AudioPlayerNotifier _audioState;
-  late SuperDownloadState _downloadState;
+  late DownloadState _downloadState;
   bool _background = true;
   set context(BuildContext context) {
     _audioState = context.audioState;
@@ -147,7 +147,7 @@ class EpisodeState extends ChangeNotifier {
   Future<void> deleteEpisodes(List<int> ids,
       {bool deleteFromDatabase = true}) async {
     final dState =
-        background ? SuperDownloadState(background: true) : _downloadState;
+        background ? DownloadState(background: true) : _downloadState;
     final downloaded =
         await getEpisodes(episodeIds: ids, filterDownloaded: true);
     for (var id in downloaded) {

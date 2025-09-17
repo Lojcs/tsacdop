@@ -7,7 +7,6 @@ import '../generated/l10n.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/audio_state.dart';
 import '../state/episode_state.dart';
-import '../state/podcast_group.dart';
 import '../state/podcast_state.dart';
 import '../util/extension_helper.dart';
 import '../widgets/action_bar.dart';

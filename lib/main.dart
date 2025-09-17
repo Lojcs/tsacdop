@@ -49,7 +49,7 @@ Future main() async {
         ChangeNotifierProvider.value(value: podcastState),
         ChangeNotifierProvider(
           lazy: false, // TODO: Check if these are actually needed.
-          create: (_) => SuperDownloadState(),
+          create: (_) => DownloadState(),
         ),
         ChangeNotifierProvider(
           lazy: false,

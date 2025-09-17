@@ -12,7 +12,6 @@ import 'package:webfeed/webfeed.dart';
 
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/episode_state.dart';
-import '../state/podcast_group.dart';
 import '../type/play_histroy.dart';
 import '../type/sub_history.dart';
 import '../util/extension_helper.dart';

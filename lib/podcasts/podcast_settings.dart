@@ -13,7 +13,6 @@ import 'package:provider/provider.dart';
 import 'package:webfeed/webfeed.dart';
 
 import '../local_storage/sqflite_localpodcast.dart';
-import '../state/podcast_group.dart';
 import '../state/podcast_state.dart';
 import '../type/play_histroy.dart';
 import '../util/extension_helper.dart';

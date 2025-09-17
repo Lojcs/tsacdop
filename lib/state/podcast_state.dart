@@ -53,7 +53,7 @@ class PodcastState extends ChangeNotifier {
   final DBHelper _dbHelper = DBHelper();
 
   late EpisodeState _episodeState;
-  late SuperDownloadState _downloadState;
+  late DownloadState _downloadState;
   bool _background = true;
   set context(BuildContext context) {
     _episodeState = context.episodeState;
@@ -82,13 +82,13 @@ class PodcastState extends ChangeNotifier {
   bool podcastChange = false; // TODO: This doesn't update on sync'n stuff
 
   /// group id : PodcastGroup
-  final Map<String, SuperPodcastGroup> _groupMap = {};
+  final Map<String, PodcastGroup> _groupMap = {};
 
   /// Gets the list of groupIds
   List<String> get groupIds => _groupMap.keys.toList();
 
   /// Gets the group with id [id]
-  SuperPodcastGroup getGroupById(String id) => _groupMap[id]!;
+  PodcastGroup getGroupById(String id) => _groupMap[id]!;
 
   /// Flips to indicate some group property changed.
   bool groupsChange = false;
@@ -371,7 +371,7 @@ class PodcastState extends ChangeNotifier {
         opmlProgress.addGroup();
         continue;
       }
-      final groupId = await addGroup(SuperPodcastGroup.create(name: name));
+      final groupId = await addGroup(PodcastGroup.create(name: name));
       final indicies = urls.map((url) => rssUrls.indexOf(url));
       for (var i in indicies) {
         String? podcastId = ids[i];
@@ -399,24 +399,6 @@ class PodcastState extends ChangeNotifier {
         final digest = sha256.convert(response.data!);
         if (digest.toString() != podcast.rssHash) {
           final feed = RssFeed.parse(String.fromCharCodes(response.data!));
-          var podcastNew = PodcastBrief.fromFeed(
-              feed,
-              response.redirects.isEmpty
-                  ? podcast.rssUrl
-                  : response.realUri.toString(),
-              digest.toString());
-          if (podcastNew.imageUrl != podcast.imageUrl) {
-            var imageResponse = await Dio().get<List<int>>(podcast.rssUrl,
-                options: Options(
-                    responseType: ResponseType.bytes,
-                    receiveTimeout: Duration(seconds: 90)));
-            var image =
-                img.decodeImage(Uint8List.fromList(imageResponse.data!))!;
-            img.Image? thumbnail = img.copyResize(image, width: 300);
-            final imagePath = "${dir.path}/${podcast.id}.png";
-            File(imagePath).writeAsBytesSync(img.encodePng(thumbnail));
-            podcast = podcast.copyWith(imagePath: imagePath);
-          }
           final items = feed.items ?? [];
           final enclosureUrls = episodes.map((e) => e.enclosureUrl).toSet();
           final newEnclosureUrls =
@@ -428,6 +410,25 @@ class PodcastState extends ChangeNotifier {
                   item, podcast.id, podcast.title, -1, "", Colors.teal))
               .toList();
           onlyNewEpisodes.sortBy<num>((episode) => episode.pubDate);
+          var podcastNew = podcast.withUpdatedInfo(
+              feed,
+              response.redirects.isEmpty
+                  ? podcast.rssUrl
+                  : response.realUri.toString(),
+              digest.toString(),
+              onlyNewEpisodes.length);
+          if (podcastNew.imageUrl != podcast.imageUrl) {
+            var imageResponse = await Dio().get<List<int>>(podcastNew.imageUrl,
+                options: Options(
+                    responseType: ResponseType.bytes,
+                    receiveTimeout: Duration(seconds: 90)));
+            var image =
+                img.decodeImage(Uint8List.fromList(imageResponse.data!))!;
+            img.Image? thumbnail = img.copyResize(image, width: 300);
+            final imagePath = "${dir.path}/${podcast.id}.png";
+            File(imagePath).writeAsBytesSync(img.encodePng(thumbnail));
+            podcastNew = podcastNew.copyWith(imagePath: imagePath);
+          }
           return (podcastNew, onlyNewEpisodes);
         }
       }
@@ -442,25 +443,32 @@ class PodcastState extends ChangeNotifier {
   Future<int?> syncPodcast(String podcastId) async {
     final episodes = await _dbHelper.getEpisodes(feedIds: [podcastId]);
     await cachePodcast(podcastId);
-    var result = await _syncFeed((_podcastMap[podcastId]!, episodes));
-    // var result =
-    //     await Isolater(_syncFeed).run((_podcastMap[podcastId]!, episodes));
+    var result =
+        await Isolater(_syncFeed).run((_podcastMap[podcastId]!, episodes));
     if (result != null) {
-      final (podcast, episodes) = result;
+      var (podcast, newEpisodes) = result;
+      podcast = await podcast.withColorFromImage();
+      newEpisodes = newEpisodes
+          .map((e) => e.copyWith(primaryColor: podcast.primaryColor))
+          .toList();
       _podcastMap[podcastId] = podcast;
       await _dbHelper.savePodcastLocal(podcast);
-      if (episodes.isNotEmpty) {
-        await _dbHelper.saveUpdatedPodcastEpisodes(episodes);
+      if (newEpisodes.isNotEmpty) {
+        await _dbHelper.saveUpdatedPodcastEpisodes(newEpisodes);
       }
       final lastWorkStorage = KeyValueStorage(lastWorkKey);
       if (await lastWorkStorage.getInt() == 0) {
         await _dbHelper.unmarkNewOldEpisodes(podcastId);
       }
-      await startDownload(episodes);
+      if (podcast.autoDownload) {
+        final savedEpisodes = await _dbHelper.getEpisodes(
+            feedIds: [podcastId], filterNew: true, filterDownloaded: false);
+        await startDownload(savedEpisodes);
+      }
       var refreshstorage = KeyValueStorage(refreshdateKey);
       await refreshstorage.saveInt(DateTime.now().millisecondsSinceEpoch);
       notifyListeners();
-      return episodes.length;
+      return newEpisodes.length;
     }
     return null;
   }
@@ -481,7 +489,7 @@ class PodcastState extends ChangeNotifier {
   Future<void> startDownload(List<EpisodeBrief> episodes) async {
     if (episodes.length < 100 && episodes.isNotEmpty) {
       final downloader =
-          background ? SuperDownloadState(background: true) : _downloadState;
+          background ? DownloadState(background: true) : _downloadState;
       final lastWorkStorage = KeyValueStorage(lastWorkKey);
       await lastWorkStorage.saveInt(1);
       for (var episode in episodes) {
@@ -556,7 +564,7 @@ class PodcastState extends ChangeNotifier {
   }
 
   /// Add new group. If the group already exists it is replaced.
-  Future<String> addGroup(SuperPodcastGroup podcastGroup) async {
+  Future<String> addGroup(PodcastGroup podcastGroup) async {
     _groupMap[podcastGroup.id] = podcastGroup;
     await _dbHelper.addGroup(podcastGroup);
     groupsChange = !groupsChange;
@@ -577,10 +585,8 @@ class PodcastState extends ChangeNotifier {
   }
 
   /// Modifies the group with the given callback.
-  Future<void> modifyGroup(
-      String groupId,
-      FutureOr<SuperPodcastGroup> Function(SuperPodcastGroup group)
-          modifier) async {
+  Future<void> modifyGroup(String groupId,
+      FutureOr<PodcastGroup> Function(PodcastGroup group) modifier) async {
     final modifiedGroup = await modifier(_groupMap.remove(groupId)!);
     await addGroup(modifiedGroup);
   }

@@ -21,7 +21,6 @@ import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../backup/gpodder_api.dart';
 import '../backup/opml_helper.dart';
-import '../state/podcast_group.dart';
 import '../state/setting_state.dart';
 import '../type/settings_backup.dart';
 import '../util/extension_helper.dart';

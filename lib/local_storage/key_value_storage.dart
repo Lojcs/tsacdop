@@ -4,7 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tuple/tuple.dart';
 
 import '../state/episode_state.dart';
-import '../state/podcast_group.dart';
 import '../type/playlist.dart';
 import '../type/podcastgroup.dart';
 
@@ -74,10 +73,10 @@ const String hapticsStrengthKey = 'hapticsStrengthKey';
 class KeyValueStorage {
   final String key;
   const KeyValueStorage(this.key);
-  Future<List<SuperPodcastGroup>> getGroups() async {
+  Future<List<PodcastGroup>> getGroups() async {
     final prefs = await SharedPreferences.getInstance();
     if (prefs.getString(key) == null) {
-      final home = SuperPodcastGroup.create(id: homeGroupId, name: 'Home');
+      final home = PodcastGroup.create(id: homeGroupId, name: 'Home');
       await prefs.setString(
           key,
           json.encode({
@@ -90,10 +89,10 @@ class KeyValueStorage {
       final color = groups[i]['color'] as String;
       if (color == "#000000") groups[i]['color'] = "009688";
     }
-    return [for (var g in groups) SuperPodcastGroup.fromJson(g)];
+    return [for (var g in groups) PodcastGroup.fromJson(g)];
   }
 
-  Future<bool> saveGroup(List<SuperPodcastGroup> groupList) async {
+  Future<bool> saveGroup(List<PodcastGroup> groupList) async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.setString(
         key,

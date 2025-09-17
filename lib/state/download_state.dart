@@ -30,7 +30,7 @@ void downloadCallback(String id, int status, int progress) {
 }
 
 /// State object that manages episode downloads. [EpisodeState] aware.
-class SuperDownloadState extends ChangeNotifier {
+class DownloadState extends ChangeNotifier {
   final autoDownloadStorage = KeyValueStorage(autoDownloadNetworkKey);
   final DBHelper _dbHelper = DBHelper();
   late EpisodeState _episodeState;
@@ -38,10 +38,10 @@ class SuperDownloadState extends ChangeNotifier {
   set context(BuildContext context) => _episodeState = context.episodeState;
 
   /// episode id : [EpisodeTask]
-  final Map<int, SuperEpisodeTask> _ongoingEpisodeTasks = {};
+  final Map<int, EpisodeTask> _ongoingEpisodeTasks = {};
 
   /// episode id : [EpisodeTask]
-  final Map<int, SuperEpisodeTask> _otherEpisodeTasks = {};
+  final Map<int, EpisodeTask> _otherEpisodeTasks = {};
   Completer downloadsComplete = Completer();
   final bool background;
   bool initDone = false;
@@ -51,21 +51,20 @@ class SuperDownloadState extends ChangeNotifier {
   late StreamSubscription<List<ConnectivityResult>> _connectivityStream;
 
   /// Returns [EpisodeTask] for episode with id [episodeId] if it exists.
-  SuperEpisodeTask? operator [](int episodeId) =>
+  EpisodeTask? operator [](int episodeId) =>
       _ongoingEpisodeTasks[episodeId] ?? _otherEpisodeTasks[episodeId];
 
-  List<SuperEpisodeTask> get ongoingDownloads =>
+  List<EpisodeTask> get ongoingDownloads =>
       _ongoingEpisodeTasks.values.toList();
-  List<SuperEpisodeTask> get otherDownloads =>
-      _otherEpisodeTasks.values.toList();
-  List<SuperEpisodeTask> get allDownloads =>
+  List<EpisodeTask> get otherDownloads => _otherEpisodeTasks.values.toList();
+  List<EpisodeTask> get allDownloads =>
       [..._ongoingEpisodeTasks.values, ..._otherEpisodeTasks.values];
 
   /// Flips to indicate that the download lists have been modified.
   bool listsUpdate = false;
 
   /// Returns [EpisodeTask] for episode with id [taskId] if it exists.
-  SuperEpisodeTask? _getTaskWithId(String taskId) {
+  EpisodeTask? _getTaskWithId(String taskId) {
     final ongoingTask =
         _ongoingEpisodeTasks.values.where((eTask) => eTask.taskId == taskId);
     if (ongoingTask.isNotEmpty) {
@@ -82,7 +81,7 @@ class SuperDownloadState extends ChangeNotifier {
   }
 
   /// Adds task to the correct task list.
-  void _addTask(SuperEpisodeTask eTask) {
+  void _addTask(EpisodeTask eTask) {
     if (eTask.status == DownloadTaskStatus.running ||
         eTask.status == DownloadTaskStatus.enqueued) {
       _ongoingEpisodeTasks[eTask.episodeId] = eTask;
@@ -96,8 +95,8 @@ class SuperDownloadState extends ChangeNotifier {
   }
 
   /// Removes and returns task from the correct task list based on either its episode or task id.
-  SuperEpisodeTask? _removeTask({int? episodeId, String? taskId}) {
-    SuperEpisodeTask? ret;
+  EpisodeTask? _removeTask({int? episodeId, String? taskId}) {
+    EpisodeTask? ret;
     if (episodeId != null) {
       ret = _ongoingEpisodeTasks.remove(episodeId) ??
           _otherEpisodeTasks.remove(episodeId);
@@ -123,7 +122,7 @@ class SuperDownloadState extends ChangeNotifier {
   /// and updates [EpisodeState] with download status and notifies its listeners.
   /// Background mode updates the database directly and doesn't notify.
   /// [downloadsComplete] is signaled when all downloads are finished.
-  SuperDownloadState({this.background = false}) {
+  DownloadState({this.background = false}) {
     _starter();
   }
 
@@ -236,7 +235,7 @@ class SuperDownloadState extends ChangeNotifier {
         openFileFromNotification: false,
       );
       if (taskId != null) {
-        _addTask(SuperEpisodeTask(episode.id, taskId));
+        _addTask(EpisodeTask(episode.id, taskId));
       }
     }
   }
@@ -294,7 +293,7 @@ class SuperDownloadState extends ChangeNotifier {
     }
   }
 
-  /// Loads [DownloadTask]s from the downloader and saves them as [SuperEpisodeTask]s.
+  /// Loads [DownloadTask]s from the downloader and saves them as [EpisodeTask]s.
   /// Removes downloads for episodes no longer in the database.
   /// Unsets downloaded status for downloads externally deleted.
   /// Sets downloaded status for downloads that exist but aren't marked.
@@ -314,7 +313,7 @@ class SuperDownloadState extends ChangeNotifier {
               taskId: task.taskId, shouldDeleteContent: true);
         } else {
           var episodeTask =
-              SuperEpisodeTask(episode.id, task.taskId, status: task.status);
+              EpisodeTask(episode.id, task.taskId, status: task.status);
           if (task.status == DownloadTaskStatus.complete) {
             episodeTask = episodeTask.copyWith(progress: 100);
             final marked = downloadedEpisodeUrls.contains(episode);
@@ -434,7 +433,7 @@ class SuperDownloadState extends ChangeNotifier {
   }
 
   /// Saves the finished download to the database.
-  Future<void> _onDownloadFinished(SuperEpisodeTask episodeTask) async {
+  Future<void> _onDownloadFinished(EpisodeTask episodeTask) async {
     listsUpdate = !listsUpdate;
     final completeTask = await FlutterDownloader.loadTasksWithRawQuery(
         query: "SELECT * FROM task WHERE task_id = '${episodeTask.taskId}'");

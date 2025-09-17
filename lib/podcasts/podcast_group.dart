@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 
-import '../state/podcast_group.dart';
 import '../state/podcast_state.dart';
 import '../type/podcastgroup.dart';
 import '../util/extension_helper.dart';

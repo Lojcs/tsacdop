@@ -9,8 +9,6 @@ import 'package:uuid/uuid.dart';
 import 'package:webfeed/webfeed.dart';
 
 import '../generated/l10n.dart';
-import '../local_storage/sqflite_localpodcast.dart';
-import '../state/podcast_group.dart';
 import '../util/extension_helper.dart';
 import '../util/helpers.dart';
 import 'fireside_data.dart';
@@ -24,6 +22,13 @@ enum DataSource {
 
 const localFolderId = "46e48103-06c7-4fe1-a0b1-68aa7205b7f0";
 const podcastAllId = "74c638a9-5021-4b1e-ba51-3deab5028905";
+
+const avatarColors = <String>[
+  '388E3C',
+  '1976D2',
+  'D32F2F',
+  '00796B',
+];
 
 class TestClass extends Equatable {
   final String id;
@@ -98,7 +103,7 @@ class PodcastBrief extends Equatable {
   })  : firesideHosts = firesideHosts ?? [],
         _primaryColor = primaryColor.toargbString();
 
-  /// Black local folder podcast object.
+  /// Construct [PodcastBrief] for a local folder.
   PodcastBrief.localFolder(S s, Directory applicationDocumentsDirectory,
       {String? id, String? title, String? description})
       : id = id ?? localFolderId,
@@ -114,31 +119,6 @@ class PodcastBrief extends Equatable {
         imageUrl = "",
         imagePath =
             "${applicationDocumentsDirectory.path}/assets/avatar_backup.png",
-        firesideBackgroundImage = "",
-        _primaryColor = Colors.teal.toargbString(),
-        syncEpisodeCount = 0,
-        episodeCount = 0,
-        hideNewMark = true,
-        noAutoSync = true,
-        autoDownload = false,
-        skipSecondsStart = 0,
-        skipSecondsEnd = 0,
-        source = DataSource.user;
-
-  /// Black local folder podcast object.
-  PodcastBrief.d({String? id, String? title, String? description})
-      : id = id ?? localFolderId,
-        title = title ?? "s.localFolder",
-        rssUrl = "",
-        rssHash = "",
-        author = "s.deviceStorage",
-        provider = "",
-        firesideHosts = [],
-        description = description ?? "s.localFolderDescription",
-        webpage = "",
-        funding = [],
-        imageUrl = "",
-        imagePath = "/assets/avatar_backup.png",
         firesideBackgroundImage = "",
         _primaryColor = Colors.teal.toargbString(),
         syncEpisodeCount = 0,
@@ -195,6 +175,26 @@ class PodcastBrief extends Equatable {
     final colorString = (await getColorFromImage(image)).toString();
     final color = colorString.toJsonColor();
     return copyWith(primaryColor: color);
+  }
+
+  /// Returns a copy with information updated from the [feed] but with existing user data.
+  PodcastBrief withUpdatedInfo(
+      RssFeed feed, String rssUrl, String rssHash, int newEpisodeCount) {
+    final newPodcast = PodcastBrief.fromFeed(feed, rssUrl, rssHash);
+    return newPodcast.copyWith(
+        id: id,
+        firesideHosts: firesideHosts,
+        imagePath: imagePath,
+        firesideBackgroundImage: firesideBackgroundImage,
+        primaryColor: primaryColor,
+        syncEpisodeCount: newEpisodeCount,
+        episodeCount: episodeCount + newEpisodeCount,
+        hideNewMark: hideNewMark,
+        noAutoSync: noAutoSync,
+        autoDownload: autoDownload,
+        skipSecondsStart: skipSecondsStart,
+        skipSecondsEnd: skipSecondsEnd,
+        source: source);
   }
 
   ImageProvider get avatarImage {

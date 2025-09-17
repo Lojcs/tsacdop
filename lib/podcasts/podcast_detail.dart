@@ -243,7 +243,7 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
             gridIndex: 3
           ),
           showGrid: !widget.hide,
-          openPodcast: true,
+          openPodcast: false,
           actionBarWidgetsFirstRow: const [
             ActionBarDropdownSortBy(0, 0),
             ActionBarSwitchSortOrder(0, 1),

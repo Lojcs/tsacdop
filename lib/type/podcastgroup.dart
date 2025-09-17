@@ -8,7 +8,7 @@ import '../util/extension_helper.dart';
 const homeGroupId = "1dd67d78-a22b-45c5-95c2-ed4a84a955ef";
 const allGroupId = "13541601-2ad5-4ab1-b919-3142a195c7c3";
 
-class SuperPodcastGroup extends Equatable {
+class PodcastGroup extends Equatable {
   /// Group uuid.
   final String id;
 
@@ -21,14 +21,14 @@ class SuperPodcastGroup extends Equatable {
   /// Id lists of podcasts in group.
   final List<String> podcastIds;
 
-  SuperPodcastGroup({
+  PodcastGroup({
     required this.id,
     required this.name,
     required this.color,
     required this.podcastIds,
   });
 
-  SuperPodcastGroup.create({
+  PodcastGroup.create({
     String? id,
     required this.name,
     this.color = Colors.teal,
@@ -43,15 +43,15 @@ class SuperPodcastGroup extends Equatable {
         'podcastList': podcastIds
       };
 
-  SuperPodcastGroup.fromJson(Map<String, dynamic> json)
+  PodcastGroup.fromJson(Map<String, dynamic> json)
       : id = json['id'] as String,
         name = json['name'] as String,
         color = 'FF${json['color'] as String}'.toargbColor(),
         podcastIds = List<String>.from(json['podcastList'] as List<dynamic>);
 
-  SuperPodcastGroup copyWith(
+  PodcastGroup copyWith(
           {String? id, String? name, Color? color, List<String>? podcastIds}) =>
-      SuperPodcastGroup(
+      PodcastGroup(
           id: id ?? this.id,
           name: name ?? this.name,
           color: color ?? this.color,

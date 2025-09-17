@@ -15,8 +15,8 @@ class DownloadList extends StatefulWidget {
   State<DownloadList> createState() => _DownloadListState();
 }
 
-Widget _downloadButton(SuperEpisodeTask task, BuildContext context) {
-  var downloader = Provider.of<SuperDownloadState>(context, listen: false);
+Widget _downloadButton(EpisodeTask task, BuildContext context) {
+  var downloader = Provider.of<DownloadState>(context, listen: false);
   return Row(
     mainAxisSize: MainAxisSize.min,
     children: [
@@ -60,7 +60,7 @@ Widget _downloadButton(SuperEpisodeTask task, BuildContext context) {
 class _DownloadListState extends State<DownloadList> {
   @override
   Widget build(BuildContext context) {
-    return Selector<SuperDownloadState, bool>(
+    return Selector<DownloadState, bool>(
       selector: (_, dState) => dState.listsUpdate,
       builder: (context, _, __) {
         final tasks = context.downloadState.allDownloads

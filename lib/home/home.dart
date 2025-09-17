@@ -530,6 +530,7 @@ class _RecentUpdateState extends State<_RecentUpdate>
           )
         ],
       ),
+      refreshNotifier: context.podcastState,
       openPodcast: true,
       layoutKey: recentLayoutKey,
     );
@@ -562,7 +563,6 @@ class _MyFavoriteState extends State<_MyFavorite>
         ],
       ),
       openPodcast: true,
-      refreshNotifier: context.podcastState,
       actionBarWidgetsFirstRow: const [
         ActionBarDropdownSortBy(0, 0),
         ActionBarSwitchSortOrder(0, 1),

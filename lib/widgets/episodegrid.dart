@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 
 import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
-import '../state/podcast_group.dart';
 import '../type/podcastgroup.dart';
 import '../util/extension_helper.dart';
 import '../util/selection_controller.dart';

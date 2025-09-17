@@ -12,7 +12,6 @@ import '../podcasts/podcast_detail.dart';
 import '../podcasts/podcast_manage.dart';
 import '../podcasts/podcastlist.dart';
 import '../state/episode_state.dart';
-import '../state/podcast_group.dart';
 import '../state/podcast_state.dart';
 import '../state/setting_state.dart';
 import '../type/podcastbrief.dart';

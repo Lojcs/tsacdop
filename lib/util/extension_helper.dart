@@ -162,8 +162,8 @@ extension StateExtension on BuildContext {
       Provider.of<PodcastState>(this, listen: false);
   AudioPlayerNotifier get audioState =>
       Provider.of<AudioPlayerNotifier>(this, listen: false);
-  SuperDownloadState get downloadState =>
-      Provider.of<SuperDownloadState>(this, listen: false);
+  DownloadState get downloadState =>
+      Provider.of<DownloadState>(this, listen: false);
 }
 
 extension StringExtension on String {

@@ -7,7 +7,6 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
 
-import '../state/podcast_group.dart';
 import '../state/podcast_state.dart';
 import '../state/setting_state.dart';
 import '../type/podcastgroup.dart';
@@ -416,7 +415,7 @@ class _AddGroupState extends State<AddGroup> {
               onPressed: () async {
                 if (_newGroup != null && _newGroup != "") {
                   context.podcastState
-                      .addGroup(SuperPodcastGroup.create(name: _newGroup!));
+                      .addGroup(PodcastGroup.create(name: _newGroup!));
                   Navigator.of(context).pop();
                 }
               },

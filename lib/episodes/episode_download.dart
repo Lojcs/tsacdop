@@ -41,7 +41,7 @@ class _DownloadButtonState extends State<DownloadButton> {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<SuperDownloadState, SuperEpisodeTask?>(
+    return Selector<DownloadState, EpisodeTask?>(
       selector: (_, dState) => dState[widget.episodeId],
       builder: (context, task, _) {
         return Row(
@@ -73,7 +73,7 @@ class _DownloadButtonState extends State<DownloadButton> {
     );
   }
 
-  Widget _downloadButton(SuperEpisodeTask? task, BuildContext context) {
+  Widget _downloadButton(EpisodeTask? task, BuildContext context) {
     switch (task?.status) {
       case null || DownloadTaskStatus.undefined:
         return _buttonOnMenu(
