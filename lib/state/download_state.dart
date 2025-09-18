@@ -60,7 +60,7 @@ class DownloadState extends ChangeNotifier {
       [..._ongoingEpisodeTasks.values, ..._otherEpisodeTasks.values];
 
   /// Flips to indicate that the download lists have been modified.
-  bool listsUpdate = false;
+  double listsUpdate = 0;
 
   /// Returns [EpisodeTask] for episode with id [taskId] if it exists.
   EpisodeTask? _getTaskWithId(String taskId) {
@@ -89,7 +89,7 @@ class DownloadState extends ChangeNotifier {
       _otherEpisodeTasks[eTask.episodeId] = eTask;
       _ongoingEpisodeTasks.remove(eTask.episodeId);
     }
-    listsUpdate = !listsUpdate;
+    listsUpdate++;
     notifyListeners();
   }
 
@@ -112,7 +112,6 @@ class DownloadState extends ChangeNotifier {
         }
       }
     }
-    listsUpdate = !listsUpdate;
     notifyListeners();
     return ret;
   }
@@ -257,11 +256,11 @@ class DownloadState extends ChangeNotifier {
     }
   }
 
-  /// Retries an episode's ongoing download.
+  /// Retries an episode's failed download.
   Future<void> retryDownload(int episodeId) async {
-    final episodeTask = this[episodeId];
+    final episodeTask = _otherEpisodeTasks[episodeId];
     if (episodeTask != null && episodeTask.pendingAction != true) {
-      episodeTask.pendingAction = true;
+      _otherEpisodeTasks[episodeId] = episodeTask.copyWith(pendingAction: true);
       var newTaskId = await FlutterDownloader.retry(taskId: episodeTask.taskId);
       await FlutterDownloader.remove(taskId: episodeTask.taskId);
       _addTask(episodeTask.copyWith(taskId: newTaskId));
@@ -271,9 +270,10 @@ class DownloadState extends ChangeNotifier {
   /// Pauses an episode's ongoing download.
   /// If running in the background, removes it from the task list as well.
   Future<void> pauseDownload(int episodeId) async {
-    final episodeTask = this[episodeId];
+    final episodeTask = _ongoingEpisodeTasks[episodeId];
     if (episodeTask != null && episodeTask.pendingAction != true) {
-      episodeTask.pendingAction = true;
+      _ongoingEpisodeTasks[episodeId] =
+          episodeTask.copyWith(pendingAction: true);
       if (episodeTask.progress >= 0) {
         await FlutterDownloader.pause(taskId: episodeTask.taskId);
       }
@@ -282,9 +282,9 @@ class DownloadState extends ChangeNotifier {
 
   /// Resumes an episode's ongoing download.
   Future<void> resumeDownload(int episodeId) async {
-    final episodeTask = this[episodeId];
+    final episodeTask = _otherEpisodeTasks[episodeId];
     if (episodeTask != null && episodeTask.pendingAction != true) {
-      episodeTask.pendingAction = true;
+      _otherEpisodeTasks[episodeId] = episodeTask.copyWith(pendingAction: true);
       var newTaskId =
           await FlutterDownloader.resume(taskId: episodeTask.taskId);
       await FlutterDownloader.remove(taskId: episodeTask.taskId);
@@ -353,11 +353,12 @@ class DownloadState extends ChangeNotifier {
       String id = data[0];
       int status = data[1];
       int progress = data[2];
-      final episodeTask = _getTaskWithId(id);
+      var episodeTask = _getTaskWithId(id);
       if (episodeTask != null) {
-        episodeTask.status = DownloadTaskStatus.fromInt(status);
-        episodeTask.progress = progress;
-        episodeTask.pendingAction = false;
+        episodeTask = episodeTask.copyWith(
+            status: DownloadTaskStatus.fromInt(status),
+            progress: progress,
+            pendingAction: false);
 
         switch (episodeTask.status) {
           case DownloadTaskStatus.undefined:
@@ -433,7 +434,7 @@ class DownloadState extends ChangeNotifier {
 
   /// Saves the finished download to the database.
   Future<void> _onDownloadFinished(EpisodeTask episodeTask) async {
-    listsUpdate = !listsUpdate;
+    listsUpdate++;
     final completeTask = await FlutterDownloader.loadTasksWithRawQuery(
         query: "SELECT * FROM task WHERE task_id = '${episodeTask.taskId}'");
     // I tried to combine these two but audioplayer only seems to work if the

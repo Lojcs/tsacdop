@@ -60,7 +60,7 @@ Widget _downloadButton(EpisodeTask task, BuildContext context) {
 class _DownloadListState extends State<DownloadList> {
   @override
   Widget build(BuildContext context) {
-    return Selector<DownloadState, bool>(
+    return Selector<DownloadState, double>(
       selector: (_, dState) => dState.listsUpdate,
       builder: (context, _, __) {
         final tasks = context.downloadState.allDownloads

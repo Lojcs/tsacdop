@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:line_icons/line_icons.dart';
@@ -1028,8 +1029,11 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
         playlist =
             Provider.of<AudioPlayerNotifier>(context, listen: false).playlist;
       }
+      final eState = context.episodeState;
+      final dState = context.downloadState;
       for (var id in selectedEpisodeIds) {
-        var episode = Provider.of<EpisodeState>(context, listen: false)[id];
+        var episode = eState[id];
+        var task = dState[id];
         if (!likedSet) {
           liked = episode.isLiked;
           likedSet = true;
@@ -1042,10 +1046,15 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
         } else if (episode.isPlayed != played) {
           played = null;
         }
+        final episodeDownloaded = switch (task?.status) {
+          null => false,
+          DownloadTaskStatus.complete => true,
+          _ => null
+        };
         if (!downloadedSet) {
-          downloaded = episode.isDownloaded;
+          downloaded = episodeDownloaded;
           downloadedSet = true;
-        } else if (episode.isDownloaded != downloaded) {
+        } else if (episodeDownloaded != downloaded) {
           downloaded = null;
         }
         if (!inPlaylistSet) {

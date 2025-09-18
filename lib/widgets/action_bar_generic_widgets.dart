@@ -62,7 +62,7 @@ class ActionBarButton extends StatefulWidget {
   });
 
   @override
-  _ActionBarButtonState createState() => _ActionBarButtonState();
+  State<ActionBarButton> createState() => _ActionBarButtonState();
 }
 
 class _ActionBarButtonState extends State<ActionBarButton>

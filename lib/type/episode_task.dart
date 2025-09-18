@@ -1,7 +1,8 @@
+import 'package:equatable/equatable.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 
 /// Class that holds information about an episode download task.
-class EpisodeTask {
+class EpisodeTask extends Equatable {
   /// [FlutterDownloader] download task id.
   final String taskId;
 
@@ -9,14 +10,14 @@ class EpisodeTask {
   final int episodeId;
 
   /// Download progress.
-  int progress;
+  final int progress;
 
   /// Download status.
-  DownloadTaskStatus status;
+  final DownloadTaskStatus status;
 
   /// Signals that a request has been sent to the downloader and the answer is pending.
-  bool pendingAction;
-  EpisodeTask(this.episodeId, this.taskId,
+  final bool pendingAction;
+  const EpisodeTask(this.episodeId, this.taskId,
       {this.progress = -1,
       this.status = DownloadTaskStatus.undefined,
       this.pendingAction = false});
@@ -31,4 +32,7 @@ class EpisodeTask {
         status: status ?? this.status,
         pendingAction: pendingAction ?? this.pendingAction);
   }
+
+  @override
+  List<Object?> get props => [taskId, episodeId, progress, status];
 }
