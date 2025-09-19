@@ -3,10 +3,14 @@ import 'dart:developer' as developer;
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:line_icons/line_icons.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../local_storage/key_value_storage.dart';
 import '../backup/opml_helper.dart';
@@ -92,7 +96,7 @@ class _PopupMenuState extends State<PopupMenu> {
               ),
             ),
             PopupMenuItem(
-              value: 4,
+              value: 3,
               child: Container(
                 padding: EdgeInsets.only(left: 10),
                 child: Row(
@@ -107,7 +111,7 @@ class _PopupMenuState extends State<PopupMenu> {
               ),
             ),
             PopupMenuItem(
-              value: 5,
+              value: 4,
               child: Container(
                 padding: EdgeInsets.only(left: 10),
                 child: Row(
@@ -121,25 +125,74 @@ class _PopupMenuState extends State<PopupMenu> {
                 ),
               ),
             ),
+            if (!kReleaseMode)
+              PopupMenuItem(
+                value: 5,
+                child: Container(
+                  padding: EdgeInsets.only(left: 10),
+                  child: Row(
+                    children: <Widget>[
+                      Icon(LineIcons.scroll),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 5.0),
+                      ),
+                      Text("Export logs"),
+                    ],
+                  ),
+                ),
+              ),
+            if (!kReleaseMode)
+              PopupMenuItem(
+                value: 6,
+                child: Container(
+                  padding: EdgeInsets.only(left: 10),
+                  child: Row(
+                    children: <Widget>[
+                      Icon(LineIcons.trash),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 5.0),
+                      ),
+                      Text("Delete logs"),
+                    ],
+                  ),
+                ),
+              ),
           ],
           onSelected: (value) async {
-            if (value == 5) {
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => AboutApp()));
-            } else if (value == 2) {
-              _getFilePath();
-            } else if (value == 1) {
-              context.podcastState.syncAllPodcasts();
-            } else if (value == 3) {
-              //  setting.theme != 2 ? setting.setTheme(2) : setting.setTheme(1);
-            } else if (value == 4) {
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => Settings()));
+            switch (value) {
+              case 1:
+                context.podcastState.syncAllPodcasts();
+              case 2:
+                _getFilePath();
+              case 3:
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => Settings()));
+              case 4:
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => AboutApp()));
+              case 5:
+                _exportLogs();
+              case 6:
+                _deleteLogs();
             }
           },
         ),
       ),
     );
+  }
+
+  Future<void> _exportLogs() async {
+    final dir = await getApplicationDocumentsDirectory();
+    final filePath = path.join(dir.path, "syncLog.txt");
+    if (File(filePath).existsSync()) {
+      await SharePlus.instance.share(ShareParams(files: [XFile(filePath)]));
+    }
+  }
+
+  Future<void> _deleteLogs() async {
+    final dir = await getApplicationDocumentsDirectory();
+    final filePath = path.join(dir.path, "syncLog.txt");
+    if (File(filePath).existsSync()) File(filePath).deleteSync();
   }
 
   Future<String> _getRefreshDate(BuildContext context) async {

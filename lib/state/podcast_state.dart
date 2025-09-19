@@ -2,13 +2,16 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:developer' as developer;
+import 'dart:developer' as dev;
 import 'dart:io';
 
 import 'package:collection/collection.dart';
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:webfeed/webfeed.dart';
 import '../local_storage/key_value_storage.dart';
@@ -437,6 +440,7 @@ class PodcastState extends ChangeNotifier {
   /// Syncs a podcast already in the database. Returns the number of new episodes.
   /// Safe to call from the background.
   Future<int?> syncPodcast(String podcastId) async {
+    dev.log("${DateTime.now()} - Syncing podcast with id: $podcastId");
     final episodes = await _dbHelper.getEpisodes(feedIds: [podcastId]);
     await cachePodcast(podcastId);
     var result =
@@ -478,6 +482,15 @@ class PodcastState extends ChangeNotifier {
       futures.add(syncPodcast(id));
     }
     await Future.wait(futures);
+    if (!kReleaseMode) {
+      final dir = await getApplicationDocumentsDirectory();
+      final logFile = File(path.join(dir.path, "syncLog.txt"));
+      if (!logFile.existsSync()) logFile.createSync();
+      final prevLog = logFile.readAsStringSync();
+      final newLog =
+          "$prevLog\n${DateTime.now()} - Synced all. Background: $background, new episodes: $total";
+      logFile.writeAsStringSync(newLog);
+    }
     return total;
   }
 
