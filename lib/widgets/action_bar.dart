@@ -14,6 +14,7 @@ import 'package:tuple/tuple.dart';
 import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/episode_state.dart';
+import 'custom_popupmenu.dart';
 import 'custom_widget.dart';
 import 'episodegrid.dart';
 
@@ -617,10 +618,12 @@ class ActionBarDropdownGroups extends ActionBarFilter {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          itemBuilder: () => sharedState.groups.map<PopupMenuItem<String>>(
+          itemBuilder: () => sharedState.groups.map(
             (groupId) {
-              final name = context.podcastState.getGroupById(groupId).name;
-              return PopupMenuItem(
+              final name = groupId == allGroupId
+                  ? context.s.all
+                  : context.podcastState.getGroupById(groupId).name;
+              return MyPopupMenuItem(
                 padding: context.actionBarIconPadding,
                 height: context.actionBarButtonSizeVertical,
                 value: groupId,
@@ -696,10 +699,10 @@ class ActionBarDropdownPodcasts extends ActionBarFilter {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              itemBuilder: () => snapshot.data!.map<PopupMenuItem<String>>(
+              itemBuilder: () => snapshot.data!.map(
                 (podcastId) {
                   final title = titleOf(context, podcastId);
-                  return PopupMenuItem(
+                  return MyPopupMenuItem(
                     padding: context.actionBarIconPadding,
                     height: context.actionBarButtonSizeVertical,
                     value: podcastId,
@@ -765,14 +768,14 @@ class ActionBarDropdownSortBy extends ActionBarSort {
   }
 }
 
-List<PopupMenuEntry<Sorter>> _getSortBy(
+List<MyPopupMenuItem<Sorter>> _getSortBy(
     BuildContext context, List<Sorter> sortByItems) {
-  List<PopupMenuEntry<Sorter>> items = [];
+  List<MyPopupMenuItem<Sorter>> items = [];
   var s = context.s;
   for (var sorter in sortByItems) {
     switch (sorter) {
       case Sorter.pubDate:
-        items.add(PopupMenuItem(
+        items.add(MyPopupMenuItem(
           padding: context.actionBarIconPadding,
           height: context.actionBarButtonSizeVertical,
           value: Sorter.pubDate,
@@ -783,7 +786,7 @@ List<PopupMenuEntry<Sorter>> _getSortBy(
         ));
         break;
       case Sorter.enclosureSize:
-        items.add(PopupMenuItem(
+        items.add(MyPopupMenuItem(
           padding: context.actionBarIconPadding,
           height: context.actionBarButtonSizeVertical,
           value: Sorter.enclosureSize,
@@ -794,7 +797,7 @@ List<PopupMenuEntry<Sorter>> _getSortBy(
         ));
         break;
       case Sorter.enclosureDuration:
-        items.add(PopupMenuItem(
+        items.add(MyPopupMenuItem(
           padding: context.actionBarIconPadding,
           height: context.actionBarButtonSizeVertical,
           value: Sorter.enclosureDuration,
@@ -805,7 +808,7 @@ List<PopupMenuEntry<Sorter>> _getSortBy(
         ));
         break;
       case Sorter.downloadDate:
-        items.add(PopupMenuItem(
+        items.add(MyPopupMenuItem(
           padding: context.actionBarIconPadding,
           height: context.actionBarButtonSizeVertical,
           value: Sorter.downloadDate,
@@ -816,7 +819,7 @@ List<PopupMenuEntry<Sorter>> _getSortBy(
         ));
         break;
       case Sorter.likedDate:
-        items.add(PopupMenuItem(
+        items.add(MyPopupMenuItem(
           padding: context.actionBarIconPadding,
           height: context.actionBarButtonSizeVertical,
           value: Sorter.likedDate,
@@ -827,7 +830,7 @@ List<PopupMenuEntry<Sorter>> _getSortBy(
         ));
         break;
       case Sorter.random:
-        items.add(PopupMenuItem(
+        items.add(MyPopupMenuItem(
           padding: context.actionBarIconPadding,
           height: context.actionBarButtonSizeVertical,
           value: Sorter.random,

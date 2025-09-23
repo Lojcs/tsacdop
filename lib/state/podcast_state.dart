@@ -166,10 +166,11 @@ class PodcastState extends ChangeNotifier {
     List<EpisodeBrief> episodes = [];
     try {
       final dio = Dio();
-      final response = await dio.get<String>(feedUrl);
+      final response = await dio.get<List<int>>(feedUrl,
+          options: Options(responseType: ResponseType.bytes));
       if (response.data != null) {
-        final feed = RssFeed.parse(response.data!);
-        final digest = sha256.convert(utf8.encode(response.data!));
+        final feed = RssFeed.parse(utf8.decode(response.data!));
+        final digest = sha256.convert(response.data!);
         podcast = PodcastBrief.fromFeed(
             feed,
             response.redirects.isEmpty ? feedUrl : response.realUri.toString(),
@@ -392,12 +393,11 @@ class PodcastState extends ChangeNotifier {
     try {
       final dio = Dio();
       final response = await dio.get<List<int>>(podcast.rssUrl,
-          options:
-              Options(responseType: ResponseType.bytes)); // Does dynamic work?
+          options: Options(responseType: ResponseType.bytes));
       if (response.data != null) {
         final digest = sha256.convert(response.data!);
         if (digest.toString() != podcast.rssHash) {
-          final feed = RssFeed.parse(String.fromCharCodes(response.data!));
+          final feed = RssFeed.parse(utf8.decode(response.data!));
           final items = feed.items ?? [];
           final enclosureUrls = episodes.map((e) => e.enclosureUrl).toSet();
           final newEnclosureUrls =

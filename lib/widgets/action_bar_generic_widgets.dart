@@ -364,7 +364,7 @@ class ActionBarDropdownButton<T> extends StatefulWidget {
   final T selected;
   final ExpansionController? expansionController;
   final Widget? expandedChild;
-  final List<PopupMenuEntry<T>> Function() itemBuilder;
+  final List<MyPopupMenuItem<T>> Function() itemBuilder;
   final ValueChanged<T> onSelected;
   final double? minExpandedWidth;
   final double? maxExpandedWidth;

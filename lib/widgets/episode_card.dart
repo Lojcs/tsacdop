@@ -411,7 +411,7 @@ class InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
     }
     await Vibration.cancel();
     Vibration.vibrate(
-      pattern: [32, 4, 4],
+      pattern: [32, 20, 4],
       intensities: [4, 0, 32]
           .map((i) => (i * math.pow(2, settings.hapticsStrength / 2)).toInt())
           .toList(),

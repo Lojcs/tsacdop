@@ -42,11 +42,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   final GlobalKey<AudioPanelState> _playerKey = GlobalKey<AudioPanelState>();
   final GlobalKey searchKey = GlobalKey();
   late TabController _controller;
-  Decoration _getIndicator(BuildContext context) {
-    return UnderlineTabIndicator(
-      borderSide: BorderSide(color: context.accentColor, width: 3),
-    );
-  }
 
   final _androidAppRetain = MethodChannel("android_app_retain");
   var feature1OverflowMode = OverflowMode.clipContent;
@@ -70,6 +65,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
   @override
   void initState() {
+    super.initState();
     _controller = TabController(length: 3, vsync: this);
     //  FeatureDiscovery.hasPreviouslyCompleted(context, addFeature).then((value) {
     //   if (!value) {
@@ -87,7 +83,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     });
     //   }
     // });
-    super.initState();
   }
 
   @override
@@ -99,7 +94,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     StatefulBuilder;
-    final height = (context.width - 20) / 3 + 145;
     final settings = Provider.of<SettingState>(context, listen: false);
     final s = context.s;
     headerSlivers = null;
@@ -209,7 +203,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                           SliverPersistentHeader(
                             delegate: _SliverAppBarDelegate(
                               TabBar(
-                                indicator: _getIndicator(context),
                                 isScrollable: true,
                                 indicatorSize: TabBarIndicatorSize.label,
                                 controller: _controller,
@@ -230,7 +223,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                 ],
                               ),
                             ),
-                            pinned: true,
                           ),
                         ];
                         return headerSlivers!;
@@ -335,169 +327,94 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   }
 }
 
-class _PlaylistButton extends StatefulWidget {
-  const _PlaylistButton();
-
-  @override
-  __PlaylistButtonState createState() => __PlaylistButtonState();
-}
-
-class __PlaylistButtonState extends State<_PlaylistButton> {
-  late bool _loadPlay;
-
-  Future<void> _getPlaylist() async {
-    if (mounted) setState(() => _loadPlay = true);
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _loadPlay = false;
-    _getPlaylist();
-  }
-
+class _PlaylistButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = context.s;
-    final audio = context.read<AudioPlayerNotifier>();
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(100),
-      clipBehavior: Clip.hardEdge,
-      child: MyPopupMenuButton<int>(
-        menuPadding: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10))),
-        elevation: 1,
-        icon: Icon(Icons.playlist_play),
-        color: context.cardColorSchemeCard,
-        tooltip: s.menu,
-        itemBuilder: (context) => [
-          MyPopupMenuItem(
-            height: 50,
-            value: 1,
-            child:
-                Selector<AudioPlayerNotifier, Tuple3<bool, EpisodeBrief?, int>>(
-              selector: (_, audio) => Tuple3(audio.playerRunning,
-                  audio.episodeBrief, audio.historyPosition),
-              builder: (_, data, __) => !_loadPlay ||
-                      data.item1 ||
-                      data.item2 == null
-                  ? Center()
-                  : InkWell(
-                      borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(10.0),
-                          topRight: Radius.circular(10.0)),
-                      onTap: () async {
-                        await audio.playFromLastPosition();
-                        await Navigator.maybePop<int>(context);
-                      },
-                      child: Column(
-                        children: <Widget>[
-                          Padding(
-                            padding: EdgeInsets.symmetric(vertical: 5),
-                          ),
-                          Stack(
-                            alignment: Alignment.center,
-                            children: <Widget>[
-                              CircleAvatar(
-                                  radius: 20,
-                                  backgroundImage: data.item2!.avatarImage),
-                              Container(
-                                height: 40.0,
-                                width: 40.0,
-                                decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Colors.black12),
-                                child: Icon(
-                                  Icons.play_arrow,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
-                          Padding(
-                            padding: EdgeInsets.symmetric(vertical: 2),
-                          ),
-                          SizedBox(
-                            height: 77,
-                            width: 140,
-                            child: Column(
-                              children: <Widget>[
-                                Text(
-                                  (data.item3 ~/ 1000).toTime,
-                                  style: TextStyle(color: context.textColor),
-                                ),
-                                Text(
-                                  data.item2!.title,
-                                  maxLines: 2,
-                                  textAlign: TextAlign.center,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(color: context.textColor),
-                                  // style: TextStyle(color: Colors.white),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Divider(
-                            height: 1,
-                          ),
-                        ],
-                      ),
-                    ),
-            ),
-          ),
+    final audio = context.audioState;
+    return PopupMenuButton<int>(
+      menuPadding: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(10))),
+      elevation: 1,
+      icon: Icon(Icons.playlist_play),
+      color: context.cardColorSchemeCard,
+      tooltip: s.menu,
+      clipBehavior: Clip.antiAlias,
+      constraints: BoxConstraints.tightFor(width: 160),
+      itemBuilder: (context) => [
+        if (!audio.playerRunning && audio.episodeBrief != null)
           PopupMenuItem(
-            value: 0,
-            child: Container(
-              padding: EdgeInsets.only(left: 10),
-              child: Row(
-                children: <Widget>[
-                  Icon(Icons.playlist_play),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 5.0),
-                  ),
-                  Text(
-                    s.homeMenuPlaylist,
-                    style: TextStyle(color: context.textColor),
-                  ),
-                ],
-              ),
+            value: 1,
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              spacing: 2,
+              children: <Widget>[
+                CircleAvatar(
+                  radius: 20,
+                  backgroundImage: audio.episodeBrief!.avatarImage,
+                  child: Icon(Icons.play_arrow, color: Colors.white),
+                ),
+                Text(
+                  (audio.historyPosition ~/ 1000).toTime,
+                  textAlign: TextAlign.center,
+                ),
+                Text(
+                  audio.episodeBrief!.title,
+                  maxLines: 2,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
           ),
-          //PopupMenuDivider(
-          //  height: 1,
-          //),
-          // PopupMenuItem(
-          //   value: 2,
-          //   child: Container(
-          //     padding: EdgeInsets.only(left: 10),
-          //     child: Row(
-          //       children: <Widget>[
-          //         Icon(Icons.history),
-          //         Padding(
-          //           padding: const EdgeInsets.symmetric(horizontal: 5.0),
-          //         ),
-          //         Text(s.settingsHistory),
-          //       ],
-          //     ),
-          //   ),
-          // ),
-          // PopupMenuDivider(
-          //   height: 1,
-          // ),
-        ],
-        onSelected: (value) {
-          if (value == 0) {
+        if (!audio.playerRunning && audio.episodeBrief != null)
+          PopupMenuDivider(thickness: 1, height: 1),
+        PopupMenuItem(
+          value: 0,
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: <Widget>[
+              Icon(Icons.playlist_play),
+              SizedBox(width: 10),
+              Text(s.homeMenuPlaylist),
+            ],
+          ),
+        ),
+        // PopupMenuItem(
+        //   value: 2,
+        //   child: Container(
+        //     padding: EdgeInsets.only(left: 10),
+        //     child: Row(
+        //       children: <Widget>[
+        //         Icon(Icons.history),
+        //         Padding(
+        //           padding: const EdgeInsets.symmetric(horizontal: 5.0),
+        //         ),
+        //         Text(s.settingsHistory),
+        //       ],
+        //     ),
+        //   ),
+        // ),
+        // PopupMenuDivider(
+        //   height: 1,
+        // ),
+      ],
+      onSelected: (value) async {
+        switch (value) {
+          case 0:
             Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (_) => PlaylistHome(),
               ),
             );
-          }
-        },
-      ),
+          case 1:
+            await audio.playFromLastPosition();
+            await Navigator.maybePop<int>(context);
+        }
+      },
     );
   }
 }

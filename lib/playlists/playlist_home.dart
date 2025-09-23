@@ -59,19 +59,19 @@ class _PlaylistHomeState extends State<PlaylistHome> {
       Function? onTap,
       required bool isSelected,
       Color? color}) {
-    return OutlinedButton.icon(
-        style: OutlinedButton.styleFrom(
-            iconColor: color,
-            iconSize: context.actionBarIconSize,
-            foregroundColor: color,
-            side: BorderSide(color: context.surface),
-            backgroundColor:
-                isSelected ? context.primaryColorDark : Colors.transparent,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(100)))),
-        icon: icon,
-        label: isSelected ? Text(label!) : Center(),
-        onPressed: onTap as void Function()?);
+    return OutlinedButton(
+      style: OutlinedButton.styleFrom(
+          iconColor: color,
+          iconSize: context.actionBarIconSize,
+          foregroundColor: color,
+          side: BorderSide(color: context.surface),
+          backgroundColor:
+              isSelected ? context.primaryColorDark : Colors.transparent,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(100)))),
+      onPressed: onTap as void Function()?,
+      child: Row(spacing: 4, children: [icon, if (isSelected) Text(label!)]),
+    );
   }
 
   @override

@@ -301,7 +301,7 @@ class _PopupMenuRoute<T> extends PopupRoute<T> {
   }) : itemSizes = List<Size?>.filled(items.length, null, growable: false);
 
   final RelativeRect? position;
-  final List<PopupMenuEntry<T>> items;
+  final List<MyPopupMenuItem<T>> items;
   final List<Size?> itemSizes;
   final T? initialValue;
   final double? elevation;
@@ -396,7 +396,7 @@ class _PopupMenuRoute<T> extends PopupRoute<T> {
 Future<T?> _showMenu<T>({
   required BuildContext context,
   required RelativeRect position,
-  required List<PopupMenuEntry<T>> items,
+  required List<MyPopupMenuItem<T>> items,
   T? initialValue,
   double? elevation,
   String? semanticLabel,
@@ -486,10 +486,10 @@ class MyPopupMenuButton<T> extends StatefulWidget {
         assert(visibleItemCount == null || itemExtent != null,
             '[itemExtent] is required if [visibleItemCount] is set.');
 
-  final PopupMenuItemBuilder<T> itemBuilder;
+  final List<MyPopupMenuItem<T>> Function(BuildContext context) itemBuilder;
 
   final T? initialValue;
-  final PopupMenuItemSelected<T>? onSelected;
+  final void Function(T value)? onSelected;
 
   final PopupMenuCanceled? onCanceled;
 
@@ -558,7 +558,7 @@ class MyPopupMenuButtonState<T> extends State<MyPopupMenuButton<T>> {
       ),
       Offset.zero & overlay.size,
     );
-    final List<PopupMenuEntry<T>> items = widget.itemBuilder(context);
+    final List<MyPopupMenuItem<T>> items = widget.itemBuilder(context);
     // Only show the menu if there is something to show
     if (items.isNotEmpty) {
       _showMenu<T>(
@@ -634,42 +634,42 @@ class MyPopupMenuButtonState<T> extends State<MyPopupMenuButton<T>> {
   }
 }
 
-class MyPopupMenuItem<int> extends PopupMenuEntry<int> {
+class MyPopupMenuItem<T> extends StatefulWidget {
   const MyPopupMenuItem({
     super.key,
     this.value,
     this.enabled = true,
     this.height = kMinInteractiveDimension,
     this.textStyle,
+    this.padding,
     required this.child,
   });
 
-  final int? value;
+  final T? value;
 
   final bool enabled;
 
   @override
   final double height;
   final TextStyle? textStyle;
+  final EdgeInsets? padding;
 
   final Widget child;
 
   @override
-  bool represents(int? value) => value == this.value;
+  bool represents(T? value) => value == this.value;
 
   @override
-  MyPopupMenuItemState<int, MyPopupMenuItem<int>> createState() =>
-      MyPopupMenuItemState<int, MyPopupMenuItem<int>>();
+  State<MyPopupMenuItem<T>> createState() => _MyPopupMenuItemState<T>();
 }
 
-class MyPopupMenuItemState<int, W extends MyPopupMenuItem<int>>
-    extends State<W> {
+class _MyPopupMenuItemState<T> extends State<MyPopupMenuItem<T>> {
   @protected
   Widget buildChild() => widget.child;
 
   @protected
   void handleTap() {
-    Navigator.pop<int>(context, widget.value);
+    Navigator.pop<T>(context, widget.value);
   }
 
   @override
@@ -679,22 +679,15 @@ class MyPopupMenuItemState<int, W extends MyPopupMenuItem<int>>
     var style = widget.textStyle ??
         popupMenuTheme.textStyle ??
         theme.textTheme.titleMedium!;
-
-    Widget item = AnimatedDefaultTextStyle(
+    return AnimatedDefaultTextStyle(
       style: style,
       duration: kThemeChangeDuration,
       child: Container(
         // alignment: AlignmentDirectional.centerStart,
         //  constraints: BoxConstraints(minHeight: widget.height),
-        padding: const EdgeInsets.all(0),
+        padding: widget.padding,
         child: buildChild(),
       ),
     );
-    return item;
-    //   return InkWell(
-    //     onTap: widget.enabled ? handleTap : null,
-    //     canRequestFocus: widget.enabled,
-    //     child: item,
-    //   );
   }
 }
