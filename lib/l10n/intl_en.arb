@@ -96,6 +96,8 @@
   "@deletedPodcastDesc": {},
   "deselectAll": "Deselect All",
   "@deselectAll": {},
+  "details": "Details",
+  "@details": {},
   "developer": "Developer",
   "@developer": {
     "description": "Can also translate to About me"
@@ -808,6 +810,8 @@
   "@stop": {},
   "subscribe": "Subscribe",
   "@subscribe": {},
+  "subscribed": "Subscribed",
+  "@subscribed": {},
   "subscribeExportDes": "Export OPML file of all podcasts",
   "@subscribeExportDes": {},
   "syncNow": "Sync now",

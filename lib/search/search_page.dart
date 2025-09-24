@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
 
 import '../home/audioplayer.dart';
@@ -206,6 +207,8 @@ class SearchPanelRoute extends ModalRoute {
                           searchFocusNode,
                           colorAnimation: animation,
                           key: villainKey,
+                          width: context.width -
+                              context.actionBarButtonSizeVertical * 3,
                         ),
                       ),
                     ),
@@ -322,10 +325,20 @@ class SearchPanelState extends State<SearchPanel> {
                 searchProvider
                     .getPodcastEpisodes(searchProvider.podcastIds[index]),
               )
-            : Container(
-                decoration: BoxDecoration(borderRadius: context.radiusSmall),
-                clipBehavior: Clip.antiAlias,
-                child: LinearProgressIndicator(),
+            : SearchPanelCard(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      margin: EdgeInsets.all(12),
+                      height: 20,
+                      decoration:
+                          BoxDecoration(borderRadius: context.radiusSmall),
+                      clipBehavior: Clip.antiAlias,
+                      child: LinearProgressIndicator(),
+                    )
+                  ],
+                ),
               ),
       );
 }
@@ -345,6 +358,7 @@ class Controls extends StatefulWidget {
 }
 
 class ControlsState extends State<Controls> {
+  bool webMode = false;
   @override
   Widget build(BuildContext context) {
     return SearchPanelCard(
@@ -352,33 +366,47 @@ class ControlsState extends State<Controls> {
       child: Padding(
         padding: EdgeInsets.symmetric(
             vertical: context.actionBarIconPadding.vertical),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (!widget.hideSearchBar)
-                  SearchBar(
-                    widget.searchFocusNode,
-                    text: Provider.of<RemoteSearch>(context, listen: false)
-                        .queryText,
-                    key: widget.searchBarKey,
+        child: webMode
+            ? WebControls(
+                CustomSearchDelegate(),
+                searchFocusNode: widget.searchFocusNode,
+                switchMode: () => setState(() => webMode = false),
+              )
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (!widget.hideSearchBar)
+                        SearchBar(widget.searchFocusNode,
+                            text: Provider.of<RemoteSearch>(context,
+                                    listen: false)
+                                .queryText,
+                            key: widget.searchBarKey,
+                            width: context.width -
+                                context.actionBarButtonSizeVertical * 3 -
+                                4),
+                      SizedBox(
+                        width: 4,
+                      ),
+                      IconButton.filled(
+                          onPressed: () => setState(() => webMode = true),
+                          icon: Icon(LineIcons.globe))
+                    ],
                   ),
-              ],
-            ),
-            SizedBox(
-              width: context.width - 80,
-              child: Text(
-                context.s.searchInstructions,
-                style: context.textTheme.bodySmall!
-                    .copyWith(color: Colors.grey[600]),
-                textAlign: TextAlign.center,
+                  SizedBox(
+                    width: context.width - 80,
+                    child: Text(
+                      context.s.searchInstructions,
+                      style: context.textTheme.bodySmall!
+                          .copyWith(color: Colors.grey[600]),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -387,56 +415,80 @@ class ControlsState extends State<Controls> {
 class WebControls extends StatelessWidget {
   final CustomSearchDelegate delegate;
   final FocusNode searchFocusNode;
+  final VoidCallback switchMode;
 
-  const WebControls(this.delegate, this.searchFocusNode, {super.key});
+  const WebControls(this.delegate,
+      {required this.searchFocusNode, required this.switchMode, super.key});
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Padding(
-          padding: context.actionBarIconPadding.copyWith(right: 0),
-          child: Material(
-            type: MaterialType.transparency,
-            borderRadius: context.radiusMedium,
-            clipBehavior: Clip.hardEdge,
-            child: InkWell(
-              splashColor: Colors.transparent,
-              onTap: () {
-                searchFocusNode.unfocus();
-                delegate.onBack();
-              },
-              child: SizedBox(
-                width: context.actionBarButtonSizeVertical,
-                height: context.actionBarButtonSizeVertical,
-                child: Icon(
-                  Icons.arrow_back,
-                  size: context.actionBarIconSize,
+        Row(
+          children: [
+            Padding(
+              padding: context.actionBarIconPadding.copyWith(right: 0),
+              child: Material(
+                type: MaterialType.transparency,
+                borderRadius: context.radiusMedium,
+                clipBehavior: Clip.hardEdge,
+                child: InkWell(
+                  splashColor: Colors.transparent,
+                  onTap: () {
+                    searchFocusNode.unfocus();
+                    delegate.onBack();
+                  },
+                  child: SizedBox(
+                    width: context.actionBarButtonSizeVertical,
+                    height: context.actionBarButtonSizeVertical,
+                    child: Icon(
+                      Icons.arrow_back,
+                      size: context.actionBarIconSize,
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
+            Padding(
+              padding: context.actionBarIconPadding.copyWith(left: 0),
+              child: Material(
+                type: MaterialType.transparency,
+                borderRadius: context.radiusMedium,
+                clipBehavior: Clip.hardEdge,
+                child: InkWell(
+                  splashColor: Colors.transparent,
+                  onTap: () {
+                    searchFocusNode.unfocus();
+                    delegate.onForward();
+                  },
+                  child: SizedBox(
+                    width: context.actionBarButtonSizeVertical,
+                    height: context.actionBarButtonSizeVertical,
+                    child: Icon(
+                      Icons.arrow_forward,
+                      size: context.actionBarIconSize,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            SearchBar(searchFocusNode,
+                width: context.width -
+                    context.actionBarButtonSizeVertical * 5 -
+                    4),
+            SizedBox(
+              width: 4,
+            ),
+            IconButton.filled(onPressed: switchMode, icon: Icon(Icons.list))
+          ],
         ),
-        Padding(
-          padding: context.actionBarIconPadding.copyWith(left: 0),
-          child: Material(
-            type: MaterialType.transparency,
-            borderRadius: context.radiusMedium,
-            clipBehavior: Clip.hardEdge,
-            child: InkWell(
-              splashColor: Colors.transparent,
-              onTap: () {
-                searchFocusNode.unfocus();
-                delegate.onForward();
-              },
-              child: SizedBox(
-                width: context.actionBarButtonSizeVertical,
-                height: context.actionBarButtonSizeVertical,
-                child: Icon(
-                  Icons.arrow_forward,
-                  size: context.actionBarIconSize,
-                ),
-              ),
-            ),
+        SizedBox(
+          width: context.width - 80,
+          child: Text(
+            context.s.searchInstructions,
+            style:
+                context.textTheme.bodySmall!.copyWith(color: Colors.grey[600]),
+            textAlign: TextAlign.center,
           ),
         ),
       ],
@@ -448,10 +500,12 @@ class SearchBar extends StatelessWidget {
   final FocusNode searchFocusNode;
   final String text;
   final Animation<double> colorAnimation;
+  final double width;
 
   const SearchBar(this.searchFocusNode,
       {this.text = "",
       this.colorAnimation = const DummyAnimation(),
+      required this.width,
       super.key});
   void search(BuildContext context, String query) {
     final searchProvider = Provider.of<RemoteSearch>(context, listen: false);
@@ -469,7 +523,7 @@ class SearchBar extends StatelessWidget {
       alignment: Alignment.centerRight,
       children: [
         SizedBox(
-          width: context.width - context.actionBarButtonSizeVertical * 3,
+          width: width,
           height: 48,
           child: AnimatedBuilder(
             animation: colorAnimation,

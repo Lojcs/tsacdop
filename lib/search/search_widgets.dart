@@ -2,9 +2,14 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../podcasts/podcast_detail.dart';
 import '../state/podcast_state.dart';
 import '../type/podcastbrief.dart';
 import '../util/extension_helper.dart';
+import '../util/hide_player_route.dart';
+import '../widgets/action_bar.dart';
+import '../widgets/action_bar_generic_widgets.dart';
+import '../widgets/custom_widget.dart';
 import 'search_api_helper.dart';
 import 'search_page.dart';
 
@@ -57,10 +62,12 @@ class SearchPanelCard extends StatefulWidget {
   final Widget? child;
   final bool floating;
   final bool short;
+  final Color? color;
   const SearchPanelCard(
       {required this.child,
       this.floating = true,
       this.short = false,
+      this.color,
       super.key});
   @override
   State<SearchPanelCard> createState() => SearchPanelCardState();
@@ -124,7 +131,7 @@ class SearchPanelCardState extends State<SearchPanelCard>
         child: Container(
           height: cardHeight,
           decoration: BoxDecoration(
-            color: context.surface,
+            color: widget.color ?? context.surface,
             borderRadius: radius,
             boxShadow:
                 context.boxShadowMedium(color: context.cardColorSchemeShadow),
@@ -161,79 +168,128 @@ class SearchPodcastPreview extends StatefulWidget {
 }
 
 class SearchPodcastPreviewState extends State<SearchPodcastPreview> {
+  bool expanded = false;
   @override
   Widget build(BuildContext context) {
-    return SearchPanelCard(
-      child: Padding(
-        padding: context.actionBarIconPadding * 2,
-        child: Center(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              AnimatedContainer(
-                duration: Duration(milliseconds: 200),
-                curve: Curves.easeInOutQuad,
-                width: context.width -
-                    110 -
-                    context.actionBarIconPadding.horizontal *
-                        (widget.floating ? 5 : 3),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Selector<PodcastState, String>(
-                      selector: (_, pState) => pState[widget.podcastId].title,
-                      builder: (context, title, _) => Text(
-                        title,
-                        maxLines: 2,
-                        style: context.textTheme.titleLarge,
-                      ),
-                    ),
-                    Selector<PodcastState, DataSource>(
-                      selector: (_, pState) => pState[widget.podcastId].source,
-                      builder: (context, source, _) => ElevatedButton(
-                        onPressed: () =>
-                            Provider.of<RemoteSearch>(context, listen: false)
-                                .subscribe(widget.podcastId),
-                        child: Text(
-                          source == DataSource.remote
-                              ? context.s.subscribe
-                              : context.s.podcastSubscribed,
-                          style: source == DataSource.remote
-                              ? context.textTheme.bodyLarge!
-                                  .copyWith(color: context.accentColor)
-                              : context.textTheme.bodyLarge,
+    final cardColorScheme =
+        context.podcastState[widget.podcastId].cardColorScheme(context);
+    return Provider.value(
+      value: cardColorScheme,
+      builder: (context, child) => SearchPanelCard(
+        color: cardColorScheme.card,
+        child: Padding(
+          padding: context.actionBarIconPadding * 2,
+          child: Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Padding(
+                  padding: EdgeInsetsGeometry.symmetric(vertical: 4),
+                  child: AnimatedContainer(
+                    duration: Duration(milliseconds: 200),
+                    curve: Curves.easeInOutQuad,
+                    width: context.width -
+                        110 -
+                        context.actionBarIconPadding.horizontal *
+                            (widget.floating ? 5 : 3),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Selector<PodcastState, String>(
+                          selector: (_, pState) =>
+                              pState[widget.podcastId].title,
+                          builder: (context, title, _) => Text(
+                            title,
+                            maxLines: 2,
+                            style: context.textTheme.titleLarge,
+                          ),
                         ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                decoration: BoxDecoration(borderRadius: context.radiusMedium),
-                clipBehavior: Clip.antiAlias,
-                width: 100,
-                height: 100,
-                child: Selector<PodcastState, String>(
-                  selector: (_, pState) => pState[widget.podcastId].imageUrl,
-                  builder: (context, imageUrl, _) => CachedNetworkImage(
-                    imageUrl: imageUrl,
-                    progressIndicatorBuilder:
-                        (context, url, downloadProgress) => Container(
-                      height: 50,
-                      width: 50,
-                      alignment: Alignment.center,
-                      child: SizedBox(
-                        width: 20,
-                        height: 2,
-                        child: LinearProgressIndicator(
-                            value: downloadProgress.progress),
-                      ),
+                        Selector<PodcastState, DataSource>(
+                          selector: (_, pState) =>
+                              pState[widget.podcastId].source,
+                          builder: (context, source, _) => Row(
+                            children: [
+                              ActionBarButton(
+                                enabled: source == DataSource.remote,
+                                state: source == DataSource.remote,
+                                buttonType: ActionBarButtonType.single,
+                                onPressed: (value) => Provider.of<RemoteSearch>(
+                                        context,
+                                        listen: false)
+                                    .subscribe(widget.podcastId),
+                                tooltip:
+                                    context.s.filterType(context.s.downloaded),
+                                // connectRight: true,
+                                width: 100,
+                                falseChild: Center(
+                                  child: Text(
+                                    context.s.subscribed,
+                                    style: context.textTheme.bodyLarge,
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    context.s.subscribe,
+                                    style: context.textTheme.bodyLarge!,
+                                  ),
+                                ),
+                              ),
+                              // ActionBarButton(
+                              //   buttonType: ActionBarButtonType.single,
+                              //   onPressed: (value) => Navigator.push(
+                              //     context,
+                              //     HidePlayerRoute(
+                              //       PodcastDetail(
+                              //         podcastId: widget.podcastId,
+                              //       ),
+                              //     ),
+                              //   ),
+                              //   tooltip:
+                              //       context.s.filterType(context.s.downloaded),
+                              //   connectLeft: true,
+                              //   width: 100,
+                              //   child: Center(
+                              //     child: Text(
+                              //       context.s.details,
+                              //       style: context.textTheme.bodyLarge!
+                              //           .copyWith(color: context.accentColor),
+                              //     ),
+                              //   ),
+                              // ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              )
-            ],
+                Container(
+                  decoration: BoxDecoration(borderRadius: context.radiusMedium),
+                  clipBehavior: Clip.antiAlias,
+                  width: 100,
+                  height: 100,
+                  child: Selector<PodcastState, String>(
+                    selector: (_, pState) => pState[widget.podcastId].imageUrl,
+                    builder: (context, imageUrl, _) => CachedNetworkImage(
+                      imageUrl: imageUrl,
+                      progressIndicatorBuilder:
+                          (context, url, downloadProgress) => Container(
+                        height: 50,
+                        width: 50,
+                        alignment: Alignment.center,
+                        child: SizedBox(
+                          width: 20,
+                          height: 2,
+                          child: LinearProgressIndicator(
+                              value: downloadProgress.progress),
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+              ],
+            ),
           ),
         ),
       ),

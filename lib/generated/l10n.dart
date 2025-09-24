@@ -370,6 +370,11 @@ class S {
     );
   }
 
+  /// `Details`
+  String get details {
+    return Intl.message('Details', name: 'details', desc: '', args: []);
+  }
+
   /// `Developer`
   String get developer {
     return Intl.message(
@@ -2876,6 +2881,11 @@ class S {
   /// `Subscribe`
   String get subscribe {
     return Intl.message('Subscribe', name: 'subscribe', desc: '', args: []);
+  }
+
+  /// `Subscribed`
+  String get subscribed {
+    return Intl.message('Subscribed', name: 'subscribed', desc: '', args: []);
   }
 
   /// `Export OPML file of all podcasts`

@@ -158,6 +158,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "This podcast has been deleted from the database",
     ),
     "deselectAll": MessageLookupByLibrary.simpleMessage("Deselect All"),
+    "details": MessageLookupByLibrary.simpleMessage("Details"),
     "developer": MessageLookupByLibrary.simpleMessage("Developer"),
     "deviceStorage": MessageLookupByLibrary.simpleMessage("Device Storage"),
     "dismiss": MessageLookupByLibrary.simpleMessage("Dismiss"),
@@ -677,6 +678,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "subscribeExportDes": MessageLookupByLibrary.simpleMessage(
       "Export OPML file of all podcasts",
     ),
+    "subscribed": MessageLookupByLibrary.simpleMessage("Subscribed"),
     "syncNow": MessageLookupByLibrary.simpleMessage("Sync now"),
     "systemDefault": MessageLookupByLibrary.simpleMessage("System default"),
     "timeLastPlayed": m27,
