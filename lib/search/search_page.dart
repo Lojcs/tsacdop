@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -5,6 +7,7 @@ import '../home/audioplayer.dart';
 import '../state/audio_state.dart';
 import '../util/extension_helper.dart';
 import '../widgets/audiopanel.dart';
+import '../widgets/custom_dropdown.dart';
 import 'search_api_helper.dart';
 import 'search_widgets.dart';
 
@@ -16,12 +19,13 @@ class SearchPanelRoute extends ModalRoute {
 
   final GlobalKey heroKey;
   final GlobalKey villainKey = GlobalKey();
+  final GlobalKey<SearchPanelState> panelKey = GlobalKey<SearchPanelState>();
   final Offset initialHeroOffset;
-  final Offset finalHeroOffset;
+  Offset finalHeroOffset;
 
   late Tween<Offset> heroOffsetTween;
   final Tween<double> heroWidthTween;
-  final Tween<double> heightTween;
+  Tween<double> heightTween;
 
   final FocusNode searchFocusNode = FocusNode();
 
@@ -77,6 +81,43 @@ class SearchPanelRoute extends ModalRoute {
   @override
   Duration get transitionDuration => const Duration(milliseconds: 400);
 
+  bool reversed = true;
+  double lastAnimationValue = 0;
+  bool lastAnimationComplete = false;
+
+  void animationListener(Animation<double> animation, BuildContext context) {
+    if (lastAnimationComplete == animation.isCompleted &&
+        lastAnimationValue == animation.value) {
+      return;
+    }
+    if (lastAnimationComplete && !animation.isCompleted ||
+        lastAnimationValue - animation.value > 0) {
+      if (!reversed) {
+        reversed = true;
+        finalHeroOffset =
+            (villainKey.currentContext!.findRenderObject() as RenderBox)
+                .localToGlobal(Offset.zero);
+        heroOffsetTween =
+            Tween<Offset>(begin: initialHeroOffset, end: finalHeroOffset);
+        final searchCardOffset = panelKey.currentState!.controller.offset +
+            120 +
+            context.actionBarIconPadding.vertical +
+            (context.audioState.playerRunning
+                ? context.audioState.playerHeight!.height
+                : 0);
+        heightTween = Tween(begin: 0, end: searchCardOffset);
+      }
+    } else if (reversed) {
+      reversed = false;
+      Future.microtask(hideIcon);
+    }
+    lastAnimationValue = animation.value;
+    lastAnimationComplete = animation.isCompleted;
+    if (animation.value < 0.1 && reversed) {
+      Future.microtask(showIcon);
+    }
+  }
+
   @override
   Widget buildPage(
       BuildContext context, Animation<double> animation, Animation<double> _) {
@@ -90,8 +131,6 @@ class SearchPanelRoute extends ModalRoute {
         parent: animation,
         curve: Curves.easeOutQuart,
         reverseCurve: Curves.easeInQuad);
-    bool reversed = true;
-    double lastAnimationValue = 0;
     return Stack(
       children: [
         GestureDetector(
@@ -111,65 +150,48 @@ class SearchPanelRoute extends ModalRoute {
             ),
           ),
         ),
-        Padding(
-          padding: MediaQuery.of(context).viewInsets,
-          child: SafeArea(
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: AnimatedBuilder(
-                animation: animation,
-                builder: (context, child) {
-                  final panel = Material(
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: AnimatedBuilder(
+            animation: animation,
+            builder: (context, child) {
+              animationListener(animation, context);
+              final panel = ScrollConfiguration(
+                  behavior: NoOverscrollScrollBehavior(),
+                  child: Material(
                     type: MaterialType.transparency,
-                    child: SingleChildScrollView(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          SearchPanel(
-                            searchFocusNode: searchFocusNode,
-                            hide: !panelAnimation.isCompleted,
-                            searchBarKey: villainKey,
-                          ),
-                          Selector<AudioPlayerNotifier, (bool, PlayerHeight?)>(
-                            selector: (_, audio) =>
-                                (audio.playerRunning, audio.playerHeight),
-                            builder: (_, data, __) {
-                              return SizedBox(
-                                  height: data.$1 && data.$2 != null
-                                      ? data.$2!.height
-                                      : 0);
-                            },
-                          ),
-                        ],
+                    child: Selector<AudioPlayerNotifier, (bool, PlayerHeight?)>(
+                      selector: (_, audio) =>
+                          (audio.playerRunning, audio.playerHeight),
+                      builder: (_, data, __) => Padding(
+                        padding: EdgeInsetsGeometry.only(
+                            bottom: data.$1 && data.$2 != null
+                                ? data.$2!.height
+                                : 0),
+                        child: SearchPanel(
+                          searchFocusNode: searchFocusNode,
+                          hide: !panelAnimation.isCompleted,
+                          searchBarKey: villainKey,
+                          key: panelKey,
+                        ),
                       ),
                     ),
-                  );
-                  return animation.isCompleted
-                      ? panel
-                      : SizedBox(
-                          height: heightTween.evaluate(panelAnimation),
-                          child: panel,
-                        );
-                },
-              ),
-            ),
+                  ));
+              return animation.isCompleted
+                  ? panel
+                  : SafeArea(
+                      child: SizedBox(
+                        height: heightTween.evaluate(panelAnimation) + 5,
+                        child: panel,
+                      ),
+                    );
+            },
           ),
         ),
         AnimatedBuilder(
           animation: animation,
           builder: (context, child) {
-            if (lastAnimationValue - animation.value > 0) {
-              if (!reversed) {
-                reversed = true;
-              }
-            } else if (reversed) {
-              reversed = false;
-              Future.microtask(hideIcon);
-            }
-            lastAnimationValue = animation.value;
-            if (animation.value < 0.1 && reversed) {
-              Future.microtask(showIcon);
-            }
+            animationListener(animation, context);
             return animation.isCompleted
                 ? Center()
                 : Transform.translate(
@@ -219,54 +241,93 @@ class SearchPanelState extends State<SearchPanel> {
   late RemoteSearch searchProvider =
       PodcastIndexSearch(context.podcastState, context.episodeState);
 
+  double get initialTopPadding =>
+      context.height -
+      MediaQuery.of(context).padding.vertical -
+      (120 +
+          context.actionBarIconPadding.vertical +
+          (context.audioState.playerRunning
+              ? context.audioState.playerHeight!.height
+              : 0));
+
+  late final ScrollController controller = ScrollController();
+  int searchItemCount = 2;
+
+  @override
+  void didUpdateWidget(covariant SearchPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!oldWidget.hide && widget.hide) {
+      final double target =
+          math.max(0, controller.offset - initialTopPadding + 5);
+      controller.jumpTo(target);
+      if (target != 0) {
+        controller.animateTo(0,
+            duration: Duration(milliseconds: 400), curve: Curves.easeOut);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider.value(
       value: searchProvider,
-      child: Align(
-        alignment: Alignment.topCenter,
-        child: Consumer<RemoteSearch>(
-          builder: (context, search, _) => ListView.builder(
+      child: Selector<RemoteSearch, int>(
+        selector: (_, search) => search.itemCount,
+        builder: (context, itemCount, _) {
+          if (controller.hasClients && (searchItemCount < itemCount + 2)) {
+            controller.animateTo(
+                initialTopPadding +
+                    (120 + context.actionBarIconPadding.vertical) +
+                    (140 + context.actionBarIconPadding.vertical) *
+                        (searchItemCount - 3),
+                duration: Durations.medium2,
+                curve: Curves.easeOut);
+          }
+          searchItemCount = itemCount + 2;
+
+          return ListView.builder(
             hitTestBehavior: HitTestBehavior.deferToChild,
             shrinkWrap: true,
-            itemCount: search.maxPodcastLength + 1,
-            itemExtentBuilder: (index, dimensions) =>
-                (index == 0 ? 120 : 140) +
-                context.actionBarIconPadding.vertical,
-            itemBuilder: (context, index) {
-              if (index == 0) {
-                return Controls(
-                    searchFocusNode: widget.searchFocusNode,
-                    hideSearchBar: widget.hide,
-                    searchBarKey: widget.searchBarKey);
-              } else {
-                // Offset podcast index to account for other cards.
-                index += search.episodeIds.isNotEmpty ? -2 : -1;
-                if (index == -1) {
-                  return SearchEpisodeGrid(search.episodeIds);
-                } else if (index < search.maxPodcastLength) {
-                  return Selector<RemoteSearch, bool>(
-                    selector: (_, search) => search.podcastIds.length > index,
-                    builder: (context, value, _) => value
-                        ? SearchPodcastPreview(
-                            search.podcastIds[index],
-                            search.getPodcastEpisodes(search.podcastIds[index]),
-                          )
-                        : Container(
-                            decoration: BoxDecoration(
-                                borderRadius: context.radiusSmall),
-                            clipBehavior: Clip.antiAlias,
-                            child: LinearProgressIndicator(),
-                          ),
-                  );
-                }
-              }
+            itemCount: searchItemCount,
+            itemExtentBuilder: (index, dimensions) => switch (index) {
+              0 => widget.hide ? 5 : initialTopPadding,
+              1 => 120 + context.actionBarIconPadding.vertical,
+              var i when i < searchItemCount =>
+                140 + context.actionBarIconPadding.vertical,
+              _ => null
             },
-          ),
-        ),
+            controller: controller,
+            itemBuilder: (context, index) =>
+                switch ((index, searchProvider.episodeIds.isNotEmpty)) {
+              (0, _) => Center(),
+              (1, _) => Controls(
+                  searchFocusNode: widget.searchFocusNode,
+                  hideSearchBar: widget.hide,
+                  searchBarKey: widget.searchBarKey),
+              (2, true) => SearchEpisodeGrid(searchProvider.episodeIds),
+              (_, true) => podcastCard(index - 3),
+              (_, false) => podcastCard(index - 2),
+            },
+          );
+        },
       ),
     );
   }
+
+  Widget podcastCard(int index) => Selector<RemoteSearch, bool>(
+        selector: (_, search) => search.podcastIds.length > index,
+        builder: (context, value, _) => value
+            ? SearchPodcastPreview(
+                searchProvider.podcastIds[index],
+                searchProvider
+                    .getPodcastEpisodes(searchProvider.podcastIds[index]),
+              )
+            : Container(
+                decoration: BoxDecoration(borderRadius: context.radiusSmall),
+                clipBehavior: Clip.antiAlias,
+                child: LinearProgressIndicator(),
+              ),
+      );
 }
 
 class Controls extends StatefulWidget {
@@ -301,6 +362,8 @@ class ControlsState extends State<Controls> {
                 if (!widget.hideSearchBar)
                   SearchBar(
                     widget.searchFocusNode,
+                    text: Provider.of<RemoteSearch>(context, listen: false)
+                        .queryText,
                     key: widget.searchBarKey,
                   ),
               ],
@@ -383,16 +446,23 @@ class WebControls extends StatelessWidget {
 
 class SearchBar extends StatelessWidget {
   final FocusNode searchFocusNode;
+  final String text;
   final Animation<double> colorAnimation;
 
   const SearchBar(this.searchFocusNode,
-      {this.colorAnimation = const DummyAnimation(), super.key});
-  void search(BuildContext context, String query) =>
-      Provider.of<RemoteSearch>(context, listen: false).query(query);
+      {this.text = "",
+      this.colorAnimation = const DummyAnimation(),
+      super.key});
+  void search(BuildContext context, String query) {
+    final searchProvider = Provider.of<RemoteSearch>(context, listen: false);
+    searchProvider.clear();
+    searchProvider.query(query);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final TextEditingController searchController = TextEditingController();
+    final TextEditingController searchController =
+        TextEditingController(text: text);
     final ColorTween background =
         ColorTween(begin: context.surface, end: context.cardColorSchemeCard);
     return Stack(

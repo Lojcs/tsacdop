@@ -38,8 +38,12 @@ class SearchButtonState extends State<SearchButton> {
                   SearchPanelRoute(
                     context,
                     widget.searchKey,
-                    showIcon: () => setState(() => hideIcon = false),
-                    hideIcon: () => setState(() => hideIcon = true),
+                    showIcon: () {
+                      if (hideIcon) setState(() => hideIcon = false);
+                    },
+                    hideIcon: () {
+                      if (!hideIcon) setState(() => hideIcon = true);
+                    },
                   ),
                 );
               },

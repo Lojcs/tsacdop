@@ -206,7 +206,11 @@ class PodcastState extends ChangeNotifier {
       case null:
         var (podcast, episodes) = await Isolater(_fetchFeed).run(feedUrl);
         if (podcast != null) {
-          podcast = await podcast.withColorFromImage();
+          try {
+            podcast = await podcast.withColorFromImage();
+          } catch (e) {
+            return ret;
+          }
           episodes = episodes
               .map((e) => e.copyWith(primaryColor: podcast!.primaryColor))
               .toList();
@@ -312,7 +316,11 @@ class PodcastState extends ChangeNotifier {
     if (await _dbHelper.checkPodcast(feedUrl) == null) {
       var (podcast, episodes) = await Isolater(_fetchFeed).run(feedUrl);
       if (podcast != null) {
-        podcast = await podcast.withColorFromImage();
+        try {
+          podcast = await podcast.withColorFromImage();
+        } catch (e) {
+          return null;
+        }
         episodes = episodes
             .map((e) => e.copyWith(primaryColor: podcast!.primaryColor))
             .toList();
@@ -447,7 +455,11 @@ class PodcastState extends ChangeNotifier {
         await Isolater(_syncFeed).run((_podcastMap[podcastId]!, episodes));
     if (result != null) {
       var (podcast, newEpisodes) = result;
-      podcast = await podcast.withColorFromImage();
+      try {
+        podcast = await podcast.withColorFromImage();
+      } catch (e) {
+        return null;
+      }
       newEpisodes = newEpisodes
           .map((e) => e.copyWith(primaryColor: podcast.primaryColor))
           .toList();

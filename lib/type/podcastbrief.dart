@@ -1,8 +1,10 @@
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:color_thief_dart/color_thief_dart.dart';
+import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
@@ -169,7 +171,10 @@ class PodcastBrief extends Equatable {
     if (imagePath != "") {
       imageProvider = FileImage(File(imagePath));
     } else {
-      imageProvider = NetworkImage(imageUrl);
+      // NetworkImage doesn't throw on error.
+      final imageBuffer = await Dio().get<List<int>>(imageUrl,
+          options: Options(responseType: ResponseType.bytes));
+      imageProvider = MemoryImage(Uint8List.fromList(imageBuffer.data!));
     }
     final image = await getImageFromProvider(imageProvider);
     final colorString = (await getColorFromImage(image)).toString();

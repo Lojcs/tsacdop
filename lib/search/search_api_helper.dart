@@ -18,12 +18,28 @@ abstract class Search extends ChangeNotifier {
   /// List of ids of search results that are episodes.
   List<int> get episodeIds => [];
 
+  /// Text of the query.
+  String queryText = "";
+
+  /// Searches the query if it is different from the last query.
+  Future<void> query(String query) async {
+    if (queryText != query && query != "") {
+      queryText = query;
+      _queryImpl(query);
+    }
+  }
+
   /// Searches the query and readies the results.
   /// Episodes are loaded immediately, podcasts can be loaded in the background
-  Future<void> query(String query);
+  Future<void> _queryImpl(String query);
+
+  /// Removes podcast from results.
+  void removePodcast(String podcastId);
 
   /// Maximum length of [podcastIds]. (it can be less due to results not having loaded in)
-  int maxPodcastLength = 0;
+  int maxPodcastCount = 0;
+
+  int get itemCount => maxPodcastCount + (episodeIds.isNotEmpty ? 1 : 0);
 
   /// Widget to be placed behind the search panel
   static const Widget background = Center();
@@ -45,40 +61,68 @@ abstract class RemoteSearch extends Search {
   @override
   List<int> getPodcastEpisodes(String podcastId) => podcastEpisodes[podcastId]!;
 
+  /// Incremented on clear, prevents results from previous searches
+  /// from being added to results later.
+  int _searchGeneration = 0;
+
   /// Call this when exiting to remove the remote data from [PodcastState] and [EpisodeState]
-  void release() {
+  void clear() {
     for (var podcastId in podcastIds) {
       pState.removeRemotePodcast(podcastId);
       eState.removeRemoteEpisodes(getPodcastEpisodes(podcastId));
     }
     eState.removeRemoteEpisodes(episodeIds);
+    podcastIds.clear();
+    podcastEpisodes.clear();
+    episodeIds.clear();
+    maxPodcastCount = 0;
+    queryText = "";
+    if (hasListeners) notifyListeners();
   }
 
   @override
   void dispose() {
-    release();
+    clear();
     super.dispose();
   }
 
   /// Helper to add feeds to the podcasts list.
   Future<void> _addFeed(String feedUrl) async {
+    final generation = _searchGeneration;
     final result = await pState.addPodcastByUrl(feedUrl);
-    if (result != null) {
-      final (podcastId, episodeIds) = result;
-      podcastIds.add(podcastId);
-      podcastEpisodes[podcastId] = episodeIds;
+    if (generation == _searchGeneration) {
+      if (result != null) {
+        final (podcastId, episodeIds) = result;
+        podcastIds.add(podcastId);
+        podcastEpisodes[podcastId] = episodeIds;
+      } else {
+        maxPodcastCount--;
+      }
       notifyListeners();
     }
   }
 
   /// Helper to add feeds to the podcasts list.
   Future<void> addFeeds(Iterable<String> feedUrls) async {
-    maxPodcastLength = feedUrls.length;
+    final generation = _searchGeneration;
     Queue<Future<void>> futures = Queue();
+    maxPodcastCount = podcastIds.length + feedUrls.length;
     for (var feed in feedUrls) {
+      if (generation != _searchGeneration) break;
       if (futures.length >= 8) await futures.removeFirst();
       futures.add(_addFeed(feed)); // Don't await
     }
+    await Future.wait(futures);
+  }
+
+  @override
+  void removePodcast(String podcastId) {
+    pState.removeRemotePodcast(podcastId);
+    eState.removeRemoteEpisodes(getPodcastEpisodes(podcastId));
+    podcastIds.remove(podcastId);
+    podcastEpisodes.remove(podcastId);
+    maxPodcastCount--;
+    notifyListeners();
   }
 
   /// Subscribe to the remote podcast with id [podcastId].
@@ -98,7 +142,7 @@ class PodcastIndexSearch extends RemoteSearch {
   PodcastIndexSearch(super.pState, super.eState);
 
   @override
-  Future<void> query(String query) async {
+  Future<void> _queryImpl(String query) async {
     const path = "https://api.podcastindex.org/search";
     try {
       final response = await Dio().get(path,
@@ -106,7 +150,7 @@ class PodcastIndexSearch extends RemoteSearch {
       final List results = response.data['results'];
       final feedUrls = results
           .map((result) => result is Map ? result['feedUrl'] as String : '');
-      addFeeds(feedUrls);
+      await addFeeds(feedUrls);
     } catch (e) {
       developer.log(e.toString());
     }
