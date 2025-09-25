@@ -191,8 +191,8 @@ class _ActionBarButtonState extends State<ActionBarButton>
         animationController.value = 1;
       } else {
         animationController.forward();
-        expand(true);
       }
+      Future.microtask(() => expand(true));
     }
   }
 
@@ -372,9 +372,12 @@ class ActionBarDropdownButton<T> extends StatefulWidget {
   final Color? color;
   final Color? activeColor;
   final String? tooltip;
+  final bool enabled;
   final bool Function(T) active;
   final bool connectLeft;
   final bool connectRight;
+  final bool dropsUp;
+  final VoidCallback? onInactiveTap;
   const ActionBarDropdownButton({
     super.key,
     required this.child,
@@ -389,12 +392,15 @@ class ActionBarDropdownButton<T> extends StatefulWidget {
     this.color,
     this.activeColor,
     this.tooltip,
+    this.enabled = true,
     required this.active,
     this.connectLeft = false,
     this.connectRight = false,
+    this.dropsUp = false,
+    this.onInactiveTap,
   });
   @override
-  _ActionBarDropdownButtonState<T> createState() =>
+  State<ActionBarDropdownButton<T>> createState() =>
       _ActionBarDropdownButtonState<T>();
 }
 
@@ -468,10 +474,7 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
       ..addListener(() {
         if (mounted) setState(() {});
       });
-    activeAnimation = CurvedAnimation(
-      parent: activeAnimationController,
-      curve: Curves.easeOutExpo,
-    );
+    activeAnimation = activeAnimationController;
     if (expands) {
       expandAnimationController = AnimationController(
           vsync: this, duration: const Duration(milliseconds: 300))
@@ -499,7 +502,7 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
     );
     if (active && !activeAnimationController.isCompleted) {
       activeAnimationController.value = 1;
-      expand(true);
+      Future.microtask(() => expand(true));
     }
   }
 
@@ -544,7 +547,7 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
         } else if (!active &&
             !(activeAnimationController.status == AnimationStatus.reverse ||
                 activeAnimationController.value == 0)) {
-          await Future.delayed(Duration(milliseconds: 150));
+          // await Future.delayed(Duration(milliseconds: 150));
           activeAnimationController.reverse();
           expand(false);
         }
@@ -581,12 +584,18 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
             !widget.connectRight ? context.actionBarIconRadius : Radius.zero,
       ),
       end: BorderRadius.only(
-        topLeft:
-            !widget.connectLeft ? context.actionBarIconRadius : Radius.zero,
-        topRight:
-            !widget.connectRight ? context.actionBarIconRadius : Radius.zero,
-        bottomLeft: Radius.zero,
-        bottomRight: Radius.zero,
+        topLeft: !widget.dropsUp && !widget.connectLeft
+            ? context.actionBarIconRadius
+            : Radius.zero,
+        topRight: !widget.dropsUp && !widget.connectRight
+            ? context.actionBarIconRadius
+            : Radius.zero,
+        bottomLeft: widget.dropsUp && !widget.connectLeft
+            ? context.actionBarIconRadius
+            : Radius.zero,
+        bottomRight: widget.dropsUp && !widget.connectRight
+            ? context.actionBarIconRadius
+            : Radius.zero,
       ),
     );
     double expandRatio = ((width - context.actionBarButtonSizeHorizontal) /
@@ -624,13 +633,19 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
             ),
             visibleItemCount: widget.visibleItemCount,
             itemExtent: context.actionBarButtonSizeVertical,
-            position: PopupMenuPosition.under,
+            // position: PopupMenuPosition.under,
+            position: widget.dropsUp
+                ? MyPopupMenuPosition.above
+                : MyPopupMenuPosition.under,
             color: data.item2,
             shape: RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.vertical(bottom: context.actionBarIconRadius)),
+                borderRadius: widget.dropsUp
+                    ? BorderRadius.vertical(top: context.actionBarIconRadius)
+                    : BorderRadius.vertical(
+                        bottom: context.actionBarIconRadius)),
             elevation: 1,
             tooltip: widget.tooltip,
+            enabled: widget.enabled,
             child: Container(
               padding: context.actionBarIconPadding,
               alignment: Alignment.centerLeft,
@@ -664,8 +679,14 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
             beforeOpened: () async {
               activeAnimationController.forward();
               expand(true);
-              openAnimationController.forward();
-              await Future.delayed(Duration(milliseconds: 100));
+              if (!active && widget.onInactiveTap != null) {
+                widget.onInactiveTap!();
+                return false;
+              } else {
+                openAnimationController.forward();
+                await Future.delayed(Duration(milliseconds: 100));
+                return true;
+              }
             },
             afterClosed: () async {
               await Future.delayed(Duration(milliseconds: 150));

@@ -56,6 +56,7 @@ class _PopupMenu<T> extends StatelessWidget {
     required this.route,
     this.semanticLabel,
     this.constraints,
+    this.direction,
     this.padding,
     this.visibleItemCount,
     this.itemExtent,
@@ -67,6 +68,7 @@ class _PopupMenu<T> extends StatelessWidget {
   final _PopupMenuRoute<T> route;
   final String? semanticLabel;
   final BoxConstraints? constraints;
+  final AxisDirection? direction;
   final EdgeInsetsGeometry? padding;
   final int? visibleItemCount;
   final double? itemExtent;
@@ -150,7 +152,9 @@ class _PopupMenu<T> extends StatelessWidget {
               maxWidth: _kMenuMaxWidth,
             ),
         child: Stack(
-          alignment: Alignment.bottomCenter,
+          alignment: direction == AxisDirection.down
+              ? Alignment.bottomCenter
+              : Alignment.topCenter,
           children: [
             IntrinsicWidth(
               stepWidth: _kMenuWidthStep,
@@ -161,7 +165,9 @@ class _PopupMenu<T> extends StatelessWidget {
                 label: semanticLabel,
                 child: SingleChildScrollView(
                   padding: padding,
-                  child: ListBody(children: children),
+                  child: ListBody(
+                      reverse: direction == AxisDirection.down ? false : true,
+                      children: children),
                 ),
               ),
             ),
@@ -186,7 +192,9 @@ class _PopupMenu<T> extends StatelessWidget {
             type: MaterialType.card,
             elevation: route.elevation ?? popupMenuTheme.elevation ?? 8.0,
             child: Align(
-              alignment: AlignmentDirectional.topEnd,
+              alignment: direction == AxisDirection.down
+                  ? AlignmentDirectional.topEnd
+                  : AlignmentDirectional.bottomEnd,
               widthFactor: animateWidth ? width.evaluate(route.animation!) : 1,
               heightFactor:
                   animateHeight ? height.evaluate(route.animation!) : 1,
@@ -201,14 +209,13 @@ class _PopupMenu<T> extends StatelessWidget {
 }
 
 class _PopupMenuRouteLayout extends SingleChildLayoutDelegate {
-  _PopupMenuRouteLayout(this.position, this.itemSizes, this.selectedItemIndex,
-      this.textDirection);
+  _PopupMenuRouteLayout(
+      this.position, this.direction, this.itemSizes, this.textDirection);
 
-  final RelativeRect? position;
+  final Offset? position;
+  final AxisDirection? direction;
 
   List<Size?> itemSizes;
-
-  final int? selectedItemIndex;
 
   final TextDirection textDirection;
 
@@ -223,35 +230,11 @@ class _PopupMenuRouteLayout extends SingleChildLayoutDelegate {
 
   @override
   Offset getPositionForChild(Size size, Size childSize) {
-    var y = position!.top;
-    if (selectedItemIndex != null) {
-      var selectedItemOffset = _kMenuVerticalPadding;
-      for (var index = 0; index < selectedItemIndex!; index += 1) {
-        selectedItemOffset += itemSizes[index]!.height;
-      }
-      selectedItemOffset += itemSizes[selectedItemIndex!]!.height / 2;
-      y = position!.top +
-          (size.height - position!.top - position!.bottom) / 2.0 -
-          selectedItemOffset;
-    }
+    var y =
+        position!.dy - (direction == AxisDirection.up ? childSize.height : 0);
 
     late double x;
-    if (position!.left > position!.right) {
-      x = size.width - position!.right - childSize.width;
-    } else if (position!.left < position!.right) {
-      // Menu button is closer to the left edge, so grow to the right, aligned to the left edge.
-      x = position!.left;
-    } else {
-      // Menu button is equidistant from both edges, so grow in reading direction.
-      switch (textDirection) {
-        case TextDirection.rtl:
-          x = size.width - position!.right - childSize.width;
-          break;
-        case TextDirection.ltr:
-          x = position!.left;
-          break;
-      }
-    }
+    x = position!.dx;
 
     if (x < _kMenuScreenPadding) {
       x = _kMenuScreenPadding;
@@ -271,7 +254,6 @@ class _PopupMenuRouteLayout extends SingleChildLayoutDelegate {
     assert(itemSizes.length == oldDelegate.itemSizes.length);
 
     return position != oldDelegate.position ||
-        selectedItemIndex != oldDelegate.selectedItemIndex ||
         textDirection != oldDelegate.textDirection ||
         !listEquals(itemSizes, oldDelegate.itemSizes);
   }
@@ -292,6 +274,7 @@ class _PopupMenuRoute<T> extends PopupRoute<T> {
     this.showMenuContext,
     this.captureInheritedThemes,
     this.constraints,
+    this.direction,
     this.padding,
     this.visibleItemCount,
     this.itemExtent,
@@ -300,7 +283,7 @@ class _PopupMenuRoute<T> extends PopupRoute<T> {
     this.animateWidth = true,
   }) : itemSizes = List<Size?>.filled(items.length, null, growable: false);
 
-  final RelativeRect? position;
+  final Offset? position;
   final List<MyPopupMenuItem<T>> items;
   final List<Size?> itemSizes;
   final T? initialValue;
@@ -313,6 +296,7 @@ class _PopupMenuRoute<T> extends PopupRoute<T> {
   final BuildContext? showMenuContext;
   final bool? captureInheritedThemes;
   final BoxConstraints? constraints;
+  final AxisDirection? direction;
   final EdgeInsetsGeometry? padding;
   final int? visibleItemCount;
   final double? itemExtent;
@@ -344,19 +328,11 @@ class _PopupMenuRoute<T> extends PopupRoute<T> {
   @override
   Widget buildPage(BuildContext context, Animation<double> animation,
       Animation<double> secondaryAnimation) {
-    int? selectedItemIndex;
-    if (initialValue != null) {
-      for (var index = 0;
-          selectedItemIndex == null && index < items.length;
-          index += 1) {
-        if (items[index].represents(initialValue)) selectedItemIndex = index;
-      }
-    }
-
     Widget menu = _PopupMenu<T>(
       route: this,
       semanticLabel: semanticLabel,
       constraints: constraints,
+      direction: direction,
       padding: padding,
       visibleItemCount: visibleItemCount,
       itemExtent: itemExtent,
@@ -381,8 +357,8 @@ class _PopupMenuRoute<T> extends PopupRoute<T> {
           return CustomSingleChildLayout(
             delegate: _PopupMenuRouteLayout(
               position,
+              direction,
               itemSizes,
-              selectedItemIndex,
               Directionality.of(context),
             ),
             child: menu,
@@ -395,7 +371,7 @@ class _PopupMenuRoute<T> extends PopupRoute<T> {
 
 Future<T?> _showMenu<T>({
   required BuildContext context,
-  required RelativeRect position,
+  required Offset position,
   required List<MyPopupMenuItem<T>> items,
   T? initialValue,
   double? elevation,
@@ -405,6 +381,7 @@ Future<T?> _showMenu<T>({
   bool captureInheritedThemes = true,
   bool useRootNavigator = false,
   BoxConstraints? constraints,
+  AxisDirection? direction,
   EdgeInsetsGeometry? padding,
   int? visibleItemCount,
   double? itemExtent,
@@ -443,6 +420,7 @@ Future<T?> _showMenu<T>({
     showMenuContext: context,
     captureInheritedThemes: captureInheritedThemes,
     constraints: constraints,
+    direction: direction,
     padding: padding,
     visibleItemCount: visibleItemCount,
     itemExtent: itemExtent,
@@ -476,7 +454,7 @@ class MyPopupMenuButton<T> extends StatefulWidget {
     this.color,
     this.enableFeedback,
     this.constraints,
-    this.position = PopupMenuPosition.over,
+    this.position = MyPopupMenuPosition.over,
     this.menuPadding = const EdgeInsets.symmetric(vertical: 8),
     this.visibleItemCount,
     this.itemExtent,
@@ -493,7 +471,8 @@ class MyPopupMenuButton<T> extends StatefulWidget {
 
   final PopupMenuCanceled? onCanceled;
 
-  final Future<void> Function()? beforeOpened;
+  /// Cancels opening if false is received.
+  final Future<bool> Function()? beforeOpened;
 
   final Future<void> Function()? afterClosed;
 
@@ -519,7 +498,7 @@ class MyPopupMenuButton<T> extends StatefulWidget {
 
   final BoxConstraints? constraints;
 
-  final PopupMenuPosition position;
+  final MyPopupMenuPosition position;
 
   final EdgeInsetsGeometry menuPadding;
 
@@ -535,29 +514,27 @@ class MyPopupMenuButton<T> extends StatefulWidget {
 
 class MyPopupMenuButtonState<T> extends State<MyPopupMenuButton<T>> {
   void showButtonMenu() async {
-    await widget.beforeOpened?.call();
+    if (widget.beforeOpened != null) {
+      final result = await widget.beforeOpened!();
+      if (!result) return;
+    }
     final popupMenuTheme = PopupMenuTheme.of(context);
     final button = context.findRenderObject() as RenderBox;
     final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
     final Offset offset;
     switch (widget.position) {
-      case PopupMenuPosition.over:
+      case MyPopupMenuPosition.over:
         offset = widget.offset;
         break;
-      case PopupMenuPosition.under:
+      case MyPopupMenuPosition.under:
         offset =
             Offset(0.0, button.size.height - (widget.padding.vertical / 2)) +
                 widget.offset;
+      case MyPopupMenuPosition.above:
+        offset = Offset(0.0, (widget.padding.vertical / 2)) + widget.offset;
         break;
     }
-    final RelativeRect position = RelativeRect.fromRect(
-      Rect.fromPoints(
-        button.localToGlobal(offset, ancestor: overlay),
-        button.localToGlobal(button.size.bottomRight(Offset.zero) + offset,
-            ancestor: overlay),
-      ),
-      Offset.zero & overlay.size,
-    );
+    final Offset position = button.localToGlobal(offset, ancestor: overlay);
     final List<MyPopupMenuItem<T>> items = widget.itemBuilder(context);
     // Only show the menu if there is something to show
     if (items.isNotEmpty) {
@@ -570,6 +547,9 @@ class MyPopupMenuButtonState<T> extends State<MyPopupMenuButton<T>> {
         shape: widget.shape ?? popupMenuTheme.shape,
         color: widget.color ?? popupMenuTheme.color,
         constraints: widget.constraints,
+        direction: widget.position == MyPopupMenuPosition.above
+            ? AxisDirection.up
+            : AxisDirection.down,
         padding: widget.menuPadding,
         visibleItemCount: widget.visibleItemCount,
         itemExtent: widget.itemExtent,
@@ -634,12 +614,24 @@ class MyPopupMenuButtonState<T> extends State<MyPopupMenuButton<T>> {
   }
 }
 
+enum MyPopupMenuPosition {
+  /// Menu is positioned over the anchor.
+  over,
+
+  /// Menu is positioned under the anchor.
+  under,
+
+  /// Menu is positioned above the anchor.
+  above,
+}
+
 class MyPopupMenuItem<T> extends StatefulWidget {
   const MyPopupMenuItem({
     super.key,
     this.value,
     this.enabled = true,
-    this.height = kMinInteractiveDimension,
+    this.height,
+    this.width,
     this.textStyle,
     this.padding,
     required this.child,
@@ -649,8 +641,8 @@ class MyPopupMenuItem<T> extends StatefulWidget {
 
   final bool enabled;
 
-  @override
-  final double height;
+  final double? height;
+  final double? width;
   final TextStyle? textStyle;
   final EdgeInsets? padding;
 
@@ -667,7 +659,6 @@ class _MyPopupMenuItemState<T> extends State<MyPopupMenuItem<T>> {
   @protected
   Widget buildChild() => widget.child;
 
-  @protected
   void handleTap() {
     Navigator.pop<T>(context, widget.value);
   }
@@ -682,11 +673,17 @@ class _MyPopupMenuItemState<T> extends State<MyPopupMenuItem<T>> {
     return AnimatedDefaultTextStyle(
       style: style,
       duration: kThemeChangeDuration,
-      child: Container(
-        // alignment: AlignmentDirectional.centerStart,
-        //  constraints: BoxConstraints(minHeight: widget.height),
-        padding: widget.padding,
-        child: buildChild(),
+      child: InkWell(
+        onTap: widget.enabled ? handleTap : null,
+        canRequestFocus: widget.enabled,
+        child: Container(
+          height: widget.height ?? context.actionBarButtonSizeVertical,
+          width: widget.width,
+          // alignment: AlignmentDirectional.centerStart,
+          //  constraints: BoxConstraints(minHeight: widget.height),
+          padding: widget.padding ?? context.actionBarIconPadding,
+          child: buildChild(),
+        ),
       ),
     );
   }

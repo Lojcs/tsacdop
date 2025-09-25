@@ -4,7 +4,6 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 
 import '../state/podcast_state.dart';
-import '../type/podcastgroup.dart';
 import '../util/extension_helper.dart';
 import '../widgets/general_dialog.dart';
 import 'podcast_settings.dart';

@@ -114,6 +114,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "addSomeGroups": MessageLookupByLibrary.simpleMessage("Add some groups"),
     "after": MessageLookupByLibrary.simpleMessage("After"),
     "all": MessageLookupByLibrary.simpleMessage("All"),
+    "apiSearch": MessageLookupByLibrary.simpleMessage("Api Search"),
     "autoDownload": MessageLookupByLibrary.simpleMessage("Auto download"),
     "back": MessageLookupByLibrary.simpleMessage("Back"),
     "before": MessageLookupByLibrary.simpleMessage("Before"),
@@ -240,6 +241,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "filterType": m32,
     "fontStyle": MessageLookupByLibrary.simpleMessage("Font style"),
     "fonts": MessageLookupByLibrary.simpleMessage("Fonts"),
+    "forward": MessageLookupByLibrary.simpleMessage("Forward"),
     "from": m5,
     "goodNight": MessageLookupByLibrary.simpleMessage("Good Night"),
     "gpodderLoginDes": MessageLookupByLibrary.simpleMessage(
@@ -455,6 +457,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "save": MessageLookupByLibrary.simpleMessage("Save"),
     "schedule": MessageLookupByLibrary.simpleMessage("Schedule"),
     "search": MessageLookupByLibrary.simpleMessage("Search"),
+    "searchApi": MessageLookupByLibrary.simpleMessage("Search Api"),
+    "searchEngine": MessageLookupByLibrary.simpleMessage("Search Engine"),
     "searchEpisode": MessageLookupByLibrary.simpleMessage("Search episode"),
     "searchHelper": MessageLookupByLibrary.simpleMessage(
       "Type the podcast name, keywords or enter a feed url.",
@@ -468,6 +472,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "searchPodcast": MessageLookupByLibrary.simpleMessage(
       "Search for podcasts",
     ),
+    "searchWeb": MessageLookupByLibrary.simpleMessage("Web Search"),
     "secCount": m24,
     "secondsAgo": m25,
     "selectMode": MessageLookupByLibrary.simpleMessage("Selection Mode"),

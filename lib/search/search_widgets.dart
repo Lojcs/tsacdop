@@ -2,15 +2,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../podcasts/podcast_detail.dart';
 import '../state/podcast_state.dart';
 import '../type/podcastbrief.dart';
 import '../util/extension_helper.dart';
-import '../util/hide_player_route.dart';
-import '../widgets/action_bar.dart';
 import '../widgets/action_bar_generic_widgets.dart';
-import '../widgets/custom_widget.dart';
-import 'search_api_helper.dart';
+import 'search_controller.dart';
 import 'search_page.dart';
 
 class SearchButton extends StatefulWidget {
@@ -91,7 +87,7 @@ class SearchPanelCardState extends State<SearchPanelCard>
   late final EdgeInsetsTween marginTween = EdgeInsetsTween(
       begin: EdgeInsets.zero,
       end: EdgeInsets.symmetric(
-          horizontal: context.actionBarIconPadding.vertical));
+          horizontal: context.actionBarIconPadding.horizontal));
 
   double get outerHeight => outerHeightTween.evaluate(animation);
   BorderRadius get radius => borderRadiusTween.evaluate(animation)!;
@@ -176,7 +172,7 @@ class SearchPodcastPreviewState extends State<SearchPodcastPreview> {
     return Provider.value(
       value: cardColorScheme,
       builder: (context, child) => SearchPanelCard(
-        color: cardColorScheme.card,
+        color: context.realDark ? context.surface : cardColorScheme.card,
         child: Padding(
           padding: context.actionBarIconPadding * 2,
           child: Center(

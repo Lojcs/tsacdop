@@ -127,6 +127,11 @@ class S {
     return Intl.message('All', name: 'all', desc: '', args: []);
   }
 
+  /// `Api Search`
+  String get apiSearch {
+    return Intl.message('Api Search', name: 'apiSearch', desc: '', args: []);
+  }
+
   /// `Auto download`
   String get autoDownload {
     return Intl.message(
@@ -763,6 +768,11 @@ class S {
   /// `Font style`
   String get fontStyle {
     return Intl.message('Font style', name: 'fontStyle', desc: '', args: []);
+  }
+
+  /// `Forward`
+  String get forward {
+    return Intl.message('Forward', name: 'forward', desc: '', args: []);
   }
 
   /// `From {time}`
@@ -1956,6 +1966,21 @@ class S {
     return Intl.message('Search', name: 'search', desc: '', args: []);
   }
 
+  /// `Search Api`
+  String get searchApi {
+    return Intl.message('Search Api', name: 'searchApi', desc: '', args: []);
+  }
+
+  /// `Search Engine`
+  String get searchEngine {
+    return Intl.message(
+      'Search Engine',
+      name: 'searchEngine',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Search episode`
   String get searchEpisode {
     return Intl.message(
@@ -2004,6 +2029,11 @@ class S {
       desc: '',
       args: [],
     );
+  }
+
+  /// `Web Search`
+  String get searchWeb {
+    return Intl.message('Web Search', name: 'searchWeb', desc: '', args: []);
   }
 
   /// `{count, plural, zero{0 sec} one{{count} sec} other{{count} sec}}`

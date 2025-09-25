@@ -624,8 +624,6 @@ class ActionBarDropdownGroups extends ActionBarFilter {
                   ? context.s.all
                   : context.podcastState.getGroupById(groupId).name;
               return MyPopupMenuItem(
-                padding: context.actionBarIconPadding,
-                height: context.actionBarButtonSizeVertical,
                 value: groupId,
                 child: Tooltip(
                   message: name,
@@ -703,8 +701,6 @@ class ActionBarDropdownPodcasts extends ActionBarFilter {
                 (podcastId) {
                   final title = titleOf(context, podcastId);
                   return MyPopupMenuItem(
-                    padding: context.actionBarIconPadding,
-                    height: context.actionBarButtonSizeVertical,
                     value: podcastId,
                     child: Tooltip(
                       message: title,
@@ -776,8 +772,6 @@ List<MyPopupMenuItem<Sorter>> _getSortBy(
     switch (sorter) {
       case Sorter.pubDate:
         items.add(MyPopupMenuItem(
-          padding: context.actionBarIconPadding,
-          height: context.actionBarButtonSizeVertical,
           value: Sorter.pubDate,
           child: Tooltip(
             message: s.publishDate,
@@ -787,8 +781,6 @@ List<MyPopupMenuItem<Sorter>> _getSortBy(
         break;
       case Sorter.enclosureSize:
         items.add(MyPopupMenuItem(
-          padding: context.actionBarIconPadding,
-          height: context.actionBarButtonSizeVertical,
           value: Sorter.enclosureSize,
           child: Tooltip(
             message: s.size,
@@ -798,8 +790,6 @@ List<MyPopupMenuItem<Sorter>> _getSortBy(
         break;
       case Sorter.enclosureDuration:
         items.add(MyPopupMenuItem(
-          padding: context.actionBarIconPadding,
-          height: context.actionBarButtonSizeVertical,
           value: Sorter.enclosureDuration,
           child: Tooltip(
             message: s.duration,
@@ -809,8 +799,6 @@ List<MyPopupMenuItem<Sorter>> _getSortBy(
         break;
       case Sorter.downloadDate:
         items.add(MyPopupMenuItem(
-          padding: context.actionBarIconPadding,
-          height: context.actionBarButtonSizeVertical,
           value: Sorter.downloadDate,
           child: Tooltip(
             message: s.downloadDate,
@@ -820,8 +808,6 @@ List<MyPopupMenuItem<Sorter>> _getSortBy(
         break;
       case Sorter.likedDate:
         items.add(MyPopupMenuItem(
-          padding: context.actionBarIconPadding,
-          height: context.actionBarButtonSizeVertical,
           value: Sorter.likedDate,
           child: Tooltip(
             message: s.likeDate,
@@ -831,8 +817,6 @@ List<MyPopupMenuItem<Sorter>> _getSortBy(
         break;
       case Sorter.random:
         items.add(MyPopupMenuItem(
-          padding: context.actionBarIconPadding,
-          height: context.actionBarButtonSizeVertical,
           value: Sorter.random,
           child: Tooltip(
             message: s.random,
