@@ -1496,10 +1496,16 @@ class CustomAudioHandler extends BaseAudioHandler
     _handleInterruption();
   }
 
+  /// Audio player audio source
+  ConcatenatingAudioSource _playlist = ConcatenatingAudioSource(
+    useLazyPreparation: true,
+    shuffleOrder: DefaultShuffleOrder(),
+    children: [],
+  );
+
   /// Initialises player and its listeners. Call this after construction!
   Future<void> initPlayer() async {
-    await _player.setAudioSources([], preload: false);
-    await _player.setAudioSources([], preload: false);
+    await _player.setAudioSource(_playlist, preload: false);
     // _player.cacheMax = cacheMax;
     // Transmit events received from player
     playbackState.add(PlaybackState(
@@ -1565,7 +1571,7 @@ class CustomAudioHandler extends BaseAudioHandler
     if (_playerReady) {
       _playerReady = false;
       await _player.stop();
-      await _player.clearAudioSources();
+      await _playlist.clear();
       await _player.dispose();
       await _playbackEventSubscription.cancel();
       await _currentIndexSubscription.cancel();
@@ -1709,7 +1715,7 @@ class CustomAudioHandler extends BaseAudioHandler
               //   await pause();
               // }
               queueItems.removeAt(i);
-              await _player.removeAudioSourceAt(i);
+              await _playlist.removeAt(i);
               i--;
             }
           }
@@ -1720,10 +1726,10 @@ class CustomAudioHandler extends BaseAudioHandler
       }
       if (index >= queue.value.length) {
         queue.value.addAll(items);
-        await _player.addAudioSources(sources);
+        await _playlist.addAll(sources);
       } else {
         queue.value.insertAll(index, items);
-        await _player.insertAudioSources(index, sources);
+        await _playlist.insertAll(index, sources);
       }
       queue.add(queue.value);
     }
@@ -1733,7 +1739,7 @@ class CustomAudioHandler extends BaseAudioHandler
   Future<void> removeQueueItemsAt(int index, {int number = 1}) async {
     int end = index + number;
     queue.add(queue.value..removeRange(index, end));
-    await _player.removeAudioSourceRange(
+    await _playlist.removeRange(
         index, end); // TODO: What happens if current is removed?
   }
 
@@ -1744,7 +1750,7 @@ class CustomAudioHandler extends BaseAudioHandler
       MediaItem reorderItem = reorderedQueue.removeAt(oldIndex);
       reorderedQueue.insert(newIndex, reorderItem);
       queue.add(reorderedQueue);
-      await _player.moveAudioSource(oldIndex, newIndex);
+      await _playlist.move(oldIndex, newIndex);
     }
   }
 
@@ -1895,7 +1901,12 @@ class CustomAudioHandler extends BaseAudioHandler
     List<AudioSource> sources = [
       for (var item in newQueue) _itemToSource(item)
     ];
-    await _player.setAudioSources(sources, preload: false);
+    _playlist = ConcatenatingAudioSource(
+      useLazyPreparation: false,
+      shuffleOrder: DefaultShuffleOrder(),
+      children: sources,
+    );
+    await _player.setAudioSource(_playlist, preload: false);
   }
 
   Future<void> _setSkipSilence(bool boo) async {
