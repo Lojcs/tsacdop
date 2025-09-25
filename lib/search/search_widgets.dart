@@ -210,7 +210,7 @@ class SearchPodcastPreviewState extends State<SearchPodcastPreview> {
                                 enabled: source == DataSource.remote,
                                 state: source == DataSource.remote,
                                 buttonType: ActionBarButtonType.single,
-                                onPressed: (value) => Provider.of<RemoteSearch>(
+                                onPressed: (value) => Provider.of<JointSearch>(
                                         context,
                                         listen: false)
                                     .subscribe(widget.podcastId),
