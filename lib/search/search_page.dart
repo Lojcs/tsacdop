@@ -35,6 +35,7 @@ class SearchPanelRoute extends ModalRoute {
 
   final FocusNode searchFocusNode = FocusNode();
 
+  final JointSearch searchProvider;
   SearchPanelRoute(BuildContext context, this.heroKey,
       {required this.showIcon, required this.hideIcon})
       : barrierLabelText = context.s.back,
@@ -42,25 +43,27 @@ class SearchPanelRoute extends ModalRoute {
             (heroKey.currentContext!.findRenderObject() as RenderBox)
                 .localToGlobal(Offset(-6, -12)),
         finalHeroOffset = Offset(
-            context.actionBarButtonSizeVertical,
+            context.actionBarButtonSizeVertical +
+                context.actionBarIconPadding.left / 2,
             context.height -
-                140 +
-                15 - // Not sure why
-                context.actionBarIconPadding.top -
+                (140 + context.actionBarIconPadding.vertical) + // Card height
+                context.actionBarIconPadding.top * 3 - // Card inner padding
                 context.originalPadding.bottom -
                 (context.audioState.playerRunning
                     ? context.audioState.playerHeight!.height
                     : 0)),
         heroWidthTween = Tween(
             begin: context.actionBarButtonSizeVertical,
-            end: context.width - context.actionBarButtonSizeVertical * 2),
+            end: SearchBar.barWidth(context)),
         heightTween = Tween(
             begin: 0,
             end: 140 +
                 context.actionBarIconPadding.vertical +
                 (context.audioState.playerRunning
                     ? context.audioState.playerHeight!.height
-                    : 0)) {
+                    : 0)),
+        searchProvider =
+            JointSearch(context.podcastState, context.episodeState) {
     heroOffsetTween =
         Tween<Offset>(begin: initialHeroOffset, end: finalHeroOffset);
   }
@@ -142,29 +145,18 @@ class SearchPanelRoute extends ModalRoute {
         parent: animation,
         curve: Curves.easeOutQuart,
         reverseCurve: Curves.easeInQuad);
-    late JointSearch searchProvider =
-        JointSearch(context.podcastState, context.episodeState);
     return PopScope(
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) searchProvider.searchWeb = false;
       },
       child: Stack(
         children: [
-          GestureDetector(
-            onTap: () {
-              if (searchFocusNode.hasFocus) {
-                searchFocusNode.unfocus();
-              } else {
-                Navigator.of(context).pop();
-              }
-            },
-            child: AnimatedBuilder(
-              animation: animation,
-              child: Container(color: context.surface.withAlpha(64)),
-              builder: (context, child) => Opacity(
-                opacity: animation.value,
-                child: child,
-              ),
+          AnimatedBuilder(
+            animation: animation,
+            child: Container(color: context.surface.withAlpha(64)),
+            builder: (context, child) => Opacity(
+              opacity: animation.value,
+              child: child,
             ),
           ),
           Align(
@@ -174,28 +166,28 @@ class SearchPanelRoute extends ModalRoute {
               builder: (context, child) {
                 animationListener(animation, context);
                 final panel = ScrollConfiguration(
-                    behavior: NoOverscrollScrollBehavior(),
-                    child: Material(
-                      type: MaterialType.transparency,
-                      child:
-                          Selector<AudioPlayerNotifier, (bool, PlayerHeight?)>(
-                        selector: (_, audio) =>
-                            (audio.playerRunning, audio.playerHeight),
-                        builder: (_, data, __) => Padding(
-                          padding: EdgeInsetsGeometry.only(
-                              bottom: data.$1 && data.$2 != null
-                                  ? data.$2!.height
-                                  : 0),
-                          child: SearchPanel(
-                            searchFocusNode: searchFocusNode,
-                            hide: !panelAnimation.isCompleted,
-                            searchBarKey: villainKey,
-                            searchProvider: searchProvider,
-                            key: panelKey,
-                          ),
+                  behavior: NoOverscrollScrollBehavior(),
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: Selector<AudioPlayerNotifier, (bool, PlayerHeight?)>(
+                      selector: (_, audio) =>
+                          (audio.playerRunning, audio.playerHeight),
+                      builder: (_, data, __) => Padding(
+                        padding: EdgeInsetsGeometry.only(
+                            bottom: data.$1 && data.$2 != null
+                                ? data.$2!.height
+                                : 0),
+                        child: SearchPanel(
+                          searchFocusNode: searchFocusNode,
+                          hide: !panelAnimation.isCompleted,
+                          searchBarKey: villainKey,
+                          searchProvider: searchProvider,
+                          key: panelKey,
                         ),
                       ),
-                    ));
+                    ),
+                  ),
+                );
                 return animation.isCompleted
                     ? panel
                     : SafeArea(
@@ -264,7 +256,8 @@ class SearchPanelState extends State<SearchPanel>
     with SingleTickerProviderStateMixin {
   double get initialTopPadding =>
       context.height -
-      context.originalPadding.vertical -
+      MediaQuery.of(context).viewInsets.vertical -
+      MediaQuery.of(context).viewPadding.vertical -
       (140 +
           context.actionBarIconPadding.vertical +
           (context.audioState.playerRunning
@@ -338,7 +331,7 @@ class SearchPanelState extends State<SearchPanel>
                 ),
               ),
               ListView.builder(
-                hitTestBehavior: HitTestBehavior.deferToChild,
+                hitTestBehavior: HitTestBehavior.opaque,
                 shrinkWrap: true,
                 itemCount: searchItemCount,
                 itemExtentBuilder: (index, dimensions) => switch (index) {
@@ -353,7 +346,15 @@ class SearchPanelState extends State<SearchPanel>
                   index,
                   widget.searchProvider.episodeIds.isNotEmpty
                 )) {
-                  (0, _) => Center(),
+                  (0, _) => GestureDetector(
+                      onTap: () {
+                        if (widget.searchFocusNode.hasFocus) {
+                          widget.searchFocusNode.unfocus();
+                        } else {
+                          Navigator.of(context).pop();
+                        }
+                      },
+                    ),
                   (1, _) => Controls(
                       searchFocusNode: widget.searchFocusNode,
                       hideSearchBar: widget.hide,
@@ -423,8 +424,10 @@ class ControlsState extends State<Controls> {
   final alignmentTween =
       AlignmentTween(begin: Alignment.center, end: Alignment.centerRight);
   late final paddingTween = EdgeInsetsTween(
-      begin: EdgeInsets.zero,
-      end: EdgeInsets.only(right: context.actionBarIconPadding.right));
+      begin: EdgeInsets.only(
+          left: context.actionBarIconPadding.left / 2,
+          right: context.actionBarIconPadding.right / 2),
+      end: EdgeInsets.only(right: context.actionBarIconPadding.right / 2));
   @override
   Widget build(BuildContext context) {
     final search = Provider.of<JointSearch>(context, listen: false);
@@ -432,222 +435,217 @@ class ControlsState extends State<Controls> {
       value: context.cardColorScheme,
       builder: (context, child) => SearchPanelCard(
         short: false,
-        child: Padding(
-            padding: context.actionBarIconPadding * 3,
-            child: Selector<JointSearch, bool>(
-              selector: (_, search) => search.searchWeb,
-              builder: (context, searchWeb, _) => Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Selector<JointSearch, bool>(
+          selector: (_, search) => search.searchWeb,
+          builder: (context, searchWeb, _) => Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Stack(
                 children: [
                   SizedBox(
                     height: 48,
-                    child: Stack(
-                      alignment: Alignment.centerLeft,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.max,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.max,
-                          children: [
-                            AnimatedBuilder(
-                              animation: widget.animation,
-                              builder: (context, child) => Opacity(
-                                opacity: widget.animation.value,
-                                child: ActionBarButton(
-                                  height: 40,
-                                  width: 40,
-                                  connectRight: true,
-                                  tooltip: context.s.back,
-                                  // enabled: webMode,
-                                  child: Center(
-                                    child: Icon(
-                                      Icons.arrow_back,
-                                      size: context.actionBarIconSize,
-                                    ),
-                                  ),
-                                  onPressed: (value) {
-                                    widget.searchFocusNode.unfocus();
-                                    search.webSearch.goBack();
-                                  },
+                        AnimatedBuilder(
+                          animation: widget.animation,
+                          builder: (context, child) => Opacity(
+                            opacity: widget.animation.value,
+                            child: ActionBarButton(
+                              height: 40,
+                              width: 40,
+                              connectRight: true,
+                              tooltip: context.s.back,
+                              // enabled: webMode,
+                              child: Center(
+                                child: Icon(
+                                  Icons.arrow_back,
+                                  size: context.actionBarIconSize,
                                 ),
                               ),
+                              onPressed: (value) {
+                                widget.searchFocusNode.unfocus();
+                                search.webSearch.goBack();
+                              },
                             ),
-                            AnimatedBuilder(
-                              animation: widget.animation,
-                              builder: (context, child) => Opacity(
-                                opacity: widget.animation.value,
-                                child: Padding(
-                                  padding: EdgeInsetsGeometry.only(right: 8),
-                                  child: ActionBarButton(
-                                    height: 40,
-                                    width: 40,
-                                    connectLeft: true,
-                                    tooltip: context.s.forward,
-                                    // enabled: webMode,
-                                    child: Center(
-                                      child: Icon(
-                                        Icons.arrow_forward,
-                                        size: context.actionBarIconSize,
-                                      ),
-                                    ),
-                                    onPressed: (value) {
-                                      widget.searchFocusNode.unfocus();
-                                      search.webSearch.goForward();
-                                    },
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                        if (!widget.hideSearchBar)
-                          AnimatedBuilder(
+                        Padding(
+                          padding: EdgeInsetsGeometry.only(right: 0),
+                          child: AnimatedBuilder(
                             animation: widget.animation,
-                            builder: (context, child) => Align(
-                              alignment:
-                                  alignmentTween.evaluate(widget.animation),
-                              child: Padding(
-                                padding:
-                                    paddingTween.evaluate(widget.animation),
-                                child: SearchBar(
-                                  widget.searchFocusNode,
-                                  width: context.width -
-                                      context.actionBarButtonSizeVertical *
-                                          (2 + widget.animation.value * 3),
-                                  text: Provider.of<JointSearch>(context,
-                                          listen: false)
-                                      .queryText,
-                                  key: widget.searchBarKey,
+                            builder: (context, child) => Opacity(
+                              opacity: widget.animation.value,
+                              child: ActionBarButton(
+                                height: 40,
+                                width: 40,
+                                connectLeft: true,
+                                tooltip: context.s.forward,
+                                // enabled: webMode,
+                                child: Center(
+                                  child: Icon(
+                                    Icons.arrow_forward,
+                                    size: context.actionBarIconSize,
+                                  ),
                                 ),
+                                onPressed: (value) {
+                                  widget.searchFocusNode.unfocus();
+                                  search.webSearch.goForward();
+                                },
                               ),
                             ),
                           ),
+                        ),
                       ],
                     ),
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Selector<JointSearch, SearchApi>(
-                        selector: (_, search) => search.searchApi,
-                        builder: (context, searchApi, _) =>
-                            ActionBarDropdownButton<SearchApi>(
-                          expansionController: bottomBarExpansionController,
-                          tooltip: context.s.searchApi,
-                          connectRight: true,
-                          selected: searchApi,
-                          dropsUp: true,
-                          itemBuilder: () => SearchApi.values
-                              .map(
-                                (e) => MyPopupMenuItem(
-                                  width: 120,
-                                  value: e,
-                                  child: Tooltip(
-                                    message: e.name,
-                                    child: Center(
-                                      child: Text(
-                                        e.name,
-                                        style: context.textTheme.bodyLarge!,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                          onSelected: (value) => search.searchApi = value,
-                          active: (_) => !searchWeb,
-                          onInactiveTap: () {
-                            search.clear();
-                            search.searchWeb = false;
-                          },
-                          maxExpandedWidth: 120,
-                          expandedChild: Center(
-                            child: Text(
-                              searchApi.name,
-                              style: context.textTheme.bodyLarge!,
-                              overflow: TextOverflow.clip,
-                            ),
-                          ),
-                          child: Icon(Icons.api_rounded),
-                        ),
-                      ),
-                      Selector<JointSearch, int>(
-                        selector: (_, search) => search.itemCount,
-                        builder: (context, itemCount, _) => ActionBarButton(
-                          expansionController: bottomBarExpansionController,
-                          state: false,
-                          buttonType: ActionBarButtonType.single,
-                          onPressed: (value) {
-                            search.clear();
-                          },
-                          tooltip: context.s.clear,
-                          connectLeft: true,
-                          connectRight: true,
-                          enabled: itemCount != 0,
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              Icon(Icons.check_box_outline_blank),
-                              Text("$itemCount")
-                            ],
+                  if (!widget.hideSearchBar)
+                    AnimatedBuilder(
+                      animation: widget.animation,
+                      builder: (context, child) => Align(
+                        alignment: Alignment.centerRight,
+                        child: Padding(
+                          padding: paddingTween.evaluate(widget.animation),
+                          child: SearchBar(
+                            widget.searchFocusNode,
+                            width: SearchBar.barWidth(context) -
+                                context.actionBarButtonSizeHorizontal *
+                                    (widget.animation.value * 2.5),
+                            text:
+                                Provider.of<JointSearch>(context, listen: false)
+                                    .queryText,
+                            key: widget.searchBarKey,
                           ),
                         ),
                       ),
-                      Selector<JointSearch, SearchEngine>(
-                        selector: (_, search) => search.searchEngine,
-                        builder: (context, searchEngine, _) =>
-                            ActionBarDropdownButton<SearchEngine>(
-                          expansionController: bottomBarExpansionController,
-                          tooltip: context.s.searchEngine,
-                          connectLeft: true,
-                          selected: searchEngine,
-                          dropsUp: true,
-                          itemBuilder: () => SearchEngine.values
-                              .map(
-                                (e) => MyPopupMenuItem(
-                                  width: 120,
-                                  value: e,
-                                  child: Tooltip(
-                                    message: e.name,
-                                    child: Center(
-                                      child: Text(
-                                        e.name,
-                                        style: context.textTheme.bodyLarge!,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                          onSelected: (value) => search.searchEngine = value,
-                          active: (_) => searchWeb,
-                          onInactiveTap: () {
-                            search.clear();
-                            search.searchWeb = true;
-                          },
-                          maxExpandedWidth: 120,
-                          expandedChild: Center(
-                            child: Text(
-                              searchEngine.name,
-                              style: context.textTheme.bodyLarge!,
-                            ),
-                          ),
-                          child: Icon(LineIcons.globe),
-                        ),
-                      ),
-                    ],
-                  ),
-                  // SizedBox(
-                  //   width: context.width - 80,
-                  //   child: Text(
-                  //     context.s.searchInstructions,
-                  //     style: context.textTheme.bodySmall!
-                  //         .copyWith(color: Colors.grey[600]),
-                  //     textAlign: TextAlign.center,
-                  //   ),
-                  // ),
+                    ),
                 ],
               ),
-            )),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Selector<JointSearch, SearchApi>(
+                    selector: (_, search) => search.searchApi,
+                    builder: (context, searchApi, _) =>
+                        ActionBarDropdownButton<SearchApi>(
+                      expansionController: bottomBarExpansionController,
+                      tooltip: context.s.searchApi,
+                      connectRight: true,
+                      selected: searchApi,
+                      dropsUp: true,
+                      itemBuilder: () => SearchApi.values
+                          .map(
+                            (e) => MyPopupMenuItem(
+                              width: 120,
+                              value: e,
+                              child: Tooltip(
+                                message: e.name,
+                                child: Center(
+                                  child: Text(
+                                    e.name,
+                                    style: context.textTheme.bodyLarge!,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                      onSelected: (value) => search.searchApi = value,
+                      active: (_) => !searchWeb,
+                      onInactiveTap: () {
+                        search.clear();
+                        search.searchWeb = false;
+                      },
+                      maxExpandedWidth: 120,
+                      expandedChild: Center(
+                        child: Text(
+                          searchApi.name,
+                          style: context.textTheme.bodyLarge!,
+                          overflow: TextOverflow.clip,
+                        ),
+                      ),
+                      child: Icon(Icons.api_rounded),
+                    ),
+                  ),
+                  Selector<JointSearch, int>(
+                    selector: (_, search) => search.itemCount,
+                    builder: (context, itemCount, _) => ActionBarButton(
+                      expansionController: bottomBarExpansionController,
+                      state: false,
+                      buttonType: ActionBarButtonType.single,
+                      onPressed: (value) {
+                        search.clear();
+                      },
+                      tooltip: context.s.clear,
+                      connectLeft: true,
+                      connectRight: true,
+                      enabled: itemCount != 0,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Icon(Icons.check_box_outline_blank),
+                          Text("$itemCount")
+                        ],
+                      ),
+                    ),
+                  ),
+                  Selector<JointSearch, SearchEngine>(
+                    selector: (_, search) => search.searchEngine,
+                    builder: (context, searchEngine, _) =>
+                        ActionBarDropdownButton<SearchEngine>(
+                      expansionController: bottomBarExpansionController,
+                      tooltip: context.s.searchEngine,
+                      connectLeft: true,
+                      selected: searchEngine,
+                      dropsUp: true,
+                      itemBuilder: () => SearchEngine.values
+                          .map(
+                            (e) => MyPopupMenuItem(
+                              width: 120,
+                              value: e,
+                              child: Tooltip(
+                                message: e.name,
+                                child: Center(
+                                  child: Text(
+                                    e.name,
+                                    style: context.textTheme.bodyLarge!,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                      onSelected: (value) => search.searchEngine = value,
+                      active: (_) => searchWeb,
+                      onInactiveTap: () {
+                        search.clear();
+                        search.searchWeb = true;
+                      },
+                      maxExpandedWidth: 120,
+                      expandedChild: Center(
+                        child: Text(
+                          searchEngine.name,
+                          style: context.textTheme.bodyLarge!,
+                        ),
+                      ),
+                      child: Icon(LineIcons.globe),
+                    ),
+                  ),
+                ],
+              ),
+              // SizedBox(
+              //   width: context.width - 80,
+              //   child: Text(
+              //     context.s.searchInstructions,
+              //     style: context.textTheme.bodySmall!
+              //         .copyWith(color: Colors.grey[600]),
+              //     textAlign: TextAlign.center,
+              //   ),
+              // ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -667,15 +665,14 @@ class SearchBar extends StatefulWidget {
 
   @override
   State<SearchBar> createState() => _SearchBarState();
+  static double barWidth(BuildContext context) =>
+      SearchPanelCard.innerWidth(context) -
+      context.actionBarIconPadding.horizontal / 2;
 }
 
 class _SearchBarState extends State<SearchBar> {
-  void search(BuildContext context, String query) {
-    final searchProvider = Provider.of<JointSearch>(context, listen: false);
-    searchProvider.clear();
-    searchProvider.query(query);
-  }
-
+  late final TextEditingController searchController =
+      TextEditingController(text: widget.text);
   late double width = widget.width ?? 0;
   @override
   void didUpdateWidget(covariant SearchBar oldWidget) {
@@ -685,10 +682,14 @@ class _SearchBarState extends State<SearchBar> {
     }
   }
 
+  void search(BuildContext context, String query) {
+    final searchProvider = Provider.of<JointSearch>(context, listen: false);
+    searchProvider.clear();
+    searchProvider.query(query);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final TextEditingController searchController =
-        TextEditingController(text: widget.text);
     final ColorTween background =
         ColorTween(begin: context.surface, end: context.cardColorSchemeCard);
     return Stack(
