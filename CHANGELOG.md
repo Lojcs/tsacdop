@@ -1,5 +1,25 @@
 # Tsacdop-Fork Changelog
 
+## 0.9.0
+Release date 2025/10/01
+
+### New
+* New search ux.
+* Supports podcast apis and web search.
+* @Zig-VS-TypeScript-VS - Added new search engines.
+* Added opml import progress popup.
+* Revised episode card opening animation.
+
+### Bugfixes
+* Fixed bugs related to episode selection.
+* Fixed playback state being lost erronously.
+* Misc. bugfixes
+
+### Other
+* Rewrote podcast fetching logic. This greatly improves the speed of sync, search and opml import.
+* Background sync battery usage reduced. This might also help with syncs consistently happening.
+* Rewrote episode downloader.
+
 ## 0.8.3
 Release date 2025/06/20
 
