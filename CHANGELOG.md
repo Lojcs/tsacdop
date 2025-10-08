@@ -1,7 +1,7 @@
 # Tsacdop-Fork Changelog
 
 ## 0.9.0
-Release date 2025/10/01
+Release date 2025/10/13
 
 ### New
 * New search ux.
