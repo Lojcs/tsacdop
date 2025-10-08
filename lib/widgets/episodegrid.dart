@@ -440,7 +440,6 @@ class EpisodeGrid extends StatelessWidget {
             layout,
             openPodcast: openPodcast,
             preferEpisodeImage: preferEpisodeImage,
-            showNumber: true,
             selectable: selectable,
             index: index,
           ),

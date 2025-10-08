@@ -20,10 +20,9 @@ import '../local_storage/sqflite_localpodcast.dart';
 import '../podcasts/podcast_detail.dart';
 import '../state/audio_state.dart';
 import '../type/play_histroy.dart';
-import '../type/podcastbrief.dart';
-import '../util/helpers.dart';
 import '../util/selection_controller.dart';
 import 'custom_widget.dart';
+import 'episode_info_widgets.dart';
 import 'episodegrid.dart';
 
 /// [EpisodeCard] widget that responds to user interaction.
@@ -42,9 +41,6 @@ class InteractiveEpisodeCard extends StatefulWidget {
 
   /// Prefer episode image over podcast image for avatar (requires [showimage])
   final bool preferEpisodeImage;
-
-  /// Episode number to be shown. Null for off
-  final bool showNumber;
 
   /// Controls the favourite indicator
   final bool showLiked;
@@ -77,7 +73,6 @@ class InteractiveEpisodeCard extends StatefulWidget {
     this.openPodcast = true,
     this.showImage = true,
     this.preferEpisodeImage = false,
-    this.showNumber = false,
     this.showLiked = true,
     this.showNew = true,
     this.showLengthAndSize = true,
@@ -111,7 +106,9 @@ class InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   late bool selected =
       selectionController?.selectedIndicies.contains(widget.index) ?? false;
 
-  GlobalKey avatarKey = GlobalKey();
+  final avatarKey = GlobalKey();
+  final numberAndNameKey = GlobalKey<EpisodeNumberAndPodcastNameState>();
+  final lengthAndSizeKey = GlobalKey();
 
   bool avatarHasFocus = false;
   Future<void> waitForAvatar = Future(() {});
@@ -154,7 +151,6 @@ class InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
         openPodcast: widget.openPodcast,
         showImage: widget.showImage,
         preferEpisodeImage: widget.preferEpisodeImage,
-        showNumber: widget.showNumber,
         showLiked: widget.showLiked,
         showNew: widget.showNew,
         showLengthAndSize: widget.showLengthAndSize,
@@ -162,10 +158,12 @@ class InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
         showDate: widget.showDate,
         decorate: false,
         avatarKey: avatarKey,
+        numberAndNameKey: numberAndNameKey,
+        lengthAndSizeKey: lengthAndSizeKey,
         onTapDown: () => avatarHasFocus = true,
         onTapUp: () => Future.delayed(
             Duration(milliseconds: 6), () => avatarHasFocus = false),
-        hideImage: hideImage,
+        hide: hideImage,
       );
 
   void openDetails(BuildContext context) => Navigator.push(
@@ -177,8 +175,11 @@ class InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
           layout: widget.layout,
           cardBuilder: _cardBuilder,
           preferEpisodeImage: widget.preferEpisodeImage,
-          heroKey: avatarKey,
+          avatarKey: avatarKey,
+          numberAndNameKey: numberAndNameKey,
+          lengthAndSizeKey: lengthAndSizeKey,
           showCard: () {
+            // _shadowController.reverse();
             setState(() => hideCard = false);
           },
           hideCard: () {
@@ -227,7 +228,7 @@ class InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                 _controller.reverse();
               }
             } else {
-              _shadowController.forward();
+              // _shadowController.forward();
               if (context.mounted) openDetails(context);
             }
           },
@@ -262,7 +263,7 @@ class InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
           },
           onDoubleClick: () {
             if (avatarHasFocus) return;
-            _shadowController.forward();
+            // _shadowController.forward();
             openDetails(context);
           },
           onAddSelect: () {
@@ -450,40 +451,40 @@ class EpisodeCardDetailRoute extends ModalRoute {
 
   final VoidCallback showCard;
   final VoidCallback hideCard;
-  final VoidCallback? onDispose;
 
   final RenderBox cardBox;
 
   final bool preferEpisodeImage;
-  final GlobalKey heroKey;
-
-  late final Offset initialHeroOffset;
-  final Offset finalHeroOffset;
+  final GlobalKey avatarKey;
+  final GlobalKey<EpisodeNumberAndPodcastNameState> numberAndNameKey;
+  final GlobalKey lengthAndSizeKey;
 
   late final Tween<Size> sizeTween;
   late final Tween<Offset> offsetTween;
 
-  late final Tween<Offset> heroOffsetTween;
-  late final Tween<double> heroSizeTween;
+  late final Tween<Offset> avatarOffsetTween;
+  late final Tween<double> avatarSizeTween;
 
-  EpisodeCardDetailRoute(BuildContext context, this.episodeId,
-      {required this.cardKey,
-      required this.layout,
-      required this.cardBuilder,
-      required this.showCard,
-      required this.hideCard,
-      required this.preferEpisodeImage,
-      required this.heroKey,
-      this.onDispose})
-      : cardBox = cardKey.currentContext!.findRenderObject() as RenderBox,
-        finalHeroOffset = Offset(
-            10,
-            context.audioState.playerRunning
-                ? context.height -
-                    context.audioState.playerHeight!.height -
-                    40 -
-                    context.originalPadding.bottom
-                : context.height - 40 - context.originalPadding.bottom) {
+  late final Tween<Offset> numberAndNameOffsetTween;
+  late final TextStyleTween numberAndNameStyleTween;
+  late final bool nameVisible;
+
+  late final Tween<Offset> lengthAndSizeOffsetTween;
+  late final Tween<double> lengthAndSizeHeightTween;
+
+  EpisodeCardDetailRoute(
+    BuildContext context,
+    this.episodeId, {
+    required this.cardKey,
+    required this.layout,
+    required this.cardBuilder,
+    required this.showCard,
+    required this.hideCard,
+    required this.preferEpisodeImage,
+    required this.avatarKey,
+    required this.numberAndNameKey,
+    required this.lengthAndSizeKey,
+  }) : cardBox = cardKey.currentContext!.findRenderObject() as RenderBox {
     sizeTween = Tween(
         begin: cardBox.size,
         end: Size(
@@ -496,17 +497,43 @@ class EpisodeCardDetailRoute extends ModalRoute {
     final cardOffset = cardBox.localToGlobal(Offset.zero);
     offsetTween = Tween(begin: cardOffset, end: Offset.zero);
 
-    final RenderBox heroBox =
-        heroKey.currentContext!.findRenderObject() as RenderBox;
-    initialHeroOffset = heroBox.localToGlobal(Offset.zero);
-    heroOffsetTween = Tween(begin: initialHeroOffset, end: finalHeroOffset);
-    heroSizeTween = Tween(begin: heroBox.size.width, end: 30);
+    final RenderBox avatarBox =
+        avatarKey.currentContext!.findRenderObject() as RenderBox;
+    final initialAvatarOffset = avatarBox.localToGlobal(Offset.zero);
+    final finalAvatarOffset = Offset(
+        10,
+        context.audioState.playerRunning
+            ? context.height -
+                context.audioState.playerHeight!.height -
+                40 -
+                context.originalPadding.bottom
+            : context.height - 40 - context.originalPadding.bottom);
+    avatarOffsetTween =
+        Tween(begin: initialAvatarOffset, end: finalAvatarOffset);
+    avatarSizeTween = Tween(begin: avatarBox.size.width, end: 30);
+
+    final RenderBox numberAndNameBox =
+        numberAndNameKey.currentContext!.findRenderObject() as RenderBox;
+    numberAndNameOffsetTween = Tween(
+        begin: numberAndNameBox.localToGlobal(Offset.zero),
+        end: Offset(45, 75));
+    numberAndNameStyleTween = TextStyleTween(
+        begin: numberAndNameKey.currentState!.textStyle,
+        end: context.textTheme.headlineSmall!);
+    nameVisible = numberAndNameKey.currentState!.widget.showName;
+
+    final RenderBox lengthAndSizeBox =
+        lengthAndSizeKey.currentContext!.findRenderObject() as RenderBox;
+    lengthAndSizeOffsetTween = Tween(
+        begin: lengthAndSizeBox.localToGlobal(Offset.zero),
+        end: Offset(30, 236));
+    lengthAndSizeHeightTween =
+        Tween(begin: lengthAndSizeBox.size.height, end: 40);
   }
 
   @override
   void dispose() {
-    showCard();
-    if (onDispose != null) onDispose!();
+    done();
     super.dispose();
   }
 
@@ -519,10 +546,21 @@ class EpisodeCardDetailRoute extends ModalRoute {
   @override
   String? get barrierLabel => null;
 
+  bool showHeroes = true;
+  void done() {
+    showCard();
+    showHeroes = false;
+  }
+
+  void begin() {
+    hideCard();
+    showHeroes = true;
+  }
+
   @override
   Widget buildPage(BuildContext context, Animation<double> animation,
       Animation<double> secondaryAnimation) {
-    Future.microtask(hideCard);
+    Future.microtask(begin);
     EpisodeState eState = Provider.of<EpisodeState>(context, listen: false);
     final sizeAnimation =
         CurvedAnimation(parent: animation, curve: Curves.easeInOutCirc);
@@ -534,19 +572,26 @@ class EpisodeCardDetailRoute extends ModalRoute {
       animation: animation,
       builder: (context, child) {
         final size = sizeTween.evaluate(sizeAnimation);
-        final heroSize = heroSizeTween.evaluate(sizeAnimation);
-        return Stack(
-          children: [
-            animation.isCompleted
-                ? PopScope(
-                    onPopInvokedWithResult: (didPop, result) {
-                      if (didPop) {
-                        Future.delayed(Duration(milliseconds: 400), showCard);
-                      }
-                    },
-                    child: EpisodeDetail(episodeId),
-                  )
-                : Transform.translate(
+        final avatarSize = avatarSizeTween.evaluate(sizeAnimation);
+        final lengthAndSizeHeight =
+            lengthAndSizeHeightTween.evaluate(sizeAnimation);
+        final numberAndNameStyle =
+            numberAndNameStyleTween.evaluate(sizeAnimation);
+        return animation.isCompleted
+            ? PopScope(
+                onPopInvokedWithResult: (didPop, result) {
+                  if (didPop) {
+                    Future.delayed(Duration(milliseconds: 400), done);
+                  }
+                },
+                child: EpisodeDetail(
+                  episodeId,
+                  numberAndNameKey: numberAndNameKey,
+                ),
+              )
+            : Stack(
+                children: [
+                  Transform.translate(
                     offset: offsetTween.evaluate(sizeAnimation),
                     child: Container(
                       decoration:
@@ -591,6 +636,7 @@ class EpisodeCardDetailRoute extends ModalRoute {
                                   child: EpisodeDetail(
                                     episodeId,
                                     hide: true,
+                                    numberAndNameKey: numberAndNameKey,
                                   ),
                                 ),
                               ),
@@ -600,22 +646,44 @@ class EpisodeCardDetailRoute extends ModalRoute {
                       ),
                     ),
                   ),
-            Transform.translate(
-              offset: heroOffsetTween.evaluate(sizeAnimation),
-              child: animation.isCompleted
-                  ? Center()
-                  : SizedBox(
-                      height: heroSize,
-                      width: heroSize,
-                      child: CircleAvatar(
-                        backgroundImage: preferEpisodeImage
-                            ? eState[episodeId].episodeOrPodcastImageProvider
-                            : eState[episodeId].podcastImageProvider,
+                  if (showHeroes)
+                    Transform.translate(
+                      offset: avatarOffsetTween.evaluate(sizeAnimation),
+                      child: SizedBox(
+                        height: avatarSize,
+                        width: avatarSize,
+                        child: CircleAvatar(
+                          key: avatarKey,
+                          radius: avatarSize,
+                          backgroundImage: preferEpisodeImage
+                              ? eState[episodeId].episodeOrPodcastImageProvider
+                              : eState[episodeId].podcastImageProvider,
+                        ),
                       ),
                     ),
-            ),
-          ],
-        );
+                  if (showHeroes)
+                    Transform.translate(
+                      offset: numberAndNameOffsetTween.evaluate(sizeAnimation),
+                      child: EpisodeNumberAndPodcastName(
+                        episodeId,
+                        showName:
+                            animation.isForwardOrCompleted ? true : nameVisible,
+                        textStyle: numberAndNameStyle,
+                        key: numberAndNameKey,
+                      ),
+                    ),
+                  if (showHeroes)
+                    Transform.translate(
+                      offset: lengthAndSizeOffsetTween.evaluate(sizeAnimation),
+                      child: EpisodeLengthAndSize(
+                        episodeId,
+                        height: lengthAndSizeHeight,
+                        fill: true,
+                        key: lengthAndSizeKey,
+                      ),
+                    ),
+                ],
+              );
       },
     );
   }
@@ -773,9 +841,6 @@ class EpisodeCard extends StatelessWidget {
   /// Prefer episode image over podcast image for avatar (requires [showimage])
   final bool preferEpisodeImage;
 
-  /// Episode number to be shown.
-  final bool showNumber;
-
   /// Controls the favourite indicator
   final bool showLiked;
 
@@ -800,13 +865,19 @@ class EpisodeCard extends StatelessWidget {
   /// Key for the avatar image
   final GlobalKey? avatarKey;
 
+  /// Key for the EpisodeNumberAndPodcastName widget
+  final GlobalKey? numberAndNameKey;
+
+  /// Key for the EpisodeLengthAndSize widget
+  final GlobalKey? lengthAndSizeKey;
+
   /// Callback that disables card gesture callbacks
   final VoidCallback? onTapDown;
 
   /// Callback that reenables card gesture callbacks
   final VoidCallback? onTapUp;
 
-  final bool hideImage;
+  final bool hide;
 
   const EpisodeCard(
     this.episodeId,
@@ -815,7 +886,6 @@ class EpisodeCard extends StatelessWidget {
     this.openPodcast = false,
     this.showImage = true,
     this.preferEpisodeImage = false,
-    this.showNumber = false,
     this.showLiked = true,
     this.showNew = true,
     this.showLengthAndSize = true,
@@ -824,9 +894,11 @@ class EpisodeCard extends StatelessWidget {
     this.selected = false,
     this.decorate = true,
     this.avatarKey,
+    this.numberAndNameKey,
+    this.lengthAndSizeKey,
     this.onTapDown,
     this.onTapUp,
-    this.hideImage = false,
+    this.hide = false,
   });
 
   @override
@@ -860,31 +932,6 @@ class EpisodeCard extends StatelessWidget {
           ),
         );
 
-    /// Episode title widget.
-    Widget podcastTitle() => Container(
-          alignment: layout == EpisodeGridLayout.large
-              ? Alignment.centerLeft
-              : Alignment.topLeft,
-          padding:
-              EdgeInsets.only(top: layout == EpisodeGridLayout.large ? 0 : 2),
-          width: (context.width / layout.getHorizontalCount(context.width)) -
-              layout.getRowHeight(context.width) * 2 -
-              30,
-          child: Text(
-            episode.podcastTitle,
-            style: (layout == EpisodeGridLayout.small
-                    ? context.textTheme.bodySmall
-                    : layout == EpisodeGridLayout.medium
-                        ? context.textTheme.bodyMedium
-                        : context.textTheme.bodyLarge)!
-                .copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: episode.colorScheme(context).onSecondaryContainer),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        );
-
     /// Circle avatar widget.
     Widget circleImage(
       bool openPodcast,
@@ -894,7 +941,7 @@ class EpisodeCard extends StatelessWidget {
         SizedBox(
           height: radius,
           width: radius,
-          child: !hideImage
+          child: !hide
               ? Stack(
                   children: [
                     CircleAvatar(
@@ -929,105 +976,6 @@ class EpisodeCard extends StatelessWidget {
               : Center(),
         );
 
-    /// Widget that shows the length, size properties and optionally the
-    /// played, downloaded status of the episode.
-    Widget lengthAndSize(BuildContext context,
-        {bool showPlayedAndDownloaded = false}) {
-      BorderSide side = BorderSide(
-          color: context.realDark
-              ? Colors.transparent
-              : episode.colorScheme(context).onSecondaryContainer,
-          width: 1);
-      BorderSide innerSide = BorderSide(
-          color: episode.colorScheme(context).onSecondaryContainer, width: 1);
-      Color backgroundColor = context.realDark
-          ? episode.colorScheme(context).secondaryContainer
-          : episode.colorScheme(context).onSecondaryContainer;
-      return Selector<EpisodeState,
-          ({int duration, int size, bool played, bool downloaded})>(
-        selector: (_, episodeState) => (
-          duration: episodeState[episodeId].enclosureDuration,
-          size: episodeState[episodeId].enclosureSize,
-          played: episodeState[episodeId].isPlayed,
-          downloaded: episodeState[episodeId].isDownloaded,
-        ),
-        builder: (context, value, _) => Row(
-          children: [
-            if (value.duration != 0)
-              Container(
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.horizontal(
-                        left: Radius.circular(5),
-                        right:
-                            value.size == 0 ? Radius.circular(5) : Radius.zero),
-                    border: Border.fromBorderSide(side),
-                    color: showPlayedAndDownloaded && value.played
-                        ? backgroundColor
-                        : Colors.transparent),
-                foregroundDecoration: context.realDark
-                    ? BoxDecoration(
-                        borderRadius: BorderRadius.horizontal(
-                            right: value.size == 0
-                                ? Radius.circular(5)
-                                : Radius.zero),
-                        border: value.size == 0 ||
-                                (showPlayedAndDownloaded &&
-                                    (value.played || value.downloaded))
-                            ? null
-                            : Border(right: innerSide),
-                      )
-                    : null,
-                alignment: Alignment.center,
-                child: Text(
-                  value.duration.toTime,
-                  style: (layout == EpisodeGridLayout.large
-                          ? context.textTheme.labelMedium
-                          : context.textTheme.labelSmall)!
-                      .copyWith(
-                          color: showPlayedAndDownloaded &&
-                                  !context.realDark &&
-                                  value.played
-                              ? episode.colorScheme(context).secondaryContainer
-                              : episode
-                                  .colorScheme(context)
-                                  .onSecondaryContainer),
-                ),
-              ),
-            if (value.size != 0)
-              Container(
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.horizontal(
-                        right: Radius.circular(5),
-                        left: value.duration == 0
-                            ? Radius.circular(5)
-                            : Radius.zero),
-                    border: value.duration == 0
-                        ? Border.fromBorderSide(side)
-                        : Border(top: side, right: side, bottom: side),
-                    color: showPlayedAndDownloaded && value.downloaded
-                        ? backgroundColor
-                        : Colors.transparent),
-                alignment: Alignment.center,
-                child: Text(
-                  '${value.size ~/ 1000000}MB',
-                  style: (layout == EpisodeGridLayout.large
-                          ? context.textTheme.labelMedium
-                          : context.textTheme.labelSmall)!
-                      .copyWith(
-                          color: showPlayedAndDownloaded &&
-                                  !context.realDark &&
-                                  value.downloaded
-                              ? episode.colorScheme(context).secondaryContainer
-                              : episode
-                                  .colorScheme(context)
-                                  .onSecondaryContainer),
-                ),
-              ),
-          ],
-        ),
-      );
-    }
-
     /// Liked indicator widget.
     Widget isLikedIndicator() => Align(
           alignment: Alignment.center,
@@ -1040,23 +988,6 @@ class EpisodeCard extends StatelessWidget {
                         ? context.textTheme.bodySmall!.fontSize
                         : context.textTheme.bodyLarge!.fontSize)
                 : Center(),
-          ),
-        );
-
-    /// Count indicator widget.
-    Widget numberIndicator() => Padding(
-          padding: EdgeInsets.only(top: 0.5),
-          child: Selector<EpisodeState, int>(
-            selector: (_, episodeState) => episodeState[episodeId].number,
-            builder: (context, value, _) => Text(
-              value.toString() + (layout == EpisodeGridLayout.large ? "|" : ""),
-              style: GoogleFonts.teko(
-                  textStyle: layout == EpisodeGridLayout.small
-                      ? context.textTheme.labelMedium
-                      : layout == EpisodeGridLayout.medium
-                          ? context.textTheme.bodyMedium
-                          : context.textTheme.bodyLarge),
-            ),
           ),
         );
 
@@ -1101,90 +1032,70 @@ class EpisodeCard extends StatelessWidget {
           Padding(
             padding: EdgeInsets.all(layout == EpisodeGridLayout.small ? 6 : 8)
                 .copyWith(bottom: layout == EpisodeGridLayout.small ? 8 : 8),
-            child: Column(
-              children: <Widget>[
-                if (layout != EpisodeGridLayout.large)
-                  Expanded(
-                    flex: 3,
-                    child: Row(
-                      children: <Widget>[
-                        circleImage(
-                          openPodcast,
-                          preferEpisodeImage,
-                          radius: layout == EpisodeGridLayout.small
-                              ? layout.getRowHeight(context.width) / 7
-                              : layout.getRowHeight(context.width) / 5,
-                        ),
-                        SizedBox(
-                            width: layout == EpisodeGridLayout.small ? 2 : 5),
-                        if (showNumber) numberIndicator(),
-                        Spacer(),
-                        pubDate(showNew),
-                      ],
+            child: Row(
+              children: [
+                if (layout == EpisodeGridLayout.large)
+                  Padding(
+                    padding: EdgeInsetsGeometry.only(right: 5),
+                    child: circleImage(
+                      openPodcast,
+                      preferEpisodeImage,
+                      radius: layout.getRowHeight(context.width) * 4 / 5,
                     ),
                   ),
                 Expanded(
-                  flex: layout == EpisodeGridLayout.small ? 10 : 7,
-                  child: layout == EpisodeGridLayout.large
-                      ? Row(
-                          children: [
-                            circleImage(
-                              openPodcast,
-                              preferEpisodeImage,
-                              radius:
-                                  layout.getRowHeight(context.width) * 4 / 5,
-                            ),
-                            SizedBox(
-                              width: 5,
-                            ),
-                            Expanded(
-                              child: Column(
-                                children: [
-                                  Expanded(
-                                    flex: 2,
-                                    child: Row(
-                                      children: <Widget>[
-                                        if (showNumber) numberIndicator(),
-                                        podcastTitle(),
-                                        Spacer(),
-                                        pubDate(showNew),
-                                      ],
-                                    ),
-                                  ),
-                                  Expanded(flex: 5, child: title()),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Row(
-                                      children: <Widget>[
-                                        if (showLiked) isLikedIndicator(),
-                                        Spacer(),
-                                        if (showLengthAndSize)
-                                          lengthAndSize(context,
-                                              showPlayedAndDownloaded:
-                                                  showPlayedAndDownloaded)
-                                      ],
-                                    ),
-                                  ),
-                                ],
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: layout != EpisodeGridLayout.large ? 24 : 32,
+                        child: Row(
+                          children: <Widget>[
+                            if (layout != EpisodeGridLayout.large)
+                              circleImage(
+                                openPodcast,
+                                preferEpisodeImage,
+                                radius: layout == EpisodeGridLayout.small
+                                    ? layout.getRowHeight(context.width) / 7
+                                    : layout.getRowHeight(context.width) / 5,
                               ),
-                            )
+                            if (layout != EpisodeGridLayout.large)
+                              SizedBox(
+                                  width: layout == EpisodeGridLayout.small
+                                      ? 2
+                                      : 5),
+                            if (!hide)
+                              EpisodeNumberAndPodcastName(
+                                episodeId,
+                                showName: layout == EpisodeGridLayout.large,
+                                key: numberAndNameKey,
+                              ),
+                            Spacer(),
+                            pubDate(showNew),
                           ],
-                        )
-                      : title(),
-                ),
-                if (layout != EpisodeGridLayout.large)
-                  Expanded(
-                    flex: 2,
-                    child: Row(
-                      children: <Widget>[
-                        if (showLiked) isLikedIndicator(),
-                        Spacer(),
-                        if (showLengthAndSize)
-                          lengthAndSize(context,
-                              showPlayedAndDownloaded: showPlayedAndDownloaded),
-                      ],
-                    ),
+                        ),
+                      ),
+                      Expanded(
+                        child: title(),
+                      ),
+                      SizedBox(
+                        height: 24,
+                        child: Row(
+                          children: <Widget>[
+                            if (showLiked) isLikedIndicator(),
+                            Spacer(),
+                            if (showLengthAndSize && !hide)
+                              EpisodeLengthAndSize(
+                                episodeId,
+                                showPlayedAndDownloaded:
+                                    showPlayedAndDownloaded,
+                                key: lengthAndSizeKey,
+                              )
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
+                )
               ],
             ),
           ),

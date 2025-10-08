@@ -461,7 +461,6 @@ class PodcastPreview extends StatelessWidget {
                       id,
                       layout,
                       preferEpisodeImage: false,
-                      showNumber: true,
                     ),
                   ),
                 )
