@@ -146,39 +146,40 @@ class _PopupMenu<T> extends StatelessWidget {
     final height = CurveTween(curve: Interval(0.0, 1 - 1.5 * unit));
 
     final Widget child = ConstrainedBox(
-        constraints: adjustedConstraints ??
-            const BoxConstraints(
-              minWidth: _kMenuMinWidth,
-              maxWidth: _kMenuMaxWidth,
-            ),
-        child: Stack(
-          alignment: direction == AxisDirection.down
-              ? Alignment.bottomCenter
-              : Alignment.topCenter,
-          children: [
-            IntrinsicWidth(
-              stepWidth: _kMenuWidthStep,
-              child: Semantics(
-                scopesRoute: true,
-                namesRoute: true,
-                explicitChildNodes: true,
-                label: semanticLabel,
-                child: SingleChildScrollView(
-                  padding: padding,
-                  child: ListBody(
-                      reverse: direction == AxisDirection.down ? false : true,
-                      children: children),
-                ),
+      constraints: adjustedConstraints ??
+          const BoxConstraints(
+            minWidth: _kMenuMinWidth,
+            maxWidth: _kMenuMaxWidth,
+          ),
+      child: Stack(
+        alignment: direction == AxisDirection.down
+            ? Alignment.bottomCenter
+            : Alignment.topCenter,
+        children: [
+          IntrinsicWidth(
+            stepWidth: _kMenuWidthStep,
+            child: Semantics(
+              scopesRoute: true,
+              namesRoute: true,
+              explicitChildNodes: true,
+              label: semanticLabel,
+              child: SingleChildScrollView(
+                padding: padding,
+                child: ListBody(
+                    reverse: direction == AxisDirection.down ? false : true,
+                    children: children),
               ),
             ),
-            if (visibleItemCount != null &&
-                visibleItemCount! < route.items.length)
-              Icon(
-                Icons.arrow_drop_down,
-                color: context.textColor.withValues(alpha: 0.4),
-              )
-          ],
-        ));
+          ),
+          if (visibleItemCount != null &&
+              visibleItemCount! < route.items.length)
+            Icon(
+              Icons.arrow_drop_down,
+              color: context.textColor.withValues(alpha: 0.4),
+            )
+        ],
+      ),
+    );
 
     return AnimatedBuilder(
       animation: route.animation!,

@@ -192,7 +192,7 @@ class SearchPodcastPreviewState extends State<SearchPodcastPreview> {
                                       listen: false)
                                   .subscribe(widget.podcastId),
                               tooltip:
-                                  context.s.filterType(context.s.downloaded),
+                                  context.s.filterType(context.s.subscribe),
                               // connectRight: true,
                               width: 100,
                               falseChild: Center(

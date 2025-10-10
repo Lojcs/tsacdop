@@ -227,7 +227,7 @@ class InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                 _controller.reverse();
               }
             } else {
-              _shadowController.forward();
+              // _shadowController.forward();
               if (context.mounted) openDetails(context);
             }
           },

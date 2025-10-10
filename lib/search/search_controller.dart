@@ -130,7 +130,7 @@ abstract class RemoteSearch extends Search {
     maxPodcastCount = podcastIds.length + feedUrls.length;
     for (var feedUrl in feedUrls) {
       if (generation != _searchGeneration) break;
-      if (futures.length >= 8) await futures.removeFirst();
+      if (futures.length >= 4) await futures.removeFirst();
       futures.add(_addFeed(feedUrl)); // Don't await
     }
     await Future.wait(futures);

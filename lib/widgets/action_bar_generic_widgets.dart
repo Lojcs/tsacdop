@@ -474,7 +474,10 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
       ..addListener(() {
         if (mounted) setState(() {});
       });
-    activeAnimation = activeAnimationController;
+    activeAnimation = CurvedAnimation(
+        parent: activeAnimationController,
+        curve: Curves.easeOutExpo,
+        reverseCurve: Curves.easeInExpo);
     if (expands) {
       expandAnimationController = AnimationController(
           vsync: this, duration: const Duration(milliseconds: 300))
