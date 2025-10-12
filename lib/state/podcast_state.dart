@@ -189,7 +189,7 @@ class PodcastState extends ChangeNotifier {
     return (podcast, episodes);
   }
 
-  /// Adds a podcast and its episodes dentoed by its rss feed url.
+  /// Adds a podcast and its episodes denoted by its rss feed url.
   /// Not safe to call from the background.
   /// If the podcast is already subscribed to, uses data from [EpisodeState].
   /// Otherwise tries to fetch the rss feed and parse it.

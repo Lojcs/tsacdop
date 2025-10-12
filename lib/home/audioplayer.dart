@@ -37,7 +37,6 @@ class PlayerWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print("Player: $playerKey");
     return Selector<AudioPlayerNotifier, Tuple2<bool, PlayerHeight?>>(
       selector: (_, audio) => Tuple2(audio.playerRunning, audio.playerHeight),
       builder: (_, data, __) {

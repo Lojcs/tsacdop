@@ -70,6 +70,7 @@ class SearchPanelRoute extends ModalRoute {
   @override
   void dispose() {
     showIcon();
+    searchProvider.dispose();
     super.dispose();
   }
 

@@ -51,8 +51,20 @@ abstract class Search extends ChangeNotifier {
   Widget background = Center();
 }
 
+/// Additional interface for remote search controllers.
+abstract interface class RemoteSearchInterface extends Search {
+  /// Called before [getPodcastEpisodes] to handle potential async work.
+  Future<void> preparePodcastEpisodes(String podcastId);
+
+  /// Clears the remote data from external state objects.
+  void clear();
+
+  /// Subscribe to the remote podcast with id [podcastId].
+  Future<void> subscribe(String podcastId);
+}
+
 /// Abtract class for search controllers that fetch data remotely
-abstract class RemoteSearch extends Search {
+abstract class RemoteSearch extends Search implements RemoteSearchInterface {
   final PodcastState pState;
   final EpisodeState eState;
 
@@ -70,9 +82,9 @@ abstract class RemoteSearch extends Search {
 
   /// Incremented on clear, prevents results from previous searches
   /// from being added to results later.
-  int _searchGeneration = 0;
+  int searchGeneration = 0;
 
-  /// Call this when exiting to remove the remote data from [PodcastState] and [EpisodeState]
+  @override
   void clear() {
     for (var podcastId in podcastIds) {
       pState.removeRemotePodcast(podcastId);
@@ -85,7 +97,7 @@ abstract class RemoteSearch extends Search {
     episodeIds.clear();
     maxPodcastCount = 0;
     queryText = "";
-    _searchGeneration++;
+    searchGeneration++;
     if (hasListeners) notifyListeners();
   }
 
@@ -96,12 +108,12 @@ abstract class RemoteSearch extends Search {
   }
 
   /// Helper to add feed to the podcasts list. Returns success.
-  Future<bool> _addFeed(String feedUrl) async {
+  Future<bool> addFeed(String feedUrl) async {
     bool ret = false;
     if (!podcastUrls.contains(feedUrl)) {
-      final generation = _searchGeneration;
+      final generation = searchGeneration;
       final result = await pState.addPodcastByUrl(feedUrl);
-      if (generation == _searchGeneration) {
+      if (generation == searchGeneration) {
         if (result != null) {
           final (podcastId, episodeIds) = result;
           podcastIds.add(podcastId);
@@ -120,18 +132,18 @@ abstract class RemoteSearch extends Search {
   /// Helper to try to add a single feed to the podcasts list. Returns success
   Future<bool> tryAddFeed(String feedUrl) {
     maxPodcastCount++;
-    return _addFeed(feedUrl);
+    return addFeed(feedUrl);
   }
 
   /// Helper to add feeds to the podcasts list.
   Future<void> addFeeds(Iterable<String> feedUrls) async {
-    final generation = _searchGeneration;
+    final generation = searchGeneration;
     Queue<Future<void>> futures = Queue();
     maxPodcastCount = podcastIds.length + feedUrls.length;
     for (var feedUrl in feedUrls) {
-      if (generation != _searchGeneration) break;
       if (futures.length >= 4) await futures.removeFirst();
-      futures.add(_addFeed(feedUrl)); // Don't await
+      if (generation != searchGeneration) return;
+      futures.add(addFeed(feedUrl)); // Don't await
     }
     await Future.wait(futures);
   }
@@ -152,7 +164,7 @@ abstract class RemoteSearch extends Search {
     notifyListeners();
   }
 
-  /// Subscribe to the remote podcast with id [podcastId].
+  @override
   Future<void> subscribe(String podcastId) async {
     final index = podcastIds.indexOf(podcastId);
     final result = await pState.subscribeRemotePodcast(
@@ -166,7 +178,7 @@ abstract class RemoteSearch extends Search {
 }
 
 /// Joins api search and web search.
-class JointSearch extends Search {
+class JointSearch extends Search implements RemoteSearchInterface {
   final PodcastState pState;
   final EpisodeState eState;
   JointSearch(this.pState, this.eState)
@@ -217,6 +229,7 @@ class JointSearch extends Search {
   @override
   int get itemCount => apiSearch.itemCount + webSearch.itemCount;
 
+  @override
   void clear() {
     queryText = "";
     apiSearch.clear();
@@ -235,6 +248,7 @@ class JointSearch extends Search {
       apiSearch.getPodcastEpisodes(podcastId) ??
       webSearch.getPodcastEpisodes(podcastId);
 
+  @override
   Future<void> subscribe(String podcastId) async {
     if (apiSearch.podcastIds.contains(podcastId)) {
       await apiSearch.subscribe(podcastId);
@@ -242,4 +256,10 @@ class JointSearch extends Search {
       await webSearch.subscribe(podcastId);
     }
   }
+
+  @override
+  Future<void> preparePodcastEpisodes(String podcastId) => Future.wait([
+        apiSearch.preparePodcastEpisodes(podcastId),
+        webSearch.preparePodcastEpisodes(podcastId)
+      ]);
 }

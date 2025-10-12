@@ -17,9 +17,15 @@ import 'fireside_data.dart';
 import 'theme_data.dart';
 
 enum DataSource {
-  database, // Persistent from database
-  user, // Temp from user
-  remote, // Temp from rss feed
+  database(subscribable: true, subscribed: true), // Persistent from database
+  user(subscribable: false, subscribed: false), // Temp from user
+  remote(subscribable: true, subscribed: false), // Temp from rss feed
+  api(subscribable: true, subscribed: false); // Temp from an api
+
+  const DataSource({required this.subscribable, required this.subscribed});
+
+  final bool subscribable;
+  final bool subscribed;
 }
 
 const localFolderId = "46e48103-06c7-4fe1-a0b1-68aa7205b7f0";
@@ -31,16 +37,6 @@ const avatarColors = <String>[
   'D32F2F',
   '00796B',
 ];
-
-class TestClass extends Equatable {
-  final String id;
-
-  const TestClass(this.id);
-
-  @override
-  // TODO: implement props
-  List<Object?> get props => throw UnimplementedError();
-}
 
 class PodcastBrief extends Equatable {
   final String id;
@@ -59,8 +55,7 @@ class PodcastBrief extends Equatable {
   final String imagePath;
   final String firesideBackgroundImage;
 
-  final String _primaryColor;
-  Color get primaryColor => _primaryColor.toargbColor();
+  final Color primaryColor;
 
   /// Number of episodes added in the last sync
   final int syncEpisodeCount;
@@ -93,7 +88,7 @@ class PodcastBrief extends Equatable {
     required this.imageUrl,
     required this.imagePath,
     this.firesideBackgroundImage = "",
-    required Color primaryColor,
+    required this.primaryColor,
     required this.syncEpisodeCount,
     required this.episodeCount,
     required this.hideNewMark,
@@ -102,8 +97,7 @@ class PodcastBrief extends Equatable {
     this.skipSecondsStart = 0,
     this.skipSecondsEnd = 0,
     this.source = DataSource.database,
-  })  : firesideHosts = firesideHosts ?? [],
-        _primaryColor = primaryColor.toargbString();
+  }) : firesideHosts = firesideHosts ?? [];
 
   /// Construct [PodcastBrief] for a local folder.
   PodcastBrief.localFolder(S s, Directory applicationDocumentsDirectory,
@@ -122,7 +116,7 @@ class PodcastBrief extends Equatable {
         imagePath =
             "${applicationDocumentsDirectory.path}/assets/avatar_backup.png",
         firesideBackgroundImage = "",
-        _primaryColor = Colors.teal.toargbString(),
+        primaryColor = Colors.teal,
         syncEpisodeCount = 0,
         episodeCount = 0,
         hideNewMark = true,
@@ -135,8 +129,8 @@ class PodcastBrief extends Equatable {
   /// Construct a [PodcastBrief] from an [RssFeed].
   /// This is callable from a background isolate, and so doesn't parse its color.
   /// Use [withColorFromImage] to fill the correct color.
-  PodcastBrief.fromFeed(RssFeed feed, this.rssUrl, this.rssHash)
-      : id = Uuid().v4(),
+  PodcastBrief.fromFeed(RssFeed feed, this.rssUrl, this.rssHash, {String? id})
+      : id = id ?? Uuid().v4(),
         title = feed.title ?? feed.itunes?.title ?? "",
         author = feed.author ?? feed.itunes?.author ?? "",
         provider = feed.generator ?? "",
@@ -154,7 +148,7 @@ class PodcastBrief extends Equatable {
                 "&color=fff&name=${feed.title}&length=2&bold=true",
         imagePath = "",
         firesideBackgroundImage = "",
-        _primaryColor = Colors.teal.toargbString(),
+        primaryColor = Colors.teal,
         syncEpisodeCount = 0,
         episodeCount = feed.items?.length ?? 0,
         hideNewMark = false,
@@ -163,6 +157,31 @@ class PodcastBrief extends Equatable {
         skipSecondsStart = 0,
         skipSecondsEnd = 0,
         source = DataSource.remote;
+
+  PodcastBrief.api(
+      {String? id,
+      required this.title,
+      required this.rssUrl,
+      required this.imageUrl,
+      this.primaryColor = Colors.teal,
+      this.author = "",
+      this.provider = "",
+      this.description = "",
+      this.webpage = "",
+      this.funding = const [],
+      this.episodeCount = 0})
+      : id = id ?? Uuid().v4(),
+        firesideHosts = [],
+        firesideBackgroundImage = "",
+        rssHash = "",
+        imagePath = "",
+        syncEpisodeCount = 0,
+        hideNewMark = false,
+        noAutoSync = false,
+        autoDownload = false,
+        skipSecondsStart = 0,
+        skipSecondsEnd = 0,
+        source = DataSource.api;
 
   /// Returns a copy with the [primaryColor] replaced with a color derived from
   /// [imagePath] or [imageUrl].
