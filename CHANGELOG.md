@@ -4,10 +4,9 @@
 Release date 2025/10/13
 
 ### New
-* New search ux.
-* Supports podcast apis and web search.
+* New search ux that supports podcast apis and web search. Web search mode can also be used to directly add rss urls. The mode can be chosen using the buttons on the bottom, and tapping the button again lets you choose the provider.
 * @Zig-VS-TypeScript-VS - Added new search engines.
-* Added opml import progress popup.
+* Added opml import progress popup. Opml import is significantly faster.
 * Revised episode card opening animation.
 
 ### Bugfixes
