@@ -262,6 +262,7 @@ class DownloadState extends ChangeNotifier {
       await _episodeState.cacheEpisodes([episodeId]);
       await _episodeState.unsetDownloaded(episodeId);
     }
+    notifyListeners();
   }
 
   /// Retries an episode's failed download.
@@ -344,6 +345,11 @@ class DownloadState extends ChangeNotifier {
           }
         }
       }
+
+      _episodeState.cacheEpisodes(allDownloads
+          .where((eTask) => eTask.status != DownloadTaskStatus.complete)
+          .map((task) => task.episodeId)
+          .toList());
     }
   }
 
