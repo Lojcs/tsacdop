@@ -8,6 +8,7 @@ Release date 2025/10/13
 * @Zig-VS-TypeScript-VS - Added new search engines.
 * Added opml import progress popup. Opml import is significantly faster.
 * Revised episode card opening animation.
+* Audio seeks are buffered so multiple rapid seeks don't cause lag.
 
 ### Bugfixes
 * Fixed bugs related to episode selection.

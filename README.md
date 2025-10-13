@@ -16,7 +16,7 @@ Enjoy podcasts with Tsacdop-Fork.
 
 Tsacdop-Fork is a fork of Tsacdop, a podcast player developed with Flutter. A clean, simply beautiful, and friendly app, which is also free and open source.
 
-This fork updates the ui, fixes bugs and adds ux features. Gpodder and podcast search apis are currently not supported.
+This fork updates the ui, fixes bugs and adds ux features. Gpodder is currently not supported.
 
 Credit to upstream project [tsacdop](https://github.com/tsacdop/tsacdop), the Flutter team and all involved plugins, especially [webfeed](https://github.com/witochandra/webfeed), [Just_Audio](https://pub.dev/packages/just_audio), and [Provider](https://pub.dev/packages/provider).
 
@@ -43,6 +43,7 @@ Or download the latest APK from the [Releases Section](https://github.com/Lojcs/
 * Skip silence
 * Boost volume
 * Load local audio files
+* Podcastindex & iTunes api + web search
 
 More to come...
 
