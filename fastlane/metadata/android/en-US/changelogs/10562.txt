@@ -1,0 +1,7 @@
+Changes from v0.8.3:
+
+* New search ux
+* Search api support
+* Optimized sync
+
+Check out https://github.com/Lojcs/tsacdop/blob/v0.9.1/CHANGELOG.md for full changelog.

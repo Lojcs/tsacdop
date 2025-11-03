@@ -463,8 +463,11 @@ class PodcastState extends ChangeNotifier {
       newEpisodes = newEpisodes
           .map((e) => e.copyWith(primaryColor: podcast.primaryColor))
           .toList();
+      if (_podcastMap[podcastId]!.primaryColor != podcast.primaryColor) {
+        await _dbHelper.savePodcastProperties([podcastId],
+            primaryColor: podcast.primaryColor);
+      }
       _podcastMap[podcastId] = podcast;
-      await _dbHelper.savePodcastLocal(podcast);
       if (newEpisodes.isNotEmpty) {
         await _dbHelper.saveUpdatedPodcastEpisodes(newEpisodes);
       }

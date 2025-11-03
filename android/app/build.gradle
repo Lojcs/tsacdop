@@ -78,6 +78,11 @@ android {
             signingConfig signingConfigs.release
             shrinkResources false
        }
+        debug {
+            applicationIdSuffix ".debug"
+            shrinkResources false
+            debuggable true
+       }
     }
 
     dependenciesInfo {

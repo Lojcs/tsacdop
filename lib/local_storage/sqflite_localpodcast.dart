@@ -369,12 +369,13 @@ class DBHelper {
     bool? autoDownload,
     int? skipSecondsStart,
     int? skipSecondsEnd,
+    Color? primaryColor,
   }) async {
     bool go = false;
     var dbClient = await database;
     List<String> update = ["UPDATE PodcastLocal SET"];
     List<String> changes = [];
-    List arguements = [];
+    List arguments = [];
     if (hideNewMark == false) {
       go = true;
       changes.add(" hide_new_mark = 0");
@@ -399,17 +400,22 @@ class DBHelper {
     if (skipSecondsStart != null) {
       go = true;
       changes.add(" skip_seconds = ?");
-      arguements.add(skipSecondsStart);
+      arguments.add(skipSecondsStart);
     }
     if (skipSecondsEnd != null) {
       go = true;
       changes.add(" skip_seconds_end = ?");
-      arguements.add(skipSecondsStart);
+      arguments.add(skipSecondsStart);
+    }
+    if (primaryColor != null) {
+      go = true;
+      changes.add(" primaryColor = ?");
+      arguments.add(primaryColor.toargbString());
     }
     if (go) {
       update.add(changes.join(", "));
       update.add(" WHERE id IN (${(", ?" * ids.length).substring(2)})");
-      await dbClient.rawUpdate(update.join(), [...arguements, ...ids]);
+      await dbClient.rawUpdate(update.join(), [...arguments, ...ids]);
     }
   }
 
@@ -426,7 +432,7 @@ class DBHelper {
     var dbClient = await database;
     await dbClient.transaction((txn) async {
       await txn.rawInsert(
-          """INSERT OR REPLACE INTO PodcastLocal (id, title, imageUrl, rssUrl, 
+          """INSERT OR IGNORE INTO PodcastLocal (id, title, imageUrl, rssUrl, 
           primaryColor, author, description, add_date, imagePath, provider, link, funding) 
           VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
           [
@@ -781,7 +787,7 @@ class DBHelper {
     Batch batchOp = txn.batch();
     for (var episode in episodes) {
       batchOp.rawInsert(
-          """INSERT OR REPLACE INTO Episodes(title, enclosure_url, enclosure_length,
+          """INSERT OR IGNORE INTO Episodes(title, enclosure_url, enclosure_length,
               pubDate, description, feed_id, milliseconds, duration, explicit, media_id,
               chapter_link, episode_image, number, display_version_id, is_new)
               VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
@@ -843,7 +849,7 @@ class DBHelper {
     assert(false, "Don't use this");
     var dbClient = await database;
     int episodeId = await dbClient.rawInsert(
-        """INSERT OR REPLACE INTO Episodes(title, enclosure_url, enclosure_length, pubDate, 
+        """INSERT OR IGNORE INTO Episodes(title, enclosure_url, enclosure_length, pubDate, 
                 description, feed_id, milliseconds, duration, explicit, media_id, episode_image) 
                 VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         [

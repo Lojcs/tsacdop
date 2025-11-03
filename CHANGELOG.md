@@ -1,5 +1,13 @@
 # Tsacdop-Fork Changelog
 
+
+## 0.9.1
+Release date 2025/11/03
+
+### Bugfixes
+* Fixed a bug causing podcast settings to be reset.
+* Fixed issues preventing release on fdroid.
+
 ## 0.9.0
 Release date 2025/10/13
 
