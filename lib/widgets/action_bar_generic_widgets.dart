@@ -1253,6 +1253,11 @@ class ExpansionController {
   void adjustWidths() {
     int minimize = 0;
     while (_availableWidth < 0) {
+      if (maxWidth() < 0) {
+        // Sometimes context.width can return 0 -_-
+        Future.delayed(Duration(milliseconds: 200), adjustWidths);
+        return;
+      }
       for (int i = 0; i < _expandedItems.length; i++) {
         Expandable item = _items[_expandedItems[i]];
         _itemsWidth +=
