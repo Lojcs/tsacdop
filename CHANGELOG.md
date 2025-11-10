@@ -1,6 +1,14 @@
 # Tsacdop-Fork Changelog
 
 
+## 0.9.2
+Release date 2025/11/11
+
+### Bugfixes
+* Fixed a bug causing the app to not open.
+* Fixed web search body being unclickable.
+* Fixed search slowing down with many existing subsciptions.
+
 ## 0.9.1
 Release date 2025/11/03
 

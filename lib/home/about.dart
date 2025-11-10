@@ -5,7 +5,7 @@ import 'package:line_icons/line_icons.dart';
 import '../util/extension_helper.dart';
 import '../widgets/custom_widget.dart';
 
-const String version = '0.7.3';
+const String version = '0.9.2';
 
 class AboutApp extends StatelessWidget {
   const AboutApp({super.key});
