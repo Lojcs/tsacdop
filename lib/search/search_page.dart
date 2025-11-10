@@ -332,7 +332,9 @@ class SearchPanelState extends State<SearchPanel>
                 ),
               ),
               ListView.builder(
-                hitTestBehavior: HitTestBehavior.opaque,
+                hitTestBehavior: searchWeb
+                    ? HitTestBehavior.deferToChild
+                    : HitTestBehavior.opaque,
                 shrinkWrap: true,
                 itemCount: searchItemCount,
                 itemExtentBuilder: (index, dimensions) => switch (index) {
@@ -347,15 +349,17 @@ class SearchPanelState extends State<SearchPanel>
                   index,
                   widget.searchProvider.episodeIds.isNotEmpty
                 )) {
-                  (0, _) => GestureDetector(
-                      onTap: () {
-                        if (widget.searchFocusNode.hasFocus) {
-                          widget.searchFocusNode.unfocus();
-                        } else {
-                          Navigator.of(context).pop();
-                        }
-                      },
-                    ),
+                  (0, _) => searchWeb
+                      ? Center()
+                      : GestureDetector(
+                          onTap: () {
+                            if (widget.searchFocusNode.hasFocus) {
+                              widget.searchFocusNode.unfocus();
+                            } else {
+                              Navigator.of(context).pop();
+                            }
+                          },
+                        ),
                   (1, _) => Controls(
                       searchFocusNode: widget.searchFocusNode,
                       hideSearchBar: widget.hide,
