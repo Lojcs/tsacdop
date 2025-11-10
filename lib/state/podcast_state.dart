@@ -134,6 +134,11 @@ class PodcastState extends ChangeNotifier {
     return podcasts.map((pod) => pod.id).toList();
   }
 
+  String? checkPodcast(String url) => _podcastMap.entries
+      .where((entry) => entry.value.rssUrl == url)
+      .firstOrNull
+      ?.key;
+
   /// Unsubscibes from podcast and deletes local data. Safe to call from the background.
   Future<void> unsubscribePodcast(String podcastId) async {
     final eState = background ? EpisodeState() : _episodeState;
@@ -196,7 +201,8 @@ class PodcastState extends ChangeNotifier {
   /// Episodes kept only as temp ids, [EpisodeBrief]s are kept in [EpisodeState]
   Future<(String, List<int>)?> addPodcastByUrl(String feedUrl) async {
     (String, List<int>)? ret;
-    switch (await _dbHelper.checkPodcast(feedUrl)) {
+    print("Checking pod");
+    switch (checkPodcast(feedUrl)) {
       case String id:
         await cachePodcast(id);
         final episodeIds =
@@ -204,6 +210,7 @@ class PodcastState extends ChangeNotifier {
         ret = (id, episodeIds);
 
       case null:
+        print("Couldn't find pod");
         var (podcast, episodes) = await Isolater(_fetchFeed).run(feedUrl);
         if (podcast != null) {
           try {
@@ -313,7 +320,7 @@ class PodcastState extends ChangeNotifier {
   /// Subscribes to a podcast denoted by its url. Returns the podcast id.
   /// Safe to call from the background.
   Future<String?> subscribePodcastByUrl(String feedUrl) async {
-    if (await _dbHelper.checkPodcast(feedUrl) == null) {
+    if (checkPodcast(feedUrl) == null) {
       var (podcast, episodes) = await Isolater(_fetchFeed).run(feedUrl);
       if (podcast != null) {
         try {
