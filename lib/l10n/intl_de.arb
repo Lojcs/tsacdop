@@ -1,1 +1,52 @@
-{}
+{
+    "addNewEpisodeTooltip": "Neue Episoden zur Wiedergabeliste hinzufügen",
+    "@addNewEpisodeTooltip": {},
+    "addSomeGroups": "Einige Gruppen hinzufügen",
+    "@addSomeGroups": {
+        "description": "Please add new groups"
+    },
+    "after": "Nach",
+    "@after": {
+        "description": "Used in a button to select episodes after the selected one(s) on a list. Not used for time"
+    },
+    "all": "Alle",
+    "@all": {},
+    "apiSearch": "API-Suche",
+    "@apiSearch": {},
+    "autoDownload": "Automatischer Download",
+    "@autoDownload": {},
+    "back": "Zurück",
+    "@back": {},
+    "before": "Vorher",
+    "@before": {
+        "description": "Used in a button to select episodes before the selected one(s) on a list. Not used for time"
+    },
+    "between": "Zwischen",
+    "@between": {
+        "description": "Used in a button to select episodes between the selected one(s) on a list"
+    },
+    "boostVolume": "Lautstärke erhöhen",
+    "@boostVolume": {
+        "description": "Boost volume in player widget."
+    },
+    "buffering": "Pufferung",
+    "@buffering": {},
+    "cancel": "ABBRECHEN",
+    "@cancel": {},
+    "capitalDefault": "Standard",
+    "@capitalDefault": {},
+    "cellularConfirm": "Warnung zu Mobilfunkdaten",
+    "@cellularConfirm": {},
+    "cellularConfirmDes": "Möchtest Du wirklich mobile Daten zum Herunterladen verwenden?",
+    "@cellularConfirmDes": {},
+    "changeLayout": "Layout ändern",
+    "@changeLayout": {},
+    "changelog": "Änderungsprotokoll",
+    "@changelog": {},
+    "close": "Schließen",
+    "@close": {},
+    "color": "Farbe",
+    "@color": {},
+    "confirm": "BESTÄTIGEN",
+    "@confirm": {}
+}
