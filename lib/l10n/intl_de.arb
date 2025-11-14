@@ -37,7 +37,7 @@
     "@capitalDefault": {},
     "cellularConfirm": "Warnung zu Mobilfunkdaten",
     "@cellularConfirm": {},
-    "cellularConfirmDes": "Möchtest Du wirklich mobile Daten zum Herunterladen verwenden?",
+    "cellularConfirmDes": "Bist du sicher, dass du mobile Daten zum Herunterladen verwenden möchtest?",
     "@cellularConfirmDes": {},
     "changeLayout": "Layout ändern",
     "@changeLayout": {},
@@ -48,5 +48,27 @@
     "color": "Farbe",
     "@color": {},
     "confirm": "BESTÄTIGEN",
-    "@confirm": {}
+    "@confirm": {},
+    "add": "Hinzufügen",
+    "@add": {
+        "description": "Subscribe new podcast"
+    },
+    "createNewPlaylist": "Neue Wiedergabeliste",
+    "@createNewPlaylist": {},
+    "darkMode": "Dunkler Modus",
+    "@darkMode": {},
+    "defaultQueueReminder": "Dies ist die Standardwarteschlange, die nicht entfernt werden kann.",
+    "@defaultQueueReminder": {
+        "description": "Remind user that default queue can't be removed."
+    },
+    "defaultSearchEngine": "Standard-Podcast-Suchmaschine",
+    "@defaultSearchEngine": {},
+    "delete": "Löschen",
+    "@delete": {},
+    "deleted": "Gelöscht",
+    "@deleted": {},
+    "deletedEpisodeDesc": "Diese Episode wurde aus der Datenbank gelöscht",
+    "@deletedEpisodeDesc": {},
+    "deletedPodcastDesc": "Dieser Podcast wurde aus der Datenbank gelöscht",
+    "@deletedPodcastDesc": {}
 }
