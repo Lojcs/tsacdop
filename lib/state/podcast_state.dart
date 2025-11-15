@@ -190,6 +190,7 @@ class PodcastState extends ChangeNotifier {
       }
     } catch (e) {
       developer.log(e.toString());
+      print("Fetch feed error: $e");
     }
     return (podcast, episodes);
   }
@@ -201,18 +202,23 @@ class PodcastState extends ChangeNotifier {
   /// Episodes kept only as temp ids, [EpisodeBrief]s are kept in [EpisodeState]
   Future<(String, List<int>)?> addPodcastByUrl(String feedUrl) async {
     (String, List<int>)? ret;
-    print("Checking pod");
     switch (checkPodcast(feedUrl)) {
       case String id:
         await cachePodcast(id);
         final episodeIds =
             await _episodeState.getEpisodes(feedIds: [id], limit: 100);
         ret = (id, episodeIds);
-
       case null:
-        print("Couldn't find pod");
         var (podcast, episodes) = await Isolater(_fetchFeed).run(feedUrl);
         if (podcast != null) {
+          final id = checkPodcast(podcast.rssUrl);
+          if (id != null) {
+            await cachePodcast(id);
+            final episodeIds =
+                await _episodeState.getEpisodes(feedIds: [id], limit: 100);
+            ret = (id, episodeIds);
+            return ret;
+          }
           try {
             podcast = await podcast.withColorFromImage();
           } catch (e) {
@@ -303,7 +309,9 @@ class PodcastState extends ChangeNotifier {
       var (podcastLocal, episodesLocal) =
           await Isolater(_persistFeed).run((podcastRemote, episodesRemote));
       await _dbHelper.savePodcastLocal(podcastLocal);
-      await _dbHelper.saveNewPodcastEpisodes(episodesLocal);
+      if (episodesLocal.isNotEmpty) {
+        await _dbHelper.saveNewPodcastEpisodes(episodesLocal);
+      }
       await addPodcastToGroup(podcastId: podcastId, groupId: homeGroupId);
 
       await cachePodcast(podcastId);
@@ -322,7 +330,8 @@ class PodcastState extends ChangeNotifier {
   Future<String?> subscribePodcastByUrl(String feedUrl) async {
     if (checkPodcast(feedUrl) == null) {
       var (podcast, episodes) = await Isolater(_fetchFeed).run(feedUrl);
-      if (podcast != null) {
+      // Sometimes podcasts have multiple rss feeds.
+      if (podcast != null && checkPodcast(podcast.rssUrl) == null) {
         try {
           podcast = await podcast.withColorFromImage();
         } catch (e) {
@@ -343,7 +352,9 @@ class PodcastState extends ChangeNotifier {
         var (podcastLocal, episodesLocal) =
             await Isolater(_persistFeed).run((podcast, episodes));
         await _dbHelper.savePodcastLocal(podcastLocal);
-        await _dbHelper.saveNewPodcastEpisodes(episodesLocal);
+        if (episodesLocal.isNotEmpty) {
+          await _dbHelper.saveNewPodcastEpisodes(episodesLocal);
+        }
         await cachePodcast(podcast.id);
         await addPodcastToGroup(podcastId: podcast.id, groupId: homeGroupId);
         return podcast.id;
@@ -372,7 +383,7 @@ class PodcastState extends ChangeNotifier {
     final futures = Queue<Future<String?>>();
     final ids = <String?>[];
     for (var rssUrl in rssUrls) {
-      if (futures.length >= 8) ids.add(await futures.removeFirst());
+      if (futures.length >= 4) ids.add(await futures.removeFirst());
       futures.add(Future(() async {
         final result = await subscribePodcastByUrl(rssUrl);
         opmlProgress.subscribe();
