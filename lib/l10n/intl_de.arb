@@ -91,7 +91,7 @@
     "@fastForward": {},
     "featureDiscoveryEditGroup": "Zum Bearbeiten auf die Gruppe tippen",
     "@featureDiscoveryEditGroup": {},
-    "featureDiscoveryEditGroupDes": "Hier kannst Du den Gruppennamen ändern oder die Gruppe löschen, aber die Hauptgruppe kann nicht bearbeitet oder gelöscht werden",
+    "featureDiscoveryEditGroupDes": "Du kannst hier den Gruppennamen ändern oder die Gruppe löschen, aber die Hauptgruppe kann nicht bearbeitet oder gelöscht werden",
     "@featureDiscoveryEditGroupDes": {},
     "gpodderLoginDes": "Herzlichen Glückwunsch! Du  hast dein gpodder.net-Konto erfolgreich verknüpft. Tsacdop synchronisiert automatisch die Abonnements auf deinem Gerät mit deinem gpodder.net-Konto.",
     "@gpodderLoginDes": {},
@@ -183,5 +183,33 @@
     "logout": "Abmelden",
     "@logout": {
         "description": "gpodder.net logout"
-    }
+    },
+    "feedbackGithub": "Problem melden",
+    "@feedbackGithub": {},
+    "feedbackPlay": "Bewertung im Play Store",
+    "@feedbackPlay": {
+        "description": "Rate on Google Play Store.\nUser can tap to open play link."
+    },
+    "feedbackTelegram": "Gruppe beitreten",
+    "@feedbackTelegram": {},
+    "filter": "Filter",
+    "@filter": {},
+    "fonts": "Schriftarten",
+    "@fonts": {},
+    "homeToprightMenuRefreshAll": "Alle aktualisieren",
+    "@homeToprightMenuRefreshAll": {},
+    "hostedOn": "Gehostet auf {host}",
+    "@hostedOn": {
+        "placeholders": {
+            "host": {}
+        }
+    },
+    "markListened": "Als gehört markieren",
+    "@markListened": {},
+    "menu": "Menü",
+    "@menu": {},
+    "menuAllPodcasts": "Alle Podcasts",
+    "@menuAllPodcasts": {},
+    "menuMarkAllListened": "Alle als gehört markieren",
+    "@menuMarkAllListened": {}
 }
