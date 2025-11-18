@@ -211,5 +211,15 @@
     "menuAllPodcasts": "Alle Podcasts",
     "@menuAllPodcasts": {},
     "menuMarkAllListened": "Alle als gehört markieren",
-    "@menuMarkAllListened": {}
+    "@menuMarkAllListened": {},
+    "featureDiscoveryEpisodeDes": "Durch längeres Drücken wird die Episode abgespielt oder zu einer Wiedergabeliste hinzugefügt.",
+    "@featureDiscoveryEpisodeDes": {},
+    "featureDiscoveryPodcastDes": "Durch Tippen auf „Alle anzeigen“ können Gruppen hinzugefügt oder Podcasts verwaltet werden.",
+    "@featureDiscoveryPodcastDes": {},
+    "settingsMarkListenedSkipDes": "Episode automatisch als angehört markieren, wenn zum nächsten Titel gesprungen wurde",
+    "@settingsMarkListenedSkipDes": {},
+    "settingsNetworkCellularAutoDes": "Du kannst den automatischen Download von Podcasts auf der Seite zur Gruppenverwaltung konfigurieren",
+    "@settingsNetworkCellularAutoDes": {},
+    "settingsEnableSyncingDes": "Alle Podcasts im Hintergrund aktualisieren, um die neuesten Episoden zu erhalten",
+    "@settingsEnableSyncingDes": {}
 }
