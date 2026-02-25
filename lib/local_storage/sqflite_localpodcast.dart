@@ -52,8 +52,15 @@ class DBHelper {
     var documentsDirectory = await getDatabasesPath();
     var path = join(documentsDirectory, "podcasts.db");
     var theDb = await openDatabase(path,
-        version: 9, onCreate: _onCreate, onUpgrade: _onUpgrade);
+        version: 9,
+        onConfigure: _onConfigure,
+        onCreate: _onCreate,
+        onUpgrade: _onUpgrade);
     return theDb;
+  }
+
+  void _onConfigure(Database db) async {
+    await db.setJournalMode('WAL');
   }
 
   void _onCreate(Database db, int version) async {
