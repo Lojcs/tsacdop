@@ -44,7 +44,7 @@ class PodcastState extends ChangeNotifier {
     for (var group in groups) {
       _groupMap[group.id] = group;
     }
-    await cacheGroup(homeGroupId);
+    await cacheAllPodcasts();
   }
 
   late Future<void> ready;
@@ -102,18 +102,9 @@ class PodcastState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Ensures the podcast with the given id is cached.
-  /// Returns wheter it was found.
-  Future<bool> cachePodcast(String podcastId) async {
-    List<String> foundIds = await getPodcasts(podcastIds: [podcastId]);
-    return foundIds.isNotEmpty;
-  }
-
   /// Ensures the group with the given id is cached.
-  /// Returns wheter it was found.
-  Future<bool> cacheGroup(String groupId) async {
-    List<String> foundIds = await getPodcasts(groupIds: [groupId]);
-    return foundIds.isNotEmpty;
+  Future<void> cacheAllPodcasts() async {
+    await getPodcasts();
   }
 
   /// Queries the database with the provided options and returns found podcasts.
@@ -153,7 +144,6 @@ class PodcastState extends ChangeNotifier {
     final podcastEpisodeIds = await eState.getEpisodes(feedIds: [podcastId]);
     eState.deleteEpisodes(podcastEpisodeIds, deleteFromDatabase: false);
 
-    await cachePodcast(podcastId);
     final podcast = _podcastMap[podcastId]!;
     // final dir = await getApplicationDocumentsDirectory();
     // final episodeImagesPath = "${dir.path}/${podcast.id}";
@@ -204,7 +194,6 @@ class PodcastState extends ChangeNotifier {
     (String, List<int>)? ret;
     switch (checkPodcast(feedUrl)) {
       case String id:
-        await cachePodcast(id);
         final episodeIds =
             await _episodeState.getEpisodes(feedIds: [id], limit: 100);
         ret = (id, episodeIds);
@@ -213,7 +202,6 @@ class PodcastState extends ChangeNotifier {
         if (podcast != null) {
           final id = checkPodcast(podcast.rssUrl);
           if (id != null) {
-            await cachePodcast(id);
             final episodeIds =
                 await _episodeState.getEpisodes(feedIds: [id], limit: 100);
             ret = (id, episodeIds);
@@ -314,7 +302,6 @@ class PodcastState extends ChangeNotifier {
       }
       await addPodcastToGroup(podcastId: podcastId, groupId: homeGroupId);
 
-      await cachePodcast(podcastId);
       final newEpisodeIds =
           await _episodeState.getEpisodes(feedIds: [podcastId], limit: 100);
       ret = (podcastId, newEpisodeIds);
@@ -355,7 +342,6 @@ class PodcastState extends ChangeNotifier {
         if (episodesLocal.isNotEmpty) {
           await _dbHelper.saveNewPodcastEpisodes(episodesLocal);
         }
-        await cachePodcast(podcast.id);
         await addPodcastToGroup(podcastId: podcast.id, groupId: homeGroupId);
         return podcast.id;
       }
@@ -468,7 +454,6 @@ class PodcastState extends ChangeNotifier {
   Future<int?> syncPodcast(String podcastId) async {
     dev.log("${DateTime.now()} - Syncing podcast with id: $podcastId");
     final episodes = await _dbHelper.getEpisodes(feedIds: [podcastId]);
-    await cachePodcast(podcastId);
     var result =
         await Isolater(_syncFeed).run((_podcastMap[podcastId]!, episodes));
     if (result != null) {
