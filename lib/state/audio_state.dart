@@ -675,28 +675,13 @@ class AudioPlayerNotifier extends ChangeNotifier {
     _sleepTimerMode = SleepTimerMode.unset;
     _switchValue = 0;
     _audioState = AudioProcessingState.loading;
-    _audioDuration = _episodeBrief?.enclosureDuration ?? 0 * 1000;
+    _audioDuration = (_episodeBrief?.enclosureDuration ?? 0) * 1000;
     _skipStart = true;
     notifyListeners();
 
-    /// Set player speed.
-    if (_currentSpeed != 1.0) {
-      await _audioHandler.customAction('setSpeed', {'speed': _currentSpeed});
-    }
-
-    /// Set slipsilence.
-    if (_skipSilence!) {
-      await _audioHandler
-          .customAction('setSkipSilence', {'skipSilence': skipSilence});
-    }
-
-    /// Set boostValome.
-    if (_boostVolume!) {
-      await _audioHandler.customAction(
-          'setBoostVolume', {'boostVolume': _boostVolume, 'gain': _volumeGain});
-    }
-
     if (playlist.isNotEmpty) {
+      // The playlist should be set first thing so MediaItem data is ready
+      // before the player is late initialized.
       if (effectiveAutoPlay) {
         final list = _playlist.episodeIds
             .map((id) => _episodeState[id].mediaItem)
@@ -717,6 +702,23 @@ class AudioPlayerNotifier extends ChangeNotifier {
           sleepTimer(_defaultTimer);
         }
       }
+    }
+
+    /// Set player speed.
+    if (_currentSpeed != 1.0) {
+      await _audioHandler.customAction('setSpeed', {'speed': _currentSpeed});
+    }
+
+    /// Set slipsilence.
+    if (_skipSilence!) {
+      await _audioHandler
+          .customAction('setSkipSilence', {'skipSilence': skipSilence});
+    }
+
+    /// Set boostValome.
+    if (_boostVolume!) {
+      await _audioHandler.customAction(
+          'setBoostVolume', {'boostVolume': _boostVolume, 'gain': _volumeGain});
     }
   }
 
@@ -1768,7 +1770,12 @@ class CustomAudioHandler extends BaseAudioHandler
       if (inputBuffer) seekInputBuffer = true;
       if (!seekOngoing) {
         seekOngoing = true;
-        await _innerCombinedSeek();
+        try {
+          await _innerCombinedSeek();
+        } catch (e) {
+          seekOngoing = false;
+          rethrow;
+        }
         seekOngoing = false;
       }
     }

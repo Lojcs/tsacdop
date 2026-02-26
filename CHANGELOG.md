@@ -1,5 +1,41 @@
 # Tsacdop-Fork Changelog
 
+
+## 0.9.2
+Release date 2025/11/11
+
+### Bugfixes
+* Fixed a bug causing the app to not open.
+* Fixed web search body being unclickable.
+* Fixed search slowing down with many existing subsciptions.
+
+## 0.9.1
+Release date 2025/11/03
+
+### Bugfixes
+* Fixed a bug causing podcast settings to be reset.
+* Fixed issues preventing release on fdroid.
+
+## 0.9.0
+Release date 2025/10/13
+
+### New
+* New search ux that supports podcast apis and web search. Web search mode can also be used to directly add rss urls. The mode can be chosen using the buttons on the bottom, and tapping the button again lets you choose the provider.
+* @Zig-VS-TypeScript-VS - Added new search engines.
+* Added opml import progress popup. Opml import is significantly faster.
+* Revised episode card opening animation.
+* Audio seeks are buffered so multiple rapid seeks don't cause lag.
+
+### Bugfixes
+* Fixed bugs related to episode selection.
+* Fixed playback state being lost erronously.
+* Misc. bugfixes
+
+### Other
+* Rewrote podcast fetching logic. This greatly improves the speed of sync, search and opml import.
+* Background sync battery usage reduced. This might also help with syncs consistently happening.
+* Rewrote episode downloader.
+
 ## 0.8.3
 Release date 2025/06/20
 

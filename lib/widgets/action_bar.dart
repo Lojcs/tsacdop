@@ -527,25 +527,22 @@ class _ActionBarSharedState extends ChangeNotifier {
       final groupPodcastIds = groupId == allGroupId
           ? <String>[]
           : context.podcastState.getGroupById(groupId).podcastIds;
-      episodeIds = await Provider.of<EpisodeState>(context, listen: false)
-          .getEpisodes(
-              feedIds: podcastId != podcastAllId
-                  ? groupPodcastIds.isEmpty ||
-                          groupPodcastIds.contains(podcastId)
-                      ? [podcastId]
-                      : []
-                  : groupPodcastIds,
-              likeEpisodeTitles:
-                  searchTitleQuery == "" ? null : [searchTitleQuery],
-              sortBy: sortBy,
-              sortOrder: sortOrder,
-              limit: count,
-              offset: offset,
-              filterNew: filterNew,
-              filterLiked: filterLiked,
-              filterPlayed: filterPlayed,
-              filterDownloaded: filterDownloaded,
-              filterDuplicateVersions: filterDisplayVersion);
+      episodeIds = await context.episodeState.getEpisodes(
+          feedIds: podcastId != podcastAllId
+              ? groupPodcastIds.isEmpty || groupPodcastIds.contains(podcastId)
+                  ? [podcastId]
+                  : []
+              : groupPodcastIds,
+          likeEpisodeTitles: searchTitleQuery == "" ? null : [searchTitleQuery],
+          sortBy: sortBy,
+          sortOrder: sortOrder,
+          limit: count,
+          offset: offset,
+          filterNew: filterNew,
+          filterLiked: filterLiked,
+          filterPlayed: filterPlayed,
+          filterDownloaded: filterDownloaded,
+          filterDuplicateVersions: filterDisplayVersion);
       return episodeIds;
     };
   }

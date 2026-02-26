@@ -92,9 +92,10 @@ class _PodcastDetailState extends State<PodcastDetail> {
                   selectionController.selectMode,
               builder: (context, selectMode, __) {
                 return PopScope(
-                  canPop: !(_playerKey.currentState != null &&
-                          _playerKey.currentState!.size! > 100) &&
-                      !selectMode,
+                  // canPop: !(_playerKey.currentState != null &&
+                  //         _playerKey.currentState!.size! > 100) &&
+                  //     !selectMode,
+                  canPop: !selectMode,
                   onPopInvokedWithResult: (_, __) {
                     if (_playerKey.currentState != null &&
                         _playerKey.currentState!.size! > 100) {

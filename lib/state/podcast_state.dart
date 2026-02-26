@@ -44,7 +44,7 @@ class PodcastState extends ChangeNotifier {
     for (var group in groups) {
       _groupMap[group.id] = group;
     }
-    await cacheGroup(homeGroupId);
+    await cacheAllPodcasts();
   }
 
   late Future<void> ready;
@@ -102,18 +102,9 @@ class PodcastState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Ensures the podcast with the given id is cached.
-  /// Returns wheter it was found.
-  Future<bool> cachePodcast(String podcastId) async {
-    List<String> foundIds = await getPodcasts(podcastIds: [podcastId]);
-    return foundIds.isNotEmpty;
-  }
-
   /// Ensures the group with the given id is cached.
-  /// Returns wheter it was found.
-  Future<bool> cacheGroup(String groupId) async {
-    List<String> foundIds = await getPodcasts(groupIds: [groupId]);
-    return foundIds.isNotEmpty;
+  Future<void> cacheAllPodcasts() async {
+    await getPodcasts();
   }
 
   /// Queries the database with the provided options and returns found podcasts.
@@ -134,6 +125,11 @@ class PodcastState extends ChangeNotifier {
     return podcasts.map((pod) => pod.id).toList();
   }
 
+  String? checkPodcast(String url) => _podcastMap.entries
+      .where((entry) => entry.value.rssUrl == url)
+      .firstOrNull
+      ?.key;
+
   /// Unsubscibes from podcast and deletes local data. Safe to call from the background.
   Future<void> unsubscribePodcast(String podcastId) async {
     final eState = background ? EpisodeState() : _episodeState;
@@ -148,7 +144,6 @@ class PodcastState extends ChangeNotifier {
     final podcastEpisodeIds = await eState.getEpisodes(feedIds: [podcastId]);
     eState.deleteEpisodes(podcastEpisodeIds, deleteFromDatabase: false);
 
-    await cachePodcast(podcastId);
     final podcast = _podcastMap[podcastId]!;
     // final dir = await getApplicationDocumentsDirectory();
     // final episodeImagesPath = "${dir.path}/${podcast.id}";
@@ -185,27 +180,33 @@ class PodcastState extends ChangeNotifier {
       }
     } catch (e) {
       developer.log(e.toString());
+      print("Fetch feed error: $e");
     }
     return (podcast, episodes);
   }
 
-  /// Adds a podcast and its episodes dentoed by its rss feed url.
+  /// Adds a podcast and its episodes denoted by its rss feed url.
   /// Not safe to call from the background.
   /// If the podcast is already subscribed to, uses data from [EpisodeState].
   /// Otherwise tries to fetch the rss feed and parse it.
   /// Episodes kept only as temp ids, [EpisodeBrief]s are kept in [EpisodeState]
   Future<(String, List<int>)?> addPodcastByUrl(String feedUrl) async {
     (String, List<int>)? ret;
-    switch (await _dbHelper.checkPodcast(feedUrl)) {
+    switch (checkPodcast(feedUrl)) {
       case String id:
-        await cachePodcast(id);
         final episodeIds =
             await _episodeState.getEpisodes(feedIds: [id], limit: 100);
         ret = (id, episodeIds);
-
       case null:
         var (podcast, episodes) = await Isolater(_fetchFeed).run(feedUrl);
         if (podcast != null) {
+          final id = checkPodcast(podcast.rssUrl);
+          if (id != null) {
+            final episodeIds =
+                await _episodeState.getEpisodes(feedIds: [id], limit: 100);
+            ret = (id, episodeIds);
+            return ret;
+          }
           try {
             podcast = await podcast.withColorFromImage();
           } catch (e) {
@@ -296,10 +297,11 @@ class PodcastState extends ChangeNotifier {
       var (podcastLocal, episodesLocal) =
           await Isolater(_persistFeed).run((podcastRemote, episodesRemote));
       await _dbHelper.savePodcastLocal(podcastLocal);
-      await _dbHelper.saveNewPodcastEpisodes(episodesLocal);
+      if (episodesLocal.isNotEmpty) {
+        await _dbHelper.saveNewPodcastEpisodes(episodesLocal);
+      }
       await addPodcastToGroup(podcastId: podcastId, groupId: homeGroupId);
 
-      await cachePodcast(podcastId);
       final newEpisodeIds =
           await _episodeState.getEpisodes(feedIds: [podcastId], limit: 100);
       ret = (podcastId, newEpisodeIds);
@@ -313,9 +315,10 @@ class PodcastState extends ChangeNotifier {
   /// Subscribes to a podcast denoted by its url. Returns the podcast id.
   /// Safe to call from the background.
   Future<String?> subscribePodcastByUrl(String feedUrl) async {
-    if (await _dbHelper.checkPodcast(feedUrl) == null) {
+    if (checkPodcast(feedUrl) == null) {
       var (podcast, episodes) = await Isolater(_fetchFeed).run(feedUrl);
-      if (podcast != null) {
+      // Sometimes podcasts have multiple rss feeds.
+      if (podcast != null && checkPodcast(podcast.rssUrl) == null) {
         try {
           podcast = await podcast.withColorFromImage();
         } catch (e) {
@@ -336,8 +339,9 @@ class PodcastState extends ChangeNotifier {
         var (podcastLocal, episodesLocal) =
             await Isolater(_persistFeed).run((podcast, episodes));
         await _dbHelper.savePodcastLocal(podcastLocal);
-        await _dbHelper.saveNewPodcastEpisodes(episodesLocal);
-        await cachePodcast(podcast.id);
+        if (episodesLocal.isNotEmpty) {
+          await _dbHelper.saveNewPodcastEpisodes(episodesLocal);
+        }
         await addPodcastToGroup(podcastId: podcast.id, groupId: homeGroupId);
         return podcast.id;
       }
@@ -365,7 +369,7 @@ class PodcastState extends ChangeNotifier {
     final futures = Queue<Future<String?>>();
     final ids = <String?>[];
     for (var rssUrl in rssUrls) {
-      if (futures.length >= 8) ids.add(await futures.removeFirst());
+      if (futures.length >= 4) ids.add(await futures.removeFirst());
       futures.add(Future(() async {
         final result = await subscribePodcastByUrl(rssUrl);
         opmlProgress.subscribe();
@@ -450,7 +454,6 @@ class PodcastState extends ChangeNotifier {
   Future<int?> syncPodcast(String podcastId) async {
     dev.log("${DateTime.now()} - Syncing podcast with id: $podcastId");
     final episodes = await _dbHelper.getEpisodes(feedIds: [podcastId]);
-    await cachePodcast(podcastId);
     var result =
         await Isolater(_syncFeed).run((_podcastMap[podcastId]!, episodes));
     if (result != null) {
@@ -463,8 +466,11 @@ class PodcastState extends ChangeNotifier {
       newEpisodes = newEpisodes
           .map((e) => e.copyWith(primaryColor: podcast.primaryColor))
           .toList();
+      if (_podcastMap[podcastId]!.primaryColor != podcast.primaryColor) {
+        await _dbHelper.savePodcastProperties([podcastId],
+            primaryColor: podcast.primaryColor);
+      }
       _podcastMap[podcastId] = podcast;
-      await _dbHelper.savePodcastLocal(podcast);
       if (newEpisodes.isNotEmpty) {
         await _dbHelper.saveUpdatedPodcastEpisodes(newEpisodes);
       }

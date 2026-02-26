@@ -107,8 +107,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             ),
             child: PopScope(
               canPop: !settings.openPlaylistDefault! &&
-                  !(_playerKey.currentState != null &&
-                      _playerKey.currentState!.size! > 100) &&
+                  // !(_playerKey.currentState != null &&
+                  //     _playerKey.currentState!.size! > 100) &&
                   !_tabSelectionController(_controller.index).selectMode,
               onPopInvokedWithResult: (_, __) {
                 if (_playerKey.currentState != null &&

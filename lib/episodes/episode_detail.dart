@@ -136,8 +136,8 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
           systemNavigationBarIconBrightness: context.iconBrightness,
         ),
         child: PopScope(
-          canPop: !(_playerKey.currentState != null &&
-              _playerKey.currentState!.size! > 100),
+          // canPop: !(_playerKey.currentState != null &&
+          //     _playerKey.currentState!.size! > 100),
           onPopInvokedWithResult: (_, __) =>
               _playerKey.currentState?.backToMini(),
           child: Scaffold(
@@ -245,7 +245,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                       Selector<AudioPlayerNotifier, int?>(
                         selector: (_, audio) => audio.episodeId,
                         builder: (_, data, __) => PlayerWidget(
-                            playerKey: GlobalKey<AudioPanelState>(),
+                            playerKey: _playerKey,
                             isPlayingPage: data == widget.episodeId),
                       ),
                   ],

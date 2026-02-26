@@ -66,6 +66,9 @@ abstract class WebSearch extends RemoteSearch {
     }
   }
 
+  @override
+  Future<void> preparePodcastEpisodes(String podcastId) async {}
+
   Future<void> goBack() => _webViewController.goBack();
   Future<void> goForward() => _webViewController.goForward();
 }

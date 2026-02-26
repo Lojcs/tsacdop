@@ -259,6 +259,7 @@ class EpisodeState extends ChangeNotifier {
 
   /// Sets the episode as downloaded and saves its mediaId, download task id
   /// size and duration
+  /// Doesn't start the download.
   Future<void> setDownloaded(int episodeId,
       {required String mediaId,
       required String taskId,
@@ -283,6 +284,7 @@ class EpisodeState extends ChangeNotifier {
   }
 
   /// Sets the episode as not downloaded and sets its mediaId to its enclosureUrl
+  /// Doesn't remove the download.
   Future<void> unsetDownloaded(int episodeId) async {
     assert(_episodeMap.keys.contains(episodeId),
         "unsetDownloaded called with unknown id");

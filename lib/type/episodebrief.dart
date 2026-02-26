@@ -36,8 +36,7 @@ class EpisodeBrief extends Equatable {
   final String mediaId;
   final String episodeImageUrl;
   final String podcastImagePath;
-  final String _primaryColor;
-  Color get primaryColor => _primaryColor.toargbColor();
+  final Color primaryColor;
 
   final bool isExplicit;
   final bool isLiked;
@@ -66,7 +65,7 @@ class EpisodeBrief extends Equatable {
     required this.mediaId,
     required this.episodeImageUrl,
     required this.podcastImagePath,
-    required Color primaryColor,
+    required this.primaryColor,
     required this.isExplicit,
     required this.isLiked,
     required this.isNew,
@@ -77,7 +76,7 @@ class EpisodeBrief extends Equatable {
     this.skipSecondsEnd = 0,
     required this.chapterLink,
     required this.source,
-  }) : _primaryColor = primaryColor.toargbString();
+  });
 
   /// Use for new user episodes not yet in database
   EpisodeBrief.user({
@@ -98,7 +97,7 @@ class EpisodeBrief extends Equatable {
         isDownloaded = true,
         downloadDate = pubDate,
         podcastImagePath = '',
-        _primaryColor = (primaryColor ?? Colors.teal).toargbString(),
+        primaryColor = primaryColor ?? Colors.teal,
         isExplicit = false,
         isLiked = false,
         isNew = false,
@@ -112,7 +111,7 @@ class EpisodeBrief extends Equatable {
 
   /// Use for new remote episodes not yet in database
   EpisodeBrief.fromRssItem(RssItem item, this.podcastId, this.podcastTitle,
-      this.number, this.podcastImagePath, Color primaryColor)
+      this.number, this.podcastImagePath, this.primaryColor)
       : id = -1,
         title = item.title ?? item.itunes?.title ?? "",
         enclosureUrl = urlFromRssItem(item),
@@ -133,7 +132,6 @@ class EpisodeBrief extends Equatable {
                 : item.enclosure!.url!)
             : "",
         episodeImageUrl = item.itunes?.image?.href ?? '',
-        _primaryColor = primaryColor.toargbString(),
         isExplicit = item.itunes?.explicit ?? false,
         isLiked = false,
         isNew = DateTime.now().difference(item.pubDate ?? DateTime(0)) <

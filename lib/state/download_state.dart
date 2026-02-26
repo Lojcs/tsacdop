@@ -220,11 +220,14 @@ class DownloadState extends ChangeNotifier {
       final saveDir = Directory(localPath);
       if (!saveDir.existsSync()) await saveDir.create();
       final dateFull = DateTime.now().toIso8601String();
-      final cleanTitle = episode.title.replaceAll('/', '');
+      var cleanTitle = episode.title.replaceAll('/', '');
       final extension =
           episode.enclosureUrl.split('/').last.split('.').last.split('?').first;
-      var fileName = '$cleanTitle - $dateFull.$extension';
-      if (fileName.length > 100) fileName = fileName.substring(100);
+      final titleTail = " - $dateFull.$extension";
+      if (cleanTitle.length > 100 - titleTail.length) {
+        cleanTitle = cleanTitle.substring(0, 100 - titleTail.length);
+      }
+      final fileName = '$cleanTitle$titleTail';
       var taskId = await FlutterDownloader.enqueue(
         fileName: fileName,
         url: episode.enclosureUrl,
@@ -242,18 +245,24 @@ class DownloadState extends ChangeNotifier {
   Future<void> removeDownload(int episodeId) async {
     final episodeTask = this[episodeId];
     if (episodeTask != null && episodeTask.pendingAction != true) {
-      _removeTask(episodeId: episodeId);
-      await FlutterDownloader.remove(
-          taskId: episodeTask.taskId, shouldDeleteContent: true);
-      if (background) {
-        final episode = await _dbHelper.getEpisodes(episodeIds: [episodeId]);
-        await _dbHelper.unsetDownloaded(episodeId,
-            enclosureUrl: episode.first.enclosureUrl);
-      } else {
-        await _episodeState.cacheEpisodes([episodeId]);
-        await _episodeState.unsetDownloaded(episodeId);
-      }
+      await _removeDownloadInternal(
+          episodeId: episodeId, taskId: episodeTask.taskId);
     }
+  }
+
+  Future<void> _removeDownloadInternal(
+      {required int episodeId, required String taskId}) async {
+    _removeTask(episodeId: episodeId);
+    await FlutterDownloader.remove(taskId: taskId, shouldDeleteContent: true);
+    if (background) {
+      final episode = await _dbHelper.getEpisodes(episodeIds: [episodeId]);
+      await _dbHelper.unsetDownloaded(episodeId,
+          enclosureUrl: episode.first.enclosureUrl);
+    } else {
+      await _episodeState.cacheEpisodes([episodeId]);
+      await _episodeState.unsetDownloaded(episodeId);
+    }
+    notifyListeners();
   }
 
   /// Retries an episode's failed download.
@@ -320,7 +329,8 @@ class DownloadState extends ChangeNotifier {
                 File(path.join(task.savedDir, task.filename)).existsSync();
             if (marked && !exists) {
               // Episode marked as downloaded but file isn't there.
-              await removeDownload(episode.id);
+              await _removeDownloadInternal(
+                  episodeId: episode.id, taskId: task.taskId);
             } else if (!marked && exists) {
               // Episode download is finished but it isn't marked as downloaded.
               _addTask(episodeTask);
@@ -335,6 +345,11 @@ class DownloadState extends ChangeNotifier {
           }
         }
       }
+
+      _episodeState.cacheEpisodes(allDownloads
+          .where((eTask) => eTask.status != DownloadTaskStatus.complete)
+          .map((task) => task.episodeId)
+          .toList());
     }
   }
 

@@ -20,8 +20,9 @@ import 'podcast_state.dart';
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     if (task == "update_podcasts") {
-      await PodcastState(await getApplicationDocumentsDirectory())
-          .syncAllPodcasts();
+      final pState = PodcastState(await getApplicationDocumentsDirectory());
+      await pState.ready;
+      await pState.syncAllPodcasts();
     } else if (task == "gpodder_sync") {}
     return Future.value(true);
   });

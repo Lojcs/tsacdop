@@ -474,7 +474,10 @@ class _ActionBarDropdownButtonState<T> extends State<ActionBarDropdownButton<T>>
       ..addListener(() {
         if (mounted) setState(() {});
       });
-    activeAnimation = activeAnimationController;
+    activeAnimation = CurvedAnimation(
+        parent: activeAnimationController,
+        curve: Curves.easeOutExpo,
+        reverseCurve: Curves.easeInExpo);
     if (expands) {
       expandAnimationController = AnimationController(
           vsync: this, duration: const Duration(milliseconds: 300))
@@ -1250,6 +1253,11 @@ class ExpansionController {
   void adjustWidths() {
     int minimize = 0;
     while (_availableWidth < 0) {
+      if (maxWidth() < 0) {
+        // Sometimes context.width can return 0 -_-
+        Future.delayed(Duration(milliseconds: 200), adjustWidths);
+        return;
+      }
       for (int i = 0; i < _expandedItems.length; i++) {
         Expandable item = _items[_expandedItems[i]];
         _itemsWidth +=
