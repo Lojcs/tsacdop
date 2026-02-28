@@ -1,5 +1,13 @@
 # Tsacdop-Fork Changelog
 
+## 0.9.3
+Release date 2026/02/26
+
+### New
+* Revised episode card opening animation. New animation runs faster, looks better and supports predicitve back gestures.
+
+### Bugfixes
+* Fixed podcast groups graying out when home group is empty.
 
 ## 0.9.2
 Release date 2025/11/11

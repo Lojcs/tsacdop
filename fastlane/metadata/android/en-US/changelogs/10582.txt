@@ -1,0 +1,6 @@
+Changes from v0.9.2:
+
+* Revised episode card opening animation. New animation runs faster, looks better and supports predicitve back gestures.
+* Fixed podcast groups graying out when home group is empty.
+
+Check out https://github.com/Lojcs/tsacdop/blob/v0.9.3/CHANGELOG.md for full changelog.
