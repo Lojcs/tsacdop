@@ -6,9 +6,9 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../widgets/episode_card.dart';
-import '../widgets/episode_info_widgets.dart';
-import 'menu_bar.dart';
+import 'episode_card.dart';
+import 'episode_info_widgets.dart';
+import 'episode_action_bar.dart';
 import 'shownote.dart';
 import '../util/helpers.dart';
 import 'package:tuple/tuple.dart';
@@ -26,13 +26,25 @@ import '../widgets/custom_widget.dart';
 class EpisodeDetail extends StatefulWidget {
   final int episodeId;
 
+  final GlobalKey? cardKey;
+  final GlobalKey? avatarKey;
+  final GlobalKey? numberAndNameKey;
+  final GlobalKey? titleKey;
+  final GlobalKey? lengthAndSizeKey;
+  final GlobalKey? heartKey;
+
   /// Hides the avatar image
   final bool hide;
 
-  final GlobalKey<EpisodeNumberAndPodcastNameState>? numberAndNameKey;
-
   const EpisodeDetail(this.episodeId,
-      {this.hide = false, this.numberAndNameKey, super.key});
+      {this.cardKey,
+      this.avatarKey,
+      this.numberAndNameKey,
+      this.titleKey,
+      this.lengthAndSizeKey,
+      this.heartKey,
+      this.hide = false,
+      super.key});
 
   @override
   State<EpisodeDetail> createState() => _EpisodeDetailState();
@@ -132,7 +144,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
         value: SystemUiOverlayStyle(
           statusBarIconBrightness: context.iconBrightness,
           systemNavigationBarColor:
-              playerRunning ? context.cardColorSchemeCard : color,
+              playerRunning ? context.cardColorSchemeCard : Colors.transparent,
           systemNavigationBarIconBrightness: context.iconBrightness,
         ),
         child: PopScope(
@@ -143,8 +155,9 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
           child: Scaffold(
             backgroundColor: color,
             extendBody: true,
+            key: widget.cardKey,
             body: SafeArea(
-              bottom: !widget.hide,
+              bottom: !widget.hide || !playerRunning,
               child: ColoredBox(
                 color: context.realDark
                     ? context.surface
@@ -189,20 +202,20 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                   padding: EdgeInsets.only(left: 30, right: 30),
                                   child: Tooltip(
                                     message: episodeItem.title,
-                                    child: Text(
-                                      episodeItem.title,
-                                      maxLines: 3,
-                                      overflow: TextOverflow.ellipsis,
-                                      textAlign: TextAlign.left,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .headlineMedium!
-                                          .copyWith(
-                                            color: episodeItem
-                                                .colorScheme(context)
-                                                .onSecondaryContainer,
+                                    child: widget.hide
+                                        ? Center()
+                                        : EpisodeTitle(
+                                            episodeId,
+                                            textStyle: Theme.of(context)
+                                                .textTheme
+                                                .headlineMedium!
+                                                .copyWith(
+                                                  color: episodeItem
+                                                      .colorScheme(context)
+                                                      .onSecondaryContainer,
+                                                ),
+                                            key: widget.titleKey,
                                           ),
-                                    ),
                                   ),
                                 ),
                               ),
@@ -235,6 +248,8 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                             child: SingleChildScrollView(
                               scrollDirection: Axis.vertical,
                               child: EpisodeActionBar(episodeId,
+                                  avatarKey: widget.avatarKey,
+                                  heartKey: widget.heartKey,
                                   hide: widget.hide),
                             ),
                           ),
@@ -277,7 +292,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                         (topHeight - _titleBarMinHeight)
                             .clamp(0, _imageTopOffset - _titleBarMinHeight)),
               ),
-              expandedTitleScale: 1.1,
+              expandedTitleScale: 1.0,
               background: Container(
                 margin: EdgeInsets.only(
                   left: _sideMargin,
@@ -299,7 +314,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                     ? Center()
                     : EpisodeNumberAndPodcastName(
                         episodeId,
-                        textStyle: context.textTheme.headlineSmall!,
+                        textStyle: context.textTheme.headlineMedium!,
                         key: widget.numberAndNameKey,
                       ),
               ),
@@ -373,16 +388,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                       height: 40.0,
                       child: Row(
                         spacing: 8,
-                        children: <Widget>[
-                          SizedBox(
-                            width: 120,
-                            child: widget.hide
-                                ? Center()
-                                : EpisodeLengthAndSize(
-                                    episodeId,
-                                    height: 40,
-                                  ),
-                          ),
+                        children: [
                           FutureBuilder<PlayHistory>(
                             future: _dbHelper.getPosition(episodeItem),
                             builder: (context, snapshot) {
@@ -438,6 +444,17 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                 return Center();
                               }
                             },
+                          ),
+                          Spacer(),
+                          SizedBox(
+                            width: 120,
+                            child: widget.hide
+                                ? Center()
+                                : EpisodeLengthAndSize(
+                                    episodeId,
+                                    height: 40,
+                                    key: widget.lengthAndSizeKey,
+                                  ),
                           ),
                         ],
                       ),

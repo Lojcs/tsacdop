@@ -157,7 +157,7 @@ class SettingState extends ChangeNotifier {
         headlineLarge: TextStyle(
             fontSize: 28.0, color: Colors.black, fontWeight: FontWeight.normal),
         headlineMedium: TextStyle(
-            fontSize: 24.0, color: Colors.black, fontWeight: FontWeight.normal),
+            fontSize: 22.0, color: Colors.black, fontWeight: FontWeight.normal),
         headlineSmall: TextStyle(
             fontSize: 20.0, color: Colors.black, fontWeight: FontWeight.normal),
       ),

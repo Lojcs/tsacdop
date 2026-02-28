@@ -107,6 +107,9 @@ class PodcastState extends ChangeNotifier {
     await getPodcasts();
   }
 
+  Future<void> _cachePodcast(String podcastId) =>
+      getPodcasts(podcastIds: [podcastId]);
+
   /// Queries the database with the provided options and returns found podcasts.
   /// Filters are tri-state (null - no filter, true - only, false - exclude)
   Future<List<String>> getPodcasts(
@@ -194,6 +197,7 @@ class PodcastState extends ChangeNotifier {
     (String, List<int>)? ret;
     switch (checkPodcast(feedUrl)) {
       case String id:
+        await _cachePodcast(id);
         final episodeIds =
             await _episodeState.getEpisodes(feedIds: [id], limit: 100);
         ret = (id, episodeIds);
@@ -202,6 +206,7 @@ class PodcastState extends ChangeNotifier {
         if (podcast != null) {
           final id = checkPodcast(podcast.rssUrl);
           if (id != null) {
+            await _cachePodcast(id);
             final episodeIds =
                 await _episodeState.getEpisodes(feedIds: [id], limit: 100);
             ret = (id, episodeIds);
@@ -302,6 +307,7 @@ class PodcastState extends ChangeNotifier {
       }
       await addPodcastToGroup(podcastId: podcastId, groupId: homeGroupId);
 
+      await _cachePodcast(podcastId);
       final newEpisodeIds =
           await _episodeState.getEpisodes(feedIds: [podcastId], limit: 100);
       ret = (podcastId, newEpisodeIds);
@@ -342,6 +348,7 @@ class PodcastState extends ChangeNotifier {
         if (episodesLocal.isNotEmpty) {
           await _dbHelper.saveNewPodcastEpisodes(episodesLocal);
         }
+        await _cachePodcast(podcast.id);
         await addPodcastToGroup(podcastId: podcast.id, groupId: homeGroupId);
         return podcast.id;
       }
@@ -454,6 +461,7 @@ class PodcastState extends ChangeNotifier {
   Future<int?> syncPodcast(String podcastId) async {
     dev.log("${DateTime.now()} - Syncing podcast with id: $podcastId");
     final episodes = await _dbHelper.getEpisodes(feedIds: [podcastId]);
+    await _cachePodcast(podcastId);
     var result =
         await Isolater(_syncFeed).run((_podcastMap[podcastId]!, episodes));
     if (result != null) {

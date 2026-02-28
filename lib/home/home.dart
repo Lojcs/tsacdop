@@ -101,8 +101,9 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             value: SystemUiOverlayStyle(
               statusBarColor: Colors.transparent,
               statusBarIconBrightness: context.iconBrightness,
-              systemNavigationBarColor:
-                  playerRunning ? context.cardColorSchemeCard : context.surface,
+              systemNavigationBarColor: playerRunning
+                  ? context.cardColorSchemeCard
+                  : Colors.transparent,
               systemNavigationBarIconBrightness: context.iconBrightness,
             ),
             child: PopScope(

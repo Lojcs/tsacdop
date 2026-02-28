@@ -2,13 +2,14 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:focused_menu/focused_menu.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:vibration/vibration.dart';
-import '../episodes/episode_detail.dart';
+import 'episode_detail.dart';
 import '../state/episode_state.dart';
 import '../state/setting_state.dart';
 import '../type/episodebrief.dart';
@@ -21,9 +22,10 @@ import '../podcasts/podcast_detail.dart';
 import '../state/audio_state.dart';
 import '../type/play_histroy.dart';
 import '../util/selection_controller.dart';
-import 'custom_widget.dart';
+import '../widgets/custom_widget.dart';
 import 'episode_info_widgets.dart';
-import 'episodegrid.dart';
+import '../widgets/episodegrid.dart';
+import 'episode_route.dart';
 
 /// [EpisodeCard] widget that responds to user interaction.
 class InteractiveEpisodeCard extends StatefulWidget {
@@ -106,9 +108,36 @@ class InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   late bool selected =
       selectionController?.selectedIndicies.contains(widget.index) ?? false;
 
-  final avatarKey = GlobalKey();
-  final numberAndNameKey = GlobalKey<EpisodeNumberAndPodcastNameState>();
-  final lengthAndSizeKey = GlobalKey();
+  late final avatarKey = GlobalKey();
+  late final numberAndNameKey = GlobalKey<EpisodeNumberAndPodcastNameState>();
+  late final titleKey = GlobalKey<EpisodeTitleState>();
+  late final lengthAndSizeKey = GlobalKey();
+  late final heartKey = GlobalKey();
+
+  late Widget progressLowerlay =
+      Selector2<AudioPlayerNotifier, EpisodeState, (bool, double)>(
+    selector: (_, audio, eState) {
+      if (audio.episodeId == widget.episodeId && audio.playerRunning) {
+        return (false, audio.seekSliderValue);
+      } else if (eState[widget.episodeId].isPlayed) {
+        return (false, 1);
+      } else {
+        return (true, 0);
+      }
+    },
+    builder: (_, data, __) => FutureBuilder<double>(
+      future: Future(
+        () async => data.$1 ? (await _getSavedPosition()).seekValue! : data.$2,
+      ),
+      // initialData: PlayHistory("", "", 0, 0),
+      builder: (context, snapshot) => ProgressLowerlay(
+        widget.episodeId,
+        snapshot.hasData ? snapshot.data! : 0,
+        widget.layout,
+        animator: _controller,
+      ),
+    ),
+  );
 
   bool avatarHasFocus = false;
   Future<void> waitForAvatar = Future(() {});
@@ -159,11 +188,14 @@ class InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
         decorate: false,
         avatarKey: avatarKey,
         numberAndNameKey: numberAndNameKey,
+        titleKey: titleKey,
         lengthAndSizeKey: lengthAndSizeKey,
+        heartKey: heartKey,
         onTapDown: () => avatarHasFocus = true,
         onTapUp: () => Future.delayed(
             Duration(milliseconds: 6), () => avatarHasFocus = false),
         hide: hideImage,
+        key: hideImage ? null : cardKey,
       );
 
   void openDetails(BuildContext context) => Navigator.push(
@@ -173,11 +205,14 @@ class InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
           widget.episodeId,
           cardKey: cardKey,
           layout: widget.layout,
-          cardBuilder: _cardBuilder,
+          card: _cardBuilder(true),
+          cardLowerlay: progressLowerlay,
           preferEpisodeImage: widget.preferEpisodeImage,
           avatarKey: avatarKey,
           numberAndNameKey: numberAndNameKey,
+          titleKey: titleKey,
           lengthAndSizeKey: lengthAndSizeKey,
+          heartKey: heartKey,
           showCard: () {
             // _shadowController.reverse();
             setState(() => hideCard = false);
@@ -191,182 +226,148 @@ class InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   @override
   Widget build(BuildContext context) {
     List<FocusedMenuItem> menuItemList = [];
-    if (hideCard) return Center();
-    return Selector<AudioPlayerNotifier, (bool, bool, bool)>(
-      key: cardKey,
-      selector: (_, audio) => (
-        audio.episodeId == widget.episodeId,
-        audio.playlist.contains(widget.episodeId),
-        audio.playerRunning,
-      ),
-      builder: (_, data, __) {
-        return _FocusedMenuHolderWrapper(
-          onTapStart: () async {
-            waitForAvatar = Future.delayed(Duration(milliseconds: 1));
-            await waitForAvatar;
-            if (avatarHasFocus) return;
-            if (selected) {
-              _vibrateTapSelected();
-            } else {
-              _vibrateTapNormal();
-            }
-          },
-          onTapEnd: () {
-            if (avatarHasFocus) return;
-            _vibrateEnd();
-          },
-          onTap: () async {
-            await waitForAvatar;
-            if (avatarHasFocus) return;
-            if (selectable && selectionController!.selectMode) {
-              selected = selectionController!.select(widget.index!);
-              if (selected) {
-                _vibrateTapFinishedSelect();
-                _controller.forward();
-              } else {
-                _vibrateTapFinishedRelease();
-                _controller.reverse();
-              }
-            } else {
-              // _shadowController.forward();
-              if (context.mounted) openDetails(context);
-            }
-          },
-          onShortTapHold: () {
-            if (avatarHasFocus) return;
-            if (selectable && !selected) {
-              _vibrateLongTap();
-              if (!selectionController!.selectMode) {
-                selectionController!.selectMode = true;
-                selectionController!.temporarySelect = true;
-              }
-              selected = selectionController!.select(widget.index!);
-
-              _controller.forward();
-            }
-          },
-          onPrimaryClick: () {
-            if (avatarHasFocus) return;
-            if (selectable) {
-              if (selectionController!.selectMode) {
-                selected = selectionController!.select(widget.index!);
-              } else {
-                selectionController!.deselectAll();
-                selected = selectionController!.select(widget.index!);
-              }
-              if (selected) {
-                _controller.forward();
-              } else {
-                _controller.reverse();
-              }
-            }
-          },
-          onDoubleClick: () {
-            if (avatarHasFocus) return;
-            // _shadowController.forward();
-            openDetails(context);
-          },
-          onAddSelect: () {
-            if (avatarHasFocus) return;
-            if (selectable) {
-              if (!selectionController!.selectMode) {
-                selectionController!.selectMode = true;
-                selectionController!.temporarySelect = true;
-              }
-              selected = selectionController!.select(widget.index!);
-              if (selected) {
-                _controller.forward();
-              } else {
-                _controller.reverse();
-              }
-            }
-          },
-          onRangeSelect: () {
-            if (avatarHasFocus) return;
-            if (selectable) {
-              if (!selectionController!.selectMode) {
-                selectionController!.selectMode = true;
-                selectionController!.temporarySelect = true;
-              }
-              selectionController!.batchSelect = BatchSelect.none;
-              if (!selected) {
-                selected = selectionController!.select(widget.index!);
-              }
-              selectionController!.batchSelect = BatchSelect.between;
-              if (selected) {
-                _controller.forward();
-              } else {
-                _controller.reverse();
-              }
-            }
-          },
-          onTapDrag: () {},
-          episodeId: widget.episodeId,
-          layout: widget.layout,
-          menuItemList: () async {
-            if (context.mounted) {
-              final menulist = await _getEpisodeMenu();
-              menuItemList = _menuItemList(context, widget.episodeId, data.$1,
-                  data.$2, data.$3, menulist,
-                  applyToAllSelected: widget.applyActionToAllSelected);
-            }
-            return menuItemList;
-          },
-          menuItemExtent: () async {
-            final menulist = await _getEpisodeMenu();
-            return widget.layout == EpisodeGridLayout.small
-                ? 41.5
-                : widget.layout == EpisodeGridLayout.medium
-                    ? 42.5
-                    : 100 / menulist.where((i) => i < 10).length;
-          },
-          menuBoxDecoration: BoxDecoration(
-            color: context.accentBackground,
-            border: Border.all(
-              color: context.accentColor,
-              width: 1.0,
-            ),
-            borderRadius: widget.layout == EpisodeGridLayout.small
-                ? context.radiusSmall
-                : widget.layout == EpisodeGridLayout.medium
-                    ? context.radiusMedium
-                    : context.radiusLarge,
-          ),
-          childLowerlay: data.$1 && data.$3
-              ? Selector<AudioPlayerNotifier, double>(
-                  selector: (_, audio) => audio.seekSliderValue,
-                  builder: (_, seekValue, __) => _ProgressLowerlay(
-                    widget.episodeId,
-                    seekValue,
-                    widget.layout,
-                    animator: _controller,
-                  ),
-                )
-              : Selector<EpisodeState, bool>(
-                  selector: (_, eState) => eState[widget.episodeId].isPlayed,
-                  builder: (_, played, __) => played
-                      ? _ProgressLowerlay(
-                          widget.episodeId,
-                          1,
-                          widget.layout,
-                          animator: _controller,
-                        )
-                      : FutureBuilder<PlayHistory>(
-                          future: _getSavedPosition(),
-                          // initialData: PlayHistory("", "", 0, 0),
-                          builder: (context, snapshot) => _ProgressLowerlay(
-                            widget.episodeId,
-                            snapshot.hasData ? snapshot.data!.seekValue! : 0,
-                            widget.layout,
-                            animator: _controller,
-                          ),
-                        ),
-                ),
-          controller: _controller,
-          shadowController: _shadowController,
-          child: _cardBuilder(false),
-        );
+    // if (hideCard) return Center();
+    return _FocusedMenuHolderWrapper(
+      onTapStart: () async {
+        waitForAvatar = Future.delayed(Duration(milliseconds: 1));
+        await waitForAvatar;
+        if (avatarHasFocus) return;
+        if (selected) {
+          _vibrateTapSelected();
+        } else {
+          _vibrateTapNormal();
+        }
       },
+      onTapEnd: () {
+        if (avatarHasFocus) return;
+        _vibrateEnd();
+      },
+      onTap: () async {
+        await waitForAvatar;
+        if (avatarHasFocus) return;
+        if (selectable && selectionController!.selectMode) {
+          selected = selectionController!.select(widget.index!);
+          if (selected) {
+            _vibrateTapFinishedSelect();
+            _controller.forward();
+          } else {
+            _vibrateTapFinishedRelease();
+            _controller.reverse();
+          }
+        } else {
+          // _shadowController.forward();
+          if (context.mounted) openDetails(context);
+        }
+      },
+      onShortTapHold: () {
+        if (avatarHasFocus) return;
+        if (selectable && !selected) {
+          _vibrateLongTap();
+          if (!selectionController!.selectMode) {
+            selectionController!.selectMode = true;
+            selectionController!.temporarySelect = true;
+          }
+          selected = selectionController!.select(widget.index!);
+
+          _controller.forward();
+        }
+      },
+      onPrimaryClick: () {
+        if (avatarHasFocus) return;
+        if (selectable) {
+          if (selectionController!.selectMode) {
+            selected = selectionController!.select(widget.index!);
+          } else {
+            selectionController!.deselectAll();
+            selected = selectionController!.select(widget.index!);
+          }
+          if (selected) {
+            _controller.forward();
+          } else {
+            _controller.reverse();
+          }
+        }
+      },
+      onDoubleClick: () {
+        if (avatarHasFocus) return;
+        // _shadowController.forward();
+        openDetails(context);
+      },
+      onAddSelect: () {
+        if (avatarHasFocus) return;
+        if (selectable) {
+          if (!selectionController!.selectMode) {
+            selectionController!.selectMode = true;
+            selectionController!.temporarySelect = true;
+          }
+          selected = selectionController!.select(widget.index!);
+          if (selected) {
+            _controller.forward();
+          } else {
+            _controller.reverse();
+          }
+        }
+      },
+      onRangeSelect: () {
+        if (avatarHasFocus) return;
+        if (selectable) {
+          if (!selectionController!.selectMode) {
+            selectionController!.selectMode = true;
+            selectionController!.temporarySelect = true;
+          }
+          selectionController!.batchSelect = BatchSelect.none;
+          if (!selected) {
+            selected = selectionController!.select(widget.index!);
+          }
+          selectionController!.batchSelect = BatchSelect.between;
+          if (selected) {
+            _controller.forward();
+          } else {
+            _controller.reverse();
+          }
+        }
+      },
+      onTapDrag: () {},
+      episodeId: widget.episodeId,
+      layout: widget.layout,
+      menuItemList: () async {
+        if (context.mounted) {
+          final audio = context.audioState;
+          menuItemList = _menuItemList(
+              context,
+              widget.episodeId,
+              audio.episodeId == widget.episodeId,
+              audio.playlist.contains(widget.episodeId),
+              audio.playerRunning,
+              await _getEpisodeMenu(),
+              applyToAllSelected: widget.applyActionToAllSelected);
+        }
+        return menuItemList;
+      },
+      menuItemExtent: () async {
+        final menulist = await _getEpisodeMenu();
+        return widget.layout == EpisodeGridLayout.small
+            ? 41.5
+            : widget.layout == EpisodeGridLayout.medium
+                ? 42.5
+                : 100 / menulist.where((i) => i < 10).length;
+      },
+      menuBoxDecoration: BoxDecoration(
+        color: context.accentBackground,
+        border: Border.all(
+          color: context.accentColor,
+          width: 1.0,
+        ),
+        borderRadius: widget.layout == EpisodeGridLayout.small
+            ? context.radiusSmall
+            : widget.layout == EpisodeGridLayout.medium
+                ? context.radiusMedium
+                : context.radiusLarge,
+      ),
+      childLowerlay: progressLowerlay,
+      controller: _controller,
+      shadowController: _shadowController,
+      child: hideCard ? Center() : _cardBuilder(false),
     );
   }
 
@@ -443,261 +444,6 @@ class InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   }
 }
 
-class EpisodeCardDetailRoute extends ModalRoute {
-  final int episodeId;
-  final GlobalKey cardKey;
-  final EpisodeGridLayout layout;
-  final Widget Function(bool hideImage) cardBuilder;
-
-  final VoidCallback showCard;
-  final VoidCallback hideCard;
-
-  final RenderBox cardBox;
-
-  final bool preferEpisodeImage;
-  final GlobalKey avatarKey;
-  final GlobalKey<EpisodeNumberAndPodcastNameState> numberAndNameKey;
-  final GlobalKey lengthAndSizeKey;
-
-  late final Tween<Size> sizeTween;
-  late final Tween<Offset> offsetTween;
-
-  late final Tween<Offset> avatarOffsetTween;
-  late final Tween<double> avatarSizeTween;
-
-  late final Tween<Offset> numberAndNameOffsetTween;
-  late final TextStyleTween numberAndNameStyleTween;
-  late final bool nameVisible;
-
-  late final Tween<Offset> lengthAndSizeOffsetTween;
-  late final Tween<double> lengthAndSizeHeightTween;
-
-  EpisodeCardDetailRoute(
-    BuildContext context,
-    this.episodeId, {
-    required this.cardKey,
-    required this.layout,
-    required this.cardBuilder,
-    required this.showCard,
-    required this.hideCard,
-    required this.preferEpisodeImage,
-    required this.avatarKey,
-    required this.numberAndNameKey,
-    required this.lengthAndSizeKey,
-  }) : cardBox = cardKey.currentContext!.findRenderObject() as RenderBox {
-    sizeTween = Tween(
-        begin: cardBox.size,
-        end: Size(
-            context.width,
-            context.height -
-                (context.audioState.playerRunning
-                    ? context.audioState.playerHeight!.height
-                    : 0) -
-                context.originalPadding.bottom));
-    final cardOffset = cardBox.localToGlobal(Offset.zero);
-    offsetTween = Tween(begin: cardOffset, end: Offset.zero);
-
-    final RenderBox avatarBox =
-        avatarKey.currentContext!.findRenderObject() as RenderBox;
-    final initialAvatarOffset = avatarBox.localToGlobal(Offset.zero);
-    final finalAvatarOffset = Offset(
-        10,
-        context.audioState.playerRunning
-            ? context.height -
-                context.audioState.playerHeight!.height -
-                40 -
-                context.originalPadding.bottom
-            : context.height - 40 - context.originalPadding.bottom);
-    avatarOffsetTween =
-        Tween(begin: initialAvatarOffset, end: finalAvatarOffset);
-    avatarSizeTween = Tween(begin: avatarBox.size.width, end: 30);
-
-    final RenderBox numberAndNameBox =
-        numberAndNameKey.currentContext!.findRenderObject() as RenderBox;
-    numberAndNameOffsetTween = Tween(
-        begin: numberAndNameBox.localToGlobal(Offset.zero),
-        end: Offset(45, 75));
-    numberAndNameStyleTween = TextStyleTween(
-        begin: numberAndNameKey.currentState!.textStyle,
-        end: context.textTheme.headlineSmall!);
-    nameVisible = numberAndNameKey.currentState!.widget.showName;
-
-    final RenderBox lengthAndSizeBox =
-        lengthAndSizeKey.currentContext!.findRenderObject() as RenderBox;
-    lengthAndSizeOffsetTween = Tween(
-        begin: lengthAndSizeBox.localToGlobal(Offset.zero),
-        end: Offset(30, 236));
-    lengthAndSizeHeightTween =
-        Tween(begin: lengthAndSizeBox.size.height, end: 40);
-  }
-
-  @override
-  void dispose() {
-    done();
-    super.dispose();
-  }
-
-  @override
-  Color? get barrierColor => null;
-
-  @override
-  bool get barrierDismissible => false;
-
-  @override
-  String? get barrierLabel => null;
-
-  bool showHeroes = true;
-  void done() {
-    showCard();
-    showHeroes = false;
-  }
-
-  void begin() {
-    hideCard();
-    showHeroes = true;
-  }
-
-  @override
-  Widget buildPage(BuildContext context, Animation<double> animation,
-      Animation<double> secondaryAnimation) {
-    Future.microtask(begin);
-    EpisodeState eState = Provider.of<EpisodeState>(context, listen: false);
-    final sizeAnimation =
-        CurvedAnimation(parent: animation, curve: Curves.easeInOutCirc);
-    final cardFadeAnimation =
-        CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
-    final detailFadeAnimation =
-        CurvedAnimation(parent: animation, curve: Curves.easeInOutCubic);
-    return AnimatedBuilder(
-      animation: animation,
-      builder: (context, child) {
-        final size = sizeTween.evaluate(sizeAnimation);
-        final avatarSize = avatarSizeTween.evaluate(sizeAnimation);
-        final lengthAndSizeHeight =
-            lengthAndSizeHeightTween.evaluate(sizeAnimation);
-        final numberAndNameStyle =
-            numberAndNameStyleTween.evaluate(sizeAnimation);
-        return animation.isCompleted
-            ? PopScope(
-                onPopInvokedWithResult: (didPop, result) {
-                  if (didPop) {
-                    Future.delayed(Duration(milliseconds: 400), done);
-                  }
-                },
-                child: EpisodeDetail(
-                  episodeId,
-                  numberAndNameKey: numberAndNameKey,
-                ),
-              )
-            : Stack(
-                children: [
-                  Transform.translate(
-                    offset: offsetTween.evaluate(sizeAnimation),
-                    child: Container(
-                      decoration:
-                          _cardDecoration(context, episodeId, layout).copyWith(
-                        border:
-                            BoxBorder.all(width: 0, color: Colors.transparent),
-                      ),
-                      clipBehavior: Clip.hardEdge,
-                      height: size.height,
-                      width: size.width,
-                      child: Stack(
-                        fit: StackFit.passthrough,
-                        children: [
-                          Opacity(
-                            opacity: 1 - cardFadeAnimation.value,
-                            child: FittedBox(
-                              alignment: Alignment.topCenter,
-                              fit: BoxFit.fitWidth,
-                              child: SizedBox(
-                                height: cardBox.size.height,
-                                width: cardBox.size.width,
-                                child: cardBuilder(true),
-                              ),
-                            ),
-                          ),
-                          Opacity(
-                            opacity: detailFadeAnimation.value,
-                            child: FittedBox(
-                              fit: BoxFit.contain,
-                              child: SizedBox(
-                                height:
-                                    context.width * size.height / size.width,
-                                width: context.width,
-                                child: PopScope(
-                                  onPopInvokedWithResult: (didPop, result) {
-                                    if (didPop) {
-                                      Future.delayed(
-                                          Duration(milliseconds: 400),
-                                          showCard);
-                                    }
-                                  },
-                                  child: EpisodeDetail(
-                                    episodeId,
-                                    hide: true,
-                                    numberAndNameKey: numberAndNameKey,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  if (showHeroes)
-                    Transform.translate(
-                      offset: avatarOffsetTween.evaluate(sizeAnimation),
-                      child: SizedBox(
-                        height: avatarSize,
-                        width: avatarSize,
-                        child: CircleAvatar(
-                          key: avatarKey,
-                          radius: avatarSize,
-                          backgroundImage: preferEpisodeImage
-                              ? eState[episodeId].episodeOrPodcastImageProvider
-                              : eState[episodeId].podcastImageProvider,
-                        ),
-                      ),
-                    ),
-                  if (showHeroes)
-                    Transform.translate(
-                      offset: numberAndNameOffsetTween.evaluate(sizeAnimation),
-                      child: EpisodeNumberAndPodcastName(
-                        episodeId,
-                        showName:
-                            animation.isForwardOrCompleted ? true : nameVisible,
-                        textStyle: numberAndNameStyle,
-                        key: numberAndNameKey,
-                      ),
-                    ),
-                  if (showHeroes)
-                    Transform.translate(
-                      offset: lengthAndSizeOffsetTween.evaluate(sizeAnimation),
-                      child: EpisodeLengthAndSize(
-                        episodeId,
-                        height: lengthAndSizeHeight,
-                        fill: true,
-                        key: lengthAndSizeKey,
-                      ),
-                    ),
-                ],
-              );
-      },
-    );
-  }
-
-  @override
-  bool get maintainState => false;
-
-  @override
-  bool get opaque => true;
-
-  @override
-  Duration get transitionDuration => const Duration(milliseconds: 400);
-}
-
 class _FocusedMenuHolderWrapper extends StatefulWidget {
   final Widget child;
 
@@ -751,7 +497,8 @@ class _FocusedMenuHolderWrapper extends StatefulWidget {
       required this.controller,
       required this.shadowController,
       this.beforeOpened,
-      this.initData});
+      this.initData,
+      super.key});
   @override
   _FocusedMenuHolderWrapperState createState() =>
       _FocusedMenuHolderWrapperState();
@@ -780,10 +527,11 @@ class _FocusedMenuHolderWrapperState extends State<_FocusedMenuHolderWrapper> {
       menuItemExtent: widget.menuItemExtent,
       enableMenuScroll: false,
       menuBoxDecoration: widget.menuBoxDecoration,
-      childDecoration: _cardDecoration(context, widget.episodeId, widget.layout,
+      childDecoration: episodeCardDecoration(
+          context, widget.episodeId, widget.layout,
           controller: widget.controller,
           shadowController: widget.shadowController),
-      openChildDecoration: _cardDecoration(
+      openChildDecoration: episodeCardDecoration(
         context,
         widget.episodeId,
         widget.layout,
@@ -868,8 +616,14 @@ class EpisodeCard extends StatelessWidget {
   /// Key for the EpisodeNumberAndPodcastName widget
   final GlobalKey? numberAndNameKey;
 
+  /// Key for the EpisodeTitle widget
+  final GlobalKey? titleKey;
+
   /// Key for the EpisodeLengthAndSize widget
   final GlobalKey? lengthAndSizeKey;
+
+  /// Key for the isLiked indicator
+  final GlobalKey? heartKey;
 
   /// Callback that disables card gesture callbacks
   final VoidCallback? onTapDown;
@@ -895,7 +649,9 @@ class EpisodeCard extends StatelessWidget {
     this.decorate = true,
     this.avatarKey,
     this.numberAndNameKey,
+    this.titleKey,
     this.lengthAndSizeKey,
+    this.heartKey,
     this.onTapDown,
     this.onTapUp,
     this.hide = false,
@@ -908,29 +664,25 @@ class EpisodeCard extends StatelessWidget {
         Provider.of<EpisodeState>(context, listen: false)[episodeId];
 
     /// Episode title widget.
-    Widget title() => Container(
-          alignment: layout == EpisodeGridLayout.large
-              ? Alignment.centerLeft
-              : Alignment.topLeft,
-          padding:
-              EdgeInsets.only(top: layout == EpisodeGridLayout.large ? 0 : 2),
-          child: Text(
-            episode.title,
-            style: (layout == EpisodeGridLayout.small
-                    ? context.textTheme.bodySmall
-                    : context.textTheme.bodyMedium)!
-                .copyWith(
-              height: 1.25,
-              color: episode.colorScheme(context).onSurface,
+    Widget title() => hide
+        ? Center()
+        : Container(
+            alignment: layout == EpisodeGridLayout.large
+                ? Alignment.centerLeft
+                : Alignment.topLeft,
+            child: EpisodeTitle(
+              episodeId,
+              textStyle: (layout == EpisodeGridLayout.small
+                  ? context.textTheme.bodySmall
+                  : context.textTheme.bodyMedium)!,
+              maxLines: layout == EpisodeGridLayout.small
+                  ? 4
+                  : layout == EpisodeGridLayout.medium
+                      ? 3
+                      : 2,
+              key: titleKey,
             ),
-            maxLines: layout == EpisodeGridLayout.small
-                ? 4
-                : layout == EpisodeGridLayout.medium
-                    ? 3
-                    : 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        );
+          );
 
     /// Circle avatar widget.
     Widget circleImage(
@@ -938,55 +690,32 @@ class EpisodeCard extends StatelessWidget {
       bool preferEpisodeImage, {
       required double radius,
     }) =>
-        SizedBox(
-          height: radius,
-          width: radius,
-          child: !hide
-              ? Stack(
-                  children: [
-                    CircleAvatar(
-                      key: avatarKey,
-                      radius: radius,
-                      backgroundColor: episode.colorScheme(context).primary,
-                      backgroundImage: preferEpisodeImage
-                          ? episode.episodeOrPodcastImageProvider
-                          : episode.podcastImageProvider,
-                    ),
-                    if (openPodcast)
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(radius),
-                          onTapDown: (details) => onTapDown?.call(),
-                          onTapUp: (details) => onTapUp?.call(),
-                          onTap: () async {
-                            if (context.mounted) {
-                              Navigator.push(
-                                context,
-                                HidePlayerRoute(
-                                  PodcastDetail(podcastId: episode.podcastId),
-                                ),
-                              );
-                            }
-                          },
-                        ),
-                      ),
-                  ],
-                )
-              : Center(),
-        );
+        hide
+            ? SizedBox(width: radius)
+            : EpisodeAvatar(
+                episodeId,
+                radius: radius,
+                preferEpisodeImage: preferEpisodeImage,
+                openPodcast: openPodcast,
+                onTapDown: onTapDown,
+                onTapUp: onTapUp,
+                key: avatarKey,
+              );
 
     /// Liked indicator widget.
     Widget isLikedIndicator() => Align(
           alignment: Alignment.center,
           child: Selector<EpisodeState, bool>(
             selector: (_, episodeState) => episodeState[episodeId].isLiked,
-            builder: (context, value, _) => value
-                ? Icon(Icons.favorite,
+            builder: (context, value, _) => value && !hide
+                ? Icon(
+                    Icons.favorite,
                     color: Colors.red,
                     size: layout == EpisodeGridLayout.small
                         ? context.textTheme.bodySmall!.fontSize
-                        : context.textTheme.bodyLarge!.fontSize)
+                        : context.textTheme.bodyLarge!.fontSize,
+                    key: heartKey,
+                  )
                 : Center(),
           ),
         );
@@ -1012,20 +741,20 @@ class EpisodeCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
           borderRadius:
-              _cardDecoration(context, episodeId, layout).borderRadius),
+              episodeCardDecoration(context, episodeId, layout).borderRadius),
       clipBehavior: Clip.hardEdge,
       child: Stack(
         alignment: AlignmentDirectional.centerStart,
         children: [
           decorate
               ? Container(
-                  decoration: _cardDecoration(context, episodeId, layout,
+                  decoration: episodeCardDecoration(context, episodeId, layout,
                       selected: selected))
               : Center(),
           decorate
               ? FutureBuilder<PlayHistory>(
                   future: DBHelper().getPosition(episode),
-                  builder: (context, snapshot) => _ProgressLowerlay(episodeId,
+                  builder: (context, snapshot) => ProgressLowerlay(episodeId,
                       snapshot.hasData ? snapshot.data!.seekValue! : 0, layout,
                       hide: selected))
               : Center(),
@@ -1045,32 +774,43 @@ class EpisodeCard extends StatelessWidget {
                   ),
                 Expanded(
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       SizedBox(
-                        height: layout != EpisodeGridLayout.large ? 24 : 32,
-                        child: Row(
-                          children: <Widget>[
-                            if (layout != EpisodeGridLayout.large)
-                              circleImage(
-                                openPodcast,
-                                preferEpisodeImage,
-                                radius: layout == EpisodeGridLayout.small
-                                    ? layout.getRowHeight(context.width) / 7
-                                    : layout.getRowHeight(context.width) / 5,
-                              ),
-                            if (layout != EpisodeGridLayout.large)
-                              SizedBox(
-                                  width: layout == EpisodeGridLayout.small
-                                      ? 2
-                                      : 5),
-                            if (!hide)
-                              EpisodeNumberAndPodcastName(
-                                episodeId,
-                                showName: layout == EpisodeGridLayout.large,
-                                key: numberAndNameKey,
-                              ),
-                            Spacer(),
-                            pubDate(showNew),
+                        height: layout != EpisodeGridLayout.large ? 30 : 16,
+                        // width: context.width -
+                        //     layout.getRowHeight(context.width) * 4 / 5 -
+                        //     120,
+                        child: Stack(
+                          children: [
+                            Row(
+                              children: <Widget>[
+                                if (layout != EpisodeGridLayout.large)
+                                  circleImage(
+                                    openPodcast,
+                                    preferEpisodeImage,
+                                    radius: layout == EpisodeGridLayout.small
+                                        ? layout.getRowHeight(context.width) / 7
+                                        : layout.getRowHeight(context.width) /
+                                            5,
+                                  ),
+                                if (layout != EpisodeGridLayout.large)
+                                  SizedBox(
+                                      width: layout == EpisodeGridLayout.small
+                                          ? 2
+                                          : 5),
+                                if (!hide)
+                                  EpisodeNumberAndPodcastName(
+                                    episodeId,
+                                    showName: layout == EpisodeGridLayout.large,
+                                    key: numberAndNameKey,
+                                  ),
+                              ],
+                            ),
+                            Align(
+                              alignment: AlignmentGeometry.centerRight,
+                              child: pubDate(showNew),
+                            ),
                           ],
                         ),
                       ),
@@ -1105,14 +845,14 @@ class EpisodeCard extends StatelessWidget {
   }
 }
 
-class _ProgressLowerlay extends StatelessWidget {
+class ProgressLowerlay extends StatelessWidget {
   final int episodeId;
   final double seekValue;
   final EpisodeGridLayout layout;
   final bool hide;
   final AnimationController? animator;
-  const _ProgressLowerlay(this.episodeId, this.seekValue, this.layout,
-      {this.hide = false, this.animator});
+  const ProgressLowerlay(this.episodeId, this.seekValue, this.layout,
+      {super.key, this.hide = false, this.animator});
 
   @override
   Widget build(BuildContext context) {
@@ -1144,7 +884,7 @@ class _ProgressLowerlay extends StatelessWidget {
   }
 }
 
-BoxDecoration _cardDecoration(
+BoxDecoration episodeCardDecoration(
   BuildContext context,
   int episodeId,
   EpisodeGridLayout layout, {
@@ -1153,8 +893,7 @@ BoxDecoration _cardDecoration(
   AnimationController?
       shadowController, // Hide shadow during expanding transition
 }) {
-  EpisodeState eState = Provider.of<EpisodeState>(context, listen: false);
-  EpisodeBrief episode = eState[episodeId];
+  EpisodeBrief episode = context.episodeState[episodeId];
   Color shownShadowColor = controller == null
       ? episode.cardShadowColor(context)
       : ColorTween(

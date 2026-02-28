@@ -4,10 +4,68 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import '../podcasts/podcast_detail.dart';
 import '../state/episode_state.dart';
 import '../util/extension_helper.dart';
-import 'custom_dropdown.dart';
-import 'episodegrid.dart';
+import '../util/hide_player_route.dart';
+import '../widgets/custom_dropdown.dart';
+
+class EpisodeAvatar extends StatelessWidget {
+  final int episodeId;
+  final double radius;
+  final bool preferEpisodeImage;
+  final bool openPodcast;
+  final VoidCallback? onTapDown;
+  final VoidCallback? onTapUp;
+
+  const EpisodeAvatar(this.episodeId,
+      {required this.radius,
+      required this.preferEpisodeImage,
+      this.openPodcast = true,
+      this.onTapDown,
+      this.onTapUp,
+      super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final episode =
+        Provider.of<EpisodeState>(context, listen: false)[episodeId];
+    return SizedBox(
+      height: radius,
+      width: radius,
+      child: Stack(
+        children: [
+          CircleAvatar(
+            radius: radius / 2,
+            backgroundColor: episode.colorScheme(context).primary,
+            backgroundImage: preferEpisodeImage
+                ? episode.episodeOrPodcastImageProvider
+                : episode.podcastImageProvider,
+          ),
+          if (openPodcast)
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(radius),
+                onTapDown: (details) => onTapDown?.call(),
+                onTapUp: (details) => onTapUp?.call(),
+                onTap: () async {
+                  if (context.mounted) {
+                    Navigator.push(
+                      context,
+                      HidePlayerRoute(
+                        PodcastDetail(podcastId: episode.podcastId),
+                      ),
+                    );
+                  }
+                },
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
 
 /// Widget that shows the length, size properties and optionally the
 /// played, downloaded status of the episode.
@@ -147,7 +205,7 @@ class _EpisodeLengthAndSizeState extends State<EpisodeLengthAndSize> {
                   border: value.duration == 0
                       ? Border.fromBorderSide(side)
                       : Border(top: side, right: side, bottom: side),
-                  color: widget.showPlayedAndDownloaded && value.played
+                  color: widget.showPlayedAndDownloaded && value.downloaded
                       ? backgroundColor
                       : widget.fill
                           ? cardColorScheme.card
@@ -174,8 +232,9 @@ class EpisodeNumberAndPodcastName extends StatefulWidget {
   final int episodeId;
   final bool showName;
   final TextStyle? textStyle;
+  final Animation<double>? nameAnimation;
   const EpisodeNumberAndPodcastName(this.episodeId,
-      {this.showName = true, this.textStyle, super.key});
+      {this.showName = true, this.nameAnimation, this.textStyle, super.key});
 
   @override
   State<EpisodeNumberAndPodcastName> createState() =>
@@ -187,102 +246,92 @@ class EpisodeNumberAndPodcastNameState
     with SingleTickerProviderStateMixin {
   TextStyle get textStyle => widget.textStyle ?? context.textTheme.bodyLarge!;
 
-  late final nameAnimationController = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: 400),
-      value: widget.showName ? 1 : 0);
-  late final nameAnimation = CurvedAnimation(
-      parent: nameAnimationController,
-      curve: Curves.easeInCirc,
-      reverseCurve: Curves.easeInCirc);
-  @override
-  void didUpdateWidget(covariant EpisodeNumberAndPodcastName oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.showName) {
-      nameAnimationController.forward();
-    } else {
-      nameAnimationController.reverse();
-    }
-  }
-
-  @override
-  void dispose() {
-    nameAnimationController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final episode =
         Provider.of<EpisodeState>(context, listen: false)[widget.episodeId];
     return ScrollConfiguration(
-        behavior: NoOverscrollScrollBehavior(),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: NeverScrollableScrollPhysics(),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: EdgeInsets.only(
-                    top: textStyle.fontSize! / 10), // Teko baseline fix
-                child: Text(
-                  episode.number.toString(),
-                  style: GoogleFonts.teko(textStyle: textStyle),
-                ),
+      behavior: NoOverscrollScrollBehavior(),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: NeverScrollableScrollPhysics(),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: EdgeInsets.only(
+                  top: textStyle.fontSize! / 10), // Teko baseline fix
+              child: Text(
+                episode.number.toString(),
+                style: GoogleFonts.teko(textStyle: textStyle),
               ),
-              AnimatedBuilder(
-                animation: nameAnimation,
-                builder: (context, child) => nameAnimation.value == 0
-                    ? Center()
-                    : Opacity(
-                        opacity: nameAnimation.value,
-                        child: Text(
-                          "|${episode.podcastTitle}",
-                          style: textStyle.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: episode
-                                  .colorScheme(context)
-                                  .onSecondaryContainer),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-              ),
-            ],
-          ),
-        ));
+            ),
+            widget.nameAnimation == null
+                ? widget.showName
+                    ? Text(
+                        "|${episode.podcastTitle}",
+                        style: textStyle.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: episode
+                                .colorScheme(context)
+                                .onSecondaryContainer),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      )
+                    : Center()
+                : AnimatedBuilder(
+                    animation: widget.nameAnimation!,
+                    builder: (context, child) =>
+                        widget.nameAnimation!.value == 0
+                            ? Center()
+                            : Opacity(
+                                opacity: widget.nameAnimation!.value,
+                                child: Text(
+                                  "|${episode.podcastTitle}",
+                                  style: textStyle.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: episode
+                                          .colorScheme(context)
+                                          .onSecondaryContainer),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                  ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
 /// Episode title widget.
-// class EpisodeTitle extends StatelessWidget {
-//   const EpisodeTitle({super.key});
+class EpisodeTitle extends StatefulWidget {
+  final int episodeId;
+  final TextStyle textStyle;
+  final int maxLines;
+  const EpisodeTitle(this.episodeId,
+      {required this.textStyle, this.maxLines = 3, super.key});
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Container(
-//       alignment: layout == EpisodeGridLayout.large
-//           ? Alignment.centerLeft
-//           : Alignment.topLeft,
-//       padding: EdgeInsets.only(top: layout == EpisodeGridLayout.large ? 0 : 2),
-//       child: Text(
-//         episode.title,
-//         style: (layout == EpisodeGridLayout.small
-//                 ? context.textTheme.bodySmall
-//                 : context.textTheme.bodyMedium)!
-//             .copyWith(
-//           height: 1.25,
-//           color: episode.colorScheme(context).onSurface,
-//         ),
-//         maxLines: layout == EpisodeGridLayout.small
-//             ? 4
-//             : layout == EpisodeGridLayout.medium
-//                 ? 3
-//                 : 2,
-//         overflow: TextOverflow.ellipsis,
-//       ),
-//     );
-//   }
-// }
+  @override
+  State<EpisodeTitle> createState() => EpisodeTitleState();
+}
+
+class EpisodeTitleState extends State<EpisodeTitle> {
+  TextStyle get textStyle => widget.textStyle;
+  @override
+  Widget build(BuildContext context) {
+    final episode =
+        Provider.of<EpisodeState>(context, listen: false)[widget.episodeId];
+    return Text(
+      episode.title,
+      style: widget.textStyle.copyWith(
+        height: 1.25,
+        color: episode.colorScheme(context).onSurface,
+      ),
+      maxLines: widget.maxLines,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
+}

@@ -10,7 +10,7 @@ import '../util/extension_helper.dart';
 import '../util/selection_controller.dart';
 import 'action_bar.dart';
 import 'custom_widget.dart';
-import 'episode_card.dart';
+import '../episodes/episode_card.dart';
 
 enum EpisodeGridLayout {
   small(1, 120, 134),
