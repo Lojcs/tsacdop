@@ -1,0 +1,225 @@
+{
+    "addNewEpisodeTooltip": "Neue Episoden zur Wiedergabeliste hinzufügen",
+    "@addNewEpisodeTooltip": {},
+    "addSomeGroups": "Einige Gruppen hinzufügen",
+    "@addSomeGroups": {
+        "description": "Please add new groups"
+    },
+    "after": "Nach",
+    "@after": {
+        "description": "Used in a button to select episodes after the selected one(s) on a list. Not used for time"
+    },
+    "all": "Alle",
+    "@all": {},
+    "apiSearch": "API-Suche",
+    "@apiSearch": {},
+    "autoDownload": "Automatischer Download",
+    "@autoDownload": {},
+    "back": "Zurück",
+    "@back": {},
+    "before": "Vorher",
+    "@before": {
+        "description": "Used in a button to select episodes before the selected one(s) on a list. Not used for time"
+    },
+    "between": "Zwischen",
+    "@between": {
+        "description": "Used in a button to select episodes between the selected one(s) on a list"
+    },
+    "boostVolume": "Lautstärke erhöhen",
+    "@boostVolume": {
+        "description": "Boost volume in player widget."
+    },
+    "buffering": "Pufferung",
+    "@buffering": {},
+    "cancel": "ABBRECHEN",
+    "@cancel": {},
+    "capitalDefault": "Standard",
+    "@capitalDefault": {},
+    "cellularConfirm": "Warnung zu Mobilfunkdaten",
+    "@cellularConfirm": {},
+    "cellularConfirmDes": "Bist du sicher, dass du mobile Daten zum Herunterladen verwenden möchtest?",
+    "@cellularConfirmDes": {},
+    "changeLayout": "Layout ändern",
+    "@changeLayout": {},
+    "changelog": "Änderungsprotokoll",
+    "@changelog": {},
+    "close": "Schließen",
+    "@close": {},
+    "color": "Farbe",
+    "@color": {},
+    "confirm": "BESTÄTIGEN",
+    "@confirm": {},
+    "add": "Hinzufügen",
+    "@add": {
+        "description": "Subscribe new podcast"
+    },
+    "createNewPlaylist": "Neue Wiedergabeliste",
+    "@createNewPlaylist": {},
+    "darkMode": "Dunkler Modus",
+    "@darkMode": {},
+    "defaultQueueReminder": "Dies ist die Standardwarteschlange, die nicht entfernt werden kann.",
+    "@defaultQueueReminder": {
+        "description": "Remind user that default queue can't be removed."
+    },
+    "defaultSearchEngine": "Standard-Podcast-Suchmaschine",
+    "@defaultSearchEngine": {},
+    "delete": "Löschen",
+    "@delete": {},
+    "deleted": "Gelöscht",
+    "@deleted": {},
+    "deletedEpisodeDesc": "Diese Episode wurde aus der Datenbank gelöscht",
+    "@deletedEpisodeDesc": {},
+    "deletedPodcastDesc": "Dieser Podcast wurde aus der Datenbank gelöscht",
+    "@deletedPodcastDesc": {},
+    "downloading": "Herunterladen",
+    "@downloading": {},
+    "downloadRemovedToast": "Download entfernt",
+    "@downloadRemovedToast": {},
+    "downloadStart": "Herunterladen",
+    "@downloadStart": {
+        "description": "Toast of downloading"
+    },
+    "duration": "Dauer",
+    "@duration": {
+        "description": "Duration sort order"
+    },
+    "editGroupName": "Gruppennamen bearbeiten",
+    "@editGroupName": {},
+    "endOfEpisode": "Ende der Episode",
+    "@endOfEpisode": {},
+    "fastForward": "Schnell vorwärts",
+    "@fastForward": {},
+    "featureDiscoveryEditGroup": "Zum Bearbeiten auf die Gruppe tippen",
+    "@featureDiscoveryEditGroup": {},
+    "featureDiscoveryEditGroupDes": "Du kannst hier den Gruppennamen ändern oder die Gruppe löschen, aber die Hauptgruppe kann nicht bearbeitet oder gelöscht werden",
+    "@featureDiscoveryEditGroupDes": {},
+    "gpodderLoginDes": "Herzlichen Glückwunsch! Du  hast dein gpodder.net-Konto erfolgreich verknüpft. Tsacdop synchronisiert automatisch die Abonnements auf deinem Gerät mit deinem gpodder.net-Konto.",
+    "@gpodderLoginDes": {},
+    "featureDiscoveryPlaylistDes": "Du kannst Episoden selbst zu Wiedergabelisten hinzufügen. Episoden werden automatisch aus Wiedergabelisten entfernt, wenn sie abgespielt wurden.",
+    "@featureDiscoveryPlaylistDes": {},
+    "groupRemoveConfirm": "Willst du diese Gruppe wirklich löschen? Die Podcasts werden in die Hauptgruppe verschoben.",
+    "@groupRemoveConfirm": {},
+    "featureDiscoverySearchDes": "Du kannst nach Podcast-Titel, Stichwort oder RSS-Link suchen, um neue Podcasts zu abonnieren.",
+    "@featureDiscoverySearchDes": {},
+    "fontStyle": "Schriftart",
+    "@fontStyle": {},
+    "forward": "Vorwärts",
+    "@forward": {},
+    "goodNight": "Gute Nacht",
+    "@goodNight": {},
+    "groupExisted": "Gruppe existiert bereits",
+    "@groupExisted": {
+        "description": "Group name validate in add group dialog. User can't add group with same name."
+    },
+    "haptics": "Haptisches Feedback",
+    "@haptics": {
+        "description": "Haptic Feedback (vibrations)"
+    },
+    "hapticsDes": "Haptisches Feedback ein- und ausschalten und dessen Intensität anpassen. (Erfordert Geräteunterstützung)",
+    "@hapticsDes": {
+        "description": "Haptic Feedback settings item description"
+    },
+    "homeGroupsSeeAll": "Alle anzeigen",
+    "@homeGroupsSeeAll": {},
+    "homeMenuPlaylist": "Wiedergabeliste",
+    "@homeMenuPlaylist": {},
+    "homeSubMenuSortBy": "Sortieren nach",
+    "@homeSubMenuSortBy": {},
+    "homeToprightMenuAbout": "Über",
+    "@homeToprightMenuAbout": {},
+    "homeToprightMenuImportOMPL": "OPML importieren",
+    "@homeToprightMenuImportOMPL": {},
+    "import": "Importieren",
+    "@import": {},
+    "importingOpml": "OPML-Datei importieren.",
+    "@importingOpml": {},
+    "interaction": "Interaktion",
+    "@interaction": {
+        "description": "Interaction setting menu section title"
+    },
+    "introFourthPage": "Du kannst die Episodenkarte lange gedrückt halten, um Schnellaktionen auszuführen.",
+    "@introFourthPage": {},
+    "introSecondPage": "Podcast über Suche abonnieren oder OPML-Datei importieren.",
+    "@introSecondPage": {},
+    "introThirdPage": "Du kannst eine neue Gruppe für Podcasts erstellen.",
+    "@introThirdPage": {},
+    "invalidName": "Ungültiger Benutzername",
+    "@invalidName": {},
+    "lastUpdate": "Letzte Aktualisierung",
+    "@lastUpdate": {
+        "description": "gpodder.net update"
+    },
+    "later": "Später",
+    "@later": {},
+    "listen": "Hören",
+    "@listen": {},
+    "listened": "Angehört",
+    "@listened": {},
+    "localFolder": "Lokaler Ordner",
+    "@localFolder": {
+        "description": "Podcast name for episodes imported from audio files on device"
+    },
+    "loadAllSelected": "Alle ausgewählten laden",
+    "@loadAllSelected": {
+        "description": "Tooltip for button that loads all episodes included in a selection."
+    },
+    "loading": "Laden",
+    "@loading": {},
+    "loadMore": "Mehr laden",
+    "@loadMore": {},
+    "loggedInAs": "Angemeldet als {userName}",
+    "@loggedInAs": {
+        "description": "gpodder.net",
+        "placeholders": {
+            "userName": {}
+        }
+    },
+    "login": "Anmelden",
+    "@login": {
+        "description": "gpodder.net login"
+    },
+    "loginFailed": "Anmeldung fehlgeschlagen",
+    "@loginFailed": {},
+    "logout": "Abmelden",
+    "@logout": {
+        "description": "gpodder.net logout"
+    },
+    "feedbackGithub": "Problem melden",
+    "@feedbackGithub": {},
+    "feedbackPlay": "Bewertung im Play Store",
+    "@feedbackPlay": {
+        "description": "Rate on Google Play Store.\nUser can tap to open play link."
+    },
+    "feedbackTelegram": "Gruppe beitreten",
+    "@feedbackTelegram": {},
+    "filter": "Filter",
+    "@filter": {},
+    "fonts": "Schriftarten",
+    "@fonts": {},
+    "homeToprightMenuRefreshAll": "Alle aktualisieren",
+    "@homeToprightMenuRefreshAll": {},
+    "hostedOn": "Gehostet auf {host}",
+    "@hostedOn": {
+        "placeholders": {
+            "host": {}
+        }
+    },
+    "markListened": "Als gehört markieren",
+    "@markListened": {},
+    "menu": "Menü",
+    "@menu": {},
+    "menuAllPodcasts": "Alle Podcasts",
+    "@menuAllPodcasts": {},
+    "menuMarkAllListened": "Alle als gehört markieren",
+    "@menuMarkAllListened": {},
+    "featureDiscoveryEpisodeDes": "Durch längeres Drücken wird die Episode abgespielt oder zu einer Wiedergabeliste hinzugefügt.",
+    "@featureDiscoveryEpisodeDes": {},
+    "featureDiscoveryPodcastDes": "Durch Tippen auf „Alle anzeigen“ können Gruppen hinzugefügt oder Podcasts verwaltet werden.",
+    "@featureDiscoveryPodcastDes": {},
+    "settingsMarkListenedSkipDes": "Episode automatisch als angehört markieren, wenn zum nächsten Titel gesprungen wurde",
+    "@settingsMarkListenedSkipDes": {},
+    "settingsNetworkCellularAutoDes": "Du kannst den automatischen Download von Podcasts auf der Seite zur Gruppenverwaltung konfigurieren",
+    "@settingsNetworkCellularAutoDes": {},
+    "settingsEnableSyncingDes": "Alle Podcasts im Hintergrund aktualisieren, um die neuesten Episoden zu erhalten",
+    "@settingsEnableSyncingDes": {}
+}
