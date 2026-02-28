@@ -390,10 +390,12 @@ class EpisodeCardDetailRoute extends ModalRoute {
         if (showHeroes && !animation.isCompleted)
           Transform.translate(
             offset: numberAndNameHero.offsetTween.evaluate(sizeAnimation),
-            child: EpisodeNumberAndPodcastName(
-              episodeId,
-              nameAnimation: nameAnimation,
-              textStyle: numberAndNameHero.styleTween.evaluate(sizeAnimation),
+            child: SizedBox.fromSize(
+              size: numberAndNameHero.sizeTween.evaluate(sizeAnimation),
+              child: EpisodeNumberAndPodcastName(
+                episodeId,
+                textStyle: numberAndNameHero.styleTween.evaluate(sizeAnimation),
+              ),
             ),
           ),
         if (showHeroes && !animation.isCompleted)

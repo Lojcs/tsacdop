@@ -114,30 +114,31 @@ class InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   late final lengthAndSizeKey = GlobalKey();
   late final heartKey = GlobalKey();
 
-  late Widget progressLowerlay =
+  Widget progressLowerlay() =>
       Selector2<AudioPlayerNotifier, EpisodeState, (bool, double)>(
-    selector: (_, audio, eState) {
-      if (audio.episodeId == widget.episodeId && audio.playerRunning) {
-        return (false, audio.seekSliderValue);
-      } else if (eState[widget.episodeId].isPlayed) {
-        return (false, 1);
-      } else {
-        return (true, 0);
-      }
-    },
-    builder: (_, data, __) => FutureBuilder<double>(
-      future: Future(
-        () async => data.$1 ? (await _getSavedPosition()).seekValue! : data.$2,
-      ),
-      // initialData: PlayHistory("", "", 0, 0),
-      builder: (context, snapshot) => ProgressLowerlay(
-        widget.episodeId,
-        snapshot.hasData ? snapshot.data! : 0,
-        widget.layout,
-        animator: _controller,
-      ),
-    ),
-  );
+        selector: (_, audio, eState) {
+          if (audio.episodeId == widget.episodeId && audio.playerRunning) {
+            return (false, audio.seekSliderValue);
+          } else if (eState[widget.episodeId].isPlayed) {
+            return (false, 1);
+          } else {
+            return (true, 0);
+          }
+        },
+        builder: (_, data, __) => FutureBuilder<double>(
+          future: Future(
+            () async =>
+                data.$1 ? (await _getSavedPosition()).seekValue! : data.$2,
+          ),
+          // initialData: PlayHistory("", "", 0, 0),
+          builder: (context, snapshot) => ProgressLowerlay(
+            widget.episodeId,
+            snapshot.hasData ? snapshot.data! : 0,
+            widget.layout,
+            animator: _controller,
+          ),
+        ),
+      );
 
   bool avatarHasFocus = false;
   Future<void> waitForAvatar = Future(() {});
@@ -206,7 +207,7 @@ class InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
           cardKey: cardKey,
           layout: widget.layout,
           card: _cardBuilder(true),
-          cardLowerlay: progressLowerlay,
+          cardLowerlay: progressLowerlay(),
           preferEpisodeImage: widget.preferEpisodeImage,
           avatarKey: avatarKey,
           numberAndNameKey: numberAndNameKey,
@@ -364,7 +365,7 @@ class InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
                 ? context.radiusMedium
                 : context.radiusLarge,
       ),
-      childLowerlay: progressLowerlay,
+      childLowerlay: progressLowerlay(),
       controller: _controller,
       shadowController: _shadowController,
       child: hideCard ? Center() : _cardBuilder(false),
@@ -866,7 +867,7 @@ class ProgressLowerlay extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(layout == EpisodeGridLayout.small
-              ? 12
+              ? 10
               : layout == EpisodeGridLayout.medium
                   ? 16
                   : 20),

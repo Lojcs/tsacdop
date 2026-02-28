@@ -176,9 +176,8 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                 maxLines: 3,
                                 text: TextSpan(
                                   text: episodeItem.title,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headlineMedium,
+                                  style:
+                                      Theme.of(context).textTheme.headlineSmall,
                                 ),
                                 textDirection: TextDirection.ltr);
                             titleLineTest.layout(maxWidth: context.width - 60);
@@ -314,7 +313,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                     ? Center()
                     : EpisodeNumberAndPodcastName(
                         episodeId,
-                        textStyle: context.textTheme.headlineMedium!,
+                        textStyle: context.textTheme.headlineSmall!,
                         key: widget.numberAndNameKey,
                       ),
               ),

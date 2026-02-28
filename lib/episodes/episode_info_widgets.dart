@@ -232,9 +232,8 @@ class EpisodeNumberAndPodcastName extends StatefulWidget {
   final int episodeId;
   final bool showName;
   final TextStyle? textStyle;
-  final Animation<double>? nameAnimation;
   const EpisodeNumberAndPodcastName(this.episodeId,
-      {this.showName = true, this.nameAnimation, this.textStyle, super.key});
+      {this.showName = true, this.textStyle, super.key});
 
   @override
   State<EpisodeNumberAndPodcastName> createState() =>
@@ -267,38 +266,17 @@ class EpisodeNumberAndPodcastNameState
                 style: GoogleFonts.teko(textStyle: textStyle),
               ),
             ),
-            widget.nameAnimation == null
-                ? widget.showName
-                    ? Text(
-                        "|${episode.podcastTitle}",
-                        style: textStyle.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: episode
-                                .colorScheme(context)
-                                .onSecondaryContainer),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      )
-                    : Center()
-                : AnimatedBuilder(
-                    animation: widget.nameAnimation!,
-                    builder: (context, child) =>
-                        widget.nameAnimation!.value == 0
-                            ? Center()
-                            : Opacity(
-                                opacity: widget.nameAnimation!.value,
-                                child: Text(
-                                  "|${episode.podcastTitle}",
-                                  style: textStyle.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: episode
-                                          .colorScheme(context)
-                                          .onSecondaryContainer),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                  ),
+            widget.showName
+                ? Text(
+                    "|${episode.podcastTitle}",
+                    style: textStyle.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color:
+                            episode.colorScheme(context).onSecondaryContainer),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  )
+                : Center(),
           ],
         ),
       ),
