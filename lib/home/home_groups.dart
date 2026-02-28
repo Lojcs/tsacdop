@@ -17,7 +17,7 @@ import '../util/extension_helper.dart';
 import '../util/hide_player_route.dart';
 import '../util/pageroute.dart';
 import '../widgets/action_bar.dart';
-import '../widgets/episode_card.dart';
+import '../episodes/episode_card.dart';
 import '../widgets/episodegrid.dart';
 
 class ScrollPodcasts extends StatefulWidget {
@@ -434,7 +434,6 @@ class PodcastPreview extends StatelessWidget {
                       id,
                       layout,
                       preferEpisodeImage: false,
-                      showNumber: true,
                     ),
                   ),
                 )

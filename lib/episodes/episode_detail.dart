@@ -6,7 +6,9 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'menu_bar.dart';
+import 'episode_card.dart';
+import 'episode_info_widgets.dart';
+import 'episode_action_bar.dart';
 import 'shownote.dart';
 import '../util/helpers.dart';
 import 'package:tuple/tuple.dart';
@@ -24,10 +26,25 @@ import '../widgets/custom_widget.dart';
 class EpisodeDetail extends StatefulWidget {
   final int episodeId;
 
+  final GlobalKey? cardKey;
+  final GlobalKey? avatarKey;
+  final GlobalKey? numberAndNameKey;
+  final GlobalKey? titleKey;
+  final GlobalKey? lengthAndSizeKey;
+  final GlobalKey? heartKey;
+
   /// Hides the avatar image
   final bool hide;
 
-  const EpisodeDetail(this.episodeId, {this.hide = false, super.key});
+  const EpisodeDetail(this.episodeId,
+      {this.cardKey,
+      this.avatarKey,
+      this.numberAndNameKey,
+      this.titleKey,
+      this.lengthAndSizeKey,
+      this.heartKey,
+      this.hide = false,
+      super.key});
 
   @override
   State<EpisodeDetail> createState() => _EpisodeDetailState();
@@ -127,7 +144,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
         value: SystemUiOverlayStyle(
           statusBarIconBrightness: context.iconBrightness,
           systemNavigationBarColor:
-              playerRunning ? context.cardColorSchemeCard : color,
+              playerRunning ? context.cardColorSchemeCard : Colors.transparent,
           systemNavigationBarIconBrightness: context.iconBrightness,
         ),
         child: PopScope(
@@ -138,8 +155,9 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
           child: Scaffold(
             backgroundColor: color,
             extendBody: true,
+            key: widget.cardKey,
             body: SafeArea(
-              bottom: !widget.hide,
+              bottom: !widget.hide || !playerRunning,
               child: ColoredBox(
                 color: context.realDark
                     ? context.surface
@@ -184,20 +202,20 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                   padding: EdgeInsets.only(left: 30, right: 30),
                                   child: Tooltip(
                                     message: episodeItem.title,
-                                    child: Text(
-                                      episodeItem.title,
-                                      maxLines: 3,
-                                      overflow: TextOverflow.ellipsis,
-                                      textAlign: TextAlign.left,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .headlineMedium!
-                                          .copyWith(
-                                            color: episodeItem
-                                                .colorScheme(context)
-                                                .onSecondaryContainer,
+                                    child: widget.hide
+                                        ? Center()
+                                        : EpisodeTitle(
+                                            episodeId,
+                                            textStyle: Theme.of(context)
+                                                .textTheme
+                                                .headlineMedium!
+                                                .copyWith(
+                                                  color: episodeItem
+                                                      .colorScheme(context)
+                                                      .onSecondaryContainer,
+                                                ),
+                                            key: widget.titleKey,
                                           ),
-                                    ),
                                   ),
                                 ),
                               ),
@@ -230,6 +248,8 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                             child: SingleChildScrollView(
                               scrollDirection: Axis.vertical,
                               child: EpisodeActionBar(episodeId,
+                                  avatarKey: widget.avatarKey,
+                                  heartKey: widget.heartKey,
                                   hide: widget.hide),
                             ),
                           ),
@@ -272,7 +292,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                         (topHeight - _titleBarMinHeight)
                             .clamp(0, _imageTopOffset - _titleBarMinHeight)),
               ),
-              expandedTitleScale: 1.1,
+              expandedTitleScale: 1.0,
               background: Container(
                 margin: EdgeInsets.only(
                   left: _sideMargin,
@@ -288,34 +308,15 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                     fit: BoxFit.fitWidth,
                     image: episodeItem.episodeOrPodcastImageProvider),
               ),
-              title: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(top: 2),
-                    child: Text(
-                      "${episodeItem.number} | ",
-                      style: GoogleFonts.teko(
-                          textStyle: context.textTheme.headlineSmall),
-                    ),
-                  ),
-                  Expanded(
-                    child: Tooltip(
-                      message: episodeItem.podcastTitle,
-                      child: Text(
-                        episodeItem.podcastTitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: context.textTheme.headlineSmall!.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: episodeItem
-                              .colorScheme(context)
-                              .onSecondaryContainer,
-                        ),
+              title: Tooltip(
+                message: episodeItem.podcastTitle,
+                child: widget.hide
+                    ? Center()
+                    : EpisodeNumberAndPodcastName(
+                        episodeId,
+                        textStyle: context.textTheme.headlineMedium!,
+                        key: widget.numberAndNameKey,
                       ),
-                    ),
-                  )
-                ],
               ),
             );
           },
@@ -383,105 +384,80 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                   ),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-                    child: Row(
-                      children: <Widget>[
-                        Selector<EpisodeState, int>(
-                          selector: (_, episodeState) =>
-                              episodeState[episodeId].enclosureDuration,
-                          builder: (context, value, _) => value != 0
-                              ? Container(
-                                  decoration: BoxDecoration(
-                                      color: context.secondary,
-                                      borderRadius: context.radiusHuge),
-                                  height: 40.0,
-                                  margin: EdgeInsets.only(right: 12.0),
-                                  padding:
-                                      EdgeInsets.symmetric(horizontal: 10.0),
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    context.s.minsCount(
-                                      value ~/ 60,
+                    child: SizedBox(
+                      height: 40.0,
+                      child: Row(
+                        spacing: 8,
+                        children: [
+                          FutureBuilder<PlayHistory>(
+                            future: _dbHelper.getPosition(episodeItem),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasError) {
+                                developer.log(snapshot.error as String);
+                              }
+                              if (snapshot.hasData &&
+                                  snapshot.data!.seekValue! < 0.9 &&
+                                  snapshot.data!.seconds! > 10) {
+                                return Container(
+                                  height: 40,
+                                  padding: EdgeInsets.symmetric(horizontal: 0),
+                                  child: OutlinedButton(
+                                    style: OutlinedButton.styleFrom(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: context.radiusSmall,
+                                      ),
+                                      side: BorderSide(
+                                        color: episodeItem
+                                            .colorScheme(context)
+                                            .onSecondaryContainer,
+                                      ),
                                     ),
-                                    style: TextStyle(color: context.surface),
-                                  ),
-                                )
-                              : Center(),
-                        ),
-                        Selector<EpisodeState, int>(
-                          selector: (_, episodeState) =>
-                              episodeState[episodeId].enclosureSize,
-                          builder: (context, value, _) => value != 0
-                              ? Container(
-                                  decoration: BoxDecoration(
-                                      color: context.tertiary,
-                                      borderRadius: context.radiusHuge),
-                                  height: 40.0,
-                                  margin: EdgeInsets.only(right: 12.0),
-                                  padding:
-                                      EdgeInsets.symmetric(horizontal: 10.0),
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    '${value ~/ 1000000}MB',
-                                    style: TextStyle(color: context.surface),
-                                  ),
-                                )
-                              : Center(),
-                        ),
-                        FutureBuilder<PlayHistory>(
-                          future: _dbHelper.getPosition(episodeItem),
-                          builder: (context, snapshot) {
-                            if (snapshot.hasError) {
-                              developer.log(snapshot.error as String);
-                            }
-                            if (snapshot.hasData &&
-                                snapshot.data!.seekValue! < 0.9 &&
-                                snapshot.data!.seconds! > 10) {
-                              return Container(
-                                height: 40,
-                                padding: EdgeInsets.symmetric(horizontal: 0),
-                                child: OutlinedButton(
-                                  style: OutlinedButton.styleFrom(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: context.radiusHuge,
-                                    ),
-                                    side: BorderSide(
-                                      color: episodeItem
-                                          .colorScheme(context)
-                                          .onSecondaryContainer,
-                                    ),
-                                  ),
-                                  onPressed: () => Provider.of<
-                                              AudioPlayerNotifier>(context,
-                                          listen: false)
-                                      .loadEpisodeToQueue(episodeId,
-                                          startPosition:
-                                              (snapshot.data!.seconds! * 1000)
-                                                  .toInt()),
-                                  child: Row(
-                                    children: [
-                                      SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CustomPaint(
-                                          painter: ListenedPainter(
-                                              context.textColor,
-                                              stroke: 2.0),
+                                    onPressed: () =>
+                                        Provider.of<AudioPlayerNotifier>(
+                                                context,
+                                                listen: false)
+                                            .loadEpisodeToQueue(episodeId,
+                                                startPosition:
+                                                    (snapshot.data!.seconds! *
+                                                            1000)
+                                                        .toInt()),
+                                    child: Row(
+                                      children: [
+                                        SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CustomPaint(
+                                            painter: ListenedPainter(
+                                                context.textColor,
+                                                stroke: 2.0),
+                                          ),
                                         ),
-                                      ),
-                                      SizedBox(width: 5),
-                                      Text(
-                                        snapshot.data!.seconds!.toTime,
-                                      ),
-                                    ],
+                                        SizedBox(width: 5),
+                                        Text(
+                                          snapshot.data!.seconds!.toTime,
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              );
-                            } else {
-                              return Center();
-                            }
-                          },
-                        ),
-                      ],
+                                );
+                              } else {
+                                return Center();
+                              }
+                            },
+                          ),
+                          Spacer(),
+                          SizedBox(
+                            width: 120,
+                            child: widget.hide
+                                ? Center()
+                                : EpisodeLengthAndSize(
+                                    episodeId,
+                                    height: 40,
+                                    key: widget.lengthAndSizeKey,
+                                  ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],

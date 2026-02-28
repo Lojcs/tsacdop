@@ -13,9 +13,13 @@ import '../util/helpers.dart';
 class EpisodeActionBar extends StatefulWidget {
   final int episodeId;
 
+  final GlobalKey? avatarKey;
+  final GlobalKey? heartKey;
+
   /// Hides the avatar image
-  final bool? hide;
-  const EpisodeActionBar(this.episodeId, {this.hide = false, super.key});
+  final bool hide;
+  const EpisodeActionBar(this.episodeId,
+      {this.avatarKey, this.heartKey, this.hide = false, super.key});
   @override
   EpisodeActionBarState createState() => EpisodeActionBarState();
 }
@@ -53,11 +57,15 @@ class EpisodeActionBarState extends State<EpisodeActionBar> {
                     child: SizedBox(
                       height: 30.0,
                       width: 30.0,
-                      child: widget.hide!
+                      child: widget.hide
                           ? Center()
-                          : CircleAvatar(
-                              radius: 15,
-                              backgroundImage: episodeItem.avatarImage),
+                          : Builder(
+                              builder: (context) => CircleAvatar(
+                                radius: 15,
+                                backgroundImage: episodeItem.avatarImage,
+                                key: widget.avatarKey,
+                              ),
+                            ),
                     ),
                   ),
                   _buttonOnMenu(
@@ -65,9 +73,13 @@ class EpisodeActionBarState extends State<EpisodeActionBar> {
                       selector: (_, episodeState) =>
                           episodeState[widget.episodeId].isLiked,
                       builder: (context, value, _) => value
-                          ? Icon(
-                              Icons.favorite,
-                              color: Colors.red,
+                          ? Opacity(
+                              opacity: widget.hide ? 0 : 1,
+                              child: Icon(
+                                Icons.favorite,
+                                color: Colors.red,
+                                key: widget.heartKey,
+                              ),
                             )
                           : Icon(
                               Icons.favorite_border,
