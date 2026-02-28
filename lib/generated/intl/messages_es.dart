@@ -20,41 +20,41 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'es';
 
-  static String m0(groupName, count) =>
+  static String m2(groupName, count) =>
       "${Intl.plural(count, zero: '', one: '${count} episodio de ${groupName} añadido a la lista', other: '${count} episodios en ${groupName} añadidos a la lista')}";
 
-  static String m1(count) =>
+  static String m3(count) =>
       "${Intl.plural(count, zero: '', one: '${count} episodio añadido a la lista', other: '${count} episodios añadidos a la lista')}";
 
-  static String m2(count) =>
+  static String m4(count) =>
       "${Intl.plural(count, zero: 'Hoy', one: 'Hace ${count} dia', other: 'Hace ${count} dias')}";
 
-  static String m3(count) =>
+  static String m5(count) =>
       "${Intl.plural(count, zero: 'Nunca', one: '${count} dia', other: '${count} dias')}";
 
-  static String m4(count) =>
+  static String m6(count) =>
       "${Intl.plural(count, zero: '', one: 'Episodio', other: 'Episodios')}";
 
   static String m32(type) => "Filtrar ${type}";
 
-  static String m5(time) => "De ${time}";
-
-  static String m6(count) =>
-      "${Intl.plural(count, zero: 'Grupo', one: 'Grupo', other: 'Grupos')}";
-
-  static String m7(host) => "Alojado en ${host}";
+  static String m7(time) => "De ${time}";
 
   static String m8(count) =>
-      "${Intl.plural(count, zero: 'Justo ahora', one: 'Hace ${count} hora', other: 'Hace ${count} horas')}";
+      "${Intl.plural(count, zero: 'Grupo', one: 'Grupo', other: 'Grupos')}";
+
+  static String m0(host) => "Alojado en ${host}";
 
   static String m9(count) =>
+      "${Intl.plural(count, zero: 'Justo ahora', one: 'Hace ${count} hora', other: 'Hace ${count} horas')}";
+
+  static String m10(count) =>
       "${Intl.plural(count, zero: 'Cero horas', one: '${count} hora', other: '${count} horas')}";
 
-  static String m10(service) => "Integrar con ${service}";
+  static String m11(service) => "Integrar con ${service}";
 
   static String m33(filePath) => "Episodio local en ${filePath}";
 
-  static String m11(userName) => "Sesión iniciado como ${userName}";
+  static String m1(userName) => "Sesión iniciado como ${userName}";
 
   static String m12(count) =>
       "${Intl.plural(count, zero: 'Justo Ahora', one: 'Hace ${count} minuto ', other: 'Hace ${count} minutos')}";
@@ -105,8 +105,8 @@ class MessageLookup extends MessageLookupByLibrary {
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
     "add": MessageLookupByLibrary.simpleMessage("Añadir"),
-    "addEpisodeGroup": m0,
-    "addNewEpisodeAll": m1,
+    "addEpisodeGroup": m2,
+    "addNewEpisodeAll": m3,
     "addNewEpisodeTooltip": MessageLookupByLibrary.simpleMessage(
       "Añade nuevos episodios a la lista de reproducción",
     ),
@@ -137,8 +137,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "confirm": MessageLookupByLibrary.simpleMessage("ACEPTAR"),
     "createNewPlaylist": MessageLookupByLibrary.simpleMessage("Nueva playlist"),
     "darkMode": MessageLookupByLibrary.simpleMessage("Modo oscuro"),
-    "daysAgo": m2,
-    "daysCount": m3,
+    "daysAgo": m4,
+    "daysCount": m5,
     "defaultQueueReminder": MessageLookupByLibrary.simpleMessage(
       "Esta es la cola por defecto, no puede removerse",
     ),
@@ -165,7 +165,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Editar nombre del grupo",
     ),
     "endOfEpisode": MessageLookupByLibrary.simpleMessage("Fin del episodio"),
-    "episode": m4,
+    "episode": m6,
     "fastForward": MessageLookupByLibrary.simpleMessage("Avanzar"),
     "fastRewind": MessageLookupByLibrary.simpleMessage("Retroceder"),
     "featureDiscoveryEditGroup": MessageLookupByLibrary.simpleMessage(
@@ -230,7 +230,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "filterType": m32,
     "fontStyle": MessageLookupByLibrary.simpleMessage("Estilo de fuente"),
     "fonts": MessageLookupByLibrary.simpleMessage("Tipografías"),
-    "from": m5,
+    "from": m7,
     "goodNight": MessageLookupByLibrary.simpleMessage("Buenas noches"),
     "gpodderLoginDes": MessageLookupByLibrary.simpleMessage(
       "Felicidades, has unido tu cuenta gpodder.net exitosamente. Tsacdop sincronizara tus subscripciones en tu dispositivo con tu cuenta gpodder.net.",
@@ -239,7 +239,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "groupRemoveConfirm": MessageLookupByLibrary.simpleMessage(
       "¿Estas seguro de que quieres remover este grupo? Los podcasts serán movidos al grupo Home",
     ),
-    "groups": m6,
+    "groups": m8,
     "hideListenedSetting": MessageLookupByLibrary.simpleMessage(
       "Ocultar escuchados",
     ),
@@ -263,12 +263,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "homeToprightMenuRefreshAll": MessageLookupByLibrary.simpleMessage(
       "Refrescar todo",
     ),
-    "hostedOn": m7,
-    "hoursAgo": m8,
-    "hoursCount": m9,
+    "hostedOn": m0,
+    "hoursAgo": m9,
+    "hoursCount": m10,
     "import": MessageLookupByLibrary.simpleMessage("Importar"),
     "interaction": MessageLookupByLibrary.simpleMessage("Interacción"),
-    "intergateWith": m10,
+    "intergateWith": m11,
     "introFourthPage": MessageLookupByLibrary.simpleMessage(
       "Puedes mantener presionado un episodio para realizar acciones rápidas",
     ),
@@ -292,7 +292,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "loadMore": MessageLookupByLibrary.simpleMessage("Cargar mas"),
     "loading": MessageLookupByLibrary.simpleMessage("Cargando"),
     "localEpisodeDescription": m33,
-    "loggedInAs": m11,
+    "loggedInAs": m1,
     "login": MessageLookupByLibrary.simpleMessage("Iniciar sesión"),
     "loginFailed": MessageLookupByLibrary.simpleMessage(
       "Inicio de sesión fallido",

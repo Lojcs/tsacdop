@@ -20,37 +20,37 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'ru';
 
-  static String m0(groupName, count) =>
+  static String m2(groupName, count) =>
       "${Intl.plural(count, zero: '', one: '${count} выпуск в ${groupName} добавлен в плейлист', few: '${count} выпуска в ${groupName} добавлены в плейлист', many: '${count} выпусков в ${groupName} добавлены в плейлист', other: '${count} выпусков в ${groupName} добавлены в плейлист')}";
 
-  static String m1(count) =>
+  static String m3(count) =>
       "${Intl.plural(count, zero: '', one: '${count} выпуск добавлен в плейлист', few: '${count} выпуска добавлены в плейлист', many: '${count} выпусков добавлены в плейлист', other: '${count} выпусков добавлены в плейлист')}";
 
-  static String m2(count) =>
+  static String m4(count) =>
       "${Intl.plural(count, zero: 'Сегодня', one: 'День назад', few: '${count} дня назад', many: '${count} дней назад', other: '${count} дней назад')}";
 
-  static String m3(count) =>
+  static String m5(count) =>
       "${Intl.plural(count, zero: 'Никогда', one: 'День', few: '${count} дня', many: '${count} дней', other: '${count} дней')}";
 
-  static String m4(count) =>
+  static String m6(count) =>
       "${Intl.plural(count, zero: '', one: 'выпуск', few: 'выпуска', many: 'выпусков', other: 'выпусков')}";
 
-  static String m5(time) => "С ${time}";
-
-  static String m6(count) =>
-      "${Intl.plural(count, zero: 'Группа', one: 'Группа', few: 'Группы', many: 'Групп', other: 'Групп')}";
-
-  static String m7(host) => "Размещено на ${host}";
+  static String m7(time) => "С ${time}";
 
   static String m8(count) =>
-      "${Intl.plural(count, zero: 'В течение часа', one: 'Час назад', few: '${count} часа назад', many: '${count} часов назад', other: '${count} часов назад')}";
+      "${Intl.plural(count, zero: 'Группа', one: 'Группа', few: 'Группы', many: 'Групп', other: 'Групп')}";
+
+  static String m0(host) => "Размещено на ${host}";
 
   static String m9(count) =>
+      "${Intl.plural(count, zero: 'В течение часа', one: 'Час назад', few: '${count} часа назад', many: '${count} часов назад', other: '${count} часов назад')}";
+
+  static String m10(count) =>
       "${Intl.plural(count, zero: '0 час.', one: '${count} час.', few: '${count} час.', many: '${count} час.', other: '${count} час.')}";
 
-  static String m10(service) => "Интегрировать с  ${service}";
+  static String m11(service) => "Интегрировать с  ${service}";
 
-  static String m11(userName) => "Авторизован как ${userName}";
+  static String m1(userName) => "Авторизован как ${userName}";
 
   static String m12(count) =>
       "${Intl.plural(count, zero: 'Только что', one: 'Минуту назад', few: '${count} минуты назад', many: '${count} минут назад', other: '${count} минут назад')}";
@@ -102,8 +102,8 @@ class MessageLookup extends MessageLookupByLibrary {
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
     "add": MessageLookupByLibrary.simpleMessage("Добавить"),
-    "addEpisodeGroup": m0,
-    "addNewEpisodeAll": m1,
+    "addEpisodeGroup": m2,
+    "addNewEpisodeAll": m3,
     "addNewEpisodeTooltip": MessageLookupByLibrary.simpleMessage(
       "Добавить новые выпуски в плейлист",
     ),
@@ -131,8 +131,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "confirm": MessageLookupByLibrary.simpleMessage("ПОДТВЕРДИТЬ"),
     "createNewPlaylist": MessageLookupByLibrary.simpleMessage("Новый плейлист"),
     "darkMode": MessageLookupByLibrary.simpleMessage("Темная"),
-    "daysAgo": m2,
-    "daysCount": m3,
+    "daysAgo": m4,
+    "daysCount": m5,
     "defaultQueueReminder": MessageLookupByLibrary.simpleMessage(
       "Это очередь по умолчанию. Ее удалить нельзя.",
     ),
@@ -156,7 +156,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Изменить название группы",
     ),
     "endOfEpisode": MessageLookupByLibrary.simpleMessage("Конец выпуска"),
-    "episode": m4,
+    "episode": m6,
     "fastForward": MessageLookupByLibrary.simpleMessage("Перемотка вперед"),
     "fastRewind": MessageLookupByLibrary.simpleMessage("Быстрая перемотка"),
     "featureDiscoveryEditGroup": MessageLookupByLibrary.simpleMessage(
@@ -222,7 +222,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "filter": MessageLookupByLibrary.simpleMessage("Фильтр"),
     "fontStyle": MessageLookupByLibrary.simpleMessage("Стиль шрифта"),
     "fonts": MessageLookupByLibrary.simpleMessage("Шрифты"),
-    "from": m5,
+    "from": m7,
     "goodNight": MessageLookupByLibrary.simpleMessage("Спокойной ночи"),
     "gpodderLoginDes": MessageLookupByLibrary.simpleMessage(
       "Поздравляем! Вы успешно связали учетную запись gpodder.net. Tsacdop будет автоматически синхронизировать подписки на вашем устройстве с вашей учетной записью gpodder.net.",
@@ -233,7 +233,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "groupRemoveConfirm": MessageLookupByLibrary.simpleMessage(
       "Вы уверены, что хотите удалить эту группу? Подкасты будут перемещены в домашнюю группу.",
     ),
-    "groups": m6,
+    "groups": m8,
     "hideListenedSetting": MessageLookupByLibrary.simpleMessage(
       "Скрыть прослушанное",
     ),
@@ -257,11 +257,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "homeToprightMenuRefreshAll": MessageLookupByLibrary.simpleMessage(
       "Обновить все",
     ),
-    "hostedOn": m7,
-    "hoursAgo": m8,
-    "hoursCount": m9,
+    "hostedOn": m0,
+    "hoursAgo": m9,
+    "hoursCount": m10,
     "import": MessageLookupByLibrary.simpleMessage("Импорт"),
-    "intergateWith": m10,
+    "intergateWith": m11,
     "introFourthPage": MessageLookupByLibrary.simpleMessage(
       "Длительное нажатие на выпуск запускает быстрые действия.",
     ),
@@ -283,7 +283,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "listen": MessageLookupByLibrary.simpleMessage("Слушать"),
     "listened": MessageLookupByLibrary.simpleMessage("Прослушано"),
     "loadMore": MessageLookupByLibrary.simpleMessage("Загрузить еще"),
-    "loggedInAs": m11,
+    "loggedInAs": m1,
     "login": MessageLookupByLibrary.simpleMessage("Войти"),
     "loginFailed": MessageLookupByLibrary.simpleMessage(
       "Не удалось авторизоваться",

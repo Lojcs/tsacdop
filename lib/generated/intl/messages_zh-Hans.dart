@@ -20,35 +20,35 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'zh_Hans';
 
-  static String m0(groupName, count) =>
+  static String m2(groupName, count) =>
       "{count, plural, zero{} other{{group Name}分组${count}集节目添加到播放列表}}";
 
-  static String m1(count) =>
+  static String m3(count) =>
       "${Intl.plural(count, zero: '', other: '${count}集节目添加到播放列表')}";
 
-  static String m2(count) =>
+  static String m4(count) =>
       "${Intl.plural(count, zero: '今天', other: '${count}天前')}";
 
-  static String m3(count) =>
+  static String m5(count) =>
       "${Intl.plural(count, zero: '从不', other: '${count}天')}";
 
-  static String m4(count) => "${Intl.plural(count, zero: '', other: '节目')}";
+  static String m6(count) => "${Intl.plural(count, zero: '', other: '节目')}";
 
-  static String m5(time) => "自${time}";
+  static String m7(time) => "自${time}";
 
-  static String m6(count) => "${Intl.plural(count, zero: '分组', other: '分组')}";
+  static String m8(count) => "${Intl.plural(count, zero: '分组', other: '分组')}";
 
-  static String m7(host) => "平台 ${host}";
-
-  static String m8(count) =>
-      "${Intl.plural(count, zero: '刚刚', other: '${count}小时前')}";
+  static String m0(host) => "平台 ${host}";
 
   static String m9(count) =>
+      "${Intl.plural(count, zero: '刚刚', other: '${count}小时前')}";
+
+  static String m10(count) =>
       "${Intl.plural(count, zero: '0小时', other: '${count} 小时')}";
 
-  static String m10(service) => "绑定 ${service}";
+  static String m11(service) => "绑定 ${service}";
 
-  static String m11(userName) => "使用${userName}登入";
+  static String m1(userName) => "使用${userName}登入";
 
   static String m12(count) =>
       "${Intl.plural(count, zero: '刚刚', other: '${count}分钟前')}";
@@ -98,8 +98,8 @@ class MessageLookup extends MessageLookupByLibrary {
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
     "add": MessageLookupByLibrary.simpleMessage("订阅"),
-    "addEpisodeGroup": m0,
-    "addNewEpisodeAll": m1,
+    "addEpisodeGroup": m2,
+    "addNewEpisodeAll": m3,
     "addNewEpisodeTooltip": MessageLookupByLibrary.simpleMessage("添加更新节目到播放列表"),
     "addSomeGroups": MessageLookupByLibrary.simpleMessage("请添加分组"),
     "all": MessageLookupByLibrary.simpleMessage("全部"),
@@ -119,8 +119,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "confirm": MessageLookupByLibrary.simpleMessage("确认"),
     "createNewPlaylist": MessageLookupByLibrary.simpleMessage("创建播放列表"),
     "darkMode": MessageLookupByLibrary.simpleMessage("夜晚模式"),
-    "daysAgo": m2,
-    "daysCount": m3,
+    "daysAgo": m4,
+    "daysCount": m5,
     "defaultQueueReminder": MessageLookupByLibrary.simpleMessage(
       "此为默认播放列表，无法删除。",
     ),
@@ -138,7 +138,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "downloaded": MessageLookupByLibrary.simpleMessage("已下载"),
     "editGroupName": MessageLookupByLibrary.simpleMessage("修改组名"),
     "endOfEpisode": MessageLookupByLibrary.simpleMessage("节目结束"),
-    "episode": m4,
+    "episode": m6,
     "fastForward": MessageLookupByLibrary.simpleMessage("快进"),
     "fastRewind": MessageLookupByLibrary.simpleMessage("快退"),
     "featureDiscoveryEditGroup": MessageLookupByLibrary.simpleMessage("点击修改分组"),
@@ -190,7 +190,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "filter": MessageLookupByLibrary.simpleMessage("过滤"),
     "fontStyle": MessageLookupByLibrary.simpleMessage("字体风格"),
     "fonts": MessageLookupByLibrary.simpleMessage("字体"),
-    "from": m5,
+    "from": m7,
     "goodNight": MessageLookupByLibrary.simpleMessage("晚安"),
     "gpodderLoginDes": MessageLookupByLibrary.simpleMessage(
       "恭喜！您已经成功绑定 gpodder.net 账号，Tsacdop 将会自动同步您的订阅到 gpodder.net 账户。",
@@ -199,7 +199,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "groupRemoveConfirm": MessageLookupByLibrary.simpleMessage(
       "您确认要移除该分组吗？播客将被移动到 Home 分组。",
     ),
-    "groups": m6,
+    "groups": m8,
     "hideListenedSetting": MessageLookupByLibrary.simpleMessage("隐藏已收听"),
     "hidePodcastDiscovery": MessageLookupByLibrary.simpleMessage("隐藏播客推荐"),
     "hidePodcastDiscoveryDes": MessageLookupByLibrary.simpleMessage(
@@ -215,11 +215,11 @@ class MessageLookup extends MessageLookupByLibrary {
       "导入OPML",
     ),
     "homeToprightMenuRefreshAll": MessageLookupByLibrary.simpleMessage("全部刷新"),
-    "hostedOn": m7,
-    "hoursAgo": m8,
-    "hoursCount": m9,
+    "hostedOn": m0,
+    "hoursAgo": m9,
+    "hoursCount": m10,
     "import": MessageLookupByLibrary.simpleMessage("导入"),
-    "intergateWith": m10,
+    "intergateWith": m11,
     "introFourthPage": MessageLookupByLibrary.simpleMessage("您可以长按节目打开快捷菜单。"),
     "introSecondPage": MessageLookupByLibrary.simpleMessage(
       "您可以通过搜索订阅播客，也可以直接导入OPML文件。",
@@ -235,7 +235,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "listen": MessageLookupByLibrary.simpleMessage("收听"),
     "listened": MessageLookupByLibrary.simpleMessage("已收听"),
     "loadMore": MessageLookupByLibrary.simpleMessage("加载更多"),
-    "loggedInAs": m11,
+    "loggedInAs": m1,
     "login": MessageLookupByLibrary.simpleMessage("登入"),
     "loginFailed": MessageLookupByLibrary.simpleMessage("登入失败"),
     "logout": MessageLookupByLibrary.simpleMessage("注销"),

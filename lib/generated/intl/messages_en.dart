@@ -20,41 +20,41 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'en';
 
-  static String m0(groupName, count) =>
+  static String m2(groupName, count) =>
       "${Intl.plural(count, zero: '', one: '${count} episode in ${groupName} added to playlist', other: '${count} episodes in ${groupName} added to playlist')}";
 
-  static String m1(count) =>
+  static String m3(count) =>
       "${Intl.plural(count, zero: '', one: '${count} episode added to playlist', other: '${count} episodes added to playlist')}";
 
-  static String m2(count) =>
+  static String m4(count) =>
       "${Intl.plural(count, zero: 'Today', one: '${count} day ago', other: '${count} days ago')}";
 
-  static String m3(count) =>
+  static String m5(count) =>
       "${Intl.plural(count, zero: 'Never', one: '${count} day', other: '${count} days')}";
 
-  static String m4(count) =>
+  static String m6(count) =>
       "${Intl.plural(count, zero: '', one: 'Episode', other: 'Episodes')}";
 
   static String m32(type) => "${type} Filter";
 
-  static String m5(time) => "From ${time}";
-
-  static String m6(count) =>
-      "${Intl.plural(count, zero: 'Group', one: 'Group', other: 'Groups')}";
-
-  static String m7(host) => "Hosted on ${host}";
+  static String m7(time) => "From ${time}";
 
   static String m8(count) =>
-      "${Intl.plural(count, zero: 'This hour', one: '${count} hour ago', other: '${count} hours ago')}";
+      "${Intl.plural(count, zero: 'Group', one: 'Group', other: 'Groups')}";
+
+  static String m0(host) => "Hosted on ${host}";
 
   static String m9(count) =>
+      "${Intl.plural(count, zero: 'This hour', one: '${count} hour ago', other: '${count} hours ago')}";
+
+  static String m10(count) =>
       "${Intl.plural(count, zero: '0 hours', one: '${count} hour', other: '${count} hours')}";
 
-  static String m10(service) => "Integrate with ${service}";
+  static String m11(service) => "Integrate with ${service}";
 
   static String m33(filePath) => "Local episode at ${filePath}";
 
-  static String m11(userName) => "Logged in as ${userName}";
+  static String m1(userName) => "Logged in as ${userName}";
 
   static String m12(count) =>
       "${Intl.plural(count, zero: 'Just now', one: '${count} minute ago', other: '${count} minutes ago')}";
@@ -106,8 +106,8 @@ class MessageLookup extends MessageLookupByLibrary {
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
     "add": MessageLookupByLibrary.simpleMessage("Add"),
-    "addEpisodeGroup": m0,
-    "addNewEpisodeAll": m1,
+    "addEpisodeGroup": m2,
+    "addNewEpisodeAll": m3,
     "addNewEpisodeTooltip": MessageLookupByLibrary.simpleMessage(
       "Add new episodes to playlist",
     ),
@@ -139,8 +139,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "confirm": MessageLookupByLibrary.simpleMessage("CONFIRM"),
     "createNewPlaylist": MessageLookupByLibrary.simpleMessage("New playlist"),
     "darkMode": MessageLookupByLibrary.simpleMessage("Dark mode"),
-    "daysAgo": m2,
-    "daysCount": m3,
+    "daysAgo": m4,
+    "daysCount": m5,
     "defaultQueueReminder": MessageLookupByLibrary.simpleMessage(
       "This is the default queue, can\'\'t be removed.",
     ),
@@ -176,7 +176,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "duration": MessageLookupByLibrary.simpleMessage("Duration"),
     "editGroupName": MessageLookupByLibrary.simpleMessage("Edit group name"),
     "endOfEpisode": MessageLookupByLibrary.simpleMessage("End of Episode"),
-    "episode": m4,
+    "episode": m6,
     "fastForward": MessageLookupByLibrary.simpleMessage("Fast forward"),
     "fastRewind": MessageLookupByLibrary.simpleMessage("Fast rewind"),
     "featureDiscoveryEditGroup": MessageLookupByLibrary.simpleMessage(
@@ -242,7 +242,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "fontStyle": MessageLookupByLibrary.simpleMessage("Font style"),
     "fonts": MessageLookupByLibrary.simpleMessage("Fonts"),
     "forward": MessageLookupByLibrary.simpleMessage("Forward"),
-    "from": m5,
+    "from": m7,
     "goodNight": MessageLookupByLibrary.simpleMessage("Good Night"),
     "gpodderLoginDes": MessageLookupByLibrary.simpleMessage(
       "Congratulations! You  have linked gpodder.net account successfully. Tsacdop will automatically sync subscriptions on your device with your gpodder.net account.",
@@ -253,7 +253,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "groupRemoveConfirm": MessageLookupByLibrary.simpleMessage(
       "Are you sure you want to delete this group? Podcasts will be moved to the Home group.",
     ),
-    "groups": m6,
+    "groups": m8,
     "haptics": MessageLookupByLibrary.simpleMessage("Haptic Feedback"),
     "hapticsDes": MessageLookupByLibrary.simpleMessage(
       "Toggle haptic feedback and adjust its intensity. (Requires device support)",
@@ -279,15 +279,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "homeToprightMenuRefreshAll": MessageLookupByLibrary.simpleMessage(
       "Refresh all",
     ),
-    "hostedOn": m7,
-    "hoursAgo": m8,
-    "hoursCount": m9,
+    "hostedOn": m0,
+    "hoursAgo": m9,
+    "hoursCount": m10,
     "import": MessageLookupByLibrary.simpleMessage("Import"),
     "importingOpml": MessageLookupByLibrary.simpleMessage(
       "Importing OPML file.",
     ),
     "interaction": MessageLookupByLibrary.simpleMessage("Interaction"),
-    "intergateWith": m10,
+    "intergateWith": m11,
     "introFourthPage": MessageLookupByLibrary.simpleMessage(
       "You can long press on episode card for quick actions.",
     ),
@@ -316,7 +316,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "localFolderDescription": MessageLookupByLibrary.simpleMessage(
       "Dummy podcast that collects imported local audio files.",
     ),
-    "loggedInAs": m11,
+    "loggedInAs": m1,
     "login": MessageLookupByLibrary.simpleMessage("Login"),
     "loginFailed": MessageLookupByLibrary.simpleMessage("Login failed"),
     "logout": MessageLookupByLibrary.simpleMessage("Logout"),

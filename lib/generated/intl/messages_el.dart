@@ -20,37 +20,37 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'el';
 
-  static String m0(groupName, count) =>
+  static String m2(groupName, count) =>
       "${Intl.plural(count, zero: '', one: '${count} επεισόδιο προστέθηκε στη λίστα ${groupName}', other: '${count} επεισόδια προστέθηκαν στη λίστα ${groupName}\n')}";
 
-  static String m1(count) =>
+  static String m3(count) =>
       "${Intl.plural(count, zero: '', one: '${count} επεισόδιο προστέθηκε στη λίστα', other: '${count} επεισόδια προστέθηκαν στη λίστα')}";
 
-  static String m2(count) =>
+  static String m4(count) =>
       "${Intl.plural(count, zero: 'Σήμερα', one: '${count} μέρα πριν', other: '${count} μέρες πριν')}";
 
-  static String m3(count) =>
+  static String m5(count) =>
       "${Intl.plural(count, zero: 'Ποτέ', one: '${count} μέρα', other: '${count} μέρες')}";
 
-  static String m4(count) =>
+  static String m6(count) =>
       "${Intl.plural(count, zero: '', one: 'Επεισόδιο', other: 'Επεισόδια')}";
 
-  static String m5(time) => "Μέχρι ${time}";
-
-  static String m6(count) =>
-      "${Intl.plural(count, zero: 'Ομάδα', one: 'Ομάδα', other: 'Ομάδες')}";
-
-  static String m7(host) => "Φιλοξενούμενο στο ${host}";
+  static String m7(time) => "Μέχρι ${time}";
 
   static String m8(count) =>
-      "${Intl.plural(count, zero: 'Αυτή την ώρα', one: '${count} ώρα πριν', other: '${count} ώρες πριν')}";
+      "${Intl.plural(count, zero: 'Ομάδα', one: 'Ομάδα', other: 'Ομάδες')}";
+
+  static String m0(host) => "Φιλοξενούμενο στο ${host}";
 
   static String m9(count) =>
+      "${Intl.plural(count, zero: 'Αυτή την ώρα', one: '${count} ώρα πριν', other: '${count} ώρες πριν')}";
+
+  static String m10(count) =>
       "${Intl.plural(count, zero: '0 ώρες', one: '${count} ώρα', other: '${count} ώρες')}";
 
-  static String m10(service) => "Ενσωμάτωση με ${service}";
+  static String m11(service) => "Ενσωμάτωση με ${service}";
 
-  static String m11(userName) => "Συνδεδεμένος/η ως ${userName}";
+  static String m1(userName) => "Συνδεδεμένος/η ως ${userName}";
 
   static String m12(count) =>
       "${Intl.plural(count, zero: 'Μόλις τώρα', one: '${count} λεπτό πριν', other: '${count} λεπτά πριν')}";
@@ -102,8 +102,8 @@ class MessageLookup extends MessageLookupByLibrary {
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
     "add": MessageLookupByLibrary.simpleMessage("Προσθήκη"),
-    "addEpisodeGroup": m0,
-    "addNewEpisodeAll": m1,
+    "addEpisodeGroup": m2,
+    "addNewEpisodeAll": m3,
     "addNewEpisodeTooltip": MessageLookupByLibrary.simpleMessage(
       "Προσθήκη νέων επεισοδίων σε λίστα",
     ),
@@ -131,8 +131,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "confirm": MessageLookupByLibrary.simpleMessage("ΕΠΙΒΕΒΑΙΩΣΗ"),
     "createNewPlaylist": MessageLookupByLibrary.simpleMessage("Νέα λίστα"),
     "darkMode": MessageLookupByLibrary.simpleMessage("Σκοτεινό θέμα"),
-    "daysAgo": m2,
-    "daysCount": m3,
+    "daysAgo": m4,
+    "daysCount": m5,
     "defaultQueueReminder": MessageLookupByLibrary.simpleMessage(
       "Αυτή είναι η προκαθορισμένη ουρά, δεν μπορεί να αφαιρεθεί.",
     ),
@@ -156,7 +156,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Επεξεργασία ονόματος ομάδας",
     ),
     "endOfEpisode": MessageLookupByLibrary.simpleMessage("Τέλος επεισοδίου"),
-    "episode": m4,
+    "episode": m6,
     "fastForward": MessageLookupByLibrary.simpleMessage(
       "Γρήγορο γύρισμα μπροστά",
     ),
@@ -226,7 +226,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "filter": MessageLookupByLibrary.simpleMessage("Φίλτρο"),
     "fontStyle": MessageLookupByLibrary.simpleMessage("Στιλ γραμματοσειράς"),
     "fonts": MessageLookupByLibrary.simpleMessage("Γραμματοσειρές"),
-    "from": m5,
+    "from": m7,
     "goodNight": MessageLookupByLibrary.simpleMessage("Καληνύχτα"),
     "gpodderLoginDes": MessageLookupByLibrary.simpleMessage(
       "Συγχαρητήρια! Έχετε συνδέσει το gpodder.net λογαριασμό σας με επιτυχία. Το Tsacdop θα συγχρονίσει αυτόματα τις εγγραφές στη συσκευή σας με το gpodder.net λογαριασμό σας.",
@@ -235,7 +235,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "groupRemoveConfirm": MessageLookupByLibrary.simpleMessage(
       "Είσαι σίγουρος/η πως θες να διαγράψεις αυτή την ομάδα; Τα Podcast θα μεταφερθούν στην Αρχική ομάδα.",
     ),
-    "groups": m6,
+    "groups": m8,
     "hideListenedSetting": MessageLookupByLibrary.simpleMessage(
       "Απόκρυψη ακουσμένων",
     ),
@@ -259,11 +259,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "homeToprightMenuRefreshAll": MessageLookupByLibrary.simpleMessage(
       "Ανανέωση όλων",
     ),
-    "hostedOn": m7,
-    "hoursAgo": m8,
-    "hoursCount": m9,
+    "hostedOn": m0,
+    "hoursAgo": m9,
+    "hoursCount": m10,
     "import": MessageLookupByLibrary.simpleMessage("Εισαγωγή"),
-    "intergateWith": m10,
+    "intergateWith": m11,
     "introFourthPage": MessageLookupByLibrary.simpleMessage(
       "Πάτα παρατεταμένα στο επεισόδιο για γρήγορες ενέργειες.",
     ),
@@ -285,7 +285,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "listen": MessageLookupByLibrary.simpleMessage("Άκουσε"),
     "listened": MessageLookupByLibrary.simpleMessage("Ακουσμένο"),
     "loadMore": MessageLookupByLibrary.simpleMessage("Περισσότερα"),
-    "loggedInAs": m11,
+    "loggedInAs": m1,
     "login": MessageLookupByLibrary.simpleMessage("Σύνδεση"),
     "loginFailed": MessageLookupByLibrary.simpleMessage("Αποτυχία σύνδεσης"),
     "logout": MessageLookupByLibrary.simpleMessage("Αποσύνδεση"),

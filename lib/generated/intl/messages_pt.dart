@@ -20,37 +20,37 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'pt';
 
-  static String m0(groupName, count) =>
+  static String m2(groupName, count) =>
       "${Intl.plural(count, zero: '', one: '${count} episódio de ${groupName} adicionado à lista', other: '${count} episódios de ${groupName} adicionados à lista')}";
 
-  static String m1(count) =>
+  static String m3(count) =>
       "${Intl.plural(count, zero: '', one: '${count} episódio adicionado à lista', other: '${count} episódios adicionados à lista')}";
 
-  static String m2(count) =>
+  static String m4(count) =>
       "${Intl.plural(count, zero: 'Hoje', one: 'Há ${count} dia', other: 'Há ${count} dias')}";
 
-  static String m3(count) =>
+  static String m5(count) =>
       "${Intl.plural(count, zero: 'Nunca', one: '${count} dia', other: '${count} dias')}";
 
-  static String m4(count) =>
+  static String m6(count) =>
       "${Intl.plural(count, zero: '', one: 'Episódio', other: 'Episódios')}";
 
-  static String m5(time) => "De ${time}";
-
-  static String m6(count) =>
-      "${Intl.plural(count, zero: 'Grupo', one: 'Grupo', other: 'Grupos')}";
-
-  static String m7(host) => "Hospedado em ${host}";
+  static String m7(time) => "De ${time}";
 
   static String m8(count) =>
-      "${Intl.plural(count, zero: '', one: 'há ${count} hora', other: 'há ${count} horas')}";
+      "${Intl.plural(count, zero: 'Grupo', one: 'Grupo', other: 'Grupos')}";
+
+  static String m0(host) => "Hospedado em ${host}";
 
   static String m9(count) =>
+      "${Intl.plural(count, zero: '', one: 'há ${count} hora', other: 'há ${count} horas')}";
+
+  static String m10(count) =>
       "${Intl.plural(count, zero: '0 horas', one: '${count} hora', other: '${count} horas')}";
 
-  static String m10(service) => "Integrate with ${service}";
+  static String m11(service) => "Integrate with ${service}";
 
-  static String m11(userName) => "Logged in as ${userName}";
+  static String m1(userName) => "Logged in as ${userName}";
 
   static String m12(count) =>
       "${Intl.plural(count, zero: 'Agora', one: 'Há ${count} minuto', other: 'Há ${count} minutos')}";
@@ -101,8 +101,8 @@ class MessageLookup extends MessageLookupByLibrary {
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
     "add": MessageLookupByLibrary.simpleMessage("Adicionar"),
-    "addEpisodeGroup": m0,
-    "addNewEpisodeAll": m1,
+    "addEpisodeGroup": m2,
+    "addNewEpisodeAll": m3,
     "addNewEpisodeTooltip": MessageLookupByLibrary.simpleMessage(
       "Adiciona novos episódios à lista de reprodução",
     ),
@@ -130,8 +130,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "confirm": MessageLookupByLibrary.simpleMessage("CONFIRMAR"),
     "createNewPlaylist": MessageLookupByLibrary.simpleMessage(""),
     "darkMode": MessageLookupByLibrary.simpleMessage("Modo escuro"),
-    "daysAgo": m2,
-    "daysCount": m3,
+    "daysAgo": m4,
+    "daysCount": m5,
     "defaultQueueReminder": MessageLookupByLibrary.simpleMessage(""),
     "defaultSearchEngine": MessageLookupByLibrary.simpleMessage(
       "Default podcast search engine",
@@ -153,7 +153,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Editar nome do grupo",
     ),
     "endOfEpisode": MessageLookupByLibrary.simpleMessage("Fim do episódio"),
-    "episode": m4,
+    "episode": m6,
     "fastForward": MessageLookupByLibrary.simpleMessage("Avanço"),
     "fastRewind": MessageLookupByLibrary.simpleMessage("Recuo rápido"),
     "featureDiscoveryEditGroup": MessageLookupByLibrary.simpleMessage(
@@ -221,7 +221,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Estilo do tipo de letra",
     ),
     "fonts": MessageLookupByLibrary.simpleMessage("Fontes"),
-    "from": m5,
+    "from": m7,
     "goodNight": MessageLookupByLibrary.simpleMessage("Boa Noite"),
     "gpodderLoginDes": MessageLookupByLibrary.simpleMessage(
       "Congratulations! You  have linked gpodder.net account successfully. Tsacdop will automatically sync subscriptions on your device with your gpodder.net account.",
@@ -230,7 +230,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "groupRemoveConfirm": MessageLookupByLibrary.simpleMessage(
       "Tens a certeza que queres eliminar este grupo? Os podcasts serão removidos para o grupo \"Home\".",
     ),
-    "groups": m6,
+    "groups": m8,
     "hideListenedSetting": MessageLookupByLibrary.simpleMessage(
       "Esconder ouvidos",
     ),
@@ -254,11 +254,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "homeToprightMenuRefreshAll": MessageLookupByLibrary.simpleMessage(
       "Atualizar todos",
     ),
-    "hostedOn": m7,
-    "hoursAgo": m8,
-    "hoursCount": m9,
+    "hostedOn": m0,
+    "hoursAgo": m9,
+    "hoursCount": m10,
     "import": MessageLookupByLibrary.simpleMessage("Importar"),
-    "intergateWith": m10,
+    "intergateWith": m11,
     "introFourthPage": MessageLookupByLibrary.simpleMessage(
       "Podes manter premido um episódio para uma ação rápida.",
     ),
@@ -278,7 +278,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "listen": MessageLookupByLibrary.simpleMessage("Ouvir"),
     "listened": MessageLookupByLibrary.simpleMessage("Ouvido"),
     "loadMore": MessageLookupByLibrary.simpleMessage("Carregar mais"),
-    "loggedInAs": m11,
+    "loggedInAs": m1,
     "login": MessageLookupByLibrary.simpleMessage("Login"),
     "loginFailed": MessageLookupByLibrary.simpleMessage("Login failed"),
     "logout": MessageLookupByLibrary.simpleMessage("Logout"),
