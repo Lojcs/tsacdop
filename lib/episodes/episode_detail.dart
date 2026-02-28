@@ -176,8 +176,9 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                 maxLines: 3,
                                 text: TextSpan(
                                   text: episodeItem.title,
-                                  style:
-                                      Theme.of(context).textTheme.headlineSmall,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineMedium,
                                 ),
                                 textDirection: TextDirection.ltr);
                             titleLineTest.layout(maxWidth: context.width - 60);
