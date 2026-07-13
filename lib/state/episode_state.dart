@@ -1,23 +1,32 @@
 import 'package:flutter/material.dart';
 import '../generated/l10n.dart';
 import '../local_storage/sqflite_localpodcast.dart';
+import '../type/podcastbrief.dart';
+import '../type/podcastgroup.dart';
+import '../type/tab_configuration.dart';
 import '../util/extension_helper.dart';
 import 'audio_state.dart';
 import '../type/episodebrief.dart';
 
 import '../type/play_histroy.dart';
 import 'download_state.dart';
+import 'podcast_state.dart';
+import 'settings/setting_state.dart';
 
 /// Global class to manage [EpisodeBrief] field updates.
 class EpisodeState extends ChangeNotifier {
   final DBHelper _dbHelper = DBHelper();
 
-  late AudioPlayerNotifier _audioState;
+  late SettingState _settingState;
+  late AudioState _audioState;
   late DownloadState _downloadState;
+  late PodcastState _podcastState;
   bool _background = true;
   set context(BuildContext context) {
+    _settingState = context.superSettingState;
     _audioState = context.audioState;
     _downloadState = context.downloadState;
+    _podcastState = context.podcastState;
     _background = false;
   }
 
@@ -36,13 +45,14 @@ class EpisodeState extends ChangeNotifier {
   final Set<int> deletedIds = {};
 
   late final EpisodeBrief deletedEpisode = EpisodeBrief.user(
-      title: S.current.deleted,
-      enclosureUrl: "",
-      pubDate: 0,
-      showNotes: S.current.deletedEpisodeDesc,
-      enclosureDuration: 0,
-      enclosureSize: 0,
-      mediaId: "");
+    title: S.current.deleted,
+    enclosureUrl: "",
+    pubDate: 0,
+    showNotes: S.current.deletedEpisodeDesc,
+    enclosureDuration: 0,
+    enclosureSize: 0,
+    mediaId: "",
+  );
 
   /// Convenience operator for getting the [EpisodeBrief] of an episode.
   EpisodeBrief operator [](int id) =>
@@ -77,33 +87,35 @@ class EpisodeState extends ChangeNotifier {
 
   /// Queries the database with the provided options and returns found episodes.
   /// Filters are tri-state (null - no filter, true - only, false - exclude)
-  Future<List<int>> getEpisodes(
-      {List<String>? feedIds,
-      List<String>? excludedFeedIds,
-      List<int>? episodeIds,
-      List<int>? excludedEpisodeIds,
-      List<String>? episodeUrls,
-      List<String>? excludedEpisodeUrls,
-      List<String>? episodeTitles,
-      List<String>? excludedEpisodeTitles,
-      List<String>? likeEpisodeTitles,
-      List<String>? excludedLikeEpisodeTitles,
-      Sorter? sortBy,
-      SortOrder sortOrder = SortOrder.desc,
-      List<Sorter>? rangeParameters,
-      List<(int, int)>? rangeDelimiters,
-      int limit = -1,
-      int offset = -1,
-      bool? filterNew,
-      bool? filterLiked,
-      bool? filterPlayed,
-      bool? filterDownloaded,
-      bool? filterDuplicateVersions,
-      bool? filterAutoDownload,
-      List<String>? customFilters,
-      List<String>? customArguements}) async {
+  Future<List<int>> getEpisodes({
+    List<String>? podcastIds,
+    List<String>? excludedFeedIds,
+    List<int>? episodeIds,
+    List<int>? excludedEpisodeIds,
+    List<String>? episodeUrls,
+    List<String>? excludedEpisodeUrls,
+    List<String>? episodeTitles,
+    List<String>? excludedEpisodeTitles,
+    List<String>? likeEpisodeTitles,
+    List<String>? excludedLikeEpisodeTitles,
+    Sorter? sortBy,
+    SortOrder sortOrder = SortOrder.desc,
+    List<Sorter>? rangeParameters,
+    List<(int, int)>? rangeDelimiters,
+    int limit = -1,
+    int offset = -1,
+    bool? filterNew,
+    bool? filterLiked,
+    bool? filterPlayed,
+    bool? filterDownloaded,
+    bool? filterDuplicateVersions,
+    bool? filterAutoDownload,
+    List<String>? customFilters,
+    List<String>? customArguements,
+  }) async {
+    _settingState.lastUsedTime.set(DateTime.now());
     List<EpisodeBrief> episodes = await _dbHelper.getEpisodes(
-      feedIds: feedIds,
+      podcastIds: podcastIds,
       excludedFeedIds: excludedFeedIds,
       episodeIds: episodeIds,
       excludedEpisodeIds: excludedEpisodeIds,
@@ -133,23 +145,61 @@ class EpisodeState extends ChangeNotifier {
     return episodes.map((ep) => ep.id).toList();
   }
 
+  /// Queries the database with the provided action bar configuration.
+  Future<List<int>> getEpisodesWithConfiguration(
+    ActionBarConfiguration configuration,
+    int count, {
+    int offset = -1,
+  }) async {
+    final List<String> groupPodcastIds = configuration.groupId == allGroupId
+        ? []
+        : _podcastState.getGroupById(configuration.groupId).podcastIds;
+    return getEpisodes(
+      podcastIds: configuration.podcastId != podcastAllId
+          ? groupPodcastIds.isEmpty ||
+                    groupPodcastIds.contains(configuration.podcastId)
+                ? [configuration.podcastId]
+                : null
+          : (groupPodcastIds.isNotEmpty ? groupPodcastIds : null),
+      likeEpisodeTitles: configuration.searchTitleQuery == null
+          ? null
+          : [configuration.searchTitleQuery!],
+      sortBy: configuration.sortBy,
+      sortOrder: configuration.sortOrder,
+      limit: count,
+      offset: offset,
+      filterNew: configuration.filterNew,
+      filterLiked: configuration.filterLiked,
+      filterPlayed: configuration.filterPlayed,
+      filterDownloaded: configuration.filterDownloaded,
+      filterDuplicateVersions: configuration.filterDisplayVersion,
+    );
+  }
+
   /// Gets the versions of the episode with [id] and populates their versions fields.
   Future<void> populateEpisodeVersions(int id) async {
     assert(_episodeMap.keys.contains(id), "Populate called with unknown id");
-    List<EpisodeBrief> versions =
-        await _dbHelper.populateReturnVersions(_episodeMap[id]!, force: true);
+    List<EpisodeBrief> versions = await _dbHelper.populateReturnVersions(
+      _episodeMap[id]!,
+      force: true,
+    );
     for (var version in versions) {
       _episodeMap[version.id] = version;
     }
   }
 
   /// Call this only when an episode is removed from the database
-  Future<void> deleteEpisodes(List<int> ids,
-      {bool deleteFromDatabase = true}) async {
-    final dState =
-        background ? DownloadState(background: true) : _downloadState;
-    final downloaded =
-        await getEpisodes(episodeIds: ids, filterDownloaded: true);
+  Future<void> deleteEpisodes(
+    List<int> ids, {
+    bool deleteFromDatabase = true,
+  }) async {
+    final dState = background
+        ? DownloadState(background: true)
+        : _downloadState;
+    final downloaded = await getEpisodes(
+      episodeIds: ids,
+      filterDownloaded: true,
+    );
     for (var id in downloaded) {
       await dState.removeDownload(id);
     }
@@ -175,8 +225,10 @@ class EpisodeState extends ChangeNotifier {
 
   /// Sets the episodes as liked
   Future<void> setLiked(List<int> ids) async {
-    assert(ids.every((id) => _episodeMap.keys.contains(id)),
-        "setLiked called with unknown id");
+    assert(
+      ids.every((id) => _episodeMap.keys.contains(id)),
+      "setLiked called with unknown id",
+    );
     await _dbHelper.setLiked(ids);
     changedIds.clear();
     for (var id in ids) {
@@ -191,8 +243,10 @@ class EpisodeState extends ChangeNotifier {
 
   /// Sets the episodes as not liked
   Future<void> unsetLiked(List<int> ids) async {
-    assert(ids.every((id) => _episodeMap.keys.contains(id)),
-        "unsetLiked called with unknown id");
+    assert(
+      ids.every((id) => _episodeMap.keys.contains(id)),
+      "unsetLiked called with unknown id",
+    );
     await _dbHelper.setUnliked(ids);
     changedIds.clear();
     for (var id in ids) {
@@ -207,8 +261,10 @@ class EpisodeState extends ChangeNotifier {
 
   /// Sets the episodes as not new
   Future<void> unsetNew(List<int> ids) async {
-    assert(ids.every((id) => _episodeMap.keys.contains(id)),
-        "unsetNew called with unknown id");
+    assert(
+      ids.every((id) => _episodeMap.keys.contains(id)),
+      "unsetNew called with unknown id",
+    );
     await _dbHelper.removeEpisodesNewMark(ids);
     changedIds.clear();
     for (var id in ids) {
@@ -222,14 +278,23 @@ class EpisodeState extends ChangeNotifier {
   }
 
   /// Sets the episodes as played
-  Future<void> setPlayed(List<int> ids,
-      {double seekValue = 1, int seconds = 0}) async {
-    assert(ids.every((id) => _episodeMap.keys.contains(id)),
-        "setPlayed called with unknown id");
+  Future<void> setPlayed(
+    List<int> ids, {
+    double seekValue = 1,
+    int seconds = 0,
+  }) async {
+    assert(
+      ids.every((id) => _episodeMap.keys.contains(id)),
+      "setPlayed called with unknown id",
+    );
     changedIds.clear();
     for (var id in ids) {
-      final history = PlayHistory(_episodeMap[id]!.title,
-          _episodeMap[id]!.enclosureUrl, seconds, seekValue);
+      final history = PlayHistory(
+        _episodeMap[id]!.title,
+        _episodeMap[id]!.enclosureUrl,
+        seconds,
+        seekValue,
+      );
       await _dbHelper.saveHistory(history);
       _episodeMap[id] = _episodeMap[id]!.copyWith(isPlayed: true);
       changedIds.add(id);
@@ -242,10 +307,13 @@ class EpisodeState extends ChangeNotifier {
 
   /// Sets the episodes as not played
   Future<void> unsetPlayed(List<int> ids) async {
-    assert(ids.every((id) => _episodeMap.keys.contains(id)),
-        "unsetPlayed called with unknown id");
-    await _dbHelper
-        .unsetListened(ids.map((id) => _episodeMap[id]!.enclosureUrl).toList());
+    assert(
+      ids.every((id) => _episodeMap.keys.contains(id)),
+      "unsetPlayed called with unknown id",
+    );
+    await _dbHelper.unsetListened(
+      ids.map((id) => _episodeMap[id]!.enclosureUrl).toList(),
+    );
     changedIds.clear();
     for (var id in ids) {
       _episodeMap[id] = _episodeMap[id]!.copyWith(isPlayed: false);
@@ -260,21 +328,29 @@ class EpisodeState extends ChangeNotifier {
   /// Sets the episode as downloaded and saves its mediaId, download task id
   /// size and duration
   /// Doesn't start the download.
-  Future<void> setDownloaded(int episodeId,
-      {required String mediaId,
-      required String taskId,
-      int? size,
-      int? duration}) async {
-    assert(_episodeMap.keys.contains(episodeId),
-        "setDownloaded called with unknown id");
+  Future<void> setDownloaded(
+    int episodeId, {
+    required String mediaId,
+    required String taskId,
+    int? size,
+    int? duration,
+  }) async {
+    assert(
+      _episodeMap.keys.contains(episodeId),
+      "setDownloaded called with unknown id",
+    );
     changedIds.clear();
-    await _dbHelper.setDownloaded(episodeId,
-        mediaId: mediaId,
-        taskId: taskId,
-        size: size ?? _episodeMap[episodeId]!.enclosureSize,
-        duration: duration ?? _episodeMap[episodeId]!.enclosureDuration);
-    _episodeMap[episodeId] =
-        _episodeMap[episodeId]!.copyWith(mediaId: mediaId, isDownloaded: true);
+    await _dbHelper.setDownloaded(
+      episodeId,
+      mediaId: mediaId,
+      taskId: taskId,
+      size: size ?? _episodeMap[episodeId]!.enclosureSize,
+      duration: duration ?? _episodeMap[episodeId]!.enclosureDuration,
+    );
+    _episodeMap[episodeId] = _episodeMap[episodeId]!.copyWith(
+      mediaId: mediaId,
+      isDownloaded: true,
+    );
     changedIds.add(episodeId);
     globalChange = !globalChange;
     if (!background) {
@@ -286,13 +362,19 @@ class EpisodeState extends ChangeNotifier {
   /// Sets the episode as not downloaded and sets its mediaId to its enclosureUrl
   /// Doesn't remove the download.
   Future<void> unsetDownloaded(int episodeId) async {
-    assert(_episodeMap.keys.contains(episodeId),
-        "unsetDownloaded called with unknown id");
+    assert(
+      _episodeMap.keys.contains(episodeId),
+      "unsetDownloaded called with unknown id",
+    );
     changedIds.clear();
-    await _dbHelper.unsetDownloaded(episodeId,
-        enclosureUrl: _episodeMap[episodeId]!.enclosureUrl);
+    await _dbHelper.unsetDownloaded(
+      episodeId,
+      enclosureUrl: _episodeMap[episodeId]!.enclosureUrl,
+    );
     _episodeMap[episodeId] = _episodeMap[episodeId]!.copyWith(
-        mediaId: _episodeMap[episodeId]!.enclosureUrl, isDownloaded: false);
+      mediaId: _episodeMap[episodeId]!.enclosureUrl,
+      isDownloaded: false,
+    );
     changedIds.add(episodeId);
     globalChange = !globalChange;
     if (!background) {
@@ -303,15 +385,15 @@ class EpisodeState extends ChangeNotifier {
 
   /// Sets the display version for all non downloaded versions of the episode
   Future<void> setDisplayVersion(int id) async {
-    print(_episodeMap[id]!.isDisplayVersion);
-    assert(_episodeMap.keys.contains(id),
-        "setDisplayVersion called with unknown id");
+    assert(
+      _episodeMap.keys.contains(id),
+      "setDisplayVersion called with unknown id",
+    );
     await _dbHelper.setDisplayVersion(_episodeMap[id]!);
     changedIds.clear();
     await populateEpisodeVersions(id);
     changedIds.addAll(_episodeMap[id]!.versions!.toList());
     globalChange = !globalChange;
     notifyListeners();
-    print(_episodeMap[id]!.isDisplayVersion);
   }
 }

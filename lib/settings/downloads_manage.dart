@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:line_icons/line_icons.dart';
@@ -10,6 +9,7 @@ import 'package:provider/provider.dart';
 
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/episode_state.dart';
+import '../type/tab_configuration.dart';
 import '../type/theme_data.dart';
 import '../util/extension_helper.dart';
 import '../widgets/action_bar.dart';
@@ -34,9 +34,10 @@ class _DownloadsManageState extends State<DownloadsManage> {
   List<int> _episodeIds = [];
 
   /// Function to get episodes
-  Future<List<int>> Function(int count) _getEpisodeIds = (int _) async {
-    return <int>[];
-  };
+  Future<List<int>> Function(int count, {int offset}) _getEpisodeIds =
+      (int _, {int offset = 0}) async {
+        return <int>[];
+      };
 
   /// If true, stop grid load animation.
   bool _scroll = false;
@@ -87,8 +88,11 @@ class _DownloadsManageState extends State<DownloadsManage> {
     _getStorageSize();
   }
 
-  String _downloadDateToString(BuildContext context,
-      {required int downloadDate, int? pubDate}) {
+  String _downloadDateToString(
+    BuildContext context, {
+    required int downloadDate,
+    int? pubDate,
+  }) {
     final s = context.s;
     var date = DateTime.fromMillisecondsSinceEpoch(downloadDate);
     var diffrence = DateTime.now().toUtc().difference(date);
@@ -98,7 +102,8 @@ class _DownloadsManageState extends State<DownloadsManage> {
       return s.daysAgo(diffrence.inDays);
     } else {
       return DateFormat.yMMMd().format(
-          DateTime.fromMillisecondsSinceEpoch(pubDate!, isUtc: true).toLocal());
+        DateTime.fromMillisecondsSinceEpoch(pubDate!, isUtc: true).toLocal(),
+      );
     }
   }
 
@@ -123,203 +128,232 @@ class _DownloadsManageState extends State<DownloadsManage> {
 
   @override
   Widget build(BuildContext context) {
-    Color appBarColor = context.realDark
+    Color appBarColor = context.trueBlack
         ? Colors.black
         : Theme.of(context).extension<CardColorScheme>()!.saturated;
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
-        statusBarColor: appBarColor,
-        statusBarIconBrightness: context.iconBrightness,
-        systemNavigationBarColor: context.surface,
-        systemNavigationBarIconBrightness: context.iconBrightness,
-      ),
+    return AnnotatedRegion(
+      value: context.overlay,
       child: Scaffold(
-        backgroundColor: context.surface,
+        backgroundColor: appBarColor,
         body: SafeArea(
-          child: Stack(
-            children: <Widget>[
-              CustomScrollView(
-                controller: _controller
-                  ..addListener(() async {
-                    if (_controller.offset >=
-                            _controller.position.maxScrollExtent -
-                                context.width &&
-                        _episodeIds.length == _top) {
-                      if (!_loadMore) {
-                        if (mounted) setState(() => _loadMore = true);
-                        _top = _top + 36;
-                        _episodeIds = await _getEpisodeIds(_top);
-                        if (mounted) setState(() => _loadMore = false);
+          child: ColoredBox(
+            color: context.surface,
+            child: Stack(
+              children: <Widget>[
+                Expanded(child: ColoredBox(color: context.surface)),
+                CustomScrollView(
+                  controller: _controller
+                    ..addListener(() async {
+                      if (_controller.offset >=
+                              _controller.position.maxScrollExtent -
+                                  context.width &&
+                          _episodeIds.length == _top) {
+                        if (!_loadMore) {
+                          if (mounted) setState(() => _loadMore = true);
+                          int newCount = 9 * (_top ~/ 36);
+                          _episodeIds.addAll(
+                            await _getEpisodeIds(newCount, offset: _top),
+                          );
+                          _top = _top + newCount;
+                          if (mounted) setState(() => _loadMore = false);
+                        }
                       }
-                    }
-                    if (mounted && !_scroll && _controller.offset > 0) {
-                      setState(() => _scroll = true);
-                    }
-                  }),
-                slivers: [
-                  SliverAppBar(
-                    pinned: true,
-                    leading: CustomBackButton(),
-                    elevation: 0,
-                    scrolledUnderElevation: 0,
-                    backgroundColor: appBarColor,
-                  ),
-                  SliverAppBar(
-                    pinned: true,
-                    leading: Center(),
-                    toolbarHeight: 100,
-                    flexibleSpace: Container(
-                      height: 140.0,
-                      color: appBarColor,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(left: 10),
-                            child: RichText(
-                              text: TextSpan(
-                                text: 'Total ',
-                                style: TextStyle(
-                                  color: context.accentColor,
-                                  fontSize: 20,
-                                ),
-                                children: <TextSpan>[
-                                  TextSpan(
-                                    text: _fileNum.toString(),
-                                    style: GoogleFonts.cairo(
-                                        textStyle: TextStyle(
-                                      color: context.accentColor,
-                                      fontSize: 40,
-                                    )),
+                      if (mounted && !_scroll && _controller.offset > 0) {
+                        setState(() => _scroll = true);
+                      }
+                    }),
+                  slivers: [
+                    SliverAppBar(
+                      pinned: true,
+                      leading: CustomBackButton(),
+                      elevation: 0,
+                      scrolledUnderElevation: 0,
+                      backgroundColor: appBarColor,
+                    ),
+                    SliverAppBar(
+                      pinned: true,
+                      leading: Center(),
+                      toolbarHeight: 100,
+                      flexibleSpace: Container(
+                        height: 140.0,
+                        color: appBarColor,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(left: 10),
+                              child: RichText(
+                                text: TextSpan(
+                                  text: 'Total ',
+                                  style: TextStyle(
+                                    color: context.primaryColor,
+                                    fontSize: 20,
                                   ),
-                                  TextSpan(
+                                  children: <TextSpan>[
+                                    TextSpan(
+                                      text: _fileNum.toString(),
+                                      style: GoogleFonts.cairo(
+                                        textStyle: TextStyle(
+                                          color: context.primaryColor,
+                                          fontSize: 40,
+                                        ),
+                                      ),
+                                    ),
+                                    TextSpan(
                                       text: _fileNum < 2
                                           ? ' episode'
                                           : ' episodes ',
                                       style: TextStyle(
-                                        color: context.accentColor,
+                                        color: context.primaryColor,
                                         fontSize: 20,
-                                      )),
-                                  TextSpan(
-                                    text: (_size ~/ 1000000) < 1000
-                                        ? (_size ~/ 1000000).toString()
-                                        : (_size / 1000000000)
-                                            .toStringAsFixed(1),
-                                    style: GoogleFonts.cairo(
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text: (_size ~/ 1000000) < 1000
+                                          ? (_size ~/ 1000000).toString()
+                                          : (_size / 1000000000)
+                                                .toStringAsFixed(1),
+                                      style: GoogleFonts.cairo(
                                         textStyle: TextStyle(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .secondary,
-                                      fontSize: 50,
-                                    )),
-                                  ),
-                                  TextSpan(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.secondary,
+                                          fontSize: 50,
+                                        ),
+                                      ),
+                                    ),
+                                    TextSpan(
                                       text: (_size ~/ 1000000) < 1000
                                           ? 'Mb'
                                           : 'Gb',
                                       style: TextStyle(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .secondary,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.secondary,
                                         fontSize: 20,
-                                      )),
-                                ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  ActionBar(
-                    onGetEpisodeIdsChanged: (getEpisodes) async {
-                      _getEpisodeIds = getEpisodes;
-                      _episodeIds = await _getEpisodeIds(_top);
-                      if (mounted) setState(() {});
-                    },
-                    widgetsFirstRow: const [
-                      ActionBarDropdownSortBy(0, 0),
-                      ActionBarSwitchSortOrder(0, 1),
-                      ActionBarSpacer(0, 2),
-                      ActionBarFilterLiked(0, 3),
-                      ActionBarFilterPlayed(0, 4),
-                    ],
-                    sortByItems: const [
-                      Sorter.downloadDate,
-                      Sorter.enclosureSize,
-                      Sorter.enclosureDuration,
-                      Sorter.pubDate
-                    ],
-                    sortBy: Sorter.downloadDate,
-                    filterDownloaded: true,
-                  ),
-                  SliverList.builder(
-                    itemCount: _episodeIds.length,
-                    itemBuilder: (context, index) {
-                      return Column(
-                        children: <Widget>[
-                          ListTile(
-                            onTap: () {
-                              if (_selectedList.contains(_episodeIds[index])) {
-                                setState(() =>
-                                    _selectedList.remove(_episodeIds[index]));
-                              } else {
-                                setState(() =>
-                                    _selectedList.add(_episodeIds[index]));
-                              }
-                            },
-                            leading: CircleAvatar(
-                                backgroundImage:
-                                    eState[_episodeIds[index]].avatarImage),
-                            title: Text(
-                              eState[_episodeIds[index]].title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            subtitle: Row(
-                              children: [
-                                Text(_downloadDateToString(context,
-                                    downloadDate:
-                                        eState[_episodeIds[index]].downloadDate,
-                                    pubDate:
-                                        eState[_episodeIds[index]].pubDate)),
-                                SizedBox(width: 20),
-                                if (eState[_episodeIds[index]].enclosureSize !=
-                                    0)
-                                  Text(
-                                      '${eState[_episodeIds[index]].enclosureSize ~/ 1000000} Mb'),
-                              ],
-                            ),
-                            trailing: Checkbox(
-                              value: _selectedList.contains(_episodeIds[index]),
-                              onChanged: (boo) {
-                                if (boo!) {
-                                  setState(() =>
-                                      _selectedList.add(_episodeIds[index]));
+                    ActionBar(
+                      onConfigurationChanged: (configuration) async {
+                        _getEpisodeIds = (count, {offset = -1}) =>
+                            context.episodeState.getEpisodesWithConfiguration(
+                              configuration,
+                              count,
+                              offset: offset,
+                            );
+                        _episodeIds = await _getEpisodeIds(_top);
+                        if (mounted) setState(() {});
+                      },
+                      sendInitialConfig: true,
+                      widgetsFirstRow: const [
+                        ActionBarDropdownSortBy(0, 0),
+                        ActionBarSwitchSortOrder(0, 1),
+                        ActionBarSpacer(0, 2),
+                        ActionBarFilterLiked(0, 3),
+                        ActionBarFilterPlayed(0, 4),
+                      ],
+                      sortByItems: const [
+                        Sorter.downloadDate,
+                        Sorter.enclosureSize,
+                        Sorter.enclosureDuration,
+                        Sorter.pubDate,
+                      ],
+                      configuration: ActionBarConfiguration(
+                        sortBy: Sorter.downloadDate,
+                        filterDownloaded: true,
+                      ),
+                    ),
+                    SliverList.builder(
+                      itemCount: _episodeIds.length,
+                      itemBuilder: (context, index) {
+                        return Column(
+                          children: <Widget>[
+                            ListTile(
+                              onTap: () {
+                                if (_selectedList.contains(
+                                  _episodeIds[index],
+                                )) {
+                                  setState(
+                                    () => _selectedList.remove(
+                                      _episodeIds[index],
+                                    ),
+                                  );
                                 } else {
                                   setState(
-                                    () => _selectedList
-                                        .remove(_episodeIds[index]),
+                                    () => _selectedList.add(_episodeIds[index]),
                                   );
                                 }
                               },
+                              leading: CircleAvatar(
+                                backgroundImage:
+                                    eState[_episodeIds[index]].avatarImage,
+                              ),
+                              title: Text(
+                                eState[_episodeIds[index]].title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              subtitle: Row(
+                                children: [
+                                  Text(
+                                    _downloadDateToString(
+                                      context,
+                                      downloadDate: eState[_episodeIds[index]]
+                                          .downloadDate,
+                                      pubDate:
+                                          eState[_episodeIds[index]].pubDate,
+                                    ),
+                                  ),
+                                  SizedBox(width: 20),
+                                  if (eState[_episodeIds[index]]
+                                          .enclosureSize !=
+                                      0)
+                                    Text(
+                                      '${eState[_episodeIds[index]].enclosureSize ~/ 1000000} Mb',
+                                    ),
+                                ],
+                              ),
+                              trailing: Checkbox(
+                                value: _selectedList.contains(
+                                  _episodeIds[index],
+                                ),
+                                onChanged: (boo) {
+                                  if (boo!) {
+                                    setState(
+                                      () =>
+                                          _selectedList.add(_episodeIds[index]),
+                                    );
+                                  } else {
+                                    setState(
+                                      () => _selectedList.remove(
+                                        _episodeIds[index],
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
                             ),
-                          ),
-                          Divider(
-                            height: 2,
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ],
-              ),
-              AnimatedPositioned(
-                duration: Duration(milliseconds: 800),
-                curve: Curves.elasticInOut,
-                left: context.width / 2 - 50,
-                bottom: _selectedList.isEmpty ? -100 : 30,
-                child: InkWell(
+                            Divider(height: 2),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
+                ),
+                AnimatedPositioned(
+                  duration: Duration(milliseconds: 800),
+                  curve: Curves.elasticInOut,
+                  left: context.width / 2 - 50,
+                  bottom: _selectedList.isEmpty ? -100 : 30,
+                  child: InkWell(
                     onTap: _delSelectedEpisodes,
                     child: Stack(
                       alignment: _clearing
@@ -331,8 +365,9 @@ class _DownloadsManageState extends State<DownloadsManage> {
                           width: 100,
                           height: 40,
                           decoration: BoxDecoration(
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(20.0)),
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(20.0),
+                            ),
                             color: Theme.of(context).colorScheme.secondary,
                           ),
                           child: Row(
@@ -342,8 +377,10 @@ class _DownloadsManageState extends State<DownloadsManage> {
                                 LineIcons.alternateTrash,
                                 color: Colors.white,
                               ),
-                              Text('${sumSelected() ~/ 1000000}Mb',
-                                  style: TextStyle(color: Colors.white)),
+                              Text(
+                                '${sumSelected() ~/ 1000000}Mb',
+                                style: TextStyle(color: Colors.white),
+                              ),
                             ],
                           ),
                         ),
@@ -355,16 +392,19 @@ class _DownloadsManageState extends State<DownloadsManage> {
                             width: _clearing ? 100 : 0,
                             height: _clearing ? 40 : 0,
                             decoration: BoxDecoration(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(20.0)),
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(20.0),
+                              ),
                               color: Colors.red.withValues(alpha: 0.6),
                             ),
                           ),
                         ),
                       ],
-                    )),
-              ),
-            ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

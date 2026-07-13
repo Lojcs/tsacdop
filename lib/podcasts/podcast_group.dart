@@ -29,19 +29,14 @@ class PodcastGroupList extends StatelessWidget {
               gravity: ToastGravity.BOTTOM,
             );
           },
-          children: podcastIds.map<Widget>(
-            (podcastId) {
-              return Container(
-                margin: EdgeInsets.only(top: 0.5, bottom: 0.5),
-                decoration: BoxDecoration(color: context.surface),
-                key: ObjectKey(podcastId),
-                child: _PodcastCard(
-                  podcastId: podcastId,
-                  groupId: groupId,
-                ),
-              );
-            },
-          ).toList(),
+          children: podcastIds.map<Widget>((podcastId) {
+            return Container(
+              margin: EdgeInsets.only(top: 0.5, bottom: 0.5),
+              decoration: BoxDecoration(color: context.surface),
+              key: ObjectKey(podcastId),
+              child: _PodcastCard(podcastId: podcastId, groupId: groupId),
+            );
+          }).toList(),
         ),
       ),
     );
@@ -80,19 +75,15 @@ class __PodcastCardState extends State<_PodcastCard>
                   Selector<PodcastState, Color>(
                     selector: (_, pState) =>
                         pState[widget.podcastId].primaryColor,
-                    builder: (context, color, _) => Icon(
-                      Icons.unfold_more,
-                      color: color,
-                    ),
+                    builder: (context, color, _) =>
+                        Icon(Icons.unfold_more, color: color),
                   ),
                   SizedBox(width: 5),
                   Selector<PodcastState, ImageProvider>(
                     selector: (_, pState) =>
                         pState[widget.podcastId].avatarImage,
-                    builder: (context, avatarImage, _) => CircleAvatar(
-                      radius: 25,
-                      backgroundImage: avatarImage,
-                    ),
+                    builder: (context, avatarImage, _) =>
+                        CircleAvatar(radius: 25, backgroundImage: avatarImage),
                   ),
                   SizedBox(width: 10),
                   Expanded(
@@ -109,7 +100,9 @@ class __PodcastCardState extends State<_PodcastCard>
                             maxLines: 2,
                             overflow: TextOverflow.fade,
                             style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 15),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
                           ),
                         ),
                         Selector<PodcastState, List<String>>(
@@ -136,7 +129,7 @@ class __PodcastCardState extends State<_PodcastCard>
                     icon: Icon(Icons.more_vert),
                     splashRadius: 20,
                     tooltip: s.menu,
-                    onPressed: () => generalSheet(
+                    onPressed: () => showGeneralSheet(
                       context,
                       title: pState[widget.podcastId].title,
                       child: PodcastSetting(podcastId: widget.podcastId),
@@ -149,9 +142,7 @@ class __PodcastCardState extends State<_PodcastCard>
         ),
         AnimatedContainer(
           duration: Duration(milliseconds: 300),
-          decoration: BoxDecoration(
-            color: context.surface,
-          ),
+          decoration: BoxDecoration(color: context.surface),
           // border: Border(
           //     bottom: BorderSide(
           //         color: Theme.of(context).primaryColorDark),
@@ -167,54 +158,55 @@ class __PodcastCardState extends State<_PodcastCard>
                   child: Selector<PodcastState, List<String>>(
                     selector: (_, pState) => pState.groupIds,
                     builder: (context, groupIds, _) => Row(
-                      children: groupIds.map<Widget>(
-                        (groupId) {
-                          return Container(
-                            padding: EdgeInsets.only(left: 5.0),
-                            child: Selector<PodcastState, bool>(
-                              selector: (_, pState) => pState
-                                  .getGroupById(groupId)
-                                  .podcastIds
-                                  .contains(widget.podcastId),
-                              builder: (context, contains, _) => FilterChip(
-                                backgroundColor: context.accentBackground,
-                                selectedColor: context.accentColor,
-                                key: ValueKey<String>(groupId),
-                                label: Selector<PodcastState, String>(
-                                  selector: (_, pState) =>
-                                      pState.getGroupById(groupId).name,
-                                  builder: (context, name, _) => Text(name),
-                                ),
-                                selected: contains,
-                                onSelected: (value) {
-                                  if (value) {
-                                    pState.addPodcastToGroup(
-                                        podcastId: widget.podcastId,
-                                        groupId: groupId);
-                                  } else {
-                                    final groupIds = pState
-                                        .findPodcastGroups(widget.podcastId);
-                                    if (groupIds.length != 1) {
-                                      pState.removePodcastFromGroup(
-                                          podcastId: widget.podcastId,
-                                          groupId: groupId);
-                                      Fluttertoast.showToast(
-                                        msg: s.toastSettingSaved,
-                                        gravity: ToastGravity.BOTTOM,
-                                      );
-                                    } else {
-                                      Fluttertoast.showToast(
-                                        msg: s.toastOneGroup,
-                                        gravity: ToastGravity.BOTTOM,
-                                      );
-                                    }
-                                  }
-                                },
+                      children: groupIds.map<Widget>((groupId) {
+                        return Container(
+                          padding: EdgeInsets.only(left: 5.0),
+                          child: Selector<PodcastState, bool>(
+                            selector: (_, pState) => pState
+                                .getGroupById(groupId)
+                                .podcastIds
+                                .contains(widget.podcastId),
+                            builder: (context, contains, _) => FilterChip(
+                              backgroundColor: context.accentBackground,
+                              selectedColor: context.primaryColor,
+                              key: ValueKey<String>(groupId),
+                              label: Selector<PodcastState, String>(
+                                selector: (_, pState) =>
+                                    pState.getGroupById(groupId).name,
+                                builder: (context, name, _) => Text(name),
                               ),
+                              selected: contains,
+                              onSelected: (value) {
+                                if (value) {
+                                  pState.addPodcastToGroup(
+                                    podcastId: widget.podcastId,
+                                    groupId: groupId,
+                                  );
+                                } else {
+                                  final groupIds = pState.findPodcastGroups(
+                                    widget.podcastId,
+                                  );
+                                  if (groupIds.length != 1) {
+                                    pState.removePodcastFromGroup(
+                                      podcastId: widget.podcastId,
+                                      groupId: groupId,
+                                    );
+                                    Fluttertoast.showToast(
+                                      msg: s.toastSettingSaved,
+                                      gravity: ToastGravity.BOTTOM,
+                                    );
+                                  } else {
+                                    Fluttertoast.showToast(
+                                      msg: s.toastOneGroup,
+                                      gravity: ToastGravity.BOTTOM,
+                                    );
+                                  }
+                                }
+                              },
                             ),
-                          );
-                        },
-                      ).toList(),
+                          ),
+                        );
+                      }).toList(),
                     ),
                   ),
                 ),
@@ -236,7 +228,8 @@ class RenameGroup extends StatefulWidget {
 
 class _RenameGroupState extends State<RenameGroup> {
   late final TextEditingController _controller = TextEditingController(
-      text: context.podcastState.getGroupById(widget.groupId).name);
+    text: context.podcastState.getGroupById(widget.groupId).name,
+  );
   String? _newName;
 
   @override
@@ -259,14 +252,12 @@ class _RenameGroupState extends State<RenameGroup> {
         statusBarColor: Colors.transparent,
         systemNavigationBarColor:
             Theme.of(context).brightness == Brightness.light
-                ? Color.fromRGBO(113, 113, 113, 1)
-                : Color.fromRGBO(5, 5, 5, 1),
+            ? Color.fromRGBO(113, 113, 113, 1)
+            : Color.fromRGBO(5, 5, 5, 1),
       ),
       child: AlertDialog(
         shape: RoundedRectangleBorder(
-          borderRadius: const BorderRadius.all(
-            Radius.circular(20),
-          ),
+          borderRadius: const BorderRadius.all(Radius.circular(20)),
         ),
         elevation: 1,
         contentPadding: EdgeInsets.symmetric(horizontal: 20),
@@ -275,25 +266,24 @@ class _RenameGroupState extends State<RenameGroup> {
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              s.cancel,
-              style: TextStyle(color: Colors.grey[600]),
-            ),
+            child: Text(s.cancel, style: TextStyle(color: Colors.grey[600])),
           ),
           TextButton(
             onPressed: () async {
               if (_newName != null) {
                 context.podcastState.modifyGroup(
-                    widget.groupId, (group) => group.copyWith(name: _newName));
+                  widget.groupId,
+                  (group) => group.copyWith(name: _newName),
+                );
 
                 Navigator.of(context).pop();
               }
             },
             child: Text(
               s.confirm,
-              style: TextStyle(color: context.accentColor),
+              style: TextStyle(color: context.primaryColor),
             ),
-          )
+          ),
         ],
         title: SizedBox(
           width: context.width - 160,
@@ -308,12 +298,16 @@ class _RenameGroupState extends State<RenameGroup> {
                 hintStyle: TextStyle(fontSize: 18),
                 filled: true,
                 focusedBorder: UnderlineInputBorder(
-                  borderSide:
-                      BorderSide(color: context.accentColor, width: 2.0),
+                  borderSide: BorderSide(
+                    color: context.primaryColor,
+                    width: 2.0,
+                  ),
                 ),
                 enabledBorder: UnderlineInputBorder(
-                  borderSide:
-                      BorderSide(color: context.accentColor, width: 2.0),
+                  borderSide: BorderSide(
+                    color: context.primaryColor,
+                    width: 2.0,
+                  ),
                 ),
               ),
               cursorRadius: Radius.circular(2),

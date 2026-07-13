@@ -14,7 +14,6 @@ import 'package:flutter/services.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:webfeed/webfeed.dart';
-import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../backup/opml_helper.dart';
 import '../type/episodebrief.dart';
@@ -26,6 +25,7 @@ import '../util/extension_helper.dart';
 import '../util/helpers.dart';
 import 'download_state.dart';
 import 'episode_state.dart';
+import 'settings/setting_state.dart';
 
 const deletedPodcastId = "46e48103-06c7-4fe1-a0b1-68aa7205b7f0";
 
@@ -51,10 +51,12 @@ class PodcastState extends ChangeNotifier {
 
   final DBHelper _dbHelper = DBHelper();
 
+  late SettingState _settingState;
   late EpisodeState _episodeState;
   late DownloadState _downloadState;
   bool _background = true;
   set context(BuildContext context) {
+    _settingState = context.superSettingState;
     _episodeState = context.episodeState;
     _downloadState = context.downloadState;
     _background = false;
@@ -112,16 +114,18 @@ class PodcastState extends ChangeNotifier {
 
   /// Queries the database with the provided options and returns found podcasts.
   /// Filters are tri-state (null - no filter, true - only, false - exclude)
-  Future<List<String>> getPodcasts(
-      {List<String>? groupIds,
-      List<String>? podcastIds,
-      List<String>? rssUrls,
-      bool? filterAutoUpdate}) async {
+  Future<List<String>> getPodcasts({
+    List<String>? groupIds,
+    List<String>? podcastIds,
+    List<String>? rssUrls,
+    bool? filterAutoUpdate,
+  }) async {
     List<PodcastBrief> podcasts = await _dbHelper.getPodcasts(
-        groupIds: groupIds,
-        podcastIds: podcastIds,
-        rssUrls: rssUrls,
-        filterNoAutoSync: filterAutoUpdate);
+      groupIds: groupIds,
+      podcastIds: podcastIds,
+      rssUrls: rssUrls,
+      filterNoAutoSync: filterAutoUpdate,
+    );
     for (var podcast in podcasts) {
       _podcastMap[podcast.id] = podcast;
     }
@@ -140,11 +144,13 @@ class PodcastState extends ChangeNotifier {
     for (var groupId in _groupMap.keys) {
       _groupMap[groupId]!.removeFromGroup(podcastId);
       await _dbHelper.removePodcastFromGroup(
-          podcastId: podcastId, groupId: groupId);
+        podcastId: podcastId,
+        groupId: groupId,
+      );
     }
     groupsChange = !groupsChange;
 
-    final podcastEpisodeIds = await eState.getEpisodes(feedIds: [podcastId]);
+    final podcastEpisodeIds = await eState.getEpisodes(podcastIds: [podcastId]);
     eState.deleteEpisodes(podcastEpisodeIds, deleteFromDatabase: false);
 
     final podcast = _podcastMap[podcastId]!;
@@ -159,25 +165,37 @@ class PodcastState extends ChangeNotifier {
 
   /// Isolateable function that fetches a podcast from an rss feed url.
   static Future<(PodcastBrief?, List<EpisodeBrief>)> _fetchFeed(
-      String feedUrl) async {
+    String feedUrl,
+  ) async {
     PodcastBrief? podcast;
     List<EpisodeBrief> episodes = [];
     try {
       final dio = Dio();
-      final response = await dio.get<List<int>>(feedUrl,
-          options: Options(responseType: ResponseType.bytes));
+      final response = await dio.get<List<int>>(
+        feedUrl,
+        options: Options(responseType: ResponseType.bytes),
+      );
       if (response.data != null) {
         final feed = RssFeed.parse(utf8.decode(response.data!));
         final digest = sha256.convert(response.data!);
         podcast = PodcastBrief.fromFeed(
-            feed,
-            response.redirects.isEmpty ? feedUrl : response.realUri.toString(),
-            digest.toString());
+          feed,
+          response.redirects.isEmpty ? feedUrl : response.realUri.toString(),
+          digest.toString(),
+        );
         final items = feed.items ?? [];
         for (int i = 0; i < items.length; i++) {
           final item = items[i];
-          episodes.add(EpisodeBrief.fromRssItem(
-              item, podcast.id, podcast.title, i, "", Colors.teal));
+          episodes.add(
+            EpisodeBrief.fromRssItem(
+              item,
+              podcast.id,
+              podcast.title,
+              i,
+              "",
+              Colors.teal,
+            ),
+          );
         }
         episodes = episodes.whereNot((e) => e.enclosureUrl == "").toList();
       }
@@ -198,8 +216,10 @@ class PodcastState extends ChangeNotifier {
     switch (checkPodcast(feedUrl)) {
       case String id:
         await _cachePodcast(id);
-        final episodeIds =
-            await _episodeState.getEpisodes(feedIds: [id], limit: 100);
+        final episodeIds = await _episodeState.getEpisodes(
+          podcastIds: [id],
+          limit: 100,
+        );
         ret = (id, episodeIds);
       case null:
         var (podcast, episodes) = await Isolater(_fetchFeed).run(feedUrl);
@@ -207,8 +227,10 @@ class PodcastState extends ChangeNotifier {
           final id = checkPodcast(podcast.rssUrl);
           if (id != null) {
             await _cachePodcast(id);
-            final episodeIds =
-                await _episodeState.getEpisodes(feedIds: [id], limit: 100);
+            final episodeIds = await _episodeState.getEpisodes(
+              podcastIds: [id],
+              limit: 100,
+            );
             ret = (id, episodeIds);
             return ret;
           }
@@ -236,14 +258,18 @@ class PodcastState extends ChangeNotifier {
 
   /// Isolateable function that prepares a remote podcast for saving into database.
   static Future<(PodcastBrief, List<EpisodeBrief>)> _persistFeed(
-      (PodcastBrief, List<EpisodeBrief>) data) async {
+    (PodcastBrief, List<EpisodeBrief>) data,
+  ) async {
     var (podcast, episodes) = data;
     final dir = await getApplicationDocumentsDirectory();
     try {
-      var imageResponse = await Dio().get<List<int>>(podcast.imageUrl,
-          options: Options(
-              responseType: ResponseType.bytes,
-              receiveTimeout: Duration(seconds: 90)));
+      var imageResponse = await Dio().get<List<int>>(
+        podcast.imageUrl,
+        options: Options(
+          responseType: ResponseType.bytes,
+          receiveTimeout: Duration(seconds: 90),
+        ),
+      );
       var image = img.decodeImage(Uint8List.fromList(imageResponse.data!))!;
       img.Image? thumbnail = img.copyResize(image, width: 300);
       final imagePath = "${dir.path}/${podcast.id}.png";
@@ -284,23 +310,29 @@ class PodcastState extends ChangeNotifier {
 
   /// Subscribes to a remote podcast. Not safe to call from the background.
   Future<(String, List<int>)?> subscribeRemotePodcast(
-      String podcastId, List<int> episodeIds) async {
+    String podcastId,
+    List<int> episodeIds,
+  ) async {
     (String, List<int>)? ret;
     if (_remotePodcastMap.containsKey(podcastId)) {
       final podcastRemote = _remotePodcastMap[podcastId]!;
-      final episodesRemote =
-          episodeIds.map((episodeId) => _episodeState[episodeId]).toList();
+      final episodesRemote = episodeIds
+          .map((episodeId) => _episodeState[episodeId])
+          .toList();
       if (podcastRemote.provider.contains('fireside')) {
-        var data = FiresideData(podcastId,
-            podcastRemote.webpage); // TODO: Move this into the isolate
+        var data = FiresideData(
+          podcastId,
+          podcastRemote.webpage,
+        ); // TODO: Move this into the isolate
         try {
           await data.fatchData();
         } catch (e) {
           developer.log(e.toString(), name: 'Fatch fireside data error');
         }
       }
-      var (podcastLocal, episodesLocal) =
-          await Isolater(_persistFeed).run((podcastRemote, episodesRemote));
+      var (podcastLocal, episodesLocal) = await Isolater(
+        _persistFeed,
+      ).run((podcastRemote, episodesRemote));
       await _dbHelper.savePodcastLocal(podcastLocal);
       if (episodesLocal.isNotEmpty) {
         await _dbHelper.saveNewPodcastEpisodes(episodesLocal);
@@ -308,8 +340,10 @@ class PodcastState extends ChangeNotifier {
       await addPodcastToGroup(podcastId: podcastId, groupId: homeGroupId);
 
       await _cachePodcast(podcastId);
-      final newEpisodeIds =
-          await _episodeState.getEpisodes(feedIds: [podcastId], limit: 100);
+      final newEpisodeIds = await _episodeState.getEpisodes(
+        podcastIds: [podcastId],
+        limit: 100,
+      );
       ret = (podcastId, newEpisodeIds);
 
       removeRemotePodcast(podcastId);
@@ -335,15 +369,18 @@ class PodcastState extends ChangeNotifier {
             .toList();
         if (podcast.provider.contains('fireside')) {
           var data = FiresideData(
-              podcast.id, podcast.webpage); // TODO: Move this into the isolate
+            podcast.id,
+            podcast.webpage,
+          ); // TODO: Move this into the isolate
           try {
             await data.fatchData();
           } catch (e) {
             developer.log(e.toString(), name: 'Fatch fireside data error');
           }
         }
-        var (podcastLocal, episodesLocal) =
-            await Isolater(_persistFeed).run((podcast, episodes));
+        var (podcastLocal, episodesLocal) = await Isolater(
+          _persistFeed,
+        ).run((podcast, episodes));
         await _dbHelper.savePodcastLocal(podcastLocal);
         if (episodesLocal.isNotEmpty) {
           await _dbHelper.saveNewPodcastEpisodes(episodesLocal);
@@ -377,11 +414,13 @@ class PodcastState extends ChangeNotifier {
     final ids = <String?>[];
     for (var rssUrl in rssUrls) {
       if (futures.length >= 4) ids.add(await futures.removeFirst());
-      futures.add(Future(() async {
-        final result = await subscribePodcastByUrl(rssUrl);
-        opmlProgress.subscribe();
-        return result;
-      }));
+      futures.add(
+        Future(() async {
+          final result = await subscribePodcastByUrl(rssUrl);
+          opmlProgress.subscribe();
+          return result;
+        }),
+      );
     }
     ids.addAll(await Future.wait(futures));
     opmlProgress.beginAddingGroups();
@@ -406,42 +445,60 @@ class PodcastState extends ChangeNotifier {
   /// Isolateable function that refetches a podcast and returns
   /// updated [PodcastBrief] and new [EpisodeBrief]s.
   static Future<(PodcastBrief, List<EpisodeBrief>)?> _syncFeed(
-      (PodcastBrief, List<EpisodeBrief>) data) async {
+    (PodcastBrief, List<EpisodeBrief>) data,
+  ) async {
     var (podcast, episodes) = data;
     final dir = await getApplicationDocumentsDirectory();
     try {
       final dio = Dio();
-      final response = await dio.get<List<int>>(podcast.rssUrl,
-          options: Options(responseType: ResponseType.bytes));
+      final response = await dio.get<List<int>>(
+        podcast.rssUrl,
+        options: Options(responseType: ResponseType.bytes),
+      );
       if (response.data != null) {
         final digest = sha256.convert(response.data!);
         if (digest.toString() != podcast.rssHash) {
           final feed = RssFeed.parse(utf8.decode(response.data!));
           final items = feed.items ?? [];
           final enclosureUrls = episodes.map((e) => e.enclosureUrl).toSet();
-          final newEnclosureUrls =
-              items.map(urlFromRssItem).whereNot((url) => url == "").toSet();
+          final newEnclosureUrls = items
+              .map(urlFromRssItem)
+              .whereNot((url) => url == "")
+              .toSet();
           final onlyNew = newEnclosureUrls.difference(enclosureUrls);
           final onlyNewEpisodes = items
               .where((i) => onlyNew.contains(urlFromRssItem(i)))
-              .map((item) => EpisodeBrief.fromRssItem(
-                  item, podcast.id, podcast.title, -1, "", Colors.teal))
+              .map(
+                (item) => EpisodeBrief.fromRssItem(
+                  item,
+                  podcast.id,
+                  podcast.title,
+                  -1,
+                  "",
+                  Colors.teal,
+                ),
+              )
               .toList();
           onlyNewEpisodes.sortBy<num>((episode) => episode.pubDate);
           var podcastNew = podcast.withUpdatedInfo(
-              feed,
-              response.redirects.isEmpty
-                  ? podcast.rssUrl
-                  : response.realUri.toString(),
-              digest.toString(),
-              onlyNewEpisodes.length);
+            feed,
+            response.redirects.isEmpty
+                ? podcast.rssUrl
+                : response.realUri.toString(),
+            digest.toString(),
+            onlyNewEpisodes.length,
+          );
           if (podcastNew.imageUrl != podcast.imageUrl) {
-            var imageResponse = await Dio().get<List<int>>(podcastNew.imageUrl,
-                options: Options(
-                    responseType: ResponseType.bytes,
-                    receiveTimeout: Duration(seconds: 90)));
-            var image =
-                img.decodeImage(Uint8List.fromList(imageResponse.data!))!;
+            var imageResponse = await Dio().get<List<int>>(
+              podcastNew.imageUrl,
+              options: Options(
+                responseType: ResponseType.bytes,
+                receiveTimeout: Duration(seconds: 90),
+              ),
+            );
+            var image = img.decodeImage(
+              Uint8List.fromList(imageResponse.data!),
+            )!;
             img.Image? thumbnail = img.copyResize(image, width: 300);
             final imagePath = "${dir.path}/${podcast.id}.png";
             File(imagePath).writeAsBytesSync(img.encodePng(thumbnail));
@@ -460,10 +517,11 @@ class PodcastState extends ChangeNotifier {
   /// Safe to call from the background.
   Future<int?> syncPodcast(String podcastId) async {
     dev.log("${DateTime.now()} - Syncing podcast with id: $podcastId");
-    final episodes = await _dbHelper.getEpisodes(feedIds: [podcastId]);
+    final episodes = await _dbHelper.getEpisodes(podcastIds: [podcastId]);
     await _cachePodcast(podcastId);
-    var result =
-        await Isolater(_syncFeed).run((_podcastMap[podcastId]!, episodes));
+    var result = await Isolater(
+      _syncFeed,
+    ).run((_podcastMap[podcastId]!, episodes));
     if (result != null) {
       var (podcast, newEpisodes) = result;
       try {
@@ -475,24 +533,29 @@ class PodcastState extends ChangeNotifier {
           .map((e) => e.copyWith(primaryColor: podcast.primaryColor))
           .toList();
       if (_podcastMap[podcastId]!.primaryColor != podcast.primaryColor) {
-        await _dbHelper.savePodcastProperties([podcastId],
-            primaryColor: podcast.primaryColor);
+        await _dbHelper.savePodcastProperties([
+          podcastId,
+        ], primaryColor: podcast.primaryColor);
       }
       _podcastMap[podcastId] = podcast;
       if (newEpisodes.isNotEmpty) {
         await _dbHelper.saveUpdatedPodcastEpisodes(newEpisodes);
       }
-      final lastWorkStorage = KeyValueStorage(lastWorkKey);
-      if (await lastWorkStorage.getInt() == 0) {
+      final lastSync = _settingState.lastSyncTime.get();
+      final lastUsed = _settingState.lastUsedTime.get();
+      if (lastUsed.isAfter(lastSync)) {
         await _dbHelper.unmarkNewOldEpisodes(podcastId);
       }
+
       if (podcast.autoDownload) {
         final savedEpisodes = await _dbHelper.getEpisodes(
-            feedIds: [podcastId], filterNew: true, filterDownloaded: false);
-        await startDownload(savedEpisodes);
+          podcastIds: [podcastId],
+          filterNew: true,
+          filterDownloaded: false,
+        );
+        await startAutoDownload(savedEpisodes);
       }
-      var refreshstorage = KeyValueStorage(refreshdateKey);
-      await refreshstorage.saveInt(DateTime.now().millisecondsSinceEpoch);
+      await _settingState.lastSyncTime.set(DateTime.now());
       notifyListeners();
       return newEpisodes.length;
     }
@@ -504,8 +567,10 @@ class PodcastState extends ChangeNotifier {
     final ids = await getPodcasts();
     Queue<Future<int?>> futures = Queue();
     for (var id in ids) {
-      if (futures.length >= 8) total += await futures.removeFirst() ?? 0;
-      futures.add(syncPodcast(id));
+      if (!_podcastMap[id]!.noAutoSync) {
+        if (futures.length >= 8) total += await futures.removeFirst() ?? 0;
+        futures.add(syncPodcast(id));
+      }
     }
     await Future.wait(futures);
     if (!kReleaseMode) {
@@ -521,14 +586,13 @@ class PodcastState extends ChangeNotifier {
   }
 
   /// Starts downloading the episodes. Safe to call from the background.
-  Future<void> startDownload(List<EpisodeBrief> episodes) async {
+  Future<void> startAutoDownload(List<EpisodeBrief> episodes) async {
     if (episodes.length < 100 && episodes.isNotEmpty) {
-      final downloader =
-          background ? DownloadState(background: true) : _downloadState;
-      final lastWorkStorage = KeyValueStorage(lastWorkKey);
-      await lastWorkStorage.saveInt(1);
+      final downloader = background
+          ? DownloadState(background: true)
+          : _downloadState;
       for (var episode in episodes) {
-        await downloader.download(episode);
+        await downloader.autoDownload(episode);
       }
     }
   }
@@ -542,8 +606,10 @@ class PodcastState extends ChangeNotifier {
     int? skipSecondsStart,
     int? skipSecondsEnd,
   }) async {
-    assert(ids.every((id) => _podcastMap.keys.contains(id)),
-        "saveNoAutoSync called with unknown id");
+    assert(
+      ids.every((id) => _podcastMap.keys.contains(id)),
+      "saveNoAutoSync called with unknown id",
+    );
     await _dbHelper.savePodcastProperties(
       ids,
       hideNewMark: hideNewMark,
@@ -580,8 +646,10 @@ class PodcastState extends ChangeNotifier {
   }
 
   /// Add podcast into the group.
-  Future<void> addPodcastToGroup(
-      {required String podcastId, required String groupId}) async {
+  Future<void> addPodcastToGroup({
+    required String podcastId,
+    required String groupId,
+  }) async {
     _groupMap[groupId]!.addToGroup(podcastId);
     await _dbHelper.addPodcastToGroup(podcastId: podcastId, groupId: groupId);
     groupsChange = !groupsChange;
@@ -589,11 +657,15 @@ class PodcastState extends ChangeNotifier {
   }
 
   /// Remove podcast from the group.
-  Future<void> removePodcastFromGroup(
-      {required String podcastId, required String groupId}) async {
+  Future<void> removePodcastFromGroup({
+    required String podcastId,
+    required String groupId,
+  }) async {
     _groupMap[groupId]!.removeFromGroup(podcastId);
     await _dbHelper.removePodcastFromGroup(
-        podcastId: podcastId, groupId: groupId);
+      podcastId: podcastId,
+      groupId: groupId,
+    );
     groupsChange = !groupsChange;
     notifyListeners();
   }
@@ -620,8 +692,10 @@ class PodcastState extends ChangeNotifier {
   }
 
   /// Modifies the group with the given callback.
-  Future<void> modifyGroup(String groupId,
-      FutureOr<PodcastGroup> Function(PodcastGroup group) modifier) async {
+  Future<void> modifyGroup(
+    String groupId,
+    FutureOr<PodcastGroup> Function(PodcastGroup group) modifier,
+  ) async {
     final modifiedGroup = await modifier(_groupMap.remove(groupId)!);
     await addGroup(modifiedGroup);
   }

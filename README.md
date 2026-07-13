@@ -24,7 +24,7 @@ Credit to upstream project [tsacdop](https://github.com/tsacdop/tsacdop), the Fl
 
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
      alt="Get it on F-Droid"
-     height="80">](https://f-droid.org/packages/dev.lojcs.tsacdop/)
+     height="80">](https://f-droid.org/packages/dev.lojcs.tsacdop.profile/)
 
 Or download the latest APK from the [Releases Section](https://github.com/Lojcs/tsacdop/releases/latest).
 

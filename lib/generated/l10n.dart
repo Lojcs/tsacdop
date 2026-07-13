@@ -263,6 +263,16 @@ class S {
     return Intl.message('CONFIRM', name: 'confirm', desc: '', args: []);
   }
 
+  /// `Confirmation`
+  String get confirmation {
+    return Intl.message(
+      'Confirmation',
+      name: 'confirmation',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `New playlist`
   String get createNewPlaylist {
     return Intl.message(
@@ -399,6 +409,11 @@ class S {
     );
   }
 
+  /// `Disabled`
+  String get disabled {
+    return Intl.message('Disabled', name: 'disabled', desc: '', args: []);
+  }
+
   /// `Dismiss`
   String get dismiss {
     return Intl.message('Dismiss', name: 'dismiss', desc: '', args: []);
@@ -485,10 +500,10 @@ class S {
     );
   }
 
-  /// `End of Episode`
+  /// `Play until end`
   String get endOfEpisode {
     return Intl.message(
-      'End of Episode',
+      'Play until end',
       name: 'endOfEpisode',
       desc: '',
       args: [],
@@ -777,6 +792,16 @@ class S {
   /// `From {time}`
   String from(Object time) {
     return Intl.message('From $time', name: 'from', desc: '', args: [time]);
+  }
+
+  /// `Globally disabled`
+  String get globallyDisabled {
+    return Intl.message(
+      'Globally disabled',
+      name: 'globallyDisabled',
+      desc: 'Indicates that a granular setting was disabled globally',
+      args: [],
+    );
   }
 
   /// `Good Night`
@@ -1149,6 +1174,16 @@ class S {
     );
   }
 
+  /// `You can contribute to the localization of this app on hosted Weblate thanks to their support of open source projects.`
+  String get localizationWeblate {
+    return Intl.message(
+      'You can contribute to the localization of this app on hosted Weblate thanks to their support of open source projects.',
+      name: 'localizationWeblate',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Load All Selected`
   String get loadAllSelected {
     return Intl.message(
@@ -1331,6 +1366,11 @@ class S {
     );
   }
 
+  /// `Mobile Data`
+  String get mobileData {
+    return Intl.message('Mobile Data', name: 'mobileData', desc: '', args: []);
+  }
+
   /// `More Options`
   String get moreOptions {
     return Intl.message(
@@ -1356,22 +1396,22 @@ class S {
     );
   }
 
-  /// `Turn off auto update`
+  /// `Don't include in global sync`
   String get neverAutoUpdate {
     return Intl.message(
-      'Turn off auto update',
+      'Don\'t include in global sync',
       name: 'neverAutoUpdate',
-      desc: 'Never auto  update in podcast settings.',
+      desc: '',
       args: [],
     );
   }
 
-  /// `New`
-  String get newPlain {
+  /// `Can still be synced on its own`
+  String get neverAutoUpdateDes {
     return Intl.message(
-      'New',
-      name: 'newPlain',
-      desc: 'Word to describe a new episode (and use in filterType)',
+      'Can still be synced on its own',
+      name: 'neverAutoUpdateDes',
+      desc: '',
       args: [],
     );
   }
@@ -1396,39 +1436,44 @@ class S {
     );
   }
 
+  /// `New`
+  String get newPlain {
+    return Intl.message(
+      'New',
+      name: 'newPlain',
+      desc: 'Word to describe a new episode (and use in filterType)',
+      args: [],
+    );
+  }
+
+  /// `New Playlist`
+  String get newPlaylist {
+    return Intl.message(
+      'New Playlist',
+      name: 'newPlaylist',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Next`
   String get next {
     return Intl.message('Next', name: 'next', desc: '', args: []);
   }
 
-  /// `No episodes downloaded yet`
-  String get noEpisodeDownload {
+  /// `No episodes found with given filters`
+  String get noEpisodesFound {
     return Intl.message(
-      'No episodes downloaded yet',
-      name: 'noEpisodeDownload',
+      'No episodes found with given filters',
+      name: 'noEpisodesFound',
       desc: '',
       args: [],
     );
   }
 
-  /// `No episodes collected yet`
-  String get noEpisodeFavorite {
-    return Intl.message(
-      'No episodes collected yet',
-      name: 'noEpisodeFavorite',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `No episodes received yet`
-  String get noEpisodeRecent {
-    return Intl.message(
-      'No episodes received yet',
-      name: 'noEpisodeRecent',
-      desc: '',
-      args: [],
-    );
+  /// `None`
+  String get none {
+    return Intl.message('None', name: 'none', desc: '', args: []);
   }
 
   /// `No podcasts in this group`
@@ -1478,16 +1523,6 @@ class S {
       name: 'notificationNetworkError',
       desc: '',
       args: [title],
-    );
-  }
-
-  /// `Notification  panel`
-  String get notificationSetting {
-    return Intl.message(
-      'Notification  panel',
-      name: 'notificationSetting',
-      desc: '',
-      args: [],
     );
   }
 
@@ -1561,6 +1596,11 @@ class S {
     );
   }
 
+  /// `OPML file`
+  String get opmlFile {
+    return Intl.message('OPML file', name: 'opmlFile', desc: '', args: []);
+  }
+
   /// `Password required`
   String get passwdRequired {
     return Intl.message(
@@ -1621,12 +1661,12 @@ class S {
     return Intl.message('Playing', name: 'playing', desc: '', args: []);
   }
 
-  /// `Playlist name existed`
-  String get playlistExisted {
+  /// `Playlist already exists`
+  String get playlistExists {
     return Intl.message(
-      'Playlist name existed',
-      name: 'playlistExisted',
-      desc: 'Error string when creating new playlist.',
+      'Playlist already exists',
+      name: 'playlistExists',
+      desc: '',
       args: [],
     );
   }
@@ -1686,6 +1726,16 @@ class S {
       name: 'podcast',
       desc: '',
       args: [count],
+    );
+  }
+
+  /// `Podcast List`
+  String get podcastList {
+    return Intl.message(
+      'Podcast List',
+      name: 'podcastList',
+      desc: '',
+      args: [],
     );
   }
 
@@ -1860,26 +1910,6 @@ class S {
     );
   }
 
-  /// `Refresh Finished`
-  String get refreshFinished {
-    return Intl.message(
-      'Refresh Finished',
-      name: 'refreshFinished',
-      desc: 'Toast for refresh finish',
-      args: [],
-    );
-  }
-
-  /// `Refreshing`
-  String get refreshStarted {
-    return Intl.message(
-      'Refreshing',
-      name: 'refreshStarted',
-      desc: 'Toast for refresh',
-      args: [],
-    );
-  }
-
   /// `Remove`
   String get remove {
     return Intl.message(
@@ -1948,6 +1978,11 @@ class S {
       desc: 'Notify user that the change will take effect after app restart.',
       args: [],
     );
+  }
+
+  /// `Satellite`
+  String get satellite {
+    return Intl.message('Satellite', name: 'satellite', desc: '', args: []);
   }
 
   /// `Save`
@@ -2096,16 +2131,6 @@ class S {
     );
   }
 
-  /// `Include the ovelay color`
-  String get settingsAccentColorDes {
-    return Intl.message(
-      'Include the ovelay color',
-      name: 'settingsAccentColorDes',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Appearance`
   String get settingsAppearance {
     return Intl.message(
@@ -2156,30 +2181,111 @@ class S {
     );
   }
 
-  /// `Auto delete downloads after`
+  /// `Auto delete`
   String get settingsAutoDelete {
     return Intl.message(
-      'Auto delete downloads after',
+      'Auto delete',
       name: 'settingsAutoDelete',
       desc: '',
       args: [],
     );
   }
 
-  /// `Default 30 days`
+  /// `Deletions are performed on app start and on sync`
   String get settingsAutoDeleteDes {
     return Intl.message(
-      'Default 30 days',
+      'Deletions are performed on app start and on sync',
       name: 'settingsAutoDeleteDes',
       desc: '',
       args: [],
     );
   }
 
-  /// `Auto play next episode in playlist`
+  /// `Delete downloads after`
+  String get settingsAutoDeleteAfterTime {
+    return Intl.message(
+      'Delete downloads after',
+      name: 'settingsAutoDeleteAfterTime',
+      desc: 'Settings item, displayed alongide a day count picker.',
+      args: [],
+    );
+  }
+
+  /// `Delete played downloads`
+  String get settingsAutoDeleteAfterPlayed {
+    return Intl.message(
+      'Delete played downloads',
+      name: 'settingsAutoDeleteAfterPlayed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Delete oldest if storage above`
+  String get settingsAutoDeleteOldestIfTotalAbove {
+    return Intl.message(
+      'Delete oldest if storage above',
+      name: 'settingsAutoDeleteOldestIfTotalAbove',
+      desc:
+          'Settings item, displayed alongside a storage size picker. (in 100 MiBs)',
+      args: [],
+    );
+  }
+
+  /// `If total size of audio downloads exceeds this the oldest downloads will be deleted.`
+  String get settingsAutoDeleteOldestIfTotalAboveDes {
+    return Intl.message(
+      'If total size of audio downloads exceeds this the oldest downloads will be deleted.',
+      name: 'settingsAutoDeleteOldestIfTotalAboveDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Auto download`
+  String get settingsAutoDownload {
+    return Intl.message(
+      'Auto download',
+      name: 'settingsAutoDownload',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Download new episodes after sync`
+  String get settingsAutoDownloadDes {
+    return Intl.message(
+      'Download new episodes after sync',
+      name: 'settingsAutoDownloadDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Auto download on forbidden connections`
+  String get settingsAutoDownloadOnForbidden {
+    return Intl.message(
+      'Auto download on forbidden connections',
+      name: 'settingsAutoDownloadOnForbidden',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `If disabled downloads will be started then paused if the connection is forbidden`
+  String get settingsAutoDownloadOnForbiddenDes {
+    return Intl.message(
+      'If disabled downloads will be started then paused if the connection is forbidden',
+      name: 'settingsAutoDownloadOnForbiddenDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Auto play the next episode when an episode ends`
   String get settingsAutoPlayDes {
     return Intl.message(
-      'Auto play next episode in playlist',
+      'Auto play the next episode when an episode ends',
       name: 'settingsAutoPlayDes',
       desc: '',
       args: [],
@@ -2191,31 +2297,226 @@ class S {
     return Intl.message('Backup', name: 'settingsBackup', desc: '', args: []);
   }
 
-  /// `Backup app data`
+  /// `Backup, restore or reset`
   String get settingsBackupDes {
     return Intl.message(
-      'Backup app data',
+      'Backup, restore or reset',
       name: 'settingsBackupDes',
       desc: '',
       args: [],
     );
   }
 
-  /// `Volume boost level`
+  /// `Categories`
+  String get settingsBackupCategories {
+    return Intl.message(
+      'Categories',
+      name: 'settingsBackupCategories',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Settings categories to export, import or reset.`
+  String get settingsBackupCategoriesDes {
+    return Intl.message(
+      'Settings categories to export, import or reset.',
+      name: 'settingsBackupCategoriesDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Are you sure you want to wipe the selected database categories and replace them with the backup?`
+  String get settingsBackupConfirmationDatabaseOverwrite {
+    return Intl.message(
+      'Are you sure you want to wipe the selected database categories and replace them with the backup?',
+      name: 'settingsBackupConfirmationDatabaseOverwrite',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Are you sure you want to reset selected database sections?`
+  String get settingsBackupConfirmationDatabaseReset {
+    return Intl.message(
+      'Are you sure you want to reset selected database sections?',
+      name: 'settingsBackupConfirmationDatabaseReset',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Are you sure you want to overwrite current settings?`
+  String get settingsBackupConfirmationSettingsOverwrite {
+    return Intl.message(
+      'Are you sure you want to overwrite current settings?',
+      name: 'settingsBackupConfirmationSettingsOverwrite',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Are you sure you want to reset settings to default?`
+  String get settingsBackupConfirmationSettingsReset {
+    return Intl.message(
+      'Are you sure you want to reset settings to default?',
+      name: 'settingsBackupConfirmationSettingsReset',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Database`
+  String get settingsBackupDatabase {
+    return Intl.message(
+      'Database',
+      name: 'settingsBackupDatabase',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Database file`
+  String get settingsBackupDatabaseBackupFile {
+    return Intl.message(
+      'Database file',
+      name: 'settingsBackupDatabaseBackupFile',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Export, import and reset app data`
+  String get settingsBackupDatabaseBackupFileDes {
+    return Intl.message(
+      'Export, import and reset app data',
+      name: 'settingsBackupDatabaseBackupFileDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Database categories to export, import or reset`
+  String get settingsBackupDatabaseCategoriesDes {
+    return Intl.message(
+      'Database categories to export, import or reset',
+      name: 'settingsBackupDatabaseCategoriesDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Podcasts, episodes and groups`
+  String get settingsBackupDatabasePodcasts {
+    return Intl.message(
+      'Podcasts, episodes and groups',
+      name: 'settingsBackupDatabasePodcasts',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Playback and subscription history`
+  String get settingsBackupDatabaseHistory {
+    return Intl.message(
+      'Playback and subscription history',
+      name: 'settingsBackupDatabaseHistory',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Playlists`
+  String get settingsBackupDatabasePlaylists {
+    return Intl.message(
+      'Playlists',
+      name: 'settingsBackupDatabasePlaylists',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Settings Backup File`
+  String get settingsBackupFile {
+    return Intl.message(
+      'Settings Backup File',
+      name: 'settingsBackupFile',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Backup Password`
+  String get settingsBackupPassword {
+    return Intl.message(
+      'Backup Password',
+      name: 'settingsBackupPassword',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Optional password to encrypt the backup when exporting or decrypt it when importing`
+  String get settingsBackupPasswordDes {
+    return Intl.message(
+      'Optional password to encrypt the backup when exporting or decrypt it when importing',
+      name: 'settingsBackupPasswordDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Volume boost amount`
   String get settingsBoostVolume {
     return Intl.message(
-      'Volume boost level',
+      'Volume boost amount',
       name: 'settingsBoostVolume',
       desc: '',
       args: [],
     );
   }
 
-  /// `Change volume boost level`
+  /// `Decibels to boost when volume boost is enabled`
   String get settingsBoostVolumeDes {
     return Intl.message(
-      'Change volume boost level',
+      'Decibels to boost when volume boost is enabled',
       name: 'settingsBoostVolumeDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Colors`
+  String get settingsColors {
+    return Intl.message('Colors', name: 'settingsColors', desc: '', args: []);
+  }
+
+  /// `Default Filters`
+  String get settingsDefaultFilters {
+    return Intl.message(
+      'Default Filters',
+      name: 'settingsDefaultFilters',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Android Auto Filters`
+  String get settingsDefaultFilterAndroidAuto {
+    return Intl.message(
+      'Android Auto Filters',
+      name: 'settingsDefaultFilterAndroidAuto',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Filters to apply to the library visible in Android Auto. Only the first 108 items will be shown`
+  String get settingsDefaultFilterAndroidAutoDes {
+    return Intl.message(
+      'Filters to apply to the library visible in Android Auto. Only the first 108 items will be shown',
+      name: 'settingsDefaultFilterAndroidAutoDes',
       desc: '',
       args: [],
     );
@@ -2287,6 +2588,46 @@ class S {
     return Intl.message(
       'Are you sure you want to reenable "Discover Features"?',
       name: 'settingsDiscoveryDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Ask when starting download on a forbidden connection`
+  String get settingsDownloadAskOnForbidden {
+    return Intl.message(
+      'Ask when starting download on a forbidden connection',
+      name: 'settingsDownloadAskOnForbidden',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `If approved downloads will be temporarily allowed on all connections`
+  String get settingsDownloadAskOnForbiddenDes {
+    return Intl.message(
+      'If approved downloads will be temporarily allowed on all connections',
+      name: 'settingsDownloadAskOnForbiddenDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Downloads`
+  String get settingsDownloads {
+    return Intl.message(
+      'Downloads',
+      name: 'settingsDownloads',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Auto download, auto delete and forbidden connections`
+  String get settingsDownloadsDes {
+    return Intl.message(
+      'Auto download, auto delete and forbidden connections',
+      name: 'settingsDownloadsDes',
       desc: '',
       args: [],
     );
@@ -2372,6 +2713,31 @@ class S {
     );
   }
 
+  /// `Forbidden download connections`
+  String get settingsForbiddenDownloadConnections {
+    return Intl.message(
+      'Forbidden download connections',
+      name: 'settingsForbiddenDownloadConnections',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Downloads will be forbidden on selected connections based on the rules above.`
+  String get settingsForbiddenDownloadConnectionsDes {
+    return Intl.message(
+      'Downloads will be forbidden on selected connections based on the rules above.',
+      name: 'settingsForbiddenDownloadConnectionsDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `General`
+  String get settingsGeneral {
+    return Intl.message('General', name: 'settingsGeneral', desc: '', args: []);
+  }
+
   /// `History`
   String get settingsHistory {
     return Intl.message('History', name: 'settingsHistory', desc: '', args: []);
@@ -2382,6 +2748,46 @@ class S {
     return Intl.message(
       'Listen data',
       name: 'settingsHistoryDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Home tabs`
+  String get settingsHomeTabs {
+    return Intl.message(
+      'Home tabs',
+      name: 'settingsHomeTabs',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Tab name`
+  String get settingsHomeTabName {
+    return Intl.message(
+      'Tab name',
+      name: 'settingsHomeTabName',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `New tab`
+  String get settingsHomeTabNew {
+    return Intl.message(
+      'New tab',
+      name: 'settingsHomeTabNew',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Add new tab`
+  String get settingsHomeTabAdd {
+    return Intl.message(
+      'Add new tab',
+      name: 'settingsHomeTabAdd',
       desc: '',
       args: [],
     );
@@ -2402,36 +2808,21 @@ class S {
     );
   }
 
-  /// `Languages`
-  String get settingsLanguages {
+  /// `Ui defaults`
+  String get settingsInterfaceDes {
     return Intl.message(
-      'Languages',
-      name: 'settingsLanguages',
+      'Ui defaults',
+      name: 'settingsInterfaceDes',
       desc: '',
       args: [],
     );
   }
 
-  /// `Change language`
-  String get settingsLanguagesDes {
+  /// `Language`
+  String get settingsLanguage {
     return Intl.message(
-      'Change language',
-      name: 'settingsLanguagesDes',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Layout`
-  String get settingsLayout {
-    return Intl.message('Layout', name: 'settingsLayout', desc: '', args: []);
-  }
-
-  /// `App layout`
-  String get settingsLayoutDes {
-    return Intl.message(
-      'App layout',
-      name: 'settingsLayoutDes',
+      'Language',
+      name: 'settingsLanguage',
       desc: '',
       args: [],
     );
@@ -2457,6 +2848,26 @@ class S {
     );
   }
 
+  /// `Look and Feel`
+  String get settingsLookAndFeel {
+    return Intl.message(
+      'Look and Feel',
+      name: 'settingsLookAndFeel',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Colors, fonts and haptics`
+  String get settingsLookAndFeelDes {
+    return Intl.message(
+      'Colors, fonts and haptics',
+      name: 'settingsLookAndFeelDes',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Manage downloads`
   String get settingsManageDownload {
     return Intl.message(
@@ -2477,21 +2888,41 @@ class S {
     );
   }
 
-  /// `Mark as listened when skipped`
+  /// `Mark skipped as played`
   String get settingsMarkListenedSkip {
     return Intl.message(
-      'Mark as listened when skipped',
+      'Mark skipped as played',
       name: 'settingsMarkListenedSkip',
-      desc: 'Mark episode as listened when skipped to next.',
+      desc: '',
       args: [],
     );
   }
 
-  /// `Auto mark episode as listened when it was skipped to next`
+  /// `Mark episode as played when skipping to next`
   String get settingsMarkListenedSkipDes {
     return Intl.message(
-      'Auto mark episode as listened when it was skipped to next',
+      'Mark episode as played when skipping to next',
       name: 'settingsMarkListenedSkipDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Notification panel media controls`
+  String get settingsMediaControls {
+    return Intl.message(
+      'Notification panel media controls',
+      name: 'settingsMediaControls',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The placement of the buttons may differ between devices, Android versions and selections of buttons`
+  String get settingsMediaControlsDes {
+    return Intl.message(
+      'The placement of the buttons may differ between devices, Android versions and selections of buttons',
+      name: 'settingsMediaControlsDes',
       desc: '',
       args: [],
     );
@@ -2517,26 +2948,6 @@ class S {
     );
   }
 
-  /// `Auto download using cellular data`
-  String get settingsNetworkCellularAuto {
-    return Intl.message(
-      'Auto download using cellular data',
-      name: 'settingsNetworkCellularAuto',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `You can configure podcast auto download in the group management page`
-  String get settingsNetworkCellularAutoDes {
-    return Intl.message(
-      'You can configure podcast auto download in the group management page',
-      name: 'settingsNetworkCellularAutoDes',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Ask to confirm when using cellular data to download episodes`
   String get settingsNetworkCellularDes {
     return Intl.message(
@@ -2547,31 +2958,51 @@ class S {
     );
   }
 
-  /// `Playlist and player`
-  String get settingsPlayDes {
+  /// `Pause and resume downloads based on connectivity`
+  String get settingsPauseDownloadOnForbiddenConnected {
     return Intl.message(
-      'Playlist and player',
-      name: 'settingsPlayDes',
+      'Pause and resume downloads based on connectivity',
+      name: 'settingsPauseDownloadOnForbiddenConnected',
       desc: '',
       args: [],
     );
   }
 
-  /// `Player height`
-  String get settingsPlayerHeight {
+  /// `All downloads will be paused if the connection changes to a forbidden one. All paused downloads will be resumed when the forbidden connection ends`
+  String get settingsPauseDownloadOnForbiddenConnectedDes {
     return Intl.message(
-      'Player height',
-      name: 'settingsPlayerHeight',
+      'All downloads will be paused if the connection changes to a forbidden one. All paused downloads will be resumed when the forbidden connection ends',
+      name: 'settingsPauseDownloadOnForbiddenConnectedDes',
       desc: '',
       args: [],
     );
   }
 
-  /// `Change player widget height as you like`
-  String get settingsPlayerHeightDes {
+  /// `Playback`
+  String get settingsPlayback {
     return Intl.message(
-      'Change player widget height as you like',
-      name: 'settingsPlayerHeightDes',
+      'Playback',
+      name: 'settingsPlayback',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Playback behavior`
+  String get settingsPlaybackDes {
+    return Intl.message(
+      'Playback behavior',
+      name: 'settingsPlaybackDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Audio Player State`
+  String get settingsPlayerState {
+    return Intl.message(
+      'Audio Player State',
+      name: 'settingsPlayerState',
       desc: '',
       args: [],
     );
@@ -2607,24 +3038,9 @@ class S {
     );
   }
 
-  /// `Real dark`
-  String get settingsRealDark {
-    return Intl.message(
-      'Real dark',
-      name: 'settingsRealDark',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Turn on if you think the night is not dark enough`
-  String get settingsRealDarkDes {
-    return Intl.message(
-      'Turn on if you think the night is not dark enough',
-      name: 'settingsRealDarkDes',
-      desc: '',
-      args: [],
-    );
+  /// `Reset`
+  String get settingsReset {
+    return Intl.message('Reset', name: 'settingsReset', desc: '', args: []);
   }
 
   /// `Rewind seconds`
@@ -2642,6 +3058,36 @@ class S {
     return Intl.message(
       'Change the rewind seconds in player',
       name: 'settingsRewindSecDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Default search api`
+  String get settingsSearchApi {
+    return Intl.message(
+      'Default search api',
+      name: 'settingsSearchApi',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Default web search engine`
+  String get settingsSearchEngine {
+    return Intl.message(
+      'Default web search engine',
+      name: 'settingsSearchEngine',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Search web by default`
+  String get settingsSearchMode {
+    return Intl.message(
+      'Search web by default',
+      name: 'settingsSearchMode',
       desc: '',
       args: [],
     );
@@ -2717,14 +3163,29 @@ class S {
     );
   }
 
-  /// `Manage cache and download storage`
-  String get settingsStorageDes {
+  /// `Play until end`
+  String get settingsSTWaitEpisodeEnd {
     return Intl.message(
-      'Manage cache and download storage',
-      name: 'settingsStorageDes',
+      'Play until end',
+      name: 'settingsSTWaitEpisodeEnd',
       desc: '',
       args: [],
     );
+  }
+
+  /// `Wait until the end of the playing episode to stop playback when sleep timer expires`
+  String get settingsSTWaitEpisodeEndDes {
+    return Intl.message(
+      'Wait until the end of the playing episode to stop playback when sleep timer expires',
+      name: 'settingsSTWaitEpisodeEndDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Storage`
+  String get settingStorage {
+    return Intl.message('Storage', name: 'settingStorage', desc: '', args: []);
   }
 
   /// `Syncing`
@@ -2737,6 +3198,16 @@ class S {
     return Intl.message(
       'Refresh podcasts in the background',
       name: 'settingsSyncingDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Syncing interval`
+  String get settingsSyncingInterval {
+    return Intl.message(
+      'Syncing interval',
+      name: 'settingsSyncingInterval',
       desc: '',
       args: [],
     );
@@ -2767,26 +3238,31 @@ class S {
     return Intl.message('Theme', name: 'settingsTheme', desc: '', args: []);
   }
 
-  /// `Storage`
-  String get settingStorage {
-    return Intl.message('Storage', name: 'settingStorage', desc: '', args: []);
-  }
-
-  /// `Update interval`
-  String get settingsUpdateInterval {
+  /// `True Black`
+  String get settingsTrueBlack {
     return Intl.message(
-      'Update interval',
-      name: 'settingsUpdateInterval',
+      'True Black',
+      name: 'settingsTrueBlack',
       desc: '',
       args: [],
     );
   }
 
-  /// `Default 24 hours`
-  String get settingsUpdateIntervalDes {
+  /// `Black surfaces on dark theme`
+  String get settingsTrueBlackDes {
     return Intl.message(
-      'Default 24 hours',
-      name: 'settingsUpdateIntervalDes',
+      'Black surfaces on dark theme',
+      name: 'settingsTrueBlackDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Use system accent color`
+  String get settingsUseSystemAccentColor {
+    return Intl.message(
+      'Use system accent color',
+      name: 'settingsUseSystemAccentColor',
       desc: '',
       args: [],
     );
@@ -2847,9 +3323,49 @@ class S {
     return Intl.message('Skip to next', name: 'skipToNext', desc: '', args: []);
   }
 
+  /// `Skip to Previous`
+  String get skipToPrevious {
+    return Intl.message(
+      'Skip to Previous',
+      name: 'skipToPrevious',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Sleep timer`
   String get sleepTimer {
     return Intl.message('Sleep timer', name: 'sleepTimer', desc: '', args: []);
+  }
+
+  /// `Cancel timer`
+  String get sleepTimerCancel {
+    return Intl.message(
+      'Cancel timer',
+      name: 'sleepTimerCancel',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Start timer`
+  String get sleepTimerStart {
+    return Intl.message(
+      'Start timer',
+      name: 'sleepTimerStart',
+      desc: 'The timer length is displayed underneath.',
+      args: [],
+    );
+  }
+
+  /// `Waiting for episode to end`
+  String get sleepTimerWait {
+    return Intl.message(
+      'Waiting for episode to end',
+      name: 'sleepTimerWait',
+      desc: '',
+      args: [],
+    );
   }
 
   /// `Sort By`
@@ -2927,9 +3443,34 @@ class S {
     );
   }
 
+  /// `Sync`
+  String get sync {
+    return Intl.message('Sync', name: 'sync', desc: '', args: []);
+  }
+
+  /// `Sync finished`
+  String get syncFinished {
+    return Intl.message(
+      'Sync finished',
+      name: 'syncFinished',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Sync now`
   String get syncNow {
     return Intl.message('Sync now', name: 'syncNow', desc: '', args: []);
+  }
+
+  /// `Sync started`
+  String get syncStarted {
+    return Intl.message(
+      'Sync started',
+      name: 'syncStarted',
+      desc: '',
+      args: [],
+    );
   }
 
   /// `System default`
@@ -3134,6 +3675,11 @@ class S {
     );
   }
 
+  /// `Unsupported`
+  String get unsupported {
+    return Intl.message('Unsupported', name: 'unsupported', desc: '', args: []);
+  }
+
   /// `Update date`
   String get updateDate {
     return Intl.message('Update date', name: 'updateDate', desc: '', args: []);
@@ -3177,26 +3723,6 @@ class S {
     );
   }
 
-  /// `Pick theme from wallpaper`
-  String get useWallpaperTheme {
-    return Intl.message(
-      'Pick theme from wallpaper',
-      name: 'useWallpaperTheme',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Pick theme from wallpaper.`
-  String get useWallpaperThemeDes {
-    return Intl.message(
-      'Pick theme from wallpaper.',
-      name: 'useWallpaperThemeDes',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Version: {version}`
   String version(Object version) {
     return Intl.message(
@@ -3205,6 +3731,16 @@ class S {
       desc: '',
       args: [version],
     );
+  }
+
+  /// `VPN`
+  String get vpn {
+    return Intl.message('VPN', name: 'vpn', desc: '', args: []);
+  }
+
+  /// `Wi-Fi`
+  String get wifi {
+    return Intl.message('Wi-Fi', name: 'wifi', desc: '', args: []);
   }
 }
 

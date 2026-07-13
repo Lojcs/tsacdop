@@ -7,7 +7,6 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 
 import '../state/podcast_state.dart';
-import '../state/setting_state.dart';
 import '../type/podcastgroup.dart';
 import '../util/extension_helper.dart';
 import '../util/pageroute.dart';
@@ -37,15 +36,21 @@ class _PodcastManageState extends State<PodcastManage>
   void initState() {
     super.initState();
     _menuController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 300));
-    _menuAnimation = Tween(begin: 0.0, end: 1.0)
-        .animate(CurvedAnimation(parent: _menuController, curve: Curves.ease))
-      ..addListener(() {
-        if (mounted) setState(() => _menuValue = _menuAnimation.value);
-      });
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _menuAnimation =
+        Tween(begin: 0.0, end: 1.0).animate(
+          CurvedAnimation(parent: _menuController, curve: Curves.ease),
+        )..addListener(() {
+          if (mounted) setState(() => _menuValue = _menuAnimation.value);
+        });
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      FeatureDiscovery.discoverFeatures(context,
-          const <String>{addGroupFeature, configureGroup, configurePodcast});
+      FeatureDiscovery.discoverFeatures(context, const <String>{
+        addGroupFeature,
+        configureGroup,
+        configurePodcast,
+      });
     });
   }
 
@@ -75,30 +80,27 @@ class _PodcastManageState extends State<PodcastManage>
               description: s.featureDiscoveryGroupDes,
               buttonColor: Colors.cyan[500],
               child: IconButton(
-                  splashRadius: 20,
-                  onPressed: () => showGeneralDialog(
-                      context: context,
-                      barrierDismissible: true,
-                      barrierLabel: MaterialLocalizations.of(context)
-                          .modalBarrierDismissLabel,
-                      barrierColor: Colors.black54,
-                      transitionDuration: const Duration(milliseconds: 200),
-                      pageBuilder: (context, animaiton, secondaryAnimation) =>
-                          AddGroup()),
-                  icon: Icon(Icons.add_circle_outline)),
+                splashRadius: 20,
+                onPressed: () => showGeneralDialog(
+                  context: context,
+                  barrierDismissible: true,
+                  barrierLabel: MaterialLocalizations.of(
+                    context,
+                  ).modalBarrierDismissLabel,
+                  barrierColor: Colors.black54,
+                  transitionDuration: const Duration(milliseconds: 200),
+                  pageBuilder: (context, animaiton, secondaryAnimation) =>
+                      AddGroup(),
+                ),
+                icon: Icon(Icons.add_circle_outline),
+              ),
             ),
-            Selector<SettingState, bool?>(
-              selector: (_, setting) => setting.openAllPodcastDefalt,
-              builder: (_, data, __) {
-                return !data!
-                    ? IconButton(
-                        splashRadius: 20,
-                        onPressed: () => Navigator.push(
-                            context, ScaleRoute(page: PodcastList())),
-                        icon: Icon(Icons.all_out))
-                    : Center();
-              },
-            )
+            IconButton(
+              splashRadius: 20,
+              onPressed: () =>
+                  Navigator.push(context, ScaleRoute(page: PodcastList())),
+              icon: Icon(Icons.all_out),
+            ),
           ],
         ),
         body: SafeArea(
@@ -158,16 +160,13 @@ class _PodcastManageState extends State<PodcastManage>
                         },
                         child: Container(
                           color: context.surface.withValues(
-                              alpha: 0.8 *
-                                  math.min(_menuController.value * 2, 1.0)),
+                            alpha:
+                                0.8 * math.min(_menuController.value * 2, 1.0),
+                          ),
                         ),
                       ),
                     ),
-                  Positioned(
-                    right: 30,
-                    bottom: 30,
-                    child: _faButton(),
-                  ),
+                  Positioned(right: 30, bottom: 30, child: _faButton()),
                   if (_showSetting)
                     Positioned(
                       right: 100 * _menuValue - 70,
@@ -190,24 +189,29 @@ class _PodcastManageState extends State<PodcastManage>
                                     : showGeneralDialog(
                                         context: context,
                                         barrierDismissible: true,
-                                        barrierLabel:
-                                            MaterialLocalizations.of(context)
-                                                .modalBarrierDismissLabel,
+                                        barrierLabel: MaterialLocalizations.of(
+                                          context,
+                                        ).modalBarrierDismissLabel,
                                         barrierColor: Colors.black54,
-                                        transitionDuration:
-                                            const Duration(milliseconds: 300),
-                                        pageBuilder: (context, animaiton,
-                                                secondaryAnimation) =>
-                                            RenameGroup(
-                                          groupId: groupIds[_index],
+                                        transitionDuration: const Duration(
+                                          milliseconds: 300,
                                         ),
+                                        pageBuilder:
+                                            (
+                                              context,
+                                              animaiton,
+                                              secondaryAnimation,
+                                            ) => RenameGroup(
+                                              groupId: groupIds[_index],
+                                            ),
                                       );
                               },
                               child: Container(
                                 height: 30.0,
                                 decoration: BoxDecoration(
-                                    color: Colors.grey[700],
-                                    borderRadius: BorderRadius.circular(10.0)),
+                                  color: Colors.grey[700],
+                                  borderRadius: BorderRadius.circular(10.0),
+                                ),
                                 padding: EdgeInsets.symmetric(horizontal: 10),
                                 child: Row(
                                   children: <Widget>[
@@ -217,11 +221,14 @@ class _PodcastManageState extends State<PodcastManage>
                                       size: 15.0,
                                     ),
                                     Padding(
-                                      padding:
-                                          EdgeInsets.symmetric(horizontal: 5.0),
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 5.0,
+                                      ),
                                     ),
-                                    Text(context.s.editGroupName,
-                                        style: TextStyle(color: Colors.white)),
+                                    Text(
+                                      context.s.editGroupName,
+                                      style: TextStyle(color: Colors.white),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -250,15 +257,19 @@ class _PodcastManageState extends State<PodcastManage>
                                             child: Text(
                                               context.s.cancel,
                                               style: TextStyle(
-                                                  color: Colors.grey[600]),
+                                                color: Colors.grey[600],
+                                              ),
                                             ),
                                           ),
                                           TextButton(
                                             onPressed: () {
                                               context.podcastState.removeGroup(
-                                                  groupIds[_index]);
+                                                groupIds[_index],
+                                              );
                                               if (_index ==
-                                                  context.podcastState.groupIds
+                                                  context
+                                                          .podcastState
+                                                          .groupIds
                                                           .length -
                                                       1) {
                                                 setState(() {
@@ -269,18 +280,20 @@ class _PodcastManageState extends State<PodcastManage>
                                             },
                                             child: Text(
                                               context.s.confirm,
-                                              style:
-                                                  TextStyle(color: Colors.red),
+                                              style: TextStyle(
+                                                color: Colors.red,
+                                              ),
                                             ),
-                                          )
+                                          ),
                                         ],
                                       );
                               },
                               child: Container(
                                 height: 30,
                                 decoration: BoxDecoration(
-                                    color: Colors.grey[700],
-                                    borderRadius: BorderRadius.circular(10.0)),
+                                  color: Colors.grey[700],
+                                  borderRadius: BorderRadius.circular(10.0),
+                                ),
                                 padding: EdgeInsets.symmetric(horizontal: 10),
                                 child: Row(
                                   children: <Widget>[
@@ -290,8 +303,10 @@ class _PodcastManageState extends State<PodcastManage>
                                       size: 15.0,
                                     ),
                                     SizedBox(width: 10),
-                                    Text(s.remove,
-                                        style: TextStyle(color: Colors.red)),
+                                    Text(
+                                      s.remove,
+                                      style: TextStyle(color: Colors.red),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -334,15 +349,16 @@ class _PodcastManageState extends State<PodcastManage>
           width: 50,
           height: 50,
           decoration: BoxDecoration(
-              color: context.accentColor,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey[700]!.withValues(alpha: 0.5),
-                  blurRadius: 1,
-                  offset: Offset(1, 1),
-                ),
-              ]),
+            color: context.primaryColor,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey[700]!.withValues(alpha: 0.5),
+                blurRadius: 1,
+                offset: Offset(1, 1),
+              ),
+            ],
+          ),
           alignment: Alignment.center,
           child: AnimatedIcon(
             color: Colors.white,
@@ -388,16 +404,14 @@ class _AddGroupState extends State<AddGroup> {
         statusBarColor: Colors.transparent,
         systemNavigationBarColor:
             Theme.of(context).brightness == Brightness.light
-                ? Color.fromRGBO(113, 113, 113, 1)
-                : Color.fromRGBO(5, 5, 5, 1),
+            ? Color.fromRGBO(113, 113, 113, 1)
+            : Color.fromRGBO(5, 5, 5, 1),
       ),
       child: SafeArea(
         top: false,
         child: AlertDialog(
           backgroundColor: context.accentBackgroundWeak,
-          shape: RoundedRectangleBorder(
-            borderRadius: context.radiusMedium,
-          ),
+          shape: RoundedRectangleBorder(borderRadius: context.radiusMedium),
           elevation: 1,
           contentPadding: EdgeInsets.symmetric(horizontal: 20),
           titlePadding: EdgeInsets.all(20),
@@ -405,22 +419,22 @@ class _AddGroupState extends State<AddGroup> {
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                s.cancel,
-                style: TextStyle(color: Colors.grey[600]),
-              ),
+              child: Text(s.cancel, style: TextStyle(color: Colors.grey[600])),
             ),
             TextButton(
               onPressed: () async {
                 if (_newGroup != null && _newGroup != "") {
-                  context.podcastState
-                      .addGroup(PodcastGroup.create(name: _newGroup!));
+                  context.podcastState.addGroup(
+                    PodcastGroup.create(name: _newGroup!),
+                  );
                   Navigator.of(context).pop();
                 }
               },
-              child:
-                  Text(s.confirm, style: TextStyle(color: context.accentColor)),
-            )
+              child: Text(
+                s.confirm,
+                style: TextStyle(color: context.primaryColor),
+              ),
+            ),
           ],
           title: SizedBox(width: context.width - 160, child: Text(s.newGroup)),
           content: Column(
@@ -433,12 +447,16 @@ class _AddGroupState extends State<AddGroup> {
                   hintStyle: TextStyle(fontSize: 18),
                   filled: true,
                   focusedBorder: UnderlineInputBorder(
-                    borderSide:
-                        BorderSide(color: context.accentColor, width: 2.0),
+                    borderSide: BorderSide(
+                      color: context.primaryColor,
+                      width: 2.0,
+                    ),
                   ),
                   enabledBorder: UnderlineInputBorder(
-                    borderSide:
-                        BorderSide(color: context.accentColor, width: 2.0),
+                    borderSide: BorderSide(
+                      color: context.primaryColor,
+                      width: 2.0,
+                    ),
                   ),
                 ),
                 cursorRadius: Radius.circular(2),

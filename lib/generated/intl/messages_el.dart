@@ -318,15 +318,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "newGroup": MessageLookupByLibrary.simpleMessage("Δημιουργία νέας ομάδας"),
     "newestFirst": MessageLookupByLibrary.simpleMessage("Νεότερα πρώτα"),
     "next": MessageLookupByLibrary.simpleMessage("Επόμενο"),
-    "noEpisodeDownload": MessageLookupByLibrary.simpleMessage(
-      "Δεν έχουν ληφθεί επεισόδια ακόμα",
-    ),
-    "noEpisodeFavorite": MessageLookupByLibrary.simpleMessage(
-      "Κανένα επεισοδίο δεν έχει επισημανθεί ακόμη ως αγαπημένο",
-    ),
-    "noEpisodeRecent": MessageLookupByLibrary.simpleMessage(
-      "Δεν έχουν βρεθεί επεισόδια ακόμα",
-    ),
     "noPodcastGroup": MessageLookupByLibrary.simpleMessage(
       "Κανένα podcast σε αυτή την ομάδα",
     ),
@@ -335,9 +326,6 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "notificaitonFatch": m14,
     "notificationNetworkError": m15,
-    "notificationSetting": MessageLookupByLibrary.simpleMessage(
-      "Πίνακας ειδοποιήσεων",
-    ),
     "notificationSubscribe": m16,
     "notificationSubscribeExisted": m17,
     "notificationSuccess": m18,
@@ -360,9 +348,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "playerHeightShort": MessageLookupByLibrary.simpleMessage("Χαμηλό"),
     "playerHeightTall": MessageLookupByLibrary.simpleMessage("Ψηλό"),
     "playing": MessageLookupByLibrary.simpleMessage("Αναπαραγωγή σε εξέλιξη "),
-    "playlistExisted": MessageLookupByLibrary.simpleMessage(
-      "Το όνομα λίστας υπάρχει",
-    ),
     "playlistNameEmpty": MessageLookupByLibrary.simpleMessage(
       "Το όνομα λίστας είναι κενό",
     ),
@@ -411,7 +396,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "refreshArtwork": MessageLookupByLibrary.simpleMessage(
       "Ενημέρωση γραφικών",
     ),
-    "refreshStarted": MessageLookupByLibrary.simpleMessage("Ανανέωση"),
     "remove": MessageLookupByLibrary.simpleMessage("Αφαίρεση"),
     "removeConfirm": MessageLookupByLibrary.simpleMessage(
       "Επιβεβαίωση κατάργησης",
@@ -443,9 +427,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "settings": MessageLookupByLibrary.simpleMessage("Ρυθμίσεις"),
     "settingsAccentColor": MessageLookupByLibrary.simpleMessage(
       "Χρώμα έμφασης",
-    ),
-    "settingsAccentColorDes": MessageLookupByLibrary.simpleMessage(
-      "Συμπερίληψη χρώματος επικάλυψης",
     ),
     "settingsAppIntro": MessageLookupByLibrary.simpleMessage(
       "Εισαγωγή εφαρμογής",
@@ -527,14 +508,6 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "settingsInfo": MessageLookupByLibrary.simpleMessage("Πληροφορίες"),
     "settingsInterface": MessageLookupByLibrary.simpleMessage("Διεπαφή"),
-    "settingsLanguages": MessageLookupByLibrary.simpleMessage("Γλώσσες"),
-    "settingsLanguagesDes": MessageLookupByLibrary.simpleMessage(
-      "Αλλαγή γλώσσας",
-    ),
-    "settingsLayout": MessageLookupByLibrary.simpleMessage("Διάταξη"),
-    "settingsLayoutDes": MessageLookupByLibrary.simpleMessage(
-      "Διάταξη εφαρμογής",
-    ),
     "settingsLibraries": MessageLookupByLibrary.simpleMessage("Βιβλιοθήκες"),
     "settingsLibrariesDes": MessageLookupByLibrary.simpleMessage(
       "Βιβλιοθήκες ανοιχτού κώδικα που χρησιμοποιούνται από την εφαρμογή",
@@ -557,23 +530,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "settingsNetworkCellular": MessageLookupByLibrary.simpleMessage(
       "Ερώτηση πριν τη χρήση δεδομένων",
     ),
-    "settingsNetworkCellularAuto": MessageLookupByLibrary.simpleMessage(
-      "Αυτόματη λήψη με χρήση δεδομένων",
-    ),
-    "settingsNetworkCellularAutoDes": MessageLookupByLibrary.simpleMessage(
-      "Μπορείς να ρυθμίσεις την αυτόματη λήψη podcast στη σελίδα διαχείρισης ομάδων",
-    ),
     "settingsNetworkCellularDes": MessageLookupByLibrary.simpleMessage(
       "Ερώτηση για επιβεβαίωση λήψης επεισοδίων κατά τη χρήση δεδομένων",
-    ),
-    "settingsPlayDes": MessageLookupByLibrary.simpleMessage(
-      "Λίστα και προβολή αναπαραγωγής",
-    ),
-    "settingsPlayerHeight": MessageLookupByLibrary.simpleMessage(
-      "Ύψος προβολής αναπαραγωγής",
-    ),
-    "settingsPlayerHeightDes": MessageLookupByLibrary.simpleMessage(
-      "Προσάρμοσε το ύψος της προβολής αναπαραγωγής εκεί που θέλεις",
     ),
     "settingsPopupMenu": MessageLookupByLibrary.simpleMessage(
       "Αναδυόμενο μενού επεισοδίων",
@@ -582,10 +540,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "Αλλαγή αναδυόμενου μενού επεισοδίων",
     ),
     "settingsPrefrence": MessageLookupByLibrary.simpleMessage("Προτίμηση"),
-    "settingsRealDark": MessageLookupByLibrary.simpleMessage("Μαύρο (AMOLED)"),
-    "settingsRealDarkDes": MessageLookupByLibrary.simpleMessage(
-      "Ενεργοποίησε αν νομίζεις ότι η νύχτα δεν είναι σκοτεινή αρκετά",
-    ),
     "settingsRewindSec": MessageLookupByLibrary.simpleMessage(
       "Δευτερολέπτα γυρίσματος πίσω",
     ),
@@ -611,9 +565,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "settingsSpeedsDes": MessageLookupByLibrary.simpleMessage(
       "Επεξεργασία διαθέσιμων ταχυτήτων",
     ),
-    "settingsStorageDes": MessageLookupByLibrary.simpleMessage(
-      "Διαχείριση χώρου αποθήκευσης λήψεων και προσωρινής μνήμης",
-    ),
     "settingsSyncing": MessageLookupByLibrary.simpleMessage("Συγχρονισμός"),
     "settingsSyncingDes": MessageLookupByLibrary.simpleMessage(
       "Ανανέωση podcast στο παρασκήνιο",
@@ -625,12 +576,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "Πρέπει να πατήσεις παρατεταμένα για το άνοιγμα της σελίδας επεισοδίου",
     ),
     "settingsTheme": MessageLookupByLibrary.simpleMessage("Θέμα"),
-    "settingsUpdateInterval": MessageLookupByLibrary.simpleMessage(
-      "Χρόνος μεταξύ ενημερώσεων",
-    ),
-    "settingsUpdateIntervalDes": MessageLookupByLibrary.simpleMessage(
-      "Προεπιλογή 24 ώρες ",
-    ),
     "share": MessageLookupByLibrary.simpleMessage("Κοινοποίηση"),
     "showNotesFonts": MessageLookupByLibrary.simpleMessage(
       "Προβολή γραμματοσειράς σημειώσεων",
@@ -717,8 +662,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "updateFailed": MessageLookupByLibrary.simpleMessage(
       "Ενημέρωση ανεπιτυχείς, σφάλμα δικτύου",
     ),
-    "useWallpaperTheme": MessageLookupByLibrary.simpleMessage(""),
-    "useWallpaperThemeDes": MessageLookupByLibrary.simpleMessage(""),
     "username": MessageLookupByLibrary.simpleMessage("Όνομα χρήστη"),
     "usernameRequired": MessageLookupByLibrary.simpleMessage(
       "Το όνομα χρήστη είναι υποχρεωτικό",

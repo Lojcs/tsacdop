@@ -4,8 +4,8 @@ import 'package:auto_animated/auto_animated.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
+import '../type/tab_configuration.dart';
 import '../util/extension_helper.dart';
 import '../util/selection_controller.dart';
 import 'action_bar.dart';
@@ -13,15 +13,28 @@ import 'custom_widget.dart';
 import '../episodes/episode_card.dart';
 
 enum EpisodeGridLayout {
-  small(1, 120, 134),
-  medium(1.5, 150, 201),
-  large(4, 300, 402);
+  small(1, 120, 134, "small"),
+  medium(1.5, 150, 201, "medium"),
+  large(4, 300, 402, "large");
 
-  const EpisodeGridLayout(this.ratio, this.minWidth, this.targetWidth);
+  const EpisodeGridLayout(
+    this.ratio,
+    this.minWidth,
+    this.targetWidth,
+    this.serial,
+  );
 
   final double ratio;
   final double minWidth;
   final double targetWidth;
+  final String serial;
+
+  factory EpisodeGridLayout.fromSerial(String serial) => switch (serial) {
+    "small" => small,
+    "medium" => medium,
+    "large" => large,
+    _ => medium,
+  };
 
   /// The number of cards to display per row ([maxWidth] includes spacing)
   int getHorizontalCount(double maxWidth) {
@@ -48,14 +61,11 @@ class InteractiveEpisodeGrid extends StatefulWidget {
   final Widget? noEpisodesWidget;
 
   /// Slivers to display in addition to the 3 included here
-  final List<Widget>? additionalSliversList;
+  final List<Widget> additionalSliversList;
 
   /// Indicies to insert included slivers at the [additionalSliversList]
-  final ({
-    int actionBarIndex,
-    int loadingIndicatorIndex,
-    int gridIndex
-  }) sliverInsertIndicies;
+  final ({int actionBarIndex, int loadingIndicatorIndex, int gridIndex})
+  sliverInsertIndicies;
 
   /// Prefer episode image over podcast image for card avatar image
   final bool preferEpisodeImage;
@@ -87,46 +97,13 @@ class InteractiveEpisodeGrid extends StatefulWidget {
   /// Sorters to show in the second row of the action bar
   final List<Sorter> actionBarSortByItems;
 
-  /// Default podcast group
-  final String? actionBarGroupId;
-
-  /// Default podcast
-  final String? actionBarPodcastId;
-
-  /// Default sorter
-  final Sorter actionBarSortBy;
-
-  /// Default filter new
-  final bool? actionBarFilterNew;
-
-  /// Default filter liked
-  final bool? actionBarFilterLiked;
-
-  /// Default filter played
-  final bool? actionBarFilterPlayed;
-
-  /// Set to override default even if provided value is null.
-  final bool actionBarFilterPlayedOverride;
-
-  /// Default filter downloaded
-  final bool? actionBarFilterDownloaded;
-
-  /// Default filter display version
-  final bool? actionBarFilterDisplayVersion;
-
-  /// Default sort order
-  final SortOrder actionBarSortOrder;
-
-  /// Default layout (overrides stored value)
-  final EpisodeGridLayout? layout;
-
-  /// KeyValueStorage key for layout
-  final String? layoutKey;
+  /// Default action bar configuration.
+  final ActionBarConfiguration actionBarConfiguration;
 
   const InteractiveEpisodeGrid({
     super.key,
     this.noEpisodesWidget,
-    this.additionalSliversList,
+    this.additionalSliversList = const [],
     this.sliverInsertIndicies = (
       actionBarIndex: 0,
       loadingIndicatorIndex: 1,
@@ -158,26 +135,17 @@ class InteractiveEpisodeGrid extends StatefulWidget {
       ActionBarFilterDownloaded(1, 4),
       ActionBarFilterLiked(1, 5),
       ActionBarSwitchLayout(1, 6),
-      ActionBarButtonRefresh(1, 7),
+      ActionBarButtonSync(1, 7),
     ],
     this.actionBarSortByItems = const [
       Sorter.pubDate,
       Sorter.enclosureSize,
       Sorter.enclosureDuration,
-      Sorter.random
+      Sorter.downloadDate,
+      Sorter.likedDate,
+      Sorter.random,
     ],
-    this.actionBarGroupId,
-    this.actionBarPodcastId,
-    this.actionBarSortBy = Sorter.pubDate,
-    this.actionBarFilterNew,
-    this.actionBarFilterLiked,
-    this.actionBarFilterPlayed,
-    this.actionBarFilterPlayedOverride = false,
-    this.actionBarFilterDownloaded,
-    this.actionBarFilterDisplayVersion = false,
-    this.actionBarSortOrder = SortOrder.desc,
-    this.layout,
-    this.layoutKey,
+    this.actionBarConfiguration = const ActionBarConfiguration(),
   });
 
   @override
@@ -193,8 +161,8 @@ class _InteractiveEpisodeGridState extends State<InteractiveEpisodeGrid> {
   /// Function to get episodes
   Future<List<int>> Function(int count, {int offset}) _getEpisodeIds =
       (int _, {int offset = 0}) async {
-    return <int>[];
-  };
+        return <int>[];
+      };
 
   /// Episodes loaded first time.
   int _top = 108;
@@ -203,15 +171,13 @@ class _InteractiveEpisodeGridState extends State<InteractiveEpisodeGrid> {
   bool _loadMore = false;
 
   /// Layout of the grid
-  late EpisodeGridLayout? _layout = widget.layout;
-
-  /// Default value for filter liked
-  bool? _actionBarFilterLiked;
+  late EpisodeGridLayout _layout = widget.actionBarConfiguration.layout;
 
   /// Stop animating after first scroll
   bool _scroll = false;
 
   List<Widget>? slivers;
+  bool update = true;
 
   Future<void>? _delayedRefreshFuture;
   @override
@@ -219,8 +185,10 @@ class _InteractiveEpisodeGridState extends State<InteractiveEpisodeGrid> {
     super.initState();
     if (widget.refreshNotifier != null) {
       widget.refreshNotifier!.addListener(() {
-        _delayedRefreshFuture ??=
-            Future.delayed(Duration(milliseconds: 500), _onNotified);
+        _delayedRefreshFuture ??= Future.delayed(
+          Duration(milliseconds: 500),
+          _onNotified,
+        );
       });
     }
   }
@@ -246,22 +214,72 @@ class _InteractiveEpisodeGridState extends State<InteractiveEpisodeGrid> {
   @override
   void didUpdateWidget(covariant InteractiveEpisodeGrid oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.layout != _layout && widget.layout != null) {
-      _layout = widget.layout!;
+    if (widget.actionBarConfiguration.layout != _layout) {
+      _layout = widget.actionBarConfiguration.layout;
+      update = true;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    bool update = true;
+    slivers ??= [...widget.additionalSliversList]
+      ..insert(
+        widget.sliverInsertIndicies.actionBarIndex,
+        ActionBar(
+          onConfigurationChanged: (configuration) async {
+            _getEpisodeIds = (count, {offset = -1}) =>
+                context.episodeState.getEpisodesWithConfiguration(
+                  configuration,
+                  count,
+                  offset: offset,
+                );
+            _episodeIds = await _getEpisodeIds(_top);
+            if (mounted && context.mounted) {
+              SelectionController? selectionController =
+                  Provider.of<SelectionController?>(context, listen: false);
+              if (selectionController != null) {
+                selectionController.setSelectableEpisodes(_episodeIds);
+              }
+              setState(() {});
+            }
+            update = true;
+          },
+          sendInitialConfig: true,
+          onLayoutChanged: (layout) {
+            _layout = layout;
+            update = true;
+            if (mounted) setState(() {});
+          },
+          widgetsFirstRow: widget.actionBarWidgetsFirstRow,
+          widgetsSecondRow: widget.actionBarWidgetsSecondRow,
+          sortByItems: widget.actionBarSortByItems,
+          configuration: widget.actionBarConfiguration,
+        ),
+      )
+      ..insert(
+        widget.sliverInsertIndicies.loadingIndicatorIndex,
+        SliverAppBar(
+          pinned: true,
+          leading: Center(),
+          toolbarHeight: 2,
+          backgroundColor: Colors.transparent,
+          scrolledUnderElevation: 0,
+          flexibleSpace: _loadMore
+              ? LinearProgressIndicator(backgroundColor: Colors.transparent)
+              : Center(),
+        ),
+      )
+      ..insert(widget.sliverInsertIndicies.gridIndex, Center());
+    if (update) updateGrid();
+    update = false;
     return NotificationListener<ScrollNotification>(
       onNotification: (scrollInfo) {
         if (scrollInfo.metrics.pixels >=
                 scrollInfo.metrics.maxScrollExtent - (context.height * 2) &&
             _episodeIds.length == _top) {
           if (!_loadMore) {
-            setState(() => _loadMore = true);
             Future.microtask(() async {
+              setState(() => _loadMore = true);
               int newCount = 9 * (_top ~/ 36);
               _episodeIds.addAll(await _getEpisodeIds(newCount, offset: _top));
               _top = _top + newCount;
@@ -269,9 +287,12 @@ class _InteractiveEpisodeGridState extends State<InteractiveEpisodeGrid> {
                 SelectionController? selectionController =
                     Provider.of<SelectionController?>(context, listen: false);
                 if (selectionController != null) {
-                  selectionController.setSelectableEpisodes(_episodeIds,
-                      compatible: true);
+                  selectionController.setSelectableEpisodes(
+                    _episodeIds,
+                    compatible: true,
+                  );
                 }
+                update = true;
                 setState(() => _loadMore = false);
               }
             });
@@ -284,100 +305,19 @@ class _InteractiveEpisodeGridState extends State<InteractiveEpisodeGrid> {
       },
       child: ScrollConfiguration(
         behavior: NoGrowBehavior(),
-        child: FutureBuilder<(EpisodeGridLayout, bool?)>(
-          future: getLayoutAndShowPlayed(
-              layoutKey: widget.layoutKey ?? podcastLayoutKey),
-          builder: (context, snapshot) {
-            update |= slivers == null;
-            if (snapshot.hasData) {
-              if (_layout == null) {
-                if (widget.layoutKey != null) {
-                  _layout = snapshot.data!.$1;
-                } else if (_layout == null) {
-                  _layout = EpisodeGridLayout.medium;
-                } else {
-                  update = true;
-                }
-              }
-              if (widget.actionBarFilterPlayedOverride ||
-                  widget.actionBarFilterPlayed != null) {
-                _actionBarFilterLiked = widget.actionBarFilterPlayed;
-              } else if (_actionBarFilterLiked == null) {
-                _actionBarFilterLiked = snapshot.data!.$2;
-              } else {
-                update = true;
-              }
-            }
-            if (update) buildSlivers();
-            return CustomScrollView(slivers: slivers!);
-          },
-        ),
+        child: CustomScrollView(slivers: slivers!),
       ),
     );
   }
 
-  void buildSlivers() {
-    slivers = widget.additionalSliversList?.toList() ?? [];
-    slivers!.insert(
-      widget.sliverInsertIndicies.actionBarIndex,
-      _layout != null
-          ? ActionBar(
-              onGetEpisodeIdsChanged: (getEpisodes) async {
-                _getEpisodeIds = getEpisodes;
-                _episodeIds = await _getEpisodeIds(_top);
-                if (mounted && context.mounted) {
-                  SelectionController? selectionController =
-                      Provider.of<SelectionController?>(context, listen: false);
-                  if (selectionController != null) {
-                    selectionController.setSelectableEpisodes(_episodeIds);
-                  }
-                  setState(() {});
-                }
-              },
-              onLayoutChanged: (layout) {
-                _layout = layout;
-                if (mounted) setState(() {});
-              },
-              widgetsFirstRow: widget.actionBarWidgetsFirstRow,
-              widgetsSecondRow: widget.actionBarWidgetsSecondRow,
-              sortByItems: widget.actionBarSortByItems,
-              group: widget.actionBarGroupId,
-              podcastId: widget.actionBarPodcastId,
-              sortBy: widget.actionBarSortBy,
-              filterNew: widget.actionBarFilterNew,
-              filterLiked: widget.actionBarFilterLiked,
-              filterPlayed: widget.actionBarFilterPlayed,
-              filterDownloaded: widget.actionBarFilterDownloaded,
-              filterDisplayVersion: widget.actionBarFilterDisplayVersion,
-              sortOrder: widget.actionBarSortOrder,
-              layout: _layout!,
-            )
-          : SliverToBoxAdapter(),
-    );
-    slivers!.insert(
-      widget.sliverInsertIndicies.loadingIndicatorIndex,
-      SliverAppBar(
-        pinned: true,
-        leading: Center(),
-        toolbarHeight: 2,
-        backgroundColor: Colors.transparent,
-        scrolledUnderElevation: 0,
-        flexibleSpace: _loadMore
-            ? LinearProgressIndicator(
-                backgroundColor: Colors.transparent,
-              )
-            : Center(),
-      ),
-    );
-    slivers!.insert(
-      widget.sliverInsertIndicies.gridIndex,
-      widget.showGrid
-          ? _episodeIds.isNotEmpty && _layout != null
+  void updateGrid() {
+    slivers![widget.sliverInsertIndicies.gridIndex] = widget.showGrid
+        ? _episodeIds.isNotEmpty
               ? EpisodeGrid(
                   episodeIds: _episodeIds,
                   initNum: widget.initNum,
                   preferEpisodeImage: widget.preferEpisodeImage,
-                  layout: _layout!,
+                  layout: _layout,
                   openPodcast: widget.openPodcast,
                   selectable: widget.selectable,
                   externallyRefreshed: true,
@@ -388,8 +328,7 @@ class _InteractiveEpisodeGridState extends State<InteractiveEpisodeGrid> {
                     child: widget.noEpisodesWidget,
                   ),
                 )
-          : SliverToBoxAdapter(),
-    );
+        : SliverToBoxAdapter();
   }
 }
 

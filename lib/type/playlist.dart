@@ -3,14 +3,15 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import '../generated/l10n.dart';
-import '../local_storage/sqflite_localpodcast.dart';
 import '../state/audio_state.dart';
 import '../state/episode_state.dart';
 import '../state/podcast_state.dart';
+import '../state/settings/setting_state.dart';
 import '../util/extension_helper.dart';
-import '../widgets/action_bar.dart';
 
 enum EpisodeCollision { keepExisting, replace, ignore }
+
+const mainQueueId = "44871ae2-af88-4084-90da-4aa6fe11c566";
 
 class Playlist {
   /// Playlist name. the default playlist is named "Playlist".
@@ -21,6 +22,9 @@ class Playlist {
 
   /// Wheter playlist is from local files.
   final bool isLocal;
+
+  /// Wheter to consume the playlist as it is played.
+  bool isQueue;
 
   /// Episode url list for playlist.
   final List<int> episodeIds;
@@ -37,27 +41,32 @@ class Playlist {
   bool contains(int episodeId) => episodeIds.contains(episodeId);
   int operator [](int i) => episodeIds[i];
 
-  bool get isQueue => name == 'Queue';
-
-  Playlist(this.name, {String? id, this.isLocal = false, List<int>? episodeIds})
-      : id = id ?? Uuid().v4(),
-        episodeIds = episodeIds ?? [],
-        assert(name != '');
+  Playlist(
+    this.name, {
+    String? id,
+    this.isLocal = false,
+    bool? isQueue,
+    List<int>? episodeIds,
+  }) : id = id ?? Uuid().v4(),
+       isQueue = !isLocal && (isQueue ?? (name == "Queue")),
+       episodeIds = episodeIds ?? [],
+       assert(name != '');
 
   Map<String, Object?> toJson() {
     return {
       'name': name,
       'id': id,
       'isLocal': isLocal,
-      'episodeIdList': episodeIds
+      'episodeIdList': episodeIds,
     };
   }
 
   Playlist.fromJson(Map<String, dynamic> json)
-      : name = json['name'] as String,
-        id = json['id'] as String,
-        isLocal = json['isLocal'] == true,
-        episodeIds = List<int>.from(json['episodeIdList']);
+    : name = json['name'] as String,
+      id = json['id'] as String,
+      isLocal = json['isLocal'] == true,
+      isQueue = json['name'] == "Queue",
+      episodeIds = List<int>.from(json['episodeIdList']);
 
   /// Caches [episodeIds] into [eState] and removes missing ids from the playlist.
   Future<bool> cachePlaylist(EpisodeState eState) async {
@@ -70,8 +79,11 @@ class Playlist {
 
   /// Adds [newEpisodes] to the playlist at [index].
   /// Don't directly use on playlists that might be live. Use [AudioState.addToPlaylist] instead.
-  void addEpisodes(List<int> newEpisodes, int index,
-      {EpisodeCollision ifExists = EpisodeCollision.ignore}) {
+  void addEpisodes(
+    List<int> newEpisodes,
+    int index, {
+    EpisodeCollision ifExists = EpisodeCollision.ignore,
+  }) {
     _generation++;
     switch (ifExists) {
       case EpisodeCollision.keepExisting:
@@ -93,8 +105,12 @@ class Playlist {
   /// Removes [number] episodes at [index] from playlist.
   /// Don't directly use on playlists that might be live. Use [AudioState.removeFromPlaylistAt] instead.
   /// [eState] is used to delete local episodes.
-  void removeEpisodesAt(EpisodeState eState, int index,
-      {int number = 1, bool delLocal = true}) {
+  void removeEpisodesAt(
+    EpisodeState eState,
+    int index, {
+    int number = 1,
+    bool delLocal = true,
+  }) {
     _generation++;
     int end = index + number;
     List<int> delIds = episodeIds.getRange(index, end).toList();
@@ -119,8 +135,11 @@ class Playlist {
     episodeIds.clear();
   }
 
-  late final MediaItem mediaItem =
-      MediaItem(id: "lst:$id", title: name, playable: false);
+  late final MediaItem mediaItem = MediaItem(
+    id: "lst:$id",
+    title: name,
+    playable: false,
+  );
 
   @override
   bool operator ==(Object other) {
@@ -139,40 +158,30 @@ class BrowsableLibrary {
   static const groupsId = '7bf8bdcf-0283-4386-ac6a-956284358200';
   static const recentsId = 'b11447c7-34cb-41b1-b587-b40c64c7a544';
 
-  BuildContext context;
-
-  late final EpisodeState episodeState = context.episodeState;
-  late final AudioPlayerNotifier audioState = context.audioState;
-  late final PodcastState podcastState = context.podcastState;
-  late final S s = S.current;
-  BrowsableLibrary(this.context);
+  final SettingState settingState;
+  final EpisodeState episodeState;
+  final AudioState audioState;
+  final PodcastState podcastState;
+  BrowsableLibrary(BuildContext context)
+    : settingState = context.superSettingState,
+      episodeState = context.episodeState,
+      audioState = context.audioState,
+      podcastState = context.podcastState;
 
   late Map<String, List<MediaItem>> root = _basicRoot;
 
   Map<String, List<MediaItem>> get _basicRoot => {
-        AudioService.browsableRootId: [
-          MediaItem(
-            id: playlistsId,
-            title: s.playlists,
-            playable: false,
-          ),
-          MediaItem(
-            id: recentsId,
-            title: s.homeTabMenuRecent,
-            playable: false,
-          ),
-          MediaItem(
-            id: podcastsId,
-            title: s.podcast(2),
-            playable: false,
-          ),
-          MediaItem(
-            id: groupsId,
-            title: s.groups(2),
-            playable: false,
-          ),
-        ],
-      };
+    AudioService.browsableRootId: [
+      MediaItem(id: playlistsId, title: S.current.playlists, playable: false),
+      MediaItem(
+        id: recentsId,
+        title: S.current.homeTabMenuRecent,
+        playable: false,
+      ),
+      MediaItem(id: podcastsId, title: S.current.podcast(2), playable: false),
+      MediaItem(id: groupsId, title: S.current.groups(2), playable: false),
+    ],
+  };
 
   void reset() => root = _basicRoot;
 
@@ -181,13 +190,11 @@ class BrowsableLibrary {
       List<String> splitId = parentMediaId.split(':');
       switch (splitId) {
         case [recentsId]:
-          final (_, showPlayed) = await getLayoutAndShowPlayed();
-          final episodeIds = await episodeState.getEpisodes(
-              sortBy: Sorter.pubDate,
-              sortOrder: SortOrder.desc,
-              limit: 108,
-              offset: 0,
-              filterPlayed: showPlayed);
+          final configuration = settingState.actionBarAndroidAuto.get();
+          final episodeIds = await episodeState.getEpisodesWithConfiguration(
+            configuration,
+            108,
+          );
           root[parentMediaId] = episodeIds.mapIndexed((i, eid) {
             final episode = episodeState[eid];
             final encodedId = "epi:rec:$parentMediaId:$i:${episode.id}";
@@ -200,9 +207,9 @@ class BrowsableLibrary {
               .toList();
           break;
         case [podcastsId]:
-          final podcastIds = await context.podcastState.getPodcasts();
+          final podcastIds = await podcastState.getPodcasts();
           root[parentMediaId] = podcastIds
-              .map((podcast) => context.podcastState[podcast].mediaItem)
+              .map((podcast) => podcastState[podcast].mediaItem)
               .toList();
           break;
         case [groupsId]:
@@ -211,14 +218,11 @@ class BrowsableLibrary {
               .toList();
           break;
         case ['grp', final id, ...]:
-          final (_, showPlayed) = await getLayoutAndShowPlayed();
-          final episodeIds = await episodeState.getEpisodes(
-              feedIds: podcastState.getGroupById(id).podcastIds,
-              sortBy: Sorter.pubDate,
-              sortOrder: SortOrder.desc,
-              limit: 108,
-              offset: 0,
-              filterPlayed: showPlayed);
+          final configuration = settingState.actionBarAndroidAuto.get();
+          final episodeIds = await episodeState.getEpisodesWithConfiguration(
+            configuration.copyWith(groupId: id),
+            108,
+          );
           root[parentMediaId] = episodeIds.mapIndexed((i, eid) {
             final episode = episodeState[eid];
             final encodedId = "epi:$parentMediaId:$i:${episode.id}";
@@ -226,14 +230,11 @@ class BrowsableLibrary {
           }).toList();
           break;
         case ['pod', final id, ...]:
-          final (_, showPlayed) = await getLayoutAndShowPlayed();
-          final episodeIds = await episodeState.getEpisodes(
-              feedIds: [id],
-              sortBy: Sorter.pubDate,
-              sortOrder: SortOrder.desc,
-              limit: 108,
-              offset: 0,
-              filterPlayed: showPlayed);
+          final configuration = settingState.actionBarAndroidAuto.get();
+          final episodeIds = await episodeState.getEpisodesWithConfiguration(
+            configuration.copyWith(podcastId: id),
+            108,
+          );
           root[parentMediaId] = episodeIds.mapIndexed((i, eid) {
             final episode = episodeState[eid];
             final encodedId = "epi:$parentMediaId:$i:${episode.id}";
@@ -241,8 +242,9 @@ class BrowsableLibrary {
           }).toList();
           break;
         case ['lst', final id, ...]:
-          final playlist =
-              audioState.playlists.firstWhere((playlist) => playlist.id == id);
+          final playlist = audioState.playlists.firstWhere(
+            (playlist) => playlist.id == id,
+          );
           await playlist.cachePlaylist(episodeState);
           root[parentMediaId] = playlist.episodeIds.mapIndexed((i, eid) {
             final episode = episodeState[eid];
@@ -254,9 +256,11 @@ class BrowsableLibrary {
           final List<int> episodeIds = root[parentId]!
               .map((mItem) => int.parse(mItem.id.split(':').last))
               .toList();
-          final playlist =
-              Playlist(s.homeTabMenuRecent, episodeIds: episodeIds);
-          audioState.addPlaylist(playlist);
+          final playlist = Playlist(
+            S.current.homeTabMenuRecent,
+            episodeIds: episodeIds,
+          );
+          await audioState.addPlaylist(playlist);
           await audioState.playlistLoad(playlist, index: int.parse(index));
           break;
         case ['epi', 'grp', final parentId, final index, ...]:
@@ -266,9 +270,11 @@ class BrowsableLibrary {
           final groupTitle = root[AudioService.browsableRootId]!
               .firstWhere((mItem) => mItem.id == parentId)
               .title;
-          final playlist =
-              Playlist("${s.groups(1)}: $groupTitle", episodeIds: episodeIds);
-          audioState.addPlaylist(playlist);
+          final playlist = Playlist(
+            "${S.current.groups(1)}: $groupTitle",
+            episodeIds: episodeIds,
+          );
+          await audioState.addPlaylist(playlist);
           await audioState.playlistLoad(playlist, index: int.parse(index));
           break;
         case ['epi', 'pod', final parentId, final index, ...]:
@@ -278,14 +284,17 @@ class BrowsableLibrary {
           final podcastTitle = root[AudioService.browsableRootId]!
               .firstWhere((mItem) => mItem.id == parentId)
               .title;
-          final playlist = Playlist("${s.podcast(1)}: $podcastTitle",
-              episodeIds: episodeIds);
-          audioState.addPlaylist(playlist);
+          final playlist = Playlist(
+            "${S.current.podcast(1)}: $podcastTitle",
+            episodeIds: episodeIds,
+          );
+          await audioState.addPlaylist(playlist);
           await audioState.playlistLoad(playlist, index: int.parse(index));
           break;
         case ['epi', 'lst', final parentId, final index, ...]:
-          final playlist = audioState.playlists
-              .firstWhere((playlist) => playlist.id == parentId);
+          final playlist = audioState.playlists.firstWhere(
+            (playlist) => playlist.id == parentId,
+          );
           await audioState.playlistLoad(playlist, index: int.parse(index));
           break;
       }

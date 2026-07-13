@@ -18,28 +18,36 @@ class EpisodeActionBar extends StatefulWidget {
 
   /// Hides the avatar image
   final bool hide;
-  const EpisodeActionBar(this.episodeId,
-      {this.avatarKey, this.heartKey, this.hide = false, super.key});
+  const EpisodeActionBar(
+    this.episodeId, {
+    this.avatarKey,
+    this.heartKey,
+    this.hide = false,
+    super.key,
+  });
   @override
   EpisodeActionBarState createState() => EpisodeActionBarState();
 }
 
 class EpisodeActionBarState extends State<EpisodeActionBar> {
-  late EpisodeState episodeState =
-      Provider.of<EpisodeState>(context, listen: false);
+  late EpisodeState episodeState = Provider.of<EpisodeState>(
+    context,
+    listen: false,
+  );
 
   /// Only use this for immutable properties or in callbacks.
   EpisodeBrief get episodeItem => episodeState[widget.episodeId];
   @override
   Widget build(BuildContext context) {
-    final audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
+    final audio = Provider.of<AudioState>(context, listen: false);
     final episodeState = Provider.of<EpisodeState>(context, listen: false);
     final s = context.s;
     return Container(
       height: 50.0,
       decoration: BoxDecoration(
-        color:
-            context.realDark ? context.surface : episodeItem.cardColor(context),
+        color: context.trueBlack
+            ? context.surface
+            : episodeItem.cardColor(context),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
@@ -83,8 +91,9 @@ class EpisodeActionBarState extends State<EpisodeActionBar> {
                             )
                           : Icon(
                               Icons.favorite_border,
-                              color: Colors.grey[
-                                  context.brightness == Brightness.light
+                              color:
+                                  Colors.grey[context.brightness ==
+                                          Brightness.light
                                       ? 700
                                       : 500],
                             ),
@@ -95,8 +104,10 @@ class EpisodeActionBarState extends State<EpisodeActionBar> {
                       } else {
                         episodeState.setLiked([widget.episodeId]);
                         OverlayEntry overlayEntry;
-                        overlayEntry =
-                            createOverlayEntry(context, leftOffset: 50);
+                        overlayEntry = createOverlayEntry(
+                          context,
+                          leftOffset: 50,
+                        );
                         Overlay.of(context).insert(overlayEntry);
                         await Future.delayed(Duration(seconds: 2));
                         overlayEntry.remove();
@@ -105,27 +116,27 @@ class EpisodeActionBarState extends State<EpisodeActionBar> {
                   ),
                   DownloadButton(episodeId: widget.episodeId),
                   _buttonOnMenu(
-                    child: Selector<AudioPlayerNotifier, List<int?>>(
+                    child: Selector<AudioState, List<int?>>(
                       selector: (_, audio) => audio.playlist.episodeIds,
                       builder: (_, data, __) => data.contains(widget.episodeId)
                           ? Icon(
                               Icons.playlist_add_check,
-                              color: context.accentColor,
+                              color: context.primaryColor,
                             )
                           : Icon(
                               Icons.playlist_add,
-                              color: Colors.grey[
-                                  context.brightness == Brightness.light
+                              color:
+                                  Colors.grey[context.brightness ==
+                                          Brightness.light
                                       ? 700
                                       : 500],
                             ),
                     ),
                     onTap: () async {
-                      final inPlaylist = Provider.of<AudioPlayerNotifier>(
-                              context,
-                              listen: false)
-                          .playlist
-                          .contains(widget.episodeId);
+                      final inPlaylist = Provider.of<AudioState>(
+                        context,
+                        listen: false,
+                      ).playlist.contains(widget.episodeId);
                       if (inPlaylist) {
                         await audio.removeFromPlaylist([widget.episodeId]);
                         await Fluttertoast.showToast(
@@ -150,17 +161,20 @@ class EpisodeActionBarState extends State<EpisodeActionBar> {
                         builder: (context, value, _) => value
                             ? CustomPaint(
                                 size: Size(25, 20),
-                                painter: ListenedAllPainter(context.accentColor,
-                                    stroke: 2.0),
+                                painter: ListenedAllPainter(
+                                  context.primaryColor,
+                                  stroke: 2.0,
+                                ),
                               )
                             : CustomPaint(
                                 size: Size(25, 20),
                                 painter: MarkListenedPainter(
-                                    Colors.grey[
-                                        context.brightness == Brightness.light
-                                            ? 700
-                                            : 500]!,
-                                    stroke: 2.0),
+                                  Colors.grey[context.brightness ==
+                                          Brightness.light
+                                      ? 700
+                                      : 500]!,
+                                  stroke: 2.0,
+                                ),
                               ),
                       ),
                     ),
@@ -180,16 +194,18 @@ class EpisodeActionBarState extends State<EpisodeActionBar> {
               ),
             ),
           ),
-          Selector<AudioPlayerNotifier, (int?, bool)>(
+          Selector<AudioState, (int?, bool)>(
             selector: (_, audio) => (audio.episodeId, audio.playerRunning),
             builder: (_, data, __) {
               return (widget.episodeId == data.$1 && data.$2)
                   ? Padding(
                       padding: EdgeInsets.only(right: 30),
                       child: SizedBox(
-                          width: 20,
-                          height: 15,
-                          child: WaveLoader(color: context.accentColor)))
+                        width: 20,
+                        height: 15,
+                        child: WaveLoader(color: context.primaryColor),
+                      ),
+                    )
                   : Material(
                       color: Colors.transparent,
                       child: InkWell(
@@ -208,14 +224,14 @@ class EpisodeActionBarState extends State<EpisodeActionBar> {
                               Text(
                                 s.play.toUpperCase(),
                                 style: TextStyle(
-                                  color: context.accentColor,
+                                  color: context.primaryColor,
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               Icon(
                                 Icons.play_arrow,
-                                color: context.accentColor,
+                                color: context.primaryColor,
                               ),
                             ],
                           ),
@@ -230,14 +246,16 @@ class EpisodeActionBarState extends State<EpisodeActionBar> {
   }
 
   Widget _buttonOnMenu({Widget? child, VoidCallback? onTap}) => Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          child: SizedBox(
-            height: 50,
-            child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 15.0), child: child),
-          ),
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: onTap,
+      child: SizedBox(
+        height: 50,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 15.0),
+          child: child,
         ),
-      );
+      ),
+    ),
+  );
 }

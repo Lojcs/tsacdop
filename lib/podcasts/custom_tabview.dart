@@ -110,7 +110,7 @@ class _CustomTabsState extends State<CustomTabView>
             unselectedLabelColor: Colors.grey[700],
             indicator: BoxDecoration(
               borderRadius: BorderRadius.all(Radius.circular(15)),
-              color: context.accentColor,
+              color: context.primaryColor,
             ),
             tabs: List.generate(
               widget.itemCount,

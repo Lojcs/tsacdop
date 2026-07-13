@@ -27,15 +27,16 @@ class _DownloadButtonState extends State<DownloadButton> {
   }
 
   Widget _buttonOnMenu(Widget widget, Function() onTap) => Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          child: Container(
-              height: 50.0,
-              padding: EdgeInsets.symmetric(horizontal: 15.0),
-              child: widget),
-        ),
-      );
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: onTap,
+      child: Container(
+        height: 50.0,
+        padding: EdgeInsets.symmetric(horizontal: 15.0),
+        child: widget,
+      ),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -52,10 +53,12 @@ class _DownloadButtonState extends State<DownloadButton> {
               duration: Duration(seconds: 1),
               curve: Curves.ease,
               decoration: BoxDecoration(
-                  color: context.accentColor,
-                  borderRadius: BorderRadius.all(Radius.circular(15.0))),
+                color: context.primaryColor,
+                borderRadius: BorderRadius.all(Radius.circular(15.0)),
+              ),
               height: 20.0,
-              width: (task?.status == DownloadTaskStatus.running ||
+              width:
+                  (task?.status == DownloadTaskStatus.running ||
                       task?.status == DownloadTaskStatus.enqueued)
                   ? 50.0
                   : 0,
@@ -78,22 +81,23 @@ class _DownloadButtonState extends State<DownloadButton> {
     switch (task?.status) {
       case null || DownloadTaskStatus.undefined:
         return _buttonOnMenu(
-            Center(
-              child: SizedBox(
-                height: 20,
-                width: 20,
-                child: CustomPaint(
-                  painter: DownloadPainter(
-                    color: Colors.grey[
-                        context.brightness == Brightness.light ? 700 : 500],
-                    fraction: 0,
-                    progressColor: context.accentColor,
-                  ),
+          Center(
+            child: SizedBox(
+              height: 20,
+              width: 20,
+              child: CustomPaint(
+                painter: DownloadPainter(
+                  color: Colors
+                      .grey[context.brightness == Brightness.light ? 700 : 500],
+                  fraction: 0,
+                  progressColor: context.primaryColor,
                 ),
               ),
             ),
-            () => context.downloadState
-                .requestDownload(context, [widget.episodeId]));
+          ),
+          () =>
+              context.downloadState.manualDownload(context, [widget.episodeId]),
+        );
       case DownloadTaskStatus.enqueued || DownloadTaskStatus.running:
         return Material(
           color: Colors.transparent,
@@ -111,10 +115,11 @@ class _DownloadButtonState extends State<DownloadButton> {
                   width: 20,
                   child: CustomPaint(
                     painter: DownloadPainter(
-                        color: context.accentColor,
-                        fraction: fraction,
-                        progressColor: context.accentColor,
-                        progress: task!.progress / 100),
+                      color: context.primaryColor,
+                      fraction: fraction,
+                      progressColor: context.primaryColor,
+                      progress: task!.progress / 100,
+                    ),
                   ),
                 ),
               ),
@@ -135,9 +140,9 @@ class _DownloadButtonState extends State<DownloadButton> {
                 width: 20,
                 child: CustomPaint(
                   painter: DownloadPainter(
-                    color: context.accentColor,
+                    color: context.primaryColor,
                     fraction: 1,
-                    progressColor: context.accentColor,
+                    progressColor: context.primaryColor,
                     progress: 1,
                   ),
                 ),
@@ -146,8 +151,10 @@ class _DownloadButtonState extends State<DownloadButton> {
           ),
         );
       case DownloadTaskStatus.failed || DownloadTaskStatus.canceled:
-        return _buttonOnMenu(Icon(Icons.refresh, color: Colors.red),
-            () => context.downloadState.pauseDownload(widget.episodeId));
+        return _buttonOnMenu(
+          Icon(Icons.refresh, color: Colors.red),
+          () => context.downloadState.pauseDownload(widget.episodeId),
+        );
       case DownloadTaskStatus.paused:
         return Material(
           color: Colors.transparent,
@@ -165,11 +172,12 @@ class _DownloadButtonState extends State<DownloadButton> {
                   width: 20,
                   child: CustomPaint(
                     painter: DownloadPainter(
-                        color: context.accentColor,
-                        fraction: 1,
-                        progressColor: context.accentColor,
-                        progress: task!.progress / 100,
-                        pauseProgress: fraction),
+                      color: context.primaryColor,
+                      fraction: 1,
+                      progressColor: context.primaryColor,
+                      progress: task!.progress / 100,
+                      pauseProgress: fraction,
+                    ),
                   ),
                 ),
               ),

@@ -1,7 +1,11 @@
 import 'dart:developer' as developer;
+import 'dart:io';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:xml/xml.dart' as xml;
 import '../state/podcast_state.dart';
@@ -16,19 +20,21 @@ class OpmlProgress extends Equatable {
   final bool addingGroups;
   final bool done;
 
-  const OpmlProgress(this.setProgress,
-      {this.totalPodcasts = 0,
-      this.subscribedPodcasts = 0,
-      this.totalGroups = 0,
-      this.addedGroups = 0,
-      this.addingGroups = false,
-      this.done = false});
+  const OpmlProgress(
+    this.setProgress, {
+    this.totalPodcasts = 0,
+    this.subscribedPodcasts = 0,
+    this.totalGroups = 0,
+    this.addedGroups = 0,
+    this.addingGroups = false,
+    this.done = false,
+  });
 
   double? get ratio => totalPodcasts == 0
       ? null
       : done
-          ? 1
-          : (subscribedPodcasts + addedGroups) / (totalPodcasts + totalGroups);
+      ? 1
+      : (subscribedPodcasts + addedGroups) / (totalPodcasts + totalGroups);
   void reset() => setProgress(OpmlProgress(setProgress));
 
   void begin(int podcasts, int groups) =>
@@ -41,29 +47,31 @@ class OpmlProgress extends Equatable {
 
   void finish() => setProgress(copyWith(done: true));
 
-  OpmlProgress copyWith(
-          {int? totalPodcasts,
-          int? subscribedPodcasts,
-          int? totalGroups,
-          int? addedGroups,
-          bool? addingGroups,
-          bool? done}) =>
-      OpmlProgress(setProgress,
-          totalPodcasts: totalPodcasts ?? this.totalPodcasts,
-          subscribedPodcasts: subscribedPodcasts ?? this.subscribedPodcasts,
-          totalGroups: totalGroups ?? this.totalGroups,
-          addedGroups: addedGroups ?? this.addedGroups,
-          addingGroups: addingGroups ?? this.addingGroups,
-          done: done ?? this.done);
+  OpmlProgress copyWith({
+    int? totalPodcasts,
+    int? subscribedPodcasts,
+    int? totalGroups,
+    int? addedGroups,
+    bool? addingGroups,
+    bool? done,
+  }) => OpmlProgress(
+    setProgress,
+    totalPodcasts: totalPodcasts ?? this.totalPodcasts,
+    subscribedPodcasts: subscribedPodcasts ?? this.subscribedPodcasts,
+    totalGroups: totalGroups ?? this.totalGroups,
+    addedGroups: addedGroups ?? this.addedGroups,
+    addingGroups: addingGroups ?? this.addingGroups,
+    done: done ?? this.done,
+  );
   @override
   List<Object?> get props => [
-        totalPodcasts,
-        subscribedPodcasts,
-        totalGroups,
-        addedGroups,
-        addingGroups,
-        done
-      ];
+    totalPodcasts,
+    subscribedPodcasts,
+    totalGroups,
+    addedGroups,
+    addingGroups,
+    done,
+  ];
 }
 
 class OpmlImportPopup extends StatelessWidget {
@@ -86,24 +94,22 @@ class OpmlImportPopup extends StatelessWidget {
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                LinearProgressIndicator(
-                  value: progress.ratio,
-                ),
+                LinearProgressIndicator(value: progress.ratio),
                 Text(switch (progress) {
                   OpmlProgress(done: true) => context.s.done,
                   OpmlProgress(
                     addingGroups: true,
                     addedGroups: var added,
-                    totalGroups: var total
+                    totalGroups: var total,
                   ) =>
                     "${context.s.notificationAddingGroups} $added/$total",
                   OpmlProgress(
                     addingGroups: false,
                     subscribedPodcasts: var added,
-                    totalPodcasts: var total
+                    totalPodcasts: var total,
                   ) =>
                     "${context.s.notificationSubscribing} $added/$total",
-                })
+                }),
               ],
             ),
           ),
@@ -111,6 +117,32 @@ class OpmlImportPopup extends StatelessWidget {
       },
     );
   }
+}
+
+void importOpml(BuildContext context, File file) async {
+  final s = context.s;
+  try {
+    final opml = file.readAsStringSync();
+    context.podcastState.subscribeOpml(opml);
+    showDialog(context: context, builder: (context) => OpmlImportPopup());
+  } catch (e) {
+    developer.log(e.toString(), name: 'OMPL parse error');
+    Fluttertoast.showToast(msg: s.toastFileError, gravity: ToastGravity.TOP);
+  }
+}
+
+Future<File> exportOmpl(BuildContext context) async {
+  final opml = PodcastsBackup.omplBuilder(context.podcastState);
+  final tempdir = await getTemporaryDirectory();
+  final now = DateTime.now();
+  final datePlus =
+      now.year.toString() +
+      now.month.toString() +
+      now.day.toString() +
+      now.second.toString();
+  final file = File(path.join(tempdir.path, 'tsacdop_opml_$datePlus.xml'));
+  await file.writeAsString(opml.toXmlString());
+  return file;
 }
 
 class OmplOutline {
@@ -131,33 +163,47 @@ class PodcastsBackup {
     final groupIds = podcastState.groupIds;
     var builder = xml.XmlBuilder();
     builder.processing('xml', 'version="1.0" encoding="UTF-8"');
-    builder.element('ompl', nest: () {
-      builder.attribute('version', '1.0');
-      builder.element('head', nest: () {
-        builder.element('title', nest: 'Tsacdop Feed Groups');
-      });
-      builder.element('body', nest: () {
-        for (var groupId in groupIds) {
-          final group = podcastState.getGroupById(groupId);
-          builder.element('outline', nest: () {
-            builder.attribute('text', group.name);
-            builder.attribute('title', group.name);
-            for (var e in group.podcastIds.map((id) => podcastState[id])) {
+    builder.element(
+      'ompl',
+      nest: () {
+        builder.attribute('version', '1.0');
+        builder.element(
+          'head',
+          nest: () {
+            builder.element('title', nest: 'Tsacdop Feed Groups');
+          },
+        );
+        builder.element(
+          'body',
+          nest: () {
+            for (var groupId in groupIds) {
+              final group = podcastState.getGroupById(groupId);
               builder.element(
                 'outline',
                 nest: () {
-                  builder.attribute('type', 'rss');
-                  builder.attribute('text', e.title);
-                  builder.attribute('title', e.title);
-                  builder.attribute('xmlUrl', e.rssUrl);
+                  builder.attribute('text', group.name);
+                  builder.attribute('title', group.name);
+                  for (var e in group.podcastIds.map(
+                    (id) => podcastState[id],
+                  )) {
+                    builder.element(
+                      'outline',
+                      nest: () {
+                        builder.attribute('type', 'rss');
+                        builder.attribute('text', e.title);
+                        builder.attribute('title', e.title);
+                        builder.attribute('xmlUrl', e.rssUrl);
+                      },
+                      isSelfClosing: true,
+                    );
+                  }
                 },
-                isSelfClosing: true,
               );
             }
-          });
-        }
-      });
-    });
+          },
+        );
+      },
+    );
     return builder.buildDocument();
   }
 

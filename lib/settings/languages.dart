@@ -1,113 +1,67 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:intl/intl_standalone.dart';
+import 'package:provider/provider.dart';
 
 import '../generated/l10n.dart';
-import '../local_storage/key_value_storage.dart';
+import '../state/settings/setting_state.dart';
 import '../util/extension_helper.dart';
 
-class LanguagesSetting extends StatefulWidget {
+class LanguagesSetting extends StatelessWidget {
   const LanguagesSetting({super.key});
 
-  @override
-  _LanguagesSettingState createState() => _LanguagesSettingState();
-}
-
-class _LanguagesSettingState extends State<LanguagesSetting> {
-  @override
-  void initState() {
-    super.initState();
-    findSystemLocale();
-  }
-
-  _setLocale(Locale? locale, {bool systemDefault = false}) async {
-    var localeStorage = KeyValueStorage(localeKey);
-    if (systemDefault) {
-      await localeStorage.saveStringList([]);
-      await findSystemLocale();
-      String systemLanCode;
-      final list = Intl.systemLocale.split('_');
-      if (list.length == 2) {
-        systemLanCode = list.first;
-      } else if (list.length == 3) {
-        systemLanCode = '${list[0]}_${list[1]}';
-      } else {
-        systemLanCode = 'en';
-      }
-      await S.load(Locale(systemLanCode));
-      if (mounted) {
-        setState(() {});
-      }
-    } else {
-      await localeStorage
-          .saveStringList([locale!.languageCode, locale.countryCode ?? '']);
-      await S.load(locale);
-      if (mounted) {
-        setState(() {});
-      }
-    }
-  }
-
-  Widget _langListTile(String lang, {Locale? locale}) => ListTile(
+  Widget _langListTile(BuildContext context, String lang, Locale? locale) =>
+      RadioListTile(
+        value: locale,
         title: Text(lang, style: context.textTheme.bodyMedium),
-        onTap: () => _setLocale(locale),
         dense: true,
         contentPadding: const EdgeInsets.symmetric(horizontal: 20),
-        trailing: Transform.scale(
-          scale: 0.8,
-          child: Radio<Locale?>(
-              value: locale,
-              groupValue: Locale(Intl.getCurrentLocale()),
-              onChanged: _setLocale),
-        ),
       );
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = context.textTheme.bodyMedium!;
-    final s = context.s;
-    return Column(
-      children: [
-        ListTile(
-          title: Text(
-            s.systemDefault,
-            style: textStyle.copyWith(
-                color: Intl.systemLocale.contains(Intl.getCurrentLocale())
-                    ? context.accentColor
-                    : null),
-          ),
-          dense: true,
-          onTap: () =>
-              _setLocale(Locale(Intl.systemLocale), systemDefault: true),
-          contentPadding: const EdgeInsets.only(left: 20, right: 20),
+    final systemLocale = basicLocaleListResolution(
+      PlatformDispatcher.instance.locales,
+      S.delegate.supportedLocales,
+    );
+    return Selector<SettingState, Locale?>(
+      selector: (_, settings) => settings.localeOverride.get(),
+      builder: (context, locale, _) => RadioGroup<Locale>(
+        onChanged: context.superSettingState.localeOverride.set,
+        groupValue: locale,
+        child: Column(
+          children: [
+            _langListTile(
+              context,
+              "${context.s.systemDefault} ($systemLocale)",
+              null,
+            ),
+            _langListTile(context, 'English', Locale('en')),
+            _langListTile(context, '简体中文', Locale('zh_Hans')),
+            _langListTile(context, 'Français', Locale('fr')),
+            _langListTile(context, 'Español', Locale('es')),
+            _langListTile(context, 'Português', Locale('pt')),
+            _langListTile(context, 'Italiano', Locale('it')),
+            _langListTile(context, 'Türkçe', Locale('tr')),
+            _langListTile(context, 'Ελληνικά', Locale('el')),
+            Divider(height: 1),
+            ListTile(
+              onTap: () =>
+                  "https://hosted.weblate.org/projects/tsacdop-fork/".launchUrl,
+              contentPadding: const EdgeInsets.only(left: 20, right: 20),
+              dense: true,
+              title: Align(
+                alignment: Alignment.center,
+                child: Image(
+                  image: AssetImage('assets/weblate.png'),
+                  height: 40,
+                ),
+              ),
+              subtitle: Text(context.s.localizationWeblate, textAlign: .center),
+            ),
+          ],
         ),
-        _langListTile('English', locale: Locale('en')),
-        _langListTile('简体中文', locale: Locale('zh_Hans')),
-        _langListTile('Français', locale: Locale('fr')),
-        _langListTile('Español', locale: Locale('es')),
-        _langListTile('Português', locale: Locale('pt')),
-        _langListTile('Italiano', locale: Locale('it')),
-        _langListTile('Türkçe', locale: Locale('tr')),
-        _langListTile('Ελληνικά', locale: Locale('el')),
-        Divider(height: 1),
-        ListTile(
-          onTap: () =>
-              'mailto:<lojcsgit+tsacdop@gmail.com>?subject=Tsacdop localization project'
-                  .launchUrl,
-          contentPadding: const EdgeInsets.only(left: 20, right: 20),
-          dense: true,
-          title: Align(
-            alignment: Alignment.centerLeft,
-            child: Image(
-                image: Theme.of(context).brightness == Brightness.light
-                    ? AssetImage('assets/localizely_logo.png')
-                    : AssetImage('assets/localizely_logo_light.png'),
-                height: 20),
-          ),
-          subtitle: Text(
-              "If you'd like to contribute to localization project, please contact me."),
-        ),
-      ],
+      ),
     );
   }
 }

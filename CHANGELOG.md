@@ -1,5 +1,36 @@
 # Tsacdop-Fork Changelog
 
+## 0.10.0
+Release date 2026/07/1?
+
+### New
+* Fully customizable notification.
+* Option to change default search method.
+* Customizable default filters.
+* Customizable home tabs.
+* Auto downloads can be globally disabled.
+* Option to auto delete old downloads if storage exceeds a threshold.
+* Customizable forbidden network types.
+* Slider based speed changer.
+* Full database backup & restore support.
+* Option to encrypt backups.
+
+### Changed
+* Rewrote settings storage and ui.
+* Reworded and clarified some strings.
+* Unknown episode length or sizes now show up as '?'.
+* Play until end sleep timer mode can be used alongside timer.
+
+### Removed
+* Right click episode popup menu.
+* Option to change the default home screen / podcast groups screen.
+* Option to change the audio panel height.
+* Option to always hide new mark of a podcast.
+
+### Bugfixes
+* Incorrect play behavior after downloading playing episode.
+* Incorrect play behavior when finishing episode.
+
 ## 0.9.3
 Release date 2026/02/26
 

@@ -1,109 +1,33 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
-import 'package:tuple/tuple.dart';
-
-import '../state/setting_state.dart';
 import '../util/extension_helper.dart';
-import '../widgets/custom_dropdown.dart';
-import '../widgets/custom_widget.dart';
+import 'settings_widgets.dart';
 
-class SyncingSetting extends StatefulWidget {
+class SyncingSetting extends StatelessWidget {
   const SyncingSetting({super.key});
 
   @override
-  _SyncingSettingState createState() => _SyncingSettingState();
-}
-
-class _SyncingSettingState extends State<SyncingSetting> {
-  @override
   Widget build(BuildContext context) {
     final s = context.s;
-    var settings = Provider.of<SettingState>(context, listen: false);
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: context.overlay,
-      child: Scaffold(
-        backgroundColor: context.surface,
-        appBar: AppBar(
-          title: Text(
-            s.settingsSyncing,
-            style: context.textTheme.titleLarge,
-          ),
-          leading: CustomBackButton(),
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          backgroundColor: context.surface,
-        ),
-        body: SingleChildScrollView(
-          child: Selector<SettingState, Tuple2<bool?, int?>>(
-            selector: (_, settings) =>
-                Tuple2(settings.autoUpdate, settings.updateInterval),
-            builder: (_, data, __) => Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(70, 20, 70, 10),
-                  child: Text(s.settingsSyncing,
-                      style: context.textTheme.bodyLarge!
-                          .copyWith(color: context.accentColor)),
-                ),
-                ListTile(
-                  onTap: () {
-                    if (settings.autoUpdate!) {
-                      settings.autoUpdate = false;
-                      settings.cancelWork();
-                    } else {
-                      settings.autoUpdate = true;
-                      settings.setWorkManager(data.item2);
-                    }
-                  },
-                  contentPadding:
-                      const EdgeInsets.only(left: 70.0, right: 20, bottom: 10),
-                  title: Text(s.settingsEnableSyncing),
-                  subtitle: Text(s.settingsEnableSyncingDes),
-                  trailing: Transform.scale(
-                    scale: 0.9,
-                    child: Switch(
-                        value: data.item1!,
-                        onChanged: (boo) async {
-                          settings.autoUpdate = boo;
-                          if (boo) {
-                            settings.setWorkManager(data.item2);
-                          } else {
-                            settings.cancelWork();
-                          }
-                        }),
-                  ),
-                ),
-                ListTile(
-                  contentPadding: const EdgeInsets.only(left: 70.0, right: 20),
-                  title: Text(s.settingsUpdateInterval),
-                  subtitle: Text(s.settingsUpdateIntervalDes),
-                  trailing: MyDropdownButton(
-                      hint: Text(s.hoursCount(data.item2!)),
-                      underline: Center(),
-                      elevation: 1,
-                      displayItemCount: 5,
-                      value: data.item2,
-                      onChanged: data.item1!
-                          ? (dynamic value) async {
-                              await settings.cancelWork();
-                              settings.setWorkManager(value);
-                            }
-                          : (int i) {},
-                      items: <int>[1, 2, 4, 8, 24, 48]
-                          .map<DropdownMenuItem<int>>((e) {
-                        return DropdownMenuItem<int>(
-                            value: e, child: Text(s.hoursCount(e)));
-                      }).toList()),
-                ),
-              ],
+    return SettingsPage(
+      title: s.settingsSyncing,
+      sections: [
+        SettingsSection(
+          title: s.settingsSyncing,
+          items: [
+            SettingsSwitchTile(
+              title: s.settingsEnableSyncing,
+              subtitle: s.settingsEnableSyncingDes,
+              selector: (_, settings) => settings.autoSync,
             ),
-          ),
+            SettingsDurationSliderTile(
+              title: s.settingsSyncingInterval,
+              selector: (_, settings) => settings.autoSyncInterval,
+              type: .hours,
+              canDisable: false,
+            ),
+          ],
         ),
-      ),
+      ],
     );
   }
 }

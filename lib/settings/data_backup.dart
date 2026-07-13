@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:developer' as developer;
 import 'dart:io';
 
@@ -8,306 +7,486 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
 import '../local_storage/key_value_storage.dart';
 import '../backup/gpodder_api.dart';
 import '../backup/opml_helper.dart';
-import '../state/setting_state.dart';
-import '../type/settings_backup.dart';
+import '../local_storage/sqflite_localpodcast.dart';
+import '../state/settings/tsacdop_settings.dart';
+import '../type/theme_data.dart';
 import '../util/extension_helper.dart';
+import '../util/helpers.dart';
 import '../widgets/custom_widget.dart';
+import '../widgets/general_dialog.dart';
+import 'settings_widgets.dart';
 
-class DataBackup extends StatefulWidget {
-  const DataBackup({super.key});
-
-  @override
-  _DataBackupState createState() => _DataBackupState();
-}
-
-class _DataBackupState extends State<DataBackup> {
-  final _gpodder = Gpodder();
-  // var _syncing = false;
+class DataBackup extends StatelessWidget {
+  DataBackup({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final prefCategories = {...PreferenceCategory.values};
+    final settingsPasswordController = TextEditingController();
+    final databaseCategories = {...DatabaseCategory.values};
+    final databasePasswordController = TextEditingController();
     final s = context.s;
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: context.overlay,
-      child: Scaffold(
-        backgroundColor: context.surface,
-        appBar: AppBar(
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          title: Text(
-            s.settingsBackup,
-            style: context.textTheme.titleLarge,
-          ),
-          leading: CustomBackButton(),
-          backgroundColor: context.surface,
-        ),
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              height: 20,
-            ),
-            Container(
-              height: 30.0,
-              padding: EdgeInsets.fromLTRB(70, 0, 70, 0),
-              alignment: Alignment.centerLeft,
-              child: Text(s.subscribe,
-                  style: context.textTheme.bodyLarge!
-                      .copyWith(color: context.accentColor)),
-            ),
-            Padding(
-              padding:
-                  EdgeInsets.only(left: 70.0, right: 20, top: 10, bottom: 10),
-              child: Text(s.subscribeExportDes),
-            ),
-            Padding(
-              padding: EdgeInsets.only(left: 70.0, right: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  ButtonTheme(
-                    height: 32,
-                    child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: Colors.green[700]!),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(100.0),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              LineIcons.save,
-                              color: Colors.green[700],
-                              size: context.textTheme.titleLarge!.fontSize,
-                            ),
-                            SizedBox(width: 10),
-                            Text(s.save,
-                                style: TextStyle(color: Colors.green[700])),
-                          ],
-                        ),
-                        onPressed: () async {
-                          final file = await _exportOmpl(context);
-                          await _saveFile(file);
-                        }),
-                  ),
-                  SizedBox(width: 10),
-                  ButtonTheme(
-                    height: 32,
-                    child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: Colors.blue[700]!),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(100.0),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.share,
-                              size: context.textTheme.titleLarge!.fontSize,
-                              color: Colors.blue[700],
-                            ),
-                            SizedBox(width: 10),
-                            Text(s.share,
-                                style: TextStyle(color: Colors.blue[700])),
-                          ],
-                        ),
-                        onPressed: () async {
-                          var file = await _exportOmpl(context);
-                          await _shareFile(file);
-                        }),
-                  )
-                ],
+    return SettingsPage(
+      title: s.settingsBackup,
+      sections: [
+        SettingsSection(
+          title: s.podcastList,
+          items: [
+            SettingsTile(
+              title: s.opmlFile,
+              body: Container(
+                decoration: BoxDecoration(
+                  borderRadius: context.radiusSmall,
+                  color: context.trueBlack
+                      ? null
+                      : context.colorScheme.surfaceContainerLow,
+                  border: context.trueBlack
+                      ? Border.all(color: context.colorScheme.surfaceBright)
+                      : null,
+                ),
+                child: Row(
+                  mainAxisSize: .min,
+                  children: [
+                    _button(
+                      context,
+                      onPressed: () async {
+                        final file = await exportOmpl(context);
+                        await saveExternalFile(file);
+                      },
+                      color: Colors.green,
+                      children: [Icon(LineIcons.save), Text(s.save)],
+                      connectRight: true,
+                    ),
+                    _button(
+                      context,
+                      onPressed: () async {
+                        var file = await exportOmpl(context);
+                        await shareFile(file);
+                      },
+                      color: Colors.blue,
+                      children: [Icon(Icons.share), Text(s.share)],
+                      connectLeft: true,
+                      connectRight: true,
+                    ),
+                    _button(
+                      context,
+                      onPressed: () async {
+                        var filePickResult = await FilePicker.pickFiles(
+                          type: FileType.any,
+                        );
+                        if (filePickResult != null && context.mounted) {
+                          importOpml(
+                            context,
+                            File(filePickResult.files.first.path!),
+                          );
+                        }
+                      },
+                      color: Colors.amber,
+                      children: [Icon(LineIcons.paperclip), Text(s.import)],
+                      connectLeft: true,
+                    ),
+                  ],
+                ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.only(top: 10.0),
-              child: Divider(height: 1),
-            ),
-            Container(
-              height: 30.0,
-              padding: EdgeInsets.symmetric(horizontal: 70),
-              alignment: Alignment.centerLeft,
-              child: Text(
-                s.settings,
-                style: context.textTheme.bodyLarge!
-                    .copyWith(color: context.accentColor),
-              ),
-            ),
-            Padding(
-              padding:
-                  EdgeInsets.only(left: 70.0, right: 20, top: 10, bottom: 10),
-              child: Text(s.settingsExportDes),
-            ),
-            Padding(
-              padding: EdgeInsets.only(left: 70.0, right: 10),
-              child: Wrap(children: [
-                ButtonTheme(
-                  height: 32,
-                  child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: Colors.green[700]!),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(100.0),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            LineIcons.save,
-                            color: Colors.green[700],
-                            size: context.textTheme.titleLarge!.fontSize,
-                          ),
-                          SizedBox(width: 10),
-                          Text(s.save,
-                              style: TextStyle(color: Colors.green[700])),
-                        ],
-                      ),
-                      onPressed: () async {
-                        var file = await _exportSetting(context);
-                        await _saveFile(file);
-                      }),
-                ),
-                SizedBox(width: 10),
-                ButtonTheme(
-                  height: 32,
-                  child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: Colors.blue[700]!),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(100.0),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.share,
-                            size: context.textTheme.titleLarge!.fontSize,
-                            color: Colors.blue[700],
-                          ),
-                          SizedBox(width: 10),
-                          Text(s.share,
-                              style: TextStyle(color: Colors.blue[700])),
-                        ],
-                      ),
-                      onPressed: () async {
-                        var file = await _exportSetting(context);
-                        await _shareFile(file);
-                      }),
-                ),
-                SizedBox(width: 10),
-                ButtonTheme(
-                  height: 32,
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: Colors.red[700]!),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(100.0),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          LineIcons.paperclip,
-                          size: context.textTheme.titleLarge!.fontSize,
-                          color: Colors.red[700],
-                        ),
-                        SizedBox(width: 10),
-                        Text(s.import,
-                            style: TextStyle(color: Colors.red[700])),
-                      ],
-                    ),
-                    onPressed: () {
-                      _getFilePath(context);
-                    },
-                  ),
-                ),
-              ]),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 10.0),
-              child: Divider(height: 1),
-            )
           ],
+        ),
+        SettingsSection(
+          title: s.settings,
+          items: [
+            SettingsTile(
+              title: s.settingsBackupFile,
+              subtitle: s.settingsExportDes,
+              body: Container(
+                decoration: BoxDecoration(
+                  borderRadius: context.radiusSmall,
+                  color: context.trueBlack
+                      ? null
+                      : context.colorScheme.surfaceContainerLow,
+                  border: context.trueBlack
+                      ? Border.all(color: context.colorScheme.surfaceBright)
+                      : null,
+                ),
+                child: Row(
+                  mainAxisSize: .min,
+                  children: [
+                    _button(
+                      context,
+                      onPressed: () async {
+                        var file = await datedSaveFile(context, "settings");
+                        if (file != null && context.mounted) {
+                          await context.superSettingState.backup(
+                            file,
+                            prefCategories,
+                            settingsPasswordController.text != ""
+                                ? settingsPasswordController.text
+                                : null,
+                          );
+                          await saveExternalFile(file);
+                        }
+                      },
+                      color: Colors.green,
+                      children: [Icon(LineIcons.save), Text(s.save)],
+                      connectRight: true,
+                    ),
+                    _button(
+                      context,
+                      onPressed: () async {
+                        var file = await datedSaveFile(context, "settings");
+                        if (file != null && context.mounted) {
+                          await context.superSettingState.backup(
+                            file,
+                            prefCategories,
+                            settingsPasswordController.text != ""
+                                ? settingsPasswordController.text
+                                : null,
+                          );
+                          await shareFile(file);
+                        }
+                      },
+                      color: Colors.blue,
+                      children: [Icon(Icons.share), Text(s.share)],
+                      connectLeft: true,
+                      connectRight: true,
+                    ),
+                    _button(
+                      context,
+                      onPressed: () async {
+                        final result = await showConfirmationDialog(
+                          context,
+                          description:
+                              s.settingsBackupConfirmationSettingsOverwrite,
+                          color: Colors.amber,
+                        );
+                        if (result) {
+                          var filePickResult = await FilePicker.pickFiles(
+                            type: FileType.any,
+                          );
+                          if (filePickResult != null && context.mounted) {
+                            context.superSettingState.restore(
+                              File(filePickResult.files.first.path!),
+                              prefCategories,
+                            );
+                          }
+                        }
+                      },
+                      color: Colors.amber,
+                      children: [Icon(LineIcons.paperclip), Text(s.import)],
+                      connectLeft: true,
+                      connectRight: true,
+                    ),
+                    _button(
+                      context,
+                      onPressed: () async {
+                        final result = await showConfirmationDialog(
+                          context,
+                          description:
+                              s.settingsBackupConfirmationSettingsReset,
+                          color: Colors.red,
+                        );
+                        if (result && context.mounted) {
+                          context.superSettingState.reset(prefCategories);
+                        }
+                      },
+                      color: Colors.red,
+                      children: [Icon(Icons.restore), Text(s.settingsReset)],
+                      connectLeft: true,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SettingsTile(
+              title: s.settingsBackupCategories,
+              subtitle: s.settingsBackupCategoriesDes,
+              onTap: (context) {
+                final options = PreferenceCategory.values;
+                if (context.mounted) {
+                  showGeneralSheet(
+                    context,
+                    title: s.settingsBackupCategories,
+                    child: StatefulBuilder(
+                      builder: (context, setState) => Column(
+                        children: options
+                            .map((option) {
+                              final title = prefCategoryToString(
+                                context,
+                                option,
+                              );
+                              if (title != null) {
+                                return CheckboxListTile(
+                                  title: Text(title),
+                                  value: prefCategories.contains(option),
+                                  onChanged: (value) {
+                                    if (value!) {
+                                      prefCategories.add(option);
+                                    } else {
+                                      prefCategories.remove(option);
+                                    }
+                                    setState(() {});
+                                  },
+                                );
+                              }
+                            })
+                            .nonNulls
+                            .toList(),
+                      ),
+                    ),
+                  );
+                }
+              },
+            ),
+            SettingsTile(
+              title: s.settingsBackupPassword,
+              subtitle: s.settingsBackupPasswordDes,
+              body: TextFormField(
+                textAlign: .center,
+                decoration: InputDecoration(
+                  hintText: s.password,
+                  isDense: true,
+                  border: InputBorder.none,
+                ),
+                obscureText: true,
+                controller: settingsPasswordController,
+              ),
+            ),
+          ],
+        ),
+        SettingsSection(
+          title: s.settingsBackupDatabase,
+          items: [
+            SettingsTile(
+              title: s.settingsBackupDatabaseBackupFile,
+              subtitle: s.settingsBackupDatabaseBackupFileDes,
+              body: Container(
+                decoration: BoxDecoration(
+                  borderRadius: context.radiusSmall,
+                  color: context.trueBlack
+                      ? null
+                      : context.colorScheme.surfaceContainerLow,
+                  border: context.trueBlack
+                      ? Border.all(color: context.colorScheme.surfaceBright)
+                      : null,
+                ),
+                child: Row(
+                  mainAxisSize: .min,
+                  children: [
+                    _button(
+                      context,
+                      onPressed: () async {
+                        var file = await datedSaveFile(context, "database");
+                        if (file != null && context.mounted) {
+                          await DBHelper().backup(file, databaseCategories);
+                          await saveExternalFile(file);
+                        }
+                      },
+                      color: Colors.green,
+                      children: [Icon(LineIcons.save), Text(s.save)],
+                      connectRight: true,
+                    ),
+                    _button(
+                      context,
+                      onPressed: () async {
+                        var file = await datedSaveFile(context, "database");
+                        if (file != null && context.mounted) {
+                          await DBHelper().backup(file, databaseCategories);
+                          await shareFile(file);
+                        }
+                      },
+                      color: Colors.blue,
+                      children: [Icon(Icons.share), Text(s.share)],
+                      connectLeft: true,
+                      connectRight: true,
+                    ),
+                    _button(
+                      context,
+                      onPressed: () async {
+                        final result = await showConfirmationDialog(
+                          context,
+                          description:
+                              s.settingsBackupConfirmationDatabaseOverwrite,
+                          color: Colors.amber,
+                        );
+                        if (result) {
+                          var filePickResult = await FilePicker.pickFiles(
+                            type: FileType.any,
+                          );
+                          if (filePickResult != null && context.mounted) {
+                            await DBHelper().restore(
+                              File(filePickResult.files.first.path!),
+                              databaseCategories,
+                            );
+                          }
+                        }
+                      },
+                      color: Colors.amber,
+                      children: [Icon(LineIcons.paperclip), Text(s.import)],
+                      connectLeft: true,
+                      connectRight: true,
+                    ),
+                    _button(
+                      context,
+                      onPressed: () async {
+                        final result = await showConfirmationDialog(
+                          context,
+                          description:
+                              s.settingsBackupConfirmationDatabaseReset,
+                          color: Colors.red,
+                        );
+                        if (result && context.mounted) {
+                          await DBHelper().reset(databaseCategories);
+                        }
+                      },
+                      color: Colors.red,
+                      children: [Icon(Icons.restore), Text(s.settingsReset)],
+                      connectLeft: true,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SettingsTile(
+              title: s.settingsBackupCategories,
+              subtitle: s.settingsBackupDatabaseCategoriesDes,
+              onTap: (context) {
+                final options = DatabaseCategory.values;
+                if (context.mounted) {
+                  showGeneralSheet(
+                    context,
+                    title: s.settingsBackupCategories,
+                    child: StatefulBuilder(
+                      builder: (context, setState) => Column(
+                        children: options
+                            .map((option) {
+                              final title = databaseCategoryToString(
+                                context,
+                                option,
+                              );
+                              if (title != null) {
+                                return CheckboxListTile(
+                                  title: Text(title),
+                                  value: databaseCategories.contains(option),
+                                  onChanged: (value) {
+                                    if (value!) {
+                                      databaseCategories.add(option);
+                                    } else {
+                                      databaseCategories.remove(option);
+                                    }
+                                    setState(() {});
+                                  },
+                                );
+                              }
+                            })
+                            .nonNulls
+                            .toList(),
+                      ),
+                    ),
+                  );
+                }
+              },
+            ),
+            SettingsTile(
+              title: s.settingsBackupPassword,
+              subtitle: s.settingsBackupPasswordDes,
+              body: TextFormField(
+                textAlign: .center,
+                decoration: InputDecoration(
+                  hintText: s.password,
+                  isDense: true,
+                  border: InputBorder.none,
+                ),
+                obscureText: true,
+                controller: databasePasswordController,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _button(
+    BuildContext context, {
+    required VoidCallback onPressed,
+    required Color? color,
+    required List<Widget> children,
+    bool connectLeft = false,
+    bool connectRight = false,
+  }) {
+    return Material(
+      borderRadius: BorderRadius.horizontal(
+        left: !connectLeft ? context.actionBarIconRadius : Radius.zero,
+        right: !connectRight ? context.actionBarIconRadius : Radius.zero,
+      ),
+      clipBehavior: .antiAlias,
+      color: color == null
+          ? null
+          : CardColorScheme(
+              getColorScheme(color, context.tbrightness),
+              context.trueBlack,
+            ).card,
+      child: InkWell(
+        onTap: onPressed,
+        child: Container(
+          width: 60,
+          height: 72,
+          padding: .all(6),
+          child: Column(mainAxisAlignment: .spaceEvenly, children: children),
         ),
       ),
     );
   }
 
-  Future<File> _exportOmpl(BuildContext context) async {
-    final opml = PodcastsBackup.omplBuilder(context.podcastState);
-    final tempdir = await getTemporaryDirectory();
-    final now = DateTime.now();
-    final datePlus = now.year.toString() +
-        now.month.toString() +
-        now.day.toString() +
-        now.second.toString();
-    final file = File(path.join(tempdir.path, 'tsacdop_opml_$datePlus.xml'));
-    await file.writeAsString(opml.toXmlString());
-    return file;
-  }
-
-  Future<void> _saveFile(File file) async {
-    final params = SaveFileDialogParams(sourceFilePath: file.path);
-    await FlutterFileDialog.saveFile(params: params);
-  }
-
-  Future<void> _shareFile(File file) async {
-    await SharePlus.instance.share(ShareParams(files: [XFile(file.path)]));
-  }
-
-  Future<File> _exportSetting(BuildContext context) async {
-    var settings = context.read<SettingState>();
-    var settingsBack = await settings.backup();
-    var json = settingsBack.toJson();
+  Future<File?> datedSaveFile(BuildContext context, String type) async {
     var tempdir = await getTemporaryDirectory();
-    var now = DateTime.now();
-    var datePlus = now.year.toString() +
-        now.month.toString() +
-        now.day.toString() +
-        now.second.toString();
-    var file = File(path.join(tempdir.path, 'tsacdop_settings_$datePlus.json'));
-    await file.writeAsString(jsonEncode(json));
-    return file;
+    if (context.mounted) {
+      var now = DateTime.now();
+      var datePlus =
+          now.year.toString() +
+          now.month.toString() +
+          now.day.toString() +
+          now.second.toString();
+      var file = File(
+        path.join(tempdir.path, 'tsacdop_${type}_$datePlus.json'),
+      );
+      return file;
+    }
+    return null;
   }
 
-  Future<void> _importSetting(String path, BuildContext context) async {
-    final s = context.s;
-    var settings = context.read<SettingState>();
-    var file = File(path);
-    try {
-      var json = file.readAsStringSync();
-      var backup = SettingsBackup.fromJson(jsonDecode(json));
-      await settings.restore(backup);
-      Fluttertoast.showToast(
-        msg: s.toastImportSettingsSuccess,
-        gravity: ToastGravity.BOTTOM,
-      );
-    } catch (e) {
-      developer.log(e.toString(), name: 'Import settings');
-      Fluttertoast.showToast(
-        msg: s.toastFileError,
-        gravity: ToastGravity.BOTTOM,
-      );
-    }
-  }
+  String? prefCategoryToString(
+    BuildContext context,
+    PreferenceCategory prefClass,
+  ) => switch (prefClass) {
+    .meta => null,
+    .times => null,
+    .general => context.s.settingsGeneral,
+    .lookAndFeel => context.s.settingsLookAndFeel,
+    .interface => context.s.settingsInterface,
+    .playback => context.s.settingsPlayback,
+    .sleepTimer => context.s.sleepTimer,
+    .playerState => context.s.settingsPlayerState,
+    .sync => context.s.settingsSyncing,
+    .download => context.s.settingsDownloads,
+  };
+
+  String? databaseCategoryToString(
+    BuildContext context,
+    DatabaseCategory prefClass,
+  ) => switch (prefClass) {
+    .podcasts => context.s.settingsBackupDatabasePodcasts,
+    .history => context.s.settingsBackupDatabaseHistory,
+    .playlists => context.s.settingsBackupDatabasePlaylists,
+  };
 
   Widget _syncStauts(int? index) {
     switch (index) {
@@ -322,25 +501,7 @@ class _DataBackupState extends State<DataBackup> {
     }
   }
 
-  void _getFilePath(BuildContext context) async {
-    final s = context.s;
-    try {
-      var filePickResult =
-          await FilePicker.platform.pickFiles(type: FileType.any);
-      if (filePickResult == null) {
-        return;
-      }
-      Fluttertoast.showToast(
-        msg: s.toastReadFile,
-        gravity: ToastGravity.BOTTOM,
-      );
-      final filePath = filePickResult.files.first.path!;
-      _importSetting(filePath, context);
-    } on PlatformException catch (e) {
-      developer.log(e.toString(), name: 'Get file path');
-    }
-  }
-
+  final _gpodder = Gpodder();
   Future<void> _logout() async {
     await _gpodder.logout();
     // Stop sync also
@@ -348,7 +509,7 @@ class _DataBackupState extends State<DataBackup> {
       msg: 'Logout successfully',
       gravity: ToastGravity.BOTTOM,
     );
-    if (mounted) setState(() {});
+    // if (mounted) setState(() {});
   }
 
   Future<List<String?>?> _getLoginInfo() async {
@@ -381,8 +542,10 @@ class __OpenEyeState extends State<_OpenEye>
   @override
   void initState() {
     super.initState();
-    _controller =
-        AnimationController(vsync: this, duration: Duration(seconds: 1));
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(seconds: 1),
+    );
     _animation = Tween(begin: 0.0, end: 1.0).animate(_controller)
       ..addListener(() {
         if (mounted) {
@@ -467,8 +630,10 @@ class __LoginGpodderState extends State<_LoginGpodder> {
     final form = _formKey.currentState!;
     if (form.validate()) {
       form.save();
-      final status =
-          await _gpodder.login(username: _username, password: _password);
+      final status = await _gpodder.login(
+        username: _username,
+        password: _password,
+      );
       if (status == 200) {
         final updateDevice = await _gpodder.updateDevice(_username);
         if (updateDevice == 200) {
@@ -514,16 +679,14 @@ class __LoginGpodderState extends State<_LoginGpodder> {
     if (opml != null && opml != '') {
       pState.subscribeOpml(opml);
     }
-    await Workmanager().initialize(
-      callbackDispatcher,
-      isInDebugMode: false,
+    await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
+    await Workmanager().registerPeriodicTask(
+      "2",
+      "gpodder_sync",
+      frequency: Duration(hours: 4),
+      initialDelay: Duration(seconds: 10),
+      constraints: Constraints(networkType: NetworkType.connected),
     );
-    await Workmanager().registerPeriodicTask("2", "gpodder_sync",
-        frequency: Duration(hours: 4),
-        initialDelay: Duration(seconds: 10),
-        constraints: Constraints(
-          networkType: NetworkType.connected,
-        ));
     developer.log('work manager init done + (gpodder sync)');
   }
 
@@ -549,10 +712,7 @@ class __LoginGpodderState extends State<_LoginGpodder> {
   Widget _loginStatusButton() {
     switch (_loginStatus) {
       case LoginStatus.none:
-        return Text(
-          context.s.login,
-          style: TextStyle(color: Colors.white),
-        );
+        return Text(context.s.login, style: TextStyle(color: Colors.white));
       case LoginStatus.syncing:
         return Text(
           context.s.settingsSyncing,
@@ -568,10 +728,7 @@ class __LoginGpodderState extends State<_LoginGpodder> {
           ),
         );
       default:
-        return Text(
-          context.s.login,
-          style: TextStyle(color: Colors.white),
-        );
+        return Text(context.s.login, style: TextStyle(color: Colors.white));
     }
   }
 
@@ -587,17 +744,15 @@ class __LoginGpodderState extends State<_LoginGpodder> {
           child: CustomScrollView(
             slivers: [
               SliverAppBar(
-                iconTheme: IconThemeData(
-                  color: Colors.white,
-                ),
+                iconTheme: IconThemeData(color: Colors.white),
                 elevation: 0,
                 leading: CustomBackButton(),
-                backgroundColor: context.accentColor,
+                backgroundColor: context.primaryColor,
                 expandedHeight: 200,
                 flexibleSpace: Container(
                   height: 200,
                   width: double.infinity,
-                  color: context.accentColor,
+                  color: context.primaryColor,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -605,20 +760,25 @@ class __LoginGpodderState extends State<_LoginGpodder> {
                         tag: 'gpodder.net',
                         child: CircleAvatar(
                           minRadius: 50,
-                          backgroundColor:
-                              context.primaryColor.withValues(alpha: 0.3),
+                          backgroundColor: context.onPrimary.withValues(
+                            alpha: 0.3,
+                          ),
                           child: SizedBox(
-                              height: 80,
-                              width: 80,
-                              child: Image.asset('assets/gpodder.png')),
+                            height: 80,
+                            width: 80,
+                            child: Image.asset('assets/gpodder.png'),
+                          ),
                         ),
                       ),
                       Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Text(s.intergateWith('gpodder.net'),
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold)),
+                        child: Text(
+                          s.intergateWith('gpodder.net'),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -631,13 +791,18 @@ class __LoginGpodderState extends State<_LoginGpodder> {
                         Stack(
                           children: [
                             Padding(
-                              padding:
-                                  const EdgeInsets.fromLTRB(40.0, 50, 40, 100),
+                              padding: const EdgeInsets.fromLTRB(
+                                40.0,
+                                50,
+                                40,
+                                100,
+                              ),
                               child: Text(
                                 s.gpodderLoginDes,
                                 textAlign: TextAlign.center,
-                                style: context.textTheme.titleMedium!
-                                    .copyWith(height: 2),
+                                style: context.textTheme.titleMedium!.copyWith(
+                                  height: 2,
+                                ),
                               ),
                             ),
                             Align(
@@ -654,7 +819,7 @@ class __LoginGpodderState extends State<_LoginGpodder> {
                                   Colors.blue,
                                   Colors.pink,
                                   Colors.orange,
-                                  Colors.purple
+                                  Colors.purple,
                                 ],
                               ),
                             ),
@@ -662,12 +827,14 @@ class __LoginGpodderState extends State<_LoginGpodder> {
                         ),
                         Center(
                           child: OutlinedButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                              style: OutlinedButton.styleFrom(
-                                  side: BorderSide(color: context.accentColor)),
-                              child: Text(s.back)),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(color: context.primaryColor),
+                            ),
+                            child: Text(s.back),
+                          ),
                         ),
                       ]),
                     )
@@ -676,75 +843,89 @@ class __LoginGpodderState extends State<_LoginGpodder> {
                       autovalidateMode: AutovalidateMode.disabled,
                       child: AutofillGroup(
                         child: SliverList(
-                          delegate: SliverChildListDelegate(
-                            [
-                              Padding(
-                                padding:
-                                    const EdgeInsets.fromLTRB(40, 20, 40, 10),
-                                child: TextFormField(
-                                  decoration: InputDecoration(
-                                    labelStyle:
-                                        TextStyle(color: context.accentColor),
-                                    focusColor: context.accentColor,
-                                    focusedBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                            color: context.accentColor,
-                                            width: 2)),
-                                    border: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                            color: context.accentColor)),
-                                    labelText: s.username,
+                          delegate: SliverChildListDelegate([
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                40,
+                                20,
+                                40,
+                                10,
+                              ),
+                              child: TextFormField(
+                                decoration: InputDecoration(
+                                  labelStyle: TextStyle(
+                                    color: context.primaryColor,
                                   ),
-                                  maxLines: 1,
-                                  autofocus: true,
-                                  validator: _validateName,
-                                  autofillHints: [AutofillHints.username],
-                                  onSaved: (value) {
-                                    setState(() => _username = value);
-                                  },
-                                ),
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.fromLTRB(40, 10, 40, 20),
-                                child: PasswordField(
-                                  fieldKey: _passwordFieldKey,
-                                  labelText: s.password,
-                                  validator: _validatePassword,
-                                  onSaved: (value) {
-                                    if (value == null) {
-                                      return setState(() {
-                                        _password = value!;
-                                      });
-                                    }
-                                  },
-                                ),
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.fromLTRB(40, 10, 40, 20),
-                                child: InkWell(
-                                  onTap: () {
-                                    _handleLogin();
-                                  },
-                                  borderRadius: BorderRadius.circular(5.0),
-                                  child: Container(
-                                    height: 40,
-                                    width: 150,
-                                    decoration: BoxDecoration(
-                                        color: context.accentColor,
-                                        borderRadius:
-                                            BorderRadius.circular(5.0)),
-                                    child: Center(child: _loginStatusButton()),
+                                  focusColor: context.primaryColor,
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                      color: context.primaryColor,
+                                      width: 2,
+                                    ),
                                   ),
+                                  border: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                      color: context.primaryColor,
+                                    ),
+                                  ),
+                                  labelText: s.username,
+                                ),
+                                maxLines: 1,
+                                autofocus: true,
+                                validator: _validateName,
+                                autofillHints: [AutofillHints.username],
+                                onSaved: (value) {
+                                  setState(() => _username = value);
+                                },
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                40,
+                                10,
+                                40,
+                                20,
+                              ),
+                              child: PasswordField(
+                                fieldKey: _passwordFieldKey,
+                                labelText: s.password,
+                                validator: _validatePassword,
+                                onSaved: (value) {
+                                  if (value == null) {
+                                    return setState(() {
+                                      _password = value!;
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                40,
+                                10,
+                                40,
+                                20,
+                              ),
+                              child: InkWell(
+                                onTap: () {
+                                  _handleLogin();
+                                },
+                                borderRadius: BorderRadius.circular(5.0),
+                                child: Container(
+                                  height: 40,
+                                  width: 150,
+                                  decoration: BoxDecoration(
+                                    color: context.primaryColor,
+                                    borderRadius: BorderRadius.circular(5.0),
+                                  ),
+                                  child: Center(child: _loginStatusButton()),
                                 ),
                               ),
-                              SizedBox(
-                                height:
-                                    MediaQuery.of(context).viewInsets.bottom,
-                              ),
-                            ],
-                          ),
+                            ),
+                            SizedBox(
+                              height: MediaQuery.of(context).viewInsets.bottom,
+                            ),
+                          ]),
                         ),
                       ),
                     ),
@@ -794,12 +975,14 @@ class _PasswordFieldState extends State<PasswordField> {
       validator: widget.validator,
       onFieldSubmitted: widget.onFieldSubmitted,
       decoration: InputDecoration(
-        hintStyle: TextStyle(color: context.accentColor),
-        labelStyle: TextStyle(color: context.accentColor),
+        hintStyle: TextStyle(color: context.primaryColor),
+        labelStyle: TextStyle(color: context.primaryColor),
         border: OutlineInputBorder(
-            borderSide: BorderSide(color: context.accentColor)),
+          borderSide: BorderSide(color: context.primaryColor),
+        ),
         focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: context.accentColor, width: 2)),
+          borderSide: BorderSide(color: context.primaryColor, width: 2),
+        ),
         hintText: widget.hintText,
         labelText: widget.labelText,
         helperText: widget.helperText,
@@ -812,7 +995,7 @@ class _PasswordFieldState extends State<PasswordField> {
           },
           child: Icon(
             _obscureText ? Icons.visibility : Icons.visibility_off,
-            color: context.accentColor,
+            color: context.primaryColor,
             semanticLabel: _obscureText ? 'Show' : 'Hide',
           ),
         ),
@@ -837,7 +1020,7 @@ class __GpodderInfoState extends State<_GpodderInfo> {
     final storage = KeyValueStorage(gpodderApiKey);
     final androidInfo = await DeviceInfoPlugin().androidInfo;
     final deviceInfo = await storage.getStringList();
-    deviceInfo.add("Tsacdop on ${androidInfo.model}");
+    deviceInfo!.add("Tsacdop on ${androidInfo.model}");
     return deviceInfo;
   }
 
@@ -874,35 +1057,38 @@ class __GpodderInfoState extends State<_GpodderInfo> {
           child: CustomScrollView(
             slivers: [
               SliverAppBar(
-                iconTheme: IconThemeData(
-                  color: Colors.white,
-                ),
+                iconTheme: IconThemeData(color: Colors.white),
                 leading: CustomBackButton(),
                 elevation: 0,
-                backgroundColor: context.accentColor,
+                backgroundColor: context.primaryColor,
                 expandedHeight: 200,
                 flexibleSpace: Container(
                   height: 200,
                   width: double.infinity,
-                  color: context.accentColor,
+                  color: context.primaryColor,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       CircleAvatar(
                         minRadius: 50,
-                        backgroundColor:
-                            context.primaryColor.withValues(alpha: 0.3),
+                        backgroundColor: context.onPrimary.withValues(
+                          alpha: 0.3,
+                        ),
                         child: SizedBox(
-                            height: 80,
-                            width: 80,
-                            child: Image.asset('assets/gpodder.png')),
+                          height: 80,
+                          width: 80,
+                          child: Image.asset('assets/gpodder.png'),
+                        ),
                       ),
                       Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Text('gpodder.net',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold)),
+                        child: Text(
+                          'gpodder.net',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -912,34 +1098,39 @@ class __GpodderInfoState extends State<_GpodderInfo> {
               SliverList(
                 delegate: SliverChildListDelegate([
                   FutureBuilder<List<String>?>(
-                      future: _getLoginInfo(),
-                      initialData: [],
-                      builder: (context, snapshot) {
-                        final deviceId =
-                            snapshot.data!.isNotEmpty ? snapshot.data![1] : '';
-                        final deviceName =
-                            snapshot.data!.isNotEmpty ? snapshot.data![3] : '';
-                        return Column(
-                          children: [
-                            ListTile(
-                              title: Text('Device id'),
-                              subtitle: Text(deviceId),
-                            ),
-                            ListTile(
-                              title: Text('Device name'),
-                              subtitle: Text(deviceName),
-                            ),
-                          ],
-                        );
-                      }),
+                    future: _getLoginInfo(),
+                    initialData: [],
+                    builder: (context, snapshot) {
+                      final deviceId = snapshot.data!.isNotEmpty
+                          ? snapshot.data![1]
+                          : '';
+                      final deviceName = snapshot.data!.isNotEmpty
+                          ? snapshot.data![3]
+                          : '';
+                      return Column(
+                        children: [
+                          ListTile(
+                            title: Text('Device id'),
+                            subtitle: Text(deviceId),
+                          ),
+                          ListTile(
+                            title: Text('Device name'),
+                            subtitle: Text(deviceName),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
                   ListTile(
-                      onTap: () => _gpodderUrl.launchUrl,
-                      title: Text('Visit gpodder.net'),
-                      subtitle: Text('Manage subscriptions online')),
+                    onTap: () => _gpodderUrl.launchUrl,
+                    title: Text('Visit gpodder.net'),
+                    subtitle: Text('Manage subscriptions online'),
+                  ),
                   ListTile(
-                      onTap: _fullSync,
-                      title: Text('Full sync'),
-                      subtitle: Text('If error happened when syncing')),
+                    onTap: _fullSync,
+                    title: Text('Full sync'),
+                    subtitle: Text('If error happened when syncing'),
+                  ),
                 ]),
               ),
             ],

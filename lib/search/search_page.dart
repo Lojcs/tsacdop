@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
 
@@ -36,36 +35,47 @@ class SearchPanelRoute extends ModalRoute {
   final FocusNode searchFocusNode = FocusNode();
 
   final JointSearch searchProvider;
-  SearchPanelRoute(BuildContext context, this.heroKey,
-      {required this.showIcon, required this.hideIcon})
-      : barrierLabelText = context.s.back,
-        initialHeroOffset =
-            (heroKey.currentContext!.findRenderObject() as RenderBox)
-                .localToGlobal(Offset(-6, -12)),
-        finalHeroOffset = Offset(
-            context.actionBarButtonSizeVertical +
-                context.actionBarIconPadding.left / 2,
-            context.height -
-                (140 + context.actionBarIconPadding.vertical) + // Card height
-                context.actionBarIconPadding.top * 3 - // Card inner padding
-                context.originalPadding.bottom -
-                (context.audioState.playerRunning
-                    ? context.audioState.playerHeight!.height
-                    : 0)),
-        heroWidthTween = Tween(
-            begin: context.actionBarButtonSizeVertical,
-            end: SearchBar.barWidth(context)),
-        heightTween = Tween(
-            begin: 0,
-            end: 140 +
-                context.actionBarIconPadding.vertical +
-                (context.audioState.playerRunning
-                    ? context.audioState.playerHeight!.height
-                    : 0)),
-        searchProvider =
-            JointSearch(context.podcastState, context.episodeState) {
-    heroOffsetTween =
-        Tween<Offset>(begin: initialHeroOffset, end: finalHeroOffset);
+  SearchPanelRoute(
+    BuildContext context,
+    this.heroKey, {
+    required this.showIcon,
+    required this.hideIcon,
+  }) : barrierLabelText = context.s.back,
+       initialHeroOffset =
+           (heroKey.currentContext!.findRenderObject() as RenderBox)
+               .localToGlobal(Offset(-6, -12)),
+       finalHeroOffset = Offset(
+         (context.superSettingState.searchMode.get() ? 90 : 0) +
+             context.actionBarButtonSizeVertical +
+             context.actionBarIconPadding.left / 2,
+         context.height -
+             (140 + context.actionBarIconPadding.vertical) + // Card height
+             context.actionBarIconPadding.top * 3 - // Card inner padding
+             context.originalPadding.bottom -
+             (context.audioState.playerRunning ? 75 : 0),
+       ),
+       heroWidthTween = Tween(
+         begin: context.actionBarButtonSizeVertical,
+         end:
+             SearchBar.barWidth(context) -
+             (context.superSettingState.searchMode.get() ? 90 : 0),
+       ),
+       heightTween = Tween(
+         begin: 0,
+         end:
+             140 +
+             context.actionBarIconPadding.vertical +
+             (context.audioState.playerRunning ? 75 : 0),
+       ),
+       searchProvider = JointSearch(
+         context.podcastState,
+         context.episodeState,
+         context.superSettingState,
+       ) {
+    heroOffsetTween = Tween<Offset>(
+      begin: initialHeroOffset,
+      end: finalHeroOffset,
+    );
   }
   @override
   void dispose() {
@@ -108,19 +118,20 @@ class SearchPanelRoute extends ModalRoute {
         final villainBox =
             villainKey.currentContext!.findRenderObject() as RenderBox;
         finalHeroOffset = villainBox.localToGlobal(Offset.zero);
-        heroOffsetTween =
-            Tween<Offset>(begin: initialHeroOffset, end: finalHeroOffset);
+        heroOffsetTween = Tween<Offset>(
+          begin: initialHeroOffset,
+          end: finalHeroOffset,
+        );
         final searchCardOffset =
             panelKey.currentState!.scrollController.offset +
-                140 +
-                context.actionBarIconPadding.vertical +
-                (context.audioState.playerRunning
-                    ? context.audioState.playerHeight!.height
-                    : 0);
+            140 +
+            context.actionBarIconPadding.vertical +
+            (context.audioState.playerRunning ? 75 : 0);
         heightTween = Tween(begin: 0, end: searchCardOffset);
         heroWidthTween = Tween(
-            begin: context.actionBarButtonSizeVertical,
-            end: villainBox.size.width);
+          begin: context.actionBarButtonSizeVertical,
+          end: villainBox.size.width,
+        );
       }
     } else if (reversed) {
       reversed = false;
@@ -135,17 +146,24 @@ class SearchPanelRoute extends ModalRoute {
 
   @override
   Widget buildPage(
-      BuildContext context, Animation<double> animation, Animation<double> _) {
-    final panelAnimation =
-        CurvedAnimation(parent: animation, curve: Curves.easeInOutCirc);
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> _,
+  ) {
+    final panelAnimation = CurvedAnimation(
+      parent: animation,
+      curve: Curves.easeInOutCirc,
+    );
     final heroOffsetAnimation = CurvedAnimation(
-        parent: animation,
-        curve: Curves.easeInOut,
-        reverseCurve: Curves.fastEaseInToSlowEaseOut);
+      parent: animation,
+      curve: Curves.easeInOut,
+      reverseCurve: Curves.fastEaseInToSlowEaseOut,
+    );
     final heroWidthAnimation = CurvedAnimation(
-        parent: animation,
-        curve: Curves.easeOutQuart,
-        reverseCurve: Curves.easeInQuad);
+      parent: animation,
+      curve: Curves.easeOutQuart,
+      reverseCurve: Curves.easeInQuad,
+    );
     return PopScope(
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) searchProvider.searchWeb = false;
@@ -155,10 +173,8 @@ class SearchPanelRoute extends ModalRoute {
           AnimatedBuilder(
             animation: animation,
             child: Container(color: context.surface.withAlpha(64)),
-            builder: (context, child) => Opacity(
-              opacity: animation.value,
-              child: child,
-            ),
+            builder: (context, child) =>
+                Opacity(opacity: animation.value, child: child),
           ),
           Align(
             alignment: Alignment.bottomCenter,
@@ -170,14 +186,12 @@ class SearchPanelRoute extends ModalRoute {
                   behavior: NoOverscrollScrollBehavior(),
                   child: Material(
                     type: MaterialType.transparency,
-                    child: Selector<AudioPlayerNotifier, (bool, PlayerHeight?)>(
-                      selector: (_, audio) =>
-                          (audio.playerRunning, audio.playerHeight),
-                      builder: (_, data, __) => Padding(
+                    child: Selector<AudioState, bool>(
+                      selector: (_, audio) => audio.playerRunning,
+                      builder: (context, value, __) => Padding(
                         padding: EdgeInsetsGeometry.only(
-                            bottom: data.$1 && data.$2 != null
-                                ? data.$2!.height
-                                : 0),
+                          bottom: value ? 75 : 0,
+                        ),
                         child: SearchPanel(
                           searchFocusNode: searchFocusNode,
                           hide: !panelAnimation.isCompleted,
@@ -225,12 +239,7 @@ class SearchPanelRoute extends ModalRoute {
                     );
             },
           ),
-          Material(
-            type: MaterialType.transparency,
-            child: SafeArea(
-              child: PlayerWidget(playerKey: GlobalKey<AudioPanelState>()),
-            ),
-          ),
+          PlayerWidget(playerKey: GlobalKey<AudioPanelState>()),
         ],
       ),
     );
@@ -242,12 +251,13 @@ class SearchPanel extends StatefulWidget {
   final bool hide;
   final GlobalKey searchBarKey;
   final JointSearch searchProvider;
-  const SearchPanel(
-      {required this.searchFocusNode,
-      this.hide = false,
-      required this.searchBarKey,
-      required this.searchProvider,
-      super.key});
+  const SearchPanel({
+    required this.searchFocusNode,
+    this.hide = false,
+    required this.searchBarKey,
+    required this.searchProvider,
+    super.key,
+  });
 
   @override
   State<SearchPanel> createState() => SearchPanelState();
@@ -261,29 +271,35 @@ class SearchPanelState extends State<SearchPanel>
       MediaQuery.of(context).viewPadding.vertical -
       (140 +
           context.actionBarIconPadding.vertical +
-          (context.audioState.playerRunning
-              ? context.audioState.playerHeight!.height
-              : 0));
+          (context.audioState.playerRunning ? 75 : 0));
 
   late final ScrollController scrollController = ScrollController();
-  late final animationComtroller =
-      AnimationController(vsync: this, duration: Duration(milliseconds: 300));
+  late final animationComtroller = AnimationController(
+    vsync: this,
+    duration: Duration(milliseconds: 300),
+  );
   late final animation = CurvedAnimation(
-      parent: animationComtroller,
-      curve: Curves.easeOutQuad,
-      reverseCurve: Curves.easeInQuad);
+    parent: animationComtroller,
+    curve: Curves.easeOutQuad,
+    reverseCurve: Curves.easeInQuad,
+  );
   int searchItemCount = 2;
 
   @override
   void didUpdateWidget(covariant SearchPanel oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!oldWidget.hide && widget.hide) {
-      final double target =
-          math.max(0, scrollController.offset - initialTopPadding + 5);
+      final double target = math.max(
+        0,
+        scrollController.offset - initialTopPadding + 5,
+      );
       scrollController.jumpTo(target);
       if (target != 0) {
-        scrollController.animateTo(0,
-            duration: Duration(milliseconds: 400), curve: Curves.easeOut);
+        scrollController.animateTo(
+          0,
+          duration: Duration(milliseconds: 400),
+          curve: Curves.easeOut,
+        );
       }
     }
   }
@@ -299,12 +315,13 @@ class SearchPanelState extends State<SearchPanel>
           if (scrollController.hasClients &&
               (searchItemCount < itemCount + 2)) {
             scrollController.animateTo(
-                initialTopPadding +
-                    (140 + context.actionBarIconPadding.vertical) +
-                    (140 + context.actionBarIconPadding.vertical) *
-                        (searchItemCount - 3),
-                duration: Durations.medium2,
-                curve: Curves.easeOut);
+              initialTopPadding +
+                  (140 + context.actionBarIconPadding.vertical) +
+                  (140 + context.actionBarIconPadding.vertical) *
+                      (searchItemCount - 3),
+              duration: Durations.medium2,
+              curve: Curves.easeOut,
+            );
           }
           searchItemCount = itemCount + 2;
           if (searchWeb) {
@@ -342,36 +359,38 @@ class SearchPanelState extends State<SearchPanel>
                   1 => 140 + context.actionBarIconPadding.vertical,
                   var i when i < searchItemCount =>
                     140 + context.actionBarIconPadding.vertical,
-                  _ => null
+                  _ => null,
                 },
                 controller: scrollController,
                 itemBuilder: (context, index) => switch ((
                   index,
-                  widget.searchProvider.episodeIds.isNotEmpty
+                  widget.searchProvider.episodeIds.isNotEmpty,
                 )) {
-                  (0, _) => searchWeb
-                      ? Center()
-                      : GestureDetector(
-                          onTap: () {
-                            if (widget.searchFocusNode.hasFocus) {
-                              widget.searchFocusNode.unfocus();
-                            } else {
-                              Navigator.of(context).pop();
-                            }
-                          },
-                        ),
+                  (0, _) =>
+                    searchWeb
+                        ? Center()
+                        : GestureDetector(
+                            onTap: () {
+                              if (widget.searchFocusNode.hasFocus) {
+                                widget.searchFocusNode.unfocus();
+                              } else {
+                                Navigator.of(context).pop();
+                              }
+                            },
+                          ),
                   (1, _) => Controls(
-                      searchFocusNode: widget.searchFocusNode,
-                      hideSearchBar: widget.hide,
-                      searchBarKey: widget.searchBarKey,
-                      animation: animation,
-                    ),
-                  (2, true) =>
-                    SearchEpisodeGrid(widget.searchProvider.episodeIds),
+                    searchFocusNode: widget.searchFocusNode,
+                    hideSearchBar: widget.hide,
+                    searchBarKey: widget.searchBarKey,
+                    animation: animation,
+                  ),
+                  (2, true) => SearchEpisodeGrid(
+                    widget.searchProvider.episodeIds,
+                  ),
                   (_, true) => podcastCard(index - 3),
                   (_, false) => podcastCard(index - 2),
                 },
-              )
+              ),
             ],
           );
         },
@@ -380,29 +399,29 @@ class SearchPanelState extends State<SearchPanel>
   }
 
   Widget podcastCard(int index) => Selector<JointSearch, bool>(
-        selector: (_, search) => search.podcastIds.length > index,
-        builder: (context, value, _) => value
-            ? SearchPodcastPreview(
-                widget.searchProvider.podcastIds[index],
-                widget.searchProvider.getPodcastEpisodes(
-                    widget.searchProvider.podcastIds[index])!,
-              )
-            : SearchPanelCard(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      margin: EdgeInsets.all(12),
-                      height: 20,
-                      decoration:
-                          BoxDecoration(borderRadius: context.radiusSmall),
-                      clipBehavior: Clip.antiAlias,
-                      child: LinearProgressIndicator(),
-                    )
-                  ],
+    selector: (_, search) => search.podcastIds.length > index,
+    builder: (context, value, _) => value
+        ? SearchPodcastPreview(
+            widget.searchProvider.podcastIds[index],
+            widget.searchProvider.getPodcastEpisodes(
+              widget.searchProvider.podcastIds[index],
+            )!,
+          )
+        : SearchPanelCard(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  margin: EdgeInsets.all(12),
+                  height: 20,
+                  decoration: BoxDecoration(borderRadius: context.radiusSmall),
+                  clipBehavior: Clip.antiAlias,
+                  child: LinearProgressIndicator(),
                 ),
-              ),
-      );
+              ],
+            ),
+          ),
+  );
 }
 
 class Controls extends StatefulWidget {
@@ -422,17 +441,22 @@ class Controls extends StatefulWidget {
 }
 
 class ControlsState extends State<Controls> {
-  late final bottomBarExpansionController =
-      ExpansionController(maxWidth: maxWidth);
+  late final bottomBarExpansionController = ExpansionController(
+    maxWidth: maxWidth,
+  );
   double maxWidth() =>
       context.width - context.actionBarIconPadding.horizontal * 5;
-  final alignmentTween =
-      AlignmentTween(begin: Alignment.center, end: Alignment.centerRight);
+  final alignmentTween = AlignmentTween(
+    begin: Alignment.center,
+    end: Alignment.centerRight,
+  );
   late final paddingTween = EdgeInsetsTween(
-      begin: EdgeInsets.only(
-          left: context.actionBarIconPadding.left / 2,
-          right: context.actionBarIconPadding.right / 2),
-      end: EdgeInsets.only(right: context.actionBarIconPadding.right / 2));
+    begin: EdgeInsets.only(
+      left: context.actionBarIconPadding.left / 2,
+      right: context.actionBarIconPadding.right / 2,
+    ),
+    end: EdgeInsets.only(right: context.actionBarIconPadding.right / 2),
+  );
   @override
   Widget build(BuildContext context) {
     final search = Provider.of<JointSearch>(context, listen: false);
@@ -476,29 +500,26 @@ class ControlsState extends State<Controls> {
                             ),
                           ),
                         ),
-                        Padding(
-                          padding: EdgeInsetsGeometry.only(right: 0),
-                          child: AnimatedBuilder(
-                            animation: widget.animation,
-                            builder: (context, child) => Opacity(
-                              opacity: widget.animation.value,
-                              child: ActionBarButton(
-                                height: 40,
-                                width: 40,
-                                connectLeft: true,
-                                tooltip: context.s.forward,
-                                // enabled: webMode,
-                                child: Center(
-                                  child: Icon(
-                                    Icons.arrow_forward,
-                                    size: context.actionBarIconSize,
-                                  ),
+                        AnimatedBuilder(
+                          animation: widget.animation,
+                          builder: (context, child) => Opacity(
+                            opacity: widget.animation.value,
+                            child: ActionBarButton(
+                              height: 40,
+                              width: 40,
+                              connectLeft: true,
+                              tooltip: context.s.forward,
+                              // enabled: webMode,
+                              child: Center(
+                                child: Icon(
+                                  Icons.arrow_forward,
+                                  size: context.actionBarIconSize,
                                 ),
-                                onPressed: (value) {
-                                  widget.searchFocusNode.unfocus();
-                                  search.webSearch.goForward();
-                                },
                               ),
+                              onPressed: (value) {
+                                widget.searchFocusNode.unfocus();
+                                search.webSearch.goForward();
+                              },
                             ),
                           ),
                         ),
@@ -514,12 +535,14 @@ class ControlsState extends State<Controls> {
                           padding: paddingTween.evaluate(widget.animation),
                           child: SearchBar(
                             widget.searchFocusNode,
-                            width: SearchBar.barWidth(context) -
+                            width:
+                                SearchBar.barWidth(context) -
                                 context.actionBarButtonSizeHorizontal *
                                     (widget.animation.value * 2.5),
-                            text:
-                                Provider.of<JointSearch>(context, listen: false)
-                                    .queryText,
+                            text: Provider.of<JointSearch>(
+                              context,
+                              listen: false,
+                            ).queryText,
                             key: widget.searchBarKey,
                           ),
                         ),
@@ -534,44 +557,44 @@ class ControlsState extends State<Controls> {
                     selector: (_, search) => search.searchApi,
                     builder: (context, searchApi, _) =>
                         ActionBarDropdownButton<SearchApi>(
-                      expansionController: bottomBarExpansionController,
-                      tooltip: context.s.searchApi,
-                      connectRight: true,
-                      selected: searchApi,
-                      dropsUp: true,
-                      itemBuilder: () => SearchApi.values
-                          .map(
-                            (e) => MyPopupMenuItem(
-                              width: 120,
-                              value: e,
-                              child: Tooltip(
-                                message: e.name,
-                                child: Center(
-                                  child: Text(
-                                    e.name,
-                                    style: context.textTheme.bodyLarge!,
+                          expansionController: bottomBarExpansionController,
+                          tooltip: context.s.searchApi,
+                          connectRight: true,
+                          selected: searchApi,
+                          dropsUp: true,
+                          itemBuilder: () => SearchApi.values
+                              .map(
+                                (e) => MyPopupMenuItem(
+                                  width: 120,
+                                  value: e,
+                                  child: Tooltip(
+                                    message: e.name,
+                                    child: Center(
+                                      child: Text(
+                                        e.name,
+                                        style: context.textTheme.bodyLarge!,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
+                              )
+                              .toList(),
+                          onSelected: (value) => search.searchApi = value,
+                          active: (_) => !searchWeb,
+                          onInactiveTap: () {
+                            search.clear();
+                            search.searchWeb = false;
+                          },
+                          maxExpandedWidth: 120,
+                          expandedChild: Center(
+                            child: Text(
+                              searchApi.name,
+                              style: context.textTheme.bodyLarge!,
+                              overflow: TextOverflow.clip,
                             ),
-                          )
-                          .toList(),
-                      onSelected: (value) => search.searchApi = value,
-                      active: (_) => !searchWeb,
-                      onInactiveTap: () {
-                        search.clear();
-                        search.searchWeb = false;
-                      },
-                      maxExpandedWidth: 120,
-                      expandedChild: Center(
-                        child: Text(
-                          searchApi.name,
-                          style: context.textTheme.bodyLarge!,
-                          overflow: TextOverflow.clip,
+                          ),
+                          child: Icon(Icons.api_rounded),
                         ),
-                      ),
-                      child: Icon(Icons.api_rounded),
-                    ),
                   ),
                   Selector<JointSearch, int>(
                     selector: (_, search) => search.itemCount,
@@ -590,7 +613,7 @@ class ControlsState extends State<Controls> {
                         alignment: Alignment.center,
                         children: [
                           Icon(Icons.check_box_outline_blank),
-                          Text("$itemCount")
+                          Text("$itemCount"),
                         ],
                       ),
                     ),
@@ -599,43 +622,43 @@ class ControlsState extends State<Controls> {
                     selector: (_, search) => search.searchEngine,
                     builder: (context, searchEngine, _) =>
                         ActionBarDropdownButton<SearchEngine>(
-                      expansionController: bottomBarExpansionController,
-                      tooltip: context.s.searchEngine,
-                      connectLeft: true,
-                      selected: searchEngine,
-                      dropsUp: true,
-                      itemBuilder: () => SearchEngine.values
-                          .map(
-                            (e) => MyPopupMenuItem(
-                              width: 120,
-                              value: e,
-                              child: Tooltip(
-                                message: e.name,
-                                child: Center(
-                                  child: Text(
-                                    e.name,
-                                    style: context.textTheme.bodyLarge!,
+                          expansionController: bottomBarExpansionController,
+                          tooltip: context.s.searchEngine,
+                          connectLeft: true,
+                          selected: searchEngine,
+                          dropsUp: true,
+                          itemBuilder: () => SearchEngine.values
+                              .map(
+                                (e) => MyPopupMenuItem(
+                                  width: 120,
+                                  value: e,
+                                  child: Tooltip(
+                                    message: e.name,
+                                    child: Center(
+                                      child: Text(
+                                        e.name,
+                                        style: context.textTheme.bodyLarge!,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
+                              )
+                              .toList(),
+                          onSelected: (value) => search.searchEngine = value,
+                          active: (_) => searchWeb,
+                          onInactiveTap: () {
+                            search.clear();
+                            search.searchWeb = true;
+                          },
+                          maxExpandedWidth: 120,
+                          expandedChild: Center(
+                            child: Text(
+                              searchEngine.name,
+                              style: context.textTheme.bodyLarge!,
                             ),
-                          )
-                          .toList(),
-                      onSelected: (value) => search.searchEngine = value,
-                      active: (_) => searchWeb,
-                      onInactiveTap: () {
-                        search.clear();
-                        search.searchWeb = true;
-                      },
-                      maxExpandedWidth: 120,
-                      expandedChild: Center(
-                        child: Text(
-                          searchEngine.name,
-                          style: context.textTheme.bodyLarge!,
+                          ),
+                          child: Icon(LineIcons.globe),
                         ),
-                      ),
-                      child: Icon(LineIcons.globe),
-                    ),
                   ),
                 ],
               ),
@@ -662,11 +685,13 @@ class SearchBar extends StatefulWidget {
   final String text;
   final Animation<double> colorAnimation;
 
-  const SearchBar(this.searchFocusNode,
-      {this.width,
-      this.text = "",
-      this.colorAnimation = const DummyAnimation(),
-      super.key});
+  const SearchBar(
+    this.searchFocusNode, {
+    this.width,
+    this.text = "",
+    this.colorAnimation = const DummyAnimation(),
+    super.key,
+  });
 
   @override
   State<SearchBar> createState() => _SearchBarState();
@@ -676,8 +701,9 @@ class SearchBar extends StatefulWidget {
 }
 
 class _SearchBarState extends State<SearchBar> {
-  late final TextEditingController searchController =
-      TextEditingController(text: widget.text);
+  late final TextEditingController searchController = TextEditingController(
+    text: widget.text,
+  );
   late double width = widget.width ?? 0;
   @override
   void didUpdateWidget(covariant SearchBar oldWidget) {
@@ -695,8 +721,10 @@ class _SearchBarState extends State<SearchBar> {
 
   @override
   Widget build(BuildContext context) {
-    final ColorTween background =
-        ColorTween(begin: context.surface, end: context.cardColorSchemeCard);
+    final ColorTween background = ColorTween(
+      begin: context.surface,
+      end: context.cardColorSchemeCard,
+    );
     return Stack(
       alignment: Alignment.centerRight,
       children: [
@@ -715,12 +743,13 @@ class _SearchBarState extends State<SearchBar> {
                 hintText: context.s.searchPodcast,
                 hintStyle: TextStyle(fontSize: 18),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: context.accentColor),
+                  borderSide: BorderSide(color: context.primaryColor),
                   borderRadius: context.radiusLarge,
                 ),
                 enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.transparent),
-                    borderRadius: context.radiusLarge),
+                  borderSide: BorderSide(color: Colors.transparent),
+                  borderRadius: context.radiusLarge,
+                ),
               ),
               controller: searchController,
               onSubmitted: (query) {
@@ -730,8 +759,9 @@ class _SearchBarState extends State<SearchBar> {
               onTap: () {
                 if (!widget.searchFocusNode.hasFocus) {
                   searchController.selection = TextSelection(
-                      baseOffset: 0,
-                      extentOffset: searchController.text.length);
+                    baseOffset: 0,
+                    extentOffset: searchController.text.length,
+                  );
                 }
               },
             ),

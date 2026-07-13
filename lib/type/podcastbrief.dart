@@ -31,12 +31,7 @@ enum DataSource {
 const localFolderId = "46e48103-06c7-4fe1-a0b1-68aa7205b7f0";
 const podcastAllId = "74c638a9-5021-4b1e-ba51-3deab5028905";
 
-const avatarColors = <String>[
-  '388E3C',
-  '1976D2',
-  'D32F2F',
-  '00796B',
-];
+const avatarColors = <String>['388E3C', '1976D2', 'D32F2F', '00796B'];
 
 class PodcastBrief extends Equatable {
   final String id;
@@ -100,88 +95,94 @@ class PodcastBrief extends Equatable {
   }) : firesideHosts = firesideHosts ?? [];
 
   /// Construct [PodcastBrief] for a local folder.
-  PodcastBrief.localFolder(S s, Directory applicationDocumentsDirectory,
-      {String? id, String? title, String? description})
-      : id = id ?? localFolderId,
-        title = title ?? s.localFolder,
-        rssUrl = "",
-        rssHash = "",
-        author = s.deviceStorage,
-        provider = "",
-        firesideHosts = [],
-        description = description ?? s.localFolderDescription,
-        webpage = "",
-        funding = [],
-        imageUrl = "",
-        imagePath =
-            "${applicationDocumentsDirectory.path}/assets/avatar_backup.png",
-        firesideBackgroundImage = "",
-        primaryColor = Colors.teal,
-        syncEpisodeCount = 0,
-        episodeCount = 0,
-        hideNewMark = true,
-        noAutoSync = true,
-        autoDownload = false,
-        skipSecondsStart = 0,
-        skipSecondsEnd = 0,
-        source = DataSource.user;
+  PodcastBrief.localFolder(
+    S s,
+    Directory applicationDocumentsDirectory, {
+    String? id,
+    String? title,
+    String? description,
+  }) : id = id ?? localFolderId,
+       title = title ?? s.localFolder,
+       rssUrl = "",
+       rssHash = "",
+       author = s.deviceStorage,
+       provider = "",
+       firesideHosts = [],
+       description = description ?? s.localFolderDescription,
+       webpage = "",
+       funding = [],
+       imageUrl = "",
+       imagePath =
+           "${applicationDocumentsDirectory.path}/assets/avatar_backup.png",
+       firesideBackgroundImage = "",
+       primaryColor = Colors.teal,
+       syncEpisodeCount = 0,
+       episodeCount = 0,
+       hideNewMark = true,
+       noAutoSync = true,
+       autoDownload = false,
+       skipSecondsStart = 0,
+       skipSecondsEnd = 0,
+       source = DataSource.user;
 
   /// Construct a [PodcastBrief] from an [RssFeed].
   /// This is callable from a background isolate, and so doesn't parse its color.
   /// Use [withColorFromImage] to fill the correct color.
   PodcastBrief.fromFeed(RssFeed feed, this.rssUrl, this.rssHash, {String? id})
-      : id = id ?? Uuid().v4(),
-        title = feed.title ?? feed.itunes?.title ?? "",
-        author = feed.author ?? feed.itunes?.author ?? "",
-        provider = feed.generator ?? "",
-        firesideHosts = [],
-        description = feed.description ??
-            feed.itunes?.summary ??
-            feed.itunes?.subtitle ??
-            "",
-        webpage = feed.link ?? "",
-        funding = [for (var f in (feed.podcastFunding ?? [])) f.url],
-        imageUrl = feed.image?.url ??
-            feed.itunes?.image?.href ??
-            "https://ui-avatars.com/api/?size=300&background="
-                "${avatarColors[math.Random().nextInt(3)]}"
-                "&color=fff&name=${feed.title}&length=2&bold=true",
-        imagePath = "",
-        firesideBackgroundImage = "",
-        primaryColor = Colors.teal,
-        syncEpisodeCount = 0,
-        episodeCount = feed.items?.length ?? 0,
-        hideNewMark = false,
-        noAutoSync = false,
-        autoDownload = false,
-        skipSecondsStart = 0,
-        skipSecondsEnd = 0,
-        source = DataSource.remote;
+    : id = id ?? Uuid().v4(),
+      title = feed.title ?? feed.itunes?.title ?? "",
+      author = feed.author ?? feed.itunes?.author ?? "",
+      provider = feed.generator ?? "",
+      firesideHosts = [],
+      description =
+          feed.description ??
+          feed.itunes?.summary ??
+          feed.itunes?.subtitle ??
+          "",
+      webpage = feed.link ?? "",
+      funding = [for (var f in (feed.podcastFunding ?? [])) f.url],
+      imageUrl =
+          feed.image?.url ??
+          feed.itunes?.image?.href ??
+          "https://ui-avatars.com/api/?size=300&background="
+              "${avatarColors[math.Random().nextInt(3)]}"
+              "&color=fff&name=${feed.title}&length=2&bold=true",
+      imagePath = "",
+      firesideBackgroundImage = "",
+      primaryColor = Colors.teal,
+      syncEpisodeCount = 0,
+      episodeCount = feed.items?.length ?? 0,
+      hideNewMark = false,
+      noAutoSync = false,
+      autoDownload = false,
+      skipSecondsStart = 0,
+      skipSecondsEnd = 0,
+      source = DataSource.remote;
 
-  PodcastBrief.api(
-      {String? id,
-      required this.title,
-      required this.rssUrl,
-      required this.imageUrl,
-      this.primaryColor = Colors.teal,
-      this.author = "",
-      this.provider = "",
-      this.description = "",
-      this.webpage = "",
-      this.funding = const [],
-      this.episodeCount = 0})
-      : id = id ?? Uuid().v4(),
-        firesideHosts = [],
-        firesideBackgroundImage = "",
-        rssHash = "",
-        imagePath = "",
-        syncEpisodeCount = 0,
-        hideNewMark = false,
-        noAutoSync = false,
-        autoDownload = false,
-        skipSecondsStart = 0,
-        skipSecondsEnd = 0,
-        source = DataSource.api;
+  PodcastBrief.api({
+    String? id,
+    required this.title,
+    required this.rssUrl,
+    required this.imageUrl,
+    this.primaryColor = Colors.teal,
+    this.author = "",
+    this.provider = "",
+    this.description = "",
+    this.webpage = "",
+    this.funding = const [],
+    this.episodeCount = 0,
+  }) : id = id ?? Uuid().v4(),
+       firesideHosts = [],
+       firesideBackgroundImage = "",
+       rssHash = "",
+       imagePath = "",
+       syncEpisodeCount = 0,
+       hideNewMark = false,
+       noAutoSync = false,
+       autoDownload = false,
+       skipSecondsStart = 0,
+       skipSecondsEnd = 0,
+       source = DataSource.api;
 
   /// Returns a copy with the [primaryColor] replaced with a color derived from
   /// [imagePath] or [imageUrl].
@@ -191,8 +192,10 @@ class PodcastBrief extends Equatable {
       imageProvider = FileImage(File(imagePath));
     } else {
       // NetworkImage doesn't throw on error.
-      final imageBuffer = await Dio().get<List<int>>(imageUrl,
-          options: Options(responseType: ResponseType.bytes));
+      final imageBuffer = await Dio().get<List<int>>(
+        imageUrl,
+        options: Options(responseType: ResponseType.bytes),
+      );
       imageProvider = MemoryImage(Uint8List.fromList(imageBuffer.data!));
     }
     final image = await getImageFromProvider(imageProvider);
@@ -203,22 +206,27 @@ class PodcastBrief extends Equatable {
 
   /// Returns a copy with information updated from the [feed] but with existing user data.
   PodcastBrief withUpdatedInfo(
-      RssFeed feed, String rssUrl, String rssHash, int newEpisodeCount) {
+    RssFeed feed,
+    String rssUrl,
+    String rssHash,
+    int newEpisodeCount,
+  ) {
     final newPodcast = PodcastBrief.fromFeed(feed, rssUrl, rssHash);
     return newPodcast.copyWith(
-        id: id,
-        firesideHosts: firesideHosts,
-        imagePath: imagePath,
-        firesideBackgroundImage: firesideBackgroundImage,
-        primaryColor: primaryColor,
-        syncEpisodeCount: newEpisodeCount,
-        episodeCount: episodeCount + newEpisodeCount,
-        hideNewMark: hideNewMark,
-        noAutoSync: noAutoSync,
-        autoDownload: autoDownload,
-        skipSecondsStart: skipSecondsStart,
-        skipSecondsEnd: skipSecondsEnd,
-        source: source);
+      id: id,
+      firesideHosts: firesideHosts,
+      imagePath: imagePath,
+      firesideBackgroundImage: firesideBackgroundImage,
+      primaryColor: primaryColor,
+      syncEpisodeCount: newEpisodeCount,
+      episodeCount: episodeCount + newEpisodeCount,
+      hideNewMark: hideNewMark,
+      noAutoSync: noAutoSync,
+      autoDownload: autoDownload,
+      skipSecondsStart: skipSecondsStart,
+      skipSecondsEnd: skipSecondsEnd,
+      source: source,
+    );
   }
 
   ImageProvider get avatarImage {
@@ -237,26 +245,40 @@ class PodcastBrief extends Equatable {
     seedColor: primaryColor,
     brightness: Brightness.dark,
   );
-  late final CardColorScheme cardColorSchemeLight =
-      CardColorScheme(colorSchemeLight);
-  late final CardColorScheme cardColorSchemeDark =
-      CardColorScheme(colorSchemeDark);
+  late final ColorScheme colorSchemeBlack = getColorScheme(
+    primaryColor,
+    .black,
+  );
+  late final CardColorScheme cardColorSchemeLight = CardColorScheme(
+    colorSchemeLight,
+    false,
+  );
+  late final CardColorScheme cardColorSchemeDark = CardColorScheme(
+    colorSchemeDark,
+    false,
+  );
+  late final CardColorScheme cardColorSchemeBlack = CardColorScheme(
+    colorSchemeBlack,
+    true,
+  );
 
   /// Gets the podcast color sceme for the provided [context].brightness.
   /// Caches its results so can be used freely.
-  ColorScheme colorScheme(BuildContext context) {
-    return context.brightness == Brightness.light
-        ? colorSchemeLight
-        : colorSchemeDark;
-  }
+  ColorScheme colorScheme(BuildContext context) =>
+      switch (context.tbrightness) {
+        .light => colorSchemeLight,
+        .dark => colorSchemeDark,
+        .black => colorSchemeBlack,
+      };
 
   /// Gets the podcast card color sceme for the provided [context].brightness.
   /// Caches its results so can be used freely.
-  CardColorScheme cardColorScheme(BuildContext context) {
-    return context.brightness == Brightness.light
-        ? cardColorSchemeLight
-        : cardColorSchemeDark;
-  }
+  CardColorScheme cardColorScheme(BuildContext context) =>
+      switch (context.tbrightness) {
+        .light => cardColorSchemeLight,
+        .dark => cardColorSchemeDark,
+        .black => cardColorSchemeBlack,
+      };
 
   Color backgroudColor(BuildContext context) {
     return cardColorScheme(context).saturated;
@@ -288,31 +310,31 @@ class PodcastBrief extends Equatable {
     int? skipSecondsStart,
     int? skipSecondsEnd,
     DataSource? source,
-  }) =>
-      PodcastBrief(
-          id: id ?? this.id,
-          title: title ?? this.title,
-          rssUrl: rssUrl ?? this.rssUrl,
-          rssHash: rssHash ?? this.rssHash,
-          author: author ?? this.author,
-          provider: provider ?? this.provider,
-          firesideHosts: firesideHosts ?? this.firesideHosts,
-          description: description ?? this.description,
-          webpage: webpage ?? this.webpage,
-          funding: funding ?? this.funding,
-          imageUrl: imageUrl ?? this.imageUrl,
-          imagePath: imagePath ?? this.imagePath,
-          firesideBackgroundImage:
-              firesideBackgroundImage ?? this.firesideBackgroundImage,
-          primaryColor: primaryColor ?? this.primaryColor,
-          syncEpisodeCount: syncEpisodeCount ?? this.syncEpisodeCount,
-          episodeCount: episodeCount ?? this.episodeCount,
-          hideNewMark: hideNewMark ?? this.hideNewMark,
-          noAutoSync: noAutoSync ?? this.noAutoSync,
-          autoDownload: autoDownload ?? this.autoDownload,
-          skipSecondsStart: skipSecondsStart ?? this.skipSecondsStart,
-          skipSecondsEnd: skipSecondsEnd ?? this.skipSecondsEnd,
-          source: source ?? this.source);
+  }) => PodcastBrief(
+    id: id ?? this.id,
+    title: title ?? this.title,
+    rssUrl: rssUrl ?? this.rssUrl,
+    rssHash: rssHash ?? this.rssHash,
+    author: author ?? this.author,
+    provider: provider ?? this.provider,
+    firesideHosts: firesideHosts ?? this.firesideHosts,
+    description: description ?? this.description,
+    webpage: webpage ?? this.webpage,
+    funding: funding ?? this.funding,
+    imageUrl: imageUrl ?? this.imageUrl,
+    imagePath: imagePath ?? this.imagePath,
+    firesideBackgroundImage:
+        firesideBackgroundImage ?? this.firesideBackgroundImage,
+    primaryColor: primaryColor ?? this.primaryColor,
+    syncEpisodeCount: syncEpisodeCount ?? this.syncEpisodeCount,
+    episodeCount: episodeCount ?? this.episodeCount,
+    hideNewMark: hideNewMark ?? this.hideNewMark,
+    noAutoSync: noAutoSync ?? this.noAutoSync,
+    autoDownload: autoDownload ?? this.autoDownload,
+    skipSecondsStart: skipSecondsStart ?? this.skipSecondsStart,
+    skipSecondsEnd: skipSecondsEnd ?? this.skipSecondsEnd,
+    source: source ?? this.source,
+  );
 
   MediaItem get mediaItem =>
       MediaItem(id: "pod:$id", title: title, playable: false);

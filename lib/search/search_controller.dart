@@ -1,14 +1,11 @@
 import 'dart:async';
 import 'dart:collection';
-import 'dart:convert';
-import 'dart:developer' as developer;
 
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
 import '../state/episode_state.dart';
 import '../state/podcast_state.dart';
+import '../state/settings/setting_state.dart';
 import '../type/episodebrief.dart';
 import 'search_api.dart';
 import 'search_web.dart';
@@ -168,7 +165,9 @@ abstract class RemoteSearch extends Search implements RemoteSearchInterface {
   Future<void> subscribe(String podcastId) async {
     final index = podcastIds.indexOf(podcastId);
     final result = await pState.subscribeRemotePodcast(
-        podcastId, podcastEpisodes[podcastId]!);
+      podcastId,
+      podcastEpisodes[podcastId]!,
+    );
     if (result != null) {
       podcastEpisodes.remove(podcastId);
       podcastIds[index] = result.$1;
@@ -181,9 +180,14 @@ abstract class RemoteSearch extends Search implements RemoteSearchInterface {
 class JointSearch extends Search implements RemoteSearchInterface {
   final PodcastState pState;
   final EpisodeState eState;
-  JointSearch(this.pState, this.eState)
-      : apiSearch = ApiSearch(pState, eState),
-        webSearch = SearchEngineSearch(pState, eState) {
+  JointSearch(this.pState, this.eState, SettingState settings)
+    : _searchWeb = settings.searchMode.get(),
+      apiSearch = ApiSearch(pState, eState, settings.searchApi.get()),
+      webSearch = SearchEngineSearch(
+        pState,
+        eState,
+        settings.searchEngine.get(),
+      ) {
     apiSearch.addListener(() => notifyListeners());
     webSearch.addListener(() => notifyListeners());
   }
@@ -191,7 +195,7 @@ class JointSearch extends Search implements RemoteSearchInterface {
   ApiSearch apiSearch;
   SearchEngineSearch webSearch;
 
-  bool _searchWeb = false;
+  bool _searchWeb;
   bool get searchWeb => _searchWeb;
   set searchWeb(bool boo) {
     _searchWeb = boo;
@@ -259,7 +263,7 @@ class JointSearch extends Search implements RemoteSearchInterface {
 
   @override
   Future<void> preparePodcastEpisodes(String podcastId) => Future.wait([
-        apiSearch.preparePodcastEpisodes(podcastId),
-        webSearch.preparePodcastEpisodes(podcastId)
-      ]);
+    apiSearch.preparePodcastEpisodes(podcastId),
+    webSearch.preparePodcastEpisodes(podcastId),
+  ]);
 }

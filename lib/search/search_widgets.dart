@@ -59,12 +59,13 @@ class SearchPanelCard extends StatefulWidget {
   final bool floating;
   final bool short;
   final Color? color;
-  const SearchPanelCard(
-      {required this.child,
-      this.floating = true,
-      this.short = false,
-      this.color,
-      super.key});
+  const SearchPanelCard({
+    required this.child,
+    this.floating = true,
+    this.short = false,
+    this.color,
+    super.key,
+  });
   @override
   State<SearchPanelCard> createState() => SearchPanelCardState();
   static double innerWidth(BuildContext context) =>
@@ -81,13 +82,17 @@ class SearchPanelCardState extends State<SearchPanelCard>
   @override
   void initState() {
     super.initState();
-    controller = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 200))
-      ..addListener(() {
-        if (mounted) setState(() {});
-      });
-    animation =
-        CurvedAnimation(parent: controller, curve: Curves.easeInOutQuad);
+    controller =
+        AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 200),
+        )..addListener(() {
+          if (mounted) setState(() {});
+        });
+    animation = CurvedAnimation(
+      parent: controller,
+      curve: Curves.easeInOutQuad,
+    );
     if (widget.floating) controller.value = 1;
   }
 
@@ -115,12 +120,14 @@ class SearchPanelCardState extends State<SearchPanelCard>
           decoration: BoxDecoration(
             color: widget.color ?? context.surface,
             borderRadius: context.radiusMedium,
-            boxShadow:
-                context.boxShadowMedium(color: context.cardColorSchemeShadow),
+            boxShadow: context.boxShadowMedium(
+              color: context.cardColorSchemeShadow,
+            ),
           ),
           clipBehavior: Clip.hardEdge,
           margin: EdgeInsets.symmetric(
-              horizontal: context.actionBarIconPadding.horizontal),
+            horizontal: context.actionBarIconPadding.horizontal,
+          ),
           padding: EdgeInsets.only(
             left: context.actionBarIconPadding.left * 4,
             top: context.actionBarIconPadding.top * 3,
@@ -152,12 +159,12 @@ class SearchPodcastPreviewState extends State<SearchPodcastPreview> {
   bool expanded = false;
   @override
   Widget build(BuildContext context) {
-    final cardColorScheme =
-        context.podcastState[widget.podcastId].cardColorScheme(context);
+    final cardColorScheme = context.podcastState[widget.podcastId]
+        .cardColorScheme(context);
     return Provider.value(
       value: cardColorScheme,
       builder: (context, child) => SearchPanelCard(
-        color: context.realDark ? context.surface : cardColorScheme.card,
+        color: cardColorScheme.card,
         child: Center(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -188,11 +195,12 @@ class SearchPodcastPreviewState extends State<SearchPodcastPreview> {
                               state: source == DataSource.remote,
                               buttonType: ActionBarButtonType.single,
                               onPressed: (value) => Provider.of<JointSearch>(
-                                      context,
-                                      listen: false)
-                                  .subscribe(widget.podcastId),
-                              tooltip:
-                                  context.s.filterType(context.s.subscribe),
+                                context,
+                                listen: false,
+                              ).subscribe(widget.podcastId),
+                              tooltip: context.s.filterType(
+                                context.s.subscribe,
+                              ),
                               // connectRight: true,
                               width: 100,
                               falseChild: Center(
@@ -248,19 +256,20 @@ class SearchPodcastPreviewState extends State<SearchPodcastPreview> {
                     imageUrl: imageUrl,
                     progressIndicatorBuilder:
                         (context, url, downloadProgress) => Container(
-                      height: 50,
-                      width: 50,
-                      alignment: Alignment.center,
-                      child: SizedBox(
-                        width: 20,
-                        height: 2,
-                        child: LinearProgressIndicator(
-                            value: downloadProgress.progress),
-                      ),
-                    ),
+                          height: 50,
+                          width: 50,
+                          alignment: Alignment.center,
+                          child: SizedBox(
+                            width: 20,
+                            height: 2,
+                            child: LinearProgressIndicator(
+                              value: downloadProgress.progress,
+                            ),
+                          ),
+                        ),
                   ),
                 ),
-              )
+              ),
             ],
           ),
         ),

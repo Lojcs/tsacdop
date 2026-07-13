@@ -48,62 +48,72 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
         title: Text(
           _selectedEpisodes.isEmpty
               ? widget.playlist.isQueue
-                  ? s.queue
-                  : widget.playlist.name
+                    ? s.queue
+                    : widget.playlist.name
               : s.selected(_selectedEpisodes.length),
           style: context.textTheme.headlineSmall,
         ),
         actions: [
           if (_selectedEpisodes.isNotEmpty)
             IconButton(
-                splashRadius: 20,
-                icon: Icon(Icons.delete_outline_rounded),
-                onPressed: () {
-                  context.read<AudioPlayerNotifier>().removeIndexesFromPlaylist(
-                      _selectedEpisodes,
-                      playlist: widget.playlist);
-                  setState(_selectedEpisodes.clear);
-                }),
+              splashRadius: 20,
+              icon: Icon(Icons.delete_outline_rounded),
+              onPressed: () {
+                context.read<AudioState>().removeIndexesFromPlaylist(
+                  _selectedEpisodes,
+                  playlist: widget.playlist,
+                );
+                setState(_selectedEpisodes.clear);
+              },
+            ),
           if (_selectedEpisodes.isNotEmpty)
             IconButton(
-                splashRadius: 20,
-                icon: Icon(Icons.select_all_outlined),
-                onPressed: () {
-                  setState(() {
-                    _selectedEpisodes.clear();
-                    _resetSelected = !_resetSelected;
-                  });
-                }),
+              splashRadius: 20,
+              icon: Icon(Icons.select_all_outlined),
+              onPressed: () {
+                setState(() {
+                  _selectedEpisodes.clear();
+                  _resetSelected = !_resetSelected;
+                });
+              },
+            ),
           IconButton(
             splashRadius: 20,
             icon: Icon(Icons.more_vert),
-            onPressed: () => generalSheet(context,
-                    title: widget.playlist.name,
-                    child: _PlaylistSetting(widget.playlist))
-                .then((value) {
-              if (!context
-                  .read<AudioPlayerNotifier>()
-                  .playlists
-                  .contains(widget.playlist)) {
-                Navigator.pop(context);
-              }
-              setState(() {});
-            }),
+            onPressed: () =>
+                showGeneralSheet(
+                  context,
+                  title: widget.playlist.name,
+                  child: _PlaylistSetting(widget.playlist),
+                ).then((value) {
+                  if (!context.read<AudioState>().playlists.contains(
+                    widget.playlist,
+                  )) {
+                    Navigator.pop(context);
+                  }
+                  setState(() {});
+                }),
           ),
         ],
       ),
       body: FutureBuilder<bool>(
-        future: widget.playlist
-            .cachePlaylist(Provider.of<EpisodeState>(context, listen: false)),
+        future: widget.playlist.cachePlaylist(
+          Provider.of<EpisodeState>(context, listen: false),
+        ),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            return _PlaylistBody(widget.playlist, (index) {
-              _selectedEpisodes.add(index);
-              if (mounted) setState(() {});
-            }, (index) {
-              _selectedEpisodes.remove(index);
-              if (mounted) setState(() {});
-            }, _resetSelected);
+            return _PlaylistBody(
+              widget.playlist,
+              (index) {
+                _selectedEpisodes.add(index);
+                if (mounted) setState(() {});
+              },
+              (index) {
+                _selectedEpisodes.remove(index);
+                if (mounted) setState(() {});
+              },
+              _resetSelected,
+            );
           } else {
             return Center();
           }
@@ -119,7 +129,11 @@ class _PlaylistBody extends StatefulWidget {
   final void Function(int index) onRemove;
   final bool resetSelected;
   const _PlaylistBody(
-      this.playlist, this.onSelect, this.onRemove, this.resetSelected);
+    this.playlist,
+    this.onSelect,
+    this.onRemove,
+    this.resetSelected,
+  );
   @override
   _PlaylistBodyState createState() => _PlaylistBodyState();
 }
@@ -132,26 +146,33 @@ class _PlaylistBodyState extends State<_PlaylistBody> {
       onReorder: (oldIndex, newIndex) async {
         if (newIndex > oldIndex) newIndex -= 1;
         final episode = episodes.removeAt(oldIndex);
-        episodes.insert(newIndex,
-            episode); // Without this the animation isn't smooth as the below call takes time to complete
+        episodes.insert(
+          newIndex,
+          episode,
+        ); // Without this the animation isn't smooth as the below call takes time to complete
         setState(() {});
-        await context
-            .read<AudioPlayerNotifier>()
-            .reorderPlaylist(oldIndex, newIndex, playlist: widget.playlist);
+        await context.read<AudioState>().reorderPlaylist(
+          oldIndex,
+          newIndex,
+          playlist: widget.playlist,
+        );
       },
       scrollDirection: Axis.vertical,
-      children: episodes.mapIndexed<Widget>(
-        (index, episodeId) {
-          return _PlaylistItem(episodeId, key: ValueKey(episodeId),
-              onSelect: () {
+      children: episodes.mapIndexed<Widget>((index, episodeId) {
+        return _PlaylistItem(
+          episodeId,
+          key: ValueKey(episodeId),
+          onSelect: () {
             widget.onSelect(index);
             setState(() {});
-          }, onRemove: () {
+          },
+          onRemove: () {
             widget.onRemove(index);
             setState(() {});
-          }, reset: widget.resetSelected);
-        },
-      ).toList(),
+          },
+          reset: widget.resetSelected,
+        );
+      }).toList(),
     );
   }
 }
@@ -161,11 +182,13 @@ class _PlaylistItem extends StatefulWidget {
   final bool reset;
   final VoidCallback onSelect;
   final VoidCallback onRemove;
-  const _PlaylistItem(this.episodeId,
-      {required this.onSelect,
-      required this.onRemove,
-      required this.reset,
-      super.key});
+  const _PlaylistItem(
+    this.episodeId, {
+    required this.onSelect,
+    required this.onRemove,
+    required this.reset,
+    super.key,
+  });
 
   @override
   __PlaylistItemState createState() => __PlaylistItemState();
@@ -182,7 +205,9 @@ class __PlaylistItemState extends State<_PlaylistItem>
     super.initState();
     _fraction = 0;
     _controller = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 500));
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
     _animation = Tween(begin: 0.0, end: 1.0).animate(_controller)
       ..addListener(() {
         if (mounted) {
@@ -215,8 +240,10 @@ class __PlaylistItemState extends State<_PlaylistItem>
   @override
   Widget build(BuildContext context) {
     final s = context.s;
-    final episode =
-        Provider.of<EpisodeState>(context, listen: false)[widget.episodeId];
+    final episode = Provider.of<EpisodeState>(
+      context,
+      listen: false,
+    )[widget.episodeId];
     final c = episode.backgroudColor(context);
     return SizedBox(
       height: 90.0,
@@ -258,15 +285,17 @@ class __PlaylistItemState extends State<_PlaylistItem>
                         ? CircleAvatar(
                             backgroundColor: c.withValues(alpha: 0.5),
                             backgroundImage:
-                                episode.episodeOrPodcastImageProvider)
+                                episode.episodeOrPodcastImageProvider,
+                          )
                         : CircleAvatar(
-                            backgroundColor: context.accentColor.withAlpha(70),
+                            backgroundColor: context.primaryColor.withAlpha(70),
                             child: Transform(
-                                alignment: FractionalOffset.center,
-                                transform: Matrix4.identity()
-                                  ..setEntry(3, 2, 0.001)
-                                  ..rotateY(math.pi),
-                                child: Icon(Icons.done)),
+                              alignment: FractionalOffset.center,
+                              transform: Matrix4.identity()
+                                ..setEntry(3, 2, 0.001)
+                                ..rotateY(math.pi),
+                              child: Icon(Icons.done),
+                            ),
                           ),
                   ),
                 ],
@@ -279,7 +308,9 @@ class __PlaylistItemState extends State<_PlaylistItem>
                     if (episode.isExplicit)
                       Container(
                         decoration: BoxDecoration(
-                            color: Colors.red[800], shape: BoxShape.circle),
+                          color: Colors.red[800],
+                          shape: BoxShape.circle,
+                        ),
                         height: 25.0,
                         width: 25.0,
                         margin: EdgeInsets.only(right: 10.0),
@@ -291,7 +322,9 @@ class __PlaylistItemState extends State<_PlaylistItem>
                           eState[widget.episodeId].enclosureDuration,
                       builder: (context, value, _) => value != 0
                           ? episodeTag(
-                              s.minsCount(value ~/ 60), Colors.cyan[300])
+                              s.minsCount(value ~/ 60),
+                              Colors.cyan[300],
+                            )
                           : Center(),
                     ),
                     Selector<EpisodeState, int>(
@@ -299,7 +332,9 @@ class __PlaylistItemState extends State<_PlaylistItem>
                           eState[widget.episodeId].enclosureSize,
                       builder: (context, value, _) => value != 0
                           ? episodeTag(
-                              '${value ~/ 1000000}MB', Colors.lightBlue[300])
+                              '${value ~/ 1000000}MB',
+                              Colors.lightBlue[300],
+                            )
                           : Center(),
                     ),
                   ],
@@ -307,9 +342,7 @@ class __PlaylistItemState extends State<_PlaylistItem>
               ),
             ),
           ),
-          Divider(
-            height: 2,
-          ),
+          Divider(height: 2),
         ],
       ),
     );
@@ -367,33 +400,34 @@ class __PlaylistSettingState extends State<_PlaylistSetting> {
                   onPressed: () => setState(() {
                     _clearConfirm = false;
                   }),
-                  child:
-                      Text(s.cancel, style: TextStyle(color: Colors.grey[600])),
+                  child: Text(
+                    s.cancel,
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
                 ),
                 TextButton(
-                    style: ButtonStyle(
-                      overlayColor: WidgetStateProperty.resolveWith<Color?>(
-                          (Set<WidgetState> states) {
-                        if (states.contains(WidgetState.focused)) {
-                          return Colors.red[300]!;
-                        }
-                        if (states.contains(WidgetState.hovered)) {
-                          return Colors.red[300]!;
-                        }
-                        if (states.contains(WidgetState.pressed)) {
-                          return Colors.red;
-                        }
-                        return null;
-                      }),
-                    ),
-                    onPressed: () async {
-                      context
-                          .read<AudioPlayerNotifier>()
-                          .clearPlaylist(widget.playlist);
-                      Navigator.of(context).pop();
-                    },
-                    child:
-                        Text(s.confirm, style: TextStyle(color: Colors.red))),
+                  style: ButtonStyle(
+                    overlayColor: WidgetStateProperty.resolveWith<Color?>((
+                      Set<WidgetState> states,
+                    ) {
+                      if (states.contains(WidgetState.focused)) {
+                        return Colors.red[300]!;
+                      }
+                      if (states.contains(WidgetState.hovered)) {
+                        return Colors.red[300]!;
+                      }
+                      if (states.contains(WidgetState.pressed)) {
+                        return Colors.red;
+                      }
+                      return null;
+                    }),
+                  ),
+                  onPressed: () async {
+                    context.read<AudioState>().clearPlaylist(widget.playlist);
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(s.confirm, style: TextStyle(color: Colors.red)),
+                ),
               ],
             ),
           ),
@@ -407,9 +441,13 @@ class __PlaylistSettingState extends State<_PlaylistSetting> {
               children: [
                 Icon(Icons.delete, color: Colors.red, size: 18),
                 SizedBox(width: 20),
-                Text(s.remove,
-                    style: textStyle!.copyWith(
-                        color: Colors.red, fontWeight: FontWeight.bold)),
+                Text(
+                  s.remove,
+                  style: textStyle!.copyWith(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
           ),
@@ -424,35 +462,38 @@ class __PlaylistSettingState extends State<_PlaylistSetting> {
                   onPressed: () => setState(() {
                     _removeConfirm = false;
                   }),
-                  child:
-                      Text(s.cancel, style: TextStyle(color: Colors.grey[600])),
+                  child: Text(
+                    s.cancel,
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
                 ),
                 TextButton(
-                    style: ButtonStyle(
-                      overlayColor: WidgetStateProperty.resolveWith<Color?>(
-                          (Set<WidgetState> states) {
-                        if (states.contains(WidgetState.focused)) {
-                          return Colors.red[300]!;
-                        }
-                        if (states.contains(WidgetState.hovered)) {
-                          return Colors.red[300]!;
-                        }
-                        if (states.contains(WidgetState.pressed)) {
-                          return Colors.red;
-                        }
-                        return null;
-                      }),
-                    ),
-                    onPressed: () async {
-                      final audio = context.read<AudioPlayerNotifier>();
-                      audio.deletePlaylist(widget.playlist);
-                      if (audio.playlist == widget.playlist) {
-                        audio.playlistLoad(audio.queue);
+                  style: ButtonStyle(
+                    overlayColor: WidgetStateProperty.resolveWith<Color?>((
+                      Set<WidgetState> states,
+                    ) {
+                      if (states.contains(WidgetState.focused)) {
+                        return Colors.red[300]!;
                       }
-                      Navigator.of(context).pop();
-                    },
-                    child:
-                        Text(s.confirm, style: TextStyle(color: Colors.red))),
+                      if (states.contains(WidgetState.hovered)) {
+                        return Colors.red[300]!;
+                      }
+                      if (states.contains(WidgetState.pressed)) {
+                        return Colors.red;
+                      }
+                      return null;
+                    }),
+                  ),
+                  onPressed: () async {
+                    final audio = context.read<AudioState>();
+                    await audio.deletePlaylist(widget.playlist);
+                    if (audio.playlist == widget.playlist) {
+                      audio.playlistLoad(audio.queue);
+                    }
+                    if (context.mounted) Navigator.of(context).pop();
+                  },
+                  child: Text(s.confirm, style: TextStyle(color: Colors.red)),
+                ),
               ],
             ),
           ),
@@ -461,13 +502,18 @@ class __PlaylistSettingState extends State<_PlaylistSetting> {
             padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             child: Row(
               children: [
-                Icon(Icons.info_outline,
-                    size: 16, color: context.textColor.withAlpha(90)),
-                Text(s.defaultQueueReminder,
-                    style: TextStyle(color: context.textColor.withAlpha(90))),
+                Icon(
+                  Icons.info_outline,
+                  size: 16,
+                  color: context.textColor.withAlpha(90),
+                ),
+                Text(
+                  s.defaultQueueReminder,
+                  style: TextStyle(color: context.textColor.withAlpha(90)),
+                ),
               ],
             ),
-          )
+          ),
       ],
     );
   }

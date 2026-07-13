@@ -5,7 +5,11 @@ import 'package:flutter/services.dart';
 class PredictiveBackPage extends StatefulWidget {
   final ModalRoute route;
   final Widget child;
-  const PredictiveBackPage({required this.route, required this.child});
+  const PredictiveBackPage({
+    required this.route,
+    required this.child,
+    super.key,
+  });
 
   @override
   State<PredictiveBackPage> createState() => PredictiveBackPageState();
@@ -33,8 +37,9 @@ class PredictiveBackPageState extends State<PredictiveBackPage>
 
   @override
   void handleUpdateBackGestureProgress(PredictiveBackEvent backEvent) {
-    widget.route
-        .handleUpdateBackGestureProgress(progress: 1 - backEvent.progress);
+    widget.route.handleUpdateBackGestureProgress(
+      progress: 1 - backEvent.progress,
+    );
   }
 
   @override

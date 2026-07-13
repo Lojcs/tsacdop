@@ -2,27 +2,18 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:focused_menu/focused_menu.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:vibration/vibration.dart';
-import 'episode_detail.dart';
 import '../state/episode_state.dart';
-import '../state/setting_state.dart';
+import '../state/settings/setting_state.dart';
 import '../type/episodebrief.dart';
 import '../util/extension_helper.dart';
-import '../util/hide_player_route.dart';
 
-import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
-import '../podcasts/podcast_detail.dart';
 import '../state/audio_state.dart';
 import '../type/play_histroy.dart';
 import '../util/selection_controller.dart';
-import '../widgets/custom_widget.dart';
 import 'episode_info_widgets.dart';
 import '../widgets/episodegrid.dart';
 import 'episode_route.dart';
@@ -83,8 +74,8 @@ class InteractiveEpisodeCard extends StatefulWidget {
     this.selectable = false,
     this.index,
     this.applyActionToAllSelected = true,
-  })  : assert(!selectable || index != null),
-        super(key: Key(episodeId.toString()));
+  }) : assert(!selectable || index != null),
+       super(key: Key(episodeId.toString()));
 
   @override
   State<InteractiveEpisodeCard> createState() => InteractiveEpisodeCardState();
@@ -99,8 +90,7 @@ class InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
 
   late SelectionController? selectionController =
       Provider.of<SelectionController?>(context, listen: false);
-  late SettingState settings =
-      Provider.of<SettingState>(context, listen: false);
+  late SettingState settings = context.superSettingState;
   late EpisodeState eState = Provider.of<EpisodeState>(context, listen: false);
 
   bool get selectable =>
@@ -115,7 +105,7 @@ class InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   late final heartKey = GlobalKey();
 
   Widget progressLowerlay() =>
-      Selector2<AudioPlayerNotifier, EpisodeState, (bool, double)>(
+      Selector2<AudioState, EpisodeState, (bool, double)>(
         selector: (_, audio, eState) {
           if (audio.episodeId == widget.episodeId && audio.playerRunning) {
             return (false, audio.seekSliderValue);
@@ -161,9 +151,13 @@ class InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   void initState() {
     super.initState();
     _controller = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 200));
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
     _shadowController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 200));
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
     selectionController?.addListener(_selectionListener);
     if (selected && selectable) _controller.value = 1;
   }
@@ -176,53 +170,53 @@ class InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
   }
 
   Widget _cardBuilder(bool hideImage) => EpisodeCard(
-        widget.episodeId,
-        widget.layout,
-        openPodcast: widget.openPodcast,
-        showImage: widget.showImage,
-        preferEpisodeImage: widget.preferEpisodeImage,
-        showLiked: widget.showLiked,
-        showNew: widget.showNew,
-        showLengthAndSize: widget.showLengthAndSize,
-        showPlayedAndDownloaded: widget.showPlayedAndDownloaded,
-        showDate: widget.showDate,
-        decorate: false,
-        avatarKey: avatarKey,
-        numberAndNameKey: numberAndNameKey,
-        titleKey: titleKey,
-        lengthAndSizeKey: lengthAndSizeKey,
-        heartKey: heartKey,
-        onTapDown: () => avatarHasFocus = true,
-        onTapUp: () => Future.delayed(
-            Duration(milliseconds: 6), () => avatarHasFocus = false),
-        hide: hideImage,
-        key: hideImage ? null : cardKey,
-      );
+    widget.episodeId,
+    widget.layout,
+    openPodcast: widget.openPodcast,
+    showImage: widget.showImage,
+    preferEpisodeImage: widget.preferEpisodeImage,
+    showLiked: widget.showLiked,
+    showNew: widget.showNew,
+    showLengthAndSize: widget.showLengthAndSize,
+    showPlayedAndDownloaded: widget.showPlayedAndDownloaded,
+    showDate: widget.showDate,
+    decorate: false,
+    avatarKey: avatarKey,
+    numberAndNameKey: numberAndNameKey,
+    titleKey: titleKey,
+    lengthAndSizeKey: lengthAndSizeKey,
+    heartKey: heartKey,
+    onTapDown: () => avatarHasFocus = true,
+    onTapUp: () =>
+        Future.delayed(Duration(milliseconds: 6), () => avatarHasFocus = false),
+    hide: hideImage,
+    key: hideImage ? null : cardKey,
+  );
 
   void openDetails(BuildContext context) => Navigator.push(
-        context,
-        EpisodeCardDetailRoute(
-          context,
-          widget.episodeId,
-          cardKey: cardKey,
-          layout: widget.layout,
-          card: _cardBuilder(true),
-          cardLowerlay: progressLowerlay(),
-          preferEpisodeImage: widget.preferEpisodeImage,
-          avatarKey: avatarKey,
-          numberAndNameKey: numberAndNameKey,
-          titleKey: titleKey,
-          lengthAndSizeKey: lengthAndSizeKey,
-          heartKey: heartKey,
-          showCard: () {
-            // _shadowController.reverse();
-            setState(() => hideCard = false);
-          },
-          hideCard: () {
-            setState(() => hideCard = true);
-          },
-        ),
-      );
+    context,
+    EpisodeCardDetailRoute(
+      context,
+      widget.episodeId,
+      cardKey: cardKey,
+      layout: widget.layout,
+      card: _cardBuilder(true),
+      cardLowerlay: progressLowerlay(),
+      preferEpisodeImage: widget.preferEpisodeImage,
+      avatarKey: avatarKey,
+      numberAndNameKey: numberAndNameKey,
+      titleKey: titleKey,
+      lengthAndSizeKey: lengthAndSizeKey,
+      heartKey: heartKey,
+      showCard: () {
+        // _shadowController.reverse();
+        setState(() => hideCard = false);
+      },
+      hideCard: () {
+        setState(() => hideCard = true);
+      },
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -331,39 +325,16 @@ class InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
       onTapDrag: () {},
       episodeId: widget.episodeId,
       layout: widget.layout,
-      menuItemList: () async {
-        if (context.mounted) {
-          final audio = context.audioState;
-          menuItemList = _menuItemList(
-              context,
-              widget.episodeId,
-              audio.episodeId == widget.episodeId,
-              audio.playlist.contains(widget.episodeId),
-              audio.playerRunning,
-              await _getEpisodeMenu(),
-              applyToAllSelected: widget.applyActionToAllSelected);
-        }
-        return menuItemList;
-      },
-      menuItemExtent: () async {
-        final menulist = await _getEpisodeMenu();
-        return widget.layout == EpisodeGridLayout.small
-            ? 41.5
-            : widget.layout == EpisodeGridLayout.medium
-                ? 42.5
-                : 100 / menulist.where((i) => i < 10).length;
-      },
+      menuItemList: () async => [],
+      menuItemExtent: () async => 0,
       menuBoxDecoration: BoxDecoration(
         color: context.accentBackground,
-        border: Border.all(
-          color: context.accentColor,
-          width: 1.0,
-        ),
+        border: Border.all(color: context.primaryColor, width: 1.0),
         borderRadius: widget.layout == EpisodeGridLayout.small
             ? context.radiusSmall
             : widget.layout == EpisodeGridLayout.medium
-                ? context.radiusMedium
-                : context.radiusLarge,
+            ? context.radiusMedium
+            : context.radiusLarge,
       ),
       childLowerlay: progressLowerlay(),
       controller: _controller,
@@ -374,63 +345,74 @@ class InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
 
   Future<void> _vibrateTapNormal() async {
     if (!(await Vibration.hasAmplitudeControl()) ||
-        settings.hapticsStrength <= -100) {
+        settings.hapticsStrength.get() <= -100) {
       return;
     }
     Vibration.vibrate(
       pattern: [5, 145, 50, 50],
       intensities: [32, 0, 4, 0]
-          .map((i) => (i * math.pow(2, settings.hapticsStrength / 2)).toInt())
+          .map(
+            (i) =>
+                (i * math.pow(2, settings.hapticsStrength.get() / 2)).toInt(),
+          )
           .toList(),
     );
   }
 
   Future<void> _vibrateTapSelected() async {
     if (!(await Vibration.hasAmplitudeControl()) ||
-        settings.hapticsStrength <= -100) {
+        settings.hapticsStrength.get() <= -100) {
       return;
     }
     await Vibration.cancel();
     Vibration.vibrate(
-        duration: 5,
-        amplitude: (32 * math.pow(2, settings.hapticsStrength / 2).toInt()));
+      duration: 5,
+      amplitude: (32 * math.pow(2, settings.hapticsStrength.get() / 2).toInt()),
+    );
   }
 
   Future<void> _vibrateLongTap() async {
     if (!(await Vibration.hasAmplitudeControl()) ||
-        settings.hapticsStrength <= -100) {
+        settings.hapticsStrength.get() <= -100) {
       return;
     }
     await Vibration.cancel();
     Vibration.vibrate(
-        duration: 5,
-        amplitude: (48 * math.pow(2, settings.hapticsStrength / 2).toInt()));
+      duration: 5,
+      amplitude: (48 * math.pow(2, settings.hapticsStrength.get() / 2).toInt()),
+    );
   }
 
   Future<void> _vibrateTapFinishedSelect() async {
     if (!(await Vibration.hasAmplitudeControl()) ||
-        settings.hapticsStrength <= -100) {
+        settings.hapticsStrength.get() <= -100) {
       return;
     }
     await Vibration.cancel();
     Vibration.vibrate(
       pattern: [32, 20, 4],
       intensities: [4, 0, 32]
-          .map((i) => (i * math.pow(2, settings.hapticsStrength / 2)).toInt())
+          .map(
+            (i) =>
+                (i * math.pow(2, settings.hapticsStrength.get() / 2)).toInt(),
+          )
           .toList(),
     );
   }
 
   Future<void> _vibrateTapFinishedRelease() async {
     if (!(await Vibration.hasAmplitudeControl()) ||
-        settings.hapticsStrength <= -100) {
+        settings.hapticsStrength.get() <= -100) {
       return;
     }
     await Vibration.cancel();
     Vibration.vibrate(
       pattern: [4, 12, 16, 12, 6],
       intensities: [32, 0, 8, 6, 4]
-          .map((i) => (i * math.pow(2, settings.hapticsStrength / 2)).toInt())
+          .map(
+            (i) =>
+                (i * math.pow(2, settings.hapticsStrength.get() / 2)).toInt(),
+          )
           .toList(),
     );
   }
@@ -475,31 +457,32 @@ class _FocusedMenuHolderWrapper extends StatefulWidget {
 
   final VoidCallback? beforeOpened;
   final Future? initData;
-  const _FocusedMenuHolderWrapper(
-      {required this.child,
-      this.onTapStart,
-      this.onTapEnd,
-      this.onTap,
-      this.onShortTapHold,
-      this.onLongTapHold,
-      this.onPrimaryClick,
-      this.onDoubleClick,
-      this.onAddSelect,
-      this.onRangeSelect,
-      this.onTapDrag,
-      this.onPrimaryDrag,
-      this.onDragOver,
-      required this.episodeId,
-      required this.layout,
-      required this.menuItemList,
-      required this.menuItemExtent,
-      required this.menuBoxDecoration,
-      required this.childLowerlay,
-      required this.controller,
-      required this.shadowController,
-      this.beforeOpened,
-      this.initData,
-      super.key});
+  const _FocusedMenuHolderWrapper({
+    required this.child,
+    this.onTapStart,
+    this.onTapEnd,
+    this.onTap,
+    this.onShortTapHold,
+    this.onLongTapHold,
+    this.onPrimaryClick,
+    this.onDoubleClick,
+    this.onAddSelect,
+    this.onRangeSelect,
+    this.onTapDrag,
+    this.onPrimaryDrag,
+    this.onDragOver,
+    required this.episodeId,
+    required this.layout,
+    required this.menuItemList,
+    required this.menuItemExtent,
+    required this.menuBoxDecoration,
+    required this.childLowerlay,
+    required this.controller,
+    required this.shadowController,
+    this.beforeOpened,
+    this.initData,
+    super.key,
+  });
   @override
   _FocusedMenuHolderWrapperState createState() =>
       _FocusedMenuHolderWrapperState();
@@ -529,9 +512,12 @@ class _FocusedMenuHolderWrapperState extends State<_FocusedMenuHolderWrapper> {
       enableMenuScroll: false,
       menuBoxDecoration: widget.menuBoxDecoration,
       childDecoration: episodeCardDecoration(
-          context, widget.episodeId, widget.layout,
-          controller: widget.controller,
-          shadowController: widget.shadowController),
+        context,
+        widget.episodeId,
+        widget.layout,
+        controller: widget.controller,
+        shadowController: widget.shadowController,
+      ),
       openChildDecoration: episodeCardDecoration(
         context,
         widget.episodeId,
@@ -563,13 +549,15 @@ class _FocusedMenuHolderWrapperState extends State<_FocusedMenuHolderWrapper> {
       child: widget.child,
     );
     return Transform.scale(
-        scale: 1 -
-            0.01 *
-                CurvedAnimation(
-                  parent: widget.controller,
-                  curve: Curves.easeOutQuad,
-                ).value,
-        child: child);
+      scale:
+          1 -
+          0.01 *
+              CurvedAnimation(
+                parent: widget.controller,
+                curve: Curves.easeOutQuad,
+              ).value,
+      child: child,
+    );
   }
 }
 
@@ -661,8 +649,10 @@ class EpisodeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     /// EpisodeBrief for convenience, don't use for value that might change
-    EpisodeBrief episode =
-        Provider.of<EpisodeState>(context, listen: false)[episodeId];
+    EpisodeBrief episode = Provider.of<EpisodeState>(
+      context,
+      listen: false,
+    )[episodeId];
 
     /// Episode title widget.
     Widget title() => hide
@@ -679,8 +669,8 @@ class EpisodeCard extends StatelessWidget {
               maxLines: layout == EpisodeGridLayout.small
                   ? 4
                   : layout == EpisodeGridLayout.medium
-                      ? 3
-                      : 2,
+                  ? 3
+                  : 2,
               key: titleKey,
             ),
           );
@@ -690,78 +680,92 @@ class EpisodeCard extends StatelessWidget {
       bool openPodcast,
       bool preferEpisodeImage, {
       required double radius,
-    }) =>
-        hide
-            ? SizedBox(width: radius)
-            : EpisodeAvatar(
-                episodeId,
-                radius: radius,
-                preferEpisodeImage: preferEpisodeImage,
-                openPodcast: openPodcast,
-                onTapDown: onTapDown,
-                onTapUp: onTapUp,
-                key: avatarKey,
-              );
+    }) => hide
+        ? SizedBox(width: radius)
+        : EpisodeAvatar(
+            episodeId,
+            radius: radius,
+            preferEpisodeImage: preferEpisodeImage,
+            openPodcast: openPodcast,
+            onTapDown: onTapDown,
+            onTapUp: onTapUp,
+            key: avatarKey,
+          );
 
     /// Liked indicator widget.
     Widget isLikedIndicator() => Align(
-          alignment: Alignment.center,
-          child: Selector<EpisodeState, bool>(
-            selector: (_, episodeState) => episodeState[episodeId].isLiked,
-            builder: (context, value, _) => value && !hide
-                ? Icon(
-                    Icons.favorite,
-                    color: Colors.red,
-                    size: layout == EpisodeGridLayout.small
-                        ? context.textTheme.bodySmall!.fontSize
-                        : context.textTheme.bodyLarge!.fontSize,
-                    key: heartKey,
-                  )
-                : Center(),
-          ),
-        );
+      alignment: Alignment.center,
+      child: Selector<EpisodeState, bool>(
+        selector: (_, episodeState) => episodeState[episodeId].isLiked,
+        builder: (context, value, _) => value && !hide
+            ? Icon(
+                Icons.favorite,
+                color: Colors.red,
+                size: layout == EpisodeGridLayout.small
+                    ? context.textTheme.bodySmall!.fontSize
+                    : context.textTheme.bodyLarge!.fontSize,
+                key: heartKey,
+              )
+            : Center(),
+      ),
+    );
 
     /// Pubdate widget
     Widget pubDate(bool showNew) => Selector<EpisodeState, bool>(
-          selector: (_, episodeState) =>
-              showNew && episodeState[episodeId].isNew,
-          builder: (context, value, _) => Text(
-            episode.pubDate.toDate(context),
-            overflow: TextOverflow.visible,
-            textAlign: TextAlign.center,
-            style: (layout == EpisodeGridLayout.small
+      selector: (_, episodeState) => showNew && episodeState[episodeId].isNew,
+      builder: (context, value, _) => Text(
+        episode.pubDate.toDate(context),
+        overflow: TextOverflow.visible,
+        textAlign: TextAlign.center,
+        style:
+            (layout == EpisodeGridLayout.small
                     ? context.textTheme.labelSmall
                     : context.textTheme.labelMedium)!
                 .copyWith(
-                    fontStyle: FontStyle.italic,
-                    color: value
-                        ? Colors.red
-                        : episode.colorScheme(context).onSecondaryContainer),
-          ),
-        );
+                  fontStyle: FontStyle.italic,
+                  color: value
+                      ? Colors.red
+                      : episode.colorScheme(context).onSecondaryContainer,
+                ),
+      ),
+    );
     return Container(
       decoration: BoxDecoration(
-          borderRadius:
-              episodeCardDecoration(context, episodeId, layout).borderRadius),
+        borderRadius: episodeCardDecoration(
+          context,
+          episodeId,
+          layout,
+        ).borderRadius,
+      ),
       clipBehavior: Clip.hardEdge,
       child: Stack(
         alignment: AlignmentDirectional.centerStart,
         children: [
           decorate
               ? Container(
-                  decoration: episodeCardDecoration(context, episodeId, layout,
-                      selected: selected))
+                  decoration: episodeCardDecoration(
+                    context,
+                    episodeId,
+                    layout,
+                    selected: selected,
+                  ),
+                )
               : Center(),
           decorate
               ? FutureBuilder<PlayHistory>(
                   future: DBHelper().getPosition(episode),
-                  builder: (context, snapshot) => ProgressLowerlay(episodeId,
-                      snapshot.hasData ? snapshot.data!.seekValue! : 0, layout,
-                      hide: selected))
+                  builder: (context, snapshot) => ProgressLowerlay(
+                    episodeId,
+                    snapshot.hasData ? snapshot.data!.seekValue! : 0,
+                    layout,
+                    hide: selected,
+                  ),
+                )
               : Center(),
           Padding(
-            padding: EdgeInsets.all(layout == EpisodeGridLayout.small ? 6 : 8)
-                .copyWith(bottom: layout == EpisodeGridLayout.small ? 8 : 8),
+            padding: EdgeInsets.all(
+              layout == EpisodeGridLayout.small ? 6 : 8,
+            ).copyWith(bottom: layout == EpisodeGridLayout.small ? 8 : 8),
             child: Row(
               children: [
                 if (layout == EpisodeGridLayout.large)
@@ -793,13 +797,14 @@ class EpisodeCard extends StatelessWidget {
                                     radius: layout == EpisodeGridLayout.small
                                         ? layout.getRowHeight(context.width) / 7
                                         : layout.getRowHeight(context.width) /
-                                            5,
+                                              5,
                                   ),
                                 if (layout != EpisodeGridLayout.large)
                                   SizedBox(
-                                      width: layout == EpisodeGridLayout.small
-                                          ? 2
-                                          : 5),
+                                    width: layout == EpisodeGridLayout.small
+                                        ? 2
+                                        : 5,
+                                  ),
                                 if (!hide)
                                   EpisodeNumberAndPodcastName(
                                     episodeId,
@@ -815,9 +820,7 @@ class EpisodeCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                      Expanded(
-                        child: title(),
-                      ),
+                      Expanded(child: title()),
                       SizedBox(
                         height: 24,
                         child: Row(
@@ -830,13 +833,13 @@ class EpisodeCard extends StatelessWidget {
                                 showPlayedAndDownloaded:
                                     showPlayedAndDownloaded,
                                 key: lengthAndSizeKey,
-                              )
+                              ),
                           ],
                         ),
                       ),
                     ],
                   ),
-                )
+                ),
               ],
             ),
           ),
@@ -852,8 +855,14 @@ class ProgressLowerlay extends StatelessWidget {
   final EpisodeGridLayout layout;
   final bool hide;
   final AnimationController? animator;
-  const ProgressLowerlay(this.episodeId, this.seekValue, this.layout,
-      {super.key, this.hide = false, this.animator});
+  const ProgressLowerlay(
+    this.episodeId,
+    this.seekValue,
+    this.layout, {
+    super.key,
+    this.hide = false,
+    this.animator,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -861,25 +870,28 @@ class ProgressLowerlay extends StatelessWidget {
     return FadeTransition(
       opacity: animator == null
           ? hide
-              ? AlwaysStoppedAnimation(0)
-              : const AlwaysStoppedAnimation(1)
+                ? AlwaysStoppedAnimation(0)
+                : const AlwaysStoppedAnimation(1)
           : ReverseAnimation(animator!),
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(layout == EpisodeGridLayout.small
-              ? 10
-              : layout == EpisodeGridLayout.medium
-                  ? 16
-                  : 20),
+          borderRadius: BorderRadius.circular(
+            layout == EpisodeGridLayout.small
+                ? 10
+                : layout == EpisodeGridLayout.medium
+                ? 16
+                : 20,
+          ),
         ),
         clipBehavior: Clip.hardEdge,
         height: double.infinity,
         child: LinearProgressIndicator(
-            color: context.realDark
-                ? context.surface
-                : eState[episodeId].progressIndicatorColor(context),
-            backgroundColor: Colors.transparent,
-            value: seekValue),
+          color: context.trueBlack
+              ? context.surface
+              : eState[episodeId].progressIndicatorColor(context),
+          backgroundColor: Colors.transparent,
+          value: seekValue,
+        ),
       ),
     );
   }
@@ -892,248 +904,61 @@ BoxDecoration episodeCardDecoration(
   bool selected = false,
   AnimationController? controller,
   AnimationController?
-      shadowController, // Hide shadow during expanding transition
+  shadowController, // Hide shadow during expanding transition
 }) {
   EpisodeBrief episode = context.episodeState[episodeId];
   Color shownShadowColor = controller == null
       ? episode.cardShadowColor(context)
       : ColorTween(
-              begin: episode.cardShadowColor(context),
-              end: Color.lerp(episode.cardColor(context), Colors.white, 0))
-          .evaluate(controller)!;
+          begin: episode.cardShadowColor(context),
+          end: Color.lerp(episode.cardColor(context), Colors.white, 0),
+        ).evaluate(controller)!;
   return BoxDecoration(
-      color: controller == null
-          ? selected
+    color: controller == null
+        ? selected
               ? episode.selectedCardColor(context)
               : episode.cardColor(context)
-          : ColorTween(
-                  begin: episode.cardColor(context),
-                  end: episode.selectedCardColor(context))
-              .evaluate(controller)!,
-      borderRadius: BorderRadius.circular(layout == EpisodeGridLayout.small
+        : ColorTween(
+            begin: episode.cardColor(context),
+            end: episode.selectedCardColor(context),
+          ).evaluate(controller)!,
+    borderRadius: BorderRadius.circular(
+      layout == EpisodeGridLayout.small
           ? 12
           : layout == EpisodeGridLayout.medium
-              ? 16
-              : 20),
-      border: Border.all(
-        color: context.realDark
-            ? controller == null
+          ? 16
+          : 20,
+    ),
+    border: Border.all(
+      color: context.trueBlack
+          ? controller == null
                 ? selected
-                    ? episode.realDarkBorderColorSelected
-                    : episode.realDarkBorderColor
+                      ? episode.realDarkBorderColorSelected
+                      : episode.realDarkBorderColor
                 : ColorTween(
-                        begin: episode.realDarkBorderColor,
-                        end: episode.realDarkBorderColorSelected)
-                    .evaluate(controller)!
-            : Colors.transparent,
-        width: 1.0,
-      ),
-      boxShadow: [
-        // Difference between the values with and without controller is intentional
-        BoxShadow(
-          color: shadowController == null
-              ? shownShadowColor
-              : ColorTween(begin: shownShadowColor, end: Colors.transparent)
-                  .evaluate(shadowController)!,
-          blurRadius: 5,
-          spreadRadius: controller == null
-              ? selected
+                    begin: episode.realDarkBorderColor,
+                    end: episode.realDarkBorderColorSelected,
+                  ).evaluate(controller)!
+          : Colors.transparent,
+      width: 1.0,
+    ),
+    boxShadow: [
+      // Difference between the values with and without controller is intentional
+      BoxShadow(
+        color: shadowController == null
+            ? shownShadowColor
+            : ColorTween(
+                begin: shownShadowColor,
+                end: Colors.transparent,
+              ).evaluate(shadowController)!,
+        blurRadius: 5,
+        spreadRadius: controller == null
+            ? selected
                   ? -2
                   : -3
-              : Tween<double>(begin: -2, end: -3).evaluate(controller),
-          offset: Offset.fromDirection(0, 0),
-        )
-      ]);
-}
-
-List<FocusedMenuItem> _menuItemList(BuildContext context, int episodeId,
-    bool playing, bool inPlaylist, bool playerRunning, List<int> menuList,
-    {bool applyToAllSelected = false}) {
-  var audio = Provider.of<AudioPlayerNotifier>(context, listen: false);
-  var episodeState = Provider.of<EpisodeState>(context, listen: false);
-  var s = context.s;
-  EpisodeState eState = Provider.of<EpisodeState>(context, listen: false);
-  return <FocusedMenuItem>[
-    FocusedMenuItem(
-        backgroundColor: Color.fromARGB(0, 5, 4, 4),
-        highlightColor: context.brightness == Brightness.light
-            ? null
-            : context.colorScheme.primaryContainer,
-        title: Text(
-          !playing || !playerRunning ? s.play : s.playing,
-        ),
-        trailing: Icon(
-          LineIcons.playCircle,
-          color: context.accentColor,
-        ),
-        onPressed: () async {
-          if (!playing || !playerRunning) {
-            List<int> episodeIds = [episodeId];
-            SelectionController? selectionController =
-                Provider.of<SelectionController?>(context, listen: false);
-            if (selectionController != null && applyToAllSelected) {
-              episodeIds = selectionController.selectedEpisodes;
-            }
-            await audio.loadEpisodesToQueue(episodeIds);
-          }
-        }),
-    if (menuList.contains(1))
-      FocusedMenuItem(
-          backgroundColor: Colors.transparent,
-          highlightColor: context.brightness == Brightness.light
-              ? null
-              : context.colorScheme.primaryContainer,
-          title: inPlaylist ? Text(s.remove) : Text(s.later),
-          trailing: Icon(
-            LineIcons.clock,
-            color: Colors.cyan,
-          ),
-          onPressed: () async {
-            List<int> episodeIds = [episodeId];
-            SelectionController? selectionController =
-                Provider.of<SelectionController?>(context, listen: false);
-            if (selectionController != null && applyToAllSelected) {
-              episodeIds = selectionController.selectedEpisodes;
-            }
-            if (!inPlaylist) {
-              await audio.addToPlaylist(episodeIds);
-              await Fluttertoast.showToast(
-                msg: s.toastAddPlaylist,
-                gravity: ToastGravity.BOTTOM,
-              );
-            } else {
-              await audio.removeFromPlaylist(episodeIds);
-              await Fluttertoast.showToast(
-                msg: s.toastRemovePlaylist,
-                gravity: ToastGravity.BOTTOM,
-              );
-            }
-          }),
-    if (menuList.contains(2))
-      FocusedMenuItem(
-          backgroundColor: Colors.transparent,
-          highlightColor: context.brightness == Brightness.light
-              ? null
-              : context.colorScheme.primaryContainer,
-          title: eState[episodeId].isLiked ? Text(s.unlike) : Text(s.like),
-          trailing: Icon(LineIcons.heart, color: Colors.red, size: 21),
-          onPressed: () async {
-            List<int> episodes = [episodeId];
-            SelectionController? selectionController =
-                Provider.of<SelectionController?>(context, listen: false);
-            if (selectionController != null && applyToAllSelected) {
-              episodes = selectionController.selectedEpisodes;
-            }
-            if (eState[episodeId].isLiked) {
-              await episodeState.unsetLiked(episodes);
-              Fluttertoast.showToast(
-                msg: s.unlike,
-                gravity: ToastGravity.BOTTOM,
-              );
-            } else {
-              await episodeState.setLiked(episodes);
-              Fluttertoast.showToast(
-                msg: s.liked,
-                gravity: ToastGravity.BOTTOM,
-              );
-            }
-          }),
-    if (menuList.contains(3))
-      FocusedMenuItem(
-          backgroundColor: Colors.transparent,
-          highlightColor: context.brightness == Brightness.light
-              ? null
-              : context.colorScheme.primaryContainer,
-          title: eState[episodeId].isPlayed
-              ? Text(s.markNotListened,
-                  style: TextStyle(
-                      color: context.textColor.withValues(alpha: 0.5)))
-              : Text(
-                  s.markListened,
-                  softWrap: true,
-                ),
-          trailing: SizedBox(
-            width: 23,
-            height: 23,
-            child: CustomPaint(
-                painter: ListenedAllPainter(Colors.blue, stroke: 1.5)),
-          ),
-          onPressed: () async {
-            List<int> episodes = [episodeId];
-            SelectionController? selectionController =
-                Provider.of<SelectionController?>(context, listen: false);
-            if (selectionController != null && applyToAllSelected) {
-              episodes = selectionController.selectedEpisodes;
-            }
-            if (eState[episodeId].isPlayed) {
-              episodeState.unsetPlayed(episodes);
-              Fluttertoast.showToast(
-                msg: s.markNotListened,
-                gravity: ToastGravity.BOTTOM,
-              );
-            } else {
-              episodeState.setPlayed(episodes);
-              Fluttertoast.showToast(
-                msg: s.markListened,
-                gravity: ToastGravity.BOTTOM,
-              );
-            }
-          }),
-    if (menuList.contains(4))
-      FocusedMenuItem(
-          backgroundColor: Colors.transparent,
-          highlightColor: context.brightness == Brightness.light
-              ? null
-              : context.colorScheme.primaryContainer,
-          title: eState[episodeId].isDownloaded
-              ? Text(s.downloaded,
-                  style: TextStyle(
-                      color: context.textColor.withValues(alpha: 0.5)))
-              : Text(s.download),
-          trailing: Icon(LineIcons.download, color: Colors.green),
-          onPressed: () async {
-            if (!eState[episodeId].isDownloaded) {
-              List<int> episodeIds = [episodeId];
-              SelectionController? selectionController =
-                  Provider.of<SelectionController?>(context, listen: false);
-              if (selectionController != null && applyToAllSelected) {
-                episodeIds = selectionController.selectedEpisodes;
-              }
-              await context.downloadState.requestDownload(context, episodeIds);
-            }
-          }),
-    if (menuList.contains(5))
-      FocusedMenuItem(
-        backgroundColor: Colors.transparent,
-        highlightColor: context.brightness == Brightness.light
-            ? null
-            : context.colorScheme.primaryContainer,
-        title: Text(s.playNext),
-        trailing: Icon(
-          LineIcons.lightningBolt,
-          color: Colors.amber,
-        ),
-        onPressed: () {
-          List<int> episodeIds = [episodeId];
-          SelectionController? selectionController =
-              Provider.of<SelectionController?>(context, listen: false);
-          if (selectionController != null && applyToAllSelected) {
-            episodeIds = selectionController.selectedEpisodes;
-          }
-          audio.addToPlaylist(episodeIds,
-              index: audio.playlist.length > 0 ? 1 : 0);
-          Fluttertoast.showToast(
-            msg: s.playNextDes,
-            gravity: ToastGravity.BOTTOM,
-          );
-        },
+            : Tween<double>(begin: -2, end: -3).evaluate(controller),
+        offset: Offset.fromDirection(0, 0),
       ),
-  ];
-}
-
-Future<List<int>> _getEpisodeMenu() async {
-  final popupMenuStorage = KeyValueStorage(
-      episodePopupMenuKey); // TODO: These should be obtainable from SettingState.
-  final list = await popupMenuStorage.getMenu();
-  return list;
+    ],
+  );
 }

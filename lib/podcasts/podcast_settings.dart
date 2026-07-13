@@ -14,6 +14,7 @@ import 'package:webfeed/webfeed.dart';
 
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/podcast_state.dart';
+import '../state/settings/setting_state.dart';
 import '../type/play_histroy.dart';
 import '../util/extension_helper.dart';
 import '../util/helpers.dart';
@@ -64,35 +65,43 @@ class _PodcastSettingState extends State<PodcastSetting> {
         mainAxisAlignment: MainAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Selector<PodcastState, bool>(
-            selector: (_, pState) => pState[widget.podcastId].autoDownload,
-            builder: (context, autoDownload, _) => ListTile(
-              onTap: () => _setAutoDownload(!autoDownload),
+          Selector2<PodcastState, SettingState, (bool, bool)>(
+            selector: (_, pState, settings) => (
+              pState[widget.podcastId].autoDownload,
+              settings.autoDownload.get(),
+            ),
+            builder: (context, value, _) => ListTile(
+              onTap: !value.$2 ? null : () => _setAutoDownload(!value.$1),
               dense: true,
-              title: Row(
+              leading: SizedBox(
+                height: 18,
+                width: 18,
+                child: CustomPaint(
+                  painter: DownloadPainter(
+                    color: context.textColor,
+                    fraction: 0,
+                    progressColor: colorScheme.primary,
+                  ),
+                ),
+              ),
+              title: Text(s.autoDownload, style: textStyle),
+              trailing: Row(
+                mainAxisSize: .min,
                 children: [
-                  SizedBox(
-                    height: 18,
-                    width: 18,
-                    child: CustomPaint(
-                      painter: DownloadPainter(
-                        color: context.textColor,
-                        fraction: 0,
-                        progressColor: colorScheme.primary,
-                      ),
+                  if (!value.$2)
+                    Text(
+                      s.globallyDisabled,
+                      style: context.textTheme.labelSmall,
+                    ),
+                  Transform.scale(
+                    scale: 0.8,
+                    child: Switch(
+                      value: value.$1,
+                      activeThumbColor: colorScheme.primary,
+                      onChanged: !value.$2 ? null : _setAutoDownload,
                     ),
                   ),
-                  SizedBox(width: 20),
-                  Text(s.autoDownload, style: textStyle),
                 ],
-              ),
-              trailing: Transform.scale(
-                scale: 0.8,
-                child: Switch(
-                  value: autoDownload,
-                  activeThumbColor: colorScheme.primary,
-                  onChanged: _setAutoDownload,
-                ),
               ),
             ),
           ),
@@ -101,41 +110,15 @@ class _PodcastSettingState extends State<PodcastSetting> {
             builder: (context, noAutoSync, _) => ListTile(
               dense: true,
               onTap: () => _setNeverUpdate(!noAutoSync),
-              title: Row(
-                children: [
-                  Icon(Icons.lock_outlined, size: 18),
-                  SizedBox(width: 20),
-                  Text(s.neverAutoUpdate, style: textStyle),
-                ],
-              ),
+              leading: Icon(Icons.lock_outlined, size: 18),
+              title: Text(s.neverAutoUpdate, style: textStyle),
+              subtitle: Text(s.neverAutoUpdateDes),
               trailing: Transform.scale(
                 scale: 0.8,
                 child: Switch(
                   value: noAutoSync,
                   activeThumbColor: colorScheme.primary,
                   onChanged: _setNeverUpdate,
-                ),
-              ),
-            ),
-          ),
-          Selector<PodcastState, bool>(
-            selector: (_, pState) => pState[widget.podcastId].hideNewMark,
-            builder: (context, hideNewMark, _) => ListTile(
-              dense: true,
-              onTap: () => _setHideNewMark(!hideNewMark),
-              title: Row(
-                children: [
-                  Icon(LineIcons.eraser, size: 18),
-                  SizedBox(width: 20),
-                  Text('Always hide new mark', style: textStyle),
-                ],
-              ),
-              trailing: Transform.scale(
-                scale: 0.8,
-                child: Switch(
-                  value: hideNewMark,
-                  activeThumbColor: colorScheme.primary,
-                  onChanged: _setHideNewMark,
                 ),
               ),
             ),
@@ -153,13 +136,8 @@ class _PodcastSettingState extends State<PodcastSetting> {
                 });
               },
               dense: true,
-              title: Row(
-                children: [
-                  Icon(Icons.fast_forward_outlined, size: 18),
-                  SizedBox(width: 20),
-                  Text(s.skipSecondsAtStart, style: textStyle),
-                ],
-              ),
+              leading: Icon(Icons.fast_forward_outlined, size: 18),
+              title: Text(s.skipSecondsAtStart, style: textStyle),
               trailing: Padding(
                 padding: const EdgeInsets.only(right: 10.0),
                 child: Text(skipSecondsStart.toTime),
@@ -192,13 +170,8 @@ class _PodcastSettingState extends State<PodcastSetting> {
                 });
               },
               dense: true,
-              title: Row(
-                children: [
-                  Icon(Icons.fast_rewind_outlined, size: 18),
-                  SizedBox(width: 20),
-                  Text(s.skipSecondsAtEnd, style: textStyle),
-                ],
-              ),
+              leading: Icon(Icons.fast_rewind_outlined, size: 18),
+              title: Text(s.skipSecondsAtEnd, style: textStyle),
               trailing: Padding(
                 padding: const EdgeInsets.only(right: 10.0),
                 child: Text(skipSecondsEnd.toTime),
@@ -229,27 +202,22 @@ class _PodcastSettingState extends State<PodcastSetting> {
               });
             },
             dense: true,
-            title: Row(
-              children: [
-                SizedBox(
-                  height: 18,
-                  width: 18,
-                  child: CustomPaint(
-                    painter: ListenedAllPainter(
-                      colorScheme.onSecondaryContainer,
-                      stroke: 2,
-                    ),
-                  ),
+            leading: SizedBox(
+              height: 18,
+              width: 18,
+              child: CustomPaint(
+                painter: ListenedAllPainter(
+                  colorScheme.onSecondaryContainer,
+                  stroke: 2,
                 ),
-                SizedBox(width: 20),
-                Text(
-                  s.menuMarkAllListened,
-                  style: textStyle.copyWith(
-                    color: colorScheme.onSecondaryContainer,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+              ),
+            ),
+            title: Text(
+              s.menuMarkAllListened,
+              style: textStyle.copyWith(
+                color: colorScheme.onSecondaryContainer,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             trailing: Padding(
               padding: const EdgeInsets.only(right: 10.0),
@@ -259,11 +227,11 @@ class _PodcastSettingState extends State<PodcastSetting> {
                 child: _markStatus == MarkStatus.none
                     ? Center()
                     : _markStatus == MarkStatus.start
-                        ? CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: colorScheme.primary,
-                          )
-                        : Icon(Icons.done),
+                    ? CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: colorScheme.primary,
+                      )
+                    : Icon(Icons.done),
               ),
             ),
           ),
@@ -278,10 +246,7 @@ class _PodcastSettingState extends State<PodcastSetting> {
                     onPressed: () => setState(() {
                       _markConfirm = false;
                     }),
-                    child: Text(
-                      s.cancel,
-                      style: TextStyle(color: Colors.grey[600]),
-                    ),
+                    child: Text(s.cancel, style: context.textTheme.bodyMedium),
                   ),
                   TextButton(
                     onPressed: () {
@@ -310,18 +275,13 @@ class _PodcastSettingState extends State<PodcastSetting> {
               });
             },
             dense: true,
-            title: Row(
-              children: [
-                Icon(Icons.delete_outlined, color: Colors.red, size: 18),
-                SizedBox(width: 20),
-                Text(
-                  s.remove,
-                  style: textStyle.copyWith(
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+            leading: Icon(Icons.delete_outlined, color: Colors.red, size: 18),
+            title: Text(
+              s.remove,
+              style: textStyle.copyWith(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           if (_removeConfirm)
@@ -335,10 +295,7 @@ class _PodcastSettingState extends State<PodcastSetting> {
                     onPressed: () => setState(() {
                       _removeConfirm = false;
                     }),
-                    child: Text(
-                      s.cancel,
-                      style: TextStyle(color: Colors.grey[600]),
-                    ),
+                    child: Text(s.cancel, style: context.textTheme.bodyMedium),
                   ),
                   TextButton(
                     onPressed: () async {
@@ -385,7 +342,7 @@ class _PodcastSettingState extends State<PodcastSetting> {
     });
     final eState = context.episodeState;
     final episodes = await eState.getEpisodes(
-      feedIds: [podcastId!],
+      podcastIds: [podcastId!],
       filterPlayed: false,
     );
     for (var episode in episodes.map((id) => eState[id])) {
@@ -441,12 +398,12 @@ class _TimePicker extends StatelessWidget {
               ),
               TextButton(
                 style: TextButton.styleFrom(
-                  surfaceTintColor: context.priamryContainer,
+                  surfaceTintColor: context.primaryContainer,
                 ),
                 onPressed: onConfirm,
                 child: Text(
                   s.confirm,
-                  style: TextStyle(color: color ?? context.accentColor),
+                  style: TextStyle(color: color ?? context.primaryColor),
                 ),
               ),
             ],

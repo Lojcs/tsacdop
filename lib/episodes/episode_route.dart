@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
-import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
 
 import '../state/audio_state.dart';
-import '../state/episode_state.dart';
 import '../type/episodebrief.dart';
 import '../util/predictive_back_page.dart';
 import 'episode_card.dart';
@@ -22,8 +18,10 @@ class EpisodeHero<T extends State<StatefulWidget>> {
   Offset? initialOffset;
   Offset? finalOffset;
   late Tween<Offset> offsetTween;
-  void setOffsetTween() => offsetTween =
-      Tween(begin: initialOffset, end: finalOffset ?? initialOffset);
+  void setOffsetTween() => offsetTween = Tween(
+    begin: initialOffset,
+    end: finalOffset ?? initialOffset,
+  );
 
   Size? initialSize;
   Size? finalSize;
@@ -56,8 +54,10 @@ class NumberAndNameHero extends EpisodeHero<EpisodeNumberAndPodcastNameState> {
   TextStyle? initialStyle;
   TextStyle? finalStyle;
   late TextStyleTween styleTween;
-  void setStyleTween() => styleTween =
-      TextStyleTween(begin: initialStyle, end: finalStyle ?? initialStyle);
+  void setStyleTween() => styleTween = TextStyleTween(
+    begin: initialStyle,
+    end: finalStyle ?? initialStyle,
+  );
 
   bool? nameVisible;
   @override
@@ -84,8 +84,10 @@ class TitleHero extends EpisodeHero<EpisodeTitleState> {
   TextStyle? initialStyle;
   TextStyle? finalStyle;
   late TextStyleTween styleTween;
-  void setStyleTween() => styleTween =
-      TextStyleTween(begin: initialStyle, end: finalStyle ?? initialStyle);
+  void setStyleTween() => styleTween = TextStyleTween(
+    begin: initialStyle,
+    end: finalStyle ?? initialStyle,
+  );
 
   @override
   void setInitial() {
@@ -147,13 +149,13 @@ class EpisodeCardDetailRoute extends ModalRoute {
     required this.titleKey,
     required this.lengthAndSizeKey,
     required this.heartKey,
-  })  : cardBox = cardKey.currentContext!.findRenderObject() as RenderBox,
-        cardHero = EpisodeHero(cardKey),
-        avatarHero = EpisodeHero(avatarKey),
-        numberAndNameHero = NumberAndNameHero(numberAndNameKey),
-        titleHero = TitleHero(titleKey),
-        lengthAndSizeHero = EpisodeHero(lengthAndSizeKey),
-        heartHero = EpisodeHero(heartKey) {
+  }) : cardBox = cardKey.currentContext!.findRenderObject() as RenderBox,
+       cardHero = EpisodeHero(cardKey),
+       avatarHero = EpisodeHero(avatarKey),
+       numberAndNameHero = NumberAndNameHero(numberAndNameKey),
+       titleHero = TitleHero(titleKey),
+       lengthAndSizeHero = EpisodeHero(lengthAndSizeKey),
+       heartHero = EpisodeHero(heartKey) {
     cardHero.setInitial();
     avatarHero.setInitial();
     numberAndNameHero.setInitial();
@@ -182,17 +184,15 @@ class EpisodeCardDetailRoute extends ModalRoute {
   bool showHeroes = true;
   void done() {
     showCard();
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) {
-        showHeroes = false;
-      },
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      showHeroes = false;
+    });
   }
 
   EpisodeBrief? episode;
 
   ///
-  late AudioPlayerNotifier audio;
+  late AudioState audio;
   late double bottomSafeArea;
 
   /// Does the same thing as [offstage], but suitable for use in higher-level
@@ -203,11 +203,10 @@ class EpisodeCardDetailRoute extends ModalRoute {
     if (force || animation!.isCompleted) {
       cardHero.setFinal();
       cardHero.finalSize = Size(
-          cardHero.finalSize!.width,
-          cardHero.finalSize!.height -
-              (audio.playerRunning
-                  ? audio.playerHeight!.height + bottomSafeArea
-                  : 0));
+        cardHero.finalSize!.width,
+        cardHero.finalSize!.height -
+            (audio.playerRunning ? 75 + bottomSafeArea : 0),
+      );
       cardHero.setSizeTween();
     }
     avatarHero.setFinal();
@@ -277,13 +276,14 @@ class EpisodeCardDetailRoute extends ModalRoute {
   int buildNumber = 0;
 
   @override
-  Widget buildPage(BuildContext context, Animation<double> animation,
-      Animation<double> secondaryAnimation) {
+  Widget buildPage(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+  ) {
     audio = context.audioState;
     bottomSafeArea = context.originalPadding.bottom;
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => setFinals(true),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) => setFinals(true));
 
     bool show = animation.isCompleted || fakeOffstage;
     Widget getChild() {
@@ -301,13 +301,11 @@ class EpisodeCardDetailRoute extends ModalRoute {
     }
 
     Widget child = getChild();
-    animation.addStatusListener(
-      (status) {
-        if (status.isDismissed) {
-          done();
-        }
-      },
-    );
+    animation.addStatusListener((status) {
+      if (status.isDismissed) {
+        done();
+      }
+    });
     return PredictiveBackPage(
       route: this,
       child: AnimatedBuilder(
@@ -324,11 +322,17 @@ class EpisodeCardDetailRoute extends ModalRoute {
   }
 
   @override
-  Widget buildTransitions(BuildContext context, Animation<double> animation,
-      Animation<double> secondaryAnimation, Widget child) {
+  Widget buildTransitions(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
     episode ??= context.episodeState[episodeId];
-    final sizeAnimation =
-        CurvedAnimation(parent: animation, curve: Curves.easeInOutCirc);
+    final sizeAnimation = CurvedAnimation(
+      parent: animation,
+      curve: Curves.easeInOutCirc,
+    );
     final nameAnimation = numberAndNameHero.nameVisible!
         ? kAlwaysCompleteAnimation
         : sizeAnimation;
@@ -342,10 +346,11 @@ class EpisodeCardDetailRoute extends ModalRoute {
           child: Container(
             decoration: episodeCardDecoration(context, episodeId, layout)
                 .copyWith(
-                    border: BoxBorder.all(width: 0, color: Colors.transparent),
-                    color: episode!.isPlayed
-                        ? episode!.progressIndicatorColor(context)
-                        : null),
+                  border: BoxBorder.all(width: 0, color: Colors.transparent),
+                  color: episode!.isPlayed
+                      ? episode!.progressIndicatorColor(context)
+                      : null,
+                ),
             clipBehavior: Clip.hardEdge,
             height: fakeOffstage || animation.isCompleted ? null : size.height,
             width: fakeOffstage || animation.isCompleted ? null : size.width,
@@ -368,8 +373,9 @@ class EpisodeCardDetailRoute extends ModalRoute {
                     Opacity(
                       opacity: 1 - sizeAnimation.value,
                       child: ColoredBox(
-                        color:
-                            context.episodeState[episodeId].cardColor(context),
+                        color: context.episodeState[episodeId].cardColor(
+                          context,
+                        ),
                       ),
                     ),
                   if (!animation.isCompleted)
@@ -378,10 +384,7 @@ class EpisodeCardDetailRoute extends ModalRoute {
                       child: cardLowerlay,
                     ),
                   if (!animation.isCompleted)
-                    Opacity(
-                      opacity: 1 - sizeAnimation.value,
-                      child: card,
-                    ),
+                    Opacity(opacity: 1 - sizeAnimation.value, child: card),
                 ],
               ),
             ),
@@ -403,8 +406,9 @@ class EpisodeCardDetailRoute extends ModalRoute {
             offset: lengthAndSizeHero.offsetTween.evaluate(sizeAnimation),
             child: EpisodeLengthAndSize(
               episodeId,
-              height:
-                  lengthAndSizeHero.sizeTween.evaluate(sizeAnimation).height,
+              height: lengthAndSizeHero.sizeTween
+                  .evaluate(sizeAnimation)
+                  .height,
             ),
           ),
         if (showHeroes && !animation.isCompleted)

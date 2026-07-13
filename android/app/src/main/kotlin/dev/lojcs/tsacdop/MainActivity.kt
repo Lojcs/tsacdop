@@ -1,4 +1,4 @@
-package dev.lojcs.tsacdop
+package dev.lojcs.tsacdop.profile
 
 import androidx.annotation.NonNull;
 import io.flutter.embedding.android.FlutterActivity

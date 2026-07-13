@@ -32,76 +32,70 @@ class Libries extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  Padding(
-                    padding: EdgeInsets.all(10.0),
-                  ),
+                  Padding(padding: EdgeInsets.all(10.0)),
                   Container(
                     height: 30.0,
                     padding: EdgeInsets.symmetric(horizontal: 70),
                     alignment: Alignment.centerLeft,
-                    child: Text('Google',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyLarge!
-                            .copyWith(color: context.accentColor)),
+                    child: Text(
+                      'Google',
+                      style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                        color: context.primaryColor,
+                      ),
+                    ),
                   ),
                   Column(
-                    children: google.map<Widget>(
-                      (e) {
-                        return ListTile(
-                          contentPadding: EdgeInsets.symmetric(horizontal: 80),
-                          onTap: () => e.link.launchUrl,
-                          title: Text(e.name),
-                          subtitle: Text(e.license),
-                        );
-                      },
-                    ).toList(),
+                    children: google.map<Widget>((e) {
+                      return ListTile(
+                        contentPadding: EdgeInsets.symmetric(horizontal: 80),
+                        onTap: () => e.link.launchUrl,
+                        title: Text(e.name),
+                        subtitle: Text(e.license),
+                      );
+                    }).toList(),
                   ),
                   Container(
                     height: 30.0,
                     padding: EdgeInsets.symmetric(horizontal: 70),
                     alignment: Alignment.centerLeft,
-                    child: Text(context.s.fonts,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyLarge!
-                            .copyWith(color: context.accentColor)),
+                    child: Text(
+                      context.s.fonts,
+                      style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                        color: context.primaryColor,
+                      ),
+                    ),
                   ),
                   Column(
-                    children: fonts.map<Widget>(
-                      (e) {
-                        return ListTile(
-                          contentPadding: EdgeInsets.symmetric(horizontal: 80),
-                          onTap: () => e.link.launchUrl,
-                          title: Text(e.name),
-                          subtitle: Text(e.license),
-                        );
-                      },
-                    ).toList(),
+                    children: fonts.map<Widget>((e) {
+                      return ListTile(
+                        contentPadding: EdgeInsets.symmetric(horizontal: 80),
+                        onTap: () => e.link.launchUrl,
+                        title: Text(e.name),
+                        subtitle: Text(e.license),
+                      );
+                    }).toList(),
                   ),
                   Container(
                     height: 30.0,
                     padding: EdgeInsets.symmetric(horizontal: 70),
                     alignment: Alignment.centerLeft,
-                    child: Text(context.s.plugins,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyLarge!
-                            .copyWith(color: context.accentColor)),
+                    child: Text(
+                      context.s.plugins,
+                      style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                        color: context.primaryColor,
+                      ),
+                    ),
                   ),
                   Container(
                     child: Column(
-                      children: plugins.map<Widget>(
-                        (e) {
-                          return ListTile(
-                            onTap: () => e.link.launchUrl,
-                            contentPadding:
-                                EdgeInsets.symmetric(horizontal: 80),
-                            title: Text(e.name),
-                            subtitle: Text(e.license),
-                          );
-                        },
-                      ).toList(),
+                      children: plugins.map<Widget>((e) {
+                        return ListTile(
+                          onTap: () => e.link.launchUrl,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 80),
+                          title: Text(e.name),
+                          subtitle: Text(e.license),
+                        );
+                      }).toList(),
                     ),
                   ),
                 ],

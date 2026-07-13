@@ -12,14 +12,15 @@ abstract class WebSearch extends RemoteSearch {
     _webViewController.clearCache();
     _webViewController
         .clearLocalStorage(); // TODO: This doesn't clear google dark mode??
-    _webViewController.setNavigationDelegate(NavigationDelegate(
-      onUrlChange: (change) async {
-        if (change.url != null && change.url != "") {
-          await tryAddFeed(change.url!);
-        }
-      },
-      onPageFinished: (url) async {
-        await _webViewController.runJavaScript("""
+    _webViewController.setNavigationDelegate(
+      NavigationDelegate(
+        onUrlChange: (change) async {
+          if (change.url != null && change.url != "") {
+            await tryAddFeed(change.url!);
+          }
+        },
+        onPageFinished: (url) async {
+          await _webViewController.runJavaScript("""
           let anchors = document.querySelectorAll('a');
           let urlsFromAnchors = Array.from(anchors).map(a => a.href);
           let urls = [...urlsFromAnchors];
@@ -29,13 +30,15 @@ abstract class WebSearch extends RemoteSearch {
             }
           }
         """);
-        for (var element in removedElements) {
-          await _webViewController
-              .runJavaScript("document.querySelector('$element').remove();");
-        }
-        await Future.delayed(Duration(seconds: 1));
-      },
-    ));
+          for (var element in removedElements) {
+            await _webViewController.runJavaScript(
+              "document.querySelector('$element').remove();",
+            );
+          }
+          await Future.delayed(Duration(seconds: 1));
+        },
+      ),
+    );
     _webViewController.addJavaScriptChannel(
       "linksChannel",
       onMessageReceived: (p0) => tryAddFeed(p0.message),
@@ -74,33 +77,79 @@ abstract class WebSearch extends RemoteSearch {
 }
 
 enum SearchEngine {
-  bing(name: "Bing", baseSearchUrl: "https://www.bing.com/search?q="),
+  bing(
+    name: "Bing",
+    baseSearchUrl: "https://www.bing.com/search?q=",
+    serial: "bing",
+  ),
   brave(
     name: "Brave",
     baseSearchUrl: "https://search.brave.com/search?q=",
+    serial: "brave",
   ),
-  duckduckgo(name: "DuckDuckGo", baseSearchUrl: "https://duckduckgo.com/?q="),
+  duckduckgo(
+    name: "DuckDuckGo",
+    baseSearchUrl: "https://duckduckgo.com/?q=",
+    serial: "duckduckgo",
+  ),
   ecosia(
-      name: "Ecosia",
-      baseSearchUrl: "https://www.ecosia.org/search?q=",
-      removedElements: [".cookie-wrapper", "#didomi-host"]),
-  google(name: "Google", baseSearchUrl: "https://www.google.com/search?q="),
-  qwant(name: "Qwant", baseSearchUrl: "https://qwant.com/search?q="),
+    name: "Ecosia",
+    baseSearchUrl: "https://www.ecosia.org/search?q=",
+    removedElements: [".cookie-wrapper", "#didomi-host"],
+    serial: "ecosia",
+  ),
+  google(
+    name: "Google",
+    baseSearchUrl: "https://www.google.com/search?q=",
+    serial: "google",
+  ),
+  qwant(
+    name: "Qwant",
+    baseSearchUrl: "https://qwant.com/search?q=",
+    serial: "qwant",
+  ),
   startpage(
-      name: "Startpage", baseSearchUrl: "https://eu.startpage.com/search?q="),
-  yahoo(name: "Yahoo", baseSearchUrl: "https://search.yahoo.com/search?q="),
-  yandex(name: "Yandex", baseSearchUrl: "https://yandex.com/search/?text=");
+    name: "Startpage",
+    baseSearchUrl: "https://eu.startpage.com/search?q=",
+    serial: "startpage",
+  ),
+  yahoo(
+    name: "Yahoo",
+    baseSearchUrl: "https://search.yahoo.com/search?q=",
+    serial: "yahoo",
+  ),
+  yandex(
+    name: "Yandex",
+    baseSearchUrl: "https://yandex.com/search/?text=",
+    serial: "yandex",
+  );
 
-  const SearchEngine(
-      {required this.name,
-      required this.baseSearchUrl,
-      this.removedElements = const [],
-      this.bespokeIcon});
+  const SearchEngine({
+    required this.name,
+    required this.baseSearchUrl,
+    this.removedElements = const [],
+    this.bespokeIcon,
+    required this.serial,
+  });
+
+  factory SearchEngine.fromSerial(String serial) => switch (serial) {
+    "bing" => bing,
+    "brave" => brave,
+    "duckduckgo" => duckduckgo,
+    "ecosia" => ecosia,
+    "google" => google,
+    "qwant" => qwant,
+    "startpage" => startpage,
+    "yahoo" => yahoo,
+    "yandex" => yandex,
+    _ => ecosia,
+  };
 
   final String name;
   final String baseSearchUrl;
   final List<String> removedElements;
   final Widget? bespokeIcon;
+  final String serial;
   Widget get icon => bespokeIcon ?? Text(name.substring(0, 1));
 }
 
@@ -113,7 +162,11 @@ class SearchEngineSearch extends WebSearch {
     notifyListeners();
   }
 
-  SearchEngineSearch(super.pState, super.eState);
+  SearchEngineSearch(
+    super.pState,
+    super.eState, [
+    SearchEngine searchEngine = SearchEngine.ecosia,
+  ]) : _searchEngine = searchEngine;
   @override
   String get baseSearchUrl => searchEngine.baseSearchUrl;
   @override

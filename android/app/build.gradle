@@ -29,9 +29,9 @@ if (flutterVersionName == null) {
    }
 
 android {
-    namespace = "dev.lojcs.tsacdop"
+    namespace = "dev.lojcs.tsacdop.profile"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = "27.2.12479018"
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -52,9 +52,9 @@ android {
     }
 
     defaultConfig {
-        applicationId "dev.lojcs.tsacdop"
+        applicationId "dev.lojcs.tsacdop.profile"
         minSdkVersion flutter.minSdkVersion
-        targetSdkVersion 33
+        targetSdkVersion 35
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"

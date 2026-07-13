@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 import '../type/episodebrief.dart';
 import '../util/extension_helper.dart';
@@ -27,9 +28,13 @@ class LayoutPainter extends CustomPainter {
     canvas.drawRect(Rect.fromLTRB(0, 0, 10 + 5 * scale, 10), paint);
     if (scale < 4) {
       canvas.drawRect(
-          Rect.fromLTRB(10 + 5 * scale, 0, 20 + 10 * scale, 10), paint);
+        Rect.fromLTRB(10 + 5 * scale, 0, 20 + 10 * scale, 10),
+        paint,
+      );
       canvas.drawRect(
-          Rect.fromLTRB(20 + 5 * scale, 0, 30, 10 - 10 * scale), paint);
+        Rect.fromLTRB(20 + 5 * scale, 0, 30, 10 - 10 * scale),
+        paint,
+      );
     }
   }
 
@@ -90,7 +95,7 @@ class StarSky extends CustomPainter {
       Offset(9, 13),
       Offset(12, 17),
       Offset(5, 19),
-      Offset(7, 19)
+      Offset(7, 19),
     ].map((e) => e * 10).toList();
     final orion = [
       Offset(3, 1),
@@ -110,7 +115,7 @@ class StarSky extends CustomPainter {
       Offset(15, 19),
       Offset(16, 18),
       Offset(2, 25),
-      Offset(10, 26)
+      Offset(10, 26),
     ].map((e) => Offset(e.dx * 10 + 250, e.dy * 10)).toList();
 
     var paint = Paint()
@@ -132,14 +137,30 @@ class StarSky extends CustomPainter {
     darwBigStar(Offset center, double radius) {
       var path = Path();
       path.moveTo(center.dx - radius * 1.5, center.dy);
-      path.quadraticBezierTo(center.dx - radius * 0.2, center.dy - radius * 0.2,
-          center.dx, center.dy - radius * 2);
-      path.quadraticBezierTo(center.dx + radius * 0.2, center.dy - radius * 0.2,
-          center.dx + radius * 1.5, center.dy);
-      path.quadraticBezierTo(center.dx + radius * 0.2, center.dy + radius * 0.2,
-          center.dx, center.dy + radius * 2);
-      path.quadraticBezierTo(center.dx - radius * 0.2, center.dy + radius * 0.2,
-          center.dx - radius * 1.5, center.dy);
+      path.quadraticBezierTo(
+        center.dx - radius * 0.2,
+        center.dy - radius * 0.2,
+        center.dx,
+        center.dy - radius * 2,
+      );
+      path.quadraticBezierTo(
+        center.dx + radius * 0.2,
+        center.dy - radius * 0.2,
+        center.dx + radius * 1.5,
+        center.dy,
+      );
+      path.quadraticBezierTo(
+        center.dx + radius * 0.2,
+        center.dy + radius * 0.2,
+        center.dx,
+        center.dy + radius * 2,
+      );
+      path.quadraticBezierTo(
+        center.dx - radius * 0.2,
+        center.dy + radius * 0.2,
+        center.dx - radius * 1.5,
+        center.dy,
+      );
       path.close();
 
       canvas.drawPath(path, fullPaint);
@@ -216,11 +237,13 @@ class _BiStateIndicatorState extends State<BiStateIndicator>
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-        foregroundPainter: BiStateIndicatorPainter(
-            fraction: animation.value,
-            color: context.textColor,
-            backgroundColor: context.accentColor),
-        child: widget.child);
+      foregroundPainter: BiStateIndicatorPainter(
+        fraction: animation.value,
+        color: context.textColor,
+        backgroundColor: context.primaryColor,
+      ),
+      child: widget.child,
+    );
   }
 }
 
@@ -244,10 +267,11 @@ class BiStateIndicatorPainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
     if (fraction! > 0) {
       canvas.drawLine(
-          Offset(size.width, size.height) / 5,
-          Offset(size.width, size.height) / 5 +
-              Offset(size.width, size.height) * 3 / 5 * fraction!,
-          linePaint);
+        Offset(size.width, size.height) / 5,
+        Offset(size.width, size.height) / 5 +
+            Offset(size.width, size.height) * 3 / 5 * fraction!,
+        linePaint,
+      );
     }
   }
 
@@ -365,8 +389,12 @@ class HideListenedPainter extends CustomPainter {
   Color? backgroundColor;
   double? fraction;
   double stroke;
-  HideListenedPainter(
-      {this.color, this.stroke = 1.0, this.backgroundColor, this.fraction});
+  HideListenedPainter({
+    this.color,
+    this.stroke = 1.0,
+    this.backgroundColor,
+    this.fraction,
+  });
   @override
   void paint(Canvas canvas, Size size) {
     var paint = Paint()
@@ -395,10 +423,11 @@ class HideListenedPainter extends CustomPainter {
     canvas.drawPath(path, paint);
     if (fraction! > 0) {
       canvas.drawLine(
-          Offset(size.width, size.height) / 5,
-          Offset(size.width, size.height) / 5 +
-              Offset(size.width, size.height) * 3 / 5 * fraction!,
-          linePaint);
+        Offset(size.width, size.height) / 5,
+        Offset(size.width, size.height) / 5 +
+            Offset(size.width, size.height) * 3 / 5 * fraction!,
+        linePaint,
+      );
     }
   }
 
@@ -423,8 +452,10 @@ class _HideListenedState extends State<HideListened>
   @override
   void initState() {
     super.initState();
-    _controller =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 400));
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 400),
+    );
     animation = Tween(begin: 0.0, end: 1.0).animate(_controller)
       ..addListener(() {
         if (mounted) {
@@ -457,10 +488,12 @@ class _HideListenedState extends State<HideListened>
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-        painter: HideListenedPainter(
-            fraction: _fraction,
-            color: context.textColor,
-            backgroundColor: context.accentColor));
+      painter: HideListenedPainter(
+        fraction: _fraction,
+        color: context.textColor,
+        backgroundColor: context.primaryColor,
+      ),
+    );
   }
 }
 
@@ -485,14 +518,17 @@ class AddToPlaylistPainter extends CustomPainter {
     path.lineTo(size.width * 3 / 7, size.height * 4 / 5);
 
     var textPainter = TextPainter(
-        textAlign: TextAlign.center,
-        textDirection: TextDirection.ltr,
-        text: TextSpan(
-          text: 'N',
-          style: TextStyle(
-              fontStyle: FontStyle.italic, color: textColor, fontSize: 10),
-        ))
-      ..layout();
+      textAlign: TextAlign.center,
+      textDirection: TextDirection.ltr,
+      text: TextSpan(
+        text: 'N',
+        style: TextStyle(
+          fontStyle: FontStyle.italic,
+          color: textColor,
+          fontSize: 10,
+        ),
+      ),
+    )..layout();
     textPainter.paint(canvas, Offset(size.width * 4 / 7, size.height * 3 / 5));
     canvas.drawPath(path, paint);
   }
@@ -529,17 +565,18 @@ class RemoveNewFlagPainter extends CustomPainter {
     path.lineTo(size.width * 3 / 5, size.height * 3 / 5);
 
     var textPainter = TextPainter(
-        textAlign: TextAlign.center,
-        textDirection: TextDirection.ltr,
-        text: TextSpan(
-          text: 'N',
-          style: TextStyle(
-              fontStyle: FontStyle.italic,
-              color: textColor,
-              fontSize: 10,
-              fontWeight: stroke >= 2 ? FontWeight.bold : FontWeight.normal),
-        ))
-      ..layout();
+      textAlign: TextAlign.center,
+      textDirection: TextDirection.ltr,
+      text: TextSpan(
+        text: 'N',
+        style: TextStyle(
+          fontStyle: FontStyle.italic,
+          color: textColor,
+          fontSize: 10,
+          fontWeight: stroke >= 2 ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
+    )..layout();
     textPainter.paint(canvas, Offset(size.width * 4 / 7, size.height * 3 / 5));
     canvas.drawPath(path, paint);
   }
@@ -585,10 +622,14 @@ class WavePainter extends CustomPainter {
     path.lineTo(size.width / 2, size.height / 2 - size.height * _value * 0.5);
     path.moveTo(size.width * 3 / 4, size.height / 2);
     path.lineTo(
-        size.width * 3 / 4, size.height / 2 + size.height * _value * 0.6);
+      size.width * 3 / 4,
+      size.height / 2 + size.height * _value * 0.6,
+    );
     path.moveTo(size.width * 3 / 4, size.height / 2);
     path.lineTo(
-        size.width * 3 / 4, size.height / 2 - size.height * _value * 0.6);
+      size.width * 3 / 4,
+      size.height / 2 - size.height * _value * 0.6,
+    );
     path.moveTo(size.width, size.height / 2);
     path.lineTo(size.width, size.height / 2 + size.height * _value * 0.2);
     path.moveTo(size.width, size.height / 2);
@@ -619,7 +660,9 @@ class _WaveLoaderState extends State<WaveLoader>
   void initState() {
     super.initState();
     _controller = AnimationController(
-        vsync: this, duration: Duration(milliseconds: 1000));
+      vsync: this,
+      duration: Duration(milliseconds: 1000),
+    );
     animation = Tween(begin: 0.0, end: 1.0).animate(_controller)
       ..addListener(() {
         if (mounted) {
@@ -647,8 +690,11 @@ class _WaveLoaderState extends State<WaveLoader>
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-        painter: WavePainter(
-            widget.animate ? _fraction : 1, widget.color ?? Colors.white));
+      painter: WavePainter(
+        widget.animate ? _fraction : 1,
+        widget.color ?? Colors.white,
+      ),
+    );
   }
 }
 
@@ -665,15 +711,35 @@ class LovePainter extends CustomPainter {
     path.moveTo(size.width / 2, size.height / 6);
     path.quadraticBezierTo(size.width / 4, 0, size.width / 8, size.height / 6);
     path.quadraticBezierTo(
-        0, size.height / 3, size.width / 8, size.height * 0.55);
+      0,
+      size.height / 3,
+      size.width / 8,
+      size.height * 0.55,
+    );
     path.quadraticBezierTo(
-        size.width / 4, size.height * 0.8, size.width / 2, size.height);
-    path.quadraticBezierTo(size.width * 0.75, size.height * 0.8,
-        size.width * 7 / 8, size.height * 0.55);
+      size.width / 4,
+      size.height * 0.8,
+      size.width / 2,
+      size.height,
+    );
     path.quadraticBezierTo(
-        size.width, size.height / 3, size.width * 7 / 8, size.height / 6);
+      size.width * 0.75,
+      size.height * 0.8,
+      size.width * 7 / 8,
+      size.height * 0.55,
+    );
     path.quadraticBezierTo(
-        size.width * 3 / 4, 0, size.width / 2, size.height / 6);
+      size.width,
+      size.height / 3,
+      size.width * 7 / 8,
+      size.height / 6,
+    );
+    path.quadraticBezierTo(
+      size.width * 3 / 4,
+      0,
+      size.width / 2,
+      size.height / 6,
+    );
 
     canvas.drawPath(path, paint);
   }
@@ -699,8 +765,11 @@ class LinePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.drawLine(Offset(0, size.height / 2.0),
-        Offset(size.width * _fraction, size.height / 2.0), _paint);
+    canvas.drawLine(
+      Offset(0, size.height / 2.0),
+      Offset(size.width * _fraction, size.height / 2.0),
+      _paint,
+    );
   }
 
   @override
@@ -724,8 +793,10 @@ class _LineLoaderState extends State<LineLoader>
   @override
   void initState() {
     super.initState();
-    controller =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 500));
+    controller = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 500),
+    );
     animation = Tween(begin: 0.0, end: 1.0).animate(controller)
       ..addListener(() {
         if (mounted) {
@@ -752,7 +823,7 @@ class _LineLoaderState extends State<LineLoader>
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(painter: LinePainter(_fraction, context.accentColor));
+    return CustomPaint(painter: LinePainter(_fraction, context.primaryColor));
   }
 }
 
@@ -805,16 +876,10 @@ class _ImageRotateState extends State<ImageRotate>
   Widget build(BuildContext context) {
     return Transform.rotate(
       angle: 2 * math.pi * _value,
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 10.0),
-        child: SizedBox(
-          width: 30,
-          height: 30,
-          child: CircleAvatar(
-              backgroundColor: widget.episodeItem!.backgroudColor(context),
-              backgroundImage:
-                  widget.episodeItem!.episodeOrPodcastImageProvider),
-        ),
+      child: CircleAvatar(
+        radius: 15,
+        backgroundColor: widget.episodeItem!.backgroudColor(context),
+        backgroundImage: widget.episodeItem!.episodeOrPodcastImageProvider,
       ),
     );
   }
@@ -860,23 +925,21 @@ class _LoveOpenState extends State<LoveOpen>
   }
 
   Widget _littleHeart(double scale, double value, double angle) => Container(
-        alignment: Alignment.centerLeft,
-        padding: EdgeInsets.only(left: value),
-        child: ScaleTransition(
-          scale: _animationA as Animation<double>,
-          alignment: Alignment.center,
-          child: Transform.rotate(
-            angle: angle,
-            child: SizedBox(
-              height: 5 * scale,
-              width: 6 * scale,
-              child: CustomPaint(
-                painter: LovePainter(),
-              ),
-            ),
-          ),
+    alignment: Alignment.centerLeft,
+    padding: EdgeInsets.only(left: value),
+    child: ScaleTransition(
+      scale: _animationA as Animation<double>,
+      alignment: Alignment.center,
+      child: Transform.rotate(
+        angle: angle,
+        child: SizedBox(
+          height: 5 * scale,
+          width: 6 * scale,
+          child: CustomPaint(painter: LovePainter()),
         ),
-      );
+      ),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -904,7 +967,7 @@ class _LoveOpenState extends State<LoveOpen>
             children: <Widget>[
               _littleHeart(1, 8, -math.pi * 0.7),
               _littleHeart(0.8, 8, math.pi),
-              _littleHeart(0.6, 3, -math.pi * 1.2)
+              _littleHeart(0.6, 3, -math.pi * 1.2),
             ],
           ),
         ],
@@ -966,8 +1029,11 @@ class _HeartSetState extends State<HeartSet>
       height: widget.height,
       width: widget.width,
       alignment: Alignment(0.5, 1 - _value),
-      child: Icon(Icons.favorite,
-          color: Colors.blue.withValues(alpha: 0.7), size: 20 * _value),
+      child: Icon(
+        Icons.favorite,
+        color: Colors.blue.withValues(alpha: 0.7),
+        size: 20 * _value,
+      ),
     );
   }
 }
@@ -1024,16 +1090,20 @@ class _HeartOpenState extends State<HeartOpen>
     return Positioned(
       left: widget.width! * position,
       bottom: widget.height! * _value * scale,
-      child: Icon(Icons.favorite,
-          color: _value > 0.5
-              ? Colors.red.withValues(alpha: 2 - _value * 2)
-              : Colors.red,
-          size: 20 * _value * scale),
+      child: Icon(
+        Icons.favorite,
+        color: _value > 0.5
+            ? Colors.red.withValues(alpha: 2 - _value * 2)
+            : Colors.red,
+        size: 20 * _value * scale,
+      ),
     );
   }
 
-  final List<double> _list =
-      List<double>.generate(20, (index) => math.Random().nextDouble());
+  final List<double> _list = List<double>.generate(
+    20,
+    (index) => math.Random().nextDouble(),
+  );
   final List<int> _index = List<int>.generate(19, (index) => index);
   @override
   Widget build(BuildContext context) {
@@ -1043,8 +1113,11 @@ class _HeartOpenState extends State<HeartOpen>
           height: widget.height,
           width: widget.width,
           alignment: Alignment(0.5, 1 - _value),
-          child: Icon(Icons.favorite,
-              color: Colors.blue.withValues(alpha: 0.7), size: 20 * _value),
+          child: Icon(
+            Icons.favorite,
+            color: Colors.blue.withValues(alpha: 0.7),
+            size: 20 * _value,
+          ),
         ),
         ..._index.map<Widget>(_position),
       ],
@@ -1054,8 +1127,12 @@ class _HeartOpenState extends State<HeartOpen>
 
 /// Icon using a painter.
 class IconPainter extends StatelessWidget {
-  const IconPainter(this.painter,
-      {this.height = 10, this.width = 30, super.key});
+  const IconPainter(
+    this.painter, {
+    this.height = 10,
+    this.width = 30,
+    super.key,
+  });
   final double height;
   final double width;
   final CustomPainter painter;
@@ -1064,9 +1141,7 @@ class IconPainter extends StatelessWidget {
     return SizedBox(
       height: height,
       width: width,
-      child: CustomPaint(
-        painter: painter,
-      ),
+      child: CustomPaint(painter: painter),
     );
   }
 }
@@ -1074,17 +1149,20 @@ class IconPainter extends StatelessWidget {
 /// A dot just a dot.
 class DotIndicator extends StatelessWidget {
   const DotIndicator({this.radius = 8, this.color, super.key})
-      : assert(radius > 0);
+    : assert(radius > 0);
   final Color? color;
   final double radius;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-        width: radius,
-        height: radius,
-        decoration: BoxDecoration(
-            shape: BoxShape.circle, color: color ?? context.accentColor));
+      width: radius,
+      height: radius,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color ?? context.primaryColor,
+      ),
+    );
   }
 }
 
@@ -1096,13 +1174,14 @@ class DownloadPainter extends CustomPainter {
   double progress;
   double pauseProgress;
   double stroke;
-  DownloadPainter(
-      {this.fraction,
-      this.color,
-      this.progressColor,
-      this.progress = 0,
-      this.stroke = 2,
-      this.pauseProgress = 0});
+  DownloadPainter({
+    this.fraction,
+    this.color,
+    this.progressColor,
+    this.progress = 0,
+    this.stroke = 2,
+    this.pauseProgress = 0,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1123,51 +1202,97 @@ class DownloadPainter extends CustomPainter {
     var height = size.height;
     var center = Offset(size.width / 2, size.height / 2);
     if (pauseProgress == 0 && progress < 1) {
-      canvas.drawLine(Offset(width / 2, height / 8),
-          Offset(width / 2, height * 4 / 5), paint);
-      canvas.drawLine(Offset(width / 4, height / 2),
-          Offset(width / 2, height * 4 / 5), paint);
-      canvas.drawLine(Offset(width * 3 / 4, height / 2),
-          Offset(width / 2, height * 4 / 5), paint);
+      canvas.drawLine(
+        Offset(width / 2, height / 8),
+        Offset(width / 2, height * 4 / 5),
+        paint,
+      );
+      canvas.drawLine(
+        Offset(width / 4, height / 2),
+        Offset(width / 2, height * 4 / 5),
+        paint,
+      );
+      canvas.drawLine(
+        Offset(width * 3 / 4, height / 2),
+        Offset(width / 2, height * 4 / 5),
+        paint,
+      );
     }
 
     if (fraction == 0) {
-      canvas.drawLine(Offset(width / 5, height * 9 / 10),
-          Offset(width * 4 / 5, height * 9 / 10), paint);
+      canvas.drawLine(
+        Offset(width / 5, height * 9 / 10),
+        Offset(width * 4 / 5, height * 9 / 10),
+        paint,
+      );
     } else if (progress < 1) {
-      canvas.drawArc(Rect.fromCircle(center: center, radius: width / 2),
-          math.pi / 2, math.pi * fraction!, false, circlePaint);
-      canvas.drawArc(Rect.fromCircle(center: center, radius: width / 2),
-          math.pi / 2, -math.pi * fraction!, false, circlePaint);
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: width / 2),
+        math.pi / 2,
+        math.pi * fraction!,
+        false,
+        circlePaint,
+      );
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: width / 2),
+        math.pi / 2,
+        -math.pi * fraction!,
+        false,
+        circlePaint,
+      );
     }
 
     if (progress == 1) {
-      canvas.drawLine(Offset(width / 5, height * 9 / 10),
-          Offset(width * 4 / 5, height * 9 / 10), progressPaint);
-      canvas.drawLine(Offset(width / 5, height * 5 / 10),
-          Offset(width * 2 / 5, height * 7 / 10), progressPaint);
-      canvas.drawLine(Offset(width * 4 / 5, height * 3 / 10),
-          Offset(width * 2 / 5, height * 7 / 10), progressPaint);
+      canvas.drawLine(
+        Offset(width / 5, height * 9 / 10),
+        Offset(width * 4 / 5, height * 9 / 10),
+        progressPaint,
+      );
+      canvas.drawLine(
+        Offset(width / 5, height * 5 / 10),
+        Offset(width * 2 / 5, height * 7 / 10),
+        progressPaint,
+      );
+      canvas.drawLine(
+        Offset(width * 4 / 5, height * 3 / 10),
+        Offset(width * 2 / 5, height * 7 / 10),
+        progressPaint,
+      );
     }
 
     if (fraction == 1 && progress < 1) {
-      canvas.drawArc(Rect.fromCircle(center: center, radius: width / 2),
-          -math.pi / 2, math.pi * 2 * progress, false, progressPaint);
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: width / 2),
+        -math.pi / 2,
+        math.pi * 2 * progress,
+        false,
+        progressPaint,
+      );
     }
 
     if (pauseProgress > 0) {
       canvas.drawLine(
-          Offset(width / 5 + height * 3 * pauseProgress / 20,
-              height / 2 - height * pauseProgress / 5),
-          Offset(width / 2 - height * 3 * pauseProgress / 20,
-              height * 4 / 5 - height * pauseProgress / 10),
-          paint);
+        Offset(
+          width / 5 + height * 3 * pauseProgress / 20,
+          height / 2 - height * pauseProgress / 5,
+        ),
+        Offset(
+          width / 2 - height * 3 * pauseProgress / 20,
+          height * 4 / 5 - height * pauseProgress / 10,
+        ),
+        paint,
+      );
       canvas.drawLine(
-          Offset(width * 4 / 5 - height * 3 * pauseProgress / 20,
-              height / 2 - height * pauseProgress / 5),
-          Offset(width / 2 + height * 3 * pauseProgress / 20,
-              height * 4 / 5 - height * pauseProgress / 10),
-          paint);
+        Offset(
+          width * 4 / 5 - height * 3 * pauseProgress / 20,
+          height / 2 - height * pauseProgress / 5,
+        ),
+        Offset(
+          width / 2 + height * 3 * pauseProgress / 20,
+          height * 4 / 5 - height * pauseProgress / 10,
+        ),
+        paint,
+      );
     }
   }
 
@@ -1202,25 +1327,19 @@ class LayoutButton extends StatelessWidget {
           ? SizedBox(
               height: 10,
               width: 30,
-              child: CustomPaint(
-                painter: LayoutPainter(0, context.textColor),
-              ),
+              child: CustomPaint(painter: LayoutPainter(0, context.textColor)),
             )
           : layout == EpisodeGridLayout.medium
-              ? SizedBox(
-                  height: 10,
-                  width: 30,
-                  child: CustomPaint(
-                    painter: LayoutPainter(1, context.textColor),
-                  ),
-                )
-              : SizedBox(
-                  height: 10,
-                  width: 30,
-                  child: CustomPaint(
-                    painter: LayoutPainter(4, context.textColor),
-                  ),
-                ),
+          ? SizedBox(
+              height: 10,
+              width: 30,
+              child: CustomPaint(painter: LayoutPainter(1, context.textColor)),
+            )
+          : SizedBox(
+              height: 10,
+              width: 30,
+              child: CustomPaint(painter: LayoutPainter(4, context.textColor)),
+            ),
     );
   }
 }
@@ -1229,7 +1348,10 @@ class LayoutButton extends StatelessWidget {
 class NoGrowBehavior extends ScrollBehavior {
   @override
   Widget buildOverscrollIndicator(
-      BuildContext context, Widget child, ScrollableDetails scrollableDetails) {
+    BuildContext context,
+    Widget child,
+    ScrollableDetails scrollableDetails,
+  ) {
     return child;
   }
 }
@@ -1271,8 +1393,10 @@ class _MeteorLoaderState extends State<MeteorLoader>
   @override
   void initState() {
     super.initState();
-    controller =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 500));
+    controller = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 500),
+    );
     animation = Tween(begin: 0.0, end: 1.0).animate(controller)
       ..addListener(() {
         if (mounted) {
@@ -1301,9 +1425,10 @@ class _MeteorLoaderState extends State<MeteorLoader>
       top: 300 * _move + 10,
       left: 150 * _move + 50,
       child: SizedBox(
-          width: 50 * _fraction!,
-          height: 100 * _fraction!,
-          child: CustomPaint(painter: Meteor())),
+        width: 50 * _fraction!,
+        height: 100 * _fraction!,
+        child: CustomPaint(painter: Meteor()),
+      ),
     );
   }
 }
@@ -1315,12 +1440,13 @@ class TabIndicator extends CustomPainter {
   Color? color;
   Color? accentColor;
   int? index;
-  TabIndicator(
-      {this.fraction,
-      this.color,
-      this.accentColor,
-      this.indicatorSize,
-      this.index});
+  TabIndicator({
+    this.fraction,
+    this.color,
+    this.accentColor,
+    this.indicatorSize,
+    this.index,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1337,21 +1463,30 @@ class TabIndicator extends CustomPainter {
     var startPoint = Offset(size.width / 2, 0);
     var leftStart = startPoint + (leftStartE - startPoint) * fraction!;
     var rightStart = startPoint + (rightStartE - startPoint) * fraction!;
-    var leftEnd = startPoint +
+    var leftEnd =
+        startPoint +
         Offset(-size.height, size.height) +
         Offset(-(size.width / 2 - size.height) * fraction!, 0);
-    var rightEnd = startPoint +
+    var rightEnd =
+        startPoint +
         Offset(size.height, size.height) +
         Offset((size.width / 2 - size.height) * fraction!, 0);
     canvas.drawLine(
-        leftStart, leftEnd, index == 0 || fraction == 0 ? accentPaint : paint);
-    canvas.drawLine(rightStart, rightEnd,
-        index == 2 || fraction == 0 ? accentPaint : paint);
+      leftStart,
+      leftEnd,
+      index == 0 || fraction == 0 ? accentPaint : paint,
+    );
+    canvas.drawLine(
+      rightStart,
+      rightEnd,
+      index == 2 || fraction == 0 ? accentPaint : paint,
+    );
     if (fraction == 1) {
       canvas.drawLine(
-          Offset(size.width / 2 - indicatorSize! / 2, size.height),
-          Offset(size.width / 2 + indicatorSize! / 2, size.height),
-          index == 1 || fraction == 0 ? accentPaint : paint);
+        Offset(size.width / 2 - indicatorSize! / 2, size.height),
+        Offset(size.width / 2 + indicatorSize! / 2, size.height),
+        index == 1 || fraction == 0 ? accentPaint : paint,
+      );
     }
   }
 
@@ -1385,8 +1520,10 @@ Widget episodeTag(String text, Color? color) {
     return Center();
   }
   return Container(
-    decoration:
-        BoxDecoration(color: color, borderRadius: BorderRadius.circular(15.0)),
+    decoration: BoxDecoration(
+      color: color,
+      borderRadius: BorderRadius.circular(15.0),
+    ),
     height: 25.0,
     margin: EdgeInsets.only(right: 10.0),
     padding: EdgeInsets.symmetric(horizontal: 8.0),
@@ -1397,34 +1534,22 @@ Widget episodeTag(String text, Color? color) {
 
 // Sleep time picker.
 class SleepTimerPicker extends StatefulWidget {
-  final ValueChanged<Duration>? onChange;
-  const SleepTimerPicker({this.onChange, super.key});
+  final ValueChanged<Duration> onChange;
+  final TimeOfDay initialValue;
+  const SleepTimerPicker({
+    required this.initialValue,
+    required this.onChange,
+    super.key,
+  });
 
   @override
-  _SleepTimerPickerState createState() => _SleepTimerPickerState();
+  State<SleepTimerPicker> createState() => _SleepTimerPickerState();
 }
 
 class _SleepTimerPickerState extends State<SleepTimerPicker> {
   final textStyle = TextStyle(fontSize: 60);
-  late int hour;
-  late int minute;
-  @override
-  void initState() {
-    _initTimer();
-    super.initState();
-  }
-
-  _initTimer() {
-    var h = DateTime.now().hour;
-    var m = DateTime.now().minute;
-    if (m > 50) {
-      hour = (h + 1) % 24;
-      minute = 0;
-    } else {
-      hour = h;
-      minute = m ~/ 10 * 10 + 10;
-    }
-  }
+  late int hour = widget.initialValue.hour;
+  late int minute = widget.initialValue.minute;
 
   _getDuration() {
     var h = DateTime.now().hour;
@@ -1441,78 +1566,80 @@ class _SleepTimerPickerState extends State<SleepTimerPicker> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-        height: 100,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            GestureDetector(
-              onTap: () {
-                setState(() {
-                  if (hour >= 23) {
-                    hour = 0;
-                  } else {
-                    hour++;
-                  }
-                });
-                widget.onChange!(_getDuration());
-              },
-              onLongPress: () {
-                setState(() {
-                  hour = DateTime.now().hour;
-                });
-                widget.onChange!(_getDuration());
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                    color: context.cardColorSchemeCard,
-                    borderRadius: BorderRadius.circular(10)),
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                child: Text(hour.toString().padLeft(2, '0'), style: textStyle),
+      height: 100,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                if (hour >= 23) {
+                  hour = 0;
+                } else {
+                  hour++;
+                }
+              });
+              widget.onChange(_getDuration());
+            },
+            onLongPress: () {
+              setState(() {
+                hour = DateTime.now().hour;
+              });
+              widget.onChange(_getDuration());
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                color: context.cardColorSchemeCard,
+                borderRadius: BorderRadius.circular(10),
               ),
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: Text(hour.toString().padLeft(2, '0'), style: textStyle),
             ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10),
-              child: Text(
-                ':',
-                style: textStyle,
-              ),
-            ),
-            GestureDetector(
-              onTap: (() {
-                setState(() {
-                  if (minute >= 55) {
-                    minute = 0;
-                  } else {
-                    minute += 5;
-                  }
-                });
-                widget.onChange!(_getDuration());
-              }),
-              onLongPress: () {
-                setState(() {
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 10),
+            child: Text(':', style: textStyle),
+          ),
+          GestureDetector(
+            onTap: (() {
+              setState(() {
+                if (minute >= 55) {
                   minute = 0;
-                });
-                widget.onChange!(_getDuration());
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                    color: context.cardColorSchemeCard,
-                    borderRadius: BorderRadius.circular(10)),
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                child:
-                    Text(minute.toString().padLeft(2, '0'), style: textStyle),
+                } else {
+                  minute += 5;
+                }
+              });
+              widget.onChange(_getDuration());
+            }),
+            onLongPress: () {
+              setState(() {
+                minute = 0;
+              });
+              widget.onChange(_getDuration());
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                color: context.cardColorSchemeCard,
+                borderRadius: BorderRadius.circular(10),
               ),
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: Text(minute.toString().padLeft(2, '0'), style: textStyle),
             ),
-          ],
-        ));
+          ),
+        ],
+      ),
+    );
   }
 }
 
 class UpDownIndicator extends StatefulWidget {
   final bool status;
   final Color color;
-  const UpDownIndicator(
-      {this.status = false, this.color = Colors.white, super.key});
+  const UpDownIndicator({
+    this.status = false,
+    this.color = Colors.white,
+    super.key,
+  });
 
   @override
   _UpDownIndicatorState createState() => _UpDownIndicatorState();
@@ -1521,9 +1648,10 @@ class UpDownIndicator extends StatefulWidget {
 class _UpDownIndicatorState extends State<UpDownIndicator>
     with SingleTickerProviderStateMixin {
   late AnimationController controller;
-  late Animation<double> turnAnimation =
-      Tween<double>(begin: unfinishedBegin ?? 0, end: unfinishedEnd ?? 0.5)
-          .animate(controller);
+  late Animation<double> turnAnimation = Tween<double>(
+    begin: unfinishedBegin ?? 0,
+    end: unfinishedEnd ?? 0.5,
+  ).animate(controller);
 
   double? unfinishedBegin;
   double? unfinishedEnd;
@@ -1531,8 +1659,10 @@ class _UpDownIndicatorState extends State<UpDownIndicator>
   @override
   void initState() {
     super.initState();
-    controller =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 300));
+    controller = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 300),
+    );
     if (widget.status) controller.value = 1;
   }
 
@@ -1569,10 +1699,7 @@ class _UpDownIndicatorState extends State<UpDownIndicator>
   Widget build(BuildContext context) {
     return RotationTransition(
       turns: turnAnimation,
-      child: Icon(
-        Icons.keyboard_arrow_down,
-        color: widget.color,
-      ),
+      child: Icon(Icons.keyboard_arrow_down, color: widget.color),
     );
   }
 }
@@ -1592,16 +1719,140 @@ class CircleProgressIndicator extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     var center = Offset(size.width / 2, size.height / 2);
     canvas.drawArc(
-        Rect.fromCenter(
-            center: center, height: size.height * 2, width: size.width * 2),
-        -math.pi / 2,
-        math.pi * 2 * (progress / 100),
-        true,
-        _paint);
+      Rect.fromCenter(
+        center: center,
+        height: size.height * 2,
+        width: size.width * 2,
+      ),
+      -math.pi / 2,
+      math.pi * 2 * (progress / 100),
+      true,
+      _paint,
+    );
   }
 
   @override
   bool shouldRepaint(CircleProgressIndicator oldDelegate) {
     return oldDelegate.progress != progress;
+  }
+}
+
+/// Rebuilds its subtree on every frame.
+class TickedSubtree extends StatefulWidget {
+  final WidgetBuilder builder;
+  final bool tick;
+  const TickedSubtree({required this.builder, this.tick = true, super.key});
+
+  @override
+  State<TickedSubtree> createState() => _TickedSubtree();
+}
+
+class _TickedSubtree extends State<TickedSubtree>
+    with SingleTickerProviderStateMixin {
+  late Ticker _ticker;
+
+  @override
+  void initState() {
+    super.initState();
+    _ticker = createTicker((_) => setState(() {}));
+    _ticker.start();
+  }
+
+  @override
+  void dispose() {
+    _ticker.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant TickedSubtree oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.tick && !_ticker.isActive) {
+      _ticker.start();
+    } else if (!widget.tick && _ticker.isActive) {
+      _ticker.stop();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.builder(context);
+  }
+}
+
+/// Dialog that pops with true if confirmed.
+class ConfirmationDialog extends StatelessWidget {
+  final String description;
+  final Color? color;
+  const ConfirmationDialog({required this.description, this.color, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.s;
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: context.radiusMedium),
+      elevation: 1,
+      backgroundColor:
+          color?.toWeakBackround(context) ?? context.accentBackgroundWeak,
+      actionsPadding: EdgeInsets.only(right: 12, bottom: 8),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text(s.cancel, style: TextStyle(color: Colors.grey[600])),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          child: Text(
+            s.confirm,
+            style: TextStyle(color: color ?? context.primaryColor),
+          ),
+        ),
+      ],
+      title: Text(context.s.confirmation),
+
+      content: Text(description),
+    );
+  }
+}
+
+class RouteAwareWidget extends StatefulWidget {
+  final VoidCallback? didPopNext;
+  final VoidCallback? didPush;
+  final VoidCallback? didPop;
+  final VoidCallback? didPushNext;
+  final Widget child;
+
+  const RouteAwareWidget({
+    super.key,
+    this.didPopNext,
+    this.didPush,
+    this.didPop,
+    this.didPushNext,
+    required this.child,
+  });
+
+  @override
+  State<RouteAwareWidget> createState() => _RouteAwareWidgetState();
+}
+
+class _RouteAwareWidgetState extends State<RouteAwareWidget> with RouteAware {
+  @override
+  void initState() {
+    super.initState();
+    // context.superSettingState.routeObserver.subscribe(this, Route)
+  }
+
+  @override
+  void didPopNext() => widget.didPopNext?.call();
+  @override
+  void didPush() => widget.didPush?.call();
+  @override
+  void didPop() => widget.didPop?.call();
+  @override
+  void didPushNext() => widget.didPushNext?.call();
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.child;
   }
 }

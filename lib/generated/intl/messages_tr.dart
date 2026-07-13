@@ -359,15 +359,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "newPlain": MessageLookupByLibrary.simpleMessage("Yeni"),
     "newestFirst": MessageLookupByLibrary.simpleMessage("Önce yeniler"),
     "next": MessageLookupByLibrary.simpleMessage("Sonraki"),
-    "noEpisodeDownload": MessageLookupByLibrary.simpleMessage(
-      "Henüz hiç bir bölüm indirilmedi",
-    ),
-    "noEpisodeFavorite": MessageLookupByLibrary.simpleMessage(
-      "Henüz hiç bir bölüm toplanmadı",
-    ),
-    "noEpisodeRecent": MessageLookupByLibrary.simpleMessage(
-      "Henüz hiç bir bölüm alınmadı",
-    ),
     "noPodcastGroup": MessageLookupByLibrary.simpleMessage(
       "Bu grupta hiç podcast yok",
     ),
@@ -379,9 +370,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "Gruplar ekleniyor ve düzenleniyor.",
     ),
     "notificationNetworkError": m15,
-    "notificationSetting": MessageLookupByLibrary.simpleMessage(
-      "Bildirim paneli",
-    ),
     "notificationSubscribe": m16,
     "notificationSubscribeExisted": m17,
     "notificationSubscribing": MessageLookupByLibrary.simpleMessage(
@@ -405,9 +393,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "playerHeightShort": MessageLookupByLibrary.simpleMessage("Kısa"),
     "playerHeightTall": MessageLookupByLibrary.simpleMessage("Uzun"),
     "playing": MessageLookupByLibrary.simpleMessage("Oynatılıyor"),
-    "playlistExisted": MessageLookupByLibrary.simpleMessage(
-      "Bu isimde bir çalma listesi mevcut",
-    ),
     "playlistNameEmpty": MessageLookupByLibrary.simpleMessage(
       "İsimsiz çalma listesi",
     ),
@@ -448,10 +433,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "refreshArtwork": MessageLookupByLibrary.simpleMessage(
       "Albüm kapağını güncelle",
     ),
-    "refreshFinished": MessageLookupByLibrary.simpleMessage(
-      "Yenileme Tamamlandı",
-    ),
-    "refreshStarted": MessageLookupByLibrary.simpleMessage("Yenileniyor"),
     "remove": MessageLookupByLibrary.simpleMessage("Kaldır"),
     "removeConfirm": MessageLookupByLibrary.simpleMessage("İptal teyidi"),
     "removeDownload": MessageLookupByLibrary.simpleMessage("İndirmeyi Sil"),
@@ -489,9 +470,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "settingStorage": MessageLookupByLibrary.simpleMessage("Depolama"),
     "settings": MessageLookupByLibrary.simpleMessage("Ayarlar"),
     "settingsAccentColor": MessageLookupByLibrary.simpleMessage("Ara renk"),
-    "settingsAccentColorDes": MessageLookupByLibrary.simpleMessage(
-      "Katman rengini seç",
-    ),
     "settingsAppIntro": MessageLookupByLibrary.simpleMessage(
       "Uygulama başlangıcı",
     ),
@@ -571,12 +549,6 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "settingsInfo": MessageLookupByLibrary.simpleMessage("Bilgi"),
     "settingsInterface": MessageLookupByLibrary.simpleMessage("Ara yüz"),
-    "settingsLanguages": MessageLookupByLibrary.simpleMessage("Diller"),
-    "settingsLanguagesDes": MessageLookupByLibrary.simpleMessage(
-      "Dili değiştir",
-    ),
-    "settingsLayout": MessageLookupByLibrary.simpleMessage("Stil"),
-    "settingsLayoutDes": MessageLookupByLibrary.simpleMessage("Uygulama stili"),
     "settingsLibraries": MessageLookupByLibrary.simpleMessage("Kütüphaneler"),
     "settingsLibrariesDes": MessageLookupByLibrary.simpleMessage(
       "Bu uygulamada kullanılann açık kaynak kütüphaneleri",
@@ -599,23 +571,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "settingsNetworkCellular": MessageLookupByLibrary.simpleMessage(
       "Hücresel veri kullanmadan önce sor",
     ),
-    "settingsNetworkCellularAuto": MessageLookupByLibrary.simpleMessage(
-      "Hücresel (mobil) veri kullanarak otomatik indir",
-    ),
-    "settingsNetworkCellularAutoDes": MessageLookupByLibrary.simpleMessage(
-      "Grup yönetimi sayfasında podcast otomatik indirme seçeneklerini ayarlayabilirsin",
-    ),
     "settingsNetworkCellularDes": MessageLookupByLibrary.simpleMessage(
       "Hücresel veri ile bölüm indirmek için sor",
-    ),
-    "settingsPlayDes": MessageLookupByLibrary.simpleMessage(
-      "Çalma listesi ve oynatıcı",
-    ),
-    "settingsPlayerHeight": MessageLookupByLibrary.simpleMessage(
-      "Oynatıcı yüksekliği",
-    ),
-    "settingsPlayerHeightDes": MessageLookupByLibrary.simpleMessage(
-      "Oynatıcı widget yüksekliğini ayarla",
     ),
     "settingsPopupMenu": MessageLookupByLibrary.simpleMessage(
       "Bölümlerin açılır pencere menüsü",
@@ -624,10 +581,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "Bölümlerin açılır pencere menüsünü değiştir",
     ),
     "settingsPrefrence": MessageLookupByLibrary.simpleMessage("Tercihler"),
-    "settingsRealDark": MessageLookupByLibrary.simpleMessage("Gerçek koyu mod"),
-    "settingsRealDarkDes": MessageLookupByLibrary.simpleMessage(
-      "Sadece koyu mod yeterli gelmediğinde...",
-    ),
     "settingsRewindSec": MessageLookupByLibrary.simpleMessage(
       "Geri sarma saniyesi",
     ),
@@ -653,9 +606,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "settingsSpeedsDes": MessageLookupByLibrary.simpleMessage(
       "Mevcut hızı ayarla",
     ),
-    "settingsStorageDes": MessageLookupByLibrary.simpleMessage(
-      "Cache ve indirme seçeneklerini yönet",
-    ),
     "settingsSyncing": MessageLookupByLibrary.simpleMessage("Senkronizasyon"),
     "settingsSyncingDes": MessageLookupByLibrary.simpleMessage(
       "Podcastleri arka planla güncelle",
@@ -667,12 +617,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "Bölüm sayfasını açmak için uzun basmalısın",
     ),
     "settingsTheme": MessageLookupByLibrary.simpleMessage("Tema"),
-    "settingsUpdateInterval": MessageLookupByLibrary.simpleMessage(
-      "Güncelleme aralığı",
-    ),
-    "settingsUpdateIntervalDes": MessageLookupByLibrary.simpleMessage(
-      "Varsayılan 24 saat",
-    ),
     "share": MessageLookupByLibrary.simpleMessage("Paylaş"),
     "showNotesFonts": MessageLookupByLibrary.simpleMessage(
       "Not yazı tipini göster",
@@ -755,12 +699,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "updateEpisodesCount": m30,
     "updateFailed": MessageLookupByLibrary.simpleMessage(
       "Güncelleme başarısız, bağlantı hatası",
-    ),
-    "useWallpaperTheme": MessageLookupByLibrary.simpleMessage(
-      "Temayı arkaplandan seç",
-    ),
-    "useWallpaperThemeDes": MessageLookupByLibrary.simpleMessage(
-      "Temayı arkaplandan seç.",
     ),
     "username": MessageLookupByLibrary.simpleMessage("Kullanıcı adı"),
     "usernameRequired": MessageLookupByLibrary.simpleMessage(

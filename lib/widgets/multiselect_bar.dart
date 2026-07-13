@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
 import '../util/selection_controller.dart';
-import 'package:tuple/tuple.dart';
 
 import '../home/audioplayer.dart';
 import '../state/audio_state.dart';
@@ -24,9 +23,7 @@ import 'episodegrid.dart';
 /// [SelectionController] needs to be provided with a [ChangeNotifierProvider]
 /// Uses the [CardColorScheme] provided with a [Provider], or defaults to the global theme
 class MultiSelectPanelIntegration extends StatefulWidget {
-  const MultiSelectPanelIntegration({
-    super.key,
-  });
+  const MultiSelectPanelIntegration({super.key});
 
   @override
   State<StatefulWidget> createState() => _MultiSelectPanelIntegrationState();
@@ -51,20 +48,24 @@ class _MultiSelectPanelIntegrationState
   @override
   void initState() {
     super.initState();
-    _slideController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 200))
-      ..addListener(() {
-        if (mounted) {
-          setState(() {});
-        }
-      });
+    _slideController =
+        AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 200),
+        )..addListener(() {
+          if (mounted) {
+            setState(() {});
+          }
+        });
     _slideAnimation = CurvedAnimation(
       parent: _slideController,
       curve: Curves.easeInOutCirc,
       reverseCurve: Curves.easeInOutCirc,
     );
-    SelectionController selectionController =
-        Provider.of<SelectionController>(context, listen: false);
+    SelectionController selectionController = Provider.of<SelectionController>(
+      context,
+      listen: false,
+    );
     selectMode = selectionController.selectMode;
     selectionController.addListener(() {
       if (selectMode != selectionController.selectMode) {
@@ -91,7 +92,8 @@ class _MultiSelectPanelIntegrationState
       children: [
         Container(
           constraints: BoxConstraints.loose(Size(context.width, 400)),
-          height: (previewHeight + multiSelectHeight + 8) *
+          height:
+              (previewHeight + multiSelectHeight + 8) *
               _slideAnimation.value.clamp(0, 1),
           child: ScrollConfiguration(
             behavior: const NoOverscrollScrollBehavior(),
@@ -117,12 +119,9 @@ class _MultiSelectPanelIntegrationState
             ),
           ),
         ),
-        Selector<AudioPlayerNotifier, (bool, PlayerHeight?)>(
-          selector: (_, audio) => (audio.playerRunning, audio.playerHeight),
-          builder: (_, data, __) {
-            return SizedBox(
-                height: data.$1 && data.$2 != null ? data.$2!.height : 0);
-          },
+        Selector<AudioState, bool>(
+          selector: (_, audio) => audio.playerRunning,
+          builder: (context, value, _) => SizedBox(height: value ? 75 : 0),
         ),
       ],
     );
@@ -155,18 +154,22 @@ class _SelectionPreviewState extends State<SelectionPreview>
   @override
   void initState() {
     super.initState();
-    _expandController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 175))
-      ..addListener(() {
-        widget.onHeightChanged(bodyHeight + iconButtonSize + 8);
-        if (mounted) setState(() {});
-      });
+    _expandController =
+        AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 175),
+        )..addListener(() {
+          widget.onHeightChanged(bodyHeight + iconButtonSize + 8);
+          if (mounted) setState(() {});
+        });
     _expandAnimation = CurvedAnimation(
       parent: _expandController,
       curve: Curves.easeOutQuad,
     );
-    SelectionController selectionController =
-        Provider.of<SelectionController>(context, listen: false);
+    SelectionController selectionController = Provider.of<SelectionController>(
+      context,
+      listen: false,
+    );
     selectMode = selectionController.selectMode;
     selectionController.addListener(() {
       if (mounted && selectMode != selectionController.selectMode) {
@@ -190,8 +193,8 @@ class _SelectionPreviewState extends State<SelectionPreview>
     Widget child = SizedBox(
       height: bodyHeight + iconButtonSize + 8,
       width: context.width,
-      child: Selector<CardColorScheme, Tuple3<Color, Color, Color>>(
-        selector: (_, cardColorScheme) => Tuple3(
+      child: Selector<CardColorScheme, (Color, Color, Color)>(
+        selector: (_, cardColorScheme) => (
           cardColorScheme.shadow,
           cardColorScheme.colorScheme.surface,
           cardColorScheme.colorScheme.primary,
@@ -204,24 +207,22 @@ class _SelectionPreviewState extends State<SelectionPreview>
               Container(
                 height: bodyHeight,
                 decoration: BoxDecoration(
-                  color: context.realDark ? context.surface : colors.item2,
+                  color: context.trueBlack ? context.surface : colors.$2,
                   borderRadius: BorderRadius.only(
-                      topRight: context.radiusMedium.topRight),
+                    topRight: context.radiusMedium.topRight,
+                  ),
                   boxShadow: _expandAnimation.value == 0
                       ? null
                       : context.boxShadowMedium(
-                          color: context.realDark ? colors.item1 : null),
+                          color: context.trueBlack ? colors.$1 : null,
+                        ),
                 ),
                 width: context.width - 48,
                 margin: EdgeInsets.symmetric(horizontal: 24),
                 clipBehavior: Clip.hardEdge,
                 child: CustomScrollView(
                   slivers: [
-                    SliverToBoxAdapter(
-                      child: SizedBox(
-                        height: 8,
-                      ),
-                    ),
+                    SliverToBoxAdapter(child: SizedBox(height: 8)),
                     Selector<SelectionController, (List<int>, int)>(
                       selector: (_, selectionController) => (
                         selectionController.selectedEpisodes,
@@ -246,11 +247,13 @@ class _SelectionPreviewState extends State<SelectionPreview>
               decoration: BoxDecoration(),
               child: Container(
                 decoration: BoxDecoration(
-                  color: context.realDark ? context.surface : colors.item2,
-                  borderRadius:
-                      BorderRadius.vertical(top: context.radiusMedium.topLeft),
+                  color: context.trueBlack ? context.surface : colors.$2,
+                  borderRadius: BorderRadius.vertical(
+                    top: context.radiusMedium.topLeft,
+                  ),
                   boxShadow: context.boxShadowMedium(
-                      color: context.realDark ? colors.item1 : null),
+                    color: context.trueBlack ? colors.$1 : null,
+                  ),
                 ),
                 clipBehavior: Clip.hardEdge,
                 height: iconButtonSize,
@@ -280,45 +283,50 @@ class _SelectionPreviewState extends State<SelectionPreview>
                             status: !expanded,
                             color: context.actionBarIconColor,
                           ),
-                          Selector<SelectionController, Tuple2<int, bool>>(
-                            selector: (context, selectionController) => Tuple2(
+                          Selector<SelectionController, (int, bool)>(
+                            selector: (context, selectionController) => (
                               selectionController.selectedEpisodes.length,
                               selectionController.selectionTentative,
                             ),
                             builder: (context, data, _) => Text(
                               context.s.selected(
-                                  "${data.item1}${data.item2 ? "+" : ""}"),
-                              style: context.textTheme.titleLarge!
-                                  .copyWith(color: colors.item3),
+                                "${data.$1}${data.$2 ? "+" : ""}",
+                              ),
+                              style: context.textTheme.titleLarge!.copyWith(
+                                color: colors.$3,
+                              ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           Padding(
                             padding: EdgeInsets.only(
-                                top: context.actionBarIconPadding.vertical / 2),
-                            child:
-                                Selector<SelectionController, (List<int>, int)>(
+                              top: context.actionBarIconPadding.vertical / 2,
+                            ),
+                            child: Selector<SelectionController, (List<int>, int)>(
                               selector: (context, selectionController) => (
                                 selectionController.selectedEpisodes,
                                 selectionController.selectedEpisodes.length,
                               ),
                               builder: (context, data, _) {
-                                var eState = Provider.of<EpisodeState>(context,
-                                    listen: false);
+                                var eState = Provider.of<EpisodeState>(
+                                  context,
+                                  listen: false,
+                                );
                                 int size = data.$1.fold(
-                                    0,
-                                    (size, id) =>
-                                        size + eState[id].enclosureSize);
+                                  0,
+                                  (size, id) => size + eState[id].enclosureSize,
+                                );
                                 int duration = data.$1.fold(
-                                    0,
-                                    (duration, id) =>
-                                        duration +
-                                        eState[id].enclosureDuration);
+                                  0,
+                                  (duration, id) =>
+                                      duration + eState[id].enclosureDuration,
+                                );
                                 return Text(
-                                  "  ${size ~/ 1000000}MB  ${duration.toTime}",
+                                  "  ${size ~/ 1048576}MiB  ${duration.toTime}",
                                   style: GoogleFonts.teko(
-                                      textStyle: context.textTheme.titleSmall!),
+                                    textStyle: context.textTheme.titleSmall!,
+                                  ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 );
@@ -336,13 +344,16 @@ class _SelectionPreviewState extends State<SelectionPreview>
         ),
       ),
     );
-    CardColorScheme? cardColorScheme =
-        Provider.of<CardColorScheme?>(context, listen: false);
+    CardColorScheme? cardColorScheme = Provider.of<CardColorScheme?>(
+      context,
+      listen: false,
+    );
     if (cardColorScheme == null) {
       return MultiProvider(
         providers: [
           Provider<CardColorScheme>.value(
-              value: Theme.of(context).extension<CardColorScheme>()!),
+            value: Theme.of(context).extension<CardColorScheme>()!,
+          ),
         ],
         child: child,
       );
@@ -376,18 +387,21 @@ class _MultiSelectPanelState extends State<MultiSelectPanel>
   EdgeInsets get iconPadding => context.actionBarIconPadding;
   Radius get iconRadius => context.actionBarIconRadius;
 
-  late Playlist _playlist =
-      Provider.of<AudioPlayerNotifier>(context, listen: false).playlist;
+  late Playlist _playlist = Provider.of<AudioState>(
+    context,
+    listen: false,
+  ).playlist;
   set playlist(Playlist p) {
     _playlist = p;
     _playlistList = _PlaylistList(
-        playlist: _playlist, onPlaylistChanged: (p) => playlist = p);
+      playlist: _playlist,
+      onPlaylistChanged: (p) => playlist = p,
+    );
     _actionBar = _MultiselectActionBar(
       secondRowController: _secondRowController,
       playlist: _playlist,
       onSecondRowOpen: () {
-        playlist =
-            Provider.of<AudioPlayerNotifier>(context, listen: false).playlist;
+        playlist = Provider.of<AudioState>(context, listen: false).playlist;
       },
     );
     setState(() {});
@@ -395,38 +409,45 @@ class _MultiSelectPanelState extends State<MultiSelectPanel>
 
   late final Widget _selectionOptions = _SelectionOptions();
   late Widget _playlistList = _PlaylistList(
-      playlist: _playlist, onPlaylistChanged: (p) => playlist = p);
+    playlist: _playlist,
+    onPlaylistChanged: (p) => playlist = p,
+  );
   late Widget _actionBar = _MultiselectActionBar(
     secondRowController: _secondRowController,
     onSecondRowOpen: () {
-      playlist =
-          Provider.of<AudioPlayerNotifier>(context, listen: false).playlist;
+      playlist = Provider.of<AudioState>(context, listen: false).playlist;
     },
   );
 
   double get height => Tween<double>(
-          begin: iconButtonSize * 2 + iconPadding.vertical * 3 / 2,
-          end: iconButtonSize * 3 + iconPadding.vertical * 2)
-      .evaluate(_secondRowSlideAnimation);
+    begin: iconButtonSize * 2 + iconPadding.vertical * 3 / 2,
+    end: iconButtonSize * 3 + iconPadding.vertical * 2,
+  ).evaluate(_secondRowSlideAnimation);
 
   @override
   void initState() {
     super.initState();
-    _secondRowController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 200))
-      ..addListener(() {
-        widget.onHeightChanged(height);
-        if (mounted) setState(() {});
-      });
+    _secondRowController =
+        AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 200),
+        )..addListener(() {
+          widget.onHeightChanged(height);
+          if (mounted) setState(() {});
+        });
     _secondRowSlideAnimation = CurvedAnimation(
       parent: _secondRowController,
       curve: Curves.easeInOutCubicEmphasized,
       reverseCurve: Curves.easeInOutCirc,
     );
     _secondRowAppearAnimation = CurvedAnimation(
-        parent: _secondRowSlideAnimation, curve: Interval(0.75, 1));
-    SelectionController selectionController =
-        Provider.of<SelectionController>(context, listen: false);
+      parent: _secondRowSlideAnimation,
+      curve: Interval(0.75, 1),
+    );
+    SelectionController selectionController = Provider.of<SelectionController>(
+      context,
+      listen: false,
+    );
     selectMode = selectionController.selectMode;
     selectionController.addListener(() {
       if (mounted && selectMode != selectionController.selectMode) {
@@ -446,15 +467,16 @@ class _MultiSelectPanelState extends State<MultiSelectPanel>
 
   @override
   Widget build(BuildContext context) {
-    Widget child = Selector<CardColorScheme, Tuple2<Color, Color>>(
+    Widget child = Selector<CardColorScheme, (Color, Color)>(
       selector: (_, cardColorScheme) =>
-          Tuple2(cardColorScheme.shadow, cardColorScheme.colorScheme.surface),
+          (cardColorScheme.shadow, cardColorScheme.colorScheme.surface),
       builder: (context, data, _) => Container(
         decoration: BoxDecoration(
-          color: context.realDark ? context.surface : data.item2,
+          color: context.trueBlack ? context.surface : data.$2,
           borderRadius: context.radiusMedium,
           boxShadow: context.boxShadowMedium(
-              color: context.realDark ? data.item1 : null),
+            color: context.trueBlack ? data.$1 : null,
+          ),
         ),
         clipBehavior: Clip.antiAlias,
         margin: EdgeInsets.only(left: 10, right: 10, bottom: 10),
@@ -472,8 +494,9 @@ class _MultiSelectPanelState extends State<MultiSelectPanel>
             _actionBar,
             SizedBox(
               height: Tween<double>(
-                      begin: 0, end: iconButtonSize + iconPadding.vertical / 2)
-                  .evaluate(_secondRowSlideAnimation),
+                begin: 0,
+                end: iconButtonSize + iconPadding.vertical / 2,
+              ).evaluate(_secondRowSlideAnimation),
               child: _secondRowAppearAnimation.value != 0
                   ? FadeTransition(
                       opacity: _secondRowAppearAnimation,
@@ -486,13 +509,16 @@ class _MultiSelectPanelState extends State<MultiSelectPanel>
         ),
       ),
     );
-    CardColorScheme? cardColorScheme =
-        Provider.of<CardColorScheme?>(context, listen: false);
+    CardColorScheme? cardColorScheme = Provider.of<CardColorScheme?>(
+      context,
+      listen: false,
+    );
     if (cardColorScheme == null) {
       return MultiProvider(
         providers: [
           Provider<CardColorScheme>.value(
-              value: Theme.of(context).extension<CardColorScheme>()!),
+            value: Theme.of(context).extension<CardColorScheme>()!,
+          ),
         ],
         child: child,
       );
@@ -506,12 +532,15 @@ class _MultiSelectPanelState extends State<MultiSelectPanel>
 class _SelectionOptions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    SelectionController selectionController =
-        Provider.of<SelectionController>(context, listen: false);
+    SelectionController selectionController = Provider.of<SelectionController>(
+      context,
+      listen: false,
+    );
     ExpansionController expansionController = ExpansionController(
-        maxWidth: () =>
-            context.width -
-            (16 + context.actionBarIconPadding.horizontal * 3 / 2));
+      maxWidth: () =>
+          context.width -
+          (16 + context.actionBarIconPadding.horizontal * 3 / 2),
+    );
     return Padding(
       padding: EdgeInsets.only(
         top: context.actionBarIconPadding.top / 2,
@@ -520,22 +549,23 @@ class _SelectionOptions extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Selector<SelectionController, Tuple2<bool, bool>>(
-            selector: (context, selectionController) => Tuple2(
-                selectionController.batchSelect == BatchSelect.before,
-                selectionController.canSetBatchSelect(BatchSelect.before)),
+          Selector<SelectionController, (bool, bool)>(
+            selector: (context, selectionController) => (
+              selectionController.batchSelect == BatchSelect.before,
+              selectionController.canSetBatchSelect(BatchSelect.before),
+            ),
             builder: (context, data, _) {
               return ActionBarButton(
                 expansionController: expansionController,
                 shrunkChild: Center(
                   child: Icon(
                     Icons.first_page,
-                    color: !data.item2 && context.realDark
+                    color: !data.$2 && context.trueBlack
                         ? Colors.grey[800]
                         : context.actionBarIconColor,
                   ),
                 ),
-                state: data.item1,
+                state: data.$1,
                 buttonType: ActionBarButtonType.onOff,
                 onPressed: (value) {
                   selectionController.batchSelect = BatchSelect.before;
@@ -543,7 +573,7 @@ class _SelectionOptions extends StatelessWidget {
                 width: 80,
                 shrunkWidth: context.actionBarButtonSizeHorizontal,
                 tooltip: context.s.before,
-                enabled: data.item2,
+                enabled: data.$2,
                 connectRight: true,
                 child: Center(
                   child: Text(
@@ -554,22 +584,23 @@ class _SelectionOptions extends StatelessWidget {
               );
             },
           ),
-          Selector<SelectionController, Tuple2<bool, bool>>(
-            selector: (context, selectionController) => Tuple2(
-                selectionController.batchSelect == BatchSelect.between,
-                selectionController.canSetBatchSelect(BatchSelect.between)),
+          Selector<SelectionController, (bool, bool)>(
+            selector: (context, selectionController) => (
+              selectionController.batchSelect == BatchSelect.between,
+              selectionController.canSetBatchSelect(BatchSelect.between),
+            ),
             builder: (context, data, _) {
               return ActionBarButton(
                 expansionController: expansionController,
                 shrunkChild: Center(
                   child: Icon(
                     Icons.more_horiz,
-                    color: !data.item2 && context.realDark
+                    color: !data.$2 && context.trueBlack
                         ? Colors.grey[800]
                         : context.actionBarIconColor,
                   ),
                 ),
-                state: data.item1,
+                state: data.$1,
                 buttonType: ActionBarButtonType.onOff,
                 onPressed: (value) {
                   selectionController.batchSelect = BatchSelect.between;
@@ -577,7 +608,7 @@ class _SelectionOptions extends StatelessWidget {
                 width: 80,
                 shrunkWidth: context.actionBarButtonSizeHorizontal,
                 tooltip: context.s.between,
-                enabled: data.item2,
+                enabled: data.$2,
                 connectLeft: true,
                 connectRight: true,
                 child: Center(
@@ -589,8 +620,8 @@ class _SelectionOptions extends StatelessWidget {
               );
             },
           ),
-          Selector<SelectionController, Tuple2<bool, bool>>(
-            selector: (context, selectionController) => Tuple2(
+          Selector<SelectionController, (bool, bool)>(
+            selector: (context, selectionController) => (
               selectionController.batchSelect == BatchSelect.after,
               selectionController.canSetBatchSelect(BatchSelect.after),
             ),
@@ -600,12 +631,12 @@ class _SelectionOptions extends StatelessWidget {
                 shrunkChild: Center(
                   child: Icon(
                     Icons.last_page,
-                    color: !data.item2 && context.realDark
+                    color: !data.$2 && context.trueBlack
                         ? Colors.grey[800]
                         : context.actionBarIconColor,
                   ),
                 ),
-                state: data.item1,
+                state: data.$1,
                 buttonType: ActionBarButtonType.onOff,
                 onPressed: (value) {
                   selectionController.batchSelect = BatchSelect.after;
@@ -613,7 +644,7 @@ class _SelectionOptions extends StatelessWidget {
                 width: 80,
                 shrunkWidth: context.actionBarButtonSizeHorizontal,
                 tooltip: context.s.after,
-                enabled: data.item2,
+                enabled: data.$2,
                 connectLeft: true,
                 connectRight: true,
                 child: Center(
@@ -672,7 +703,7 @@ class _SelectionOptions extends StatelessWidget {
                 connectRight: true,
                 child: Icon(
                   Icons.all_inclusive,
-                  color: !data && context.realDark
+                  color: !data && context.trueBlack
                       ? Colors.grey[800]
                       : context.actionBarIconColor,
                 ),
@@ -704,8 +735,10 @@ class _SelectionOptions extends StatelessWidget {
           ActionBarButton(
             expansionController: expansionController,
             onPressed: (value) {
-              Provider.of<SelectionController>(context, listen: false)
-                  .selectMode = false;
+              Provider.of<SelectionController>(
+                context,
+                listen: false,
+              ).selectMode = false;
             },
             tooltip: context.s.close,
             connectLeft: true,
@@ -736,52 +769,56 @@ class __NewPlaylistState extends State<_NewPlaylist> {
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: context.radiusMedium),
       elevation: 1,
-      backgroundColor: widget.color?.toWeakBackround(context) ??
+      backgroundColor:
+          widget.color?.toWeakBackround(context) ??
           context.accentBackgroundWeak,
       titlePadding: EdgeInsets.all(20),
       actionsPadding: EdgeInsets.zero,
       actions: <Widget>[
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text(
-            s.cancel,
-            style: TextStyle(color: Colors.grey[600]),
-          ),
+          child: Text(s.cancel, style: TextStyle(color: Colors.grey[600])),
         ),
         TextButton(
           onPressed: () async {
-            if (context
-                .read<AudioPlayerNotifier>()
-                .playlistExists(_playlistName)) {
+            if (context.read<AudioState>().playlistExists(_playlistName)) {
               if (mounted) setState(() => _error = 1);
             } else {
-              final playlist =
-                  Playlist(_playlistName, episodeIds: widget.episodeIds);
-              context.read<AudioPlayerNotifier>().addPlaylist(playlist);
+              final playlist = Playlist(
+                _playlistName,
+                episodeIds: widget.episodeIds,
+              );
+              await context.audioState.addPlaylist(playlist);
               Navigator.of(context).pop();
             }
           },
-          child: Text(s.confirm,
-              style: TextStyle(color: widget.color ?? context.accentColor)),
-        )
+          child: Text(
+            s.confirm,
+            style: TextStyle(color: widget.color ?? context.primaryColor),
+          ),
+        ),
       ],
-      title: SizedBox(width: context.width - 160, child: Text('New playlist')),
+      title: SizedBox(width: context.width - 160, child: Text(s.newPlaylist)),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           TextField(
             decoration: InputDecoration(
               contentPadding: EdgeInsets.symmetric(horizontal: 10),
-              hintText: 'New playlist',
+              hintText: s.newPlaylist,
               hintStyle: TextStyle(fontSize: 18),
               filled: true,
               focusedBorder: UnderlineInputBorder(
                 borderSide: BorderSide(
-                    color: widget.color ?? context.accentColor, width: 2.0),
+                  color: widget.color ?? context.primaryColor,
+                  width: 2.0,
+                ),
               ),
               enabledBorder: UnderlineInputBorder(
                 borderSide: BorderSide(
-                    color: widget.color ?? context.accentColor, width: 2.0),
+                  color: widget.color ?? context.primaryColor,
+                  width: 2.0,
+                ),
               ),
             ),
             cursorRadius: Radius.circular(2),
@@ -795,7 +832,7 @@ class __NewPlaylistState extends State<_NewPlaylist> {
             alignment: Alignment.centerLeft,
             child: (_error == 1)
                 ? Text(
-                    'Playlist existed',
+                    s.playlistExists,
                     style: TextStyle(color: Colors.red[400]),
                   )
                 : Center(),
@@ -826,9 +863,11 @@ class _PlaylistList extends StatelessWidget {
         top: context.actionBarIconPadding.top / 2,
         bottom: context.actionBarIconPadding.bottom / 2,
       ),
-      child: Selector<AudioPlayerNotifier, Tuple2<List<Playlist>, int>>(
-        selector: (_, audio) => Tuple2(audio.playlists,
-            audio.playlists.length), // Length is needed for selector
+      child: Selector<AudioState, (List<Playlist>, int)>(
+        selector: (_, audio) => (
+          audio.playlists,
+          audio.playlists.length,
+        ), // Length is needed for selector
         builder: (_, data, child) {
           return Align(
             alignment: Alignment.centerLeft,
@@ -843,30 +882,33 @@ class _PlaylistList extends StatelessWidget {
                       children: [
                         Icon(Icons.add),
                         SizedBox(width: 5),
-                        Text('New')
+                        Text('New'),
                       ],
                     ),
                     onTap: () {
                       showGeneralDialog(
                         context: context,
                         barrierDismissible: true,
-                        barrierLabel: MaterialLocalizations.of(context)
-                            .modalBarrierDismissLabel,
+                        barrierLabel: MaterialLocalizations.of(
+                          context,
+                        ).modalBarrierDismissLabel,
                         barrierColor: Colors.black54,
                         transitionDuration: const Duration(milliseconds: 200),
                         pageBuilder: (_, animaiton, secondaryAnimation) =>
                             _NewPlaylist(
-                                Provider.of<SelectionController>(context,
-                                        listen: false)
-                                    .selectedEpisodes,
-                                color: Provider.of<CardColorScheme>(context,
-                                        listen: false)
-                                    .colorScheme
-                                    .primary),
+                              Provider.of<SelectionController>(
+                                context,
+                                listen: false,
+                              ).selectedEpisodes,
+                              color: Provider.of<CardColorScheme>(
+                                context,
+                                listen: false,
+                              ).colorScheme.primary,
+                            ),
                       );
                     },
                   ),
-                  ...data.item1.map<Widget>(
+                  ...data.$1.map<Widget>(
                     (p) => _buttonOnMenu(
                       context,
                       child: Row(
@@ -875,11 +917,13 @@ class _PlaylistList extends StatelessWidget {
                             height: 30,
                             width: 30,
                             decoration: BoxDecoration(
-                              color: Provider.of<CardColorScheme>(context,
-                                      listen: false)
-                                  .colorScheme
-                                  .primary
-                                  .toHighlightBackround(context),
+                              color:
+                                  Provider.of<CardColorScheme>(
+                                    context,
+                                    listen: false,
+                                  ).colorScheme.primary.toHighlightBackround(
+                                    context,
+                                  ),
                               borderRadius: context.radiusSmall,
                             ),
                             clipBehavior: Clip.antiAlias,
@@ -893,8 +937,8 @@ class _PlaylistList extends StatelessWidget {
                                     return eState[p.episodeIds.first]
                                         .podcastImageProvider;
                                   }(),
-                                  builder: (_, snapshot) => snapshot.data !=
-                                          null
+                                  builder: (_, snapshot) =>
+                                      snapshot.data != null
                                       ? SizedBox(
                                           height: 30,
                                           width: 30,
@@ -906,10 +950,7 @@ class _PlaylistList extends StatelessWidget {
                                   ColoredBox(
                                     color: context.surface.withAlpha(64),
                                     child: Center(
-                                      child: Icon(
-                                        Icons.check,
-                                        size: 30,
-                                      ),
+                                      child: Icon(Icons.check, size: 30),
                                     ),
                                   ),
                               ],
@@ -935,20 +976,21 @@ class _PlaylistList extends StatelessWidget {
     BuildContext context, {
     Widget? child,
     VoidCallback? onTap,
-  }) =>
-      Material(
-        borderRadius: context.radiusSmall,
-        clipBehavior: Clip.antiAlias,
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          child: SizedBox(
-            height: 40,
-            child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12.0), child: child),
-          ),
+  }) => Material(
+    borderRadius: context.radiusSmall,
+    clipBehavior: Clip.antiAlias,
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: onTap,
+      child: SizedBox(
+        height: 40,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 12.0),
+          child: child,
         ),
-      );
+      ),
+    ),
+  );
 }
 
 /// Action bar for batch actions
@@ -993,13 +1035,15 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
   @override
   void initState() {
     super.initState();
-    _initProperties(Provider.of<SelectionController>(context, listen: false)
-        .selectionTentative);
-    widget.secondRowController.addStatusListener(
-      (status) {
-        if (mounted && status == AnimationStatus.dismissed) setState(() {});
-      },
+    _initProperties(
+      Provider.of<SelectionController>(
+        context,
+        listen: false,
+      ).selectionTentative,
     );
+    widget.secondRowController.addStatusListener((status) {
+      if (mounted && status == AnimationStatus.dismissed) setState(() {});
+    });
   }
 
   @override
@@ -1026,8 +1070,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
       downloaded = false;
       inPlaylist = false;
       if (widget.playlist == null) {
-        playlist =
-            Provider.of<AudioPlayerNotifier>(context, listen: false).playlist;
+        playlist = Provider.of<AudioState>(context, listen: false).playlist;
       }
       final eState = context.episodeState;
       final dState = context.downloadState;
@@ -1049,7 +1092,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
         final episodeDownloaded = switch (task?.status) {
           null => false,
           DownloadTaskStatus.complete => true,
-          _ => null
+          _ => null,
         };
         if (!downloadedSet) {
           downloaded = episodeDownloaded;
@@ -1080,380 +1123,418 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
         top: context.actionBarIconPadding.top / 2,
         bottom: context.actionBarIconPadding.bottom / 2,
       ),
-      child: Selector2<SelectionController, EpisodeState,
-          (List<int>, int, bool, bool)>(
-        selector: (_, selectionController, episodeState) => (
-          selectionController.selectedEpisodes,
-          selectionController.selectedEpisodes.length,
-          selectionController.selectionTentative,
-          episodeState.globalChange,
-        ),
-        builder: (context, data, _) {
-          selectedEpisodeIds = data.$1;
-          _initProperties(data.$3);
-          return Row(
-            children: [
-              ActionBarButton(
-                falseChild: Icon(Icons.favorite_border,
-                    color: data.$2 == 0 && context.realDark
-                        ? Colors.grey[800]
-                        : context.actionBarIconColor),
-                state: liked,
-                buttonType: ActionBarButtonType.partialOnOff,
-                onPressed: (value) async {
-                  setState(() => actionLock = true);
-                  if (selectedEpisodeIds.isNotEmpty) {
-                    EpisodeState episodeState =
-                        Provider.of<EpisodeState>(context, listen: false);
-                    SelectionController selectionController =
-                        Provider.of<SelectionController>(context,
-                            listen: false);
-                    await selectionController.getEpisodesLimitless();
-                    selectedEpisodeIds = selectionController.selectedEpisodes;
-                    liked = value;
-                    if (value!) {
-                      await episodeState.setLiked(selectedEpisodeIds);
-                      setState(() => actionLock = false);
-                      Fluttertoast.showToast(
-                        msg: context.s.liked,
-                        gravity: ToastGravity.BOTTOM,
-                      );
-                      OverlayEntry overlayEntry;
-                      overlayEntry = createOverlayEntry(context);
-                      Overlay.of(context).insert(overlayEntry);
-                      await Future.delayed(Duration(seconds: 2));
-                      overlayEntry.remove();
-                    } else {
-                      await episodeState.unsetLiked(selectedEpisodeIds);
-                      setState(() => actionLock = false);
-                      Fluttertoast.showToast(
-                        msg: context.s.unlike,
-                        gravity: ToastGravity.BOTTOM,
-                      );
-                    }
-                  }
-                },
-                tooltip: liked != false ? context.s.like : context.s.unlike,
-                enabled: !actionLock && data.$2 >= 1,
-                connectRight: true,
-                child: Icon(Icons.favorite, color: Colors.red),
-              ),
-              ActionBarButton(
-                falseChild: CustomPaint(
-                  size: Size(25, 25),
-                  painter: MarkListenedPainter(
-                      data.$2 == 0 && context.realDark
-                          ? Colors.grey[800]!
+      child:
+          Selector2<
+            SelectionController,
+            EpisodeState,
+            (List<int>, int, bool, bool)
+          >(
+            selector: (_, selectionController, episodeState) => (
+              selectionController.selectedEpisodes,
+              selectionController.selectedEpisodes.length,
+              selectionController.selectionTentative,
+              episodeState.globalChange,
+            ),
+            builder: (context, data, _) {
+              selectedEpisodeIds = data.$1;
+              _initProperties(data.$3);
+              return Row(
+                children: [
+                  ActionBarButton(
+                    falseChild: Icon(
+                      Icons.favorite_border,
+                      color: data.$2 == 0 && context.trueBlack
+                          ? Colors.grey[800]
                           : context.actionBarIconColor,
-                      stroke: 2.0),
-                ),
-                state: played,
-                buttonType: ActionBarButtonType.partialOnOff,
-                onPressed: (value) async {
-                  setState(() => actionLock = true);
-                  if (selectedEpisodeIds.isNotEmpty) {
-                    EpisodeState episodeState =
-                        Provider.of<EpisodeState>(context, listen: false);
-                    SelectionController selectionController =
-                        Provider.of<SelectionController>(context,
-                            listen: false);
-                    await selectionController.getEpisodesLimitless();
-                    selectedEpisodeIds = selectionController.selectedEpisodes;
-                    played = value;
-                    if (value!) {
-                      await episodeState.setPlayed(selectedEpisodeIds);
-                      Fluttertoast.showToast(
-                        msg: context.s.markListened,
-                        gravity: ToastGravity.BOTTOM,
-                      );
-                    } else {
-                      await episodeState.unsetPlayed(selectedEpisodeIds);
-                      Fluttertoast.showToast(
-                        msg: context.s.markNotListened,
-                        gravity: ToastGravity.BOTTOM,
-                      );
-                    }
-                  }
-                  setState(() => actionLock = false);
-                },
-                tooltip: played != false
-                    ? context.s.markListened
-                    : context.s.markNotListened,
-                enabled: !actionLock && data.$2 >= 1,
-                connectLeft: true,
-                connectRight: true,
-                child: Selector<CardColorScheme, Color>(
-                  selector: (context, cardColorScheme) =>
-                      cardColorScheme.colorScheme.primary,
-                  builder: (context, color, _) => CustomPaint(
-                    size: Size(25, 25),
-                    painter: ListenedAllPainter(color, stroke: 2.0),
+                    ),
+                    state: liked,
+                    buttonType: ActionBarButtonType.partialOnOff,
+                    onPressed: (value) async {
+                      setState(() => actionLock = true);
+                      if (selectedEpisodeIds.isNotEmpty) {
+                        EpisodeState episodeState = Provider.of<EpisodeState>(
+                          context,
+                          listen: false,
+                        );
+                        SelectionController selectionController =
+                            Provider.of<SelectionController>(
+                              context,
+                              listen: false,
+                            );
+                        await selectionController.getEpisodesLimitless();
+                        selectedEpisodeIds =
+                            selectionController.selectedEpisodes;
+                        liked = value;
+                        if (value!) {
+                          await episodeState.setLiked(selectedEpisodeIds);
+                          setState(() => actionLock = false);
+                          Fluttertoast.showToast(
+                            msg: context.s.liked,
+                            gravity: ToastGravity.BOTTOM,
+                          );
+                          OverlayEntry overlayEntry;
+                          overlayEntry = createOverlayEntry(context);
+                          Overlay.of(context).insert(overlayEntry);
+                          await Future.delayed(Duration(seconds: 2));
+                          overlayEntry.remove();
+                        } else {
+                          await episodeState.unsetLiked(selectedEpisodeIds);
+                          setState(() => actionLock = false);
+                          Fluttertoast.showToast(
+                            msg: context.s.unlike,
+                            gravity: ToastGravity.BOTTOM,
+                          );
+                        }
+                      }
+                    },
+                    tooltip: liked != false ? context.s.like : context.s.unlike,
+                    enabled: !actionLock && data.$2 >= 1,
+                    connectRight: true,
+                    child: Icon(Icons.favorite, color: Colors.red),
                   ),
-                ),
-              ),
-              ActionBarButton(
-                falseChild: Center(
-                  child: SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CustomPaint(
-                      painter: DownloadPainter(
-                        color: data.$2 == 0 && context.realDark
-                            ? Colors.grey[800]
+                  ActionBarButton(
+                    falseChild: CustomPaint(
+                      size: Size(25, 25),
+                      painter: MarkListenedPainter(
+                        data.$2 == 0 && context.trueBlack
+                            ? Colors.grey[800]!
                             : context.actionBarIconColor,
-                        fraction: 0,
-                        progressColor: data.$2 == 0 && context.realDark
-                            ? Colors.grey[800]
-                            : context.actionBarIconColor,
+                        stroke: 2.0,
                       ),
                     ),
-                  ),
-                ),
-                state: downloaded,
-                buttonType: ActionBarButtonType.partialOnOff,
-                onPressed: (value) async {
-                  setState(() => actionLock = true);
-                  if (selectedEpisodeIds.isNotEmpty) {
-                    SelectionController selectionController =
-                        Provider.of<SelectionController>(context,
-                            listen: false);
-                    await selectionController.getEpisodesLimitless();
-                    selectedEpisodeIds = selectionController.selectedEpisodes;
-                    downloaded = value;
-                    if (context.mounted) {
-                      if (value!) {
-                        await context.downloadState.requestDownload(
+                    state: played,
+                    buttonType: ActionBarButtonType.partialOnOff,
+                    onPressed: (value) async {
+                      setState(() => actionLock = true);
+                      if (selectedEpisodeIds.isNotEmpty) {
+                        EpisodeState episodeState = Provider.of<EpisodeState>(
                           context,
-                          selectedEpisodeIds,
-                          onSuccess: () {
-                            // TODO: Make the icon reflect this
-                            Fluttertoast.showToast(
-                              msg: context.s.downloading,
-                              gravity: ToastGravity.BOTTOM,
+                          listen: false,
+                        );
+                        SelectionController selectionController =
+                            Provider.of<SelectionController>(
+                              context,
+                              listen: false,
                             );
-                          },
-                        );
-                      } else {
-                        List<Future<void>> futures = [];
-                        for (var episode in selectedEpisodeIds) {
-                          futures.add(
-                              context.downloadState.removeDownload(episode));
+                        await selectionController.getEpisodesLimitless();
+                        selectedEpisodeIds =
+                            selectionController.selectedEpisodes;
+                        played = value;
+                        if (value!) {
+                          await episodeState.setPlayed(selectedEpisodeIds);
+                          Fluttertoast.showToast(
+                            msg: context.s.markListened,
+                            gravity: ToastGravity.BOTTOM,
+                          );
+                        } else {
+                          await episodeState.unsetPlayed(selectedEpisodeIds);
+                          Fluttertoast.showToast(
+                            msg: context.s.markNotListened,
+                            gravity: ToastGravity.BOTTOM,
+                          );
                         }
-                        Future.wait(futures);
-                        Fluttertoast.showToast(
-                          msg: context.s.downloadRemovedToast,
-                          gravity: ToastGravity.BOTTOM,
-                        );
                       }
-                    }
-                  }
-                  setState(() => actionLock = false);
-                },
-                tooltip: downloaded != false
-                    ? context.s.download
-                    : context.s.removeDownload,
-                enabled: !actionLock && data.$2 >= 1,
-                connectLeft: true,
-                connectRight: false,
-                child: Center(
-                  child: SizedBox(
-                    height: 20,
-                    width: 20,
+                      setState(() => actionLock = false);
+                    },
+                    tooltip: played != false
+                        ? context.s.markListened
+                        : context.s.markNotListened,
+                    enabled: !actionLock && data.$2 >= 1,
+                    connectLeft: true,
+                    connectRight: true,
                     child: Selector<CardColorScheme, Color>(
                       selector: (context, cardColorScheme) =>
                           cardColorScheme.colorScheme.primary,
                       builder: (context, color, _) => CustomPaint(
-                        painter: DownloadPainter(
-                            color: color,
-                            fraction: 1,
-                            progressColor: color,
-                            progress: 1),
+                        size: Size(25, 25),
+                        painter: ListenedAllPainter(color, stroke: 2.0),
                       ),
                     ),
                   ),
-                ),
-              ),
-              Spacer(),
-              ActionBarButton(
-                state: secondRow,
-                buttonType: ActionBarButtonType.onOff,
-                onPressed: (value) {
-                  secondRow = value!;
-                },
-                tooltip: context.s.playlists,
-                connectLeft: false,
-                connectRight: true,
-                child: Icon(
-                  Icons.add_box_outlined,
-                  color: context.actionBarIconColor,
-                ),
-              ),
-              ActionBarButton(
-                state: inPlaylist,
-                buttonType: ActionBarButtonType.partialOnOff,
-                onPressed: (value) async {
-                  setState(() => actionLock = true);
-                  if (selectedEpisodeIds.isNotEmpty) {
-                    SelectionController selectionController =
-                        Provider.of<SelectionController>(context,
-                            listen: false);
-                    AudioPlayerNotifier audio =
-                        Provider.of<AudioPlayerNotifier>(context,
-                            listen: false);
-                    await selectionController.getEpisodesLimitless();
-                    selectedEpisodeIds = selectionController.selectedEpisodes;
-                    inPlaylist = value;
-                    if (value!) {
-                      await audio.addToPlaylist(selectedEpisodeIds,
-                          playlist: playlist);
-                      await Fluttertoast.showToast(
-                        msg: context.s.toastAddPlaylist,
-                        gravity: ToastGravity.BOTTOM,
-                      );
-                    } else {
-                      await audio.removeFromPlaylist(selectedEpisodeIds,
-                          playlist: playlist);
-                      await Fluttertoast.showToast(
-                        msg: context.s.toastRemovePlaylist,
-                        gravity: ToastGravity.BOTTOM,
-                      );
-                    }
-                  }
-                  setState(() => actionLock = false);
-                },
-                tooltip: context.s.later,
-                enabled: !actionLock && data.$2 >= 1,
-                connectLeft: true,
-                connectRight: true,
-                falseChild: Icon(
-                  Icons.playlist_add,
-                  color: data.$2 == 0 && context.realDark
-                      ? Colors.grey[800]
-                      : context.actionBarIconColor,
-                ),
-                child: Selector<CardColorScheme, Color>(
-                  selector: (context, cardColorScheme) =>
-                      cardColorScheme.colorScheme.primary,
-                  builder: (context, color, _) =>
-                      Icon(Icons.playlist_add_check, color: color),
-                ),
-              ),
-              ActionBarButton(
-                state: inPlaylist,
-                buttonType: ActionBarButtonType.partialOnOff,
-                onPressed: (value) async {
-                  setState(() => actionLock = true);
-                  if (selectedEpisodeIds.isNotEmpty) {
-                    SelectionController selectionController =
-                        Provider.of<SelectionController>(context,
-                            listen: false);
-                    AudioPlayerNotifier audio =
-                        Provider.of<AudioPlayerNotifier>(context,
-                            listen: false);
-                    await selectionController.getEpisodesLimitless();
-                    selectedEpisodeIds = selectionController.selectedEpisodes;
-                    inPlaylist = value;
-                    if (value!) {
-                      await audio.addToPlaylist(selectedEpisodeIds,
-                          index: audio.playlist.length > 0 ? 1 : 0,
-                          playlist: playlist);
-                      await Fluttertoast.showToast(
-                        msg: context.s.toastAddPlaylist,
-                        gravity: ToastGravity.BOTTOM,
-                      );
-                    } else {
-                      await audio.removeFromPlaylist(selectedEpisodeIds,
-                          playlist: playlist);
-                      await Fluttertoast.showToast(
-                        msg: context.s.toastRemovePlaylist,
-                        gravity: ToastGravity.BOTTOM,
-                      );
-                    }
-                  }
-
-                  setState(() => actionLock = false);
-                },
-                tooltip: context.s.playNext,
-                enabled: !actionLock && data.$2 >= 1,
-                connectLeft: true,
-                connectRight: true,
-                falseChild: Icon(
-                  LineIcons.lightningBolt,
-                  color: data.$2 == 0 && context.realDark
-                      ? Colors.grey[800]
-                      : context.actionBarIconColor,
-                ),
-                child: Selector<CardColorScheme, Color>(
-                  selector: (context, cardColorScheme) =>
-                      cardColorScheme.colorScheme.primary,
-                  builder: (context, color, _) => Stack(
-                    children: [
-                      Icon(LineIcons.lightningBolt, color: color),
-                      Container(
-                        alignment: Alignment.bottomRight,
-                        child: Icon(
-                          Icons.check,
-                          color: color,
-                          size: 12,
+                  ActionBarButton(
+                    falseChild: Center(
+                      child: SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CustomPaint(
+                          painter: DownloadPainter(
+                            color: data.$2 == 0 && context.trueBlack
+                                ? Colors.grey[800]
+                                : context.actionBarIconColor,
+                            fraction: 0,
+                            progressColor: data.$2 == 0 && context.trueBlack
+                                ? Colors.grey[800]
+                                : context.actionBarIconColor,
+                          ),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-              Selector<AudioPlayerNotifier, bool>(
-                selector: (context, audio) => audio.playerRunning,
-                builder: (context, playerRunning, _) => ActionBarButton(
-                  state: playerRunning ? inPlaylist : false,
-                  buttonType: ActionBarButtonType.partialOnOff,
-                  onPressed: (value) async {
-                    setState(() => actionLock = true);
-                    if (selectedEpisodeIds.isNotEmpty) {
-                      SelectionController selectionController =
-                          Provider.of<SelectionController>(context,
-                              listen: false);
-                      await selectionController.getEpisodesLimitless();
-                      selectedEpisodeIds = selectionController.selectedEpisodes;
-                      inPlaylist = value;
-                      if (value! && context.mounted) {
-                        await context.audioState
-                            .loadEpisodesToQueue(selectedEpisodeIds);
+                    ),
+                    state: downloaded,
+                    buttonType: ActionBarButtonType.partialOnOff,
+                    onPressed: (value) async {
+                      setState(() => actionLock = true);
+                      if (selectedEpisodeIds.isNotEmpty) {
+                        SelectionController selectionController =
+                            Provider.of<SelectionController>(
+                              context,
+                              listen: false,
+                            );
+                        await selectionController.getEpisodesLimitless();
+                        selectedEpisodeIds =
+                            selectionController.selectedEpisodes;
+                        downloaded = value;
+                        if (context.mounted) {
+                          if (value!) {
+                            await context.downloadState.manualDownload(
+                              context,
+                              selectedEpisodeIds,
+                              onSuccess: () {
+                                // TODO: Make the icon reflect this
+                                Fluttertoast.showToast(
+                                  msg: context.s.downloading,
+                                  gravity: ToastGravity.BOTTOM,
+                                );
+                              },
+                            );
+                          } else {
+                            List<Future<void>> futures = [];
+                            for (var episode in selectedEpisodeIds) {
+                              futures.add(
+                                context.downloadState.removeDownload(episode),
+                              );
+                            }
+                            Future.wait(futures);
+                            Fluttertoast.showToast(
+                              msg: context.s.downloadRemovedToast,
+                              gravity: ToastGravity.BOTTOM,
+                            );
+                          }
+                        }
                       }
-                      if (context.mounted && !context.audioState.playing) {
-                        context.audioState.resumeAudio();
-                      }
-                      await Fluttertoast.showToast(
-                        msg: context.s.toastAddPlaylist,
-                        gravity: ToastGravity.BOTTOM,
-                      );
-                    }
-                    setState(() => actionLock = false);
-                  },
-                  tooltip: context.s.play,
-                  enabled: !actionLock && data.$2 >= 1,
-                  connectLeft: true,
-                  connectRight: false,
-                  falseChild: Icon(
-                    Icons.play_arrow,
-                    color: data.$2 == 0 && context.realDark
-                        ? Colors.grey[800]
-                        : context.actionBarIconColor,
-                  ),
-                  child: Selector<CardColorScheme, Color>(
-                    selector: (context, cardColorScheme) =>
-                        cardColorScheme.colorScheme.primary,
-                    builder: (context, color, _) => SizedBox(
-                      width: 20,
-                      height: 15,
-                      child: WaveLoader(color: context.accentColor),
+                      setState(() => actionLock = false);
+                    },
+                    tooltip: downloaded != false
+                        ? context.s.download
+                        : context.s.removeDownload,
+                    enabled: !actionLock && data.$2 >= 1,
+                    connectLeft: true,
+                    connectRight: false,
+                    child: Center(
+                      child: SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: Selector<CardColorScheme, Color>(
+                          selector: (context, cardColorScheme) =>
+                              cardColorScheme.colorScheme.primary,
+                          builder: (context, color, _) => CustomPaint(
+                            painter: DownloadPainter(
+                              color: color,
+                              fraction: 1,
+                              progressColor: color,
+                              progress: 1,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-            ],
-          );
-        },
-      ),
+                  Spacer(),
+                  ActionBarButton(
+                    state: secondRow,
+                    buttonType: ActionBarButtonType.onOff,
+                    onPressed: (value) {
+                      secondRow = value!;
+                    },
+                    tooltip: context.s.playlists,
+                    connectLeft: false,
+                    connectRight: true,
+                    child: Icon(
+                      Icons.add_box_outlined,
+                      color: context.actionBarIconColor,
+                    ),
+                  ),
+                  ActionBarButton(
+                    state: inPlaylist,
+                    buttonType: ActionBarButtonType.partialOnOff,
+                    onPressed: (value) async {
+                      setState(() => actionLock = true);
+                      if (selectedEpisodeIds.isNotEmpty) {
+                        SelectionController selectionController =
+                            Provider.of<SelectionController>(
+                              context,
+                              listen: false,
+                            );
+                        AudioState audio = Provider.of<AudioState>(
+                          context,
+                          listen: false,
+                        );
+                        await selectionController.getEpisodesLimitless();
+                        selectedEpisodeIds =
+                            selectionController.selectedEpisodes;
+                        inPlaylist = value;
+                        if (value!) {
+                          await audio.addToPlaylist(
+                            selectedEpisodeIds,
+                            playlist: playlist,
+                          );
+                          await Fluttertoast.showToast(
+                            msg: context.s.toastAddPlaylist,
+                            gravity: ToastGravity.BOTTOM,
+                          );
+                        } else {
+                          await audio.removeFromPlaylist(
+                            selectedEpisodeIds,
+                            playlist: playlist,
+                          );
+                          await Fluttertoast.showToast(
+                            msg: context.s.toastRemovePlaylist,
+                            gravity: ToastGravity.BOTTOM,
+                          );
+                        }
+                      }
+                      setState(() => actionLock = false);
+                    },
+                    tooltip: context.s.later,
+                    enabled: !actionLock && data.$2 >= 1,
+                    connectLeft: true,
+                    connectRight: true,
+                    falseChild: Icon(
+                      Icons.playlist_add,
+                      color: data.$2 == 0 && context.trueBlack
+                          ? Colors.grey[800]
+                          : context.actionBarIconColor,
+                    ),
+                    child: Selector<CardColorScheme, Color>(
+                      selector: (context, cardColorScheme) =>
+                          cardColorScheme.colorScheme.primary,
+                      builder: (context, color, _) =>
+                          Icon(Icons.playlist_add_check, color: color),
+                    ),
+                  ),
+                  ActionBarButton(
+                    state: inPlaylist,
+                    buttonType: ActionBarButtonType.partialOnOff,
+                    onPressed: (value) async {
+                      setState(() => actionLock = true);
+                      if (selectedEpisodeIds.isNotEmpty) {
+                        SelectionController selectionController =
+                            Provider.of<SelectionController>(
+                              context,
+                              listen: false,
+                            );
+                        AudioState audio = Provider.of<AudioState>(
+                          context,
+                          listen: false,
+                        );
+                        await selectionController.getEpisodesLimitless();
+                        selectedEpisodeIds =
+                            selectionController.selectedEpisodes;
+                        inPlaylist = value;
+                        if (value!) {
+                          await audio.addToPlaylist(
+                            selectedEpisodeIds,
+                            index: audio.playlist.length > 0 ? 1 : 0,
+                            playlist: playlist,
+                          );
+                          await Fluttertoast.showToast(
+                            msg: context.s.toastAddPlaylist,
+                            gravity: ToastGravity.BOTTOM,
+                          );
+                        } else {
+                          await audio.removeFromPlaylist(
+                            selectedEpisodeIds,
+                            playlist: playlist,
+                          );
+                          await Fluttertoast.showToast(
+                            msg: context.s.toastRemovePlaylist,
+                            gravity: ToastGravity.BOTTOM,
+                          );
+                        }
+                      }
+
+                      setState(() => actionLock = false);
+                    },
+                    tooltip: context.s.playNext,
+                    enabled: !actionLock && data.$2 >= 1,
+                    connectLeft: true,
+                    connectRight: true,
+                    falseChild: Icon(
+                      LineIcons.lightningBolt,
+                      color: data.$2 == 0 && context.trueBlack
+                          ? Colors.grey[800]
+                          : context.actionBarIconColor,
+                    ),
+                    child: Selector<CardColorScheme, Color>(
+                      selector: (context, cardColorScheme) =>
+                          cardColorScheme.colorScheme.primary,
+                      builder: (context, color, _) => Stack(
+                        children: [
+                          Icon(LineIcons.lightningBolt, color: color),
+                          Container(
+                            alignment: Alignment.bottomRight,
+                            child: Icon(Icons.check, color: color, size: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Selector<AudioState, bool>(
+                    selector: (context, audio) => audio.playerRunning,
+                    builder: (context, playerRunning, _) => ActionBarButton(
+                      state: playerRunning ? inPlaylist : false,
+                      buttonType: ActionBarButtonType.partialOnOff,
+                      onPressed: (value) async {
+                        setState(() => actionLock = true);
+                        if (selectedEpisodeIds.isNotEmpty) {
+                          SelectionController selectionController =
+                              Provider.of<SelectionController>(
+                                context,
+                                listen: false,
+                              );
+                          await selectionController.getEpisodesLimitless();
+                          selectedEpisodeIds =
+                              selectionController.selectedEpisodes;
+                          inPlaylist = value;
+                          if (value! && context.mounted) {
+                            await context.audioState.loadEpisodesToQueue(
+                              selectedEpisodeIds,
+                            );
+                          }
+                          if (context.mounted && !context.audioState.playing) {
+                            context.audioState.resumeAudio();
+                          }
+                          await Fluttertoast.showToast(
+                            msg: context.s.toastAddPlaylist,
+                            gravity: ToastGravity.BOTTOM,
+                          );
+                        }
+                        setState(() => actionLock = false);
+                      },
+                      tooltip: context.s.play,
+                      enabled: !actionLock && data.$2 >= 1,
+                      connectLeft: true,
+                      connectRight: false,
+                      falseChild: Icon(
+                        Icons.play_arrow,
+                        color: data.$2 == 0 && context.trueBlack
+                            ? Colors.grey[800]
+                            : context.actionBarIconColor,
+                      ),
+                      child: Selector<CardColorScheme, Color>(
+                        selector: (context, cardColorScheme) =>
+                            cardColorScheme.colorScheme.primary,
+                        builder: (context, color, _) => SizedBox(
+                          width: 20,
+                          height: 15,
+                          child: WaveLoader(color: context.primaryColor),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
     );
   }
 }

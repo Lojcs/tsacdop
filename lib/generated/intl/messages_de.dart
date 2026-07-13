@@ -187,8 +187,5 @@ class MessageLookup extends MessageLookupByLibrary {
     "settingsMarkListenedSkipDes": MessageLookupByLibrary.simpleMessage(
       "Episode automatisch als angehört markieren, wenn zum nächsten Titel gesprungen wurde",
     ),
-    "settingsNetworkCellularAutoDes": MessageLookupByLibrary.simpleMessage(
-      "Du kannst den automatischen Download von Podcasts auf der Seite zur Gruppenverwaltung konfigurieren",
-    ),
   };
 }

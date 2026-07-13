@@ -16,14 +16,15 @@ class AudioPanel extends StatefulWidget {
   final double midHeight;
   final double? maxHeight;
 
-  const AudioPanel(
-      {required this.miniPanel,
-      required this.maxiPanel,
-      this.midiPanel,
-      this.minHeight = 70,
-      this.midHeight = 300,
-      this.maxHeight,
-      super.key});
+  const AudioPanel({
+    required this.miniPanel,
+    required this.maxiPanel,
+    this.midiPanel,
+    this.minHeight = 70,
+    this.midHeight = 300,
+    this.maxHeight,
+    super.key,
+  });
   @override
   AudioPanelState createState() => AudioPanelState();
 }
@@ -54,10 +55,9 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
           ..addListener(() {
             if (mounted) setState(() {});
           });
-    if (Provider.of<AudioPlayerNotifier>(context, listen: false)
-        .playerInitialStart) {
-      Provider.of<AudioPlayerNotifier>(context, listen: false)
-          .playerInitialStart = false;
+    if (Provider.of<AudioState>(context, listen: false).playerInitialStart) {
+      Provider.of<AudioState>(context, listen: false).playerInitialStart =
+          false;
       _animation = Tween<double>(begin: 0, end: 0).animate(_controller);
       _animatePanel(end: size, slow: true);
     } else {
@@ -75,119 +75,142 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: <Widget>[
-        Container(
-          child: (_animation.value > widget.minHeight + 30)
-              ? Positioned.fill(
-                  child: GestureDetector(
-                    onTap: backToMini,
-                    child: Container(
-                      color: context.surface.withValues(
-                          alpha: 0.4 *
+    return Material(
+      type: .transparency,
+      child: Stack(
+        children: <Widget>[
+          Container(
+            child: (_animation.value > widget.minHeight + 30)
+                ? Positioned.fill(
+                    child: GestureDetector(
+                      onTap: backToMini,
+                      child: Container(
+                        color: context.surface.withValues(
+                          alpha:
+                              0.4 *
                               math.min(
-                                  (_animation.value - widget.minHeight) /
-                                      widget.midHeight,
-                                  1)),
+                                (_animation.value - widget.minHeight) /
+                                    widget.midHeight,
+                                1,
+                              ),
+                        ),
+                      ),
                     ),
-                  ),
-                )
-              : Center(),
-        ),
-        Align(
-          alignment: Alignment.bottomCenter,
-          child: NotificationListener<ScrollNotification>(
-            onNotification: (notification) {
-              if (_lastScrollNotification != notification) {
-                _lastScrollNotification = notification;
-                if (notification is ScrollStartNotification &&
-                    notification.dragDetails != null &&
-                    notification.metrics.pixels ==
-                        notification.metrics.minScrollExtent) {
-                  _dragStarted = true;
-                  _start(notification.dragDetails!);
-                } else if (_dragStarted) {
-                  if (notification is OverscrollNotification &&
-                      notification.dragDetails != null) {
-                    if (!_animation.isAnimating) {
-                      _update(notification.dragDetails!);
-                    }
-                  } else if (notification is ScrollUpdateNotification &&
-                      notification.dragDetails != null) {
-                    if (!_animation.isAnimating) {
-                      _update(notification.dragDetails!);
-                    }
-                  } else if (notification is ScrollEndNotification &&
-                      !_animation.isAnimating &&
-                      _animation.value != widget.maxHeight &&
-                      _animation.value != widget.midHeight) {
-                    _dragStarted = false;
-                    if (notification.dragDetails != null) {
-                      _end(notification.dragDetails!);
-                    } else {
-                      _end(DragEndDetails(
-                          velocity: Velocity(pixelsPerSecond: Offset(0, -3001)),
-                          primaryVelocity: -3001));
+                  )
+                : Center(),
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              color: context.cardColorSchemeCard,
+              height: context.originalPadding.bottom,
+            ),
+          ),
+          SafeArea(
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: NotificationListener<ScrollNotification>(
+                onNotification: (notification) {
+                  if (_lastScrollNotification != notification) {
+                    _lastScrollNotification = notification;
+                    if (notification is ScrollStartNotification &&
+                        notification.dragDetails != null &&
+                        notification.metrics.pixels ==
+                            notification.metrics.minScrollExtent) {
+                      _dragStarted = true;
+                      _start(notification.dragDetails!);
+                    } else if (_dragStarted) {
+                      if (notification is OverscrollNotification &&
+                          notification.dragDetails != null) {
+                        if (!_animation.isAnimating) {
+                          _update(notification.dragDetails!);
+                        }
+                      } else if (notification is ScrollUpdateNotification &&
+                          notification.dragDetails != null) {
+                        if (!_animation.isAnimating) {
+                          _update(notification.dragDetails!);
+                        }
+                      } else if (notification is ScrollEndNotification &&
+                          !_animation.isAnimating &&
+                          _animation.value != widget.maxHeight &&
+                          _animation.value != widget.midHeight) {
+                        _dragStarted = false;
+                        if (notification.dragDetails != null) {
+                          _end(notification.dragDetails!);
+                        } else {
+                          _end(
+                            DragEndDetails(
+                              velocity: Velocity(
+                                pixelsPerSecond: Offset(0, -3001),
+                              ),
+                              primaryVelocity: -3001,
+                            ),
+                          );
+                        }
+                      }
                     }
                   }
-                }
-              }
-              return true;
-            },
-            child: GestureDetector(
-              onVerticalDragStart: _start,
-              onVerticalDragUpdate: _update,
-              onVerticalDragEnd: _end,
-              child: SizedBox(
-                height: _animation.value < 0 ? 0 : _animation.value,
-                child: Stack(
-                  fit: StackFit.passthrough,
-                  children: [
-                    Opacity(
-                      opacity: 1,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(context.width / 15),
-                              topRight: Radius.circular(context.width / 15)),
-                          boxShadow: [
-                            BoxShadow(
-                              offset: Offset(0, -1),
-                              blurRadius: 1,
-                              color: context.brightness == Brightness.light
-                                  ? Colors.grey[400]!.withValues(alpha: 0.5)
-                                  : !context.realDark
+                  return true;
+                },
+                child: GestureDetector(
+                  onVerticalDragStart: _start,
+                  onVerticalDragUpdate: _update,
+                  onVerticalDragEnd: _end,
+                  child: SizedBox(
+                    height: _animation.value < 0 ? 0 : _animation.value,
+                    child: Stack(
+                      fit: StackFit.passthrough,
+                      children: [
+                        Opacity(
+                          opacity: 1,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(context.width / 15),
+                                topRight: Radius.circular(context.width / 15),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  offset: Offset(0, -1),
+                                  blurRadius: 1,
+                                  color: context.brightness == Brightness.light
+                                      ? Colors.grey[400]!.withValues(alpha: 0.5)
+                                      : !context.trueBlack
                                       ? Colors.grey[900]!
                                       : Colors.grey[800]!,
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        clipBehavior: Clip.hardEdge,
-                        child: SingleChildScrollView(
-                          physics: const NeverScrollableScrollPhysics(),
-                          child: SizedBox(
-                              height: math.max(
+                            clipBehavior: Clip.hardEdge,
+                            child: SingleChildScrollView(
+                              physics: const NeverScrollableScrollPhysics(),
+                              child: SizedBox(
+                                height: math.max(
                                   widget.midHeight,
-                                  math.min(
-                                      _animation.value, widget.maxHeight!)),
-                              child: widget.maxiPanel),
+                                  math.min(_animation.value, widget.maxHeight!),
+                                ),
+                                child: widget.maxiPanel,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
+                        if (widget.minHeight + 50 > _animation.value)
+                          Opacity(
+                            opacity:
+                                ((widget.minHeight + 50 - _animation.value) /
+                                        50)
+                                    .clamp(0, 1),
+                            child: widget.miniPanel,
+                          ),
+                      ],
                     ),
-                    if (widget.minHeight + 50 > _animation.value)
-                      Opacity(
-                        opacity:
-                            ((widget.minHeight + 50 - _animation.value) / 50)
-                                .clamp(0, 1),
-                        child: widget.miniPanel,
-                      ),
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -199,14 +222,19 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
     _animatePanel(end: widget.maxHeight, slow: true);
   }
 
-  void _animatePanel(
-      {required double? end, bool slow = false, bool bounce = false}) {
+  void _animatePanel({
+    required double? end,
+    bool slow = false,
+    bool bounce = false,
+  }) {
     AnimationController controller = slow ? _slowController : _controller;
     controller.reset();
     _animation = Tween<double>(begin: _animation.value, end: end).animate(
-        CurvedAnimation(
-            parent: controller,
-            curve: bounce ? Curves.easeOutBack : Curves.easeOutQuad));
+      CurvedAnimation(
+        parent: controller,
+        curve: bounce ? Curves.easeOutBack : Curves.easeOutQuad,
+      ),
+    );
     size = end;
     controller.forward();
   }
@@ -221,8 +249,10 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
   void _update(DragUpdateDetails event) {
     setState(() {
       _move = _startdy - event.localPosition.dy;
-      _animation = Tween<double>(begin: size! + _move, end: size! + _move)
-          .animate(_controller);
+      _animation = Tween<double>(
+        begin: size! + _move,
+        end: size! + _move,
+      ).animate(_controller);
       _slideDirection = _move > 0 ? SlideDirection.up : SlideDirection.down;
     });
   }
@@ -231,10 +261,14 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
     // Minimize / maximize on fast swipe
     if ((event.primaryVelocity ?? 0) > 3000) {
       _animatePanel(
-          end: widget.minHeight, slow: size! > widget.midHeight ? true : false);
+        end: widget.minHeight,
+        slow: size! > widget.midHeight ? true : false,
+      );
     } else if ((event.primaryVelocity ?? 0) < -3000) {
       _animatePanel(
-          end: widget.maxHeight, slow: size! < widget.midHeight ? true : false);
+        end: widget.maxHeight,
+        slow: size! < widget.midHeight ? true : false,
+      );
     }
     // Return to position on small swipe
     else if (_move.abs() < 50) {
@@ -273,51 +307,46 @@ class __AudioPanelRouteState extends State<_AudioPanelRoute> {
       context: context,
       removeTop: true,
       child: Scaffold(
-        body: Stack(children: <Widget>[
-          Container(
-            child: Positioned.fill(
-              child: GestureDetector(
-                onTap: () => Navigator.pop(context),
-                // child:
-                // Container(
-                //   color: Theme.of(context)
-                //       .background
-                //       .withOpacity(0.8),
-                //
-                //),
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              decoration: BoxDecoration(
-                color: context.primaryColor,
-                boxShadow: [
-                  BoxShadow(
-                    offset: Offset(0, -1),
-                    blurRadius: 1,
-                    color: context.brightness == Brightness.light
-                        ? Colors.grey[400]!.withValues(alpha: 0.5)
-                        : Colors.grey[800]!,
-                  ),
-                ],
-              ),
-              child: SingleChildScrollView(
-                physics: const NeverScrollableScrollPhysics(),
-                child: SizedBox(
-                  height: 300,
+        body: Stack(
+          children: <Widget>[
+            Container(
+              child: Positioned.fill(
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  // child:
+                  // Container(
+                  //   color: Theme.of(context)
+                  //       .background
+                  //       .withOpacity(0.8),
+                  //
+                  //),
                 ),
               ),
             ),
-          ),
-        ]),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: context.onPrimary,
+                  boxShadow: [
+                    BoxShadow(
+                      offset: Offset(0, -1),
+                      blurRadius: 1,
+                      color: context.brightness == Brightness.light
+                          ? Colors.grey[400]!.withValues(alpha: 0.5)
+                          : Colors.grey[800]!,
+                    ),
+                  ],
+                ),
+                child: SingleChildScrollView(
+                  physics: const NeverScrollableScrollPhysics(),
+                  child: SizedBox(height: 300),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
-}
-
-class AudioPanelInnerNotification extends Notification {
-  ScrollController scrollController;
-  AudioPanelInnerNotification(this.scrollController);
 }

@@ -14,13 +14,14 @@ class DismissibleContainer extends StatefulWidget {
   final int index;
   final VoidCallback? onRemove;
   final bool selectMode;
-  const DismissibleContainer(
-      {required this.playlist,
-      required this.episodeId,
-      required this.index,
-      this.onRemove,
-      this.selectMode = false,
-      super.key});
+  const DismissibleContainer({
+    required this.playlist,
+    required this.episodeId,
+    required this.index,
+    this.onRemove,
+    this.selectMode = false,
+    super.key,
+  });
 
   @override
   _DismissibleContainerState createState() => _DismissibleContainerState();
@@ -37,7 +38,7 @@ class _DismissibleContainerState extends State<DismissibleContainer> {
 
   @override
   Widget build(BuildContext context) {
-    AudioPlayerNotifier audio = context.read<AudioPlayerNotifier>();
+    AudioState audio = context.read<AudioState>();
     final s = context.s;
     return AnimatedContainer(
       duration: Duration(milliseconds: 300),
@@ -45,9 +46,7 @@ class _DismissibleContainerState extends State<DismissibleContainer> {
       alignment: Alignment.center,
       // height: _delete ? 0 : 91.0,
       child: _delete
-          ? Container(
-              color: Colors.transparent,
-            )
+          ? Container(color: Colors.transparent)
           : Column(
               children: [
                 Dismissible(
@@ -60,7 +59,9 @@ class _DismissibleContainerState extends State<DismissibleContainer> {
                       children: <Widget>[
                         Container(
                           decoration: BoxDecoration(
-                              shape: BoxShape.circle, color: Colors.red),
+                            shape: BoxShape.circle,
+                            color: Colors.red,
+                          ),
                           padding: EdgeInsets.all(5),
                           alignment: Alignment.center,
                           child: Icon(
@@ -71,7 +72,9 @@ class _DismissibleContainerState extends State<DismissibleContainer> {
                         ),
                         Container(
                           decoration: BoxDecoration(
-                              shape: BoxShape.circle, color: Colors.red),
+                            shape: BoxShape.circle,
+                            color: Colors.red,
+                          ),
                           padding: EdgeInsets.all(5),
                           alignment: Alignment.center,
                           child: Icon(
@@ -87,25 +90,35 @@ class _DismissibleContainerState extends State<DismissibleContainer> {
                     setState(() {
                       _delete = true;
                     });
-                    await audio.removeFromPlaylistAt(widget.index,
-                        playlist: widget.playlist);
+                    await audio.removeFromPlaylistAt(
+                      widget.index,
+                      playlist: widget.playlist,
+                    );
                     widget.onRemove!();
                     final episodeRemoved = widget.episodeId;
                     ScaffoldMessenger.of(context).removeCurrentSnackBar();
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      behavior: SnackBarBehavior.floating,
-                      backgroundColor: Colors.grey[800],
-                      content: Text(s.toastRemovePlaylist,
-                          style: TextStyle(color: Colors.white)),
-                      action: SnackBarAction(
-                          textColor: context.accentColor,
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        behavior: SnackBarBehavior.floating,
+                        backgroundColor: Colors.grey[800],
+                        content: Text(
+                          s.toastRemovePlaylist,
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        action: SnackBarAction(
+                          textColor: context.primaryColor,
                           label: s.undo,
                           onPressed: () async {
-                            await audio.addToPlaylist([episodeRemoved],
-                                playlist: widget.playlist, index: widget.index);
+                            await audio.addToPlaylist(
+                              [episodeRemoved],
+                              playlist: widget.playlist,
+                              index: widget.index,
+                            );
                             widget.onRemove!();
-                          }),
-                    ));
+                          },
+                        ),
+                      ),
+                    );
                   },
                   child: EpisodeTile(
                     widget.episodeId,
@@ -114,13 +127,13 @@ class _DismissibleContainerState extends State<DismissibleContainer> {
                     showDivider: false,
                     onTap: () async {
                       await context
-                          .read<AudioPlayerNotifier>()
+                          .read<AudioState>()
                           .loadEpisodeFromCurrentPlaylist(widget.index);
                       widget.onRemove!();
                     },
                   ),
                 ),
-                Divider(height: 1)
+                Divider(height: 1),
               ],
             ),
     );
@@ -135,19 +148,23 @@ class EpisodeTile extends StatelessWidget {
   final bool canReorder;
   final bool showDivider;
   final bool havePadding;
-  const EpisodeTile(this.episodeId,
-      {this.tileColor,
-      this.onTap,
-      this.isPlaying,
-      this.canReorder = false,
-      this.showDivider = true,
-      this.havePadding = false,
-      super.key});
+  const EpisodeTile(
+    this.episodeId, {
+    this.tileColor,
+    this.onTap,
+    this.isPlaying,
+    this.canReorder = false,
+    this.showDivider = true,
+    this.havePadding = false,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final episode =
-        Provider.of<EpisodeState>(context, listen: false)[episodeId];
+    final episode = Provider.of<EpisodeState>(
+      context,
+      listen: false,
+    )[episodeId];
     // return Container(
     //   height: context.width / 4,
     //   padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -189,8 +206,9 @@ class EpisodeTile extends StatelessWidget {
                     Icon(Icons.unfold_more, color: c),
                   SizedBox(width: canReorder && !havePadding ? 0 : 24),
                   CircleAvatar(
-                      backgroundColor: c.withValues(alpha: 0.5),
-                      backgroundImage: episode.episodeOrPodcastImageProvider),
+                    backgroundColor: c.withValues(alpha: 0.5),
+                    backgroundImage: episode.episodeOrPodcastImageProvider,
+                  ),
                 ],
               ),
               subtitle: Container(
@@ -201,7 +219,9 @@ class EpisodeTile extends StatelessWidget {
                     if (episode.isExplicit)
                       Container(
                         decoration: BoxDecoration(
-                            color: Colors.red[800], shape: BoxShape.circle),
+                          color: Colors.red[800],
+                          shape: BoxShape.circle,
+                        ),
                         height: 25.0,
                         width: 25.0,
                         margin: EdgeInsets.only(right: 10.0),
@@ -213,14 +233,18 @@ class EpisodeTile extends StatelessWidget {
                           eState[episodeId].enclosureDuration,
                       builder: (context, value, _) => value != 0
                           ? episodeTag(
-                              s.minsCount(value ~/ 60), Colors.cyan[300])
+                              s.minsCount(value ~/ 60),
+                              Colors.cyan[300],
+                            )
                           : Center(),
                     ),
                     Selector<EpisodeState, int>(
                       selector: (_, eState) => eState[episodeId].enclosureSize,
                       builder: (context, value, _) => value != 0
                           ? episodeTag(
-                              '${value ~/ 1000000}MB', Colors.lightBlue[300])
+                              '${value ~/ 1000000}MB',
+                              Colors.lightBlue[300],
+                            )
                           : Center(),
                     ),
                   ],
@@ -231,10 +255,9 @@ class EpisodeTile extends StatelessWidget {
                       height: 20,
                       width: 20,
                       margin: EdgeInsets.symmetric(horizontal: 20),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                      ),
-                      child: WaveLoader(color: context.accentColor))
+                      decoration: BoxDecoration(shape: BoxShape.circle),
+                      child: WaveLoader(color: context.primaryColor),
+                    )
                   : SizedBox(width: 1),
             ),
           ),

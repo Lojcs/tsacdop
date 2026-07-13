@@ -332,15 +332,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "Mas recientes primero",
     ),
     "next": MessageLookupByLibrary.simpleMessage("Siguiente"),
-    "noEpisodeDownload": MessageLookupByLibrary.simpleMessage(
-      "Aun no hay episodios decargados",
-    ),
-    "noEpisodeFavorite": MessageLookupByLibrary.simpleMessage(
-      "Aun no hay episodios recolectados",
-    ),
-    "noEpisodeRecent": MessageLookupByLibrary.simpleMessage(
-      "Aun no hay episodios recibidos",
-    ),
     "noPodcastGroup": MessageLookupByLibrary.simpleMessage(
       "No hay podcasts en este grupo",
     ),
@@ -349,9 +340,6 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "notificaitonFatch": m14,
     "notificationNetworkError": m15,
-    "notificationSetting": MessageLookupByLibrary.simpleMessage(
-      "Panel de notificaciones",
-    ),
     "notificationSubscribe": m16,
     "notificationSubscribeExisted": m17,
     "notificationSuccess": m18,
@@ -374,9 +362,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "playerHeightShort": MessageLookupByLibrary.simpleMessage("Bajo"),
     "playerHeightTall": MessageLookupByLibrary.simpleMessage("Alto"),
     "playing": MessageLookupByLibrary.simpleMessage("Reproduciendo"),
-    "playlistExisted": MessageLookupByLibrary.simpleMessage(
-      "El nombre de la playlist ya esta en uso",
-    ),
     "playlistNameEmpty": MessageLookupByLibrary.simpleMessage(
       "La playlist no tiene nombre",
     ),
@@ -427,7 +412,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "refreshArtwork": MessageLookupByLibrary.simpleMessage(
       "Actualizar portada",
     ),
-    "refreshStarted": MessageLookupByLibrary.simpleMessage("Refrescando"),
     "remove": MessageLookupByLibrary.simpleMessage("Remover"),
     "removeConfirm": MessageLookupByLibrary.simpleMessage(
       "Confirma la remoción ",
@@ -463,9 +447,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "settings": MessageLookupByLibrary.simpleMessage("Ajustes"),
     "settingsAccentColor": MessageLookupByLibrary.simpleMessage(
       "Color de acento ",
-    ),
-    "settingsAccentColorDes": MessageLookupByLibrary.simpleMessage(
-      "Incluir el color del overlay",
     ),
     "settingsAppIntro": MessageLookupByLibrary.simpleMessage("Intro de App"),
     "settingsAppearance": MessageLookupByLibrary.simpleMessage("Apariencia"),
@@ -546,12 +527,6 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "settingsInfo": MessageLookupByLibrary.simpleMessage("Información"),
     "settingsInterface": MessageLookupByLibrary.simpleMessage("Interfaz"),
-    "settingsLanguages": MessageLookupByLibrary.simpleMessage("Lenguajes"),
-    "settingsLanguagesDes": MessageLookupByLibrary.simpleMessage(
-      "Cambiar lenguaje",
-    ),
-    "settingsLayout": MessageLookupByLibrary.simpleMessage("Diseño"),
-    "settingsLayoutDes": MessageLookupByLibrary.simpleMessage("Diseño de app"),
     "settingsLibraries": MessageLookupByLibrary.simpleMessage("Librerías"),
     "settingsLibrariesDes": MessageLookupByLibrary.simpleMessage(
       "Librerías de código abierto usadas en la app",
@@ -574,23 +549,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "settingsNetworkCellular": MessageLookupByLibrary.simpleMessage(
       "Preguntar antes de usar datos móviles ",
     ),
-    "settingsNetworkCellularAuto": MessageLookupByLibrary.simpleMessage(
-      "Auto descargar usando datos móviles",
-    ),
-    "settingsNetworkCellularAutoDes": MessageLookupByLibrary.simpleMessage(
-      "Puedes configurar la auto-descarga en la pagina de administración de grupos",
-    ),
     "settingsNetworkCellularDes": MessageLookupByLibrary.simpleMessage(
       "Pregunta para confirmar el uso de datos móviles al descargar episodios",
-    ),
-    "settingsPlayDes": MessageLookupByLibrary.simpleMessage(
-      "Lista de reproducción y Reproductor",
-    ),
-    "settingsPlayerHeight": MessageLookupByLibrary.simpleMessage(
-      "Altura del reproductor",
-    ),
-    "settingsPlayerHeightDes": MessageLookupByLibrary.simpleMessage(
-      "Cambia la altura del reproductor como gustes",
     ),
     "settingsPopupMenu": MessageLookupByLibrary.simpleMessage(
       "Menú emergente de episodios ",
@@ -599,10 +559,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "Cambia el menu emergente del episodio",
     ),
     "settingsPrefrence": MessageLookupByLibrary.simpleMessage("Preferencias"),
-    "settingsRealDark": MessageLookupByLibrary.simpleMessage("Negro Puro"),
-    "settingsRealDarkDes": MessageLookupByLibrary.simpleMessage(
-      "Activa si el modo Noche no es suficientemente oscuro",
-    ),
     "settingsRewindSec": MessageLookupByLibrary.simpleMessage(
       "Segundos de retraso",
     ),
@@ -628,9 +584,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "settingsSpeedsDes": MessageLookupByLibrary.simpleMessage(
       "Personalizar velocidades disponibles",
     ),
-    "settingsStorageDes": MessageLookupByLibrary.simpleMessage(
-      "Administrar cache y almacenamiento de descargas",
-    ),
     "settingsSyncing": MessageLookupByLibrary.simpleMessage("Sincronización"),
     "settingsSyncingDes": MessageLookupByLibrary.simpleMessage(
       "Actualizar podcasts en el fondo",
@@ -642,12 +595,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "Necesitas mantener presionado para abrir la pagina del episodio",
     ),
     "settingsTheme": MessageLookupByLibrary.simpleMessage("Tema"),
-    "settingsUpdateInterval": MessageLookupByLibrary.simpleMessage(
-      "Intervalo de actualización",
-    ),
-    "settingsUpdateIntervalDes": MessageLookupByLibrary.simpleMessage(
-      "24 horas por defecto",
-    ),
     "share": MessageLookupByLibrary.simpleMessage("Compartir"),
     "showNotesFonts": MessageLookupByLibrary.simpleMessage(
       "Fuente de las notas del show",
@@ -735,8 +682,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "updateFailed": MessageLookupByLibrary.simpleMessage(
       "Actualización fallida, error de red",
     ),
-    "useWallpaperTheme": MessageLookupByLibrary.simpleMessage(""),
-    "useWallpaperThemeDes": MessageLookupByLibrary.simpleMessage(""),
     "username": MessageLookupByLibrary.simpleMessage("Nombre de usuario"),
     "usernameRequired": MessageLookupByLibrary.simpleMessage(
       "Nombre de usuario requerido",

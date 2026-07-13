@@ -18,18 +18,22 @@ class EpisodeAvatar extends StatelessWidget {
   final VoidCallback? onTapDown;
   final VoidCallback? onTapUp;
 
-  const EpisodeAvatar(this.episodeId,
-      {required this.radius,
-      required this.preferEpisodeImage,
-      this.openPodcast = true,
-      this.onTapDown,
-      this.onTapUp,
-      super.key});
+  const EpisodeAvatar(
+    this.episodeId, {
+    required this.radius,
+    required this.preferEpisodeImage,
+    this.openPodcast = true,
+    this.onTapDown,
+    this.onTapUp,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final episode =
-        Provider.of<EpisodeState>(context, listen: false)[episodeId];
+    final episode = Provider.of<EpisodeState>(
+      context,
+      listen: false,
+    )[episodeId];
     return SizedBox(
       height: radius,
       width: radius,
@@ -76,12 +80,14 @@ class EpisodeLengthAndSize extends StatefulWidget {
   final double? height;
   final double? width;
   final bool fill;
-  const EpisodeLengthAndSize(this.episodeId,
-      {this.showPlayedAndDownloaded = true,
-      this.height,
-      this.width,
-      this.fill = false,
-      super.key});
+  const EpisodeLengthAndSize(
+    this.episodeId, {
+    this.showPlayedAndDownloaded = true,
+    this.height,
+    this.width,
+    this.fill = false,
+    super.key,
+  });
 
   @override
   State<EpisodeLengthAndSize> createState() => _EpisodeLengthAndSizeState();
@@ -102,8 +108,10 @@ class _EpisodeLengthAndSizeState extends State<EpisodeLengthAndSize> {
       (null, null) => 1,
       (null, var width!) => width / defaultWidth,
       (var height!, null) => height / defaultHeight,
-      (var height!, var width!) =>
-        math.min(height / defaultHeight, width / defaultWidth)
+      (var height!, var width!) => math.min(
+        height / defaultHeight,
+        width / defaultWidth,
+      ),
     };
     textScale = math.sqrt(scale);
     targetHeight = defaultHeight * scale;
@@ -127,22 +135,29 @@ class _EpisodeLengthAndSizeState extends State<EpisodeLengthAndSize> {
 
   @override
   Widget build(BuildContext context) {
-    final episode =
-        Provider.of<EpisodeState>(context, listen: false)[widget.episodeId];
+    final episode = Provider.of<EpisodeState>(
+      context,
+      listen: false,
+    )[widget.episodeId];
     final colorScheme = episode.colorScheme(context);
     final cardColorScheme = episode.cardColorScheme(context);
     BorderSide side = BorderSide(
-        color: context.realDark
-            ? Colors.transparent
-            : colorScheme.onSecondaryContainer,
-        width: 1);
-    BorderSide innerSide =
-        BorderSide(color: colorScheme.onSecondaryContainer, width: 1);
-    Color backgroundColor = context.realDark
+      color: context.trueBlack
+          ? Colors.transparent
+          : colorScheme.onSecondaryContainer,
+      width: 1,
+    );
+    BorderSide innerSide = BorderSide(
+      color: colorScheme.onSecondaryContainer,
+      width: 1,
+    );
+    Color backgroundColor = context.trueBlack
         ? colorScheme.secondaryContainer
         : colorScheme.onSecondaryContainer;
-    return Selector<EpisodeState,
-        ({int duration, int size, bool played, bool downloaded})>(
+    return Selector<
+      EpisodeState,
+      ({int duration, int size, bool played, bool downloaded})
+    >(
       selector: (_, episodeState) => (
         duration: episodeState[widget.episodeId].enclosureDuration,
         size: episodeState[widget.episodeId].enclosureSize,
@@ -151,77 +166,83 @@ class _EpisodeLengthAndSizeState extends State<EpisodeLengthAndSize> {
       ),
       builder: (context, value, _) => Row(
         children: [
-          if (value.duration != 0)
-            Container(
-              height: targetHeight,
-              width: targetWidth / 2,
-              decoration: BoxDecoration(
-                  borderRadius: BorderRadius.horizontal(
-                      left: Radius.circular(targetCornerRadius),
+          Container(
+            height: targetHeight,
+            width: targetWidth / 2,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.horizontal(
+                left: Radius.circular(targetCornerRadius),
+              ),
+              border: Border.fromBorderSide(side),
+              color: widget.showPlayedAndDownloaded && value.played
+                  ? backgroundColor
+                  : widget.fill
+                  ? cardColorScheme.card
+                  : Colors.transparent,
+            ),
+            foregroundDecoration: context.trueBlack
+                ? BoxDecoration(
+                    borderRadius: BorderRadius.horizontal(
                       right: value.size == 0
                           ? Radius.circular(targetCornerRadius)
-                          : Radius.zero),
-                  border: Border.fromBorderSide(side),
-                  color: widget.showPlayedAndDownloaded && value.played
-                      ? backgroundColor
-                      : widget.fill
-                          ? cardColorScheme.card
-                          : Colors.transparent),
-              foregroundDecoration: context.realDark
-                  ? BoxDecoration(
-                      borderRadius: BorderRadius.horizontal(
-                          right: value.size == 0
-                              ? Radius.circular(targetCornerRadius)
-                              : Radius.zero),
-                      border: value.size == 0 ||
-                              (widget.showPlayedAndDownloaded &&
-                                  (value.played || value.downloaded))
-                          ? null
-                          : Border(right: innerSide),
-                    )
-                  : null,
-              alignment: Alignment.center,
-              child: Text(
-                value.duration.toTime,
-                textScaler: TextScaler.linear(textScale),
-                style: context.textTheme.labelSmall!.copyWith(
-                    color: widget.showPlayedAndDownloaded &&
-                            !context.realDark &&
-                            value.played
-                        ? colorScheme.secondaryContainer
-                        : colorScheme.onSecondaryContainer),
+                          : Radius.zero,
+                    ),
+                    border:
+                        value.size == 0 ||
+                            (widget.showPlayedAndDownloaded &&
+                                (value.played || value.downloaded))
+                        ? null
+                        : Border(right: innerSide),
+                  )
+                : null,
+            alignment: Alignment.center,
+            child: Text(
+              value.duration != 0 ? value.duration.toTime : "??:??",
+              textScaler: TextScaler.linear(textScale),
+              overflow: .clip,
+              maxLines: 1,
+              style: context.textTheme.labelSmall!.copyWith(
+                color:
+                    widget.showPlayedAndDownloaded &&
+                        !context.trueBlack &&
+                        value.played
+                    ? colorScheme.secondaryContainer
+                    : colorScheme.onSecondaryContainer,
               ),
             ),
-          if (value.size != 0)
-            Container(
-              height: targetHeight,
-              width: targetWidth / 2,
-              decoration: BoxDecoration(
-                  borderRadius: BorderRadius.horizontal(
-                      right: Radius.circular(targetCornerRadius),
-                      left: value.duration == 0
-                          ? Radius.circular(targetCornerRadius)
-                          : Radius.zero),
-                  border: value.duration == 0
-                      ? Border.fromBorderSide(side)
-                      : Border(top: side, right: side, bottom: side),
-                  color: widget.showPlayedAndDownloaded && value.downloaded
-                      ? backgroundColor
-                      : widget.fill
-                          ? cardColorScheme.card
-                          : Colors.transparent),
-              alignment: Alignment.center,
-              child: Text(
-                '${value.size ~/ 1000000}MB',
-                textScaler: TextScaler.linear(textScale),
-                style: context.textTheme.labelSmall!.copyWith(
-                    color: widget.showPlayedAndDownloaded &&
-                            !context.realDark &&
-                            value.downloaded
-                        ? colorScheme.secondaryContainer
-                        : colorScheme.onSecondaryContainer),
+          ),
+          Container(
+            height: targetHeight,
+            width: targetWidth / 2,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.horizontal(
+                right: Radius.circular(targetCornerRadius),
+              ),
+              border: value.duration == 0
+                  ? Border.fromBorderSide(side)
+                  : Border(top: side, right: side, bottom: side),
+              color: widget.showPlayedAndDownloaded && value.downloaded
+                  ? backgroundColor
+                  : widget.fill
+                  ? cardColorScheme.card
+                  : Colors.transparent,
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              '${value.size != 0 ? value.size ~/ 1000000 : "??"}MB',
+              textScaler: TextScaler.linear(textScale),
+              overflow: .clip,
+              maxLines: 1,
+              style: context.textTheme.labelSmall!.copyWith(
+                color:
+                    widget.showPlayedAndDownloaded &&
+                        !context.trueBlack &&
+                        value.downloaded
+                    ? colorScheme.secondaryContainer
+                    : colorScheme.onSecondaryContainer,
               ),
             ),
+          ),
         ],
       ),
     );
@@ -232,8 +253,12 @@ class EpisodeNumberAndPodcastName extends StatefulWidget {
   final int episodeId;
   final bool showName;
   final TextStyle? textStyle;
-  const EpisodeNumberAndPodcastName(this.episodeId,
-      {this.showName = true, this.textStyle, super.key});
+  const EpisodeNumberAndPodcastName(
+    this.episodeId, {
+    this.showName = true,
+    this.textStyle,
+    super.key,
+  });
 
   @override
   State<EpisodeNumberAndPodcastName> createState() =>
@@ -247,8 +272,10 @@ class EpisodeNumberAndPodcastNameState
 
   @override
   Widget build(BuildContext context) {
-    final episode =
-        Provider.of<EpisodeState>(context, listen: false)[widget.episodeId];
+    final episode = Provider.of<EpisodeState>(
+      context,
+      listen: false,
+    )[widget.episodeId];
     return ScrollConfiguration(
       behavior: NoOverscrollScrollBehavior(),
       child: SingleChildScrollView(
@@ -260,7 +287,8 @@ class EpisodeNumberAndPodcastNameState
           children: [
             Padding(
               padding: EdgeInsets.only(
-                  top: textStyle.fontSize! / 10), // Teko baseline fix
+                top: textStyle.fontSize! / 10,
+              ), // Teko baseline fix
               child: Text(
                 episode.number.toString(),
                 style: GoogleFonts.teko(textStyle: textStyle),
@@ -270,9 +298,9 @@ class EpisodeNumberAndPodcastNameState
                 ? Text(
                     "|${episode.podcastTitle}",
                     style: textStyle.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color:
-                            episode.colorScheme(context).onSecondaryContainer),
+                      fontWeight: FontWeight.bold,
+                      color: episode.colorScheme(context).onSecondaryContainer,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   )
@@ -289,8 +317,12 @@ class EpisodeTitle extends StatefulWidget {
   final int episodeId;
   final TextStyle textStyle;
   final int maxLines;
-  const EpisodeTitle(this.episodeId,
-      {required this.textStyle, this.maxLines = 3, super.key});
+  const EpisodeTitle(
+    this.episodeId, {
+    required this.textStyle,
+    this.maxLines = 3,
+    super.key,
+  });
 
   @override
   State<EpisodeTitle> createState() => EpisodeTitleState();
@@ -300,8 +332,10 @@ class EpisodeTitleState extends State<EpisodeTitle> {
   TextStyle get textStyle => widget.textStyle;
   @override
   Widget build(BuildContext context) {
-    final episode =
-        Provider.of<EpisodeState>(context, listen: false)[widget.episodeId];
+    final episode = Provider.of<EpisodeState>(
+      context,
+      listen: false,
+    )[widget.episodeId];
     return Text(
       episode.title,
       style: widget.textStyle.copyWith(

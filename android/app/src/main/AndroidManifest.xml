@@ -53,6 +53,9 @@
             android:name="io.flutter.embedding.android.DisableMergedPlatformUIThread"
             android:value="true" /> --> <!--Removing
         this might return a bug but I don't know what bug.-->
+        <meta-data
+            android:name="com.tekartik.sqflite.wal_enabled"
+            android:value="true" />
     </application>
     <queries>
         <intent>

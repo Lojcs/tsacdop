@@ -137,6 +137,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "close": MessageLookupByLibrary.simpleMessage("Close"),
     "color": MessageLookupByLibrary.simpleMessage("color"),
     "confirm": MessageLookupByLibrary.simpleMessage("CONFIRM"),
+    "confirmation": MessageLookupByLibrary.simpleMessage("Confirmation"),
     "createNewPlaylist": MessageLookupByLibrary.simpleMessage("New playlist"),
     "darkMode": MessageLookupByLibrary.simpleMessage("Dark mode"),
     "daysAgo": m4,
@@ -162,6 +163,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "details": MessageLookupByLibrary.simpleMessage("Details"),
     "developer": MessageLookupByLibrary.simpleMessage("Developer"),
     "deviceStorage": MessageLookupByLibrary.simpleMessage("Device Storage"),
+    "disabled": MessageLookupByLibrary.simpleMessage("Disabled"),
     "dismiss": MessageLookupByLibrary.simpleMessage("Dismiss"),
     "displayVersion": MessageLookupByLibrary.simpleMessage("Display Version"),
     "done": MessageLookupByLibrary.simpleMessage("Done"),
@@ -175,7 +177,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "downloading": MessageLookupByLibrary.simpleMessage("Downloading"),
     "duration": MessageLookupByLibrary.simpleMessage("Duration"),
     "editGroupName": MessageLookupByLibrary.simpleMessage("Edit group name"),
-    "endOfEpisode": MessageLookupByLibrary.simpleMessage("End of Episode"),
+    "endOfEpisode": MessageLookupByLibrary.simpleMessage("Play until end"),
     "episode": m6,
     "fastForward": MessageLookupByLibrary.simpleMessage("Fast forward"),
     "fastRewind": MessageLookupByLibrary.simpleMessage("Fast rewind"),
@@ -243,6 +245,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "fonts": MessageLookupByLibrary.simpleMessage("Fonts"),
     "forward": MessageLookupByLibrary.simpleMessage("Forward"),
     "from": m7,
+    "globallyDisabled": MessageLookupByLibrary.simpleMessage(
+      "Globally disabled",
+    ),
     "goodNight": MessageLookupByLibrary.simpleMessage("Good Night"),
     "gpodderLoginDes": MessageLookupByLibrary.simpleMessage(
       "Congratulations! You  have linked gpodder.net account successfully. Tsacdop will automatically sync subscriptions on your device with your gpodder.net account.",
@@ -316,6 +321,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "localFolderDescription": MessageLookupByLibrary.simpleMessage(
       "Dummy podcast that collects imported local audio files.",
     ),
+    "localizationWeblate": MessageLookupByLibrary.simpleMessage(
+      "You can contribute to the localization of this app on hosted Weblate thanks to their support of open source projects.",
+    ),
     "loggedInAs": m1,
     "login": MessageLookupByLibrary.simpleMessage("Login"),
     "loginFailed": MessageLookupByLibrary.simpleMessage("Login failed"),
@@ -338,26 +346,25 @@ class MessageLookup extends MessageLookupByLibrary {
     "menuVisitSite": MessageLookupByLibrary.simpleMessage("Visit Site"),
     "minsAgo": m12,
     "minsCount": m13,
+    "mobileData": MessageLookupByLibrary.simpleMessage("Mobile Data"),
     "moreOptions": MessageLookupByLibrary.simpleMessage("More Options"),
     "network": MessageLookupByLibrary.simpleMessage("Network"),
     "networkErrorDNS": MessageLookupByLibrary.simpleMessage(
       "Network error (DNS issue)",
     ),
     "neverAutoUpdate": MessageLookupByLibrary.simpleMessage(
-      "Turn off auto update",
+      "Don\'t include in global sync",
+    ),
+    "neverAutoUpdateDes": MessageLookupByLibrary.simpleMessage(
+      "Can still be synced on its own",
     ),
     "newGroup": MessageLookupByLibrary.simpleMessage("Create new group"),
     "newPlain": MessageLookupByLibrary.simpleMessage("New"),
+    "newPlaylist": MessageLookupByLibrary.simpleMessage("New Playlist"),
     "newestFirst": MessageLookupByLibrary.simpleMessage("Newest first"),
     "next": MessageLookupByLibrary.simpleMessage("Next"),
-    "noEpisodeDownload": MessageLookupByLibrary.simpleMessage(
-      "No episodes downloaded yet",
-    ),
-    "noEpisodeFavorite": MessageLookupByLibrary.simpleMessage(
-      "No episodes collected yet",
-    ),
-    "noEpisodeRecent": MessageLookupByLibrary.simpleMessage(
-      "No episodes received yet",
+    "noEpisodesFound": MessageLookupByLibrary.simpleMessage(
+      "No episodes found with given filters",
     ),
     "noPodcastGroup": MessageLookupByLibrary.simpleMessage(
       "No podcasts in this group",
@@ -365,14 +372,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "noShownote": MessageLookupByLibrary.simpleMessage(
       "No show notes available for this episode.",
     ),
+    "none": MessageLookupByLibrary.simpleMessage("None"),
     "notificaitonFatch": m14,
     "notificationAddingGroups": MessageLookupByLibrary.simpleMessage(
       "Adding and organizing groups.",
     ),
     "notificationNetworkError": m15,
-    "notificationSetting": MessageLookupByLibrary.simpleMessage(
-      "Notification  panel",
-    ),
     "notificationSubscribe": m16,
     "notificationSubscribeExisted": m17,
     "notificationSubscribing": MessageLookupByLibrary.simpleMessage(
@@ -382,6 +387,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "notificationUpdate": m19,
     "notificationUpdateError": m20,
     "oldestFirst": MessageLookupByLibrary.simpleMessage("Oldest first"),
+    "opmlFile": MessageLookupByLibrary.simpleMessage("OPML file"),
     "passwdRequired": MessageLookupByLibrary.simpleMessage("Password required"),
     "password": MessageLookupByLibrary.simpleMessage("Password"),
     "pause": MessageLookupByLibrary.simpleMessage("Pause"),
@@ -396,8 +402,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "playerHeightShort": MessageLookupByLibrary.simpleMessage("Low"),
     "playerHeightTall": MessageLookupByLibrary.simpleMessage("High"),
     "playing": MessageLookupByLibrary.simpleMessage("Playing"),
-    "playlistExisted": MessageLookupByLibrary.simpleMessage(
-      "Playlist name existed",
+    "playlistExists": MessageLookupByLibrary.simpleMessage(
+      "Playlist already exists",
     ),
     "playlistNameEmpty": MessageLookupByLibrary.simpleMessage(
       "Playlist name is empty",
@@ -405,6 +411,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "playlists": MessageLookupByLibrary.simpleMessage("Playlists"),
     "plugins": MessageLookupByLibrary.simpleMessage("Plugins"),
     "podcast": m21,
+    "podcastList": MessageLookupByLibrary.simpleMessage("Podcast List"),
     "podcastSubscribed": MessageLookupByLibrary.simpleMessage(
       "Podcast subscribed",
     ),
@@ -439,8 +446,6 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "refresh": MessageLookupByLibrary.simpleMessage("Refresh"),
     "refreshArtwork": MessageLookupByLibrary.simpleMessage("Update artwork"),
-    "refreshFinished": MessageLookupByLibrary.simpleMessage("Refresh Finished"),
-    "refreshStarted": MessageLookupByLibrary.simpleMessage("Refreshing"),
     "remove": MessageLookupByLibrary.simpleMessage("Remove"),
     "removeConfirm": MessageLookupByLibrary.simpleMessage(
       "Removal confirmation",
@@ -454,6 +459,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "restartAppForEffect": MessageLookupByLibrary.simpleMessage(
       "Restart the app for the changes to take effect.",
     ),
+    "satellite": MessageLookupByLibrary.simpleMessage("Satellite"),
     "save": MessageLookupByLibrary.simpleMessage("Save"),
     "schedule": MessageLookupByLibrary.simpleMessage("Schedule"),
     "search": MessageLookupByLibrary.simpleMessage("Search"),
@@ -480,9 +486,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "settingStorage": MessageLookupByLibrary.simpleMessage("Storage"),
     "settings": MessageLookupByLibrary.simpleMessage("Settings"),
     "settingsAccentColor": MessageLookupByLibrary.simpleMessage("Accent color"),
-    "settingsAccentColorDes": MessageLookupByLibrary.simpleMessage(
-      "Include the ovelay color",
-    ),
     "settingsAppIntro": MessageLookupByLibrary.simpleMessage("App Intro"),
     "settingsAppearance": MessageLookupByLibrary.simpleMessage("Appearance"),
     "settingsAppearanceDes": MessageLookupByLibrary.simpleMessage(
@@ -492,24 +495,105 @@ class MessageLookup extends MessageLookupByLibrary {
     "settingsAudioCacheDes": MessageLookupByLibrary.simpleMessage(
       "Audio cache max size",
     ),
-    "settingsAutoDelete": MessageLookupByLibrary.simpleMessage(
-      "Auto delete downloads after",
+    "settingsAutoDelete": MessageLookupByLibrary.simpleMessage("Auto delete"),
+    "settingsAutoDeleteAfterPlayed": MessageLookupByLibrary.simpleMessage(
+      "Delete played downloads",
+    ),
+    "settingsAutoDeleteAfterTime": MessageLookupByLibrary.simpleMessage(
+      "Delete downloads after",
     ),
     "settingsAutoDeleteDes": MessageLookupByLibrary.simpleMessage(
-      "Default 30 days",
+      "Deletions are performed on app start and on sync",
+    ),
+    "settingsAutoDeleteOldestIfTotalAbove":
+        MessageLookupByLibrary.simpleMessage("Delete oldest if storage above"),
+    "settingsAutoDeleteOldestIfTotalAboveDes": MessageLookupByLibrary.simpleMessage(
+      "If total size of audio downloads exceeds this the oldest downloads will be deleted.",
+    ),
+    "settingsAutoDownload": MessageLookupByLibrary.simpleMessage(
+      "Auto download",
+    ),
+    "settingsAutoDownloadDes": MessageLookupByLibrary.simpleMessage(
+      "Download new episodes after sync",
+    ),
+    "settingsAutoDownloadOnForbidden": MessageLookupByLibrary.simpleMessage(
+      "Auto download on forbidden connections",
+    ),
+    "settingsAutoDownloadOnForbiddenDes": MessageLookupByLibrary.simpleMessage(
+      "If disabled downloads will be started then paused if the connection is forbidden",
     ),
     "settingsAutoPlayDes": MessageLookupByLibrary.simpleMessage(
-      "Auto play next episode in playlist",
+      "Auto play the next episode when an episode ends",
     ),
     "settingsBackup": MessageLookupByLibrary.simpleMessage("Backup"),
+    "settingsBackupCategories": MessageLookupByLibrary.simpleMessage(
+      "Categories",
+    ),
+    "settingsBackupCategoriesDes": MessageLookupByLibrary.simpleMessage(
+      "Settings categories to export, import or reset.",
+    ),
+    "settingsBackupConfirmationDatabaseOverwrite":
+        MessageLookupByLibrary.simpleMessage(
+          "Are you sure you want to wipe the selected database categories and replace them with the backup?",
+        ),
+    "settingsBackupConfirmationDatabaseReset":
+        MessageLookupByLibrary.simpleMessage(
+          "Are you sure you want to reset selected database sections?",
+        ),
+    "settingsBackupConfirmationSettingsOverwrite":
+        MessageLookupByLibrary.simpleMessage(
+          "Are you sure you want to overwrite current settings?",
+        ),
+    "settingsBackupConfirmationSettingsReset":
+        MessageLookupByLibrary.simpleMessage(
+          "Are you sure you want to reset settings to default?",
+        ),
+    "settingsBackupDatabase": MessageLookupByLibrary.simpleMessage("Database"),
+    "settingsBackupDatabaseBackupFile": MessageLookupByLibrary.simpleMessage(
+      "Database file",
+    ),
+    "settingsBackupDatabaseBackupFileDes": MessageLookupByLibrary.simpleMessage(
+      "Export, import and reset app data",
+    ),
+    "settingsBackupDatabaseCategoriesDes": MessageLookupByLibrary.simpleMessage(
+      "Database categories to export, import or reset",
+    ),
+    "settingsBackupDatabaseHistory": MessageLookupByLibrary.simpleMessage(
+      "Playback and subscription history",
+    ),
+    "settingsBackupDatabasePlaylists": MessageLookupByLibrary.simpleMessage(
+      "Playlists",
+    ),
+    "settingsBackupDatabasePodcasts": MessageLookupByLibrary.simpleMessage(
+      "Podcasts, episodes and groups",
+    ),
     "settingsBackupDes": MessageLookupByLibrary.simpleMessage(
-      "Backup app data",
+      "Backup, restore or reset",
+    ),
+    "settingsBackupFile": MessageLookupByLibrary.simpleMessage(
+      "Settings Backup File",
+    ),
+    "settingsBackupPassword": MessageLookupByLibrary.simpleMessage(
+      "Backup Password",
+    ),
+    "settingsBackupPasswordDes": MessageLookupByLibrary.simpleMessage(
+      "Optional password to encrypt the backup when exporting or decrypt it when importing",
     ),
     "settingsBoostVolume": MessageLookupByLibrary.simpleMessage(
-      "Volume boost level",
+      "Volume boost amount",
     ),
     "settingsBoostVolumeDes": MessageLookupByLibrary.simpleMessage(
-      "Change volume boost level",
+      "Decibels to boost when volume boost is enabled",
+    ),
+    "settingsColors": MessageLookupByLibrary.simpleMessage("Colors"),
+    "settingsDefaultFilterAndroidAuto": MessageLookupByLibrary.simpleMessage(
+      "Android Auto Filters",
+    ),
+    "settingsDefaultFilterAndroidAutoDes": MessageLookupByLibrary.simpleMessage(
+      "Filters to apply to the library visible in Android Auto. Only the first 108 items will be shown",
+    ),
+    "settingsDefaultFilters": MessageLookupByLibrary.simpleMessage(
+      "Default Filters",
     ),
     "settingsDefaultGrid": MessageLookupByLibrary.simpleMessage(
       "Default grid view",
@@ -532,8 +616,18 @@ class MessageLookup extends MessageLookupByLibrary {
     "settingsDiscoveryDes": MessageLookupByLibrary.simpleMessage(
       "Are you sure you want to reenable \"Discover Features\"?",
     ),
+    "settingsDownloadAskOnForbidden": MessageLookupByLibrary.simpleMessage(
+      "Ask when starting download on a forbidden connection",
+    ),
+    "settingsDownloadAskOnForbiddenDes": MessageLookupByLibrary.simpleMessage(
+      "If approved downloads will be temporarily allowed on all connections",
+    ),
     "settingsDownloadPosition": MessageLookupByLibrary.simpleMessage(
       "Download position",
+    ),
+    "settingsDownloads": MessageLookupByLibrary.simpleMessage("Downloads"),
+    "settingsDownloadsDes": MessageLookupByLibrary.simpleMessage(
+      "Auto download, auto delete and forbidden connections",
     ),
     "settingsEnableSyncing": MessageLookupByLibrary.simpleMessage(
       "Enable synchronisation",
@@ -554,19 +648,31 @@ class MessageLookup extends MessageLookupByLibrary {
     "settingsFeedbackDes": MessageLookupByLibrary.simpleMessage(
       "Bugs and feature requests",
     ),
+    "settingsForbiddenDownloadConnections":
+        MessageLookupByLibrary.simpleMessage("Forbidden download connections"),
+    "settingsForbiddenDownloadConnectionsDes": MessageLookupByLibrary.simpleMessage(
+      "Downloads will be forbidden on selected connections based on the rules above.",
+    ),
+    "settingsGeneral": MessageLookupByLibrary.simpleMessage("General"),
     "settingsHistory": MessageLookupByLibrary.simpleMessage("History"),
     "settingsHistoryDes": MessageLookupByLibrary.simpleMessage("Listen data"),
+    "settingsHomeTabAdd": MessageLookupByLibrary.simpleMessage("Add new tab"),
+    "settingsHomeTabName": MessageLookupByLibrary.simpleMessage("Tab name"),
+    "settingsHomeTabNew": MessageLookupByLibrary.simpleMessage("New tab"),
+    "settingsHomeTabs": MessageLookupByLibrary.simpleMessage("Home tabs"),
     "settingsInfo": MessageLookupByLibrary.simpleMessage("Info"),
     "settingsInterface": MessageLookupByLibrary.simpleMessage("Interface"),
-    "settingsLanguages": MessageLookupByLibrary.simpleMessage("Languages"),
-    "settingsLanguagesDes": MessageLookupByLibrary.simpleMessage(
-      "Change language",
-    ),
-    "settingsLayout": MessageLookupByLibrary.simpleMessage("Layout"),
-    "settingsLayoutDes": MessageLookupByLibrary.simpleMessage("App layout"),
+    "settingsInterfaceDes": MessageLookupByLibrary.simpleMessage("Ui defaults"),
+    "settingsLanguage": MessageLookupByLibrary.simpleMessage("Language"),
     "settingsLibraries": MessageLookupByLibrary.simpleMessage("Libraries"),
     "settingsLibrariesDes": MessageLookupByLibrary.simpleMessage(
       "Open source libraries used in this app",
+    ),
+    "settingsLookAndFeel": MessageLookupByLibrary.simpleMessage(
+      "Look and Feel",
+    ),
+    "settingsLookAndFeelDes": MessageLookupByLibrary.simpleMessage(
+      "Colors, fonts and haptics",
     ),
     "settingsManageDownload": MessageLookupByLibrary.simpleMessage(
       "Manage downloads",
@@ -575,10 +681,16 @@ class MessageLookup extends MessageLookupByLibrary {
       "Manage downloaded audio files",
     ),
     "settingsMarkListenedSkip": MessageLookupByLibrary.simpleMessage(
-      "Mark as listened when skipped",
+      "Mark skipped as played",
     ),
     "settingsMarkListenedSkipDes": MessageLookupByLibrary.simpleMessage(
-      "Auto mark episode as listened when it was skipped to next",
+      "Mark episode as played when skipping to next",
+    ),
+    "settingsMediaControls": MessageLookupByLibrary.simpleMessage(
+      "Notification panel media controls",
+    ),
+    "settingsMediaControlsDes": MessageLookupByLibrary.simpleMessage(
+      "The placement of the buttons may differ between devices, Android versions and selections of buttons",
     ),
     "settingsMenuAutoPlay": MessageLookupByLibrary.simpleMessage(
       "Auto play next",
@@ -586,23 +698,23 @@ class MessageLookup extends MessageLookupByLibrary {
     "settingsNetworkCellular": MessageLookupByLibrary.simpleMessage(
       "Ask before using cellular data",
     ),
-    "settingsNetworkCellularAuto": MessageLookupByLibrary.simpleMessage(
-      "Auto download using cellular data",
-    ),
-    "settingsNetworkCellularAutoDes": MessageLookupByLibrary.simpleMessage(
-      "You can configure podcast auto download in the group management page",
-    ),
     "settingsNetworkCellularDes": MessageLookupByLibrary.simpleMessage(
       "Ask to confirm when using cellular data to download episodes",
     ),
-    "settingsPlayDes": MessageLookupByLibrary.simpleMessage(
-      "Playlist and player",
+    "settingsPauseDownloadOnForbiddenConnected":
+        MessageLookupByLibrary.simpleMessage(
+          "Pause and resume downloads based on connectivity",
+        ),
+    "settingsPauseDownloadOnForbiddenConnectedDes":
+        MessageLookupByLibrary.simpleMessage(
+          "All downloads will be paused if the connection changes to a forbidden one. All paused downloads will be resumed when the forbidden connection ends",
+        ),
+    "settingsPlayback": MessageLookupByLibrary.simpleMessage("Playback"),
+    "settingsPlaybackDes": MessageLookupByLibrary.simpleMessage(
+      "Playback behavior",
     ),
-    "settingsPlayerHeight": MessageLookupByLibrary.simpleMessage(
-      "Player height",
-    ),
-    "settingsPlayerHeightDes": MessageLookupByLibrary.simpleMessage(
-      "Change player widget height as you like",
+    "settingsPlayerState": MessageLookupByLibrary.simpleMessage(
+      "Audio Player State",
     ),
     "settingsPopupMenu": MessageLookupByLibrary.simpleMessage(
       "Episodes popup menu",
@@ -611,10 +723,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Change the popup menu of episodes",
     ),
     "settingsPrefrence": MessageLookupByLibrary.simpleMessage("Preference"),
-    "settingsRealDark": MessageLookupByLibrary.simpleMessage("Real dark"),
-    "settingsRealDarkDes": MessageLookupByLibrary.simpleMessage(
-      "Turn on if you think the night is not dark enough",
-    ),
+    "settingsReset": MessageLookupByLibrary.simpleMessage("Reset"),
     "settingsRewindSec": MessageLookupByLibrary.simpleMessage("Rewind seconds"),
     "settingsRewindSecDes": MessageLookupByLibrary.simpleMessage(
       "Change the rewind seconds in player",
@@ -634,16 +743,31 @@ class MessageLookup extends MessageLookupByLibrary {
     "settingsSTMode": MessageLookupByLibrary.simpleMessage(
       "Auto sleep timer mode",
     ),
+    "settingsSTWaitEpisodeEnd": MessageLookupByLibrary.simpleMessage(
+      "Play until end",
+    ),
+    "settingsSTWaitEpisodeEndDes": MessageLookupByLibrary.simpleMessage(
+      "Wait until the end of the playing episode to stop playback when sleep timer expires",
+    ),
+    "settingsSearchApi": MessageLookupByLibrary.simpleMessage(
+      "Default search api",
+    ),
+    "settingsSearchEngine": MessageLookupByLibrary.simpleMessage(
+      "Default web search engine",
+    ),
+    "settingsSearchMode": MessageLookupByLibrary.simpleMessage(
+      "Search web by default",
+    ),
     "settingsSpeeds": MessageLookupByLibrary.simpleMessage("Speeds"),
     "settingsSpeedsDes": MessageLookupByLibrary.simpleMessage(
       "Customize the speeds available",
     ),
-    "settingsStorageDes": MessageLookupByLibrary.simpleMessage(
-      "Manage cache and download storage",
-    ),
     "settingsSyncing": MessageLookupByLibrary.simpleMessage("Syncing"),
     "settingsSyncingDes": MessageLookupByLibrary.simpleMessage(
       "Refresh podcasts in the background",
+    ),
+    "settingsSyncingInterval": MessageLookupByLibrary.simpleMessage(
+      "Syncing interval",
     ),
     "settingsTapToOpenPopupMenu": MessageLookupByLibrary.simpleMessage(
       "Tap to open popup menu",
@@ -652,11 +776,12 @@ class MessageLookup extends MessageLookupByLibrary {
       "You need to long press to open episode page",
     ),
     "settingsTheme": MessageLookupByLibrary.simpleMessage("Theme"),
-    "settingsUpdateInterval": MessageLookupByLibrary.simpleMessage(
-      "Update interval",
+    "settingsTrueBlack": MessageLookupByLibrary.simpleMessage("True Black"),
+    "settingsTrueBlackDes": MessageLookupByLibrary.simpleMessage(
+      "Black surfaces on dark theme",
     ),
-    "settingsUpdateIntervalDes": MessageLookupByLibrary.simpleMessage(
-      "Default 24 hours",
+    "settingsUseSystemAccentColor": MessageLookupByLibrary.simpleMessage(
+      "Use system accent color",
     ),
     "share": MessageLookupByLibrary.simpleMessage("Share"),
     "showNotesFonts": MessageLookupByLibrary.simpleMessage("Show notes font"),
@@ -669,7 +794,13 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "skipSilence": MessageLookupByLibrary.simpleMessage("Skip silence"),
     "skipToNext": MessageLookupByLibrary.simpleMessage("Skip to next"),
+    "skipToPrevious": MessageLookupByLibrary.simpleMessage("Skip to Previous"),
     "sleepTimer": MessageLookupByLibrary.simpleMessage("Sleep timer"),
+    "sleepTimerCancel": MessageLookupByLibrary.simpleMessage("Cancel timer"),
+    "sleepTimerStart": MessageLookupByLibrary.simpleMessage("Start timer"),
+    "sleepTimerWait": MessageLookupByLibrary.simpleMessage(
+      "Waiting for episode to end",
+    ),
     "sortBy": MessageLookupByLibrary.simpleMessage("Sort By"),
     "sortOrder": MessageLookupByLibrary.simpleMessage("Sort Order"),
     "status": MessageLookupByLibrary.simpleMessage("Status"),
@@ -684,7 +815,10 @@ class MessageLookup extends MessageLookupByLibrary {
       "Export OPML file of all podcasts",
     ),
     "subscribed": MessageLookupByLibrary.simpleMessage("Subscribed"),
+    "sync": MessageLookupByLibrary.simpleMessage("Sync"),
+    "syncFinished": MessageLookupByLibrary.simpleMessage("Sync finished"),
     "syncNow": MessageLookupByLibrary.simpleMessage("Sync now"),
+    "syncStarted": MessageLookupByLibrary.simpleMessage("Sync started"),
     "systemDefault": MessageLookupByLibrary.simpleMessage("System default"),
     "timeLastPlayed": m27,
     "timeLeft": m28,
@@ -734,21 +868,18 @@ class MessageLookup extends MessageLookupByLibrary {
     "unliked": MessageLookupByLibrary.simpleMessage(
       "Episode removed from favorites",
     ),
+    "unsupported": MessageLookupByLibrary.simpleMessage("Unsupported"),
     "updateDate": MessageLookupByLibrary.simpleMessage("Update date"),
     "updateEpisodesCount": m30,
     "updateFailed": MessageLookupByLibrary.simpleMessage(
       "Update failed, network error",
-    ),
-    "useWallpaperTheme": MessageLookupByLibrary.simpleMessage(
-      "Pick theme from wallpaper",
-    ),
-    "useWallpaperThemeDes": MessageLookupByLibrary.simpleMessage(
-      "Pick theme from wallpaper.",
     ),
     "username": MessageLookupByLibrary.simpleMessage("Username"),
     "usernameRequired": MessageLookupByLibrary.simpleMessage(
       "Username required",
     ),
     "version": m31,
+    "vpn": MessageLookupByLibrary.simpleMessage("VPN"),
+    "wifi": MessageLookupByLibrary.simpleMessage("Wi-Fi"),
   };
 }

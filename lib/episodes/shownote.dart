@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:provider/provider.dart';
 import '../state/audio_state.dart';
-import '../state/setting_state.dart';
+import '../state/settings/setting_state.dart';
 import '../util/extension_helper.dart';
 
 class ShowNote extends StatelessWidget {
@@ -16,21 +16,23 @@ class ShowNote extends StatelessWidget {
     final s = context.s;
     final description = eState[episodeId].showNotes;
     if (description.isNotEmpty) {
-      return Selector<AudioPlayerNotifier, int?>(
+      return Selector<AudioState, int?>(
         selector: (_, audio) => audio.episodeId,
         builder: (_, playEpisodeId, __) {
           return Selector<SettingState, TextStyle>(
-            selector: (_, settings) => settings.showNoteFontStyle,
-            builder: (_, data, __) => SelectionArea(
+            selector: (_, settings) => settings.showNotesFont.get(),
+            builder: (context, value, __) => SelectionArea(
               child: Html(
                 style: {
                   'html':
-                      Style.fromTextStyle(data.copyWith(fontSize: 14)).copyWith(
-                    padding: HtmlPaddings.symmetric(horizontal: 12),
-                    color: eState[episodeId].colorScheme(context).onSurface,
-                  ),
+                      Style.fromTextStyle(
+                        value.copyWith(fontSize: 14, height: 1.8),
+                      ).copyWith(
+                        padding: HtmlPaddings.symmetric(horizontal: 12),
+                        color: eState[episodeId].colorScheme(context).onSurface,
+                      ),
                   'a': Style(
-                    color: context.accentColor,
+                    color: context.primaryColor,
                     textDecoration: TextDecoration.none,
                   ),
                 },
@@ -57,15 +59,13 @@ class ShowNote extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Image(
-              image: AssetImage('assets/shownote.png'),
-              height: 100.0,
-            ),
+            Image(image: AssetImage('assets/shownote.png'), height: 100.0),
             Padding(padding: EdgeInsets.all(5.0)),
-            Text(s.noShownote,
-                textAlign: TextAlign.center,
-                style:
-                    TextStyle(color: context.textColor.withValues(alpha: 0.5))),
+            Text(
+              s.noShownote,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: context.textColor.withValues(alpha: 0.5)),
+            ),
           ],
         ),
       );
@@ -77,7 +77,8 @@ class ShowNote extends StatelessWidget {
     final data = time.split(':');
     int? seconds;
     if (data.length == 3) {
-      seconds = int.tryParse(data[0])! * 3600 +
+      seconds =
+          int.tryParse(data[0])! * 3600 +
           int.tryParse(data[1])! * 60 +
           int.tryParse(data[2])!;
     } else if (data.length == 2) {

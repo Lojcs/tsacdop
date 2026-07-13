@@ -316,15 +316,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "newGroup": MessageLookupByLibrary.simpleMessage("Создать новую группу"),
     "newestFirst": MessageLookupByLibrary.simpleMessage("Начиная с новых"),
     "next": MessageLookupByLibrary.simpleMessage("Следующий"),
-    "noEpisodeDownload": MessageLookupByLibrary.simpleMessage(
-      "Выпуски пока не загружены",
-    ),
-    "noEpisodeFavorite": MessageLookupByLibrary.simpleMessage(
-      "Выпуски пока не добавлены",
-    ),
-    "noEpisodeRecent": MessageLookupByLibrary.simpleMessage(
-      "Нет недавних выпусков",
-    ),
     "noPodcastGroup": MessageLookupByLibrary.simpleMessage(
       "В этой группе нет подкастов",
     ),
@@ -333,9 +324,6 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "notificaitonFatch": m14,
     "notificationNetworkError": m15,
-    "notificationSetting": MessageLookupByLibrary.simpleMessage(
-      "Панель уведомлений",
-    ),
     "notificationSubscribe": m16,
     "notificationSubscribeExisted": m17,
     "notificationSuccess": m18,
@@ -358,9 +346,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "playerHeightShort": MessageLookupByLibrary.simpleMessage("Низкий"),
     "playerHeightTall": MessageLookupByLibrary.simpleMessage("Высокий"),
     "playing": MessageLookupByLibrary.simpleMessage("Проигрывается"),
-    "playlistExisted": MessageLookupByLibrary.simpleMessage(
-      "Название плейлиста существует",
-    ),
     "playlistNameEmpty": MessageLookupByLibrary.simpleMessage(
       "Название плейлиста пустое",
     ),
@@ -407,7 +392,6 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "refresh": MessageLookupByLibrary.simpleMessage("Обновить"),
     "refreshArtwork": MessageLookupByLibrary.simpleMessage("Обновить обложку"),
-    "refreshStarted": MessageLookupByLibrary.simpleMessage("Обновление"),
     "remove": MessageLookupByLibrary.simpleMessage("Удалить"),
     "removeConfirm": MessageLookupByLibrary.simpleMessage(
       "Подтверждение удаления",
@@ -436,9 +420,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "settingStorage": MessageLookupByLibrary.simpleMessage("Хранилище"),
     "settings": MessageLookupByLibrary.simpleMessage("Настройки"),
     "settingsAccentColor": MessageLookupByLibrary.simpleMessage("Цвет акцента"),
-    "settingsAccentColorDes": MessageLookupByLibrary.simpleMessage(
-      "Выбор цвета темы",
-    ),
     "settingsAppIntro": MessageLookupByLibrary.simpleMessage(
       "Тур по приложению",
     ),
@@ -517,14 +498,6 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "settingsInfo": MessageLookupByLibrary.simpleMessage("Информация"),
     "settingsInterface": MessageLookupByLibrary.simpleMessage("Интерфейс"),
-    "settingsLanguages": MessageLookupByLibrary.simpleMessage("Языки"),
-    "settingsLanguagesDes": MessageLookupByLibrary.simpleMessage(
-      "Изменить язык",
-    ),
-    "settingsLayout": MessageLookupByLibrary.simpleMessage("Стиль"),
-    "settingsLayoutDes": MessageLookupByLibrary.simpleMessage(
-      "Стиль приложения",
-    ),
     "settingsLibraries": MessageLookupByLibrary.simpleMessage("Библиотеки"),
     "settingsLibrariesDes": MessageLookupByLibrary.simpleMessage(
       "Библиотеки с открытым исходным кодом, используемые в этом приложении",
@@ -547,21 +520,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "settingsNetworkCellular": MessageLookupByLibrary.simpleMessage(
       "Запрос перед использованием мобильной сети",
     ),
-    "settingsNetworkCellularAuto": MessageLookupByLibrary.simpleMessage(
-      "Автоматическая загрузка через мобильную сеть",
-    ),
-    "settingsNetworkCellularAutoDes": MessageLookupByLibrary.simpleMessage(
-      "Вы можете настроить автоматическую загрузку подкастов на странице управления группой",
-    ),
     "settingsNetworkCellularDes": MessageLookupByLibrary.simpleMessage(
       "Запрашивать подтверждение при использовании мобильной сети для загрузки выпусков",
-    ),
-    "settingsPlayDes": MessageLookupByLibrary.simpleMessage("Плейлист и плеер"),
-    "settingsPlayerHeight": MessageLookupByLibrary.simpleMessage(
-      "Высота плейера",
-    ),
-    "settingsPlayerHeightDes": MessageLookupByLibrary.simpleMessage(
-      "Изменение высоты виджета плеера по своему усмотрению",
     ),
     "settingsPopupMenu": MessageLookupByLibrary.simpleMessage(
       "Всплывающее меню выпусков",
@@ -570,10 +530,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "Настройка всплывающего меню выпусков",
     ),
     "settingsPrefrence": MessageLookupByLibrary.simpleMessage("Предпочтения"),
-    "settingsRealDark": MessageLookupByLibrary.simpleMessage("Истинный черный"),
-    "settingsRealDarkDes": MessageLookupByLibrary.simpleMessage(
-      "Акцентированный темный режим",
-    ),
     "settingsRewindSec": MessageLookupByLibrary.simpleMessage(
       "Секунды перемотки назад",
     ),
@@ -599,9 +555,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "settingsSpeedsDes": MessageLookupByLibrary.simpleMessage(
       "Настроить доступные скорости",
     ),
-    "settingsStorageDes": MessageLookupByLibrary.simpleMessage(
-      "Управление кэшем и хранилищем загрузок",
-    ),
     "settingsSyncing": MessageLookupByLibrary.simpleMessage("Синхронизация"),
     "settingsSyncingDes": MessageLookupByLibrary.simpleMessage(
       "Обновление подкастов в фоновом режиме",
@@ -613,12 +566,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "Для открытия страницы выпуска нажмите и удерживайте",
     ),
     "settingsTheme": MessageLookupByLibrary.simpleMessage("Тема"),
-    "settingsUpdateInterval": MessageLookupByLibrary.simpleMessage(
-      "Интервал обновления",
-    ),
-    "settingsUpdateIntervalDes": MessageLookupByLibrary.simpleMessage(
-      "По умолчанию 24 часа",
-    ),
     "share": MessageLookupByLibrary.simpleMessage("Поделиться"),
     "showNotesFonts": MessageLookupByLibrary.simpleMessage(
       "Показать шрифт заметок",
@@ -701,8 +648,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "updateFailed": MessageLookupByLibrary.simpleMessage(
       "Ошибка обновления, ошибка сети",
     ),
-    "useWallpaperTheme": MessageLookupByLibrary.simpleMessage(""),
-    "useWallpaperThemeDes": MessageLookupByLibrary.simpleMessage(""),
     "username": MessageLookupByLibrary.simpleMessage("Имя пользователя"),
     "usernameRequired": MessageLookupByLibrary.simpleMessage(
       "Требуется имя пользователя",

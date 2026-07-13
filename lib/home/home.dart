@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:collection/collection.dart';
 import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart';
 import 'package:feature_discovery/feature_discovery.dart';
 import 'package:flutter/material.dart' hide NestedScrollView, showSearch;
@@ -8,15 +9,13 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
-import '../local_storage/key_value_storage.dart';
 import '../search/search_widgets.dart';
+import '../type/tab_configuration.dart';
 import '../util/selection_controller.dart';
-import '../widgets/action_bar.dart';
 
-import '../local_storage/sqflite_localpodcast.dart';
 import '../playlists/playlist_home.dart';
 import '../state/audio_state.dart';
-import '../state/setting_state.dart';
+import '../state/settings/setting_state.dart';
 import '../util/extension_helper.dart';
 import '../widgets/audiopanel.dart';
 import '../widgets/episodegrid.dart';
@@ -31,109 +30,112 @@ class Home extends StatefulWidget {
   const Home({super.key});
 
   @override
-  _HomeState createState() => _HomeState();
+  State<Home> createState() => _HomeState();
 }
 
-class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
+class _HomeState extends State<Home> with TickerProviderStateMixin {
   final GlobalKey<AudioPanelState> _playerKey = GlobalKey<AudioPanelState>();
   final GlobalKey searchKey = GlobalKey();
-  late TabController _controller;
+  late TabController controller;
 
   final _androidAppRetain = MethodChannel("android_app_retain");
   var feature1OverflowMode = OverflowMode.clipContent;
   var feature1EnablePulsingAnimation = false;
   double top = 0;
 
-  final SelectionController _recentUpdateSelectionController =
-      SelectionController();
-  final SelectionController _myFavouriteSelectionController =
-      SelectionController();
-  final SelectionController _myDownloadedSelectionController =
-      SelectionController();
-
+  late List<HomeTabConfiguration> homeTabs = context.superSettingState.homeTabs
+      .get();
+  List<SelectionController>? selectionControllers;
+  List<Key>? tabKeys;
   List<Widget>? headerSlivers;
 
-  SelectionController _tabSelectionController(int i) => i == 0
-      ? _recentUpdateSelectionController
-      : i == 1
-          ? _myFavouriteSelectionController
-          : _myDownloadedSelectionController;
+  /// Checks if home tabs changed and if so updates them.
+  /// This is done here and not in a selector as it changes more seldomly than
+  /// most other things (like theme or audio player) and updating it causes visual
+  /// disturbance.
+  void updateTabs() {
+    final newHomeTabs = context.superSettingState.homeTabs.get();
+    if (!newHomeTabs.equals(homeTabs)) {
+      homeTabs = newHomeTabs;
+      final index = controller.index;
+      controller.dispose();
+      controller = TabController(length: homeTabs.length + 1, vsync: this);
+      controller.index = index;
+      headerSlivers = null;
+      selectionControllers = null;
+      tabKeys = null;
+      setState(() {});
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _controller = TabController(length: 3, vsync: this);
-    //  FeatureDiscovery.hasPreviouslyCompleted(context, addFeature).then((value) {
-    //   if (!value) {
+    context.superSettingState.addListener(updateTabs);
+    controller = TabController(length: homeTabs.length + 1, vsync: this);
     SchedulerBinding.instance.addPostFrameCallback((_) {
-      FeatureDiscovery.discoverFeatures(
-        context,
-        const <String>{
-          addFeature,
-          menuFeature,
-          playlistFeature,
-          //groupsFeature,
-          //podcastFeature,
-        },
-      );
+      FeatureDiscovery.discoverFeatures(context, const <String>{
+        addFeature,
+        menuFeature,
+        playlistFeature,
+        //groupsFeature,
+        //podcastFeature,
+      });
     });
-    //   }
-    // });
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    controller.dispose();
+    context.superSettingState.removeListener(updateTabs);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    StatefulBuilder;
-    final settings = Provider.of<SettingState>(context, listen: false);
     final s = context.s;
-    headerSlivers = null;
-    return Selector<AudioPlayerNotifier, bool>(
-        selector: (_, audio) => audio.playerRunning,
-        builder: (_, playerRunning, __) {
-          context.originalPadding = MediaQuery.of(context).padding;
-          return AnnotatedRegion<SystemUiOverlayStyle>(
-            value: SystemUiOverlayStyle(
-              statusBarColor: Colors.transparent,
-              statusBarIconBrightness: context.iconBrightness,
-              systemNavigationBarColor: playerRunning
-                  ? context.cardColorSchemeCard
-                  : Colors.transparent,
-              systemNavigationBarIconBrightness: context.iconBrightness,
-            ),
-            child: PopScope(
-              canPop: !settings.openPlaylistDefault! &&
-                  // !(_playerKey.currentState != null &&
-                  //     _playerKey.currentState!.size! > 100) &&
-                  !_tabSelectionController(_controller.index).selectMode,
-              onPopInvokedWithResult: (_, __) {
-                if (_playerKey.currentState != null &&
-                    _playerKey.currentState!.size! > 100) {
-                  _playerKey.currentState!.backToMini();
-                } else if (_tabSelectionController(_controller.index)
-                    .selectMode) {
-                  _tabSelectionController(_controller.index).selectMode = false;
-                } else if (!settings.openPlaylistDefault! &&
-                    Platform.isAndroid) {
-                  // _androidAppRetain
-                  //     .invokeMethod('sendToBackground'); // This doesn't work
-                }
-              },
-              child: Scaffold(
-                backgroundColor: context.surface,
-                body: SafeArea(
-                  // bottom: playerRunning,
-                  child: Stack(children: <Widget>[
-                    ExtendedNestedScrollView(
+    Theme.of(context); // This fixes the color of the tab text.
+    selectionControllers ??= List.generate(
+      controller.length - 1,
+      (_) => SelectionController(),
+    );
+    tabKeys ??= List.generate(controller.length - 1, (_) => UniqueKey());
+    return Selector<AudioState, bool>(
+      selector: (_, audio) => audio.playerRunning,
+      builder: (context, playerRunning, _) {
+        context.originalPadding = MediaQuery.of(context).padding;
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: context.iconBrightness,
+            systemNavigationBarIconBrightness: context.iconBrightness,
+          ),
+          child: PopScope(
+            canPop:
+                // !(_playerKey.currentState != null &&
+                //     _playerKey.currentState!.size! > 100) &&
+                !selectionControllers![controller.index].selectMode,
+            onPopInvokedWithResult: (_, __) {
+              if (_playerKey.currentState != null &&
+                  _playerKey.currentState!.size! > 100) {
+                _playerKey.currentState!.backToMini();
+              } else if (selectionControllers![controller.index].selectMode) {
+                selectionControllers![controller.index].selectMode = false;
+              } else if (Platform.isAndroid) {
+                // _androidAppRetain
+                //     .invokeMethod('sendToBackground'); // This doesn't work
+              }
+            },
+            child: Stack(
+              children: <Widget>[
+                Scaffold(
+                  backgroundColor: context.surface,
+                  body: SafeArea(
+                    child: ExtendedNestedScrollView(
                       pinnedHeaderSliverHeightBuilder: () => 50,
                       // floatHeaderSlivers: true,
                       headerSliverBuilder: (context, innerBoxScrolled) {
-                        // Otherwise this rebuilds every time inner bos scrolls
+                        // Otherwise this rebuilds every time inner box scrolls
                         headerSlivers ??= [
                           SliverToBoxAdapter(
                             child: Column(
@@ -157,22 +159,32 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                       ),
                                       GestureDetector(
                                         onTap: () {
-                                          if (context.brightness ==
-                                              Brightness.light) {
-                                            settings.setTheme = ThemeMode.dark;
-                                            settings.setRealDark = false;
-                                          } else if (settings.realDark!) {
-                                            settings.setTheme = ThemeMode.light;
-                                          } else {
-                                            settings.setRealDark = true;
+                                          final settings =
+                                              context.superSettingState;
+                                          switch ((
+                                            context.brightness,
+                                            settings.trueBlack.get(),
+                                          )) {
+                                            case (Brightness.light, _):
+                                              settings.themeMode.set(
+                                                ThemeMode.dark,
+                                              );
+                                              settings.trueBlack.set(false);
+                                            case (Brightness.dark, false):
+                                              settings.trueBlack.set(true);
+                                            case (Brightness.dark, true):
+                                              settings.themeMode.set(
+                                                ThemeMode.light,
+                                              );
                                           }
                                         },
                                         child: Text(
                                           'Tsacdop',
                                           style: GoogleFonts.quicksand(
-                                              color: context.accentColor,
-                                              textStyle: context
-                                                  .textTheme.headlineLarge),
+                                            color: context.primaryColor,
+                                            textStyle:
+                                                context.textTheme.headlineLarge,
+                                          ),
                                         ),
                                       ),
                                       featureDiscoveryOverlay(
@@ -184,9 +196,10 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                         title: s.featureDiscoveryOMPL,
                                         description: s.featureDiscoveryOMPLDes,
                                         child: Padding(
-                                          padding:
-                                              const EdgeInsets.only(right: 5.0),
-                                          child: PopupMenu(),
+                                          padding: const EdgeInsets.only(
+                                            right: 5.0,
+                                          ),
+                                          child: HomeMenu(),
                                         ),
                                       ),
                                     ],
@@ -197,26 +210,45 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                             ),
                           ),
                           SliverToBoxAdapter(child: ScrollPodcasts()),
-                          SliverPersistentHeader(
-                            delegate: _SliverAppBarDelegate(
-                              TabBar(
-                                isScrollable: true,
-                                indicatorSize: TabBarIndicatorSize.label,
-                                controller: _controller,
-                                labelStyle: context.textTheme.titleMedium,
-                                // labelColor: context.textColor,
-                                dividerHeight: 0,
-                                tabAlignment: TabAlignment.start,
-                                tabs: <Widget>[
-                                  Tab(
-                                    text: s.homeTabMenuRecent,
+                          Selector<SettingState, List<String>>(
+                            selector: (_, settings) => settings.homeTabs
+                                .get()
+                                .map((t) => t.name)
+                                .toList(),
+                            builder: (context, value, _) => SliverToBoxAdapter(
+                              child: Stack(
+                                children: <Widget>[
+                                  Padding(
+                                    padding: .only(right: 32),
+                                    child: TabBar(
+                                      isScrollable: true,
+                                      indicatorSize: TabBarIndicatorSize.label,
+                                      controller: controller,
+                                      labelStyle: context.textTheme.titleMedium,
+                                      // labelColor: context.textColor,
+                                      dividerHeight: 0,
+                                      tabAlignment: TabAlignment.start,
+                                      tabs:
+                                          value
+                                              .map((e) => Tab(text: e))
+                                              .toList()
+                                            ..add(Tab(text: s.downloading)),
+                                    ),
                                   ),
-                                  Tab(
-                                    text: s.homeTabMenuFavotite,
+                                  Align(
+                                    alignment: .centerRight,
+                                    child: featureDiscoveryOverlay(
+                                      context,
+                                      featureId: playlistFeature,
+                                      tapTarget: Icon(Icons.playlist_play),
+                                      backgroundColor: Colors.cyan[500],
+                                      title: s.featureDiscoveryPlaylist,
+                                      description:
+                                          s.featureDiscoveryPlaylistDes,
+                                      buttonColor: Colors.cyan[600],
+                                      child: _PlaylistButton(),
+                                    ),
                                   ),
-                                  Tab(
-                                    text: s.download,
-                                  )
                                 ],
                               ),
                             ),
@@ -226,101 +258,100 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                       },
                       body: TabBarView(
                         // TODO: Add pull to refresh?
-                        controller: _controller,
-                        children: <Widget>[
-                          KeyedSubtree(
-                            key: Key('tab0'),
-                            child: ChangeNotifierProvider<
-                                SelectionController>.value(
-                              value: _recentUpdateSelectionController,
-                              child: Stack(
-                                children: [
-                                  _RecentUpdate(),
-                                  MultiSelectPanelIntegration(),
-                                ],
+                        controller: controller,
+                        children:
+                            homeTabs
+                                .mapIndexed(
+                                  (i, e) => KeyedSubtree(
+                                    key: Key('tab$i'),
+                                    child:
+                                        ChangeNotifierProvider<
+                                          SelectionController
+                                        >.value(
+                                          value: selectionControllers![i],
+                                          child: _HomeTab(
+                                            key: tabKeys![i],
+                                            Stack(
+                                              children: [
+                                                InteractiveEpisodeGrid(
+                                                  noEpisodesWidget:
+                                                      _NoEpisodes(),
+                                                  refreshNotifier:
+                                                      context.podcastState,
+                                                  openPodcast: true,
+                                                  actionBarConfiguration:
+                                                      e.actionBarConfiguration,
+                                                ),
+                                                MultiSelectPanelIntegration(),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                  ),
+                                )
+                                .toList()
+                              ..add(
+                                KeyedSubtree(
+                                  key: Key('downloading'),
+                                  child: _HomeTab(
+                                    CustomScrollView(slivers: [DownloadList()]),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                          KeyedSubtree(
-                            key: Key('tab1'),
-                            child: ChangeNotifierProvider<
-                                SelectionController>.value(
-                              value: _myFavouriteSelectionController,
-                              child: Stack(
-                                children: [
-                                  _MyFavorite(),
-                                  MultiSelectPanelIntegration(),
-                                ],
-                              ),
-                            ),
-                          ),
-                          KeyedSubtree(
-                            key: Key('tab2'),
-                            child: ChangeNotifierProvider<
-                                SelectionController>.value(
-                              value: _myDownloadedSelectionController,
-                              child: Stack(
-                                children: [
-                                  _MyDownload(),
-                                  MultiSelectPanelIntegration(),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
                       ),
                     ),
-                    PlayerWidget(playerKey: _playerKey),
-                  ]),
+                  ),
                 ),
-              ),
+                PlayerWidget(playerKey: _playerKey),
+              ],
             ),
-          );
-        });
+          ),
+        );
+      },
+    );
   }
 }
 
-class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
-  _SliverAppBarDelegate(this._tabBar);
-  final TabBar _tabBar;
+class _HomeTab extends StatefulWidget {
+  final Widget child;
+
+  const _HomeTab(this.child, {super.key});
+  @override
+  _HomeTabState createState() => _HomeTabState();
+}
+
+class _HomeTabState extends State<_HomeTab> with AutomaticKeepAliveClientMixin {
+  //final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
+  //    GlobalKey<RefreshIndicatorState>();
 
   @override
-  double get minExtent => _tabBar.preferredSize.height;
-  @override
-  double get maxExtent => _tabBar.preferredSize.height;
-
-  @override
-  Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
-    final s = context.s;
-    return Container(
-      color: Colors.transparent,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
-              _tabBar,
-              Spacer(),
-              featureDiscoveryOverlay(context,
-                  featureId: playlistFeature,
-                  tapTarget: Icon(Icons.playlist_play),
-                  backgroundColor: Colors.cyan[500],
-                  title: s.featureDiscoveryPlaylist,
-                  description: s.featureDiscoveryPlaylistDes,
-                  buttonColor: Colors.cyan[600],
-                  child: _PlaylistButton()),
-            ],
-          ),
-        ],
-      ),
-    );
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
   }
 
   @override
-  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
-    return true;
+  bool get wantKeepAlive => true;
+}
+
+class _NoEpisodes extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        Icon(
+          LineIcons.alternateCloudDownload,
+          size: 80,
+          color: Colors.grey[500],
+        ),
+        Padding(padding: EdgeInsets.symmetric(vertical: 10)),
+        Text(
+          context.s.noEpisodesFound,
+          style: TextStyle(color: Colors.grey[500]),
+        ),
+      ],
+    );
   }
 }
 
@@ -329,237 +360,90 @@ class _PlaylistButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.s;
     final audio = context.audioState;
-    return PopupMenuButton<int>(
-      menuPadding: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(10))),
-      elevation: 1,
-      icon: Icon(Icons.playlist_play),
-      color: context.cardColorSchemeCard,
-      tooltip: s.menu,
-      clipBehavior: Clip.antiAlias,
-      constraints: BoxConstraints.tightFor(width: 160),
-      itemBuilder: (context) => [
-        if (!audio.playerRunning && audio.episodeBrief != null)
+    return ColoredBox(
+      color: context.surface,
+      child: PopupMenuButton<int>(
+        menuPadding: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(10)),
+        ),
+        elevation: 1,
+        icon: Icon(Icons.playlist_play, size: 24),
+        tooltip: s.menu,
+        clipBehavior: Clip.antiAlias,
+        constraints: BoxConstraints.tightFor(width: 160),
+        itemBuilder: (context) => [
+          if (!audio.playerRunning && audio.episodeBrief != null)
+            PopupMenuItem(
+              value: 1,
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                spacing: 2,
+                children: <Widget>[
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundImage: audio.episodeBrief!.avatarImage,
+                    child: Icon(Icons.play_arrow, color: Colors.white),
+                  ),
+                  Text(
+                    (audio.historyPosition ~/ 1000).toTime,
+                    textAlign: TextAlign.center,
+                  ),
+                  Text(
+                    audio.episodeBrief!.title,
+                    maxLines: 2,
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          if (!audio.playerRunning && audio.episodeBrief != null)
+            PopupMenuDivider(thickness: 1, height: 1),
           PopupMenuItem(
-            value: 1,
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              spacing: 2,
+            value: 0,
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
               children: <Widget>[
-                CircleAvatar(
-                  radius: 20,
-                  backgroundImage: audio.episodeBrief!.avatarImage,
-                  child: Icon(Icons.play_arrow, color: Colors.white),
-                ),
-                Text(
-                  (audio.historyPosition ~/ 1000).toTime,
-                  textAlign: TextAlign.center,
-                ),
-                Text(
-                  audio.episodeBrief!.title,
-                  maxLines: 2,
-                  textAlign: TextAlign.center,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                Icon(Icons.playlist_play),
+                SizedBox(width: 10),
+                Text(s.homeMenuPlaylist),
               ],
             ),
           ),
-        if (!audio.playerRunning && audio.episodeBrief != null)
-          PopupMenuDivider(thickness: 1, height: 1),
-        PopupMenuItem(
-          value: 0,
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: <Widget>[
-              Icon(Icons.playlist_play),
-              SizedBox(width: 10),
-              Text(s.homeMenuPlaylist),
-            ],
-          ),
-        ),
-        // PopupMenuItem(
-        //   value: 2,
-        //   child: Container(
-        //     padding: EdgeInsets.only(left: 10),
-        //     child: Row(
-        //       children: <Widget>[
-        //         Icon(Icons.history),
-        //         Padding(
-        //           padding: const EdgeInsets.symmetric(horizontal: 5.0),
-        //         ),
-        //         Text(s.settingsHistory),
-        //       ],
-        //     ),
-        //   ),
-        // ),
-        // PopupMenuDivider(
-        //   height: 1,
-        // ),
-      ],
-      onSelected: (value) async {
-        switch (value) {
-          case 0:
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => PlaylistHome(),
-              ),
-            );
-          case 1:
-            await audio.playFromLastPosition();
-            await Navigator.maybePop<int>(context);
-        }
-      },
-    );
-  }
-}
-
-class _RecentUpdate extends StatefulWidget {
-  @override
-  _RecentUpdateState createState() => _RecentUpdateState();
-}
-
-class _RecentUpdateState extends State<_RecentUpdate>
-    with AutomaticKeepAliveClientMixin {
-  //final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
-  //    GlobalKey<RefreshIndicatorState>();
-
-  @override
-  Widget build(BuildContext context) {
-    super.build(context);
-    return InteractiveEpisodeGrid(
-      noEpisodesWidget: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Icon(LineIcons.alternateCloudDownload,
-              size: 80, color: Colors.grey[500]),
-          Padding(padding: EdgeInsets.symmetric(vertical: 10)),
-          Text(
-            context.s.noEpisodeRecent,
-            style: TextStyle(color: Colors.grey[500]),
-          )
+          // PopupMenuItem(
+          //   value: 2,
+          //   child: Container(
+          //     padding: EdgeInsets.only(left: 10),
+          //     child: Row(
+          //       children: <Widget>[
+          //         Icon(Icons.history),
+          //         Padding(
+          //           padding: const EdgeInsets.symmetric(horizontal: 5.0),
+          //         ),
+          //         Text(s.settingsHistory),
+          //       ],
+          //     ),
+          //   ),
+          // ),
+          // PopupMenuDivider(
+          //   height: 1,
+          // ),
         ],
+        onSelected: (value) async {
+          switch (value) {
+            case 0:
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => PlaylistHome()),
+              );
+            case 1:
+              await audio.playFromLastPosition();
+              await Navigator.maybePop<int>(context);
+          }
+        },
       ),
-      refreshNotifier: context.podcastState,
-      openPodcast: true,
-      layoutKey: recentLayoutKey,
     );
   }
-
-  @override
-  bool get wantKeepAlive => true;
-}
-
-class _MyFavorite extends StatefulWidget {
-  @override
-  _MyFavoriteState createState() => _MyFavoriteState();
-}
-
-class _MyFavoriteState extends State<_MyFavorite>
-    with AutomaticKeepAliveClientMixin {
-  @override
-  Widget build(BuildContext context) {
-    super.build(context);
-    return InteractiveEpisodeGrid(
-      noEpisodesWidget: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Icon(LineIcons.heartbeat, size: 80, color: Colors.grey[500]),
-          Padding(padding: EdgeInsets.symmetric(vertical: 10)),
-          Text(
-            context.s.noEpisodeFavorite,
-            style: TextStyle(color: Colors.grey[500]),
-          )
-        ],
-      ),
-      openPodcast: true,
-      actionBarWidgetsFirstRow: const [
-        ActionBarDropdownSortBy(0, 0),
-        ActionBarSwitchSortOrder(0, 1),
-        ActionBarDropdownGroups(0, 2),
-        ActionBarSpacer(0, 3),
-        ActionBarFilterLiked(0, 4),
-        ActionBarSwitchLayout(0, 5),
-        ActionBarSwitchSelectMode(0, 6),
-      ],
-      actionBarWidgetsSecondRow: [],
-      actionBarSortByItems: const [
-        Sorter.likedDate,
-        Sorter.pubDate,
-        Sorter.enclosureSize,
-        Sorter.enclosureDuration
-      ],
-      actionBarSortBy: Sorter.likedDate,
-      actionBarFilterLiked: true,
-      actionBarFilterDisplayVersion: null,
-      actionBarFilterPlayed: null,
-      actionBarFilterPlayedOverride: true,
-      layoutKey: favLayoutKey,
-    );
-  }
-
-  @override
-  bool get wantKeepAlive => true;
-}
-
-class _MyDownload extends StatefulWidget {
-  @override
-  _MyDownloadState createState() => _MyDownloadState();
-}
-
-class _MyDownloadState extends State<_MyDownload>
-    with AutomaticKeepAliveClientMixin {
-  @override
-  Widget build(BuildContext context) {
-    super.build(context);
-    return InteractiveEpisodeGrid(
-      additionalSliversList: [DownloadList()],
-      sliverInsertIndicies: (
-        actionBarIndex: 0,
-        loadingIndicatorIndex: 1,
-        gridIndex: 3
-      ),
-      noEpisodesWidget: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Icon(LineIcons.download, size: 80, color: Colors.grey[500]),
-          Padding(padding: EdgeInsets.symmetric(vertical: 10)),
-          Text(
-            context.s.noEpisodeDownload,
-            style: TextStyle(color: Colors.grey[500]),
-          )
-        ],
-      ),
-      openPodcast: true,
-      refreshNotifier: context.downloadState,
-      actionBarWidgetsFirstRow: const [
-        ActionBarDropdownSortBy(0, 0),
-        ActionBarSwitchSortOrder(0, 1),
-        ActionBarDropdownGroups(0, 2),
-        ActionBarSpacer(0, 3),
-        ActionBarFilterPlayed(0, 4),
-        ActionBarFilterDownloaded(0, 5),
-        ActionBarSwitchLayout(0, 6),
-        ActionBarSwitchSelectMode(0, 7),
-      ],
-      actionBarWidgetsSecondRow: [],
-      actionBarSortByItems: const [
-        Sorter.downloadDate,
-        Sorter.pubDate,
-        Sorter.enclosureSize,
-        Sorter.enclosureDuration
-      ],
-      actionBarSortBy: Sorter.downloadDate,
-      actionBarFilterDownloaded: true,
-      actionBarFilterDisplayVersion: null,
-      actionBarFilterPlayed: null,
-      actionBarFilterPlayedOverride: true,
-      layoutKey: favLayoutKey,
-    );
-  }
-
-  @override
-  bool get wantKeepAlive => true;
 }

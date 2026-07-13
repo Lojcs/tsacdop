@@ -6,13 +6,62 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
-import '../local_storage/key_value_storage.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/podcast_state.dart';
 
 enum GpodderSyncStatus { none, success, fail, authError }
+
+const String gpodderApiKey = 'gpodderApiKey';
+const String gpodderAddKey = 'gpodderAddKey';
+const String gpodderRemoveKey = 'gpodderRemoveKey';
+const String gpodderSyncStatusKey = 'gpodderSyncStatusKey';
+const String gpodderSyncDateTimeKey = 'gpodderSyncDateTimeKey';
+const String gpodderRemoteAddKey = 'gpodderRemoteAddKey';
+const String gpodderRemoteRemoveKey = 'gpodderRemoteRemoveKey';
+
+/// Remnants of KeyValueStorage used with gpodder.
+class _KeyValueStorage {
+  final String key;
+  const _KeyValueStorage(this.key);
+
+  Future<bool> saveInt(int? setting) async {
+    if (setting != null) {
+      var prefs = await SharedPreferences.getInstance();
+      return prefs.setInt(key, setting);
+    } else {
+      return Future.value(false);
+    }
+  }
+
+  Future<bool> saveStringList(List<String?>? playList) async {
+    if (playList != null) {
+      var prefs = await SharedPreferences.getInstance();
+      return prefs.setStringList(key, playList.nonNulls.toList());
+    } else {
+      return Future.value(false);
+    }
+  }
+
+  Future<List<String>> getStringList() async {
+    var prefs = await SharedPreferences.getInstance();
+    if (prefs.getStringList(key) == null) {
+      await prefs.setStringList(key, []);
+    }
+    return prefs.getStringList(key) ?? [];
+  }
+
+  Future<void> addList(List<String?> addList) async {
+    final list = await getStringList();
+    await saveStringList([...list, ...addList]);
+  }
+
+  Future<void> clearList() async {
+    await saveStringList([]);
+  }
+}
 
 /// Remnants from old GroupList that deal with gpodder sync. For future reference.
 /// Some are rewritten for compatibility with [PodcastState].
@@ -22,11 +71,11 @@ class GroupListRemnants {
   }
   late PodcastState _pState;
 
-  final _loginInfp = KeyValueStorage(gpodderApiKey);
-  final _addStorage = KeyValueStorage(gpodderAddKey);
-  final _removeStorage = KeyValueStorage(gpodderRemoveKey);
-  final _remoteAddStorage = KeyValueStorage(gpodderRemoteAddKey);
-  final _remoteRemoveStorage = KeyValueStorage(gpodderRemoteRemoveKey);
+  final _loginInfp = _KeyValueStorage(gpodderApiKey);
+  final _addStorage = _KeyValueStorage(gpodderAddKey);
+  final _removeStorage = _KeyValueStorage(gpodderRemoveKey);
+  final _remoteAddStorage = _KeyValueStorage(gpodderRemoteAddKey);
+  final _remoteRemoveStorage = _KeyValueStorage(gpodderRemoteRemoveKey);
   Future<void> gpodderSyncNow() async {
     final addList = await _remoteAddStorage.getStringList();
     final removeList = await _remoteRemoveStorage.getStringList();
@@ -66,32 +115,36 @@ class GroupListRemnants {
 }
 
 class Gpodder {
-  final _dio = Dio(BaseOptions(
-    connectTimeout: Duration(seconds: 30),
-    receiveTimeout: Duration(seconds: 90),
-    sendTimeout: Duration(seconds: 90),
-  ));
-  final _storage = KeyValueStorage(gpodderApiKey);
-  final _addStorage = KeyValueStorage(gpodderAddKey);
-  final _removeStorage = KeyValueStorage(gpodderRemoveKey);
-  final _remoteAddStorage = KeyValueStorage(gpodderRemoteAddKey);
-  final _remoteRemoveStorage = KeyValueStorage(gpodderRemoteRemoveKey);
-  final _dateTimeStorage = KeyValueStorage(gpodderSyncDateTimeKey);
-  final _statusStorage = KeyValueStorage(gpodderSyncStatusKey);
+  final _dio = Dio(
+    BaseOptions(
+      connectTimeout: Duration(seconds: 30),
+      receiveTimeout: Duration(seconds: 90),
+      sendTimeout: Duration(seconds: 90),
+    ),
+  );
+  final _storage = _KeyValueStorage(gpodderApiKey);
+  final _addStorage = _KeyValueStorage(gpodderAddKey);
+  final _removeStorage = _KeyValueStorage(gpodderRemoveKey);
+  final _remoteAddStorage = _KeyValueStorage(gpodderRemoteAddKey);
+  final _remoteRemoveStorage = _KeyValueStorage(gpodderRemoteRemoveKey);
+  final _dateTimeStorage = _KeyValueStorage(gpodderSyncDateTimeKey);
+  final _statusStorage = _KeyValueStorage(gpodderSyncStatusKey);
 
   final _baseUrl = "https://gpodder.net";
 
   Future<void> _initDio() async {
     final dir = await getApplicationDocumentsDirectory();
-    var cookieJar =
-        PersistCookieJar(storage: FileStorage("${dir.path}/.cookies/"));
+    var cookieJar = PersistCookieJar(
+      storage: FileStorage("${dir.path}/.cookies/"),
+    );
     _dio.interceptors.add(CookieManager(cookieJar));
   }
 
   Future<int?> login({String? username, String? password}) async {
     final dir = await getApplicationDocumentsDirectory();
-    var cookieJar =
-        PersistCookieJar(storage: FileStorage("${dir.path}/.cookies/"));
+    var cookieJar = PersistCookieJar(
+      storage: FileStorage("${dir.path}/.cookies/"),
+    );
     cookieJar.delete(Uri.parse(_baseUrl));
     _dio.interceptors.add(CookieManager(cookieJar));
     final basicAuth =
@@ -99,9 +152,10 @@ class Gpodder {
     int? status;
     Response response;
     try {
-      response = await _dio.post('$_baseUrl/api/2/auth/$username/login.json',
-          options:
-              Options(headers: <String, String>{'authorization': basicAuth}));
+      response = await _dio.post(
+        '$_baseUrl/api/2/auth/$username/login.json',
+        options: Options(headers: <String, String>{'authorization': basicAuth}),
+      );
       status = response.statusCode;
     } catch (e) {
       developer.log(e.toString(), name: 'gpoderr login error');
@@ -135,8 +189,9 @@ class Gpodder {
 
   Future<void> _initService() async {
     final dir = await getApplicationDocumentsDirectory();
-    var cookieJar =
-        PersistCookieJar(storage: FileStorage("${dir.path}/.cookies/"));
+    var cookieJar = PersistCookieJar(
+      storage: FileStorage("${dir.path}/.cookies/"),
+    );
     cookieJar.delete(Uri.parse(_baseUrl));
     await _storage.clearList();
     await _addStorage.clearList();
@@ -149,9 +204,7 @@ class Gpodder {
 
   Future<int?> checkLogin(String username) async {
     await _initDio();
-    var response = await _dio.post(
-      '$_baseUrl/api/2/auth/$username/login.json',
-    );
+    var response = await _dio.post('$_baseUrl/api/2/auth/$username/login.json');
     final status = response.statusCode;
     return status;
   }
@@ -162,11 +215,10 @@ class Gpodder {
     final androidInfo = await DeviceInfoPlugin().androidInfo;
     int? status = 0;
     try {
-      var response = await _dio
-          .post("$_baseUrl/api/2/devices/$username/$deviceId.json", data: {
-        "caption": "Tsacdop on ${androidInfo.model}",
-        "type": "mobile"
-      });
+      var response = await _dio.post(
+        "$_baseUrl/api/2/devices/$username/$deviceId.json",
+        data: {"caption": "Tsacdop on ${androidInfo.model}", "type": "mobile"},
+      );
       status = response.statusCode;
     } catch (e) {
       developer.log(e.toString(), name: 'gpodder update device error');
@@ -184,9 +236,7 @@ class Gpodder {
     Response response;
     await _initDio();
     try {
-      response = await _dio.get(
-        '$_baseUrl/subscriptions/$username.opml',
-      );
+      response = await _dio.get('$_baseUrl/subscriptions/$username.opml');
     } catch (e) {
       developer.log(e.toString(), name: 'gpodder update podcasts error');
       return '';
@@ -210,8 +260,9 @@ class Gpodder {
     int? status;
     try {
       final response = await _dio.put(
-          '$_baseUrl/subscriptions/$username/$deviceId.txt',
-          data: subscriptions);
+        '$_baseUrl/subscriptions/$username/$deviceId.txt',
+        data: subscriptions,
+      );
       status = response.statusCode;
     } catch (e) {
       developer.log(e.toString(), name: 'gpodder update podcasts error');
@@ -232,8 +283,9 @@ class Gpodder {
     await _initDio();
     try {
       response = await _dio.get(
-          "$_baseUrl/api/2/subscriptions/$username/$deviceId.json",
-          queryParameters: {'since': timeStamp});
+        "$_baseUrl/api/2/subscriptions/$username/$deviceId.json",
+        queryParameters: {'since': timeStamp},
+      );
       status = response.statusCode;
     } catch (e) {
       developer.log(e.toString(), name: 'gpodder update podcasts error');
@@ -267,8 +319,9 @@ class Gpodder {
     Response response;
     try {
       response = await _dio.post(
-          '$_baseUrl/api/2/subscriptions/$username/$deviceId.json',
-          data: {'add': addList, 'remove': removeList});
+        '$_baseUrl/api/2/subscriptions/$username/$deviceId.json',
+        data: {'add': addList, 'remove': removeList},
+      );
       status = response.statusCode;
     } catch (e) {
       if (status == 401) {
@@ -285,8 +338,11 @@ class Gpodder {
       await _statusStorage.saveInt(1);
       Map changes = jsonDecode(response.toString());
       final timeStamp = changes['timestamp'] as int;
-      await _storage
-          .saveStringList([username, deviceId, (timeStamp + 1).toString()]);
+      await _storage.saveStringList([
+        username,
+        deviceId,
+        (timeStamp + 1).toString(),
+      ]);
     }
     return status;
   }

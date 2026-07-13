@@ -1,24 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tuple/tuple.dart' as tuple;
 
 import '../state/audio_state.dart';
 import '../util/extension_helper.dart';
 
 class HidePlayerRoute extends ModalRoute<void> {
   HidePlayerRoute(this.openPage, [this.transitionPage])
-      : transitionDuration = const Duration(milliseconds: 300);
+    : transitionDuration = const Duration(milliseconds: 300);
   final Widget openPage;
   final Widget? transitionPage;
 
   @override
-  Widget buildPage(BuildContext context, Animation<double> animation,
-      Animation<double> secondaryAnimation) {
+  Widget buildPage(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+  ) {
     Key pageKey = GlobalObjectKey(openPage);
-    return Selector<AudioPlayerNotifier, tuple.Tuple2<bool, PlayerHeight?>>(
-      selector: (_, audio) =>
-          tuple.Tuple2(audio.playerRunning, audio.playerHeight),
-      builder: (_, data, __) => Align(
+    return Selector<AudioState, bool>(
+      selector: (_, audio) => audio.playerRunning,
+      builder: (context, playerRunning, __) => Align(
         alignment: Alignment.topLeft,
         child: AnimatedBuilder(
           animation: animation,
@@ -31,16 +32,16 @@ class HidePlayerRoute extends ModalRoute<void> {
             //   curve: Curves.fastOutSlowIn,
             //   reverseCurve: Curves.fastOutSlowIn.flipped,
             // );
-            final playerHeight = data.item2!.height;
-            final playerRunning = data.item1;
+            final playerHeight = 70;
             return Transform.translate(
               offset: Offset(
-                  context.width *
-                      (1 - Curves.easeOut.transform(animation.value)),
-                  0),
+                context.width * (1 - Curves.easeOut.transform(animation.value)),
+                0,
+              ),
               child: Container(
                 width: context.width,
-                height: context.height -
+                height:
+                    context.height -
                     (playerRunning
                         ? playerHeight + MediaQuery.of(context).padding.bottom
                         : 0),
