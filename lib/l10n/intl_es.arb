@@ -1,860 +1,608 @@
 {
-  "@@locale": "es",
-  "add": "Añadir",
-  "@add": {
-    "description": "Subscribe new podcast"
-  },
-  "addEpisodeGroup": "{count, plural, zero{} one{{count} episodio de {groupName} añadido a la lista} other{{count} episodios en {groupName} añadidos a la lista}}",
-  "@addEpisodeGroup": {
-    "placeholders": {
-      "groupName": {}
-    }
-  },
-  "addNewEpisodeAll": "{count, plural, zero{} one{{count} episodio añadido a la lista} other{{count} episodios añadidos a la lista}}",
-  "@addNewEpisodeAll": {},
-  "addNewEpisodeTooltip": "Añade nuevos episodios a la lista de reproducción",
-  "@addNewEpisodeTooltip": {},
-  "addSomeGroups": "Añade algún grupo",
-  "@addSomeGroups": {
-    "description": "Please add new groups"
-  },
-  "all": "Todos",
-  "@all": {},
-  "autoDownload": "Auto-descargar",
-  "@autoDownload": {},
-  "back": "Atras",
-  "@back": {},
-  "boostVolume": "Aumentar volumen",
-  "@boostVolume": {
-    "description": "Boost volume in player widget."
-  },
-  "buffering": "Cargando ",
-  "@buffering": {},
-  "cancel": "CANCELAR",
-  "@cancel": {},
-  "cellularConfirm": "Alerta de datos móviles ",
-  "@cellularConfirm": {},
-  "cellularConfirmDes": "¿Seguro que quieres usar datos móviles para realizar descargas?",
-  "@cellularConfirmDes": {},
-  "changeLayout": "Cambiar diseño",
-  "@changeLayout": {},
-  "changelog": "Reporte de cambios",
-  "@changelog": {},
-  "chooseA": "Escoger un",
-  "@chooseA": {},
-  "clear": "Limpiar",
-  "@clear": {},
-  "clearAll": "Limipar todo",
-  "@clearAll": {
-    "description": "Clear all episodes in playlist."
-  },
-  "color": "color",
-  "@color": {},
-  "confirm": "ACEPTAR",
-  "@confirm": {},
-  "createNewPlaylist": "Nueva playlist",
-  "@createNewPlaylist": {},
-  "darkMode": "Modo oscuro",
-  "@darkMode": {},
-  "daysAgo": "{count, plural, zero{Hoy} one{Hace {count} dia} other{Hace {count} dias}}",
-  "@daysAgo": {},
-  "daysCount": "{count, plural, zero{Nunca} one{{count} dia} other{{count} dias}}",
-  "@daysCount": {},
-  "defaultQueueReminder": "Esta es la cola por defecto, no puede removerse",
-  "@defaultQueueReminder": {
-    "description": "Remind user that default queue can't be removed."
-  },
-  "defaultSearchEngine": "Motor de busqueda de podcasts por defecto",
-  "@defaultSearchEngine": {},
-  "defaultSearchEngineDes": "Escoge el motor de busqueda de podcasts por defecto ",
-  "@defaultSearchEngineDes": {
-    "description": "Choose the default podcast search engine"
-  },
-  "delete": "Eliminar",
-  "@delete": {},
-  "developer": "Desarrollador",
-  "@developer": {
-    "description": "Can also translate to About me"
-  },
-  "dismiss": "Minimizar",
-  "@dismiss": {},
-  "done": "Hecho",
-  "@done": {},
-  "download": "Descargar",
-  "@download": {},
-  "downloaded": "Descargados",
-  "@downloaded": {},
-  "downloadRemovedToast": "Descarga removida",
-  "@downloadRemovedToast": {},
-  "downloadStart": "Descargando",
-  "@downloadStart": {
-    "description": "Toast of downloading"
-  },
-  "editGroupName": "Editar nombre del grupo",
-  "@editGroupName": {},
-  "endOfEpisode": "Fin del episodio",
-  "@endOfEpisode": {},
-  "episode": "{count, plural, zero{} one{Episodio} other{Episodios}}",
-  "@episode": {},
-  "fastForward": "Avanzar",
-  "@fastForward": {},
-  "fastRewind": "Retroceder",
-  "@fastRewind": {},
-  "featureDiscoveryEditGroup": "Toca para editar grupo",
-  "@featureDiscoveryEditGroup": {},
-  "featureDiscoveryEditGroupDes": "Puedes cambiar el nombre del grupo o eliminar el grupo aquí, el grupo Home no puede ser editado ni borrado",
-  "@featureDiscoveryEditGroupDes": {},
-  "featureDiscoveryEpisode": "Vista de episodios",
-  "@featureDiscoveryEpisode": {},
-  "featureDiscoveryEpisodeDes": "Puedes mantener presionado para reproducir o añadir un episodio a la lista de reproducción ",
-  "@featureDiscoveryEpisodeDes": {},
-  "featureDiscoveryEpisodeTitle": "Mantén presionado para reproducir episodio instantáneamente",
-  "@featureDiscoveryEpisodeTitle": {},
-  "featureDiscoveryGroup": "Toca para añadir grupo",
-  "@featureDiscoveryGroup": {},
-  "featureDiscoveryGroupDes": "El grupo por defecto para nuevos podcasts es Home, puedes crear nuevos grupos y mover podcasts ahí. Puedes poner un podcast en varios grupos",
-  "@featureDiscoveryGroupDes": {},
-  "featureDiscoveryGroupPodcast": "Mantén presionado para re-ordenar podcasts",
-  "@featureDiscoveryGroupPodcast": {},
-  "featureDiscoveryGroupPodcastDes": "Puedes tocar para ver mas opciones, o mantener presionado para ordenar podcasts en grupos",
-  "@featureDiscoveryGroupPodcastDes": {},
-  "featureDiscoveryOMPL": "Toca para importar un OPML",
-  "@featureDiscoveryOMPL": {},
-  "featureDiscoveryOMPLDes": "Puedes importar archivos OPML, abre los ajustes o refresca todos los podcasts aquí ",
-  "@featureDiscoveryOMPLDes": {},
-  "featureDiscoveryPlaylist": "Toca para abrir lista de reproducción ",
-  "@featureDiscoveryPlaylist": {},
-  "featureDiscoveryPlaylistDes": "Puedes añadir episodios a la lista de reproducción. El episodio se removerá automáticamente de la lista una vez reproducido ",
-  "@featureDiscoveryPlaylistDes": {},
-  "featureDiscoveryPodcast": "Vista",
-  "@featureDiscoveryPodcast": {},
-  "featureDiscoveryPodcastDes": "Puedes tocar \"Ver Todos\" para añadir grupos u organizar podcasts ",
-  "@featureDiscoveryPodcastDes": {},
-  "featureDiscoveryPodcastTitle": "Desplazate verticalmente para cambiar entre grupos",
-  "@featureDiscoveryPodcastTitle": {},
-  "featureDiscoverySearch": "Toca para buscar podcast",
-  "@featureDiscoverySearch": {},
-  "featureDiscoverySearchDes": "Puedes buscar podcasts, palabras clave o enlaces RSS para añadir nuevos podcasts",
-  "@featureDiscoverySearchDes": {},
-  "feedbackEmail": "Escríbeme ",
-  "@feedbackEmail": {},
-  "feedbackGithub": "Reportar problema",
-  "@feedbackGithub": {},
-  "feedbackPlay": "Calificar en Play Store",
-  "@feedbackPlay": {
-    "description": "Rate on Google Play Store.\nUser can tap to open play link."
-  },
-  "feedbackTelegram": "Unirse a grupo",
-  "@feedbackTelegram": {},
-  "filter": "Filtrar",
-  "@filter": {},
-  "fonts": "Tipografías",
-  "@fonts": {},
-  "fontStyle": "Estilo de fuente",
-  "@fontStyle": {},
-  "from": "De {time}",
-  "@from": {
-    "placeholders": {
-      "time": {}
-    }
-  },
-  "goodNight": "Buenas noches",
-  "@goodNight": {},
-  "gpodderLoginDes": "Felicidades, has unido tu cuenta gpodder.net exitosamente. Tsacdop sincronizara tus subscripciones en tu dispositivo con tu cuenta gpodder.net.",
-  "@gpodderLoginDes": {},
-  "groupExisted": "El grupo ya existe",
-  "@groupExisted": {
-    "description": "Group name validate in add group dialog. User can't add group with same name."
-  },
-  "groupFilter": "Filtro de grupo",
-  "@groupFilter": {},
-  "groupRemoveConfirm": "¿Estas seguro de que quieres remover este grupo? Los podcasts serán movidos al grupo Home",
-  "@groupRemoveConfirm": {},
-  "groups": "{count, plural, zero{Grupo} one{Grupo} other{Grupos}}",
-  "@groups": {},
-  "hideListenedSetting": "Ocultar escuchados",
-  "@hideListenedSetting": {},
-  "hidePodcastDiscovery": "Ocultar descubrimiento de podcasts",
-  "@hidePodcastDiscovery": {
-    "description": "Hide podcast discovery"
-  },
-  "hidePodcastDiscoveryDes": "Ocultar descubrimiento de pocasts en el motor de busqueda",
-  "@hidePodcastDiscoveryDes": {},
-  "homeGroupsSeeAll": "Ver todo",
-  "@homeGroupsSeeAll": {},
-  "homeMenuPlaylist": "Lista de reproducción",
-  "@homeMenuPlaylist": {},
-  "homeSubMenuSortBy": "Ordenar por",
-  "@homeSubMenuSortBy": {},
-  "homeTabMenuFavotite": "Favoritos",
-  "@homeTabMenuFavotite": {},
-  "homeTabMenuRecent": "Recientes",
-  "@homeTabMenuRecent": {},
-  "homeToprightMenuAbout": "Acerca de",
-  "@homeToprightMenuAbout": {},
-  "homeToprightMenuImportOMPL": "Importar OPML",
-  "@homeToprightMenuImportOMPL": {},
-  "homeToprightMenuRefreshAll": "Refrescar todo",
-  "@homeToprightMenuRefreshAll": {},
-  "hostedOn": "Alojado en {host}",
-  "@hostedOn": {
-    "placeholders": {
-      "host": {}
-    }
-  },
-  "hoursAgo": "{count, plural, zero{Justo ahora} one{Hace {count} hora} other{Hace {count} horas}}",
-  "@hoursAgo": {},
-  "hoursCount": "{count, plural, zero{Cero horas} one{{count} hora} other{{count} horas}}",
-  "@hoursCount": {},
-  "import": "Importar",
-  "@import": {},
-  "intergateWith": "Integrar con {service}",
-  "@intergateWith": {
-    "description": "Integrate with",
-    "placeholders": {
-      "service": {}
-    }
-  },
-  "introFourthPage": "Puedes mantener presionado un episodio para realizar acciones rápidas",
-  "@introFourthPage": {},
-  "introSecondPage": "Suscribete a podcasts buscándolos, o importando un archivo OPML",
-  "@introSecondPage": {},
-  "introThirdPage": "Puedes crear un nuevo grupo de podcasts",
-  "@introThirdPage": {},
-  "invalidName": "Nombre de usuario invalido",
-  "@invalidName": {},
-  "lastUpdate": "Ultima actualización",
-  "@lastUpdate": {
-    "description": "gpodder.net update"
-  },
-  "later": "Despues",
-  "@later": {},
-  "lightMode": "Modo claro",
-  "@lightMode": {},
-  "like": "Me gusta",
-  "@like": {},
-  "liked": "Me gusta",
-  "@liked": {},
-  "likeDate": "Fecha en que Me Gusto",
-  "@likeDate": {
-    "description": "Favorite tab, sort by like date."
-  },
-  "listen": "Escuchar",
-  "@listen": {},
-  "listened": "Escuchado",
-  "@listened": {},
-  "loadMore": "Cargar mas",
-  "@loadMore": {},
-  "loggedInAs": "Sesión iniciado como {userName}",
-  "@loggedInAs": {
-    "description": "gpodder.net",
-    "placeholders": {
-      "userName": {}
-    }
-  },
-  "login": "Iniciar sesión",
-  "@login": {
-    "description": "gpodder.net login"
-  },
-  "loginFailed": "Inicio de sesión fallido",
-  "@loginFailed": {},
-  "logout": "Cerrar sesión",
-  "@logout": {
-    "description": "gpodder.net logout"
-  },
-  "mark": "Completado",
-  "@mark": {
-    "description": "In listen history page, if a episode is marked as listened."
-  },
-  "markConfirm": "Confirmar marcado",
-  "@markConfirm": {},
-  "markConfirmContent": "¿Marcar todos los episodios como escuchados?",
-  "@markConfirmContent": {},
-  "markListened": "Marcar escuchados",
-  "@markListened": {},
-  "markNotListened": "Marcar no escuchados",
-  "@markNotListened": {},
-  "menu": "Menú",
-  "@menu": {},
-  "menuAllPodcasts": "Todos los podcasts",
-  "@menuAllPodcasts": {},
-  "menuMarkAllListened": "Marcar todo como escuchado",
-  "@menuMarkAllListened": {},
-  "menuViewRSS": "Visitar feed RSS",
-  "@menuViewRSS": {},
-  "menuVisitSite": "Visitar sitio web",
-  "@menuVisitSite": {},
-  "minsAgo": "{count, plural, zero{Justo Ahora} one{Hace {count} minuto } other{Hace {count} minutos}}",
-  "@minsAgo": {},
-  "minsCount": "{count, plural, zero{0 minutos} one{{count} minuto} other{{count} minutos}}",
-  "@minsCount": {},
-  "network": "Red",
-  "@network": {},
-  "neverAutoUpdate": "Desactivar actualizaciones automaticas ",
-  "@neverAutoUpdate": {
-    "description": "Never auto  update in podcast settings."
-  },
-  "newestFirst": "Mas recientes primero",
-  "@newestFirst": {},
-  "newGroup": "Crear grupo nuevo",
-  "@newGroup": {},
-  "next": "Siguiente",
-  "@next": {},
-  "noEpisodeDownload": "Aun no hay episodios decargados",
-  "@noEpisodeDownload": {},
-  "noEpisodeFavorite": "Aun no hay episodios recolectados",
-  "@noEpisodeFavorite": {},
-  "noEpisodeRecent": "Aun no hay episodios recibidos",
-  "@noEpisodeRecent": {},
-  "noPodcastGroup": "No hay podcasts en este grupo",
-  "@noPodcastGroup": {},
-  "noShownote": "Aun no hay notas disponibles para este episodio",
-  "@noShownote": {
-    "description": "Means this episode have no show notes."
-  },
-  "notificaitonFatch": "Obtener datos {title}",
-  "@notificaitonFatch": {},
-  "notificationNetworkError": "Suscripción fallida, error de red {title}",
-  "@notificationNetworkError": {
-    "placeholders": {
-      "title": {}
-    }
-  },
-  "notificationSetting": "Panel de notificaciones",
-  "@notificationSetting": {},
-  "notificationSubscribe": "Suscribir {title}",
-  "@notificationSubscribe": {
-    "placeholders": {
-      "title": {}
-    }
-  },
-  "notificationSubscribeExisted": "Suscripción fallida, podcast ya existe {title}",
-  "@notificationSubscribeExisted": {
-    "placeholders": {
-      "title": {}
-    }
-  },
-  "notificationSuccess": "Suscripción exitosa",
-  "@notificationSuccess": {
-    "placeholders": {
-      "title": {}
-    }
-  },
-  "notificationUpdate": "Actualizar {title}",
-  "@notificationUpdate": {
-    "placeholders": {
-      "title": {}
-    }
-  },
-  "notificationUpdateError": "Error de actualización {title}",
-  "@notificationUpdateError": {
-    "placeholders": {
-      "title": {}
-    }
-  },
-  "oldestFirst": "Mas antiguos primero",
-  "@oldestFirst": {},
-  "passwdRequired": "Contraseña requerida",
-  "@passwdRequired": {},
-  "password": "Contraseña",
-  "@password": {},
-  "pause": "Pausa",
-  "@pause": {},
-  "play": "Reproducir",
-  "@play": {},
-  "playback": "Control de reproducción",
-  "@playback": {},
-  "player": "Reproductor",
-  "@player": {},
-  "playerHeightMed": "Medio",
-  "@playerHeightMed": {},
-  "playerHeightShort": "Bajo",
-  "@playerHeightShort": {},
-  "playerHeightTall": "Alto",
-  "@playerHeightTall": {},
-  "playing": "Reproduciendo",
-  "@playing": {},
-  "playlistExisted": "El nombre de la playlist ya esta en uso",
-  "@playlistExisted": {
-    "description": "Error string when creating new playlist."
-  },
-  "playlistNameEmpty": "La playlist no tiene nombre",
-  "@playlistNameEmpty": {
-    "description": "Error string when creating new playlist."
-  },
-  "playlists": "Playlists",
-  "@playlists": {
-    "description": "Title for playlists tab."
-  },
-  "playNext": "Reproducir siguiente",
-  "@playNext": {
-    "description": "Popup menu for episode."
-  },
-  "playNextDes": "Añadir episodio a la cima de la playlist",
-  "@playNextDes": {
-    "description": "Description for next play."
-  },
-  "plugins": "Plugins",
-  "@plugins": {},
-  "podcast": "{count, plural, zero{} one{Podcast} other{Podcasts}}",
-  "@podcast": {},
-  "podcastSubscribed": "Podcast añadido",
-  "@podcastSubscribed": {},
-  "popupMenuDownloadDes": "Descargar episodio",
-  "@popupMenuDownloadDes": {},
-  "popupMenuLaterDes": "Añadir episodio a lista de reproducción",
-  "@popupMenuLaterDes": {},
-  "popupMenuLikeDes": "Añadir episodio a favoritos",
-  "@popupMenuLikeDes": {},
-  "popupMenuMarkDes": "Marcar episodio como escuchado",
-  "@popupMenuMarkDes": {},
-  "popupMenuPlayDes": "Reproducir episodio\n",
-  "@popupMenuPlayDes": {},
-  "privacyPolicy": "Política de privacidad",
-  "@privacyPolicy": {},
-  "published": "Publicado el {date}",
-  "@published": {
-    "placeholders": {
-      "date": {}
-    }
-  },
-  "publishedDaily": "Publicado diariamente",
-  "@publishedDaily": {},
-  "publishedMonthly": "Publicado mensualmente",
-  "@publishedMonthly": {},
-  "publishedWeekly": "Publicado semanalmente",
-  "@publishedWeekly": {
-    "description": "In search podcast detail page."
-  },
-  "publishedYearly": "Publicado anualmente",
-  "@publishedYearly": {},
-  "queue": "Cola",
-  "@queue": {
-    "description": "Queue"
-  },
-  "recoverSubscribe": "Recuperar suscripcion",
-  "@recoverSubscribe": {
-    "description": "User can recover subscribe podcast after remove it in subscribe history page."
-  },
-  "refresh": "Refrescar",
-  "@refresh": {
-    "description": "Refresh"
-  },
-  "refreshArtwork": "Actualizar portada",
-  "@refreshArtwork": {},
-  "refreshStarted": "Refrescando",
-  "@refreshStarted": {
-    "description": "Toast for refresh"
-  },
-  "remove": "Remover",
-  "@remove": {
-    "description": "Remove not \"removed\". \nRemove a podcast or a group."
-  },
-  "removeConfirm": "Confirma la remoción ",
-  "@removeConfirm": {
-    "description": "unsubscribe podcast dialog"
-  },
-  "removedAt": "Removido el (fecha)",
-  "@removedAt": {
-    "description": "For example ：Removed at 2020.10.10",
-    "placeholders": {
-      "date": {}
-    }
-  },
-  "removeNewMark": "Remover marca",
-  "@removeNewMark": {
-    "description": "Remove new mark for new episodes."
-  },
-  "removePodcastDes": "¿Estas seguro de que deseas desuscribirte?",
-  "@removePodcastDes": {},
-  "save": "Guardar",
-  "@save": {},
-  "schedule": "Horario",
-  "@schedule": {},
-  "search": "Buscar",
-  "@search": {},
-  "searchEpisode": "Buscar episodio",
-  "@searchEpisode": {},
-  "searchHelper": "Escribe el nombre del podcast, palabras clave o un feed url",
-  "@searchHelper": {},
-  "searchInvalidRss": "Enlace RSS invalido ",
-  "@searchInvalidRss": {},
-  "searchPodcast": "Buscar podcast",
-  "@searchPodcast": {},
-  "secCount": "{count, plural, zero{0 segundos} one{{count} segundo} other{{count} segundos}}",
-  "@secCount": {},
-  "secondsAgo": "{count, plural, zero{Justo ahora} one{Hace {count} segundo } other{Hace {count} segundos}}",
-  "@secondsAgo": {},
-  "selected": "{count} selecciones",
-  "@selected": {
-    "placeholders": {
-      "count": {}
-    }
-  },
-  "settings": "Ajustes",
-  "@settings": {},
-  "settingsAccentColor": "Color de acento ",
-  "@settingsAccentColor": {},
-  "settingsAccentColorDes": "Incluir el color del overlay",
-  "@settingsAccentColorDes": {},
-  "settingsAppearance": "Apariencia",
-  "@settingsAppearance": {},
-  "settingsAppearanceDes": "Tema y Colores\n",
-  "@settingsAppearanceDes": {},
-  "settingsAppIntro": "Intro de App",
-  "@settingsAppIntro": {},
-  "settingsAudioCache": "Cache de audio",
-  "@settingsAudioCache": {},
-  "settingsAudioCacheDes": "Tamaño máximo del cache de audio",
-  "@settingsAudioCacheDes": {},
-  "settingsAutoDelete": "Auto-eliminar descargas después",
-  "@settingsAutoDelete": {},
-  "settingsAutoDeleteDes": "30 días por defecto",
-  "@settingsAutoDeleteDes": {},
-  "settingsAutoPlayDes": "Reproducir automaticamente episodio siguiente ",
-  "@settingsAutoPlayDes": {},
-  "settingsBackup": "Respaldo",
-  "@settingsBackup": {},
-  "settingsBackupDes": "Respaldar datos de la app",
-  "@settingsBackupDes": {},
-  "settingsBoostVolume": "Nivel de aumento de volumen",
-  "@settingsBoostVolume": {},
-  "settingsBoostVolumeDes": "Cambiar nivel de aumento de volumen",
-  "@settingsBoostVolumeDes": {},
-  "settingsDefaultGrid": "Vista de cuadricula por defecto",
-  "@settingsDefaultGrid": {},
-  "settingsDefaultGridDownload": "Pestaña de descargas",
-  "@settingsDefaultGridDownload": {},
-  "settingsDefaultGridFavorite": "Pestaña de favoritos",
-  "@settingsDefaultGridFavorite": {},
-  "settingsDefaultGridPodcast": "Pagina de podcasts",
-  "@settingsDefaultGridPodcast": {},
-  "settingsDefaultGridRecent": "Pestaña de recientes",
-  "@settingsDefaultGridRecent": {},
-  "settingsDiscovery": "Reiniciar tutorial",
-  "@settingsDiscovery": {
-    "description": "Reset feature discovery state. User tap it and restart app, will see features tutorial again."
-  },
-  "settingsDownloadPosition": "Posicion de descarga",
-  "@settingsDownloadPosition": {
-    "description": "Choose folder for downloads."
-  },
-  "settingsEnableSyncing": "Activar sincronización",
-  "@settingsEnableSyncing": {},
-  "settingsEnableSyncingDes": "Actualizar todos los podcasts en el fondo para obtener episodios mas recientes",
-  "@settingsEnableSyncingDes": {},
-  "settingsExportDes": "Exportar e importar ajustes de la app",
-  "@settingsExportDes": {},
-  "settingsFastForwardSec": "Segundos de avance",
-  "@settingsFastForwardSec": {},
-  "settingsFastForwardSecDes": "Cambia los segundos de avance del reproductor",
-  "@settingsFastForwardSecDes": {},
-  "settingsFeedback": "Comentarios",
-  "@settingsFeedback": {},
-  "settingsFeedbackDes": "Haz sugerencias y reporta errores",
-  "@settingsFeedbackDes": {},
-  "settingsHistory": "Historial",
-  "@settingsHistory": {},
-  "settingsHistoryDes": "Datos de escucha",
-  "@settingsHistoryDes": {},
-  "settingsInfo": "Información",
-  "@settingsInfo": {},
-  "settingsInterface": "Interfaz",
-  "@settingsInterface": {},
-  "settingsLanguages": "Lenguajes",
-  "@settingsLanguages": {},
-  "settingsLanguagesDes": "Cambiar lenguaje",
-  "@settingsLanguagesDes": {},
-  "settingsLayout": "Diseño",
-  "@settingsLayout": {},
-  "settingsLayoutDes": "Diseño de app",
-  "@settingsLayoutDes": {},
-  "settingsLibraries": "Librerías",
-  "@settingsLibraries": {},
-  "settingsLibrariesDes": "Librerías de código abierto usadas en la app",
-  "@settingsLibrariesDes": {},
-  "settingsManageDownload": "Administrar descargas",
-  "@settingsManageDownload": {},
-  "settingsManageDownloadDes": "Administrar archivos de audio descargados",
-  "@settingsManageDownloadDes": {},
-  "settingsMarkListenedSkip": "Marcar como escuchado al saltar episodio",
-  "@settingsMarkListenedSkip": {
-    "description": "Mark episode as listened when skipped to next."
-  },
-  "settingsMarkListenedSkipDes": "Marcar episodio como escuchado automaticamente al saltar al siguiente",
-  "@settingsMarkListenedSkipDes": {},
-  "settingsMenuAutoPlay": "Auto reproducir siguiente ",
-  "@settingsMenuAutoPlay": {},
-  "settingsNetworkCellular": "Preguntar antes de usar datos móviles ",
-  "@settingsNetworkCellular": {},
-  "settingsNetworkCellularAuto": "Auto descargar usando datos móviles",
-  "@settingsNetworkCellularAuto": {},
-  "settingsNetworkCellularAutoDes": "Puedes configurar la auto-descarga en la pagina de administración de grupos",
-  "@settingsNetworkCellularAutoDes": {},
-  "settingsNetworkCellularDes": "Pregunta para confirmar el uso de datos móviles al descargar episodios",
-  "@settingsNetworkCellularDes": {},
-  "settingsPlayDes": "Lista de reproducción y Reproductor",
-  "@settingsPlayDes": {},
-  "settingsPlayerHeight": "Altura del reproductor",
-  "@settingsPlayerHeight": {},
-  "settingsPlayerHeightDes": "Cambia la altura del reproductor como gustes",
-  "@settingsPlayerHeightDes": {},
-  "settingsPopupMenu": "Menú emergente de episodios ",
-  "@settingsPopupMenu": {},
-  "settingsPopupMenuDes": "Cambia el menu emergente del episodio",
-  "@settingsPopupMenuDes": {},
-  "settingsPrefrence": "Preferencias",
-  "@settingsPrefrence": {},
-  "settingsRealDark": "Negro Puro",
-  "@settingsRealDark": {},
-  "settingsRealDarkDes": "Activa si el modo Noche no es suficientemente oscuro",
-  "@settingsRealDarkDes": {},
-  "settingsRewindSec": "Segundos de retraso",
-  "@settingsRewindSec": {},
-  "settingsRewindSecDes": "Cambia los segundos de retroceso del reproductor",
-  "@settingsRewindSecDes": {},
-  "settingsSpeeds": "Velocidades",
-  "@settingsSpeeds": {
-    "description": "Playback speeds setting."
-  },
-  "settingsSpeedsDes": "Personalizar velocidades disponibles",
-  "@settingsSpeedsDes": {
-    "description": "Playback speed setting description"
-  },
-  "settingsSTAuto": "Encender temporizador de sueño automáticamente",
-  "@settingsSTAuto": {},
-  "settingsSTAutoDes": "Encender temporizador de sueño en un horario determinado",
-  "@settingsSTAutoDes": {},
-  "settingsSTDefaultTime": "Tiempo predeterminado",
-  "@settingsSTDefaultTime": {},
-  "settingsSTDefautTimeDes": "Tiempo predeterminado de temporizador de sueño",
-  "@settingsSTDefautTimeDes": {},
-  "settingsSTMode": "Modo automático de tempo. de sueño",
-  "@settingsSTMode": {},
-  "settingsStorageDes": "Administrar cache y almacenamiento de descargas",
-  "@settingsStorageDes": {},
-  "settingsSyncing": "Sincronización",
-  "@settingsSyncing": {},
-  "settingsSyncingDes": "Actualizar podcasts en el fondo",
-  "@settingsSyncingDes": {},
-  "settingsTapToOpenPopupMenu": "Presiona para abrir el menu",
-  "@settingsTapToOpenPopupMenu": {},
-  "settingsTapToOpenPopupMenuDes": "Necesitas mantener presionado para abrir la pagina del episodio",
-  "@settingsTapToOpenPopupMenuDes": {},
-  "settingsTheme": "Tema",
-  "@settingsTheme": {},
-  "settingStorage": "Almacenamiento",
-  "@settingStorage": {},
-  "settingsUpdateInterval": "Intervalo de actualización",
-  "@settingsUpdateInterval": {},
-  "settingsUpdateIntervalDes": "24 horas por defecto",
-  "@settingsUpdateIntervalDes": {},
-  "share": "Compartir",
-  "@share": {},
-  "showNotesFonts": "Fuente de las notas del show",
-  "@showNotesFonts": {},
-  "size": "Tamaño",
-  "@size": {},
-  "skipSecondsAtEnd": "Saltar segundos al final",
-  "@skipSecondsAtEnd": {},
-  "skipSecondsAtStart": "Saltar segundos al inicio",
-  "@skipSecondsAtStart": {},
-  "skipSilence": "Saltar silencios",
-  "@skipSilence": {
-    "description": "Feature skip silence"
-  },
-  "skipToNext": "Saltar a la siguiente",
-  "@skipToNext": {},
-  "sleepTimer": "Temporizador de sueño",
-  "@sleepTimer": {},
-  "status": "Estatus",
-  "@status": {
-    "description": "gpodder.net status"
-  },
-  "statusAuthError": " Error de autenticación",
-  "@statusAuthError": {
-    "description": "Sync error"
-  },
-  "statusFail": "Fallido",
-  "@statusFail": {
-    "description": "Sync fail"
-  },
-  "statusSuccess": "Exitoso",
-  "@statusSuccess": {
-    "description": "Sync status"
-  },
-  "stop": "Detener",
-  "@stop": {},
-  "subscribe": "Suscribir",
-  "@subscribe": {},
-  "subscribeExportDes": "Exportar OPML de todos los podcasts",
-  "@subscribeExportDes": {},
-  "syncNow": "Sincronizar ahora",
-  "@syncNow": {},
-  "systemDefault": "Acorde al sistema",
-  "@systemDefault": {},
-  "timeLastPlayed": "Tiempo previo {time}",
-  "@timeLastPlayed": {
-    "description": "Show last time stop position  in player when a episode have been played.",
-    "placeholders": {
-      "time": {}
-    }
-  },
-  "timeLeft": "{time} Restante",
-  "@timeLeft": {
-    "placeholders": {
-      "time": {}
-    }
-  },
-  "to": "A {time}",
-  "@to": {
-    "placeholders": {
-      "time": {}
-    }
-  },
-  "toastAddPlaylist": "Añadido a la lista de reproducción ",
-  "@toastAddPlaylist": {},
-  "toastDiscovery": "El tutorial se ha reiniciado, reinicia la app porfavor",
-  "@toastDiscovery": {
-    "description": "Toast displayed when user tap Discovery Features Again in settings page."
-  },
-  "toastFileError": "Error de archivo, suscripción fallida",
-  "@toastFileError": {},
-  "toastFileNotValid": "Archivo invalido",
-  "@toastFileNotValid": {},
-  "toastHomeGroupNotSupport": "El grupo Home no esta soportado",
-  "@toastHomeGroupNotSupport": {},
-  "toastImportSettingsSuccess": "Ajustes importados correctamente",
-  "@toastImportSettingsSuccess": {},
-  "toastOneGroup": "Selecciona al menos un grupo",
-  "@toastOneGroup": {},
-  "toastPodcastRecovering": "Recuperando, espera un momento",
-  "@toastPodcastRecovering": {
-    "description": "Resubscribe removed podcast"
-  },
-  "toastReadFile": "Archivo leído con exito",
-  "@toastReadFile": {},
-  "toastRecoverFailed": "Recuperación de podcast fallida",
-  "@toastRecoverFailed": {
-    "description": "Resubscribe removed podast"
-  },
-  "toastRemovePlaylist": "Episodio removido de la lista de reproducción",
-  "@toastRemovePlaylist": {},
-  "toastSettingSaved": "Ajustes guardados",
-  "@toastSettingSaved": {},
-  "toastTimeEqualEnd": "El tiempo es igual al tiempo final",
-  "@toastTimeEqualEnd": {
-    "description": "User can't choose the same time as schedule end time."
-  },
-  "toastTimeEqualStart": "El tiempo es igual al tiempo de inicio",
-  "@toastTimeEqualStart": {
-    "description": "User can't choose the same time as schedule start time."
-  },
-  "translators": "Traductores",
-  "@translators": {},
-  "understood": "Entendido",
-  "@understood": {},
-  "undo": "Deshacer ",
-  "@undo": {},
-  "unlike": "No me gusta",
-  "@unlike": {},
-  "unliked": "Episodio removido de favoritos",
-  "@unliked": {},
-  "updateDate": "Fecha de actualización ",
-  "@updateDate": {},
-  "updateEpisodesCount": "{count, plural, zero{No hay actualizaciones} one{Se actualizo {count} episodio} other{Se actualizaron {count} episodios}}",
-  "@updateEpisodesCount": {},
-  "updateFailed": "Actualización fallida, error de red",
-  "@updateFailed": {},
-  "username": "Nombre de usuario",
-  "@username": {},
-  "usernameRequired": "Nombre de usuario requerido",
-  "@usernameRequired": {},
-  "useWallpaperTheme": "",
-  "@useWallpaperTheme": {},
-  "useWallpaperThemeDes": "",
-  "@useWallpaperThemeDes": {},
-  "version": "Versión: {version}",
-  "@version": {
-    "placeholders": {
-      "version": {}
-    }
-  },
-  "after": "Después",
-  "@after": {
-    "description": "Used in a button to select episodes after the selected one(s) on a list. Not used for time"
-  },
-  "before": "Antes",
-  "@before": {
-    "description": "Used in a button to select episodes before the selected one(s) on a list. Not used for time"
-  },
-  "between": "Entre",
-  "@between": {
-    "description": "Used in a button to select episodes between the selected one(s) on a list"
-  },
-  "capitalDefault": "Por defecto",
-  "@capitalDefault": {},
-  "deselectAll": "Desmarcar Todo",
-  "@deselectAll": {},
-  "downloadDate": "Fecha de descarga",
-  "@downloadDate": {
-    "description": "Download Date sort order"
-  },
-  "duration": "Duración",
-  "@duration": {
-    "description": "Duration sort order"
-  },
-  "moreOptions": "Más Opciones",
-  "@moreOptions": {},
-  "removeDownload": "Eliminar Descarga",
-  "@removeDownload": {},
-  "restartAppForEffect": "Reinicie la aplicación para que los cambios surtan efecto.",
-  "@restartAppForEffect": {
-    "description": "Notify user that the change will take effect after app restart."
-  },
-  "settingsDiscoveryDes": "¿Estás seguro de que quiere reactivar \"Descubrir Características\"?",
-  "@settingsDiscoveryDes": {},
-  "filterType": "Filtrar {type}",
-  "@filterType": {
-    "description": "To use with different episode filter types. Noun, not verb. Ex: {Downloaded} Filter, {Played} Filter, {Group} Filter...",
-    "placeholders": {
-      "type": {}
-    }
-  },
-  "localEpisodeDescription": "Episodio local en {filePath}",
-  "@localEpisodeDescription": {
-    "placeholders": {
-      "filePath": {}
-    }
-  },
-  "networkErrorDNS": "Error de red (problema de DNS)",
-  "@networkErrorDNS": {
-    "description": "Notify the user that the host address couldn't be found."
-  },
-  "newPlain": "Nuevo",
-  "@newPlain": {
-    "description": "Word to describe a new episode (and use in filterType)"
-  },
-  "random": "Aleatorio",
-  "@random": {
-    "description": "Random sort order"
-  },
-  "close": "Cerrar",
-  "@close": {},
-  "publishDate": "Fecha de publicación",
-  "@publishDate": {
-    "description": "Publish Date sort order"
-  },
-  "interaction": "Interacción",
-  "@interaction": {
-    "description": "Interaction setting menu section title"
-  },
-  "loading": "Cargando",
-  "@loading": {},
-  "selectMode": "Modo de Selección",
-  "@selectMode": {},
-  "searchInstructions": "Introduce la url de un feed rss o busca un podcast y abre su feed rss para suscribirte.",
-  "@searchInstructions": {},
-  "sortBy": "Ordenar Por",
-  "@sortBy": {}
+    "@@locale": "es",
+    "add": "Añadir",
+    "@add": {
+        "description": "Subscribe new podcast"
+    },
+    "addEpisodeGroup": "{count, plural, zero{} one{{count} episodio de {groupName} añadido a la lista} other{{count} episodios en {groupName} añadidos a la lista}}",
+    "@addEpisodeGroup": {
+        "placeholders": {
+            "groupName": {}
+        }
+    },
+    "addNewEpisodeAll": "{count, plural, zero{} one{{count} episodio añadido a la lista} other{{count} episodios añadidos a la lista}}",
+    "addNewEpisodeTooltip": "Añade nuevos episodios a la lista de reproducción",
+    "addSomeGroups": "Añade algún grupo",
+    "@addSomeGroups": {
+        "description": "Please add new groups"
+    },
+    "all": "Todos",
+    "autoDownload": "Auto-descargar",
+    "back": "Atras",
+    "boostVolume": "Aumentar volumen",
+    "@boostVolume": {
+        "description": "Boost volume in player widget."
+    },
+    "buffering": "Cargando ",
+    "cancel": "CANCELAR",
+    "cellularConfirm": "Alerta de datos móviles ",
+    "cellularConfirmDes": "¿Seguro que quieres usar datos móviles para realizar descargas?",
+    "changeLayout": "Cambiar diseño",
+    "changelog": "Reporte de cambios",
+    "chooseA": "Escoger un",
+    "clear": "Limpiar",
+    "clearAll": "Limipar todo",
+    "@clearAll": {
+        "description": "Clear all episodes in playlist."
+    },
+    "color": "color",
+    "confirm": "ACEPTAR",
+    "createNewPlaylist": "Nueva playlist",
+    "darkMode": "Modo oscuro",
+    "daysAgo": "{count, plural, zero{Hoy} one{Hace {count} dia} other{Hace {count} dias}}",
+    "daysCount": "{count, plural, zero{Nunca} one{{count} dia} other{{count} dias}}",
+    "defaultQueueReminder": "Esta es la cola por defecto, no puede removerse",
+    "@defaultQueueReminder": {
+        "description": "Remind user that default queue can't be removed."
+    },
+    "defaultSearchEngine": "Motor de busqueda de podcasts por defecto",
+    "defaultSearchEngineDes": "Escoge el motor de busqueda de podcasts por defecto ",
+    "@defaultSearchEngineDes": {
+        "description": "Choose the default podcast search engine"
+    },
+    "delete": "Eliminar",
+    "developer": "Desarrollador",
+    "@developer": {
+        "description": "Can also translate to About me"
+    },
+    "dismiss": "Minimizar",
+    "done": "Hecho",
+    "download": "Descargar",
+    "downloaded": "Descargados",
+    "downloadRemovedToast": "Descarga removida",
+    "downloadStart": "Descargando",
+    "@downloadStart": {
+        "description": "Toast of downloading"
+    },
+    "editGroupName": "Editar nombre del grupo",
+    "endOfEpisode": "Fin del episodio",
+    "episode": "{count, plural, zero{} one{Episodio} other{Episodios}}",
+    "fastForward": "Avanzar",
+    "fastRewind": "Retroceder",
+    "featureDiscoveryEditGroup": "Toca para editar grupo",
+    "featureDiscoveryEditGroupDes": "Puedes cambiar el nombre del grupo o eliminar el grupo aquí, el grupo Home no puede ser editado ni borrado",
+    "featureDiscoveryEpisode": "Vista de episodios",
+    "featureDiscoveryEpisodeDes": "Puedes mantener presionado para reproducir o añadir un episodio a la lista de reproducción ",
+    "featureDiscoveryEpisodeTitle": "Mantén presionado para reproducir episodio instantáneamente",
+    "featureDiscoveryGroup": "Toca para añadir grupo",
+    "featureDiscoveryGroupDes": "El grupo por defecto para nuevos podcasts es Home, puedes crear nuevos grupos y mover podcasts ahí. Puedes poner un podcast en varios grupos",
+    "featureDiscoveryGroupPodcast": "Mantén presionado para re-ordenar podcasts",
+    "featureDiscoveryGroupPodcastDes": "Puedes tocar para ver mas opciones, o mantener presionado para ordenar podcasts en grupos",
+    "featureDiscoveryOMPL": "Toca para importar un OPML",
+    "featureDiscoveryOMPLDes": "Puedes importar archivos OPML, abre los ajustes o refresca todos los podcasts aquí ",
+    "featureDiscoveryPlaylist": "Toca para abrir lista de reproducción ",
+    "featureDiscoveryPlaylistDes": "Puedes añadir episodios a la lista de reproducción. El episodio se removerá automáticamente de la lista una vez reproducido ",
+    "featureDiscoveryPodcast": "Vista",
+    "featureDiscoveryPodcastDes": "Puedes tocar \"Ver Todos\" para añadir grupos u organizar podcasts ",
+    "featureDiscoveryPodcastTitle": "Desplazate verticalmente para cambiar entre grupos",
+    "featureDiscoverySearch": "Toca para buscar podcast",
+    "featureDiscoverySearchDes": "Puedes buscar podcasts, palabras clave o enlaces RSS para añadir nuevos podcasts",
+    "feedbackEmail": "Escríbeme ",
+    "feedbackGithub": "Reportar problema",
+    "feedbackPlay": "Calificar en Play Store",
+    "@feedbackPlay": {
+        "description": "Rate on Google Play Store.\nUser can tap to open play link."
+    },
+    "feedbackTelegram": "Unirse a grupo",
+    "filter": "Filtrar",
+    "fonts": "Tipografías",
+    "fontStyle": "Estilo de fuente",
+    "from": "De {time}",
+    "@from": {
+        "placeholders": {
+            "time": {}
+        }
+    },
+    "goodNight": "Buenas noches",
+    "gpodderLoginDes": "Felicidades, has unido tu cuenta gpodder.net exitosamente. Tsacdop sincronizara tus subscripciones en tu dispositivo con tu cuenta gpodder.net.",
+    "groupExisted": "El grupo ya existe",
+    "@groupExisted": {
+        "description": "Group name validate in add group dialog. User can't add group with same name."
+    },
+    "groupFilter": "Filtro de grupo",
+    "groupRemoveConfirm": "¿Estas seguro de que quieres remover este grupo? Los podcasts serán movidos al grupo Home",
+    "groups": "{count, plural, zero{Grupo} one{Grupo} other{Grupos}}",
+    "hideListenedSetting": "Ocultar escuchados",
+    "hidePodcastDiscovery": "Ocultar descubrimiento de podcasts",
+    "@hidePodcastDiscovery": {
+        "description": "Hide podcast discovery"
+    },
+    "hidePodcastDiscoveryDes": "Ocultar descubrimiento de pocasts en el motor de busqueda",
+    "homeGroupsSeeAll": "Ver todo",
+    "homeMenuPlaylist": "Lista de reproducción",
+    "homeSubMenuSortBy": "Ordenar por",
+    "homeTabMenuFavotite": "Favoritos",
+    "homeTabMenuRecent": "Recientes",
+    "homeToprightMenuAbout": "Acerca de",
+    "homeToprightMenuImportOMPL": "Importar OPML",
+    "homeToprightMenuRefreshAll": "Refrescar todo",
+    "hostedOn": "Alojado en {host}",
+    "@hostedOn": {
+        "placeholders": {
+            "host": {}
+        }
+    },
+    "hoursAgo": "{count, plural, zero{Justo ahora} one{Hace {count} hora} other{Hace {count} horas}}",
+    "hoursCount": "{count, plural, zero{Cero horas} one{{count} hora} other{{count} horas}}",
+    "import": "Importar",
+    "intergateWith": "Integrar con {service}",
+    "@intergateWith": {
+        "description": "Integrate with",
+        "placeholders": {
+            "service": {}
+        }
+    },
+    "introFourthPage": "Puedes mantener presionado un episodio para realizar acciones rápidas",
+    "introSecondPage": "Suscribete a podcasts buscándolos, o importando un archivo OPML",
+    "introThirdPage": "Puedes crear un nuevo grupo de podcasts",
+    "invalidName": "Nombre de usuario invalido",
+    "lastUpdate": "Ultima actualización",
+    "@lastUpdate": {
+        "description": "gpodder.net update"
+    },
+    "later": "Despues",
+    "lightMode": "Modo claro",
+    "like": "Me gusta",
+    "liked": "Me gusta",
+    "likeDate": "Fecha en que Me Gusto",
+    "@likeDate": {
+        "description": "Favorite tab, sort by like date."
+    },
+    "listen": "Escuchar",
+    "listened": "Escuchado",
+    "loadMore": "Cargar mas",
+    "loggedInAs": "Sesión iniciado como {userName}",
+    "@loggedInAs": {
+        "description": "gpodder.net",
+        "placeholders": {
+            "userName": {}
+        }
+    },
+    "login": "Iniciar sesión",
+    "@login": {
+        "description": "gpodder.net login"
+    },
+    "loginFailed": "Inicio de sesión fallido",
+    "logout": "Cerrar sesión",
+    "@logout": {
+        "description": "gpodder.net logout"
+    },
+    "mark": "Completado",
+    "@mark": {
+        "description": "In listen history page, if a episode is marked as listened."
+    },
+    "markConfirm": "Confirmar marcado",
+    "markConfirmContent": "¿Marcar todos los episodios como escuchados?",
+    "markListened": "Marcar escuchados",
+    "markNotListened": "Marcar no escuchados",
+    "menu": "Menú",
+    "menuAllPodcasts": "Todos los podcasts",
+    "menuMarkAllListened": "Marcar todo como escuchado",
+    "menuViewRSS": "Visitar feed RSS",
+    "menuVisitSite": "Visitar sitio web",
+    "minsAgo": "{count, plural, zero{Justo Ahora} one{Hace {count} minuto } other{Hace {count} minutos}}",
+    "minsCount": "{count, plural, zero{0 minutos} one{{count} minuto} other{{count} minutos}}",
+    "network": "Red",
+    "neverAutoUpdate": "Desactivar actualizaciones automaticas ",
+    "@neverAutoUpdate": {
+        "description": "Never auto  update in podcast settings."
+    },
+    "newestFirst": "Mas recientes primero",
+    "newGroup": "Crear grupo nuevo",
+    "next": "Siguiente",
+    "noEpisodeDownload": "Aun no hay episodios decargados",
+    "noEpisodeFavorite": "Aun no hay episodios recolectados",
+    "noEpisodeRecent": "Aun no hay episodios recibidos",
+    "noPodcastGroup": "No hay podcasts en este grupo",
+    "noShownote": "Aun no hay notas disponibles para este episodio",
+    "@noShownote": {
+        "description": "Means this episode have no show notes."
+    },
+    "notificaitonFatch": "Obtener datos {title}",
+    "notificationNetworkError": "Suscripción fallida, error de red {title}",
+    "@notificationNetworkError": {
+        "placeholders": {
+            "title": {}
+        }
+    },
+    "notificationSetting": "Panel de notificaciones",
+    "notificationSubscribe": "Suscribir {title}",
+    "@notificationSubscribe": {
+        "placeholders": {
+            "title": {}
+        }
+    },
+    "notificationSubscribeExisted": "Suscripción fallida, podcast ya existe {title}",
+    "@notificationSubscribeExisted": {
+        "placeholders": {
+            "title": {}
+        }
+    },
+    "notificationSuccess": "Suscripción exitosa",
+    "@notificationSuccess": {
+        "placeholders": {
+            "title": {}
+        }
+    },
+    "notificationUpdate": "Actualizar {title}",
+    "@notificationUpdate": {
+        "placeholders": {
+            "title": {}
+        }
+    },
+    "notificationUpdateError": "Error de actualización {title}",
+    "@notificationUpdateError": {
+        "placeholders": {
+            "title": {}
+        }
+    },
+    "oldestFirst": "Mas antiguos primero",
+    "passwdRequired": "Contraseña requerida",
+    "password": "Contraseña",
+    "pause": "Pausa",
+    "play": "Reproducir",
+    "playback": "Control de reproducción",
+    "player": "Reproductor",
+    "playerHeightMed": "Medio",
+    "playerHeightShort": "Bajo",
+    "playerHeightTall": "Alto",
+    "playing": "Reproduciendo",
+    "playlistExisted": "El nombre de la playlist ya esta en uso",
+    "@playlistExisted": {
+        "description": "Error string when creating new playlist."
+    },
+    "playlistNameEmpty": "La playlist no tiene nombre",
+    "@playlistNameEmpty": {
+        "description": "Error string when creating new playlist."
+    },
+    "playlists": "Playlists",
+    "@playlists": {
+        "description": "Title for playlists tab."
+    },
+    "playNext": "Reproducir siguiente",
+    "@playNext": {
+        "description": "Popup menu for episode."
+    },
+    "playNextDes": "Añadir episodio a la cima de la playlist",
+    "@playNextDes": {
+        "description": "Description for next play."
+    },
+    "plugins": "Plugins",
+    "podcast": "{count, plural, zero{} one{Podcast} other{Podcasts}}",
+    "podcastSubscribed": "Podcast añadido",
+    "popupMenuDownloadDes": "Descargar episodio",
+    "popupMenuLaterDes": "Añadir episodio a lista de reproducción",
+    "popupMenuLikeDes": "Añadir episodio a favoritos",
+    "popupMenuMarkDes": "Marcar episodio como escuchado",
+    "popupMenuPlayDes": "Reproducir episodio\n",
+    "privacyPolicy": "Política de privacidad",
+    "published": "Publicado el {date}",
+    "@published": {
+        "placeholders": {
+            "date": {}
+        }
+    },
+    "publishedDaily": "Publicado diariamente",
+    "publishedMonthly": "Publicado mensualmente",
+    "publishedWeekly": "Publicado semanalmente",
+    "@publishedWeekly": {
+        "description": "In search podcast detail page."
+    },
+    "publishedYearly": "Publicado anualmente",
+    "queue": "Cola",
+    "@queue": {
+        "description": "Queue"
+    },
+    "recoverSubscribe": "Recuperar suscripcion",
+    "@recoverSubscribe": {
+        "description": "User can recover subscribe podcast after remove it in subscribe history page."
+    },
+    "refresh": "Refrescar",
+    "@refresh": {
+        "description": "Refresh"
+    },
+    "refreshArtwork": "Actualizar portada",
+    "refreshStarted": "Refrescando",
+    "@refreshStarted": {
+        "description": "Toast for refresh"
+    },
+    "remove": "Remover",
+    "@remove": {
+        "description": "Remove not \"removed\". \nRemove a podcast or a group."
+    },
+    "removeConfirm": "Confirma la remoción ",
+    "@removeConfirm": {
+        "description": "unsubscribe podcast dialog"
+    },
+    "removedAt": "Removido el (fecha)",
+    "@removedAt": {
+        "description": "For example ：Removed at 2020.10.10",
+        "placeholders": {
+            "date": {}
+        }
+    },
+    "removeNewMark": "Remover marca",
+    "@removeNewMark": {
+        "description": "Remove new mark for new episodes."
+    },
+    "removePodcastDes": "¿Estas seguro de que deseas desuscribirte?",
+    "save": "Guardar",
+    "schedule": "Horario",
+    "search": "Buscar",
+    "searchEpisode": "Buscar episodio",
+    "searchHelper": "Escribe el nombre del podcast, palabras clave o un feed url",
+    "searchInvalidRss": "Enlace RSS invalido ",
+    "searchPodcast": "Buscar podcast",
+    "secCount": "{count, plural, zero{0 segundos} one{{count} segundo} other{{count} segundos}}",
+    "secondsAgo": "{count, plural, zero{Justo ahora} one{Hace {count} segundo } other{Hace {count} segundos}}",
+    "selected": "{count} selecciones",
+    "@selected": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "settings": "Ajustes",
+    "settingsAccentColor": "Color de acento ",
+    "settingsAccentColorDes": "Incluir el color del overlay",
+    "settingsAppearance": "Apariencia",
+    "settingsAppearanceDes": "Tema y Colores\n",
+    "settingsAppIntro": "Intro de App",
+    "settingsAudioCache": "Cache de audio",
+    "settingsAudioCacheDes": "Tamaño máximo del cache de audio",
+    "settingsAutoDelete": "Auto-eliminar descargas después",
+    "settingsAutoDeleteDes": "30 días por defecto",
+    "settingsAutoPlayDes": "Reproducir automaticamente episodio siguiente ",
+    "settingsBackup": "Respaldo",
+    "settingsBackupDes": "Respaldar datos de la app",
+    "settingsBoostVolume": "Nivel de aumento de volumen",
+    "settingsBoostVolumeDes": "Cambiar nivel de aumento de volumen",
+    "settingsDefaultGrid": "Vista de cuadricula por defecto",
+    "settingsDefaultGridDownload": "Pestaña de descargas",
+    "settingsDefaultGridFavorite": "Pestaña de favoritos",
+    "settingsDefaultGridPodcast": "Pagina de podcasts",
+    "settingsDefaultGridRecent": "Pestaña de recientes",
+    "settingsDiscovery": "Reiniciar tutorial",
+    "@settingsDiscovery": {
+        "description": "Reset feature discovery state. User tap it and restart app, will see features tutorial again."
+    },
+    "settingsDownloadPosition": "Posicion de descarga",
+    "@settingsDownloadPosition": {
+        "description": "Choose folder for downloads."
+    },
+    "settingsEnableSyncing": "Activar sincronización",
+    "settingsEnableSyncingDes": "Actualizar todos los podcasts en el fondo para obtener episodios mas recientes",
+    "settingsExportDes": "Exportar e importar ajustes de la app",
+    "settingsFastForwardSec": "Segundos de avance",
+    "settingsFastForwardSecDes": "Cambia los segundos de avance del reproductor",
+    "settingsFeedback": "Comentarios",
+    "settingsFeedbackDes": "Haz sugerencias y reporta errores",
+    "settingsHistory": "Historial",
+    "settingsHistoryDes": "Datos de escucha",
+    "settingsInfo": "Información",
+    "settingsInterface": "Interfaz",
+    "settingsLanguages": "Lenguajes",
+    "settingsLanguagesDes": "Cambiar lenguaje",
+    "settingsLayout": "Diseño",
+    "settingsLayoutDes": "Diseño de app",
+    "settingsLibraries": "Librerías",
+    "settingsLibrariesDes": "Librerías de código abierto usadas en la app",
+    "settingsManageDownload": "Administrar descargas",
+    "settingsManageDownloadDes": "Administrar archivos de audio descargados",
+    "settingsMarkListenedSkip": "Marcar como escuchado al saltar episodio",
+    "@settingsMarkListenedSkip": {
+        "description": "Mark episode as listened when skipped to next."
+    },
+    "settingsMarkListenedSkipDes": "Marcar episodio como escuchado automaticamente al saltar al siguiente",
+    "settingsMenuAutoPlay": "Auto reproducir siguiente ",
+    "settingsNetworkCellular": "Preguntar antes de usar datos móviles ",
+    "settingsNetworkCellularAuto": "Auto descargar usando datos móviles",
+    "settingsNetworkCellularAutoDes": "Puedes configurar la auto-descarga en la pagina de administración de grupos",
+    "settingsNetworkCellularDes": "Pregunta para confirmar el uso de datos móviles al descargar episodios",
+    "settingsPlayDes": "Lista de reproducción y Reproductor",
+    "settingsPlayerHeight": "Altura del reproductor",
+    "settingsPlayerHeightDes": "Cambia la altura del reproductor como gustes",
+    "settingsPopupMenu": "Menú emergente de episodios ",
+    "settingsPopupMenuDes": "Cambia el menu emergente del episodio",
+    "settingsPrefrence": "Preferencias",
+    "settingsRealDark": "Negro Puro",
+    "settingsRealDarkDes": "Activa si el modo Noche no es suficientemente oscuro",
+    "settingsRewindSec": "Segundos de retraso",
+    "settingsRewindSecDes": "Cambia los segundos de retroceso del reproductor",
+    "settingsSpeeds": "Velocidades",
+    "@settingsSpeeds": {
+        "description": "Playback speeds setting."
+    },
+    "settingsSpeedsDes": "Personalizar velocidades disponibles",
+    "@settingsSpeedsDes": {
+        "description": "Playback speed setting description"
+    },
+    "settingsSTAuto": "Encender temporizador de sueño automáticamente",
+    "settingsSTAutoDes": "Encender temporizador de sueño en un horario determinado",
+    "settingsSTDefaultTime": "Tiempo predeterminado",
+    "settingsSTDefautTimeDes": "Tiempo predeterminado de temporizador de sueño",
+    "settingsSTMode": "Modo automático de tempo. de sueño",
+    "settingsStorageDes": "Administrar cache y almacenamiento de descargas",
+    "settingsSyncing": "Sincronización",
+    "settingsSyncingDes": "Actualizar podcasts en el fondo",
+    "settingsTapToOpenPopupMenu": "Presiona para abrir el menu",
+    "settingsTapToOpenPopupMenuDes": "Necesitas mantener presionado para abrir la pagina del episodio",
+    "settingsTheme": "Tema",
+    "settingStorage": "Almacenamiento",
+    "settingsUpdateInterval": "Intervalo de actualización",
+    "settingsUpdateIntervalDes": "24 horas por defecto",
+    "share": "Compartir",
+    "showNotesFonts": "Fuente de las notas del show",
+    "size": "Tamaño",
+    "skipSecondsAtEnd": "Saltar segundos al final",
+    "skipSecondsAtStart": "Saltar segundos al inicio",
+    "skipSilence": "Saltar silencios",
+    "@skipSilence": {
+        "description": "Feature skip silence"
+    },
+    "skipToNext": "Saltar a la siguiente",
+    "sleepTimer": "Temporizador de sueño",
+    "status": "Estatus",
+    "@status": {
+        "description": "gpodder.net status"
+    },
+    "statusAuthError": " Error de autenticación",
+    "@statusAuthError": {
+        "description": "Sync error"
+    },
+    "statusFail": "Fallido",
+    "@statusFail": {
+        "description": "Sync fail"
+    },
+    "statusSuccess": "Exitoso",
+    "@statusSuccess": {
+        "description": "Sync status"
+    },
+    "stop": "Detener",
+    "subscribe": "Suscribir",
+    "subscribeExportDes": "Exportar OPML de todos los podcasts",
+    "syncNow": "Sincronizar ahora",
+    "systemDefault": "Acorde al sistema",
+    "timeLastPlayed": "Tiempo previo {time}",
+    "@timeLastPlayed": {
+        "description": "Show last time stop position  in player when a episode have been played.",
+        "placeholders": {
+            "time": {}
+        }
+    },
+    "timeLeft": "{time} Restante",
+    "@timeLeft": {
+        "placeholders": {
+            "time": {}
+        }
+    },
+    "to": "A {time}",
+    "@to": {
+        "placeholders": {
+            "time": {}
+        }
+    },
+    "toastAddPlaylist": "Añadido a la lista de reproducción ",
+    "toastDiscovery": "El tutorial se ha reiniciado, reinicia la app porfavor",
+    "@toastDiscovery": {
+        "description": "Toast displayed when user tap Discovery Features Again in settings page."
+    },
+    "toastFileError": "Error de archivo, suscripción fallida",
+    "toastFileNotValid": "Archivo invalido",
+    "toastHomeGroupNotSupport": "El grupo Home no esta soportado",
+    "toastImportSettingsSuccess": "Ajustes importados correctamente",
+    "toastOneGroup": "Selecciona al menos un grupo",
+    "toastPodcastRecovering": "Recuperando, espera un momento",
+    "@toastPodcastRecovering": {
+        "description": "Resubscribe removed podcast"
+    },
+    "toastReadFile": "Archivo leído con exito",
+    "toastRecoverFailed": "Recuperación de podcast fallida",
+    "@toastRecoverFailed": {
+        "description": "Resubscribe removed podast"
+    },
+    "toastRemovePlaylist": "Episodio removido de la lista de reproducción",
+    "toastSettingSaved": "Ajustes guardados",
+    "toastTimeEqualEnd": "El tiempo es igual al tiempo final",
+    "@toastTimeEqualEnd": {
+        "description": "User can't choose the same time as schedule end time."
+    },
+    "toastTimeEqualStart": "El tiempo es igual al tiempo de inicio",
+    "@toastTimeEqualStart": {
+        "description": "User can't choose the same time as schedule start time."
+    },
+    "translators": "Traductores",
+    "understood": "Entendido",
+    "undo": "Deshacer ",
+    "unlike": "No me gusta",
+    "unliked": "Episodio removido de favoritos",
+    "updateDate": "Fecha de actualización ",
+    "updateEpisodesCount": "{count, plural, zero{No hay actualizaciones} one{Se actualizo {count} episodio} other{Se actualizaron {count} episodios}}",
+    "updateFailed": "Actualización fallida, error de red",
+    "username": "Nombre de usuario",
+    "usernameRequired": "Nombre de usuario requerido",
+    "useWallpaperTheme": "",
+    "useWallpaperThemeDes": "",
+    "version": "Versión: {version}",
+    "@version": {
+        "placeholders": {
+            "version": {}
+        }
+    },
+    "after": "Después",
+    "@after": {
+        "description": "Used in a button to select episodes after the selected one(s) on a list. Not used for time"
+    },
+    "before": "Antes",
+    "@before": {
+        "description": "Used in a button to select episodes before the selected one(s) on a list. Not used for time"
+    },
+    "between": "Entre",
+    "@between": {
+        "description": "Used in a button to select episodes between the selected one(s) on a list"
+    },
+    "capitalDefault": "Por defecto",
+    "deselectAll": "Desmarcar Todo",
+    "downloadDate": "Fecha de descarga",
+    "@downloadDate": {
+        "description": "Download Date sort order"
+    },
+    "duration": "Duración",
+    "@duration": {
+        "description": "Duration sort order"
+    },
+    "moreOptions": "Más Opciones",
+    "removeDownload": "Eliminar Descarga",
+    "restartAppForEffect": "Reinicie la aplicación para que los cambios surtan efecto.",
+    "@restartAppForEffect": {
+        "description": "Notify user that the change will take effect after app restart."
+    },
+    "settingsDiscoveryDes": "¿Estás seguro de que quiere reactivar \"Descubrir Características\"?",
+    "filterType": "Filtrar {type}",
+    "@filterType": {
+        "description": "To use with different episode filter types. Noun, not verb. Ex: {Downloaded} Filter, {Played} Filter, {Group} Filter...",
+        "placeholders": {
+            "type": {}
+        }
+    },
+    "localEpisodeDescription": "Episodio local en {filePath}",
+    "@localEpisodeDescription": {
+        "placeholders": {
+            "filePath": {}
+        }
+    },
+    "networkErrorDNS": "Error de red (problema de DNS)",
+    "@networkErrorDNS": {
+        "description": "Notify the user that the host address couldn't be found."
+    },
+    "newPlain": "Nuevo",
+    "@newPlain": {
+        "description": "Word to describe a new episode (and use in filterType)"
+    },
+    "random": "Aleatorio",
+    "@random": {
+        "description": "Random sort order"
+    },
+    "close": "Cerrar",
+    "publishDate": "Fecha de publicación",
+    "@publishDate": {
+        "description": "Publish Date sort order"
+    },
+    "interaction": "Interacción",
+    "@interaction": {
+        "description": "Interaction setting menu section title"
+    },
+    "loading": "Cargando",
+    "selectMode": "Modo de Selección",
+    "searchInstructions": "Introduce la url de un feed rss o busca un podcast y abre su feed rss para suscribirte.",
+    "sortBy": "Ordenar Por"
 }
