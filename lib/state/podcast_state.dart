@@ -26,6 +26,7 @@ import '../util/helpers.dart';
 import 'download_state.dart';
 import 'episode_state.dart';
 import 'settings/setting_state.dart';
+import 'settings/tsacdop_settings.dart';
 
 const deletedPodcastId = "46e48103-06c7-4fe1-a0b1-68aa7205b7f0";
 
@@ -335,7 +336,7 @@ class PodcastState extends ChangeNotifier {
       ).run((podcastRemote, episodesRemote));
       await _dbHelper.savePodcastLocal(podcastLocal);
       if (episodesLocal.isNotEmpty) {
-        await _dbHelper.saveNewPodcastEpisodes(episodesLocal);
+        await _dbHelper.saveNewPodcastEpisodes(episodesLocal, _settingState);
       }
       await addPodcastToGroup(podcastId: podcastId, groupId: homeGroupId);
 
@@ -355,6 +356,7 @@ class PodcastState extends ChangeNotifier {
   /// Subscribes to a podcast denoted by its url. Returns the podcast id.
   /// Safe to call from the background.
   Future<String?> subscribePodcastByUrl(String feedUrl) async {
+    final settings = background ? BackgroundSettingState() : _settingState;
     if (checkPodcast(feedUrl) == null) {
       var (podcast, episodes) = await Isolater(_fetchFeed).run(feedUrl);
       // Sometimes podcasts have multiple rss feeds.
@@ -383,7 +385,7 @@ class PodcastState extends ChangeNotifier {
         ).run((podcast, episodes));
         await _dbHelper.savePodcastLocal(podcastLocal);
         if (episodesLocal.isNotEmpty) {
-          await _dbHelper.saveNewPodcastEpisodes(episodesLocal);
+          await _dbHelper.saveNewPodcastEpisodes(episodesLocal, settings);
         }
         await _cachePodcast(podcast.id);
         await addPodcastToGroup(podcastId: podcast.id, groupId: homeGroupId);
@@ -445,9 +447,9 @@ class PodcastState extends ChangeNotifier {
   /// Isolateable function that refetches a podcast and returns
   /// updated [PodcastBrief] and new [EpisodeBrief]s.
   static Future<(PodcastBrief, List<EpisodeBrief>)?> _syncFeed(
-    (PodcastBrief, List<EpisodeBrief>) data,
+    (PodcastBrief, Set<String>) data,
   ) async {
-    var (podcast, episodes) = data;
+    var (podcast, urls) = data;
     final dir = await getApplicationDocumentsDirectory();
     try {
       final dio = Dio();
@@ -460,12 +462,11 @@ class PodcastState extends ChangeNotifier {
         if (digest.toString() != podcast.rssHash) {
           final feed = RssFeed.parse(utf8.decode(response.data!));
           final items = feed.items ?? [];
-          final enclosureUrls = episodes.map((e) => e.enclosureUrl).toSet();
           final newEnclosureUrls = items
               .map(urlFromRssItem)
               .whereNot((url) => url == "")
               .toSet();
-          final onlyNew = newEnclosureUrls.difference(enclosureUrls);
+          final onlyNew = newEnclosureUrls.difference(urls);
           final onlyNewEpisodes = items
               .where((i) => onlyNew.contains(urlFromRssItem(i)))
               .map(
@@ -517,11 +518,15 @@ class PodcastState extends ChangeNotifier {
   /// Safe to call from the background.
   Future<int?> syncPodcast(String podcastId) async {
     dev.log("${DateTime.now()} - Syncing podcast with id: $podcastId");
-    final episodes = await _dbHelper.getEpisodes(podcastIds: [podcastId]);
+    final eState = background ? EpisodeState() : _episodeState;
+    final settings = background ? BackgroundSettingState() : _settingState;
     await _cachePodcast(podcastId);
-    var result = await Isolater(
-      _syncFeed,
-    ).run((_podcastMap[podcastId]!, episodes));
+    final episodes = await eState.getEpisodes(podcastIds: [podcastId]);
+    await eState.checkUnsetNew(episodes, syncing: true);
+    var result = await Isolater(_syncFeed).run((
+      _podcastMap[podcastId]!,
+      episodes.map((e) => eState[e].enclosureUrl).toSet(),
+    ));
     if (result != null) {
       var (podcast, newEpisodes) = result;
       try {
@@ -539,12 +544,7 @@ class PodcastState extends ChangeNotifier {
       }
       _podcastMap[podcastId] = podcast;
       if (newEpisodes.isNotEmpty) {
-        await _dbHelper.saveUpdatedPodcastEpisodes(newEpisodes);
-      }
-      final lastSync = _settingState.lastSyncTime.get();
-      final lastUsed = _settingState.lastUsedTime.get();
-      if (lastUsed.isAfter(lastSync)) {
-        await _dbHelper.unmarkNewOldEpisodes(podcastId);
+        await _dbHelper.saveSyncedPodcastEpisodes(newEpisodes, settings);
       }
 
       if (podcast.autoDownload) {
@@ -555,13 +555,15 @@ class PodcastState extends ChangeNotifier {
         );
         await startAutoDownload(savedEpisodes);
       }
-      await _settingState.lastSyncTime.set(DateTime.now());
+      await settings.lastSyncTime.set(DateTime.now());
       notifyListeners();
       return newEpisodes.length;
     }
     return null;
   }
 
+  /// Syncs all podcasts.
+  /// Safe to call from the background.
   Future<int> syncAllPodcasts() async {
     var total = 0;
     final ids = await getPodcasts();

@@ -583,7 +583,7 @@ class RemoveNewFlagPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(RemoveNewFlagPainter oldDelegate) =>
-      oldDelegate.color != color;
+      oldDelegate.color != color || oldDelegate.textColor != textColor;
 
   @override
   bool shouldRebuildSemantics(RemoveNewFlagPainter oldDelegate) => false;

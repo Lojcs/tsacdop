@@ -56,29 +56,26 @@ class DataBackup extends StatelessWidget {
                 child: Row(
                   mainAxisSize: .min,
                   children: [
-                    _button(
-                      context,
+                    SettingsActionButton(
                       onPressed: () async {
                         final file = await exportOmpl(context);
                         await saveExternalFile(file);
                       },
-                      color: Colors.green,
-                      children: [Icon(LineIcons.save), Text(s.save)],
+                      baseColor: Colors.green,
                       connectRight: true,
+                      children: [Icon(LineIcons.save), Text(s.save)],
                     ),
-                    _button(
-                      context,
+                    SettingsActionButton(
                       onPressed: () async {
                         var file = await exportOmpl(context);
                         await shareFile(file);
                       },
-                      color: Colors.blue,
-                      children: [Icon(Icons.share), Text(s.share)],
+                      baseColor: Colors.blue,
                       connectLeft: true,
                       connectRight: true,
+                      children: [Icon(Icons.share), Text(s.share)],
                     ),
-                    _button(
-                      context,
+                    SettingsActionButton(
                       onPressed: () async {
                         var filePickResult = await FilePicker.pickFiles(
                           type: FileType.any,
@@ -90,9 +87,9 @@ class DataBackup extends StatelessWidget {
                           );
                         }
                       },
-                      color: Colors.amber,
-                      children: [Icon(LineIcons.paperclip), Text(s.import)],
+                      baseColor: Colors.amber,
                       connectLeft: true,
+                      children: [Icon(LineIcons.paperclip), Text(s.import)],
                     ),
                   ],
                 ),
@@ -119,8 +116,7 @@ class DataBackup extends StatelessWidget {
                 child: Row(
                   mainAxisSize: .min,
                   children: [
-                    _button(
-                      context,
+                    SettingsActionButton(
                       onPressed: () async {
                         var file = await datedSaveFile(context, "settings");
                         if (file != null && context.mounted) {
@@ -134,12 +130,11 @@ class DataBackup extends StatelessWidget {
                           await saveExternalFile(file);
                         }
                       },
-                      color: Colors.green,
-                      children: [Icon(LineIcons.save), Text(s.save)],
+                      baseColor: Colors.green,
                       connectRight: true,
+                      children: [Icon(LineIcons.save), Text(s.save)],
                     ),
-                    _button(
-                      context,
+                    SettingsActionButton(
                       onPressed: () async {
                         var file = await datedSaveFile(context, "settings");
                         if (file != null && context.mounted) {
@@ -153,13 +148,12 @@ class DataBackup extends StatelessWidget {
                           await shareFile(file);
                         }
                       },
-                      color: Colors.blue,
-                      children: [Icon(Icons.share), Text(s.share)],
+                      baseColor: Colors.blue,
                       connectLeft: true,
                       connectRight: true,
+                      children: [Icon(Icons.share), Text(s.share)],
                     ),
-                    _button(
-                      context,
+                    SettingsActionButton(
                       onPressed: () async {
                         final result = await showConfirmationDialog(
                           context,
@@ -179,13 +173,12 @@ class DataBackup extends StatelessWidget {
                           }
                         }
                       },
-                      color: Colors.amber,
-                      children: [Icon(LineIcons.paperclip), Text(s.import)],
+                      baseColor: Colors.amber,
                       connectLeft: true,
                       connectRight: true,
+                      children: [Icon(LineIcons.paperclip), Text(s.import)],
                     ),
-                    _button(
-                      context,
+                    SettingsActionButton(
                       onPressed: () async {
                         final result = await showConfirmationDialog(
                           context,
@@ -197,9 +190,9 @@ class DataBackup extends StatelessWidget {
                           context.superSettingState.reset(prefCategories);
                         }
                       },
-                      color: Colors.red,
-                      children: [Icon(Icons.restore), Text(s.settingsReset)],
+                      baseColor: Colors.red,
                       connectLeft: true,
+                      children: [Icon(Icons.restore), Text(s.settingsReset)],
                     ),
                   ],
                 ),
@@ -262,6 +255,94 @@ class DataBackup extends StatelessWidget {
           ],
         ),
         SettingsSection(
+          title: s.settingsLegacy,
+          items: [
+            SettingsTile(
+              title: s.settingsBackupLegacyFile,
+              subtitle: s.settingsBackupLegacyFileDes,
+              body: Container(
+                decoration: BoxDecoration(
+                  borderRadius: context.radiusSmall,
+                  color: context.trueBlack
+                      ? null
+                      : context.colorScheme.surfaceContainerLow,
+                  border: context.trueBlack
+                      ? Border.all(color: context.colorScheme.surfaceBright)
+                      : null,
+                ),
+                child: Row(
+                  mainAxisSize: .min,
+                  children: [
+                    SettingsActionButton(
+                      onPressed: () async {
+                        final result = await showConfirmationDialog(
+                          context,
+                          description:
+                              s.settingsBackupConfirmationSettingsOverwrite,
+                          color: Colors.amber,
+                        );
+                        if (result) {
+                          var filePickResult = await FilePicker.pickFiles(
+                            type: FileType.any,
+                          );
+                          if (filePickResult != null && context.mounted) {
+                            context.superSettingState.restore(
+                              File(filePickResult.files.first.path!),
+                              prefCategories,
+                            );
+                          }
+                        }
+                      },
+                      baseColor: Colors.amber,
+                      children: [Icon(LineIcons.paperclip), Text(s.import)],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SettingsTile(
+              title: s.settingsBackupCategories,
+              subtitle: s.settingsBackupCategoriesImportDes,
+              onTap: (context) {
+                final options = PreferenceCategory.values;
+                if (context.mounted) {
+                  showGeneralSheet(
+                    context,
+                    title: s.settingsBackupCategories,
+                    child: StatefulBuilder(
+                      builder: (context, setState) => Column(
+                        children: options
+                            .map((option) {
+                              final title = prefCategoryToString(
+                                context,
+                                option,
+                              );
+                              if (title != null) {
+                                return CheckboxListTile(
+                                  title: Text(title),
+                                  value: prefCategories.contains(option),
+                                  onChanged: (value) {
+                                    if (value!) {
+                                      prefCategories.add(option);
+                                    } else {
+                                      prefCategories.remove(option);
+                                    }
+                                    setState(() {});
+                                  },
+                                );
+                              }
+                            })
+                            .nonNulls
+                            .toList(),
+                      ),
+                    ),
+                  );
+                }
+              },
+            ),
+          ],
+        ),
+        SettingsSection(
           title: s.settingsBackupDatabase,
           items: [
             SettingsTile(
@@ -280,8 +361,7 @@ class DataBackup extends StatelessWidget {
                 child: Row(
                   mainAxisSize: .min,
                   children: [
-                    _button(
-                      context,
+                    SettingsActionButton(
                       onPressed: () async {
                         var file = await datedSaveFile(context, "database");
                         if (file != null && context.mounted) {
@@ -289,12 +369,11 @@ class DataBackup extends StatelessWidget {
                           await saveExternalFile(file);
                         }
                       },
-                      color: Colors.green,
-                      children: [Icon(LineIcons.save), Text(s.save)],
+                      baseColor: Colors.green,
                       connectRight: true,
+                      children: [Icon(LineIcons.save), Text(s.save)],
                     ),
-                    _button(
-                      context,
+                    SettingsActionButton(
                       onPressed: () async {
                         var file = await datedSaveFile(context, "database");
                         if (file != null && context.mounted) {
@@ -302,13 +381,12 @@ class DataBackup extends StatelessWidget {
                           await shareFile(file);
                         }
                       },
-                      color: Colors.blue,
-                      children: [Icon(Icons.share), Text(s.share)],
+                      baseColor: Colors.blue,
                       connectLeft: true,
                       connectRight: true,
+                      children: [Icon(Icons.share), Text(s.share)],
                     ),
-                    _button(
-                      context,
+                    SettingsActionButton(
                       onPressed: () async {
                         final result = await showConfirmationDialog(
                           context,
@@ -328,13 +406,12 @@ class DataBackup extends StatelessWidget {
                           }
                         }
                       },
-                      color: Colors.amber,
-                      children: [Icon(LineIcons.paperclip), Text(s.import)],
+                      baseColor: Colors.amber,
                       connectLeft: true,
                       connectRight: true,
+                      children: [Icon(LineIcons.paperclip), Text(s.import)],
                     ),
-                    _button(
-                      context,
+                    SettingsActionButton(
                       onPressed: () async {
                         final result = await showConfirmationDialog(
                           context,
@@ -346,9 +423,9 @@ class DataBackup extends StatelessWidget {
                           await DBHelper().reset(databaseCategories);
                         }
                       },
-                      color: Colors.red,
-                      children: [Icon(Icons.restore), Text(s.settingsReset)],
+                      baseColor: Colors.red,
                       connectLeft: true,
+                      children: [Icon(Icons.restore), Text(s.settingsReset)],
                     ),
                   ],
                 ),
@@ -411,38 +488,6 @@ class DataBackup extends StatelessWidget {
           ],
         ),
       ],
-    );
-  }
-
-  Widget _button(
-    BuildContext context, {
-    required VoidCallback onPressed,
-    required Color? color,
-    required List<Widget> children,
-    bool connectLeft = false,
-    bool connectRight = false,
-  }) {
-    return Material(
-      borderRadius: BorderRadius.horizontal(
-        left: !connectLeft ? context.actionBarIconRadius : Radius.zero,
-        right: !connectRight ? context.actionBarIconRadius : Radius.zero,
-      ),
-      clipBehavior: .antiAlias,
-      color: color == null
-          ? null
-          : CardColorScheme(
-              getColorScheme(color, context.tbrightness),
-              context.trueBlack,
-            ).card,
-      child: InkWell(
-        onTap: onPressed,
-        child: Container(
-          width: 60,
-          height: 72,
-          padding: .all(6),
-          child: Column(mainAxisAlignment: .spaceEvenly, children: children),
-        ),
-      ),
     );
   }
 
@@ -513,67 +558,13 @@ class DataBackup extends StatelessWidget {
   }
 
   Future<List<String?>?> _getLoginInfo() async {
-    final storage = KeyValueStorage(gpodderApiKey);
-    return await storage.getStringList();
+    return await KeyValueStorage().getStringList(gpodderApiKey);
   }
 
   Future<List<int?>> _getSyncStatus() async {
-    var dateTimeStorage = KeyValueStorage(gpodderSyncDateTimeKey);
-    var statusStorage = KeyValueStorage(gpodderSyncStatusKey);
-    final syncDateTime = await dateTimeStorage.getInt();
-    final statusIndex = await statusStorage.getInt();
+    final syncDateTime = await KeyValueStorage().getInt(gpodderSyncDateTimeKey);
+    final statusIndex = await KeyValueStorage().getInt(gpodderSyncStatusKey);
     return [syncDateTime, statusIndex];
-  }
-}
-
-class _OpenEye extends StatefulWidget {
-  const _OpenEye();
-
-  @override
-  __OpenEyeState createState() => __OpenEyeState();
-}
-
-class __OpenEyeState extends State<_OpenEye>
-    with SingleTickerProviderStateMixin {
-  double _radius = 0.0;
-  late Animation _animation;
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: Duration(seconds: 1),
-    );
-    _animation = Tween(begin: 0.0, end: 1.0).animate(_controller)
-      ..addListener(() {
-        if (mounted) {
-          setState(() {
-            _radius = _animation.value;
-          });
-        }
-      });
-    _controller.forward();
-    _controller.addStatusListener((status) async {
-      if (status == AnimationStatus.completed) {
-        await Future.delayed(Duration(milliseconds: 400));
-        _controller.reverse();
-      } else if (status == AnimationStatus.dismissed) {
-        _controller.forward();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return DotIndicator(radius: 8 * _radius + 0.5, color: Colors.white);
   }
 }
 
@@ -1017,9 +1008,8 @@ class __GpodderInfoState extends State<_GpodderInfo> {
   final _gpodderUrl = "https://gpodder.net";
 
   Future<List<String>?> _getLoginInfo() async {
-    final storage = KeyValueStorage(gpodderApiKey);
     final androidInfo = await DeviceInfoPlugin().androidInfo;
-    final deviceInfo = await storage.getStringList();
+    final deviceInfo = await KeyValueStorage().getStringList(gpodderApiKey);
     deviceInfo!.add("Tsacdop on ${androidInfo.model}");
     return deviceInfo;
   }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:line_icons/line_icons.dart';
 
+import '../home/about.dart';
 import '../intro_slider/app_intro.dart';
 import '../util/extension_helper.dart';
 import '../util/locales.dart';
@@ -128,12 +129,11 @@ class Settings extends StatelessWidget {
           title: s.settingsInfo,
           items: [
             SettingsTile(
-              title: s.settingsLibraries,
-              subtitle: s.settingsLibrariesDes,
-              leading: Icon(LineIcons.bookOpen, color: Colors.purple[700]),
+              title: s.homeToprightMenuAbout,
+              leading: Icon(LineIcons.infoCircle),
               onTap: (context) => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => LicensePage()),
+                MaterialPageRoute(builder: (context) => AboutApp()),
               ),
             ),
             SettingsTile(
@@ -163,6 +163,15 @@ class Settings extends StatelessWidget {
                     //     'https://play.google.com/store/apps/details?id=com.stonegate.tsacdop'),
                   ],
                 ),
+              ),
+            ),
+            SettingsTile(
+              title: s.settingsLibraries,
+              subtitle: s.settingsLibrariesDes,
+              leading: Icon(LineIcons.bookOpen, color: Colors.purple[700]),
+              onTap: (context) => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => LicensePage()),
               ),
             ),
             SettingsTile(

@@ -123,9 +123,8 @@ class InteractiveEpisodeGrid extends StatefulWidget {
       ActionBarSpacer(0, 3),
       ActionBarFilterPlayed(0, 4),
       ActionBarFilterNew(0, 5),
-      ActionBarButtonRemoveNewMark(0, 6),
-      ActionBarSwitchSelectMode(0, 7),
-      ActionBarSwitchSecondRow(0, 8),
+      ActionBarSwitchSelectMode(0, 6),
+      ActionBarSwitchSecondRow(0, 7),
     ],
     this.actionBarWidgetsSecondRow = const [
       ActionBarDropdownPodcasts(1, 0),

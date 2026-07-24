@@ -263,9 +263,8 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
           ActionBarFilterDisplayVersion(1, 0),
           ActionBarSearchTitle(1, 1),
           ActionBarSpacer(1, 2),
-          ActionBarButtonRemoveNewMark(1, 3),
-          ActionBarSwitchLayout(1, 4),
-          ActionBarButtonSync(1, 5),
+          ActionBarSwitchLayout(1, 3),
+          ActionBarButtonSync(1, 4),
         ],
         actionBarSortByItems: const [
           Sorter.downloadDate,

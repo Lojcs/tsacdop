@@ -184,11 +184,18 @@ extension DateTimeExtension on DateTime {
 }
 
 extension DurationExtension on Duration {
+  /// Truncates the time and returns the localized text representation.
   String toLocalString(BuildContext context) => switch (this) {
     < const Duration(minutes: 1) => context.s.secCount(inSeconds),
     < const Duration(hours: 1) => context.s.minsCount(inMinutes),
     < const Duration(days: 1) => context.s.hoursCount(inHours),
-    _ => context.s.daysCount(inDays),
+    const Duration(days: 7) ||
+    const Duration(days: 14) ||
+    const Duration(days: 21) ||
+    const Duration(days: 28) => context.s.weeksCount(inDays ~/ 7),
+    < const Duration(days: 30) => context.s.daysCount(inDays),
+    < const Duration(days: 365) => context.s.monthsCount(inDays ~/ 30),
+    _ => context.s.yearsCount(inDays ~/ 365),
   };
   String toTime() => switch (this) {
     < const Duration(minutes: 1) =>

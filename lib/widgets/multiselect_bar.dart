@@ -1013,6 +1013,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
   bool? liked;
   bool? played;
   bool? downloaded;
+  bool? isNew;
   bool? inPlaylist;
 
   late Playlist playlist;
@@ -1059,15 +1060,18 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
       liked = null;
       played = null;
       downloaded = null;
+      isNew = null;
       inPlaylist = null;
     } else {
       bool likedSet = false;
       bool playedSet = false;
       bool downloadedSet = false;
+      bool isNewSet = false;
       bool inPlaylistSet = false;
       liked = false;
       played = false;
       downloaded = false;
+      isNew = false;
       inPlaylist = false;
       if (widget.playlist == null) {
         playlist = Provider.of<AudioState>(context, listen: false).playlist;
@@ -1100,6 +1104,12 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
         } else if (episodeDownloaded != downloaded) {
           downloaded = null;
         }
+        if (!isNewSet) {
+          isNew = episode.isNew;
+          isNewSet = true;
+        } else if (episode.isNew != isNew) {
+          isNew = null;
+        }
         if (!inPlaylistSet) {
           inPlaylist = playlist.contains(id);
           inPlaylistSet = true;
@@ -1109,6 +1119,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
         if (liked == null &&
             played == null &&
             downloaded == null &&
+            isNew == null &&
             inPlaylist == null) {
           break;
         }
@@ -1334,6 +1345,52 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                               progress: 1,
                             ),
                           ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  ActionBarButton(
+                    buttonType: ActionBarButtonType.single,
+                    onPressed: (_) async {
+                      setState(() => actionLock = true);
+                      if (selectedEpisodeIds.isNotEmpty) {
+                        EpisodeState episodeState = Provider.of<EpisodeState>(
+                          context,
+                          listen: false,
+                        );
+                        SelectionController selectionController =
+                            Provider.of<SelectionController>(
+                              context,
+                              listen: false,
+                            );
+                        await selectionController.getEpisodesLimitless();
+                        selectedEpisodeIds =
+                            selectionController.selectedEpisodes;
+                        isNew = false;
+                        await episodeState.unsetNew(selectedEpisodeIds);
+                        Fluttertoast.showToast(
+                          msg: context.s.removeNewMark,
+                          gravity: ToastGravity.BOTTOM,
+                        );
+                      }
+                      setState(() => actionLock = false);
+                    },
+                    tooltip: context.s.removeNewMark,
+                    enabled: isNew != false,
+                    child: SizedBox(
+                      height: context.actionBarButtonSizeVertical,
+                      width: context.actionBarButtonSizeHorizontal,
+                      child: CustomPaint(
+                        painter: RemoveNewFlagPainter(
+                          isNew == false && context.trueBlack
+                              ? Colors.grey[800]
+                              : context.actionBarIconColor,
+                          isNew != false
+                              ? Colors.red
+                              : context.trueBlack
+                              ? Colors.grey[800]!
+                              : context.actionBarIconColor,
+                          stroke: 2,
                         ),
                       ),
                     ),

@@ -43,6 +43,7 @@ class EpisodeBrief extends Equatable {
   final bool isNew;
   final bool isPlayed;
   final bool isDisplayVersion;
+  final bool isInteracted;
   final List<int>? versions;
   final int skipSecondsStart;
   final int skipSecondsEnd;
@@ -71,6 +72,7 @@ class EpisodeBrief extends Equatable {
     required this.isNew,
     required this.isPlayed,
     required this.isDisplayVersion,
+    required this.isInteracted,
     this.versions,
     this.skipSecondsStart = 0,
     this.skipSecondsEnd = 0,
@@ -103,6 +105,7 @@ class EpisodeBrief extends Equatable {
        isNew = false,
        isPlayed = false,
        isDisplayVersion = true,
+       isInteracted = false,
        versions = null,
        skipSecondsStart = 0,
        skipSecondsEnd = 0,
@@ -147,6 +150,7 @@ class EpisodeBrief extends Equatable {
           Duration(days: 1),
       isPlayed = false,
       isDisplayVersion = true,
+      isInteracted = false,
       versions = [],
       skipSecondsStart = 0,
       skipSecondsEnd = 0,
@@ -345,6 +349,7 @@ class EpisodeBrief extends Equatable {
     bool? isNew,
     bool? isPlayed,
     bool? isDisplayVersion,
+    bool? isInteracted,
     List<int>? versions,
     int? skipSecondsStart,
     int? skipSecondsEnd,
@@ -372,6 +377,7 @@ class EpisodeBrief extends Equatable {
     isNew: isNew ?? this.isNew,
     isPlayed: isPlayed ?? this.isPlayed,
     isDisplayVersion: isDisplayVersion ?? this.isDisplayVersion,
+    isInteracted: isInteracted ?? this.isInteracted,
     versions: versions ?? this.versions,
     skipSecondsStart: skipSecondsStart ?? this.skipSecondsStart,
     skipSecondsEnd: skipSecondsEnd ?? this.skipSecondsEnd,

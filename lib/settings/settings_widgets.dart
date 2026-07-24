@@ -2,10 +2,13 @@ import 'dart:math';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
 
 import '../state/settings/preference.dart';
 import '../state/settings/setting_state.dart';
+import '../type/requirement_combinator.dart';
+import '../type/theme_data.dart';
 import '../util/extension_helper.dart';
 import '../widgets/custom_widget.dart';
 import '../widgets/general_dialog.dart';
@@ -400,7 +403,7 @@ class SettingsSliderTile<T> extends SettingsItem {
   }
 }
 
-enum DurationSliderType { seconds, minutes, hours, days }
+enum DurationSliderType { seconds, minutes, hours, days, log }
 
 /// Tile with slider underneath and value printed next to it.
 class SettingsDurationSliderTile extends SettingsSliderTile<Duration> {
@@ -423,12 +426,32 @@ class SettingsDurationSliderTile extends SettingsSliderTile<Duration> {
            .minutes => value.inMinutes.toDouble(),
            .hours => value.inHours.toDouble(),
            .days => value.inDays.toDouble(),
+           .log => switch (value) {
+             const Duration(hours: 1) => 1,
+             const Duration(hours: 6) => 2,
+             const Duration(days: 1) => 3,
+             const Duration(days: 3) => 4,
+             const Duration(days: 7) => 5,
+             const Duration(days: 30) => 6,
+             const Duration(days: 365) => 7,
+             _ => 4,
+           },
          },
          doubleToValue: (_, value) => switch (type) {
            .seconds => Duration(seconds: value.toInt()),
            .minutes => Duration(minutes: value.toInt()),
            .hours => Duration(hours: value.toInt()),
            .days => Duration(days: value.toInt()),
+           .log => switch (value) {
+             1 => const Duration(hours: 1),
+             2 => const Duration(hours: 6),
+             3 => const Duration(days: 1),
+             4 => const Duration(days: 3),
+             5 => const Duration(days: 7),
+             6 => const Duration(days: 30),
+             7 => const Duration(days: 365),
+             _ => const Duration(days: 3),
+           },
          },
          min: 1,
          max: switch (type) {
@@ -436,6 +459,7 @@ class SettingsDurationSliderTile extends SettingsSliderTile<Duration> {
            .minutes => 120,
            .hours => 24,
            .days => 30,
+           .log => 7,
          },
          disableValue: .zero,
          defaultValue: switch (type) {
@@ -443,12 +467,14 @@ class SettingsDurationSliderTile extends SettingsSliderTile<Duration> {
            .minutes => Duration(minutes: 30),
            .hours => Duration(days: 1),
            .days => Duration(days: 15),
+           .log => Duration(days: 3),
          },
          divisions: switch (type) {
            .seconds => 12,
            .minutes => 8,
            .hours => 6,
            .days => 6,
+           .log => 6,
          },
        );
 }
@@ -618,4 +644,103 @@ class SettingsCheckboxSheetTile<T> extends SettingsValueTile<Set<T>> {
       );
     }
   }
+}
+
+/// Button similar to an action bar button to use in settings.
+class SettingsActionButton extends StatelessWidget {
+  const SettingsActionButton({
+    required this.onPressed,
+    required this.children,
+    this.baseColor,
+    this.active = false,
+    this.connectLeft = false,
+    this.connectRight = false,
+    super.key,
+  });
+
+  final VoidCallback onPressed;
+  final List<Widget> children;
+  final Color? baseColor;
+  final bool active;
+  final bool connectLeft;
+  final bool connectRight;
+
+  @override
+  Widget build(BuildContext context) {
+    final cardColorScheme = baseColor == null
+        ? null
+        : CardColorScheme(
+            getColorScheme(baseColor!, context.tbrightness),
+            context.trueBlack,
+          );
+    return Material(
+      borderRadius: BorderRadius.horizontal(
+        left: !connectLeft ? context.actionBarIconRadius : Radius.zero,
+        right: !connectRight ? context.actionBarIconRadius : Radius.zero,
+      ),
+      clipBehavior: .antiAlias,
+      color: baseColor == null
+          ? active
+                ? context.cardColorSchemeSelected
+                : context.cardColorSchemeCard
+          : active
+          ? cardColorScheme!.selected
+          : cardColorScheme!.card,
+      child: InkWell(
+        onTap: onPressed,
+        child: Container(
+          width: 60,
+          height: 72,
+          padding: .all(6),
+          child: Column(mainAxisAlignment: .spaceEvenly, children: children),
+        ),
+      ),
+    );
+  }
+}
+
+class SettingsRequirementCombinatorSubsection
+    extends SettingsValueTile<RequirementCombinator> {
+  /// Items in the section.
+  final List<Widget> items;
+
+  SettingsRequirementCombinatorSubsection({
+    required super.title,
+    super.subtitle,
+    required this.items,
+    required super.selector,
+    super.leading,
+    super.key,
+  }) : super(
+         trailingBuilder: (context, value) => Row(
+           mainAxisSize: .min,
+           children: [
+             SettingsActionButton(
+               onPressed: () {
+                 var preference = selector(context, context.superSettingState);
+                 preference.set(.all);
+               },
+               active: value == .all,
+               connectRight: true,
+               children: [
+                 Icon(LineIcons.diceD6),
+                 Text(context.s.settingsRequirementsAll),
+               ],
+             ),
+             SettingsActionButton(
+               onPressed: () {
+                 var preference = selector(context, context.superSettingState);
+                 preference.set(.any);
+               },
+               active: value == .any,
+               connectLeft: true,
+               children: [
+                 Icon(LineIcons.diceOne),
+                 Text(context.s.settingsRequirementsAny),
+               ],
+             ),
+           ],
+         ),
+         bodyBuilder: (context, value) => Column(children: items),
+       );
 }

@@ -604,7 +604,6 @@ class AudioState extends ChangeNotifier {
       }
     }
     notifyListeners();
-    await _episodeState.unsetNew(episodeIds);
   }
 
   /// Skips to the episode at specified index
@@ -859,7 +858,6 @@ class AudioState extends ChangeNotifier {
       index = playlist.length;
     }
     await playlist.cachePlaylist(_episodeState);
-    await _episodeState.unsetNew(episodeIds);
     EpisodeCollision ifExists = playlist.isQueue
         ? EpisodeCollision.replace
         : EpisodeCollision.ignore;

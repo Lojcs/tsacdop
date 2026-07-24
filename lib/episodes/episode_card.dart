@@ -240,18 +240,21 @@ class InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
       onTap: () async {
         await waitForAvatar;
         if (avatarHasFocus) return;
-        if (selectable && selectionController!.selectMode) {
-          selected = selectionController!.select(widget.index!);
-          if (selected) {
-            _vibrateTapFinishedSelect();
-            _controller.forward();
+        if (context.mounted) {
+          context.episodeState.setInteracted(widget.episodeId);
+          if (selectable && selectionController!.selectMode) {
+            selected = selectionController!.select(widget.index!);
+            if (selected) {
+              _vibrateTapFinishedSelect();
+              _controller.forward();
+            } else {
+              _vibrateTapFinishedRelease();
+              _controller.reverse();
+            }
           } else {
-            _vibrateTapFinishedRelease();
-            _controller.reverse();
+            // _shadowController.forward();
+            if (context.mounted) openDetails(context);
           }
-        } else {
-          // _shadowController.forward();
-          if (context.mounted) openDetails(context);
         }
       },
       onShortTapHold: () {

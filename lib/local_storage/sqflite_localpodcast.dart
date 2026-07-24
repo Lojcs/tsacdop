@@ -7,6 +7,8 @@ import 'package:html/parser.dart' show parse;
 import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
+import '../state/settings/setting_state.dart';
+import '../state/settings/tsacdop_settings.dart';
 import '../type/fireside_data.dart';
 import '../type/playlist.dart';
 import '../type/podcastgroup.dart';
@@ -120,7 +122,7 @@ class DBHelper {
         liked INTEGER DEFAULT 0, liked_date INTEGER DEFAULT 0, downloaded TEXT DEFAULT 'ND', 
         download_date INTEGER DEFAULT 0, media_id TEXT, is_new INTEGER DEFAULT 0, 
         chapter_link TEXT DEFAULT '', hosts TEXT DEFAULT '', episode_image TEXT DEFAULT '',
-        number INTEGER DEFAULT -1, display_version_id INTEGER DEFAULT -1)""",
+        number INTEGER DEFAULT -1, display_version_id INTEGER DEFAULT -1, interacted INTEGER DEFAULT 0)""",
     );
     await db.execute(
       """CREATE TABLE PlayHistory(id INTEGER PRIMARY KEY, title TEXT, enclosure_url TEXT,
@@ -311,12 +313,12 @@ class DBHelper {
     List<Map> podcasts = await db.rawQuery("SELECT id FROM PodcastLocal");
     List<Future> futures = [];
     for (var podcast in podcasts) {
-      futures.add(rescanPodcastEpisodesVersions(db, podcast['id']));
+      futures.add(_rescanPodcastEpisodesVersions(db, podcast['id']));
     }
     await Future.wait(futures);
     futures.clear();
     for (var podcast in podcasts) {
-      futures.add(renumberPodcastEpisodes(db, podcast['id']));
+      futures.add(_renumberPodcastEpisodes(db, podcast['id']));
     }
     await Future.wait(futures);
   }
@@ -394,6 +396,8 @@ class DBHelper {
   }
 
   Future<void> _v10Update(Database db) async {
+    await db.execute("ALTER TABLE Episodes ADD interacted INTEGER DEFAULT 0");
+    await db.rawUpdate("UPDATE Episodes SET interacted = 1");
     await db.execute(
       "CREATE TABLE Playlists(id TEXT PRIMARY KEY, name TEXT, is_local INTEGER, is_queue INTEGER)",
     );
@@ -1005,7 +1009,7 @@ class DBHelper {
   }
 
   /// Assigns each episode in a podcast numbers based on its publish date
-  Future<void> renumberPodcastEpisodes(
+  Future<void> _renumberPodcastEpisodes(
     DatabaseExecutor dbClient,
     String feedId,
   ) async {
@@ -1034,7 +1038,7 @@ class DBHelper {
   /// a) Manually set version / newsest downloaded version (whichever is newer)
   /// b) The version all other undownloaded versions point to (newest on rescan)
   /// c) Itself
-  Future<void> rescanPodcastEpisodesVersions(
+  Future<void> _rescanPodcastEpisodesVersions(
     DatabaseExecutor dbClient,
     String feedId,
   ) async {
@@ -1123,15 +1127,9 @@ class DBHelper {
   Future<void> _savePodcastEpisodes(
     Transaction txn,
     List<EpisodeBrief> episodes, {
-    bool update = true,
+    required TsacdopSettings settings,
+    required bool update,
   }) async {
-    final hideNew = Sqflite.firstIntValue(
-      await txn.rawQuery(
-        'SELECT hide_new_mark FROM PodcastLocal WHERE id = ?',
-        [episodes.first.podcastId],
-      ),
-    );
-    final newMark = update && hideNew == 0;
     Batch batchOp = txn.batch();
     for (var episode in episodes) {
       batchOp.rawInsert(
@@ -1154,14 +1152,12 @@ class DBHelper {
           episode.episodeImageUrl,
           update ? -1 : episode.number,
           update ? -1 : 0,
-          newMark ? 1 : 0,
+          0,
         ],
       );
     }
     await batchOp.commit();
     final feedId = episodes.first.podcastId;
-    await renumberPodcastEpisodes(txn, feedId);
-    await rescanPodcastEpisodesVersions(txn, feedId);
     int? count = Sqflite.firstIntValue(
       await txn.rawQuery('SELECT COUNT(*) FROM Episodes WHERE feed_id = ?', [
         feedId,
@@ -1171,32 +1167,45 @@ class DBHelper {
       """UPDATE PodcastLocal SET episode_count = ? WHERE id = ?""",
       [count ?? 0, feedId],
     );
-  }
-
-  Future<void> saveNewPodcastEpisodes(List<EpisodeBrief> episodes) async {
-    var dbClient = await database;
-    await dbClient.transaction<void>((txn) async {
-      await _savePodcastEpisodes(txn, episodes, update: false);
-      await rescanPodcastEpisodesVersions(txn, episodes.first.podcastId);
-    });
-  }
-
-  Future<void> saveUpdatedPodcastEpisodes(List<EpisodeBrief> episodes) async {
-    var dbClient = await database;
-    await dbClient.transaction<void>((txn) async {
-      await _savePodcastEpisodes(txn, episodes, update: true);
-    });
-  }
-
-  Future<void> unmarkNewOldEpisodes(String podcastId) async {
-    var dbClient = await database;
-    await dbClient.rawUpdate(
-      "UPDATE Episodes SET is_new = 0 WHERE feed_id = ? AND milliseconds < ?",
-      [
-        podcastId,
-        DateTime.now().subtract(Duration(days: 1)).millisecondsSinceEpoch,
-      ],
+    await _renumberPodcastEpisodes(txn, feedId);
+    await _rescanPodcastEpisodesVersions(txn, feedId);
+    await _checkSetNew(
+      txn,
+      feedId,
+      settings: settings,
+      update: update,
+      newlyAddedEpisodeUrls: episodes.map((e) => e.enclosureUrl).toList(),
     );
+  }
+
+  Future<void> saveNewPodcastEpisodes(
+    List<EpisodeBrief> episodes,
+    TsacdopSettings settings,
+  ) async {
+    var dbClient = await database;
+    await dbClient.transaction<void>((txn) async {
+      await _savePodcastEpisodes(
+        txn,
+        episodes,
+        update: false,
+        settings: settings,
+      );
+    });
+  }
+
+  Future<void> saveSyncedPodcastEpisodes(
+    List<EpisodeBrief> episodes,
+    TsacdopSettings settings,
+  ) async {
+    var dbClient = await database;
+    await dbClient.transaction<void>((txn) async {
+      await _savePodcastEpisodes(
+        txn,
+        episodes,
+        update: true,
+        settings: settings,
+      );
+    });
   }
 
   Future<int> saveLocalEpisode(EpisodeBrief episode) async {
@@ -1268,6 +1277,7 @@ class DBHelper {
     bool? filterDownloaded,
     bool? filterDuplicateVersions,
     bool? filterAutoDownload,
+    bool? filterInteracted,
     List<String>? customFilters,
     List<String>? customArguments,
   }) async {
@@ -1279,66 +1289,66 @@ class DBHelper {
       E.is_new, E.display_version_id, P.skip_seconds, P.skip_seconds_end, E.liked""",
     ];
     List<String> filters = [];
-    List arguements = [];
+    List arguments = [];
     query.add(" FROM Episodes E INNER JOIN PodcastLocal P ON E.feed_id = P.id");
     query.add(" LEFT JOIN PlayHistory H ON E.enclosure_url = H.enclosure_url");
 
     if (podcastIds != null && podcastIds.isNotEmpty) {
       filters.add(" P.id IN (${(", ?" * podcastIds.length).substring(2)})");
-      arguements.addAll(podcastIds);
+      arguments.addAll(podcastIds);
     }
     if (excludedFeedIds != null && excludedFeedIds.isNotEmpty) {
       filters.add(
         " P.id NOT IN (${(", ?" * excludedFeedIds.length).substring(2)})",
       );
-      arguements.addAll(excludedFeedIds);
+      arguments.addAll(excludedFeedIds);
     }
     if (episodeIds != null && episodeIds.isNotEmpty) {
       filters.add(" E.id IN (${(", ?" * episodeIds.length).substring(2)})");
-      arguements.addAll(episodeIds);
+      arguments.addAll(episodeIds);
     }
     if (excludedEpisodeIds != null && excludedEpisodeIds.isNotEmpty) {
       filters.add(
         " E.id NOT IN (${(", ?" * excludedEpisodeIds.length).substring(2)})",
       );
-      arguements.addAll(excludedEpisodeIds);
+      arguments.addAll(excludedEpisodeIds);
     }
     if (episodeUrls != null && episodeUrls.isNotEmpty) {
       filters.add(
         " E.enclosure_url IN (${(", ?" * episodeUrls.length).substring(2)})",
       );
-      arguements.addAll(episodeUrls);
+      arguments.addAll(episodeUrls);
     }
     if (excludedEpisodeUrls != null && excludedEpisodeUrls.isNotEmpty) {
       filters.add(
         " E.enclosure_url NOT IN (${(", ?" * excludedEpisodeUrls.length).substring(2)})",
       );
-      arguements.addAll(excludedEpisodeUrls);
+      arguments.addAll(excludedEpisodeUrls);
     }
     if (episodeTitles != null && episodeTitles.isNotEmpty) {
       filters.add(
         " E.title IN (${(", ?" * episodeTitles.length).substring(2)})",
       );
-      arguements.addAll(episodeTitles);
+      arguments.addAll(episodeTitles);
     }
     if (excludedEpisodeTitles != null && excludedEpisodeTitles.isNotEmpty) {
       filters.add(
         " E.title NOT IN (${(", ?" * excludedEpisodeTitles.length).substring(2)})",
       );
-      arguements.addAll(excludedEpisodeTitles);
+      arguments.addAll(excludedEpisodeTitles);
     }
     if (likeEpisodeTitles != null && likeEpisodeTitles.isNotEmpty) {
       filters.add(
         " (${(" OR E.title LIKE ?" * likeEpisodeTitles.length).substring(4)})",
       );
-      arguements.addAll(likeEpisodeTitles.map((e) => "%$e%"));
+      arguments.addAll(likeEpisodeTitles.map((e) => "%$e%"));
     }
     if (excludedLikeEpisodeTitles != null &&
         excludedLikeEpisodeTitles.isNotEmpty) {
       filters.add(
         " (${(" OR E.title LIKE ?" * excludedLikeEpisodeTitles.length).substring(4)})",
       );
-      arguements.addAll(excludedLikeEpisodeTitles.map((e) => "%$e%"));
+      arguments.addAll(excludedLikeEpisodeTitles.map((e) => "%$e%"));
     }
     if (filterNew == false) {
       filters.add(" E.is_new = 0");
@@ -1365,6 +1375,11 @@ class DBHelper {
     } else if (filterAutoDownload == true) {
       filters.add(" P.auto_download = 1");
     }
+    if (filterInteracted == false) {
+      filters.add(" E.interacted = 0");
+    } else if (filterInteracted == true) {
+      filters.add(" E.interacted = 1");
+    }
     if (rangeParameters != null &&
         rangeParameters.isNotEmpty &&
         rangeDelimiters != null &&
@@ -1387,7 +1402,7 @@ class DBHelper {
         filters.add(" $filter");
       }
       if (customArguments != null && customFilters.isNotEmpty) {
-        arguements.addAll(customArguments);
+        arguments.addAll(customArguments);
       }
     }
     if (filters.isNotEmpty) {
@@ -1417,7 +1432,7 @@ class DBHelper {
     var dbClient = await database;
     List<EpisodeBrief> episodes = [];
     List<Map> result;
-    result = await dbClient.rawQuery(query.join(), arguements);
+    result = await dbClient.rawQuery(query.join(), arguments);
     if (result.isNotEmpty) {
       for (var i in result) {
         EpisodeBrief episode = EpisodeBrief(
@@ -1444,6 +1459,7 @@ class DBHelper {
           isNew: i['is_new'] == 1,
           isPlayed: i['play_time'] != null && i['play_time'] != 0,
           isDisplayVersion: i['display_version_id'] == i['id'],
+          isInteracted: i['interacted'] == 1,
           versions: null,
           skipSecondsStart: i['skip_seconds'],
           skipSecondsEnd: i['skip_seconds_end'],
@@ -1539,6 +1555,57 @@ class DBHelper {
       "UPDATE Episodes SET downloaded = 'ND', media_id = ? WHERE id = ?",
       [enclosureUrl, episodeId],
     );
+  }
+
+  Future<void> setInteracted(int id) async {
+    var dbClient = await database;
+    await dbClient.rawUpdate(
+      "UPDATE Episodes SET interacted = 1 WHERE id = ?",
+      [id],
+    );
+  }
+
+  /// Constructs a sqlite statement based on the app settings
+  /// to mark episodes of a podcast as new.
+  Future<void> _checkSetNew(
+    Transaction txn,
+    String feedId, {
+    required TsacdopSettings settings,
+    required bool update,
+    required List<String> newlyAddedEpisodeUrls,
+  }) async {
+    final hideNew =
+        Sqflite.firstIntValue(
+          await txn.rawQuery(
+            'SELECT hide_new_mark FROM PodcastLocal WHERE id = ?',
+            [feedId],
+          ),
+        ) ==
+        1;
+    if (!hideNew && (update || settings.markNewAllowNewSubscription.get())) {
+      List<String> stmnt = ["UPDATE Episodes SET is_new = 1 WHERE"];
+      List<String> filters = [" is_new = 1", " feed_id = ?"];
+      List<String> requirements = [];
+      List arguments = [feedId];
+      if (!settings.markNewAllowDuplicate.get()) {
+        filters.add(" display_version_id = id");
+      }
+      var ageMax = settings.markNewRequireAgeMax.get();
+      if (ageMax != Duration.zero) {
+        requirements.add(" milliseconds <= ?");
+        arguments.add(DateTime.now().subtract(ageMax).millisecondsSinceEpoch);
+      }
+      if (settings.markNewRequireUnseen.get()) {
+        requirements.add(
+          " enclosure_url IN (${(", ?" * newlyAddedEpisodeUrls.length).substring(2)})",
+        );
+        arguments.addAll(newlyAddedEpisodeUrls);
+      }
+      var combinator = settings.markNewRequirementCombinator.get();
+      filters.add("(${requirements.join(combinator.sql)})");
+      stmnt.add(filters.join(" AND"));
+      await txn.rawUpdate(stmnt.join(), arguments);
+    }
   }
 
   Future<String?> getDescription(int id) async {

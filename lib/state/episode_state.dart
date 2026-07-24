@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import '../generated/l10n.dart';
 import '../local_storage/sqflite_localpodcast.dart';
@@ -277,6 +278,61 @@ class EpisodeState extends ChangeNotifier {
     }
   }
 
+  /// Checks the conditions for which an episode's new mark might be removed
+  /// If they are satisfied removes the mark.
+  /// Call after syncs, interactions and plays.
+  Future<void> checkUnsetNew(List<int> ids, {required bool syncing}) async {
+    assert(
+      ids.every((id) => _episodeMap.keys.contains(id)),
+      "checkUnsetNew called with unknown id",
+    );
+    if (_settingState.unmarkNewWaitForSync.get() && !syncing) {
+      return;
+    }
+    var hasCondition = false;
+    final combinator = _settingState.unmarkNewRequirementCombinator.get();
+    final startingValue = combinator == .all;
+    var episodes = ids
+        .map((id) => (_episodeMap[id]!, startingValue))
+        .where((e) => e.$1.isNew)
+        .toList();
+    if (_settingState.unmarkNewRequireInteracted.get()) {
+      hasCondition = true;
+      episodes = episodes
+          .map((e) => (e.$1, combinator.combine(e.$2, e.$1.isInteracted)))
+          .toList();
+    }
+    if (_settingState.unmarkNewRequirePlayed.get()) {
+      hasCondition = true;
+      episodes = episodes
+          .map((e) => (e.$1, combinator.combine(e.$2, e.$1.isPlayed)))
+          .toList();
+    }
+    final duration = _settingState.unmarkNewRequireAgeMin.get();
+    if (duration != Duration.zero) {
+      hasCondition = true;
+      episodes = episodes
+          .map(
+            (e) => (
+              e.$1,
+              combinator.combine(
+                e.$2,
+                duration >=
+                    DateTime.fromMillisecondsSinceEpoch(
+                      e.$1.pubDate,
+                    ).toLocal().difference(DateTime.now()),
+              ),
+            ),
+          )
+          .toList();
+    }
+    if (hasCondition) {
+      await unsetNew(
+        episodes.map((e) => e.$2 ? e.$1.id : null).nonNulls.toList(),
+      );
+    }
+  }
+
   /// Sets the episodes as played
   Future<void> setPlayed(
     List<int> ids, {
@@ -287,6 +343,7 @@ class EpisodeState extends ChangeNotifier {
       ids.every((id) => _episodeMap.keys.contains(id)),
       "setPlayed called with unknown id",
     );
+    checkUnsetNew(ids, syncing: false);
     changedIds.clear();
     for (var id in ids) {
       final history = PlayHistory(
@@ -395,5 +452,20 @@ class EpisodeState extends ChangeNotifier {
     changedIds.addAll(_episodeMap[id]!.versions!.toList());
     globalChange = !globalChange;
     notifyListeners();
+  }
+
+  /// Sets the episode as interacted
+  Future<void> setInteracted(int id) async {
+    assert(_episodeMap.keys.contains(id), "setLiked called with unknown id");
+    final episode = _episodeMap[id]!;
+    if (!episode.isInteracted) {
+      await _dbHelper.setInteracted(id);
+      await checkUnsetNew([id], syncing: false);
+      changedIds.clear();
+      _episodeMap[id] = _episodeMap[id]!.copyWith(isInteracted: true);
+      changedIds.add(id);
+      globalChange = !globalChange;
+      notifyListeners();
+    }
   }
 }

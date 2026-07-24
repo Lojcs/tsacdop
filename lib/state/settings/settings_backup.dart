@@ -6,13 +6,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../util/helpers.dart';
 import 'tsacdop_settings.dart';
 
-class SuperSettingsBackup extends TsacdopSettings<BackupPreferences> {
+class SettingsBackup extends TsacdopSettings<BackupPreferences> {
   /// File the backup is stored.
   final File backupFile;
 
   /// User-given password.
   final String? password;
-  SuperSettingsBackup(this.backupFile, [this.password]) {
+  SettingsBackup(this.backupFile, [this.password]) {
     backend = BackupPreferences();
   }
 
@@ -71,49 +71,34 @@ class BackupPreferences implements SharedPreferencesWithCache {
 
   @override
   Future<void> clear() async => prefs.clear();
-
   @override
   bool containsKey(String key) => prefs.containsKey(key);
-
   @override
   Object? get(String key) => prefs[key];
-
   @override
   bool? getBool(String key) => prefs[key] as bool?;
-
   @override
   double? getDouble(String key) => prefs[key] as double?;
-
   @override
   int? getInt(String key) => prefs[key] as int?;
-
   @override
   String? getString(String key) => prefs[key] as String?;
-
   @override
   List<String>? getStringList(String key) => prefs[key] as List<String>?;
-
   @override
   Set<String> get keys => prefs.keys.toSet();
-
   @override
   Future<void> reloadCache() async {}
-
   @override
   Future<void> remove(String key) async => prefs.remove(key);
-
   @override
   Future<void> setBool(String key, bool value) async => prefs[key] = value;
-
   @override
   Future<void> setDouble(String key, double value) async => prefs[key] = value;
-
   @override
   Future<void> setInt(String key, int value) async => prefs[key] = value;
-
   @override
   Future<void> setString(String key, String value) async => prefs[key] = value;
-
   @override
   Future<void> setStringList(String key, List<String> value) async =>
       prefs[key] = value;

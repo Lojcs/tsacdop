@@ -209,13 +209,13 @@ class BoolProxyPreference<T> extends ProxyPreference<T, bool, BoolPreference> {
     required super.serialize,
     required super.deserialize,
   }) : super(
-         BoolPreference(
-           prefs,
-           key: key,
-           defaultValue: serialize(defaultValue),
-           updateCallback: updateCallback,
-         ),
-       );
+          BoolPreference(
+            prefs,
+            key: key,
+            defaultValue: serialize(defaultValue),
+            updateCallback: updateCallback,
+          ),
+        );
 }
 
 class IntProxyPreference<T> extends ProxyPreference<T, int, IntPreference> {
@@ -228,13 +228,13 @@ class IntProxyPreference<T> extends ProxyPreference<T, int, IntPreference> {
     required super.serialize,
     required super.deserialize,
   }) : super(
-         IntPreference(
-           prefs,
-           key: key,
-           defaultValue: serialize(defaultValue),
-           updateCallback: updateCallback,
-         ),
-       );
+          IntPreference(
+            prefs,
+            key: key,
+            defaultValue: serialize(defaultValue),
+            updateCallback: updateCallback,
+          ),
+        );
 }
 
 class DoubleProxyPreference<T>
@@ -248,13 +248,13 @@ class DoubleProxyPreference<T>
     required super.serialize,
     required super.deserialize,
   }) : super(
-         DoublePreference(
-           prefs,
-           key: key,
-           defaultValue: serialize(defaultValue),
-           updateCallback: updateCallback,
-         ),
-       );
+          DoublePreference(
+            prefs,
+            key: key,
+            defaultValue: serialize(defaultValue),
+            updateCallback: updateCallback,
+          ),
+        );
 }
 
 class StringProxyPreference<T>
@@ -268,13 +268,13 @@ class StringProxyPreference<T>
     required super.serialize,
     required super.deserialize,
   }) : super(
-         StringPreference(
-           prefs,
-           key: key,
-           defaultValue: serialize(defaultValue),
-           updateCallback: updateCallback,
-         ),
-       );
+          StringPreference(
+            prefs,
+            key: key,
+            defaultValue: serialize(defaultValue),
+            updateCallback: updateCallback,
+          ),
+        );
 }
 
 class StringListProxyPreference<T extends Iterable>
@@ -288,13 +288,13 @@ class StringListProxyPreference<T extends Iterable>
     required super.serialize,
     required super.deserialize,
   }) : super(
-         StringListPreference(
-           prefs,
-           key: key,
-           defaultValue: serialize(defaultValue),
-           updateCallback: updateCallback,
-         ),
-       );
+          StringListPreference(
+            prefs,
+            key: key,
+            defaultValue: serialize(defaultValue),
+            updateCallback: updateCallback,
+          ),
+        );
 }
 
 class DateTimePreference extends IntProxyPreference<DateTime> {
@@ -305,9 +305,9 @@ class DateTimePreference extends IntProxyPreference<DateTime> {
     super.updateCallback,
     super.getLegacy,
   }) : super(
-         serialize: (value) => value.millisecondsSinceEpoch,
-         deserialize: (serial) => DateTime.fromMillisecondsSinceEpoch(serial),
-       );
+          serialize: (value) => value.millisecondsSinceEpoch,
+          deserialize: (serial) => DateTime.fromMillisecondsSinceEpoch(serial),
+        );
 }
 
 class DurationPreference extends IntProxyPreference<Duration> {
@@ -318,9 +318,9 @@ class DurationPreference extends IntProxyPreference<Duration> {
     super.updateCallback,
     super.getLegacy,
   }) : super(
-         serialize: (value) => value.inMilliseconds,
-         deserialize: (serial) => Duration(milliseconds: serial),
-       );
+          serialize: (value) => value.inMilliseconds,
+          deserialize: (serial) => Duration(milliseconds: serial),
+        );
 }
 
 class TimeOfDayPreference extends IntProxyPreference<TimeOfDay> {
@@ -331,9 +331,9 @@ class TimeOfDayPreference extends IntProxyPreference<TimeOfDay> {
     super.updateCallback,
     super.getLegacy,
   }) : super(
-         serialize: (value) => value.hour * 60 + value.minute,
-         deserialize: (serial) => minutesToTimeOfDay(serial),
-       );
+          serialize: (value) => value.hour * 60 + value.minute,
+          deserialize: (serial) => minutesToTimeOfDay(serial),
+        );
 }
 
 class KeyValueStorageUnconverted {

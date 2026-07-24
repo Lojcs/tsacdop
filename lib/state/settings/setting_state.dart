@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -33,8 +34,8 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
     backend = await SharedPreferencesWithCache.create(
       cacheOptions: SharedPreferencesWithCacheOptions(),
     );
-    if (await KeyValueStorage('intro').getBool() != null) {
-      await _migrateSettings();
+    if (await legacyBackend.getBool('intro') != null) {
+      await _migrateSettings(PreferenceCategory.values.toSet());
     }
     if (!settingsInitialized.get()) {
       await _initDefaultSettings();
@@ -45,8 +46,8 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
 
   /// Migrates settings from the old [SharedPreferences] backend
   /// to the new [SharedPreferencesWithCache] backend.
-  Future<void> _migrateSettings() async {
-    final prefSet = PreferenceCategory.allPrefs();
+  Future<void> _migrateSettings(Set<PreferenceCategory> prefClasses) async {
+    final prefSet = PreferenceCategory.getPrefSet(prefClasses);
     for (var pref in prefSet) {
       final currentPref = getPref(pref);
       if (currentPref.getLegacy != null) {
@@ -54,8 +55,7 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
         if (value != null) await currentPref.set(value);
       }
     }
-    var legacyPrefs = await SharedPreferences.getInstance();
-    await legacyPrefs.clear();
+    await legacyBackend.clear();
     await settingsInitialized.set(true);
   }
 
@@ -240,7 +240,7 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
     Set<PreferenceCategory> prefClasses, [
     String? password,
   ]) async {
-    final settingsBackup = SuperSettingsBackup(backupFile, password);
+    final settingsBackup = SettingsBackup(backupFile, password);
     await settingsBackup.ready;
     final prefSet = PreferenceCategory.getPrefSet(prefClasses);
     for (var pref in prefSet) {
@@ -255,7 +255,7 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
     Set<PreferenceCategory> prefClasses, [
     String? password,
   ]) async {
-    final settingsBackup = SuperSettingsBackup(backupFile, password);
+    final settingsBackup = SettingsBackup(backupFile, password);
     await settingsBackup.ready;
     final prefSet = PreferenceCategory.getPrefSet(prefClasses);
     await settingsBackup.load();
@@ -265,11 +265,44 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
     }
   }
 
+  Future<void> restoreLegacy(
+    File backupFile,
+    Set<PreferenceCategory> prefClasses,
+  ) async {
+    var data = await backupFile.readAsString();
+    legacyBackend = KeyValueStorage.withBackend(
+      LegacyBackupPreferences(json.decode(data)),
+    );
+    await _migrateSettings(prefClasses);
+    legacyBackend = KeyValueStorage();
+  }
+
   Future<void> reset(Set<PreferenceCategory> prefClasses) async {
     final prefSet = PreferenceCategory.getPrefSet(prefClasses);
     for (var pref in prefSet) {
       getPref(pref).reset();
     }
     await _initDefaultSettings(true);
+    startWorkManager();
+    setThemes();
   }
+}
+
+/// SettingState that's safe to construct from a background isolate.
+class BackgroundSettingState extends TsacdopSettings {
+  @override
+  Future<void> init() async {
+    backend = await SharedPreferencesWithCache.create(
+      cacheOptions: SharedPreferencesWithCacheOptions(),
+    );
+  }
+
+  @override
+  void playbackChanged() {}
+  @override
+  void settingsChanged() {}
+  @override
+  void syncChanged() {}
+  @override
+  void themesChanged() {}
 }

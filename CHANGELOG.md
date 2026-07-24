@@ -1,13 +1,14 @@
 # Tsacdop-Fork Changelog
 
 ## 0.10.0
-Release date 2026/07/1?
+Release date 2026/07/2?
 
 ### New
 * Fully customizable notification.
 * Option to change default search method.
 * Customizable default filters.
 * Customizable home tabs.
+* Customizable new episode criteria.
 * Auto downloads can be globally disabled.
 * Option to auto delete old downloads if storage exceeds a threshold.
 * Customizable forbidden network types.

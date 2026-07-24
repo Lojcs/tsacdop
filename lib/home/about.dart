@@ -33,19 +33,19 @@ class AboutApp extends StatelessWidget {
     final s = context.s;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: context.overlay,
-      child: SafeArea(
-        child: Scaffold(
+      child: Scaffold(
+        backgroundColor: context.surface,
+        appBar: AppBar(
           backgroundColor: context.surface,
-          appBar: AppBar(
-            backgroundColor: context.surface,
-            title: Text(
-              s.homeToprightMenuAbout,
-              style: context.textTheme.titleLarge,
-            ),
-            scrolledUnderElevation: 0,
-            leading: CustomBackButton(),
+          title: Text(
+            s.homeToprightMenuAbout,
+            style: context.textTheme.titleLarge,
           ),
-          body: SingleChildScrollView(
+          scrolledUnderElevation: 0,
+          leading: CustomBackButton(),
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
             scrollDirection: Axis.vertical,
             child: Padding(
               padding: const EdgeInsets.all(20.0),
@@ -121,12 +121,12 @@ class AboutApp extends StatelessWidget {
                         ),
                         // _listItem(context, 'Telegram', LineIcons.telegram,
                         //     'https://t.me/joinchat/Bk3LkRpTHy40QYC78PK7Qg'),
-                        _listItem(
-                          context,
-                          'Reddit',
-                          LineIcons.redditLogo,
-                          'https://www.reddit.com/r/Tsacdop',
-                        ),
+                        // _listItem(
+                        //   context,
+                        //   'Reddit',
+                        //   LineIcons.redditLogo,
+                        //   'https://www.reddit.com/r/Tsacdop',
+                        // ),
                         // Center(
                         //   child: SizedBox(
                         //     width: 200,
@@ -269,9 +269,6 @@ class AboutApp extends StatelessWidget {
       height: 50.0,
       padding: EdgeInsets.symmetric(horizontal: 20.0),
       alignment: Alignment.centerLeft,
-      decoration: BoxDecoration(
-        border: Border(bottom: Divider.createBorderSide(context)),
-      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,

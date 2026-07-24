@@ -301,11 +301,11 @@ class S {
     );
   }
 
-  /// `{count, plural, zero{Never} one{{count} day} other{{count} days}}`
+  /// `{count, plural, zero{0 days} one{{count} day} other{{count} days}}`
   String daysCount(num count) {
     return Intl.plural(
       count,
-      zero: 'Never',
+      zero: '0 days',
       one: '$count day',
       other: '$count days',
       name: 'daysCount',
@@ -1371,6 +1371,19 @@ class S {
     return Intl.message('Mobile Data', name: 'mobileData', desc: '', args: []);
   }
 
+  /// `{count, plural, zero{{count} months} one{{count} month} other{{count} months}}`
+  String monthsCount(num count) {
+    return Intl.plural(
+      count,
+      zero: '$count months',
+      one: '$count month',
+      other: '$count months',
+      name: 'monthsCount',
+      desc: '',
+      args: [count],
+    );
+  }
+
   /// `More Options`
   String get moreOptions {
     return Intl.message(
@@ -2191,21 +2204,31 @@ class S {
     );
   }
 
-  /// `Deletions are performed on app start and on sync`
+  /// `Deletions are performed on app start and on sync.`
   String get settingsAutoDeleteDes {
     return Intl.message(
-      'Deletions are performed on app start and on sync',
+      'Deletions are performed on app start and on sync.',
       name: 'settingsAutoDeleteDes',
       desc: '',
       args: [],
     );
   }
 
-  /// `Delete downloads after`
+  /// `Delete old downloads`
   String get settingsAutoDeleteAfterTime {
     return Intl.message(
-      'Delete downloads after',
+      'Delete old downloads',
       name: 'settingsAutoDeleteAfterTime',
+      desc: 'Settings item, displayed alongide a day count picker.',
+      args: [],
+    );
+  }
+
+  /// `Delete downloads older than...`
+  String get settingsAutoDeleteAfterTimeDes {
+    return Intl.message(
+      'Delete downloads older than...',
+      name: 'settingsAutoDeleteAfterTimeDes',
       desc: 'Settings item, displayed alongide a day count picker.',
       args: [],
     );
@@ -2221,10 +2244,10 @@ class S {
     );
   }
 
-  /// `Delete oldest if storage above`
+  /// `Limit downloads storage`
   String get settingsAutoDeleteOldestIfTotalAbove {
     return Intl.message(
-      'Delete oldest if storage above',
+      'Limit downloads storage',
       name: 'settingsAutoDeleteOldestIfTotalAbove',
       desc:
           'Settings item, displayed alongside a storage size picker. (in 100 MiBs)',
@@ -2232,10 +2255,10 @@ class S {
     );
   }
 
-  /// `If total size of audio downloads exceeds this the oldest downloads will be deleted.`
+  /// `If total size of audio downloads exceeds this, the oldest downloads will be deleted.`
   String get settingsAutoDeleteOldestIfTotalAboveDes {
     return Intl.message(
-      'If total size of audio downloads exceeds this the oldest downloads will be deleted.',
+      'If total size of audio downloads exceeds this, the oldest downloads will be deleted.',
       name: 'settingsAutoDeleteOldestIfTotalAboveDes',
       desc: '',
       args: [],
@@ -2252,10 +2275,10 @@ class S {
     );
   }
 
-  /// `Download new episodes after sync`
+  /// `Download episodes marked new after sync.`
   String get settingsAutoDownloadDes {
     return Intl.message(
-      'Download new episodes after sync',
+      'Download episodes marked new after sync.',
       name: 'settingsAutoDownloadDes',
       desc: '',
       args: [],
@@ -2272,20 +2295,20 @@ class S {
     );
   }
 
-  /// `If disabled downloads will be started then paused if the connection is forbidden`
+  /// `If disabled downloads will be started then paused if the connection is forbidden.`
   String get settingsAutoDownloadOnForbiddenDes {
     return Intl.message(
-      'If disabled downloads will be started then paused if the connection is forbidden',
+      'If disabled downloads will be started then paused if the connection is forbidden.',
       name: 'settingsAutoDownloadOnForbiddenDes',
       desc: '',
       args: [],
     );
   }
 
-  /// `Auto play the next episode when an episode ends`
+  /// `Auto play the next episode when an episode ends.`
   String get settingsAutoPlayDes {
     return Intl.message(
-      'Auto play the next episode when an episode ends',
+      'Auto play the next episode when an episode ends.',
       name: 'settingsAutoPlayDes',
       desc: '',
       args: [],
@@ -2327,6 +2350,16 @@ class S {
     );
   }
 
+  /// `Settings categories to import.`
+  String get settingsBackupCategoriesImportDes {
+    return Intl.message(
+      'Settings categories to import.',
+      name: 'settingsBackupCategoriesImportDes',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Are you sure you want to wipe the selected database categories and replace them with the backup?`
   String get settingsBackupConfirmationDatabaseOverwrite {
     return Intl.message(
@@ -2337,30 +2370,30 @@ class S {
     );
   }
 
-  /// `Are you sure you want to reset selected database sections?`
+  /// `Are you sure you want to reset the selected database categories?`
   String get settingsBackupConfirmationDatabaseReset {
     return Intl.message(
-      'Are you sure you want to reset selected database sections?',
+      'Are you sure you want to reset the selected database categories?',
       name: 'settingsBackupConfirmationDatabaseReset',
       desc: '',
       args: [],
     );
   }
 
-  /// `Are you sure you want to overwrite current settings?`
+  /// `Are you sure you want to overwrite the current settings in the selected categories?`
   String get settingsBackupConfirmationSettingsOverwrite {
     return Intl.message(
-      'Are you sure you want to overwrite current settings?',
+      'Are you sure you want to overwrite the current settings in the selected categories?',
       name: 'settingsBackupConfirmationSettingsOverwrite',
       desc: '',
       args: [],
     );
   }
 
-  /// `Are you sure you want to reset settings to default?`
+  /// `Are you sure you want to reset settings in the selected categories to default?`
   String get settingsBackupConfirmationSettingsReset {
     return Intl.message(
-      'Are you sure you want to reset settings to default?',
+      'Are you sure you want to reset settings in the selected categories to default?',
       name: 'settingsBackupConfirmationSettingsReset',
       desc: '',
       args: [],
@@ -2397,10 +2430,10 @@ class S {
     );
   }
 
-  /// `Database categories to export, import or reset`
+  /// `Database categories to export, import or reset.`
   String get settingsBackupDatabaseCategoriesDes {
     return Intl.message(
-      'Database categories to export, import or reset',
+      'Database categories to export, import or reset.',
       name: 'settingsBackupDatabaseCategoriesDes',
       desc: '',
       args: [],
@@ -2447,6 +2480,26 @@ class S {
     );
   }
 
+  /// `Legacy Settings Backup File`
+  String get settingsBackupLegacyFile {
+    return Intl.message(
+      'Legacy Settings Backup File',
+      name: 'settingsBackupLegacyFile',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Import backups created before v0.10.`
+  String get settingsBackupLegacyFileDes {
+    return Intl.message(
+      'Import backups created before v0.10.',
+      name: 'settingsBackupLegacyFileDes',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Backup Password`
   String get settingsBackupPassword {
     return Intl.message(
@@ -2457,10 +2510,10 @@ class S {
     );
   }
 
-  /// `Optional password to encrypt the backup when exporting or decrypt it when importing`
+  /// `Optional password to encrypt the backup when exporting or decrypt it when importing.`
   String get settingsBackupPasswordDes {
     return Intl.message(
-      'Optional password to encrypt the backup when exporting or decrypt it when importing',
+      'Optional password to encrypt the backup when exporting or decrypt it when importing.',
       name: 'settingsBackupPasswordDes',
       desc: '',
       args: [],
@@ -2477,10 +2530,10 @@ class S {
     );
   }
 
-  /// `Decibels to boost when volume boost is enabled`
+  /// `Decibels to boost by when volume boost is enabled.`
   String get settingsBoostVolumeDes {
     return Intl.message(
-      'Decibels to boost when volume boost is enabled',
+      'Decibels to boost by when volume boost is enabled.',
       name: 'settingsBoostVolumeDes',
       desc: '',
       args: [],
@@ -2512,10 +2565,10 @@ class S {
     );
   }
 
-  /// `Filters to apply to the library visible in Android Auto. Only the first 108 items will be shown`
+  /// `Filters to apply to the library visible in Android Auto. Only the first 108 items will be shown.`
   String get settingsDefaultFilterAndroidAutoDes {
     return Intl.message(
-      'Filters to apply to the library visible in Android Auto. Only the first 108 items will be shown',
+      'Filters to apply to the library visible in Android Auto. Only the first 108 items will be shown.',
       name: 'settingsDefaultFilterAndroidAutoDes',
       desc: '',
       args: [],
@@ -2603,10 +2656,10 @@ class S {
     );
   }
 
-  /// `If approved downloads will be temporarily allowed on all connections`
+  /// `If approved downloads will be temporarily allowed on all connections.`
   String get settingsDownloadAskOnForbiddenDes {
     return Intl.message(
-      'If approved downloads will be temporarily allowed on all connections',
+      'If approved downloads will be temporarily allowed on all connections.',
       name: 'settingsDownloadAskOnForbiddenDes',
       desc: '',
       args: [],
@@ -2643,30 +2696,40 @@ class S {
     );
   }
 
-  /// `Enable synchronisation`
+  /// `Episode Management`
+  String get settingsEpisodeManagement {
+    return Intl.message(
+      'Episode Management',
+      name: 'settingsEpisodeManagement',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enable auto synchronisation`
   String get settingsEnableSyncing {
     return Intl.message(
-      'Enable synchronisation',
+      'Enable auto synchronisation',
       name: 'settingsEnableSyncing',
       desc: '',
       args: [],
     );
   }
 
-  /// `Refresh all podcasts in the background to get latest episodes`
+  /// `Refresh all podcasts in the background to get latest episodes.`
   String get settingsEnableSyncingDes {
     return Intl.message(
-      'Refresh all podcasts in the background to get latest episodes',
+      'Refresh all podcasts in the background to get latest episodes.',
       name: 'settingsEnableSyncingDes',
       desc: '',
       args: [],
     );
   }
 
-  /// `Export and import app settings`
+  /// `Export and import app settings.`
   String get settingsExportDes {
     return Intl.message(
-      'Export and import app settings',
+      'Export and import app settings.',
       name: 'settingsExportDes',
       desc: '',
       args: [],
@@ -2828,6 +2891,16 @@ class S {
     );
   }
 
+  /// `Settings (Legacy)`
+  String get settingsLegacy {
+    return Intl.message(
+      'Settings (Legacy)',
+      name: 'settingsLegacy',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Libraries`
   String get settingsLibraries {
     return Intl.message(
@@ -2898,10 +2971,10 @@ class S {
     );
   }
 
-  /// `Mark episode as played when skipping to next`
+  /// `Mark episode as played when skipping to next.`
   String get settingsMarkListenedSkipDes {
     return Intl.message(
-      'Mark episode as played when skipping to next',
+      'Mark episode as played when skipping to next.',
       name: 'settingsMarkListenedSkipDes',
       desc: '',
       args: [],
@@ -2918,10 +2991,10 @@ class S {
     );
   }
 
-  /// `The placement of the buttons may differ between devices, Android versions and selections of buttons`
+  /// `The placement of the buttons may differ between devices, Android versions and selections of buttons.`
   String get settingsMediaControlsDes {
     return Intl.message(
-      'The placement of the buttons may differ between devices, Android versions and selections of buttons',
+      'The placement of the buttons may differ between devices, Android versions and selections of buttons.',
       name: 'settingsMediaControlsDes',
       desc: '',
       args: [],
@@ -2958,6 +3031,226 @@ class S {
     );
   }
 
+  /// `New Episodes`
+  String get settingsNewEpisodes {
+    return Intl.message(
+      'New Episodes',
+      name: 'settingsNewEpisodes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `New episode criteria.`
+  String get settingsNewEpisodesDes {
+    return Intl.message(
+      'New episode criteria.',
+      name: 'settingsNewEpisodesDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Mark new episodes`
+  String get settingsNewEpisodesMark {
+    return Intl.message(
+      'Mark new episodes',
+      name: 'settingsNewEpisodesMark',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Maximum Age`
+  String get settingsNewEpisodesMarkAge {
+    return Intl.message(
+      'Maximum Age',
+      name: 'settingsNewEpisodesMarkAge',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Publish date is newer than...`
+  String get settingsNewEpisodesMarkAgeDes {
+    return Intl.message(
+      'Publish date is newer than...',
+      name: 'settingsNewEpisodesMarkAgeDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Criteria for marking episodes as new after sync.`
+  String get settingsNewEpisodesMarkDes {
+    return Intl.message(
+      'Criteria for marking episodes as new after sync.',
+      name: 'settingsNewEpisodesMarkDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Duplicate`
+  String get settingsNewEpisodesMarkDuplicate {
+    return Intl.message(
+      'Duplicate',
+      name: 'settingsNewEpisodesMarkDuplicate',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Duplicate episode versions can be marked as new.`
+  String get settingsNewEpisodesMarkDuplicateDes {
+    return Intl.message(
+      'Duplicate episode versions can be marked as new.',
+      name: 'settingsNewEpisodesMarkDuplicateDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `New Podcast`
+  String get settingsNewEpisodesMarkNewPodcast {
+    return Intl.message(
+      'New Podcast',
+      name: 'settingsNewEpisodesMarkNewPodcast',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Episodes can be marked as new on initial podcast subscription.`
+  String get settingsNewEpisodesMarkNewPodcastDes {
+    return Intl.message(
+      'Episodes can be marked as new on initial podcast subscription.',
+      name: 'settingsNewEpisodesMarkNewPodcastDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Unseen`
+  String get settingsNewEpisodesMarkUnseen {
+    return Intl.message(
+      'Unseen',
+      name: 'settingsNewEpisodesMarkUnseen',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Episode was not in the database before sync.`
+  String get settingsNewEpisodesMarkUnseenDes {
+    return Intl.message(
+      'Episode was not in the database before sync.',
+      name: 'settingsNewEpisodesMarkUnseenDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Unmark new episodes`
+  String get settingsNewEpisodesUnmark {
+    return Intl.message(
+      'Unmark new episodes',
+      name: 'settingsNewEpisodesUnmark',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Minimum Age`
+  String get settingsNewEpisodesUnmarkAge {
+    return Intl.message(
+      'Minimum Age',
+      name: 'settingsNewEpisodesUnmarkAge',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Publish date is older than...`
+  String get settingsNewEpisodesUnmarkAgeDes {
+    return Intl.message(
+      'Publish date is older than...',
+      name: 'settingsNewEpisodesUnmarkAgeDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Criteria for automatically removing the new mark from episodes.`
+  String get settingsNewEpisodesUnmarkDes {
+    return Intl.message(
+      'Criteria for automatically removing the new mark from episodes.',
+      name: 'settingsNewEpisodesUnmarkDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Interacted`
+  String get settingsNewEpisodesUnmarkInteracted {
+    return Intl.message(
+      'Interacted',
+      name: 'settingsNewEpisodesUnmarkInteracted',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Episode details were opened or episode was selected.`
+  String get settingsNewEpisodesUnmarkInteractedDes {
+    return Intl.message(
+      'Episode details were opened or episode was selected.',
+      name: 'settingsNewEpisodesUnmarkInteractedDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Played`
+  String get settingsNewEpisodesUnmarkPlayed {
+    return Intl.message(
+      'Played',
+      name: 'settingsNewEpisodesUnmarkPlayed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Episode was played.`
+  String get settingsNewEpisodesUnmarkPlayedDes {
+    return Intl.message(
+      'Episode was played.',
+      name: 'settingsNewEpisodesUnmarkPlayedDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Wait until next sync`
+  String get settingsNewEpisodesUnmarkWaitSync {
+    return Intl.message(
+      'Wait until next sync',
+      name: 'settingsNewEpisodesUnmarkWaitSync',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Only remove new marks during sync.`
+  String get settingsNewEpisodesUnmarkWaitSyncDes {
+    return Intl.message(
+      'Only remove new marks during sync.',
+      name: 'settingsNewEpisodesUnmarkWaitSyncDes',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Pause and resume downloads based on connectivity`
   String get settingsPauseDownloadOnForbiddenConnected {
     return Intl.message(
@@ -2968,10 +3261,10 @@ class S {
     );
   }
 
-  /// `All downloads will be paused if the connection changes to a forbidden one. All paused downloads will be resumed when the forbidden connection ends`
+  /// `All downloads will be paused if the connection changes to a forbidden one. All paused downloads will be resumed when the forbidden connection ends.`
   String get settingsPauseDownloadOnForbiddenConnectedDes {
     return Intl.message(
-      'All downloads will be paused if the connection changes to a forbidden one. All paused downloads will be resumed when the forbidden connection ends',
+      'All downloads will be paused if the connection changes to a forbidden one. All paused downloads will be resumed when the forbidden connection ends.',
       name: 'settingsPauseDownloadOnForbiddenConnectedDes',
       desc: '',
       args: [],
@@ -3034,6 +3327,46 @@ class S {
       'Preference',
       name: 'settingsPrefrence',
       desc: '',
+      args: [],
+    );
+  }
+
+  /// `Requirements`
+  String get settingsRequirements {
+    return Intl.message(
+      'Requirements',
+      name: 'settingsRequirements',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `All`
+  String get settingsRequirementsAll {
+    return Intl.message(
+      'All',
+      name: 'settingsRequirementsAll',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Any`
+  String get settingsRequirementsAny {
+    return Intl.message(
+      'Any',
+      name: 'settingsRequirementsAny',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `In addition to the above, require all or any of the below.`
+  String get settingsRequirementsDes {
+    return Intl.message(
+      'In addition to the above, require all or any of the below.',
+      name: 'settingsRequirementsDes',
+      desc: 'Displayed alongside buttons to pick \'All\' or \'Any\'.',
       args: [],
     );
   }
@@ -3123,10 +3456,10 @@ class S {
     );
   }
 
-  /// `Auto start sleep timer at scheduled time`
+  /// `Auto start sleep timer at scheduled time.`
   String get settingsSTAutoDes {
     return Intl.message(
-      'Auto start sleep timer at scheduled time',
+      'Auto start sleep timer at scheduled time.',
       name: 'settingsSTAutoDes',
       desc: '',
       args: [],
@@ -3143,10 +3476,10 @@ class S {
     );
   }
 
-  /// `Default time for sleep timer`
+  /// `Default waiting time for sleep timer.`
   String get settingsSTDefautTimeDes {
     return Intl.message(
-      'Default time for sleep timer',
+      'Default waiting time for sleep timer.',
       name: 'settingsSTDefautTimeDes',
       desc: '',
       args: [],
@@ -3173,10 +3506,10 @@ class S {
     );
   }
 
-  /// `Wait until the end of the playing episode to stop playback when sleep timer expires`
+  /// `Wait until the end of the playing episode to stop playback when sleep timer expires.`
   String get settingsSTWaitEpisodeEndDes {
     return Intl.message(
-      'Wait until the end of the playing episode to stop playback when sleep timer expires',
+      'Wait until the end of the playing episode to stop playback when sleep timer expires.',
       name: 'settingsSTWaitEpisodeEndDes',
       desc: '',
       args: [],
@@ -3741,6 +4074,32 @@ class S {
   /// `Wi-Fi`
   String get wifi {
     return Intl.message('Wi-Fi', name: 'wifi', desc: '', args: []);
+  }
+
+  /// `{count, plural, zero{{count} weeks} one{{count} week} other{{count} weeks}}`
+  String weeksCount(num count) {
+    return Intl.plural(
+      count,
+      zero: '$count weeks',
+      one: '$count week',
+      other: '$count weeks',
+      name: 'weeksCount',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `{count, plural, zero{{count} years} one{{count} year} other{{count} years}}`
+  String yearsCount(num count) {
+    return Intl.plural(
+      count,
+      zero: '$count years',
+      one: '$count year',
+      other: '$count years',
+      name: 'yearsCount',
+      desc: '',
+      args: [count],
+    );
   }
 }
 

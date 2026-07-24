@@ -67,12 +67,11 @@ class ActionBar extends StatefulWidget {
       ActionBarSwitchSortOrder(0, 1),
       ActionBarSpacer(0, 2),
       ActionBarButtonSync(0, 3),
-      ActionBarButtonRemoveNewMark(0, 4),
-      ActionBarFilterPlayed(0, 5),
-      ActionBarFilterDownloaded(0, 6),
-      ActionBarSwitchLayout(0, 7),
-      ActionBarSwitchSelectMode(0, 8),
-      ActionBarSwitchSecondRow(0, 9),
+      ActionBarFilterPlayed(0, 4),
+      ActionBarFilterDownloaded(0, 5),
+      ActionBarSwitchLayout(0, 6),
+      ActionBarSwitchSelectMode(0, 7),
+      ActionBarSwitchSecondRow(0, 8),
     ],
     this.widgetsSecondRow = const [
       ActionBarDropdownGroups(1, 0),
@@ -103,7 +102,6 @@ class ActionBar extends StatefulWidget {
 class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
   late AnimationController _switchSecondRowController;
   late AnimationController _buttonRefreshController;
-  late AnimationController _buttonRemoveNewMarkController;
 
   late ActionBarSharedState _sharedState;
 
@@ -123,17 +121,12 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 200),
     );
-    _buttonRemoveNewMarkController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 200),
-    );
   }
 
   @override
   void dispose() {
     _switchSecondRowController.dispose();
     _buttonRefreshController.dispose();
-    _buttonRemoveNewMarkController.dispose();
     _sharedState.dispose();
     _sharedState.disposed = true;
     super.dispose();
@@ -221,7 +214,6 @@ class _ActionBarState extends State<ActionBar> with TickerProviderStateMixin {
         configuration: widget.configuration,
         switchSecondRowController: _switchSecondRowController,
         buttonSyncController: _buttonRefreshController,
-        buttonRemoveNewMarkController: _buttonRemoveNewMarkController,
       );
       SelectionController? selectionController =
           Provider.of<SelectionController?>(context, listen: false);
@@ -486,7 +478,6 @@ class ActionBarSharedState extends ChangeNotifier {
 
   final AnimationController switchSecondRowController;
   final AnimationController buttonSyncController;
-  final AnimationController buttonRemoveNewMarkController;
 
   ActionBarSharedState(
     this.context, {
@@ -501,7 +492,6 @@ class ActionBarSharedState extends ChangeNotifier {
     required ActionBarConfiguration configuration,
     required this.switchSecondRowController,
     required this.buttonSyncController,
-    required this.buttonRemoveNewMarkController,
   }) : _groupId = configuration.groupId,
        _podcastId = configuration.podcastId,
        _sortBy = configuration.sortBy,
@@ -550,9 +540,6 @@ class ActionBarSharedState extends ChangeNotifier {
   String searchTitleQuery = "";
 
   List<int> episodeIds = [];
-  List<int> get newEpisodeIds => episodeIds
-      .where((e) => Provider.of<EpisodeState>(context, listen: false)[e].isNew)
-      .toList();
 
   late ExpansionController expansionControllerFirstRow = ExpansionController(
     maxWidth: maxWidth,
@@ -1393,66 +1380,6 @@ class ActionBarButtonSync extends ActionBarControl {
         width: context.actionBarButtonSizeHorizontal,
         child: Icon(Icons.refresh, color: context.actionBarIconColor),
       ),
-    );
-  }
-}
-
-class ActionBarButtonRemoveNewMark extends ActionBarControl {
-  const ActionBarButtonRemoveNewMark(super.rowIndex, super.index, {super.key});
-  @override
-  Widget build(BuildContext context) {
-    ActionBarSharedState sharedState = Provider.of<ActionBarSharedState>(
-      context,
-      listen: false,
-    );
-    final row = sharedState.rows[rowIndex];
-    return Selector<ActionBarSharedState, (bool, List<int>)>(
-      selector: (_, sharedState) {
-        List<int> newEpisodes = sharedState.newEpisodeIds;
-        return (newEpisodes.isNotEmpty, newEpisodes);
-      },
-      builder: (context, data, _) {
-        return ActionBarButton(
-          expansionController: sharedState.expansionControllers[rowIndex],
-          buttonType: ActionBarButtonType.single,
-          onPressed: (value) async {
-            if (sharedState.buttonRemoveNewMarkController.value == 0) {
-              sharedState.buttonRemoveNewMarkController.forward();
-              await Provider.of<EpisodeState>(
-                context,
-                listen: false,
-              ).unsetNew(data.$2);
-              await Future.delayed(Duration(seconds: 1));
-              sharedState.onConfigurationChanged(sharedState.configuration);
-              sharedState.buttonRemoveNewMarkController.reverse();
-              // It's supposed to disable immediately but it doesn't so at least turn off the selection
-            }
-          },
-          tooltip: context.s.removeNewMark,
-          enabled: data.$1,
-          animation: sharedState.buttonRemoveNewMarkController,
-          connectLeft: index != 0 && row[index - 1] is ActionBarControl,
-          connectRight:
-              index != row.length - 1 && row[index + 1] is ActionBarControl,
-          child: SizedBox(
-            height: context.actionBarButtonSizeVertical,
-            width: context.actionBarButtonSizeHorizontal,
-            child: CustomPaint(
-              painter: RemoveNewFlagPainter(
-                !data.$1 && context.trueBlack
-                    ? Colors.grey[800]
-                    : context.actionBarIconColor,
-                data.$1
-                    ? Colors.red
-                    : context.trueBlack
-                    ? Colors.grey[800]!
-                    : context.actionBarIconColor,
-                stroke: 2,
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 }

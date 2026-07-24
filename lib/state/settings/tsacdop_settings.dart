@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../generated/l10n.dart';
 import '../../local_storage/key_value_storage.dart';
+import '../../type/requirement_combinator.dart';
 import 'preference.dart';
 import '../../search/search_api.dart';
 import '../../search/search_web.dart';
@@ -57,7 +58,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     defaultValue: DateTime.fromMillisecondsSinceEpoch(0),
     updateCallback: settingsChanged,
     getLegacy: () async {
-      final value = await KeyValueStorage('refreshdate').getInt();
+      final value = await legacyBackend.getInt('refreshdate');
       return value == null ? null : DateTime.fromMillisecondsSinceEpoch(value);
     },
   );
@@ -70,7 +71,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     key: 'showIntro',
     defaultValue: true,
     updateCallback: settingsChanged,
-    getLegacy: () => KeyValueStorage('intro').getBool(reverse: true),
+    getLegacy: () => legacyBackend.getBool('intro', reverse: true),
   );
 
   /// Locale override.
@@ -99,7 +100,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
       };
     },
     getLegacy: () async =>
-        switch (await KeyValueStorage('localeKey').getStringList()) {
+        switch (await legacyBackend.getStringList('localeKey')) {
           [] => null,
           [var languageCode] => Locale(languageCode),
           [var languageCode, var scriptCode] => Locale.fromSubtags(
@@ -119,7 +120,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     defaultValue: ThemeMode.system,
     updateCallback: settingsChanged,
     getLegacy: () async {
-      final value = await KeyValueStorage('theme').getInt();
+      final value = await legacyBackend.getInt('theme');
       return value == null ? null : ThemeMode.values[value];
     },
     serialize: (value) => value.index,
@@ -132,7 +133,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     key: 'trueBlack',
     defaultValue: false,
     updateCallback: settingsChanged,
-    getLegacy: () => KeyValueStorage('realDark').getBool(),
+    getLegacy: () => legacyBackend.getBool('realDark'),
   );
 
   /// Theme accent color.
@@ -142,7 +143,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     defaultValue: Colors.teal,
     updateCallback: themesChanged,
     getLegacy: () async =>
-        (await KeyValueStorage('accents').getString())?.toargbColor(),
+        (await legacyBackend.getString('accents'))?.toargbColor(),
     serialize: (value) => value.toargbString(),
     deserialize: (serial) => serial.toargbColor(),
   );
@@ -153,7 +154,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     key: 'useSystemAccentColor',
     defaultValue: false,
     updateCallback: settingsChanged,
-    getLegacy: () => KeyValueStorage('useWallpaperThemeKet').getBool(),
+    getLegacy: () => legacyBackend.getBool('useWallpaperThemeKet'),
   );
 
   /// Font style of the shownotes.
@@ -163,7 +164,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     defaultValue: GoogleFonts.getFont("Martel"),
     updateCallback: settingsChanged,
     getLegacy: () async {
-      final value = await KeyValueStorage('showNotesFontKey').getInt();
+      final value = await legacyBackend.getInt('showNotesFontKey');
       return switch (value) {
         0 => TextStyle(),
         1 => GoogleFonts.getFont("Martel"),
@@ -183,7 +184,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     key: 'hapticsStrength',
     defaultValue: 0,
     updateCallback: settingsChanged,
-    getLegacy: () => KeyValueStorage('hapticsStrengthKey').getInt(),
+    getLegacy: () => legacyBackend.getInt('hapticsStrengthKey'),
   );
 
   /// Interface settings.
@@ -204,7 +205,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
         deserialize: (serial) =>
             serial.map((e) => TsacdopMediaControl.fromSerial(e)).toList(),
         getLegacy: () async =>
-            switch (await KeyValueStorage('notificationLayoutKey').getInt()) {
+            switch (await legacyBackend.getInt('notificationLayoutKey')) {
               0 => [
                 StopControl(),
                 FastForwardControl(),
@@ -267,8 +268,8 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     serialize: (value) => value.toSerial(),
     deserialize: (serial) => ActionBarConfiguration.fromSerial(serial),
     getLegacy: () async {
-      final index = await KeyValueStorage('podcastLayoutKey').getInt();
-      final hideListened = await KeyValueStorage('hideListenedKey').getBool();
+      final index = await legacyBackend.getInt('podcastLayoutKey');
+      final hideListened = await legacyBackend.getBool('hideListenedKey');
       return index == null || hideListened == null
           ? null
           : ActionBarConfiguration(
@@ -288,9 +289,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
         serialize: (value) => value.toSerial(),
         deserialize: (serial) => ActionBarConfiguration.fromSerial(serial),
         getLegacy: () async {
-          final hideListened = await KeyValueStorage(
-            'hideListenedKey',
-          ).getBool();
+          final hideListened = await legacyBackend.getBool('hideListenedKey');
           return hideListened == null
               ? null
               : ActionBarConfiguration(
@@ -315,10 +314,10 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
         serial.map((e) => HomeTabConfiguration.fromSerial(e)).toList(),
     getLegacy: () async {
       final s = S.current;
-      final recentIndex = await KeyValueStorage('recentLayoutKey').getInt();
-      final hideListened = await KeyValueStorage('hideListenedKey').getBool();
-      final favIndex = await KeyValueStorage('favLayoutKey').getInt();
-      final downloadIndex = await KeyValueStorage('downloadLayoutKey').getInt();
+      final recentIndex = await legacyBackend.getInt('recentLayoutKey');
+      final hideListened = await legacyBackend.getBool('hideListenedKey');
+      final favIndex = await legacyBackend.getInt('favLayoutKey');
+      final downloadIndex = await legacyBackend.getInt('downloadLayoutKey');
       return recentIndex == null ||
               hideListened == null ||
               favIndex == null ||
@@ -358,7 +357,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     key: 'autoPlay',
     defaultValue: true,
     updateCallback: playbackChanged,
-    getLegacy: () => KeyValueStorage('autoPlay').getBool(reverse: true),
+    getLegacy: () => legacyBackend.getBool('autoPlay', reverse: true),
   );
 
   /// Auto play next episode in a playlist.
@@ -367,7 +366,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     key: 'markPlayedWhenSkipped',
     defaultValue: false,
     updateCallback: playbackChanged,
-    getLegacy: () => KeyValueStorage('markListenedAfterSkipKey').getBool(),
+    getLegacy: () => legacyBackend.getBool('markListenedAfterSkipKey'),
   );
 
   /// Fast forward interval.
@@ -377,7 +376,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     defaultValue: Duration(seconds: 30),
     updateCallback: playbackChanged,
     getLegacy: () async {
-      final value = await KeyValueStorage('fastForwardSecondsKey').getInt();
+      final value = await legacyBackend.getInt('fastForwardSecondsKey');
       return value == null ? null : Duration(seconds: value);
     },
   );
@@ -389,7 +388,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     defaultValue: Duration(seconds: 10),
     updateCallback: playbackChanged,
     getLegacy: () async {
-      final value = await KeyValueStorage('rewindSecondsKey').getInt();
+      final value = await legacyBackend.getInt('rewindSecondsKey');
       return value == null ? null : Duration(seconds: value);
     },
   );
@@ -400,7 +399,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     key: 'skipSilence',
     defaultValue: false,
     updateCallback: playbackChanged,
-    getLegacy: () async => await KeyValueStorage('skipSilenceKey').getBool(),
+    getLegacy: () async => await legacyBackend.getBool('skipSilenceKey'),
   );
 
   /// Volume boost enabled.
@@ -409,7 +408,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     key: 'volumeBoost',
     defaultValue: false,
     updateCallback: playbackChanged,
-    getLegacy: () async => await KeyValueStorage('boostVolumeKey').getBool(),
+    getLegacy: () async => await legacyBackend.getBool('boostVolumeKey'),
   );
 
   /// Volume boost decibels.
@@ -419,7 +418,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     defaultValue: 1.5,
     updateCallback: playbackChanged,
     getLegacy: () async {
-      final value = await KeyValueStorage('volumeGainKey').getInt();
+      final value = await legacyBackend.getInt('volumeGainKey');
       return value == null ? null : value / 2000;
     },
   );
@@ -430,7 +429,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     key: 'audioSpeedRatio',
     defaultValue: 1.0,
     updateCallback: playbackChanged,
-    getLegacy: () async => await KeyValueStorage('speedKey').getDouble(),
+    getLegacy: () async => await legacyBackend.getDouble('speedKey'),
   );
 
   /// Sleep timer settings.
@@ -441,7 +440,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     key: 'sleepTimerAuto',
     defaultValue: false,
     updateCallback: settingsChanged,
-    getLegacy: () async => await KeyValueStorage('autoSleepTimerKey').getBool(),
+    getLegacy: () async => await legacyBackend.getBool('autoSleepTimerKey'),
   );
 
   /// Start of auto sleep timer schedule period.
@@ -451,7 +450,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     defaultValue: TimeOfDay(hour: 23, minute: 0),
     updateCallback: settingsChanged,
     getLegacy: () async {
-      final value = await KeyValueStorage('autoSleepTimerStartKey').getInt();
+      final value = await legacyBackend.getInt('autoSleepTimerStartKey');
       return value == null ? null : minutesToTimeOfDay(value);
     },
   );
@@ -463,7 +462,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     defaultValue: TimeOfDay(hour: 6, minute: 0),
     updateCallback: settingsChanged,
     getLegacy: () async {
-      final value = await KeyValueStorage('autoSleepTimerEndKey').getInt();
+      final value = await legacyBackend.getInt('autoSleepTimerEndKey');
       return value == null ? null : minutesToTimeOfDay(value);
     },
   );
@@ -475,7 +474,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     defaultValue: false,
     updateCallback: settingsChanged,
     getLegacy: () async =>
-        await KeyValueStorage('autoSleepTimerModeKey').getBool(reverse: true),
+        (await legacyBackend.getInt('autoSleepTimerModeKey')) == 0,
   );
 
   /// Default sleep timer wait interval and the interval used for auto sleep timer.
@@ -485,8 +484,14 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     defaultValue: Duration(minutes: 30),
     updateCallback: settingsChanged,
     getLegacy: () async {
-      final value = await KeyValueStorage('defaultSleepTimerKey').getInt();
-      return value == null ? null : Duration(minutes: value);
+      final mode = await legacyBackend.getInt('autoSleepTimerModeKey');
+      if (mode == null) return null;
+      if (mode == 1) {
+        final value = await legacyBackend.getInt('defaultSleepTimerKey');
+        return value == null ? null : Duration(minutes: value);
+      } else {
+        return Duration.zero;
+      }
     },
   );
 
@@ -498,7 +503,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     key: 'currentPlaylistId',
     defaultValue: mainQueueId,
     getLegacy: () async =>
-        (await KeyValueStorage('playerStateKey').getPlayerState()).$1,
+        (await legacyBackend.getPlayerState('playerStateKey')).$1,
   );
 
   /// Index of the current episode in playlist.
@@ -507,7 +512,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     key: 'currentEpisodeIndex',
     defaultValue: 0,
     getLegacy: () async =>
-        (await KeyValueStorage('playerStateKey').getPlayerState()).$2,
+        (await legacyBackend.getPlayerState('playerStateKey')).$2,
   );
 
   /// Position of the playback in the current episode.
@@ -516,9 +521,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     key: 'currentPositionMilliseconds',
     defaultValue: Duration.zero,
     getLegacy: () async => Duration(
-      milliseconds: (await KeyValueStorage(
-        'playerStateKey',
-      ).getPlayerState()).$3,
+      milliseconds: (await legacyBackend.getPlayerState('playerStateKey')).$3,
     ),
   );
 
@@ -530,7 +533,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     key: 'autoSyncEnabled',
     defaultValue: true,
     updateCallback: syncChanged,
-    getLegacy: () => KeyValueStorage('autoAdd').getBool(reverse: true),
+    getLegacy: () => legacyBackend.getBool('autoAdd', reverse: true),
   );
 
   /// Auto sync podcasts interval.
@@ -540,9 +543,97 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     defaultValue: Duration(days: 1),
     updateCallback: syncChanged,
     getLegacy: () async {
-      final value = await KeyValueStorage('updateInterval').getInt();
+      final value = await legacyBackend.getInt('updateInterval');
       return value == null ? null : Duration(hours: value);
     },
+  );
+
+  /// New episodes (syncing)
+
+  /// Allow duplicate episodes to be marked as new.
+  late final markNewAllowDuplicate = BoolPreference(
+    backend,
+    key: 'markNewAllowDuplicate',
+    defaultValue: false,
+    updateCallback: settingsChanged,
+  );
+
+  /// Allow episodes of a newly subscribed podcast to be marked as new.
+  late final markNewAllowNewSubscription = BoolPreference(
+    backend,
+    key: 'markNewAllowNewSubscription',
+    defaultValue: false,
+    updateCallback: settingsChanged,
+  );
+
+  /// The combinator used to combine mark new requirements.
+  late final markNewRequirementCombinator =
+      StringProxyPreference<RequirementCombinator>(
+        backend,
+        key: 'markNewRequirementCombinator',
+        defaultValue: RequirementCombinator.any,
+        updateCallback: settingsChanged,
+        serialize: (value) => value.serial,
+        deserialize: (serial) => RequirementCombinator.fromSerial(serial),
+      );
+
+  /// Mark episode as new if it is not in the database.
+  late final markNewRequireUnseen = BoolPreference(
+    backend,
+    key: 'markNewRequireUnseen',
+    defaultValue: true,
+    updateCallback: settingsChanged,
+  );
+
+  /// Mark episode as new if its publish date is at most this long ago.
+  late final markNewRequireAgeMax = DurationPreference(
+    backend,
+    key: 'markNewRequireAgeMaxMilliseconds',
+    defaultValue: Duration.zero,
+    updateCallback: settingsChanged,
+  );
+
+  /// Wait until syncing to remove the new mark from episodes.
+  late final unmarkNewWaitForSync = BoolPreference(
+    backend,
+    key: 'unmarkNewWaitForSync',
+    defaultValue: true,
+    updateCallback: settingsChanged,
+  );
+
+  /// The combinator used to combine remove new mark requirements.
+  late final unmarkNewRequirementCombinator =
+      StringProxyPreference<RequirementCombinator>(
+        backend,
+        key: 'unmarkNewRequirementCombinator',
+        defaultValue: RequirementCombinator.any,
+        updateCallback: settingsChanged,
+        serialize: (value) => value.serial,
+        deserialize: (serial) => RequirementCombinator.fromSerial(serial),
+      );
+
+  /// Remove the new mark if the episode details were opened or the episode is selected.
+  late final unmarkNewRequireInteracted = BoolPreference(
+    backend,
+    key: 'unmarkNewRequireInteracted',
+    defaultValue: false,
+    updateCallback: settingsChanged,
+  );
+
+  /// Remove the new mark if the episode was plaged.
+  late final unmarkNewRequirePlayed = BoolPreference(
+    backend,
+    key: 'unmarkNewRequirePlayed',
+    defaultValue: true,
+    updateCallback: settingsChanged,
+  );
+
+  /// Remove the new mark if its publish date is at least this long ago.
+  late final unmarkNewRequireAgeMin = DurationPreference(
+    backend,
+    key: 'unmarkNewRequireAgeMinMilliseconds',
+    defaultValue: Duration(days: 3),
+    updateCallback: settingsChanged,
   );
 
   /// Download settings.
@@ -565,7 +656,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     defaultValue: defaultDownloadStoragePath,
     updateCallback: settingsChanged,
     getLegacy: () async {
-      final value = await KeyValueStorage('downloadPositionKey').getInt();
+      final value = await legacyBackend.getInt('downloadPositionKey');
       return value == null
           ? null
           : (await getExternalStorageDirectories())![value].path;
@@ -590,7 +681,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     key: 'autoDownloadOnForbidden',
     defaultValue: false,
     updateCallback: settingsChanged,
-    getLegacy: () => KeyValueStorage('autoDownloadNetwork').getBool(),
+    getLegacy: () => legacyBackend.getBool('autoDownloadNetwork'),
   );
 
   /// Pause downloads when mobile data connection starts (wifi is lost).
@@ -608,8 +699,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     key: 'manualDownloadAskOnForbidden',
     defaultValue: true,
     updateCallback: settingsChanged,
-    getLegacy: () =>
-        KeyValueStorage('downloadUsingData').getBool(reverse: true),
+    getLegacy: () => legacyBackend.getBool('downloadUsingData', reverse: true),
   );
 
   /// Delete downloads after they are played. (during cleanup)
@@ -618,7 +708,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     key: 'autoDeleteAfterPlayed',
     defaultValue: true,
     updateCallback: settingsChanged,
-    getLegacy: () => KeyValueStorage('removeAfterPlayedKey').getBool(),
+    getLegacy: () => legacyBackend.getBool('removeAfterPlayedKey'),
   );
 
   /// Delete downloads after specified amount of time passes. (during cleanup)
@@ -629,7 +719,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     defaultValue: Duration(days: 30),
     updateCallback: settingsChanged,
     getLegacy: () async {
-      final value = await KeyValueStorage('autoDeleteKey').getInt();
+      final value = await legacyBackend.getInt('autoDeleteKey');
       return value == null ? null : Duration(days: value);
     },
   );
@@ -646,8 +736,11 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
   /// Prefs instance to use.
   late final T backend;
 
+  /// Backend to retrieve legacy values from.
+  KeyValueStorage legacyBackend;
+
   /// Do not forget to wait for [ready] before use.
-  TsacdopSettings() {
+  TsacdopSettings() : legacyBackend = KeyValueStorage() {
     ready = init();
   }
 
@@ -708,6 +801,16 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
         .currentPosition => currentPosition,
         .autoSync => autoSync,
         .autoSyncInterval => autoSyncInterval,
+        .markNewAllowDuplicate => markNewAllowDuplicate,
+        .markNewAllowNewSubscription => markNewAllowNewSubscription,
+        .markNewRequirementCombinator => markNewRequirementCombinator,
+        .markNewRequireUnseen => markNewRequireUnseen,
+        .markNewRequireAgeMax => markNewRequireAgeMax,
+        .unmarkNewWaitForSync => unmarkNewWaitForSync,
+        .unmarkNewRequirementCombinator => unmarkNewRequirementCombinator,
+        .unmarkNewRequireInteracted => unmarkNewRequireInteracted,
+        .unmarkNewRequirePlayed => unmarkNewRequirePlayed,
+        .unmarkNewRequireAgeMin => unmarkNewRequireAgeMin,
         .autoDownload => autoDownload,
         .downloadStoragePath => downloadStoragePath,
         .forbiddenDownloadConnections => forbiddenDownloadConnections,
@@ -758,6 +861,16 @@ enum TsacdopPreference {
   currentPosition,
   autoSync,
   autoSyncInterval,
+  markNewAllowDuplicate,
+  markNewAllowNewSubscription,
+  markNewRequirementCombinator,
+  markNewRequireUnseen,
+  markNewRequireAgeMax,
+  unmarkNewWaitForSync,
+  unmarkNewRequirementCombinator,
+  unmarkNewRequireInteracted,
+  unmarkNewRequirePlayed,
+  unmarkNewRequireAgeMin,
   autoDownload,
   downloadStoragePath,
   forbiddenDownloadConnections,
@@ -808,7 +921,20 @@ enum PreferenceCategory {
     .sleepTimerInterval,
   ]),
   playerState([.currentPlaylistId, .currentEpisodeIndex, .currentPosition]),
-  sync([.autoSync, .autoSyncInterval]),
+  sync([
+    .autoSync,
+    .autoSyncInterval,
+    .markNewAllowDuplicate,
+    .markNewAllowNewSubscription,
+    .markNewRequirementCombinator,
+    .markNewRequireUnseen,
+    .markNewRequireAgeMax,
+    .unmarkNewWaitForSync,
+    .unmarkNewRequirementCombinator,
+    .unmarkNewRequireInteracted,
+    .unmarkNewRequirePlayed,
+    .unmarkNewRequireAgeMin,
+  ]),
   download([
     .autoDownload,
     .downloadStoragePath,
