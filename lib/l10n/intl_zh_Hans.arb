@@ -1,783 +1,541 @@
 {
-  "@@locale": "zh-Hans",
-  "add": "订阅",
-  "@add": {
-    "description": "Subscribe new podcast"
-  },
-  "addEpisodeGroup": "{count, plural, zero{} other{{group Name}分组{count}集节目添加到播放列表}}",
-  "@addEpisodeGroup": {
-    "placeholders": {
-      "groupName": {}
+    "@@locale": "zh-Hans",
+    "add": "订阅",
+    "@add": {
+        "description": "Subscribe new podcast"
+    },
+    "addEpisodeGroup": "{count, plural, zero{} other{{group Name}分组{count}集节目添加到播放列表}}",
+    "@addEpisodeGroup": {
+        "placeholders": {
+            "groupName": {}
+        }
+    },
+    "addNewEpisodeAll": "{count, plural, zero{} other{{count}集节目添加到播放列表}}",
+    "addNewEpisodeTooltip": "添加更新节目到播放列表",
+    "addSomeGroups": "请添加分组",
+    "@addSomeGroups": {
+        "description": "Please add new groups"
+    },
+    "all": "全部",
+    "autoDownload": "自动下载",
+    "back": "返回",
+    "boostVolume": "增强声音",
+    "@boostVolume": {
+        "description": "Boost volume in player widget."
+    },
+    "buffering": "缓冲中",
+    "cancel": "取消",
+    "cellularConfirm": "流量确认",
+    "cellularConfirmDes": "您确定使用流量下载吗",
+    "changeLayout": "修改布局",
+    "changelog": "更新日志",
+    "chooseA": "选择",
+    "clear": "清除",
+    "clearAll": "清除全部",
+    "@clearAll": {
+        "description": "Clear all episodes in playlist."
+    },
+    "color": "颜色",
+    "confirm": "确认",
+    "createNewPlaylist": "创建播放列表",
+    "darkMode": "夜晚模式",
+    "daysAgo": "{count, plural, zero{今天} other{{count}天前}}",
+    "daysCount": "{count, plural, zero{从不} other{{count}天}}",
+    "defaultQueueReminder": "此为默认播放列表，无法删除。",
+    "@defaultQueueReminder": {
+        "description": "Remind user that default queue can't be removed."
+    },
+    "defaultSearchEngine": "默认播客搜索引擎",
+    "defaultSearchEngineDes": "选择默认播客搜索引擎",
+    "@defaultSearchEngineDes": {
+        "description": "Choose the default podcast search engine"
+    },
+    "delete": "删除",
+    "developer": "关于我",
+    "@developer": {
+        "description": "Can also translate to About me"
+    },
+    "dismiss": "忽略",
+    "done": "完成",
+    "download": "下载",
+    "downloaded": "已下载",
+    "downloadRemovedToast": "下载已删除",
+    "downloadStart": "下载中",
+    "@downloadStart": {
+        "description": "Toast of downloading"
+    },
+    "editGroupName": "修改组名",
+    "endOfEpisode": "节目结束",
+    "episode": "{count, plural, zero{} other{节目}}",
+    "fastForward": "快进",
+    "fastRewind": "快退",
+    "featureDiscoveryEditGroup": "点击修改分组",
+    "featureDiscoveryEditGroupDes": "您可以修改分组名或者删除分组，注意 Home 分组无法修改，也不能被删除。",
+    "featureDiscoveryEpisode": "节目界面",
+    "featureDiscoveryEpisodeDes": "您可以长按播放节目或者添加节目到播放列表。",
+    "featureDiscoveryEpisodeTitle": "您可以长按快速播放节目",
+    "featureDiscoveryGroup": "点击添加分组",
+    "featureDiscoveryGroupDes": "新订阅播客默认分组为 Home，您可以添加新的分组，移动播客到新的分组，每个播客可以被添加到多个分组。",
+    "featureDiscoveryGroupPodcast": "长按可以移动播客位置",
+    "featureDiscoveryGroupPodcastDes": "您可以点击对播客进行设置，或者长按重新排序。",
+    "featureDiscoveryOMPL": "点击导入 OPML",
+    "featureDiscoveryOMPLDes": "在这里您可以导入OPML文件，打开设置页面，或者刷新所有播客。",
+    "featureDiscoveryPlaylist": "点击打开播放列表",
+    "featureDiscoveryPlaylistDes": "您可以添加节目到播放列表，节目在播放后将会从播放列表自动移除。",
+    "featureDiscoveryPodcast": "播客界面",
+    "featureDiscoveryPodcastDes": "您可以点击“查看所有”新增或管理分组。",
+    "featureDiscoveryPodcastTitle": "您可以通过上下滑动切换分组",
+    "featureDiscoverySearch": "点击搜索播客",
+    "featureDiscoverySearchDes": "您可以通过搜索播客名称、关键字或者RSS链接订阅播客。",
+    "feedbackEmail": "发送邮件",
+    "feedbackGithub": "提交Issue",
+    "feedbackPlay": "Play评价",
+    "@feedbackPlay": {
+        "description": "Rate on Google Play Store.\nUser can tap to open play link."
+    },
+    "feedbackTelegram": "加入小组",
+    "filter": "过滤",
+    "fonts": "字体",
+    "fontStyle": "字体风格",
+    "from": "自{time}",
+    "@from": {
+        "placeholders": {
+            "time": {}
+        }
+    },
+    "goodNight": "晚安",
+    "gpodderLoginDes": "恭喜！您已经成功绑定 gpodder.net 账号，Tsacdop 将会自动同步您的订阅到 gpodder.net 账户。",
+    "groupExisted": "组名已使用",
+    "@groupExisted": {
+        "description": "Group name validate in add group dialog. User can't add group with same name."
+    },
+    "groupFilter": "分组",
+    "groupRemoveConfirm": "您确认要移除该分组吗？播客将被移动到 Home 分组。",
+    "groups": "{count, plural, zero{分组} other{分组}}",
+    "hideListenedSetting": "隐藏已收听",
+    "hidePodcastDiscovery": "隐藏播客推荐",
+    "@hidePodcastDiscovery": {
+        "description": "Hide podcast discovery"
+    },
+    "hidePodcastDiscoveryDes": "在搜索页面隐藏播客推荐",
+    "homeGroupsSeeAll": "查看全部",
+    "homeMenuPlaylist": "播放列表",
+    "homeSubMenuSortBy": "排序",
+    "homeTabMenuFavotite": "收藏",
+    "homeTabMenuRecent": "最近更新",
+    "homeToprightMenuAbout": "关于",
+    "homeToprightMenuImportOMPL": "导入OPML",
+    "homeToprightMenuRefreshAll": "全部刷新",
+    "hostedOn": "平台 {host}",
+    "@hostedOn": {
+        "placeholders": {
+            "host": {}
+        }
+    },
+    "hoursAgo": "{count, plural, zero{刚刚} other{{count}小时前}}",
+    "hoursCount": "{count, plural, zero{0小时} other{{count} 小时}}",
+    "import": "导入",
+    "intergateWith": "绑定 {service}",
+    "@intergateWith": {
+        "description": "Integrate with",
+        "placeholders": {
+            "service": {}
+        }
+    },
+    "introFourthPage": "您可以长按节目打开快捷菜单。",
+    "introSecondPage": "您可以通过搜索订阅播客，也可以直接导入OPML文件。",
+    "introThirdPage": "您可以创建分组，上下滑动切换分组。",
+    "invalidName": "用户名错误",
+    "lastUpdate": "最近更新",
+    "@lastUpdate": {
+        "description": "gpodder.net update"
+    },
+    "later": "稍后",
+    "lightMode": "明亮模式",
+    "like": "喜欢",
+    "liked": "已收藏",
+    "likeDate": "收藏日期",
+    "@likeDate": {
+        "description": "Favorite tab, sort by like date."
+    },
+    "listen": "收听",
+    "listened": "已收听",
+    "loadMore": "加载更多",
+    "loggedInAs": "使用{userName}登入",
+    "@loggedInAs": {
+        "description": "gpodder.net",
+        "placeholders": {
+            "userName": {}
+        }
+    },
+    "login": "登入",
+    "@login": {
+        "description": "gpodder.net login"
+    },
+    "loginFailed": "登入失败",
+    "logout": "注销",
+    "@logout": {
+        "description": "gpodder.net logout"
+    },
+    "mark": "标记",
+    "@mark": {
+        "description": "In listen history page, if a episode is marked as listened."
+    },
+    "markConfirm": "确认标记",
+    "markConfirmContent": "是否确认标记全部节目为已收听？",
+    "markListened": "标记已收听",
+    "markNotListened": "标记为未收听",
+    "menu": "菜单",
+    "menuAllPodcasts": "所有订阅",
+    "menuMarkAllListened": "标记所有已收听",
+    "menuViewRSS": "查看 RSS",
+    "menuVisitSite": "访问网站",
+    "minsAgo": "{count, plural, zero{刚刚} other{{count}分钟前}}",
+    "minsCount": "{count, plural, zero{0分钟} other{{count}分钟}}",
+    "network": "网络",
+    "neverAutoUpdate": "无需自动更新",
+    "@neverAutoUpdate": {
+        "description": "Never auto  update in podcast settings."
+    },
+    "newestFirst": "由新到旧",
+    "newGroup": "创建分组",
+    "next": "下一步",
+    "noEpisodeDownload": "暂无下载节目",
+    "noEpisodeFavorite": "暂无收藏节目",
+    "noEpisodeRecent": "暂无节目",
+    "noPodcastGroup": "分组无播客",
+    "noShownote": "节目简介暂未收到。",
+    "@noShownote": {
+        "description": "Means this episode have no show notes."
+    },
+    "notificaitonFatch": "获取数据 {title}",
+    "notificationNetworkError": "订阅失败，网络错误 {title}",
+    "@notificationNetworkError": {
+        "placeholders": {
+            "title": {}
+        }
+    },
+    "notificationSetting": "通知栏",
+    "notificationSubscribe": "订阅 {title}",
+    "@notificationSubscribe": {
+        "placeholders": {
+            "title": {}
+        }
+    },
+    "notificationSubscribeExisted": "订阅失败，播客已存在 {title}",
+    "@notificationSubscribeExisted": {
+        "placeholders": {
+            "title": {}
+        }
+    },
+    "notificationSuccess": "订阅成功 {title}",
+    "@notificationSuccess": {
+        "placeholders": {
+            "title": {}
+        }
+    },
+    "notificationUpdate": "更新 {title}",
+    "@notificationUpdate": {
+        "placeholders": {
+            "title": {}
+        }
+    },
+    "notificationUpdateError": "更新失败 {title}",
+    "@notificationUpdateError": {
+        "placeholders": {
+            "title": {}
+        }
+    },
+    "oldestFirst": "由旧到新",
+    "passwdRequired": "密码为空",
+    "password": "密码",
+    "pause": "暂停",
+    "play": "播放",
+    "playback": "播放控制",
+    "player": "播放器",
+    "playerHeightMed": "中",
+    "playerHeightShort": "低",
+    "playerHeightTall": "高",
+    "playing": "正在播放",
+    "playlistExisted": "播放列表已存在",
+    "@playlistExisted": {
+        "description": "Error string when creating new playlist."
+    },
+    "playlistNameEmpty": "播放列表名为空",
+    "@playlistNameEmpty": {
+        "description": "Error string when creating new playlist."
+    },
+    "playlists": "播放列表",
+    "@playlists": {
+        "description": "Title for playlists tab."
+    },
+    "playNext": "下一首",
+    "@playNext": {
+        "description": "Popup menu for episode."
+    },
+    "playNextDes": "添加节目到播放列表的顶部",
+    "@playNextDes": {
+        "description": "Description for next play."
+    },
+    "plugins": "插件",
+    "podcast": "{count, plural, zero{} other{播客}}",
+    "podcastSubscribed": "播客已订阅",
+    "popupMenuDownloadDes": "下载节目",
+    "popupMenuLaterDes": "添加到播放列表",
+    "popupMenuLikeDes": "添加到收藏",
+    "popupMenuMarkDes": "设置为已收听",
+    "popupMenuPlayDes": "播放节目",
+    "privacyPolicy": "隐私条款",
+    "published": "{date}上线",
+    "@published": {
+        "placeholders": {
+            "date": {}
+        }
+    },
+    "publishedDaily": "每日更新",
+    "publishedMonthly": "每月更新",
+    "publishedWeekly": "每周更新",
+    "@publishedWeekly": {
+        "description": "In search podcast detail page."
+    },
+    "publishedYearly": "每年更新",
+    "queue": "队列",
+    "@queue": {
+        "description": "Queue"
+    },
+    "recoverSubscribe": "恢复订阅",
+    "@recoverSubscribe": {
+        "description": "User can recover subscribe podcast after remove it in subscribe history page."
+    },
+    "refresh": "刷新",
+    "@refresh": {
+        "description": "Refresh"
+    },
+    "refreshArtwork": "更新头像",
+    "refreshStarted": "刷新中",
+    "@refreshStarted": {
+        "description": "Toast for refresh"
+    },
+    "remove": "移除",
+    "@remove": {
+        "description": "Remove not \"removed\". \nRemove a podcast or a group."
+    },
+    "removeConfirm": "取消订阅",
+    "@removeConfirm": {
+        "description": "unsubscribe podcast dialog"
+    },
+    "removedAt": "{date}移除",
+    "@removedAt": {
+        "description": "For example ：Removed at 2020.10.10",
+        "placeholders": {
+            "date": {}
+        }
+    },
+    "removeNewMark": "移除New标记",
+    "@removeNewMark": {
+        "description": "Remove new mark for new episodes."
+    },
+    "removePodcastDes": "您确认要取消订阅吗？",
+    "save": "保存",
+    "schedule": "定时",
+    "search": "搜索",
+    "searchEpisode": "搜索节目",
+    "searchHelper": "请输入播客名，关键字或者RSS链接。",
+    "searchInvalidRss": "RSS 链接错误",
+    "searchPodcast": "搜索播客",
+    "secCount": "{count, plural, zero{0 秒} other{{count} 秒}}",
+    "secondsAgo": "{count, plural, zero{刚刚} other{{count}秒前}}",
+    "selected": "已选择 {count} 项",
+    "@selected": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "settings": "设置",
+    "settingsAccentColor": "次要颜色",
+    "settingsAccentColorDes": "包括溢出颜色",
+    "settingsAppearance": "界面",
+    "settingsAppearanceDes": "颜色与主题",
+    "settingsAppIntro": "引导页",
+    "settingsAudioCache": "播放缓存",
+    "settingsAudioCacheDes": "播放缓存设置",
+    "settingsAutoDelete": "自动删除下载节目",
+    "settingsAutoDeleteDes": "默认 30 天",
+    "settingsAutoPlayDes": "自动播放下一节目",
+    "settingsBackup": "备份",
+    "settingsBackupDes": "备份应用数据",
+    "settingsBoostVolume": "声音增强水平",
+    "settingsBoostVolumeDes": "修改声音增强水平",
+    "settingsDefaultGrid": "默认布局",
+    "settingsDefaultGridDownload": "下载页",
+    "settingsDefaultGridFavorite": "收藏页",
+    "settingsDefaultGridPodcast": "播客页",
+    "settingsDefaultGridRecent": "最近页",
+    "settingsDiscovery": "再次功能介绍",
+    "@settingsDiscovery": {
+        "description": "Reset feature discovery state. User tap it and restart app, will see features tutorial again."
+    },
+    "settingsDownloadPosition": "下载位置",
+    "@settingsDownloadPosition": {
+        "description": "Choose folder for downloads."
+    },
+    "settingsEnableSyncing": "开启自动更新",
+    "settingsEnableSyncingDes": "在后台更新所有订阅播客",
+    "settingsExportDes": "导出及恢复所有设置项",
+    "settingsFastForwardSec": "快进时间",
+    "settingsFastForwardSecDes": "修改播放器快进时间",
+    "settingsFeedback": "反馈",
+    "settingsFeedbackDes": "意见与建议",
+    "settingsHistory": "历史记录",
+    "settingsHistoryDes": "收听记录",
+    "settingsInfo": "信息",
+    "settingsInterface": "界面",
+    "settingsLanguages": "语言",
+    "settingsLanguagesDes": "设置语言",
+    "settingsLayout": "布局",
+    "settingsLayoutDes": "应用布局",
+    "settingsLibraries": "开源",
+    "settingsLibrariesDes": "开源项目使用",
+    "settingsManageDownload": "下载管理",
+    "settingsManageDownloadDes": "管理下载节目文件",
+    "settingsMarkListenedSkip": "跳过后标记为已收听",
+    "@settingsMarkListenedSkip": {
+        "description": "Mark episode as listened when skipped to next."
+    },
+    "settingsMarkListenedSkipDes": "当节目被跳过时自动标记为已收听",
+    "settingsMenuAutoPlay": "自动播放下一节目",
+    "settingsNetworkCellular": "蜂窝数据确认",
+    "settingsNetworkCellularAuto": "是否用蜂窝数据自动下载",
+    "settingsNetworkCellularAutoDes": "你可以在分组管理页面设置自动下载",
+    "settingsNetworkCellularDes": "在使用蜂窝数据下载前确认",
+    "settingsPlayDes": "播放列表和播放器",
+    "settingsPlayerHeight": "播放器高度",
+    "settingsPlayerHeightDes": "您可以修改播放器高度",
+    "settingsPopupMenu": "节目弹出菜单",
+    "settingsPopupMenuDes": "修改节目弹出菜单",
+    "settingsPrefrence": "首选项",
+    "settingsRealDark": "极黑",
+    "settingsRealDarkDes": "如果夜不够黑，请开启",
+    "settingsRewindSec": "快退时间",
+    "settingsRewindSecDes": "修改播放器快退时间",
+    "settingsSpeeds": "播放速度",
+    "@settingsSpeeds": {
+        "description": "Playback speeds setting."
+    },
+    "settingsSpeedsDes": "设置播放速度选项",
+    "@settingsSpeedsDes": {
+        "description": "Playback speed setting description"
+    },
+    "settingsSTAuto": "自动睡眠模式",
+    "settingsSTAutoDes": "定期开启睡眠模式",
+    "settingsSTDefaultTime": "默认时长",
+    "settingsSTDefautTimeDes": "睡眠模式默认时长",
+    "settingsSTMode": "自动睡眠模式默认时长",
+    "settingsStorageDes": "管理缓存和下载空间",
+    "settingsSyncing": "同步",
+    "settingsSyncingDes": "在后台更新播客",
+    "settingsTapToOpenPopupMenu": "轻点打开弹出菜单",
+    "settingsTapToOpenPopupMenuDes": "开启后您需长按打开节目页",
+    "settingsTheme": "主题",
+    "settingStorage": "储存空间",
+    "settingsUpdateInterval": "更新频率",
+    "settingsUpdateIntervalDes": "默认 24 小时",
+    "share": "分享",
+    "showNotesFonts": "节目简介字体",
+    "size": "大小",
+    "skipSecondsAtEnd": "结束跳过秒数",
+    "skipSecondsAtStart": "开头跳过秒数",
+    "skipSilence": "跳过无声",
+    "@skipSilence": {
+        "description": "Feature skip silence"
+    },
+    "skipToNext": "下一首",
+    "sleepTimer": "睡眠模式",
+    "status": "状态",
+    "@status": {
+        "description": "gpodder.net status"
+    },
+    "statusAuthError": "验证错误",
+    "@statusAuthError": {
+        "description": "Sync error"
+    },
+    "statusFail": "失败",
+    "@statusFail": {
+        "description": "Sync fail"
+    },
+    "statusSuccess": "成功",
+    "@statusSuccess": {
+        "description": "Sync status"
+    },
+    "stop": "停止",
+    "subscribe": "订阅",
+    "subscribeExportDes": "导出 OPML 文件",
+    "syncNow": "立即同步",
+    "systemDefault": "系统默认",
+    "timeLastPlayed": "上次播放{time}",
+    "@timeLastPlayed": {
+        "description": "Show last time stop position  in player when a episode have been played.",
+        "placeholders": {
+            "time": {}
+        }
+    },
+    "timeLeft": "剩余 {time}",
+    "@timeLeft": {
+        "placeholders": {
+            "time": {}
+        }
+    },
+    "to": "到{time}",
+    "@to": {
+        "placeholders": {
+            "time": {}
+        }
+    },
+    "toastAddPlaylist": "添加到播放列表",
+    "toastDiscovery": "重启应用后可查看",
+    "@toastDiscovery": {
+        "description": "Toast displayed when user tap Discovery Features Again in settings page."
+    },
+    "toastFileError": "文件错误，导入失败",
+    "toastFileNotValid": "文件错误",
+    "toastHomeGroupNotSupport": "Home 分组不支持此功能",
+    "toastImportSettingsSuccess": "导入设置成功",
+    "toastOneGroup": "请至少选择一个分组",
+    "toastPodcastRecovering": "恢复中，请稍后",
+    "@toastPodcastRecovering": {
+        "description": "Resubscribe removed podcast"
+    },
+    "toastReadFile": "读取文件成功",
+    "toastRecoverFailed": "恢复订阅失败",
+    "@toastRecoverFailed": {
+        "description": "Resubscribe removed podast"
+    },
+    "toastRemovePlaylist": "从播放列表移除",
+    "toastSettingSaved": "设置已保存",
+    "toastTimeEqualEnd": "与结束时刻相同",
+    "@toastTimeEqualEnd": {
+        "description": "User can't choose the same time as schedule end time."
+    },
+    "toastTimeEqualStart": "与起始时刻相同",
+    "@toastTimeEqualStart": {
+        "description": "User can't choose the same time as schedule start time."
+    },
+    "translators": "翻译者",
+    "understood": "了解",
+    "undo": "撤销",
+    "unlike": "取消喜欢",
+    "unliked": "从收藏移除",
+    "updateDate": "更新日期",
+    "updateEpisodesCount": "{count, plural, zero{未有更新} other{更新 {count} 集节目}}",
+    "updateFailed": "更新失败",
+    "username": "用户名",
+    "usernameRequired": "用户名为空",
+    "useWallpaperTheme": "",
+    "useWallpaperThemeDes": "",
+    "version": "版本：{version}",
+    "@version": {
+        "placeholders": {
+            "version": {}
+        }
     }
-  },
-  "addNewEpisodeAll": "{count, plural, zero{} other{{count}集节目添加到播放列表}}",
-  "@addNewEpisodeAll": {},
-  "addNewEpisodeTooltip": "添加更新节目到播放列表",
-  "@addNewEpisodeTooltip": {},
-  "addSomeGroups": "请添加分组",
-  "@addSomeGroups": {
-    "description": "Please add new groups"
-  },
-  "all": "全部",
-  "@all": {},
-  "autoDownload": "自动下载",
-  "@autoDownload": {},
-  "back": "返回",
-  "@back": {},
-  "boostVolume": "增强声音",
-  "@boostVolume": {
-    "description": "Boost volume in player widget."
-  },
-  "buffering": "缓冲中",
-  "@buffering": {},
-  "cancel": "取消",
-  "@cancel": {},
-  "cellularConfirm": "流量确认",
-  "@cellularConfirm": {},
-  "cellularConfirmDes": "您确定使用流量下载吗",
-  "@cellularConfirmDes": {},
-  "changeLayout": "修改布局",
-  "@changeLayout": {},
-  "changelog": "更新日志",
-  "@changelog": {},
-  "chooseA": "选择",
-  "@chooseA": {},
-  "clear": "清除",
-  "@clear": {},
-  "clearAll": "清除全部",
-  "@clearAll": {
-    "description": "Clear all episodes in playlist."
-  },
-  "color": "颜色",
-  "@color": {},
-  "confirm": "确认",
-  "@confirm": {},
-  "createNewPlaylist": "创建播放列表",
-  "@createNewPlaylist": {},
-  "darkMode": "夜晚模式",
-  "@darkMode": {},
-  "daysAgo": "{count, plural, zero{今天} other{{count}天前}}",
-  "@daysAgo": {},
-  "daysCount": "{count, plural, zero{从不} other{{count}天}}",
-  "@daysCount": {},
-  "defaultQueueReminder": "此为默认播放列表，无法删除。",
-  "@defaultQueueReminder": {
-    "description": "Remind user that default queue can't be removed."
-  },
-  "defaultSearchEngine": "默认播客搜索引擎",
-  "@defaultSearchEngine": {},
-  "defaultSearchEngineDes": "选择默认播客搜索引擎",
-  "@defaultSearchEngineDes": {
-    "description": "Choose the default podcast search engine"
-  },
-  "delete": "删除",
-  "@delete": {},
-  "developer": "关于我",
-  "@developer": {
-    "description": "Can also translate to About me"
-  },
-  "dismiss": "忽略",
-  "@dismiss": {},
-  "done": "完成",
-  "@done": {},
-  "download": "下载",
-  "@download": {},
-  "downloaded": "已下载",
-  "@downloaded": {},
-  "downloadRemovedToast": "下载已删除",
-  "@downloadRemovedToast": {},
-  "downloadStart": "下载中",
-  "@downloadStart": {
-    "description": "Toast of downloading"
-  },
-  "editGroupName": "修改组名",
-  "@editGroupName": {},
-  "endOfEpisode": "节目结束",
-  "@endOfEpisode": {},
-  "episode": "{count, plural, zero{} other{节目}}",
-  "@episode": {},
-  "fastForward": "快进",
-  "@fastForward": {},
-  "fastRewind": "快退",
-  "@fastRewind": {},
-  "featureDiscoveryEditGroup": "点击修改分组",
-  "@featureDiscoveryEditGroup": {},
-  "featureDiscoveryEditGroupDes": "您可以修改分组名或者删除分组，注意 Home 分组无法修改，也不能被删除。",
-  "@featureDiscoveryEditGroupDes": {},
-  "featureDiscoveryEpisode": "节目界面",
-  "@featureDiscoveryEpisode": {},
-  "featureDiscoveryEpisodeDes": "您可以长按播放节目或者添加节目到播放列表。",
-  "@featureDiscoveryEpisodeDes": {},
-  "featureDiscoveryEpisodeTitle": "您可以长按快速播放节目",
-  "@featureDiscoveryEpisodeTitle": {},
-  "featureDiscoveryGroup": "点击添加分组",
-  "@featureDiscoveryGroup": {},
-  "featureDiscoveryGroupDes": "新订阅播客默认分组为 Home，您可以添加新的分组，移动播客到新的分组，每个播客可以被添加到多个分组。",
-  "@featureDiscoveryGroupDes": {},
-  "featureDiscoveryGroupPodcast": "长按可以移动播客位置",
-  "@featureDiscoveryGroupPodcast": {},
-  "featureDiscoveryGroupPodcastDes": "您可以点击对播客进行设置，或者长按重新排序。",
-  "@featureDiscoveryGroupPodcastDes": {},
-  "featureDiscoveryOMPL": "点击导入 OPML",
-  "@featureDiscoveryOMPL": {},
-  "featureDiscoveryOMPLDes": "在这里您可以导入OPML文件，打开设置页面，或者刷新所有播客。",
-  "@featureDiscoveryOMPLDes": {},
-  "featureDiscoveryPlaylist": "点击打开播放列表",
-  "@featureDiscoveryPlaylist": {},
-  "featureDiscoveryPlaylistDes": "您可以添加节目到播放列表，节目在播放后将会从播放列表自动移除。",
-  "@featureDiscoveryPlaylistDes": {},
-  "featureDiscoveryPodcast": "播客界面",
-  "@featureDiscoveryPodcast": {},
-  "featureDiscoveryPodcastDes": "您可以点击“查看所有”新增或管理分组。",
-  "@featureDiscoveryPodcastDes": {},
-  "featureDiscoveryPodcastTitle": "您可以通过上下滑动切换分组",
-  "@featureDiscoveryPodcastTitle": {},
-  "featureDiscoverySearch": "点击搜索播客",
-  "@featureDiscoverySearch": {},
-  "featureDiscoverySearchDes": "您可以通过搜索播客名称、关键字或者RSS链接订阅播客。",
-  "@featureDiscoverySearchDes": {},
-  "feedbackEmail": "发送邮件",
-  "@feedbackEmail": {},
-  "feedbackGithub": "提交Issue",
-  "@feedbackGithub": {},
-  "feedbackPlay": "Play评价",
-  "@feedbackPlay": {
-    "description": "Rate on Google Play Store.\nUser can tap to open play link."
-  },
-  "feedbackTelegram": "加入小组",
-  "@feedbackTelegram": {},
-  "filter": "过滤",
-  "@filter": {},
-  "fonts": "字体",
-  "@fonts": {},
-  "fontStyle": "字体风格",
-  "@fontStyle": {},
-  "from": "自{time}",
-  "@from": {
-    "placeholders": {
-      "time": {}
-    }
-  },
-  "goodNight": "晚安",
-  "@goodNight": {},
-  "gpodderLoginDes": "恭喜！您已经成功绑定 gpodder.net 账号，Tsacdop 将会自动同步您的订阅到 gpodder.net 账户。",
-  "@gpodderLoginDes": {},
-  "groupExisted": "组名已使用",
-  "@groupExisted": {
-    "description": "Group name validate in add group dialog. User can't add group with same name."
-  },
-  "groupFilter": "分组",
-  "@groupFilter": {},
-  "groupRemoveConfirm": "您确认要移除该分组吗？播客将被移动到 Home 分组。",
-  "@groupRemoveConfirm": {},
-  "groups": "{count, plural, zero{分组} other{分组}}",
-  "@groups": {},
-  "hideListenedSetting": "隐藏已收听",
-  "@hideListenedSetting": {},
-  "hidePodcastDiscovery": "隐藏播客推荐",
-  "@hidePodcastDiscovery": {
-    "description": "Hide podcast discovery"
-  },
-  "hidePodcastDiscoveryDes": "在搜索页面隐藏播客推荐",
-  "@hidePodcastDiscoveryDes": {},
-  "homeGroupsSeeAll": "查看全部",
-  "@homeGroupsSeeAll": {},
-  "homeMenuPlaylist": "播放列表",
-  "@homeMenuPlaylist": {},
-  "homeSubMenuSortBy": "排序",
-  "@homeSubMenuSortBy": {},
-  "homeTabMenuFavotite": "收藏",
-  "@homeTabMenuFavotite": {},
-  "homeTabMenuRecent": "最近更新",
-  "@homeTabMenuRecent": {},
-  "homeToprightMenuAbout": "关于",
-  "@homeToprightMenuAbout": {},
-  "homeToprightMenuImportOMPL": "导入OPML",
-  "@homeToprightMenuImportOMPL": {},
-  "homeToprightMenuRefreshAll": "全部刷新",
-  "@homeToprightMenuRefreshAll": {},
-  "hostedOn": "平台 {host}",
-  "@hostedOn": {
-    "placeholders": {
-      "host": {}
-    }
-  },
-  "hoursAgo": "{count, plural, zero{刚刚} other{{count}小时前}}",
-  "@hoursAgo": {},
-  "hoursCount": "{count, plural, zero{0小时} other{{count} 小时}}",
-  "@hoursCount": {},
-  "import": "导入",
-  "@import": {},
-  "intergateWith": "绑定 {service}",
-  "@intergateWith": {
-    "description": "Integrate with",
-    "placeholders": {
-      "service": {}
-    }
-  },
-  "introFourthPage": "您可以长按节目打开快捷菜单。",
-  "@introFourthPage": {},
-  "introSecondPage": "您可以通过搜索订阅播客，也可以直接导入OPML文件。",
-  "@introSecondPage": {},
-  "introThirdPage": "您可以创建分组，上下滑动切换分组。",
-  "@introThirdPage": {},
-  "invalidName": "用户名错误",
-  "@invalidName": {},
-  "lastUpdate": "最近更新",
-  "@lastUpdate": {
-    "description": "gpodder.net update"
-  },
-  "later": "稍后",
-  "@later": {},
-  "lightMode": "明亮模式",
-  "@lightMode": {},
-  "like": "喜欢",
-  "@like": {},
-  "liked": "已收藏",
-  "@liked": {},
-  "likeDate": "收藏日期",
-  "@likeDate": {
-    "description": "Favorite tab, sort by like date."
-  },
-  "listen": "收听",
-  "@listen": {},
-  "listened": "已收听",
-  "@listened": {},
-  "loadMore": "加载更多",
-  "@loadMore": {},
-  "loggedInAs": "使用{userName}登入",
-  "@loggedInAs": {
-    "description": "gpodder.net",
-    "placeholders": {
-      "userName": {}
-    }
-  },
-  "login": "登入",
-  "@login": {
-    "description": "gpodder.net login"
-  },
-  "loginFailed": "登入失败",
-  "@loginFailed": {},
-  "logout": "注销",
-  "@logout": {
-    "description": "gpodder.net logout"
-  },
-  "mark": "标记",
-  "@mark": {
-    "description": "In listen history page, if a episode is marked as listened."
-  },
-  "markConfirm": "确认标记",
-  "@markConfirm": {},
-  "markConfirmContent": "是否确认标记全部节目为已收听？",
-  "@markConfirmContent": {},
-  "markListened": "标记已收听",
-  "@markListened": {},
-  "markNotListened": "标记为未收听",
-  "@markNotListened": {},
-  "menu": "菜单",
-  "@menu": {},
-  "menuAllPodcasts": "所有订阅",
-  "@menuAllPodcasts": {},
-  "menuMarkAllListened": "标记所有已收听",
-  "@menuMarkAllListened": {},
-  "menuViewRSS": "查看 RSS",
-  "@menuViewRSS": {},
-  "menuVisitSite": "访问网站",
-  "@menuVisitSite": {},
-  "minsAgo": "{count, plural, zero{刚刚} other{{count}分钟前}}",
-  "@minsAgo": {},
-  "minsCount": "{count, plural, zero{0分钟} other{{count}分钟}}",
-  "@minsCount": {},
-  "network": "网络",
-  "@network": {},
-  "neverAutoUpdate": "无需自动更新",
-  "@neverAutoUpdate": {
-    "description": "Never auto  update in podcast settings."
-  },
-  "newestFirst": "由新到旧",
-  "@newestFirst": {},
-  "newGroup": "创建分组",
-  "@newGroup": {},
-  "next": "下一步",
-  "@next": {},
-  "noEpisodeDownload": "暂无下载节目",
-  "@noEpisodeDownload": {},
-  "noEpisodeFavorite": "暂无收藏节目",
-  "@noEpisodeFavorite": {},
-  "noEpisodeRecent": "暂无节目",
-  "@noEpisodeRecent": {},
-  "noPodcastGroup": "分组无播客",
-  "@noPodcastGroup": {},
-  "noShownote": "节目简介暂未收到。",
-  "@noShownote": {
-    "description": "Means this episode have no show notes."
-  },
-  "notificaitonFatch": "获取数据 {title}",
-  "@notificaitonFatch": {},
-  "notificationNetworkError": "订阅失败，网络错误 {title}",
-  "@notificationNetworkError": {
-    "placeholders": {
-      "title": {}
-    }
-  },
-  "notificationSetting": "通知栏",
-  "@notificationSetting": {},
-  "notificationSubscribe": "订阅 {title}",
-  "@notificationSubscribe": {
-    "placeholders": {
-      "title": {}
-    }
-  },
-  "notificationSubscribeExisted": "订阅失败，播客已存在 {title}",
-  "@notificationSubscribeExisted": {
-    "placeholders": {
-      "title": {}
-    }
-  },
-  "notificationSuccess": "订阅成功 {title}",
-  "@notificationSuccess": {
-    "placeholders": {
-      "title": {}
-    }
-  },
-  "notificationUpdate": "更新 {title}",
-  "@notificationUpdate": {
-    "placeholders": {
-      "title": {}
-    }
-  },
-  "notificationUpdateError": "更新失败 {title}",
-  "@notificationUpdateError": {
-    "placeholders": {
-      "title": {}
-    }
-  },
-  "oldestFirst": "由旧到新",
-  "@oldestFirst": {},
-  "passwdRequired": "密码为空",
-  "@passwdRequired": {},
-  "password": "密码",
-  "@password": {},
-  "pause": "暂停",
-  "@pause": {},
-  "play": "播放",
-  "@play": {},
-  "playback": "播放控制",
-  "@playback": {},
-  "player": "播放器",
-  "@player": {},
-  "playerHeightMed": "中",
-  "@playerHeightMed": {},
-  "playerHeightShort": "低",
-  "@playerHeightShort": {},
-  "playerHeightTall": "高",
-  "@playerHeightTall": {},
-  "playing": "正在播放",
-  "@playing": {},
-  "playlistExisted": "播放列表已存在",
-  "@playlistExisted": {
-    "description": "Error string when creating new playlist."
-  },
-  "playlistNameEmpty": "播放列表名为空",
-  "@playlistNameEmpty": {
-    "description": "Error string when creating new playlist."
-  },
-  "playlists": "播放列表",
-  "@playlists": {
-    "description": "Title for playlists tab."
-  },
-  "playNext": "下一首",
-  "@playNext": {
-    "description": "Popup menu for episode."
-  },
-  "playNextDes": "添加节目到播放列表的顶部",
-  "@playNextDes": {
-    "description": "Description for next play."
-  },
-  "plugins": "插件",
-  "@plugins": {},
-  "podcast": "{count, plural, zero{} other{播客}}",
-  "@podcast": {},
-  "podcastSubscribed": "播客已订阅",
-  "@podcastSubscribed": {},
-  "popupMenuDownloadDes": "下载节目",
-  "@popupMenuDownloadDes": {},
-  "popupMenuLaterDes": "添加到播放列表",
-  "@popupMenuLaterDes": {},
-  "popupMenuLikeDes": "添加到收藏",
-  "@popupMenuLikeDes": {},
-  "popupMenuMarkDes": "设置为已收听",
-  "@popupMenuMarkDes": {},
-  "popupMenuPlayDes": "播放节目",
-  "@popupMenuPlayDes": {},
-  "privacyPolicy": "隐私条款",
-  "@privacyPolicy": {},
-  "published": "{date}上线",
-  "@published": {
-    "placeholders": {
-      "date": {}
-    }
-  },
-  "publishedDaily": "每日更新",
-  "@publishedDaily": {},
-  "publishedMonthly": "每月更新",
-  "@publishedMonthly": {},
-  "publishedWeekly": "每周更新",
-  "@publishedWeekly": {
-    "description": "In search podcast detail page."
-  },
-  "publishedYearly": "每年更新",
-  "@publishedYearly": {},
-  "queue": "队列",
-  "@queue": {
-    "description": "Queue"
-  },
-  "recoverSubscribe": "恢复订阅",
-  "@recoverSubscribe": {
-    "description": "User can recover subscribe podcast after remove it in subscribe history page."
-  },
-  "refresh": "刷新",
-  "@refresh": {
-    "description": "Refresh"
-  },
-  "refreshArtwork": "更新头像",
-  "@refreshArtwork": {},
-  "refreshStarted": "刷新中",
-  "@refreshStarted": {
-    "description": "Toast for refresh"
-  },
-  "remove": "移除",
-  "@remove": {
-    "description": "Remove not \"removed\". \nRemove a podcast or a group."
-  },
-  "removeConfirm": "取消订阅",
-  "@removeConfirm": {
-    "description": "unsubscribe podcast dialog"
-  },
-  "removedAt": "{date}移除",
-  "@removedAt": {
-    "description": "For example ：Removed at 2020.10.10",
-    "placeholders": {
-      "date": {}
-    }
-  },
-  "removeNewMark": "移除New标记",
-  "@removeNewMark": {
-    "description": "Remove new mark for new episodes."
-  },
-  "removePodcastDes": "您确认要取消订阅吗？",
-  "@removePodcastDes": {},
-  "save": "保存",
-  "@save": {},
-  "schedule": "定时",
-  "@schedule": {},
-  "search": "搜索",
-  "@search": {},
-  "searchEpisode": "搜索节目",
-  "@searchEpisode": {},
-  "searchHelper": "请输入播客名，关键字或者RSS链接。",
-  "@searchHelper": {},
-  "searchInvalidRss": "RSS 链接错误",
-  "@searchInvalidRss": {},
-  "searchPodcast": "搜索播客",
-  "@searchPodcast": {},
-  "secCount": "{count, plural, zero{0 秒} other{{count} 秒}}",
-  "@secCount": {},
-  "secondsAgo": "{count, plural, zero{刚刚} other{{count}秒前}}",
-  "@secondsAgo": {},
-  "selected": "已选择 {count} 项",
-  "@selected": {
-    "placeholders": {
-      "count": {}
-    }
-  },
-  "settings": "设置",
-  "@settings": {},
-  "settingsAccentColor": "次要颜色",
-  "@settingsAccentColor": {},
-  "settingsAccentColorDes": "包括溢出颜色",
-  "@settingsAccentColorDes": {},
-  "settingsAppearance": "界面",
-  "@settingsAppearance": {},
-  "settingsAppearanceDes": "颜色与主题",
-  "@settingsAppearanceDes": {},
-  "settingsAppIntro": "引导页",
-  "@settingsAppIntro": {},
-  "settingsAudioCache": "播放缓存",
-  "@settingsAudioCache": {},
-  "settingsAudioCacheDes": "播放缓存设置",
-  "@settingsAudioCacheDes": {},
-  "settingsAutoDelete": "自动删除下载节目",
-  "@settingsAutoDelete": {},
-  "settingsAutoDeleteDes": "默认 30 天",
-  "@settingsAutoDeleteDes": {},
-  "settingsAutoPlayDes": "自动播放下一节目",
-  "@settingsAutoPlayDes": {},
-  "settingsBackup": "备份",
-  "@settingsBackup": {},
-  "settingsBackupDes": "备份应用数据",
-  "@settingsBackupDes": {},
-  "settingsBoostVolume": "声音增强水平",
-  "@settingsBoostVolume": {},
-  "settingsBoostVolumeDes": "修改声音增强水平",
-  "@settingsBoostVolumeDes": {},
-  "settingsDefaultGrid": "默认布局",
-  "@settingsDefaultGrid": {},
-  "settingsDefaultGridDownload": "下载页",
-  "@settingsDefaultGridDownload": {},
-  "settingsDefaultGridFavorite": "收藏页",
-  "@settingsDefaultGridFavorite": {},
-  "settingsDefaultGridPodcast": "播客页",
-  "@settingsDefaultGridPodcast": {},
-  "settingsDefaultGridRecent": "最近页",
-  "@settingsDefaultGridRecent": {},
-  "settingsDiscovery": "再次功能介绍",
-  "@settingsDiscovery": {
-    "description": "Reset feature discovery state. User tap it and restart app, will see features tutorial again."
-  },
-  "settingsDownloadPosition": "下载位置",
-  "@settingsDownloadPosition": {
-    "description": "Choose folder for downloads."
-  },
-  "settingsEnableSyncing": "开启自动更新",
-  "@settingsEnableSyncing": {},
-  "settingsEnableSyncingDes": "在后台更新所有订阅播客",
-  "@settingsEnableSyncingDes": {},
-  "settingsExportDes": "导出及恢复所有设置项",
-  "@settingsExportDes": {},
-  "settingsFastForwardSec": "快进时间",
-  "@settingsFastForwardSec": {},
-  "settingsFastForwardSecDes": "修改播放器快进时间",
-  "@settingsFastForwardSecDes": {},
-  "settingsFeedback": "反馈",
-  "@settingsFeedback": {},
-  "settingsFeedbackDes": "意见与建议",
-  "@settingsFeedbackDes": {},
-  "settingsHistory": "历史记录",
-  "@settingsHistory": {},
-  "settingsHistoryDes": "收听记录",
-  "@settingsHistoryDes": {},
-  "settingsInfo": "信息",
-  "@settingsInfo": {},
-  "settingsInterface": "界面",
-  "@settingsInterface": {},
-  "settingsLanguages": "语言",
-  "@settingsLanguages": {},
-  "settingsLanguagesDes": "设置语言",
-  "@settingsLanguagesDes": {},
-  "settingsLayout": "布局",
-  "@settingsLayout": {},
-  "settingsLayoutDes": "应用布局",
-  "@settingsLayoutDes": {},
-  "settingsLibraries": "开源",
-  "@settingsLibraries": {},
-  "settingsLibrariesDes": "开源项目使用",
-  "@settingsLibrariesDes": {},
-  "settingsManageDownload": "下载管理",
-  "@settingsManageDownload": {},
-  "settingsManageDownloadDes": "管理下载节目文件",
-  "@settingsManageDownloadDes": {},
-  "settingsMarkListenedSkip": "跳过后标记为已收听",
-  "@settingsMarkListenedSkip": {
-    "description": "Mark episode as listened when skipped to next."
-  },
-  "settingsMarkListenedSkipDes": "当节目被跳过时自动标记为已收听",
-  "@settingsMarkListenedSkipDes": {},
-  "settingsMenuAutoPlay": "自动播放下一节目",
-  "@settingsMenuAutoPlay": {},
-  "settingsNetworkCellular": "蜂窝数据确认",
-  "@settingsNetworkCellular": {},
-  "settingsNetworkCellularAuto": "是否用蜂窝数据自动下载",
-  "@settingsNetworkCellularAuto": {},
-  "settingsNetworkCellularAutoDes": "你可以在分组管理页面设置自动下载",
-  "@settingsNetworkCellularAutoDes": {},
-  "settingsNetworkCellularDes": "在使用蜂窝数据下载前确认",
-  "@settingsNetworkCellularDes": {},
-  "settingsPlayDes": "播放列表和播放器",
-  "@settingsPlayDes": {},
-  "settingsPlayerHeight": "播放器高度",
-  "@settingsPlayerHeight": {},
-  "settingsPlayerHeightDes": "您可以修改播放器高度",
-  "@settingsPlayerHeightDes": {},
-  "settingsPopupMenu": "节目弹出菜单",
-  "@settingsPopupMenu": {},
-  "settingsPopupMenuDes": "修改节目弹出菜单",
-  "@settingsPopupMenuDes": {},
-  "settingsPrefrence": "首选项",
-  "@settingsPrefrence": {},
-  "settingsRealDark": "极黑",
-  "@settingsRealDark": {},
-  "settingsRealDarkDes": "如果夜不够黑，请开启",
-  "@settingsRealDarkDes": {},
-  "settingsRewindSec": "快退时间",
-  "@settingsRewindSec": {},
-  "settingsRewindSecDes": "修改播放器快退时间",
-  "@settingsRewindSecDes": {},
-  "settingsSpeeds": "播放速度",
-  "@settingsSpeeds": {
-    "description": "Playback speeds setting."
-  },
-  "settingsSpeedsDes": "设置播放速度选项",
-  "@settingsSpeedsDes": {
-    "description": "Playback speed setting description"
-  },
-  "settingsSTAuto": "自动睡眠模式",
-  "@settingsSTAuto": {},
-  "settingsSTAutoDes": "定期开启睡眠模式",
-  "@settingsSTAutoDes": {},
-  "settingsSTDefaultTime": "默认时长",
-  "@settingsSTDefaultTime": {},
-  "settingsSTDefautTimeDes": "睡眠模式默认时长",
-  "@settingsSTDefautTimeDes": {},
-  "settingsSTMode": "自动睡眠模式默认时长",
-  "@settingsSTMode": {},
-  "settingsStorageDes": "管理缓存和下载空间",
-  "@settingsStorageDes": {},
-  "settingsSyncing": "同步",
-  "@settingsSyncing": {},
-  "settingsSyncingDes": "在后台更新播客",
-  "@settingsSyncingDes": {},
-  "settingsTapToOpenPopupMenu": "轻点打开弹出菜单",
-  "@settingsTapToOpenPopupMenu": {},
-  "settingsTapToOpenPopupMenuDes": "开启后您需长按打开节目页",
-  "@settingsTapToOpenPopupMenuDes": {},
-  "settingsTheme": "主题",
-  "@settingsTheme": {},
-  "settingStorage": "储存空间",
-  "@settingStorage": {},
-  "settingsUpdateInterval": "更新频率",
-  "@settingsUpdateInterval": {},
-  "settingsUpdateIntervalDes": "默认 24 小时",
-  "@settingsUpdateIntervalDes": {},
-  "share": "分享",
-  "@share": {},
-  "showNotesFonts": "节目简介字体",
-  "@showNotesFonts": {},
-  "size": "大小",
-  "@size": {},
-  "skipSecondsAtEnd": "结束跳过秒数",
-  "@skipSecondsAtEnd": {},
-  "skipSecondsAtStart": "开头跳过秒数",
-  "@skipSecondsAtStart": {},
-  "skipSilence": "跳过无声",
-  "@skipSilence": {
-    "description": "Feature skip silence"
-  },
-  "skipToNext": "下一首",
-  "@skipToNext": {},
-  "sleepTimer": "睡眠模式",
-  "@sleepTimer": {},
-  "status": "状态",
-  "@status": {
-    "description": "gpodder.net status"
-  },
-  "statusAuthError": "验证错误",
-  "@statusAuthError": {
-    "description": "Sync error"
-  },
-  "statusFail": "失败",
-  "@statusFail": {
-    "description": "Sync fail"
-  },
-  "statusSuccess": "成功",
-  "@statusSuccess": {
-    "description": "Sync status"
-  },
-  "stop": "停止",
-  "@stop": {},
-  "subscribe": "订阅",
-  "@subscribe": {},
-  "subscribeExportDes": "导出 OPML 文件",
-  "@subscribeExportDes": {},
-  "syncNow": "立即同步",
-  "@syncNow": {},
-  "systemDefault": "系统默认",
-  "@systemDefault": {},
-  "timeLastPlayed": "上次播放{time}",
-  "@timeLastPlayed": {
-    "description": "Show last time stop position  in player when a episode have been played.",
-    "placeholders": {
-      "time": {}
-    }
-  },
-  "timeLeft": "剩余 {time}",
-  "@timeLeft": {
-    "placeholders": {
-      "time": {}
-    }
-  },
-  "to": "到{time}",
-  "@to": {
-    "placeholders": {
-      "time": {}
-    }
-  },
-  "toastAddPlaylist": "添加到播放列表",
-  "@toastAddPlaylist": {},
-  "toastDiscovery": "重启应用后可查看",
-  "@toastDiscovery": {
-    "description": "Toast displayed when user tap Discovery Features Again in settings page."
-  },
-  "toastFileError": "文件错误，导入失败",
-  "@toastFileError": {},
-  "toastFileNotValid": "文件错误",
-  "@toastFileNotValid": {},
-  "toastHomeGroupNotSupport": "Home 分组不支持此功能",
-  "@toastHomeGroupNotSupport": {},
-  "toastImportSettingsSuccess": "导入设置成功",
-  "@toastImportSettingsSuccess": {},
-  "toastOneGroup": "请至少选择一个分组",
-  "@toastOneGroup": {},
-  "toastPodcastRecovering": "恢复中，请稍后",
-  "@toastPodcastRecovering": {
-    "description": "Resubscribe removed podcast"
-  },
-  "toastReadFile": "读取文件成功",
-  "@toastReadFile": {},
-  "toastRecoverFailed": "恢复订阅失败",
-  "@toastRecoverFailed": {
-    "description": "Resubscribe removed podast"
-  },
-  "toastRemovePlaylist": "从播放列表移除",
-  "@toastRemovePlaylist": {},
-  "toastSettingSaved": "设置已保存",
-  "@toastSettingSaved": {},
-  "toastTimeEqualEnd": "与结束时刻相同",
-  "@toastTimeEqualEnd": {
-    "description": "User can't choose the same time as schedule end time."
-  },
-  "toastTimeEqualStart": "与起始时刻相同",
-  "@toastTimeEqualStart": {
-    "description": "User can't choose the same time as schedule start time."
-  },
-  "translators": "翻译者",
-  "@translators": {},
-  "understood": "了解",
-  "@understood": {},
-  "undo": "撤销",
-  "@undo": {},
-  "unlike": "取消喜欢",
-  "@unlike": {},
-  "unliked": "从收藏移除",
-  "@unliked": {},
-  "updateDate": "更新日期",
-  "@updateDate": {},
-  "updateEpisodesCount": "{count, plural, zero{未有更新} other{更新 {count} 集节目}}",
-  "@updateEpisodesCount": {},
-  "updateFailed": "更新失败",
-  "@updateFailed": {},
-  "username": "用户名",
-  "@username": {},
-  "usernameRequired": "用户名为空",
-  "@usernameRequired": {},
-  "useWallpaperTheme": "",
-  "@useWallpaperTheme": {},
-  "useWallpaperThemeDes": "",
-  "@useWallpaperThemeDes": {},
-  "version": "版本：{version}",
-  "@version": {
-    "placeholders": {
-      "version": {}
-    }
-  }
 }
