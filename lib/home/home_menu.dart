@@ -49,7 +49,7 @@ class HomeMenu extends StatelessWidget {
                       children: <Widget>[
                         Text(s.homeToprightMenuRefreshAll),
                         Text(
-                          context.superSettingState.lastSyncTime
+                          context.settingState.lastSyncTime
                               .get()
                               .toRelativeString(context),
                           style: TextStyle(color: Colors.red, fontSize: 12),

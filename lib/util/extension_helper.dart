@@ -90,7 +90,7 @@ extension ContextExtension on BuildContext {
     systemNavigationBarIconBrightness: iconBrightness,
   );
   bool get trueBlack =>
-      superSettingState.trueBlack.get() && brightness == Brightness.dark;
+      settingState.trueBlack.get() && brightness == Brightness.dark;
   EdgeInsets get originalPadding =>
       Provider.of<SettingState>(this, listen: false).originalPadding ??
       EdgeInsets.all(0);
@@ -220,7 +220,7 @@ extension TimeOfDayExtension on TimeOfDay {
 /// Still do assign these to local vars since Provider.of isn't free.
 extension StateExtension on BuildContext {
   S get s => S.of(this);
-  SettingState get superSettingState =>
+  SettingState get settingState =>
       Provider.of<SettingState>(this, listen: false);
   EpisodeState get episodeState =>
       Provider.of<EpisodeState>(this, listen: false);

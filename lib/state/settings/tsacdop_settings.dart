@@ -102,6 +102,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     getLegacy: () async =>
         switch (await legacyBackend.getStringList('localeKey')) {
           [] => null,
+          [""] => null,
           [var languageCode] => Locale(languageCode),
           [var languageCode, var scriptCode] => Locale.fromSubtags(
             languageCode: languageCode,

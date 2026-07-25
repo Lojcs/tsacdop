@@ -59,7 +59,7 @@ class SettingsBackup extends TsacdopSettings<BackupPreferences> {
 }
 
 class BackupPreferences implements SharedPreferencesWithCache {
-  final Map<String, dynamic> prefs;
+  Map<String, dynamic> prefs;
 
   BackupPreferences() : prefs = {};
 
@@ -67,7 +67,9 @@ class BackupPreferences implements SharedPreferencesWithCache {
   String save() => json.encode(prefs);
 
   /// Loads preferences from the file.
-  void load(String serial) => json.decode(serial);
+  void load(String serial) => prefs
+    ..clear()
+    ..addAll(json.decode(serial));
 
   @override
   Future<void> clear() async => prefs.clear();
@@ -84,7 +86,7 @@ class BackupPreferences implements SharedPreferencesWithCache {
   @override
   String? getString(String key) => prefs[key] as String?;
   @override
-  List<String>? getStringList(String key) => prefs[key] as List<String>?;
+  List<String>? getStringList(String key) => List<String>.from(prefs[key]);
   @override
   Set<String> get keys => prefs.keys.toSet();
   @override

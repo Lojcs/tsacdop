@@ -35,7 +35,7 @@ class DownloadState extends ChangeNotifier {
   late EpisodeState _episodeState;
 
   set context(BuildContext context) {
-    _settingState = context.superSettingState;
+    _settingState = context.settingState;
     _episodeState = context.episodeState;
   }
 

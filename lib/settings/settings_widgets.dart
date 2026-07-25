@@ -220,11 +220,11 @@ class SettingsSwitchTile extends SettingsValueTile<bool> {
              padding: .zero,
              value: value,
              onChanged: (newValue) =>
-                 selector(context, context.superSettingState).set(newValue),
+                 selector(context, context.settingState).set(newValue),
            ),
          ),
          onTap: (context) {
-           var preference = selector(context, context.superSettingState);
+           var preference = selector(context, context.settingState);
            preference.set(!preference.get());
          },
        );
@@ -299,7 +299,7 @@ class SettingsSliderTile<T> extends SettingsItem {
         child: InkWell(
           onTap: canDisable
               ? () {
-                  var preference = selector(context, context.superSettingState);
+                  var preference = selector(context, context.settingState);
                   preference.set(
                     preference.get() == disableValue
                         ? defaultValue
@@ -332,10 +332,7 @@ class SettingsSliderTile<T> extends SettingsItem {
                                 padding: .zero,
                                 value: value != disableValue,
                                 onChanged: (newValue) =>
-                                    selector(
-                                      context,
-                                      context.superSettingState,
-                                    ).set(
+                                    selector(context, context.settingState).set(
                                       value != disableValue
                                           ? disableValue
                                           : defaultValue,
@@ -369,7 +366,7 @@ class SettingsSliderTile<T> extends SettingsItem {
                                   onChanged: (val) {
                                     var preference = selector(
                                       context,
-                                      context.superSettingState,
+                                      context.settingState,
                                     );
                                     preference.set(doubleToValue(context, val));
                                   },
@@ -575,7 +572,7 @@ class SettingsRadioSheetTile<T> extends SettingsValueSubtitleTile<T> {
           builder: (context, value, _) => RadioGroup<T>(
             groupValue: value,
             onChanged: (value) =>
-                selector(context, context.superSettingState).set(value as T),
+                selector(context, context.settingState).set(value as T),
             child: Column(
               children: [
                 for (var option in options)
@@ -627,10 +624,7 @@ class SettingsCheckboxSheetTile<T> extends SettingsValueTile<Set<T>> {
                   title: Text(valueToString(context, option)),
                   value: value.contains(option),
                   onChanged: (value) {
-                    final setting = selector(
-                      context,
-                      context.superSettingState,
-                    );
+                    final setting = selector(context, context.settingState);
                     if (value == true) {
                       setting.set({...setting.get(), option});
                     } else {
@@ -668,34 +662,51 @@ class SettingsActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cardColorScheme = baseColor == null
-        ? null
+        ? context.cardColorScheme
         : CardColorScheme(
             getColorScheme(baseColor!, context.tbrightness),
             context.trueBlack,
           );
-    return Material(
-      borderRadius: BorderRadius.horizontal(
-        left: !connectLeft ? context.actionBarIconRadius : Radius.zero,
-        right: !connectRight ? context.actionBarIconRadius : Radius.zero,
-      ),
+    final borderRadius = BorderRadius.horizontal(
+      left: !connectLeft ? context.radiusSmall.bottomLeft : Radius.zero,
+      right: !connectRight ? context.radiusSmall.bottomLeft : Radius.zero,
+    );
+    final side = BorderSide(color: cardColorScheme.saturated);
+    final child = Material(
+      borderRadius: borderRadius,
       clipBehavior: .antiAlias,
-      color: baseColor == null
-          ? active
-                ? context.cardColorSchemeSelected
-                : context.cardColorSchemeCard
-          : active
-          ? cardColorScheme!.selected
-          : cardColorScheme!.card,
+      color: active ? cardColorScheme.selected : cardColorScheme.card,
       child: InkWell(
         onTap: onPressed,
         child: Container(
           width: 60,
           height: 72,
           padding: .all(6),
+          decoration: BoxDecoration(
+            borderRadius: borderRadius,
+            border: context.trueBlack
+                ? Border(
+                    top: side,
+                    bottom: side,
+                    left: connectLeft ? .none : side,
+                    right: connectRight ? .none : side,
+                  )
+                : null,
+          ),
           child: Column(mainAxisAlignment: .spaceEvenly, children: children),
         ),
       ),
     );
+    if (context.trueBlack) {
+      return IconTheme(
+        data: IconThemeData(
+          color: context.trueBlack ? cardColorScheme.saturated : null,
+        ),
+        child: child,
+      );
+    } else {
+      return child;
+    }
   }
 }
 
@@ -717,7 +728,7 @@ class SettingsRequirementCombinatorSubsection
            children: [
              SettingsActionButton(
                onPressed: () {
-                 var preference = selector(context, context.superSettingState);
+                 var preference = selector(context, context.settingState);
                  preference.set(.all);
                },
                active: value == .all,
@@ -729,7 +740,7 @@ class SettingsRequirementCombinatorSubsection
              ),
              SettingsActionButton(
                onPressed: () {
-                 var preference = selector(context, context.superSettingState);
+                 var preference = selector(context, context.settingState);
                  preference.set(.any);
                },
                active: value == .any,

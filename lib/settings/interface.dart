@@ -100,7 +100,7 @@ class _InterfaceSettingState extends State<InterfaceSetting> {
                 child: LayoutBuilder(
                   builder: (context, constraints) => ActionBar(
                     onConfigurationChanged: (config) =>
-                        context.superSettingState.actionBarPodcasts.set(config),
+                        context.settingState.actionBarPodcasts.set(config),
                     widgetsFirstRow: [
                       ActionBarDropdownSortBy(0, 0),
                       ActionBarSwitchSortOrder(0, 1),
@@ -142,7 +142,7 @@ class _InterfaceSettingState extends State<InterfaceSetting> {
                 child: LayoutBuilder(
                   builder: (context, constraints) => ActionBar(
                     onConfigurationChanged: (config) =>
-                        context.superSettingState.actionBarPodcasts.set(config),
+                        context.settingState.actionBarPodcasts.set(config),
                     widgetsFirstRow: [
                       ActionBarFilterNew(0, 0),
                       ActionBarFilterLiked(0, 1),
@@ -209,10 +209,8 @@ class _InterfaceSettingState extends State<InterfaceSetting> {
                                           ),
                                           controller: nameControllers[i],
                                           // initialValue: tab.name,
-                                          onChanged: (name) => context
-                                              .superSettingState
-                                              .homeTabs
-                                              .set(
+                                          onChanged: (name) =>
+                                              context.settingState.homeTabs.set(
                                                 [...value]
                                                   ..[i] = tab.copyWith(
                                                     name: name,
@@ -224,7 +222,7 @@ class _InterfaceSettingState extends State<InterfaceSetting> {
                                         onPressed: i == 0
                                             ? null
                                             : () => context
-                                                  .superSettingState
+                                                  .settingState
                                                   .homeTabs
                                                   .set([...value]..removeAt(i)),
                                         icon: Icon(Icons.delete),
@@ -235,7 +233,7 @@ class _InterfaceSettingState extends State<InterfaceSetting> {
                                 LayoutBuilder(
                                   builder: (context, constraints) => ActionBar(
                                     onConfigurationChanged: (config) =>
-                                        context.superSettingState.homeTabs.set(
+                                        context.settingState.homeTabs.set(
                                           [...value]
                                             ..[i] = tab.copyWith(
                                               actionBarConfiguration: config,
@@ -272,7 +270,7 @@ class _InterfaceSettingState extends State<InterfaceSetting> {
                             width: 200,
                             child: TextButton(
                               onPressed: () =>
-                                  context.superSettingState.homeTabs.set([
+                                  context.settingState.homeTabs.set([
                                     ...value,
                                     HomeTabConfiguration(
                                       name: s.settingsHomeTabNew,
@@ -319,7 +317,7 @@ class _InterfaceSettingState extends State<InterfaceSetting> {
                           onChanged: (control) {
                             controls = [...controls];
                             controls[index] = control!;
-                            context.superSettingState.notificationLayout.set(
+                            context.settingState.notificationLayout.set(
                               controls,
                             );
                           },

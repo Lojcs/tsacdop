@@ -229,7 +229,7 @@ class AudioActions extends StatelessWidget {
                   ),
                 ),
               ),
-              onPressed: () => context.superSettingState.skipSilence.set(!data),
+              onPressed: () => context.settingState.skipSilence.set(!data),
               child: Row(
                 children: [
                   Icon(
@@ -266,7 +266,7 @@ class AudioActions extends StatelessWidget {
                 ),
                 padding: EdgeInsets.symmetric(horizontal: 10),
               ),
-              onPressed: () => context.superSettingState.volumeBoost.set(!data),
+              onPressed: () => context.settingState.volumeBoost.set(!data),
               child: Row(
                 children: [
                   Icon(
@@ -1662,7 +1662,7 @@ class _ControlPanelState extends State<ControlPanel>
                                               value: currentSpeed,
                                               onChanged: audio.setVisualSpeed,
                                               onChangeEnd: context
-                                                  .superSettingState
+                                                  .settingState
                                                   .audioSpeedRatio
                                                   .set,
                                             ),

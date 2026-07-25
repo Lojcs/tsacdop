@@ -140,7 +140,7 @@ class MyApp extends StatelessWidget {
                 ],
                 locale: data.localeOverride,
                 supportedLocales: S.delegate.supportedLocales,
-                home: context.superSettingState.showIntro.get()
+                home: context.settingState.showIntro.get()
                     ? SlideIntro(goto: Goto.home)
                     : Home(),
               );

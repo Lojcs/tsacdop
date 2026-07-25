@@ -162,9 +162,7 @@ class _SlideIntroState extends State<SlideIntro> {
                                         context,
                                         SlideLeftRoute(page: Home()),
                                       );
-                                      context.superSettingState.showIntro.set(
-                                        false,
-                                      );
+                                      context.settingState.showIntro.set(false);
                                     } else if (widget.goto == Goto.settings) {
                                       Navigator.pop(context);
                                     }

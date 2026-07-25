@@ -89,7 +89,7 @@ class LegacyBackupPreferences implements SharedPreferences {
     'autoSleepTimerModeKey' => json['autoSleepTimerMode'],
     'fastForwardSecondsKey' => json['fastForwardSeconds'],
     'rewindSecondsKey' => json['rewindSeconds'],
-    'localeKey' => json['locale'],
+    'localeKey' => [json['locale']],
     'hideListenedKey' => json['hideListened'],
     'notificationLayoutKey' => json['notificationLayout'],
     'showNotesFontKey' => json['showNotesFont'],
@@ -112,13 +112,18 @@ class LegacyBackupPreferences implements SharedPreferences {
   @override
   double? getDouble(String key) => getValue(key) as double?;
   @override
-  int? getInt(String key) => getValue(key) as int?;
+  int? getInt(String key) => switch (getValue(key)) {
+    int i => i,
+    bool b => b ? 1 : 0,
+    _ => null,
+  };
   @override
   Set<String> getKeys() => {}; // Can't bother
   @override
   String? getString(String key) => getValue(key) as String?;
   @override
-  List<String>? getStringList(String key) => getValue(key) as List<String>?;
+  List<String>? getStringList(String key) =>
+      getValue(key) == null ? null : List<String>.from(getValue(key));
   @override
   Future<void> reload() async {}
   @override

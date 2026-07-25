@@ -43,8 +43,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   var feature1EnablePulsingAnimation = false;
   double top = 0;
 
-  late List<HomeTabConfiguration> homeTabs = context.superSettingState.homeTabs
-      .get();
+  late SettingState settingState = context.settingState;
+  late List<HomeTabConfiguration> homeTabs = settingState.homeTabs.get();
   List<SelectionController>? selectionControllers;
   List<Key>? tabKeys;
   List<Widget>? headerSlivers;
@@ -54,7 +54,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   /// most other things (like theme or audio player) and updating it causes visual
   /// disturbance.
   void updateTabs() {
-    final newHomeTabs = context.superSettingState.homeTabs.get();
+    final newHomeTabs = settingState.homeTabs.get();
     if (!newHomeTabs.equals(homeTabs)) {
       homeTabs = newHomeTabs;
       final index = controller.index;
@@ -71,7 +71,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    context.superSettingState.addListener(updateTabs);
+    settingState.addListener(updateTabs);
     controller = TabController(length: homeTabs.length + 1, vsync: this);
     SchedulerBinding.instance.addPostFrameCallback((_) {
       FeatureDiscovery.discoverFeatures(context, const <String>{
@@ -87,7 +87,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   @override
   void dispose() {
     controller.dispose();
-    context.superSettingState.removeListener(updateTabs);
+    settingState.removeListener(updateTabs);
     super.dispose();
   }
 
@@ -161,8 +161,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                       ),
                                       GestureDetector(
                                         onTap: () {
-                                          final settings =
-                                              context.superSettingState;
+                                          final settings = context.settingState;
                                           switch ((
                                             context.brightness,
                                             settings.trueBlack.get(),

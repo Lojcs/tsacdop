@@ -27,7 +27,7 @@ class LanguagesSetting extends StatelessWidget {
     return Selector<SettingState, Locale?>(
       selector: (_, settings) => settings.localeOverride.get(),
       builder: (context, locale, _) => RadioGroup<Locale>(
-        onChanged: context.superSettingState.localeOverride.set,
+        onChanged: context.settingState.localeOverride.set,
         groupValue: locale,
         child: Column(
           children: [

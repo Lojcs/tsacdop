@@ -113,7 +113,7 @@ class PlaybackSetting extends StatelessWidget {
 class _ScheduleWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    var settings = context.superSettingState;
+    var settings = context.settingState;
     final s = context.s;
     return Selector<SettingState, (TimeOfDay, TimeOfDay)>(
       selector: (_, settings) => (

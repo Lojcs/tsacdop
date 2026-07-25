@@ -272,7 +272,7 @@ class _PodcastDetailBodyState extends State<PodcastDetailBody> {
           Sorter.enclosureSize,
           Sorter.enclosureDuration,
         ],
-        actionBarConfiguration: context.superSettingState.actionBarPodcasts
+        actionBarConfiguration: context.settingState.actionBarPodcasts
             .get()
             .copyWith(podcastId: widget.podcastId),
         initNum: widget.initIds != null ? 0 : 1 << 32,

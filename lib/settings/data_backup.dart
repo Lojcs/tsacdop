@@ -42,56 +42,45 @@ class DataBackup extends StatelessWidget {
           items: [
             SettingsTile(
               title: s.opmlFile,
-              body: Container(
-                decoration: BoxDecoration(
-                  borderRadius: context.radiusSmall,
-                  color: context.trueBlack
-                      ? null
-                      : context.colorScheme.surfaceContainerLow,
-                  border: context.trueBlack
-                      ? Border.all(color: context.colorScheme.surfaceBright)
-                      : null,
-                ),
-                child: Row(
-                  mainAxisSize: .min,
-                  children: [
-                    SettingsActionButton(
-                      onPressed: () async {
-                        final file = await exportOmpl(context);
-                        await saveExternalFile(file);
-                      },
-                      baseColor: Colors.green,
-                      connectRight: true,
-                      children: [Icon(LineIcons.save), Text(s.save)],
-                    ),
-                    SettingsActionButton(
-                      onPressed: () async {
-                        var file = await exportOmpl(context);
-                        await shareFile(file);
-                      },
-                      baseColor: Colors.blue,
-                      connectLeft: true,
-                      connectRight: true,
-                      children: [Icon(Icons.share), Text(s.share)],
-                    ),
-                    SettingsActionButton(
-                      onPressed: () async {
-                        var filePickResult = await FilePicker.pickFiles(
-                          type: FileType.any,
+              body: Row(
+                mainAxisSize: .min,
+                children: [
+                  SettingsActionButton(
+                    onPressed: () async {
+                      final file = await exportOmpl(context);
+                      await saveExternalFile(file);
+                    },
+                    baseColor: Colors.green,
+                    connectRight: true,
+                    children: [Icon(LineIcons.save), Text(s.save)],
+                  ),
+                  SettingsActionButton(
+                    onPressed: () async {
+                      var file = await exportOmpl(context);
+                      await shareFile(file);
+                    },
+                    baseColor: Colors.blue,
+                    connectLeft: true,
+                    connectRight: true,
+                    children: [Icon(Icons.share), Text(s.share)],
+                  ),
+                  SettingsActionButton(
+                    onPressed: () async {
+                      var filePickResult = await FilePicker.pickFiles(
+                        type: FileType.any,
+                      );
+                      if (filePickResult != null && context.mounted) {
+                        importOpml(
+                          context,
+                          File(filePickResult.files.first.path!),
                         );
-                        if (filePickResult != null && context.mounted) {
-                          importOpml(
-                            context,
-                            File(filePickResult.files.first.path!),
-                          );
-                        }
-                      },
-                      baseColor: Colors.amber,
-                      connectLeft: true,
-                      children: [Icon(LineIcons.paperclip), Text(s.import)],
-                    ),
-                  ],
-                ),
+                      }
+                    },
+                    baseColor: Colors.amber,
+                    connectLeft: true,
+                    children: [Icon(LineIcons.paperclip), Text(s.import)],
+                  ),
+                ],
               ),
             ),
           ],
@@ -102,99 +91,87 @@ class DataBackup extends StatelessWidget {
             SettingsTile(
               title: s.settingsBackupFile,
               subtitle: s.settingsExportDes,
-              body: Container(
-                decoration: BoxDecoration(
-                  borderRadius: context.radiusSmall,
-                  color: context.trueBlack
-                      ? null
-                      : context.colorScheme.surfaceContainerLow,
-                  border: context.trueBlack
-                      ? Border.all(color: context.colorScheme.surfaceBright)
-                      : null,
-                ),
-                child: Row(
-                  mainAxisSize: .min,
-                  children: [
-                    SettingsActionButton(
-                      onPressed: () async {
-                        var file = await datedSaveFile(context, "settings");
-                        if (file != null && context.mounted) {
-                          await context.superSettingState.backup(
-                            file,
-                            prefCategories,
-                            settingsPasswordController.text != ""
-                                ? settingsPasswordController.text
-                                : null,
-                          );
-                          await saveExternalFile(file);
-                        }
-                      },
-                      baseColor: Colors.green,
-                      connectRight: true,
-                      children: [Icon(LineIcons.save), Text(s.save)],
-                    ),
-                    SettingsActionButton(
-                      onPressed: () async {
-                        var file = await datedSaveFile(context, "settings");
-                        if (file != null && context.mounted) {
-                          await context.superSettingState.backup(
-                            file,
-                            prefCategories,
-                            settingsPasswordController.text != ""
-                                ? settingsPasswordController.text
-                                : null,
-                          );
-                          await shareFile(file);
-                        }
-                      },
-                      baseColor: Colors.blue,
-                      connectLeft: true,
-                      connectRight: true,
-                      children: [Icon(Icons.share), Text(s.share)],
-                    ),
-                    SettingsActionButton(
-                      onPressed: () async {
-                        final result = await showConfirmationDialog(
-                          context,
-                          description:
-                              s.settingsBackupConfirmationSettingsOverwrite,
-                          color: Colors.amber,
+              body: Row(
+                mainAxisSize: .min,
+                children: [
+                  SettingsActionButton(
+                    onPressed: () async {
+                      var file = await datedSaveFile(context, "settings");
+                      if (file != null && context.mounted) {
+                        await context.settingState.backup(
+                          file,
+                          prefCategories,
+                          settingsPasswordController.text != ""
+                              ? settingsPasswordController.text
+                              : null,
                         );
-                        if (result) {
-                          var filePickResult = await FilePicker.pickFiles(
-                            type: FileType.any,
-                          );
-                          if (filePickResult != null && context.mounted) {
-                            context.superSettingState.restore(
-                              File(filePickResult.files.first.path!),
-                              prefCategories,
-                            );
-                          }
-                        }
-                      },
-                      baseColor: Colors.amber,
-                      connectLeft: true,
-                      connectRight: true,
-                      children: [Icon(LineIcons.paperclip), Text(s.import)],
-                    ),
-                    SettingsActionButton(
-                      onPressed: () async {
-                        final result = await showConfirmationDialog(
-                          context,
-                          description:
-                              s.settingsBackupConfirmationSettingsReset,
-                          color: Colors.red,
+                        await saveExternalFile(file);
+                      }
+                    },
+                    baseColor: Colors.green,
+                    connectRight: true,
+                    children: [Icon(LineIcons.save), Text(s.save)],
+                  ),
+                  SettingsActionButton(
+                    onPressed: () async {
+                      var file = await datedSaveFile(context, "settings");
+                      if (file != null && context.mounted) {
+                        await context.settingState.backup(
+                          file,
+                          prefCategories,
+                          settingsPasswordController.text != ""
+                              ? settingsPasswordController.text
+                              : null,
                         );
-                        if (result && context.mounted) {
-                          context.superSettingState.reset(prefCategories);
+                        await shareFile(file);
+                      }
+                    },
+                    baseColor: Colors.blue,
+                    connectLeft: true,
+                    connectRight: true,
+                    children: [Icon(Icons.share), Text(s.share)],
+                  ),
+                  SettingsActionButton(
+                    onPressed: () async {
+                      final result = await showConfirmationDialog(
+                        context,
+                        description:
+                            s.settingsBackupConfirmationSettingsOverwrite,
+                        color: Colors.amber,
+                      );
+                      if (result) {
+                        var filePickResult = await FilePicker.pickFiles(
+                          type: FileType.any,
+                        );
+                        if (filePickResult != null && context.mounted) {
+                          context.settingState.restore(
+                            File(filePickResult.files.first.path!),
+                            prefCategories,
+                          );
                         }
-                      },
-                      baseColor: Colors.red,
-                      connectLeft: true,
-                      children: [Icon(Icons.restore), Text(s.settingsReset)],
-                    ),
-                  ],
-                ),
+                      }
+                    },
+                    baseColor: Colors.amber,
+                    connectLeft: true,
+                    connectRight: true,
+                    children: [Icon(LineIcons.paperclip), Text(s.import)],
+                  ),
+                  SettingsActionButton(
+                    onPressed: () async {
+                      final result = await showConfirmationDialog(
+                        context,
+                        description: s.settingsBackupConfirmationSettingsReset,
+                        color: Colors.red,
+                      );
+                      if (result && context.mounted) {
+                        context.settingState.reset(prefCategories);
+                      }
+                    },
+                    baseColor: Colors.red,
+                    connectLeft: true,
+                    children: [Icon(Icons.restore), Text(s.settingsReset)],
+                  ),
+                ],
               ),
             ),
             SettingsTile(
@@ -259,44 +236,27 @@ class DataBackup extends StatelessWidget {
             SettingsTile(
               title: s.settingsBackupLegacyFile,
               subtitle: s.settingsBackupLegacyFileDes,
-              body: Container(
-                decoration: BoxDecoration(
-                  borderRadius: context.radiusSmall,
-                  color: context.trueBlack
-                      ? null
-                      : context.colorScheme.surfaceContainerLow,
-                  border: context.trueBlack
-                      ? Border.all(color: context.colorScheme.surfaceBright)
-                      : null,
-                ),
-                child: Row(
-                  mainAxisSize: .min,
-                  children: [
-                    SettingsActionButton(
-                      onPressed: () async {
-                        final result = await showConfirmationDialog(
-                          context,
-                          description:
-                              s.settingsBackupConfirmationSettingsOverwrite,
-                          color: Colors.amber,
-                        );
-                        if (result) {
-                          var filePickResult = await FilePicker.pickFiles(
-                            type: FileType.any,
-                          );
-                          if (filePickResult != null && context.mounted) {
-                            context.superSettingState.restore(
-                              File(filePickResult.files.first.path!),
-                              prefCategories,
-                            );
-                          }
-                        }
-                      },
-                      baseColor: Colors.amber,
-                      children: [Icon(LineIcons.paperclip), Text(s.import)],
-                    ),
-                  ],
-                ),
+              body: SettingsActionButton(
+                onPressed: () async {
+                  final result = await showConfirmationDialog(
+                    context,
+                    description: s.settingsBackupConfirmationSettingsOverwrite,
+                    color: Colors.amber,
+                  );
+                  if (result) {
+                    var filePickResult = await FilePicker.pickFiles(
+                      type: FileType.any,
+                    );
+                    if (filePickResult != null && context.mounted) {
+                      context.settingState.restoreLegacy(
+                        File(filePickResult.files.first.path!),
+                        prefCategories,
+                      );
+                    }
+                  }
+                },
+                baseColor: Colors.amber,
+                children: [Icon(LineIcons.paperclip), Text(s.import)],
               ),
             ),
             SettingsTile(
@@ -347,87 +307,75 @@ class DataBackup extends StatelessWidget {
             SettingsTile(
               title: s.settingsBackupDatabaseBackupFile,
               subtitle: s.settingsBackupDatabaseBackupFileDes,
-              body: Container(
-                decoration: BoxDecoration(
-                  borderRadius: context.radiusSmall,
-                  color: context.trueBlack
-                      ? null
-                      : context.colorScheme.surfaceContainerLow,
-                  border: context.trueBlack
-                      ? Border.all(color: context.colorScheme.surfaceBright)
-                      : null,
-                ),
-                child: Row(
-                  mainAxisSize: .min,
-                  children: [
-                    SettingsActionButton(
-                      onPressed: () async {
-                        var file = await datedSaveFile(context, "database");
-                        if (file != null && context.mounted) {
-                          await DBHelper().backup(file, databaseCategories);
-                          await saveExternalFile(file);
-                        }
-                      },
-                      baseColor: Colors.green,
-                      connectRight: true,
-                      children: [Icon(LineIcons.save), Text(s.save)],
-                    ),
-                    SettingsActionButton(
-                      onPressed: () async {
-                        var file = await datedSaveFile(context, "database");
-                        if (file != null && context.mounted) {
-                          await DBHelper().backup(file, databaseCategories);
-                          await shareFile(file);
-                        }
-                      },
-                      baseColor: Colors.blue,
-                      connectLeft: true,
-                      connectRight: true,
-                      children: [Icon(Icons.share), Text(s.share)],
-                    ),
-                    SettingsActionButton(
-                      onPressed: () async {
-                        final result = await showConfirmationDialog(
-                          context,
-                          description:
-                              s.settingsBackupConfirmationDatabaseOverwrite,
-                          color: Colors.amber,
+              body: Row(
+                mainAxisSize: .min,
+                children: [
+                  SettingsActionButton(
+                    onPressed: () async {
+                      var file = await datedSaveFile(context, "database");
+                      if (file != null && context.mounted) {
+                        await DBHelper().backup(file, databaseCategories);
+                        await saveExternalFile(file);
+                      }
+                    },
+                    baseColor: Colors.green,
+                    connectRight: true,
+                    children: [Icon(LineIcons.save), Text(s.save)],
+                  ),
+                  SettingsActionButton(
+                    onPressed: () async {
+                      var file = await datedSaveFile(context, "database");
+                      if (file != null && context.mounted) {
+                        await DBHelper().backup(file, databaseCategories);
+                        await shareFile(file);
+                      }
+                    },
+                    baseColor: Colors.blue,
+                    connectLeft: true,
+                    connectRight: true,
+                    children: [Icon(Icons.share), Text(s.share)],
+                  ),
+                  SettingsActionButton(
+                    onPressed: () async {
+                      final result = await showConfirmationDialog(
+                        context,
+                        description:
+                            s.settingsBackupConfirmationDatabaseOverwrite,
+                        color: Colors.amber,
+                      );
+                      if (result) {
+                        var filePickResult = await FilePicker.pickFiles(
+                          type: FileType.any,
                         );
-                        if (result) {
-                          var filePickResult = await FilePicker.pickFiles(
-                            type: FileType.any,
+                        if (filePickResult != null && context.mounted) {
+                          await DBHelper().restore(
+                            File(filePickResult.files.first.path!),
+                            databaseCategories,
                           );
-                          if (filePickResult != null && context.mounted) {
-                            await DBHelper().restore(
-                              File(filePickResult.files.first.path!),
-                              databaseCategories,
-                            );
-                          }
                         }
-                      },
-                      baseColor: Colors.amber,
-                      connectLeft: true,
-                      connectRight: true,
-                      children: [Icon(LineIcons.paperclip), Text(s.import)],
-                    ),
-                    SettingsActionButton(
-                      onPressed: () async {
-                        final result = await showConfirmationDialog(
-                          context,
-                          description:
-                              s.settingsBackupConfirmationDatabaseReset,
-                          color: Colors.red,
-                        );
-                        if (result && context.mounted) {
-                          await DBHelper().reset(databaseCategories);
-                        }
-                      },
-                      baseColor: Colors.red,
-                      connectLeft: true,
-                      children: [Icon(Icons.restore), Text(s.settingsReset)],
-                    ),
-                  ],
-                ),
+                      }
+                    },
+                    baseColor: Colors.amber,
+                    connectLeft: true,
+                    connectRight: true,
+                    children: [Icon(LineIcons.paperclip), Text(s.import)],
+                  ),
+                  SettingsActionButton(
+                    onPressed: () async {
+                      final result = await showConfirmationDialog(
+                        context,
+                        description: s.settingsBackupConfirmationDatabaseReset,
+                        color: Colors.red,
+                      );
+                      if (result && context.mounted) {
+                        await DBHelper().reset(databaseCategories);
+                      }
+                    },
+                    baseColor: Colors.red,
+                    connectLeft: true,
+                    children: [Icon(Icons.restore), Text(s.settingsReset)],
+                  ),
+                ],
               ),
             ),
             SettingsTile(

@@ -45,7 +45,7 @@ class SearchPanelRoute extends ModalRoute {
            (heroKey.currentContext!.findRenderObject() as RenderBox)
                .localToGlobal(Offset(-6, -12)),
        finalHeroOffset = Offset(
-         (context.superSettingState.searchMode.get() ? 90 : 0) +
+         (context.settingState.searchMode.get() ? 90 : 0) +
              context.actionBarButtonSizeVertical +
              context.actionBarIconPadding.left / 2,
          context.height -
@@ -58,7 +58,7 @@ class SearchPanelRoute extends ModalRoute {
          begin: context.actionBarButtonSizeVertical,
          end:
              SearchBar.barWidth(context) -
-             (context.superSettingState.searchMode.get() ? 90 : 0),
+             (context.settingState.searchMode.get() ? 90 : 0),
        ),
        heightTween = Tween(
          begin: 0,
@@ -70,7 +70,7 @@ class SearchPanelRoute extends ModalRoute {
        searchProvider = JointSearch(
          context.podcastState,
          context.episodeState,
-         context.superSettingState,
+         context.settingState,
        ) {
     heroOffsetTween = Tween<Offset>(
       begin: initialHeroOffset,

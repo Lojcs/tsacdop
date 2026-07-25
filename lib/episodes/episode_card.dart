@@ -90,7 +90,7 @@ class InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
 
   late SelectionController? selectionController =
       Provider.of<SelectionController?>(context, listen: false);
-  late SettingState settings = context.superSettingState;
+  late SettingState settings = context.settingState;
   late EpisodeState eState = Provider.of<EpisodeState>(context, listen: false);
 
   bool get selectable =>

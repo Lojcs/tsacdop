@@ -52,7 +52,7 @@ class AppearanceSetting extends StatelessWidget {
                 context,
                 title: Selector<SettingState, Color>(
                   selector: (context, settings) =>
-                      context.superSettingState.accentColor.get(),
+                      context.settingState.accentColor.get(),
                   builder: (context, value, _) => Text.rich(
                     TextSpan(
                       text: context.s.chooseA,
@@ -89,8 +89,9 @@ class AppearanceSetting extends StatelessWidget {
                         ]
                         .map(
                           (textStyle) => InkWell(
-                            onTap: () => context.superSettingState.showNotesFont
-                                .set(textStyle),
+                            onTap: () => context.settingState.showNotesFont.set(
+                              textStyle,
+                            ),
                             borderRadius: BorderRadius.circular(10.0),
                             child: Container(
                               height: 60,
@@ -264,10 +265,10 @@ class __ColorPickerState extends State<_ColorPicker>
       color: Colors.transparent,
       child: InkWell(
         borderRadius: context.radiusSmall,
-        onTap: () => context.superSettingState.accentColor.set(color),
+        onTap: () => context.settingState.accentColor.set(color),
         child: Selector<SettingState, bool>(
           selector: (context, settings) =>
-              color == context.superSettingState.accentColor.get(),
+              color == context.settingState.accentColor.get(),
           builder: (context, value, _) => Container(
             decoration: BoxDecoration(
               border: value

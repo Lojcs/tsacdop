@@ -56,7 +56,7 @@ class PodcastState extends ChangeNotifier {
   late DownloadState _downloadState;
   bool _background = true;
   set context(BuildContext context) {
-    _settingState = context.superSettingState;
+    _settingState = context.settingState;
     _episodeState = context.episodeState;
     _downloadState = context.downloadState;
     _background = false;

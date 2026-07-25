@@ -23,7 +23,7 @@ class EpisodeState extends ChangeNotifier {
   late PodcastState _podcastState;
   bool _background = true;
   set context(BuildContext context) {
-    _settingState = context.superSettingState;
+    _settingState = context.settingState;
     _audioState = context.audioState;
     _downloadState = context.downloadState;
     _podcastState = context.podcastState;

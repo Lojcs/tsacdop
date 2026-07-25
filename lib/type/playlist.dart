@@ -163,7 +163,7 @@ class BrowsableLibrary {
   final AudioState audioState;
   final PodcastState podcastState;
   BrowsableLibrary(BuildContext context)
-    : settingState = context.superSettingState,
+    : settingState = context.settingState,
       episodeState = context.episodeState,
       audioState = context.audioState,
       podcastState = context.podcastState;
