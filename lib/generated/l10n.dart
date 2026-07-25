@@ -301,11 +301,11 @@ class S {
     );
   }
 
-  /// `{count, plural, zero{0 days} one{{count} day} other{{count} days}}`
+  /// `{count, plural, zero{{count} days} one{{count} day} other{{count} days}}`
   String daysCount(num count) {
     return Intl.plural(
       count,
-      zero: '0 days',
+      zero: '$count days',
       one: '$count day',
       other: '$count days',
       name: 'daysCount',
@@ -1419,10 +1419,10 @@ class S {
     );
   }
 
-  /// `Can still be synced on its own`
+  /// `The podcast can still be synced on its own.`
   String get neverAutoUpdateDes {
     return Intl.message(
-      'Can still be synced on its own',
+      'The podcast can still be synced on its own.',
       name: 'neverAutoUpdateDes',
       desc: '',
       args: [],
@@ -1486,7 +1486,12 @@ class S {
 
   /// `None`
   String get none {
-    return Intl.message('None', name: 'none', desc: '', args: []);
+    return Intl.message(
+      'None',
+      name: 'none',
+      desc: 'Indicates that no option was selected among the given options.',
+      args: [],
+    );
   }
 
   /// `No podcasts in this group`
@@ -2295,10 +2300,10 @@ class S {
     );
   }
 
-  /// `If disabled downloads will be started then paused if the connection is forbidden.`
+  /// `If disabled, auto downloads starting on forbidden connections will be immediately paused.`
   String get settingsAutoDownloadOnForbiddenDes {
     return Intl.message(
-      'If disabled downloads will be started then paused if the connection is forbidden.',
+      'If disabled, auto downloads starting on forbidden connections will be immediately paused.',
       name: 'settingsAutoDownloadOnForbiddenDes',
       desc: '',
       args: [],
@@ -2420,10 +2425,10 @@ class S {
     );
   }
 
-  /// `Export, import and reset app data`
+  /// `Export, import and reset app data.`
   String get settingsBackupDatabaseBackupFileDes {
     return Intl.message(
-      'Export, import and reset app data',
+      'Export, import and reset app data.',
       name: 'settingsBackupDatabaseBackupFileDes',
       desc: '',
       args: [],
@@ -2656,10 +2661,10 @@ class S {
     );
   }
 
-  /// `If approved downloads will be temporarily allowed on all connections.`
+  /// `If approved, downloads will be temporarily allowed on all connections.`
   String get settingsDownloadAskOnForbiddenDes {
     return Intl.message(
-      'If approved downloads will be temporarily allowed on all connections.',
+      'If approved, downloads will be temporarily allowed on all connections.',
       name: 'settingsDownloadAskOnForbiddenDes',
       desc: '',
       args: [],
@@ -2726,10 +2731,10 @@ class S {
     );
   }
 
-  /// `Export and import app settings.`
+  /// `Export, import and reset app settings.`
   String get settingsExportDes {
     return Intl.message(
-      'Export and import app settings.',
+      'Export, import and reset app settings.',
       name: 'settingsExportDes',
       desc: '',
       args: [],

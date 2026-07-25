@@ -30,7 +30,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "${Intl.plural(count, zero: 'Today', one: '${count} day ago', other: '${count} days ago')}";
 
   static String m5(count) =>
-      "${Intl.plural(count, zero: '0 days', one: '${count} day', other: '${count} days')}";
+      "${Intl.plural(count, zero: '${count} days', one: '${count} day', other: '${count} days')}";
 
   static String m6(count) =>
       "${Intl.plural(count, zero: '', one: 'Episode', other: 'Episodes')}";
@@ -366,7 +366,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Don\'t include in global sync",
     ),
     "neverAutoUpdateDes": MessageLookupByLibrary.simpleMessage(
-      "Can still be synced on its own",
+      "The podcast can still be synced on its own.",
     ),
     "newGroup": MessageLookupByLibrary.simpleMessage("Create new group"),
     "newPlain": MessageLookupByLibrary.simpleMessage("New"),
@@ -533,7 +533,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Auto download on forbidden connections",
     ),
     "settingsAutoDownloadOnForbiddenDes": MessageLookupByLibrary.simpleMessage(
-      "If disabled downloads will be started then paused if the connection is forbidden.",
+      "If disabled, auto downloads starting on forbidden connections will be immediately paused.",
     ),
     "settingsAutoPlayDes": MessageLookupByLibrary.simpleMessage(
       "Auto play the next episode when an episode ends.",
@@ -568,7 +568,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Database file",
     ),
     "settingsBackupDatabaseBackupFileDes": MessageLookupByLibrary.simpleMessage(
-      "Export, import and reset app data",
+      "Export, import and reset app data.",
     ),
     "settingsBackupDatabaseCategoriesDes": MessageLookupByLibrary.simpleMessage(
       "Database categories to export, import or reset.",
@@ -641,7 +641,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Ask when starting download on a forbidden connection",
     ),
     "settingsDownloadAskOnForbiddenDes": MessageLookupByLibrary.simpleMessage(
-      "If approved downloads will be temporarily allowed on all connections.",
+      "If approved, downloads will be temporarily allowed on all connections.",
     ),
     "settingsDownloadPosition": MessageLookupByLibrary.simpleMessage(
       "Download position",
@@ -660,7 +660,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Episode Management",
     ),
     "settingsExportDes": MessageLookupByLibrary.simpleMessage(
-      "Export and import app settings.",
+      "Export, import and reset app settings.",
     ),
     "settingsFastForwardSec": MessageLookupByLibrary.simpleMessage(
       "Fast forward seconds",
