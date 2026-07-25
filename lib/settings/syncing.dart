@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:line_icons/line_icons.dart';
 import '../util/extension_helper.dart';
 import 'settings_widgets.dart';
 

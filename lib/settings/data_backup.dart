@@ -18,7 +18,6 @@ import '../backup/gpodder_api.dart';
 import '../backup/opml_helper.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../state/settings/tsacdop_settings.dart';
-import '../type/theme_data.dart';
 import '../util/extension_helper.dart';
 import '../util/helpers.dart';
 import '../widgets/custom_widget.dart';

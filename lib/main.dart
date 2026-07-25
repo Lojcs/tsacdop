@@ -8,6 +8,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'intro_slider/app_intro.dart';
 import 'state/episode_state.dart';
 
 import 'generated/l10n.dart';
@@ -17,6 +18,7 @@ import 'state/download_state.dart';
 import 'state/podcast_state.dart';
 import 'state/settings/setting_state.dart';
 import 'type/playlist.dart';
+import 'type/theme_data.dart';
 import 'util/extension_helper.dart';
 
 Future main() async {
@@ -102,15 +104,11 @@ class MyApp extends StatelessWidget {
               final lightTheme = data.useSystemAccent && lightDynamic != null
                   ? data.lightTheme.copyWith(
                       colorScheme: lightDynamic,
-                      // extensions: [
-                      //   ActionBarTheme(
-                      //     iconColor: Colors.grey[800],
-                      //     size: 24,
-                      //     radius: const Radius.circular(16),
-                      //     padding: const EdgeInsets.all(6),
-                      //   ),
-                      //   CardColorScheme(lightDynamic, data.trueBlack),
-                      // ],
+                      extensions: [
+                        TsacdopTheme(TBrightness.light),
+                        ActionBarTheme.light(),
+                        CardColorScheme(lightDynamic, data.trueBlack),
+                      ],
                     )
                   : data.lightTheme;
               var darkTheme = data.trueBlack ? data.blackTheme : data.darkTheme;
@@ -119,15 +117,13 @@ class MyApp extends StatelessWidget {
                       colorScheme: darkDynamic.copyWith(
                         surface: data.trueBlack ? Colors.black : null,
                       ),
-                      // extensions: [
-                      //   ActionBarTheme(
-                      //     iconColor: Colors.grey[200],
-                      //     size: 24,
-                      //     radius: const Radius.circular(16),
-                      //     padding: const EdgeInsets.all(6),
-                      //   ),
-                      //   CardColorScheme(darkDynamic, data.trueBlack),
-                      // ],
+                      extensions: [
+                        TsacdopTheme(
+                          data.trueBlack ? TBrightness.black : TBrightness.dark,
+                        ),
+                        ActionBarTheme.dark(),
+                        CardColorScheme(darkDynamic, data.trueBlack),
+                      ],
                     )
                   : darkTheme;
               return MaterialApp(
@@ -144,7 +140,9 @@ class MyApp extends StatelessWidget {
                 ],
                 locale: data.localeOverride,
                 supportedLocales: S.delegate.supportedLocales,
-                home: Home(),
+                home: context.superSettingState.showIntro.get()
+                    ? SlideIntro(goto: Goto.home)
+                    : Home(),
               );
             },
           ),

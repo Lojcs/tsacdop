@@ -12,7 +12,6 @@ import '../util/extension_helper.dart';
 import '../util/selection_controller.dart';
 import 'action_bar_generic_widgets.dart';
 import '../local_storage/sqflite_localpodcast.dart';
-import '../state/episode_state.dart';
 import 'custom_popupmenu.dart';
 import 'custom_widget.dart';
 import 'episodegrid.dart';

@@ -48,6 +48,7 @@ class TsacdopTheme extends ThemeExtension<TsacdopTheme> {
   }
 }
 
+/// Non accent color related theme parameters of action bars.
 class ActionBarTheme extends ThemeExtension<ActionBarTheme> {
   final Color? iconColor;
   final double? size;
@@ -67,6 +68,19 @@ class ActionBarTheme extends ThemeExtension<ActionBarTheme> {
     this.radius,
     this.padding,
   });
+
+  ActionBarTheme.light()
+    : iconColor = Colors.grey[800],
+      size = 24,
+      radius = const Radius.circular(16),
+      padding = const EdgeInsets.all(6),
+      shadows = null;
+  ActionBarTheme.dark()
+    : iconColor = Colors.grey[200],
+      size = 24,
+      radius = const Radius.circular(16),
+      padding = const EdgeInsets.all(6),
+      shadows = null;
 
   @override
   ThemeExtension<ActionBarTheme> copyWith({

@@ -26,7 +26,6 @@ import '../util/helpers.dart';
 import 'download_state.dart';
 import 'episode_state.dart';
 import 'settings/setting_state.dart';
-import 'settings/tsacdop_settings.dart';
 
 const deletedPodcastId = "46e48103-06c7-4fe1-a0b1-68aa7205b7f0";
 

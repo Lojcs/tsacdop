@@ -100,6 +100,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
       (_) => SelectionController(),
     );
     tabKeys ??= List.generate(controller.length - 1, (_) => UniqueKey());
+    headerSlivers = null;
+    // print(context.primaryColor.toargbString());
     return Selector<AudioState, bool>(
       selector: (_, audio) => audio.playerRunning,
       builder: (context, playerRunning, _) {

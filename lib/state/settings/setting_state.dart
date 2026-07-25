@@ -173,12 +173,7 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
         useMaterial3: true,
         extensions: [
           TsacdopTheme(TBrightness.light),
-          ActionBarTheme(
-            iconColor: Colors.grey[800],
-            size: 24,
-            radius: const Radius.circular(16),
-            padding: const EdgeInsets.all(6),
-          ),
+          ActionBarTheme.light(),
           CardColorScheme(lightColorScheme, false),
         ],
       ),
@@ -192,12 +187,7 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
         useMaterial3: true,
         extensions: [
           TsacdopTheme(TBrightness.dark),
-          ActionBarTheme(
-            iconColor: Colors.grey[200],
-            size: 24,
-            radius: const Radius.circular(16),
-            padding: const EdgeInsets.all(6),
-          ),
+          ActionBarTheme.dark(),
           CardColorScheme(darkColorScheme, false),
         ],
       ),
@@ -212,12 +202,7 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
         useMaterial3: true,
         extensions: [
           TsacdopTheme(TBrightness.black),
-          ActionBarTheme(
-            iconColor: Colors.grey[200],
-            size: 24,
-            radius: const Radius.circular(16),
-            padding: const EdgeInsets.all(6),
-          ),
+          ActionBarTheme.dark(),
           CardColorScheme(blackColorScheme, true),
         ],
         dialogTheme: DialogThemeData(backgroundColor: Colors.black),

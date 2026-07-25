@@ -7,7 +7,6 @@ import 'package:html/parser.dart' show parse;
 import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
-import '../state/settings/setting_state.dart';
 import '../state/settings/tsacdop_settings.dart';
 import '../type/fireside_data.dart';
 import '../type/playlist.dart';

@@ -1,4 +1,3 @@
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import '../generated/l10n.dart';
 import '../local_storage/sqflite_localpodcast.dart';
