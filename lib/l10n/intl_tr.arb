@@ -40,7 +40,7 @@
     "createNewPlaylist": "Yeni çalma listesi",
     "darkMode": "Karanlık mod",
     "daysAgo": "{count, plural, zero{Bugün} one{{count} gün önce} other{{count} gün önce}}",
-    "daysCount": "{count, plural, zero{0 gün} one{{count} gün} other{{count} gün}}",
+    "daysCount": "{count, plural, zero{{count} gün} one{{count} gün} other{{count} gün}}",
     "defaultQueueReminder": "Varsayılan sıralama kaldırılamaz.",
     "@defaultQueueReminder": {
         "description": "Remind user that default queue can't be removed."
@@ -193,7 +193,7 @@
     "minsAgo": "{count, plural, zero{Şimdi} one{{count} dakika önce} other{{count} dakika önce}}",
     "minsCount": "{count, plural, zero{0 dk} one{{count} dk} other{{count} dk}}",
     "network": "Bağlantı",
-    "neverAutoUpdate": "Küresel senkronizasyona dahil etme.",
+    "neverAutoUpdate": "Küresel senkronizasyona dahil etme",
     "@neverAutoUpdate": {
         "description": "Never auto  update in podcast settings."
     },
@@ -361,7 +361,7 @@
     "settingsAudioCacheDes": "Maksimum audio cache boyutu",
     "settingsAutoDelete": "Otomatik sil",
     "settingsAutoDeleteDes": "Silme işlemleri uygulama açılışı veya senkronizasyon sırasında yapılır.",
-    "settingsAutoPlayDes": "Şimdiki bölüm bitince sonraki bölümü otomatik oynat",
+    "settingsAutoPlayDes": "Şimdiki bölüm bitince sonraki bölümü otomatik oynat.",
     "settingsBackup": "Yedekleme",
     "settingsBackupDes": "Yedekle, geri yükle veya sıfırla",
     "settingsBoostVolume": "Ses yükseltme miktarı",
@@ -381,7 +381,7 @@
     },
     "settingsEnableSyncing": "Otomatik senkronizasyonu aktive et",
     "settingsEnableSyncingDes": "En son yayınlananları görüntülemek için tüm podcastleri arka planda güncelle.",
-    "settingsExportDes": "Uygulama ayarlarıını içe ya da dışa aktar.",
+    "settingsExportDes": "Uygulama ayarlarıını dışa aktar, içe aktar veya sıfırla.",
     "settingsFastForwardSec": "İleri sarma saniyesi",
     "settingsFastForwardSecDes": "Oynatıcıda ileri sarma saniyesini belirle",
     "settingsFeedback": "Geribildirim",
@@ -662,7 +662,7 @@
     "localizationWeblate": "Bu uygulamanın çervrilmesine açık kaynaklı uygulamalara sundukları destek sayesinde Hosted Weblate'te katkıda bulunabilirsiniz.",
     "mobileData": "Mobil Veri",
     "monthsCount": "{count, plural, zero{{count} ay} one{{count} ay} other{{count} ay}}",
-    "neverAutoUpdateDes": "Kendi başına yine de senkronize edilebilir",
+    "neverAutoUpdateDes": "Podcast kendi başına yine de senkronize edilebilir.",
     "newPlaylist": "Yeni Çalma Listesi",
     "noEpisodesFound": "Seçili filtrelerle bölüm bulunamadı",
     "none": "Hiçbiri",
@@ -697,7 +697,7 @@
     "settingsBackupConfirmationSettingsReset": "Seçili kategorilerdeki ayarları varsayılanlara sıfırlamak istediğinizden emin misiniz?",
     "settingsBackupDatabase": "Veritabanı",
     "settingsBackupDatabaseBackupFile": "Veritabanı dosyası",
-    "settingsBackupDatabaseBackupFileDes": "Uygulama verilerini dışa aktar, içe aktar veya sıfırla",
+    "settingsBackupDatabaseBackupFileDes": "Uygulama verilerini dışa aktar, içe aktar veya sıfırla.",
     "settingsBackupDatabaseCategoriesDes": "Dışa aktarılacak, içe aktarılacak veya sıfırlanacak veritabanı kategorileri.",
     "settingsBackupDatabasePodcasts": "Podcastler, bölümler ve gruplar",
     "settingsBackupDatabaseHistory": "Oynatma ve abonelik geçmişi",
