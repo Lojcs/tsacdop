@@ -4,7 +4,7 @@
     "@add": {
         "description": "Subscribe new podcast"
     },
-    "addEpisodeGroup": "{count, plural, zero{} other{{group Name}分组{count}集节目添加到播放列表}}",
+    "addEpisodeGroup": "{count, plural, zero{} other{{groupName}分组{count}集节目添加到播放列表}}",
     "@addEpisodeGroup": {
         "placeholders": {
             "groupName": {}

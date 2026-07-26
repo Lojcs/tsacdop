@@ -298,6 +298,10 @@
   "@introThirdPage": {},
   "invalidName": "Invalid username",
   "@invalidName": {},
+  "keepAndroidOpen": "Google wants to control which apps you can install on your phone.",
+  "@keepAndroidOpen": {},
+  "keepAndroidOpenDes": "Learn more and make you voice heard on keepandroidopen.org.",
+  "@keepAndroidOpenDes": {},
   "lastUpdate": "Last update",
   "@lastUpdate": {
     "description": "gpodder.net update"

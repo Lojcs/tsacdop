@@ -91,6 +91,10 @@ git clone https://github.com/lojcs/tsacdop.git --recurse-submodules
 .flutter/bin/flutter run
 ```
 
+## Develop
+
+On VSCode / VSCodium, install the `Flutter`, `Flutter Intl` and `ARB Editor` extensions to use in development.
+
 ## Contribute 
 
 If you have an issue or found a bug, please raise a GitHub issue. Pull requests are also welcome.

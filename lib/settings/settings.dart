@@ -2,6 +2,8 @@ import 'package:feature_discovery/feature_discovery.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:line_icons/line_icons.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 import '../home/about.dart';
 import '../intro_slider/app_intro.dart';
@@ -128,6 +130,12 @@ class Settings extends StatelessWidget {
         SettingsSection(
           title: s.settingsInfo,
           items: [
+            SettingsTile(
+              title: s.keepAndroidOpen,
+              subtitle: s.keepAndroidOpenDes,
+              leading: Icon(Icons.lock_outline, color: Colors.deepOrange[400]),
+              onTap: (_) => launchUrlString("https://keepandroidopen.org/"),
+            ),
             SettingsTile(
               title: s.homeToprightMenuAbout,
               leading: Icon(LineIcons.infoCircle),
