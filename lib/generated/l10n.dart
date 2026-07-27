@@ -2314,6 +2314,26 @@ class S {
     );
   }
 
+  /// `Schedule disabled.`
+  String get scheduleDisabled {
+    return Intl.message(
+      'Schedule disabled.',
+      name: 'scheduleDisabled',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Schedule: {start} - {end}`
+  String scheduleTime(Object start, Object end) {
+    return Intl.message(
+      'Schedule: $start - $end',
+      name: 'scheduleTime',
+      desc: 'For example \'Schedule: 21:50 - 06:30\'',
+      args: [start, end],
+    );
+  }
+
   /// `Search`
   String get search {
     return Intl.message(
@@ -4108,6 +4128,26 @@ class S {
       'Sort Order',
       name: 'sortOrder',
       desc: '',
+      args: [],
+    );
+  }
+
+  /// `Expire At`
+  String get STExpireAt {
+    return Intl.message(
+      'Expire At',
+      name: 'STExpireAt',
+      desc: 'The time (as in time of day) at which the sleep timer will end.',
+      args: [],
+    );
+  }
+
+  /// `Wait For (Minutes)`
+  String get STWaitFor {
+    return Intl.message(
+      'Wait For (Minutes)',
+      name: 'STWaitFor',
+      desc: 'The time period the sleep timer will run for.',
       args: [],
     );
   }

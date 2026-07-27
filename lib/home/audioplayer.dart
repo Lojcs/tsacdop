@@ -359,9 +359,6 @@ class PlaylistWidget extends StatefulWidget {
 class _PlaylistWidgetState extends State<PlaylistWidget> {
   final GlobalKey<AnimatedListState> miniPlaylistKey = GlobalKey();
 
-  /// Map to hold ListView tiles between rebuilds due to playlist change.
-  final Map<int, Widget> listItems = {};
-
   @override
   Widget build(BuildContext context) {
     var audio = context.audioState;
@@ -370,76 +367,73 @@ class _PlaylistWidgetState extends State<PlaylistWidget> {
       mainAxisAlignment: MainAxisAlignment.start,
       children: <Widget>[
         Expanded(
-          child: Selector<AudioState, Playlist>(
-            selector: (_, audio) => audio.playlist,
-            builder: (_, playlist, __) => ListView.builder(
+          child: Selector<AudioState, (Playlist, int)>(
+            selector: (_, audio) => (audio.playlist, audio.playlist.generation),
+            builder: (context, value, _) => ListView.builder(
               padding: EdgeInsets.zero,
-              itemCount: playlist.length,
+              itemCount: value.$1.length,
               itemBuilder: (context, index) {
-                int episodeId = playlist[index];
-                if (!listItems.containsKey(episodeId)) {
-                  listItems[episodeId] = Selector<AudioState, bool>(
-                    selector: (_, audio) => index == audio.episodeIndex,
-                    builder: (_, isPlaying, __) => Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () async {
-                          if (!isPlaying) {
-                            audio.loadEpisodeFromCurrentPlaylist(index);
-                          }
-                        },
-                        child: Container(
-                          height: 50,
-                          color: isPlaying
-                              ? context.primaryColor
-                              : Colors.transparent,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              Padding(
-                                padding: EdgeInsets.all(10.0),
-                                child: CircleAvatar(
-                                  radius: 15,
-                                  backgroundImage: eState[episodeId]
-                                      .episodeOrPodcastImageProvider,
+                int episodeId = value.$1[index];
+                return Selector<AudioState, bool>(
+                  selector: (_, audio) => index == audio.episodeIndex,
+                  builder: (context, isPlaying, _) => Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () async {
+                        if (!isPlaying) {
+                          audio.loadEpisodeFromCurrentPlaylist(index);
+                        }
+                      },
+                      child: Container(
+                        height: 50,
+                        color: isPlaying
+                            ? context.primaryColor
+                            : Colors.transparent,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            Padding(
+                              padding: EdgeInsets.all(10.0),
+                              child: CircleAvatar(
+                                radius: 15,
+                                backgroundImage: eState[episodeId]
+                                    .episodeOrPodcastImageProvider,
+                              ),
+                            ),
+                            Expanded(
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  eState[episodeId].title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              Expanded(
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    eState[episodeId].title,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                            ),
+                            if (isPlaying)
+                              Container(
+                                height: 20,
+                                width: 20,
+                                margin: EdgeInsets.symmetric(horizontal: 10),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Selector<AudioState, bool>(
+                                  selector: (_, audio) => audio.playing,
+                                  builder: (_, playing, __) => WaveLoader(
+                                    animate: playing,
+                                    color: context.cardColorSchemeSaturated,
                                   ),
                                 ),
                               ),
-                              if (isPlaying)
-                                Container(
-                                  height: 20,
-                                  width: 20,
-                                  margin: EdgeInsets.symmetric(horizontal: 10),
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Selector<AudioState, bool>(
-                                    selector: (_, audio) => audio.playing,
-                                    builder: (_, playing, __) => WaveLoader(
-                                      animate: playing,
-                                      color: context.cardColorSchemeSaturated,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
+                          ],
                         ),
                       ),
                     ),
-                  );
-                }
-                return listItems[episodeId];
+                  ),
+                );
               },
             ),
           ),
@@ -450,12 +444,12 @@ class _PlaylistWidgetState extends State<PlaylistWidget> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               children: <Widget>[
-                Selector<AudioState, Playlist>(
-                  selector: (_, audio) => audio.playlist,
-                  builder: (_, playlist, __) => Text(
-                    playlist.name == 'Queue'
+                Selector<AudioState, String>(
+                  selector: (_, audio) => audio.playlist.name,
+                  builder: (context, name, _) => Text(
+                    name == 'Queue'
                         ? context.s.queue
-                        : '${context.s.homeMenuPlaylist}${'-${playlist.name}'}',
+                        : '${context.s.homeMenuPlaylist}${'-${name}'}',
                     overflow: TextOverflow.fade,
                     style: TextStyle(
                       color: context.primaryColor,
@@ -556,48 +550,71 @@ class SleepModeState extends State<SleepMode>
                     duration: Duration(milliseconds: 300),
                     curve: Curves.easeOutQuad,
                     child: _openClock
-                        ? SleepTimerPicker(
-                            initialValue: TimeOfDay.fromDateTime(
-                              DateTime.now().add(value.$2),
-                            ),
-                            onChange: (duration) => setState(
-                              () => context.audioState.sleepInterval = duration,
-                            ),
+                        ? Column(
+                            mainAxisAlignment: .center,
+                            spacing: 16,
+                            children: [
+                              Text(
+                                context.s.STExpireAt,
+                                style: context.textTheme.titleLarge,
+                              ),
+                              SleepTimerPicker(
+                                initialValue: TimeOfDay.fromDateTime(
+                                  DateTime.now().add(value.$2),
+                                ),
+                                onChange: (duration) => setState(
+                                  () => context.audioState.sleepInterval =
+                                      duration,
+                                ),
+                              ),
+                            ],
                           )
-                        : Wrap(
-                            direction: Axis.horizontal,
-                            children: kMinsToSelect
-                                .map(
-                                  (e) => InkWell(
-                                    onTap: () => setState(
-                                      () =>
-                                          context.audioState.sleepInterval = e,
-                                    ),
-                                    child: Container(
-                                      margin: EdgeInsets.all(10.0),
-                                      decoration: BoxDecoration(
-                                        color: (e == value.$2)
-                                            ? context.cardColorSchemeSelected
-                                            : context.cardColorSchemeCard,
-                                        shape: BoxShape.circle,
-                                        boxShadow: context.boxShadowSmall(),
-                                      ),
-                                      alignment: Alignment.center,
-                                      height: 30,
-                                      width: 30,
-                                      child: Text(
-                                        e.inMinutes.toString(),
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: (e == value.$2)
-                                              ? Colors.white
-                                              : null,
+                        : Column(
+                            mainAxisAlignment: .center,
+                            spacing: 16,
+                            children: [
+                              Text(
+                                context.s.STWaitFor,
+                                style: context.textTheme.titleLarge,
+                              ),
+                              Wrap(
+                                direction: Axis.horizontal,
+                                children: kMinsToSelect
+                                    .map(
+                                      (e) => InkWell(
+                                        onTap: () => setState(
+                                          () =>
+                                              context.audioState.sleepInterval =
+                                                  e,
+                                        ),
+                                        child: Container(
+                                          margin: EdgeInsets.all(10.0),
+                                          decoration: BoxDecoration(
+                                            color: (e == value.$2)
+                                                ? context
+                                                      .cardColorSchemeSelected
+                                                : context.cardColorSchemeCard,
+                                            shape: BoxShape.circle,
+                                            boxShadow: context.boxShadowSmall(),
+                                          ),
+                                          alignment: Alignment.center,
+                                          height: 30,
+                                          width: 30,
+                                          child: Text(
+                                            e.inMinutes.toString(),
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: (e == value.$2)
+                                                  ? Colors.white
+                                                  : null,
+                                            ),
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ),
-                                )
-                                .toList(),
+                                    )
+                                    .toList(),
+                              ),
+                            ],
                           ),
                   ),
                 ),
@@ -616,78 +633,84 @@ class SleepModeState extends State<SleepMode>
                     )
                   : Center(),
             ),
-            Selector<AudioState, bool>(
-              selector: (_, audio) => audio.sleepWaitEpisodeEnd,
-              builder: (context, value, __) => Container(
-                alignment: Alignment.center,
-                height: 40,
-                width: 120,
-                decoration: BoxDecoration(
-                  color: value
-                      ? context.cardColorSchemeSaturated
-                      : context.cardColorSchemeCard,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: context.boxShadowSmall(),
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () =>
-                        context.audioState.sleepWaitEpisodeEnd = !value,
-                    borderRadius: BorderRadius.circular(20),
-                    child: SizedBox(
-                      height: 40,
-                      width: 120,
-                      child: Center(
-                        child: Text(
-                          context.s.endOfEpisode,
-                          style: TextStyle(
-                            color: value ? context.primaryColor : null,
+            Row(
+              mainAxisAlignment: .center,
+              spacing: 16,
+              children: [
+                Selector<AudioState, bool>(
+                  selector: (_, audio) => audio.sleepWaitEpisodeEnd,
+                  builder: (context, value, __) => Container(
+                    alignment: Alignment.center,
+                    height: 40,
+                    width: 120,
+                    decoration: BoxDecoration(
+                      color: value
+                          ? context.cardColorSchemeSaturated
+                          : context.cardColorSchemeCard,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: context.boxShadowSmall(),
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () =>
+                            context.audioState.sleepWaitEpisodeEnd = !value,
+                        borderRadius: BorderRadius.circular(20),
+                        child: SizedBox(
+                          height: 40,
+                          width: 120,
+                          child: Center(
+                            child: Text(
+                              context.s.endOfEpisode,
+                              style: !value || context.tbrightness != .black
+                                  ? null
+                                  : TextStyle(color: context.primaryColor),
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ),
-            Selector<AudioState, bool>(
-              selector: (_, audio) => audio.sleepTimerRunning,
-              builder: (context, value, __) => Container(
-                height: 40,
-                width: 120,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: value
-                      ? context.cardColorSchemeSaturated
-                      : context.cardColorSchemeCard,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: context.boxShadowSmall(),
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () => value
-                        ? context.audioState.cancelSleepTimer()
-                        : context.audioState.startSleepTimer(),
-                    borderRadius: BorderRadius.circular(20),
-                    child: SizedBox(
-                      height: 40,
-                      width: 120,
-                      child: Center(
-                        child: Text(
-                          value
-                              ? context.s.sleepTimerCancel
-                              : context.s.sleepTimerStart,
-                          style: TextStyle(
-                            color: value ? context.primaryColor : null,
+                Selector<AudioState, bool>(
+                  selector: (_, audio) => audio.sleepTimerRunning,
+                  builder: (context, value, __) => Container(
+                    height: 40,
+                    width: 120,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: value
+                          ? context.cardColorSchemeSaturated
+                          : context.cardColorSchemeCard,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: context.boxShadowSmall(),
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => value
+                            ? context.audioState.cancelSleepTimerExplicitly()
+                            : context.audioState.startSleepTimerExplicitly(),
+                        borderRadius: BorderRadius.circular(20),
+                        child: SizedBox(
+                          height: 40,
+                          width: 120,
+                          child: Center(
+                            child: Text(
+                              value
+                                  ? context.s.sleepTimerCancel
+                                  : context.s.sleepTimerStart,
+                              style: !value || context.tbrightness != .black
+                                  ? null
+                                  : TextStyle(color: context.primaryColor),
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ),
             Selector<AudioState, (bool, bool)>(
               selector: (_, audio) =>
@@ -703,6 +726,31 @@ class SleepModeState extends State<SleepMode>
                     fontSize: 20,
                     color: context.primaryColor,
                   ),
+                ),
+              ),
+            ),
+
+            Selector<SettingState, (bool, TimeOfDay, TimeOfDay)>(
+              selector: (_, settings) => (
+                settings.sleepTimerAuto.get(),
+                settings.sleepTimerScheduleStart.get(),
+                settings.sleepTimerScheduleEnd.get(),
+              ),
+              builder: (context, value, _) => Text(
+                value.$1
+                    ? context.s.scheduleTime(
+                        context.materialLocalizations.formatTimeOfDay(
+                          value.$2,
+                          alwaysUse24HourFormat: true,
+                        ),
+                        context.materialLocalizations.formatTimeOfDay(
+                          value.$3,
+                          alwaysUse24HourFormat: true,
+                        ),
+                      )
+                    : context.s.scheduleDisabled,
+                style: context.textTheme.bodyMedium!.copyWith(
+                  color: context.primaryColor,
                 ),
               ),
             ),

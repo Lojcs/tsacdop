@@ -60,13 +60,9 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
   }
 
   /// Initializes default settings that can't auto-initialize.
-  Future<void> _initDefaultSettings([bool force = false]) async {
-    defaultDownloadStoragePath =
-        (await getExternalStorageDirectories())![0].path;
-    if (force) {
-      downloadStoragePath.set(defaultDownloadStoragePath);
-    } else {
-      downloadStoragePath.get();
+  Future<void> _initDefaultSettings() async {
+    if (downloadStoragePath.get() == unsetSentinel) {
+      downloadStoragePath.set((await getExternalStorageDirectories())![0].path);
     }
     await settingsInitialized.set(true);
   }
@@ -267,7 +263,7 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
     for (var pref in prefSet) {
       getPref(pref).reset();
     }
-    await _initDefaultSettings(true);
+    await _initDefaultSettings();
     startWorkManager();
     setThemes();
   }

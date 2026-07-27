@@ -7,31 +7,11 @@ import '../util/extension_helper.dart';
 import '../widgets/custom_time_picker.dart';
 import 'settings_widgets.dart';
 
-const List kSecondsToSelect = [5, 10, 15, 20, 25, 30, 45, 60];
-const List<double> kSpeedToSelect = [
-  0.5,
-  0.6,
-  0.8,
-  0.9,
-  1.0,
-  1.1,
-  1.2,
-  1.5,
-  2.0,
-  2.5,
-  3.0,
-  3.5,
-  4.0,
-  4.5,
-  5.0,
-];
-
 class PlaybackSetting extends StatelessWidget {
   const PlaybackSetting({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final audio = context.audioState;
     final s = context.s;
     return SettingsPage(
       title: s.settingsPlayback,

@@ -87,6 +87,8 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m23(date) => "Removed at ${date}";
 
+  static String m35(start, end) => "Schedule: ${start} - ${end}";
+
   static String m24(count) =>
       "${Intl.plural(count, zero: '0 sec', one: '${count} sec', other: '${count} sec')}";
 
@@ -106,14 +108,16 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m31(version) => "Version: ${version}";
 
-  static String m35(count) =>
+  static String m36(count) =>
       "${Intl.plural(count, zero: '${count} weeks', one: '${count} week', other: '${count} weeks')}";
 
-  static String m36(count) =>
+  static String m37(count) =>
       "${Intl.plural(count, zero: '${count} years', one: '${count} year', other: '${count} years')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
+        "STExpireAt": MessageLookupByLibrary.simpleMessage("Expire At"),
+        "STWaitFor": MessageLookupByLibrary.simpleMessage("Wait For (Minutes)"),
         "add": MessageLookupByLibrary.simpleMessage("Add"),
         "addEpisodeGroup": m2,
         "addNewEpisodeAll": m3,
@@ -420,6 +424,9 @@ class MessageLookup extends MessageLookupByLibrary {
         "satellite": MessageLookupByLibrary.simpleMessage("Satellite"),
         "save": MessageLookupByLibrary.simpleMessage("Save"),
         "schedule": MessageLookupByLibrary.simpleMessage("Schedule"),
+        "scheduleDisabled":
+            MessageLookupByLibrary.simpleMessage("Schedule disabled."),
+        "scheduleTime": m35,
         "search": MessageLookupByLibrary.simpleMessage("Search"),
         "searchApi": MessageLookupByLibrary.simpleMessage("Search Api"),
         "searchEngine": MessageLookupByLibrary.simpleMessage("Search Engine"),
@@ -815,8 +822,8 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Username required"),
         "version": m31,
         "vpn": MessageLookupByLibrary.simpleMessage("VPN"),
-        "weeksCount": m35,
+        "weeksCount": m36,
         "wifi": MessageLookupByLibrary.simpleMessage("Wi-Fi"),
-        "yearsCount": m36
+        "yearsCount": m37
       };
 }

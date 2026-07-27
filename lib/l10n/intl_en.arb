@@ -602,6 +602,16 @@
   "@save": {},
   "schedule": "Schedule",
   "@schedule": {},
+  "scheduleDisabled": "Schedule disabled.",
+  "@scheduleDisabled": {},
+  "scheduleTime": "Schedule: {start} - {end}",
+  "@scheduleTime": {
+    "description": "For example 'Schedule: 21:50 - 06:30'",
+    "placeholders": {
+      "start": {},
+      "end": {}
+    }
+  },
   "search": "Search",
   "@search": {},
   "searchApi": "Search Api",
@@ -984,6 +994,14 @@
   "@sortBy": {},
   "sortOrder": "Sort Order",
   "@sortOrder": {},
+  "STExpireAt": "Expire At",
+  "@STExpireAt": {
+    "description": "The time (as in time of day) at which the sleep timer will end."
+  },
+  "STWaitFor": "Wait For (Minutes)",
+  "@STWaitFor": {
+    "description": "The time period the sleep timer will run for."
+  },
   "status": "Status",
   "@status": {
     "description": "gpodder.net status"

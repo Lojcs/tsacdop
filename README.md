@@ -36,9 +36,9 @@ Or download the latest APK from the [Releases Section](https://github.com/Lojcs/
 * OPML file export and import
 * Auto-syncing in the background
 * Listening and subscription history record
-* Dark mode / real dark mode / accent color
+* Dark mode / black mode / accent color
 * Download for offline play
-* Auto-download new episodes / auto-delete outdated downloads
+* Auto-download new episodes / auto-delete downloads
 * Settings backup
 * Skip silence
 * Boost volume

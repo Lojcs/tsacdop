@@ -440,7 +440,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     backend,
     key: 'sleepTimerAuto',
     defaultValue: false,
-    updateCallback: settingsChanged,
+    updateCallback: playbackChanged,
     getLegacy: () async => await legacyBackend.getBool('autoSleepTimerKey'),
   );
 
@@ -449,7 +449,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     backend,
     key: 'sleepTimerScheduleStartMinutes',
     defaultValue: TimeOfDay(hour: 23, minute: 0),
-    updateCallback: settingsChanged,
+    updateCallback: playbackChanged,
     getLegacy: () async {
       final value = await legacyBackend.getInt('autoSleepTimerStartKey');
       return value == null ? null : minutesToTimeOfDay(value);
@@ -461,7 +461,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     backend,
     key: 'sleepTimerScheduleEndMinutes',
     defaultValue: TimeOfDay(hour: 6, minute: 0),
-    updateCallback: settingsChanged,
+    updateCallback: playbackChanged,
     getLegacy: () async {
       final value = await legacyBackend.getInt('autoSleepTimerEndKey');
       return value == null ? null : minutesToTimeOfDay(value);
@@ -473,7 +473,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     backend,
     key: 'sleepTimerWaitEpisodeEnd',
     defaultValue: false,
-    updateCallback: settingsChanged,
+    updateCallback: playbackChanged,
     getLegacy: () async =>
         (await legacyBackend.getInt('autoSleepTimerModeKey')) == 0,
   );
@@ -491,7 +491,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
         final value = await legacyBackend.getInt('defaultSleepTimerKey');
         return value == null ? null : Duration(minutes: value);
       } else {
-        return Duration.zero;
+        return Duration(minutes: 1);
       }
     },
   );
@@ -647,14 +647,13 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     updateCallback: settingsChanged,
   );
 
-  /// Default value of the downloadStoragePath, initialized during app start.
-  String defaultDownloadStoragePath = "unset_sentinel";
+  final String unsetSentinel = "unset_sentinel";
 
   /// Path of downloads storage directory.
   late final downloadStoragePath = StringPreference(
     backend,
     key: 'downloadStoragePath',
-    defaultValue: defaultDownloadStoragePath,
+    defaultValue: unsetSentinel,
     updateCallback: settingsChanged,
     getLegacy: () async {
       final value = await legacyBackend.getInt('downloadPositionKey');

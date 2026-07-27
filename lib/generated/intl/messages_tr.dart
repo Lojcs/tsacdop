@@ -107,10 +107,10 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m31(version) => "Version: ${version}";
 
-  static String m35(count) =>
+  static String m36(count) =>
       "${Intl.plural(count, zero: '${count} hafta', one: '${count} hafta', other: '${count} hafta')}";
 
-  static String m36(count) =>
+  static String m37(count) =>
       "${Intl.plural(count, zero: '${count} yıl', one: '${count} yıl', other: '${count} yıl')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
@@ -832,8 +832,8 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Kullanıcı adı gerekli"),
         "version": m31,
         "vpn": MessageLookupByLibrary.simpleMessage("VPN"),
-        "weeksCount": m35,
+        "weeksCount": m36,
         "wifi": MessageLookupByLibrary.simpleMessage("Wi-Fi"),
-        "yearsCount": m36
+        "yearsCount": m37
       };
 }

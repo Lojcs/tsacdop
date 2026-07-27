@@ -413,6 +413,7 @@ class _MultiSelectPanelState extends State<MultiSelectPanel>
     onPlaylistChanged: (p) => playlist = p,
   );
   late Widget _actionBar = _MultiselectActionBar(
+    playlist: _playlist,
     secondRowController: _secondRowController,
     onSecondRowOpen: () {
       playlist = Provider.of<AudioState>(context, listen: false).playlist;
@@ -996,13 +997,13 @@ class _PlaylistList extends StatelessWidget {
 /// Action bar for batch actions
 class _MultiselectActionBar extends StatefulWidget {
   final AnimationController secondRowController;
-  final Playlist? playlist;
+  final Playlist playlist;
 
   final VoidCallback onSecondRowOpen;
 
   const _MultiselectActionBar({
     required this.secondRowController,
-    this.playlist,
+    required this.playlist,
     required this.onSecondRowOpen,
   });
   @override
@@ -1016,7 +1017,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
   bool? isNew;
   bool? inPlaylist;
 
-  late Playlist playlist;
+  late Playlist playlist = widget.playlist;
 
   List<int> selectedEpisodeIds = [];
   bool _secondRow = false;
@@ -1043,15 +1044,24 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
       ).selectionTentative,
     );
     widget.secondRowController.addStatusListener((status) {
-      if (mounted && status == AnimationStatus.dismissed) setState(() {});
+      if (mounted && status == AnimationStatus.dismissed) {
+        secondRow = false;
+        setState(() {});
+      }
     });
   }
 
   @override
   void didUpdateWidget(_MultiselectActionBar oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.playlist != null) {
-      playlist = widget.playlist!;
+    if (playlist != widget.playlist) {
+      playlist = widget.playlist;
+      _initProperties(
+        Provider.of<SelectionController>(
+          context,
+          listen: false,
+        ).selectionTentative,
+      );
     }
   }
 
@@ -1073,9 +1083,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
       downloaded = false;
       isNew = false;
       inPlaylist = false;
-      if (widget.playlist == null) {
-        playlist = Provider.of<AudioState>(context, listen: false).playlist;
-      }
+
       final eState = context.episodeState;
       final dState = context.downloadState;
       for (var id in selectedEpisodeIds) {

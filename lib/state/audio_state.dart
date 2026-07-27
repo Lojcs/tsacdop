@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
+import 'dart:developer' as dev;
 
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
@@ -116,7 +117,7 @@ class AudioState extends ChangeNotifier {
   /// Player playing.
   bool _playing = false;
 
-  /// Control audio player
+  /// Wheter running or stopped.
   bool _playerRunning = false;
 
   /// Wheter the player just started
@@ -185,14 +186,29 @@ class AudioState extends ChangeNotifier {
 
   /// Sleep variables
 
-  /// Sleep timer interval.
-  late Duration _sleepInterval = _settingState.sleepTimerInterval.get();
+  /// Auto enable sleep timer according to schedule.
+  late bool _sleepTimerAuto = _settingState.sleepTimerAuto.get();
+
+  /// Start of auto sleep timer schedule period.
+  late TimeOfDay _sleepTimerScheduleStart = _settingState
+      .sleepTimerScheduleStart
+      .get();
+
+  /// End of auto sleep timer schedule period.
+  late TimeOfDay _sleepTimerScheduleEnd = _settingState.sleepTimerScheduleEnd
+      .get();
 
   /// Wheter to wait the episode's end to stop playback when the sleep timer expires.
   late bool _sleepWaitEpisodeEnd = _settingState.sleepTimerWaitEpisodeEnd.get();
 
+  /// Sleep timer interval.
+  late Duration _sleepInterval = _settingState.sleepTimerInterval.get();
+
+  /// Sleep timer schedule start timer.
+  late Timer _scheduleTimer = Timer(Duration.zero, () {});
+
   /// Sleep timer timer.
-  late Timer _stopTimer;
+  late Timer _sleepTimer = Timer(Duration.zero, () {});
 
   /// Start time of the sleep timer.
   DateTime _sleepTimerStart = DateTime.now();
@@ -286,7 +302,10 @@ class AudioState extends ChangeNotifier {
       ? _sleepInterval - DateTime.now().difference(_sleepTimerStart)
       : _sleepInterval;
   bool get sleepWaitingForEpisodeEnd =>
-      _sleepTimerRunning && _sleepWaitEpisodeEnd && !_stopTimer.isActive;
+      _playerRunning &&
+      _sleepTimerRunning &&
+      _sleepWaitEpisodeEnd &&
+      !_sleepTimer.isActive;
   bool get sleepTimerRunning => _sleepTimerRunning;
   bool get sleepWaitEpisodeEnd => _sleepWaitEpisodeEnd;
   set sleepWaitEpisodeEnd(bool boo) {
@@ -303,6 +322,7 @@ class AudioState extends ChangeNotifier {
     await loadSavedPosition();
     _audioHandler = await AudioService.init(
       builder: () => CustomAudioHandler(
+        this,
         _settingState,
         browsableLibrary!,
         _fastForwardInterval,
@@ -316,6 +336,7 @@ class AudioState extends ChangeNotifier {
     await _audioHandler.setVolumeBoost(_volumeBoost);
     await _audioHandler.setVolumeBoostDecibels(_volumeGain);
     await _loadPlayer();
+    await _setSleepTimerSchedule();
     _addHandlerListeners();
     super.addListener(listener);
     notifyListeners();
@@ -371,6 +392,25 @@ class AudioState extends ChangeNotifier {
       _rewindInterval = rewindInterval;
       _audioHandler.rewindInterval = _rewindInterval;
     }
+    var STchanged = false;
+    final sleepTimerAuto = _settingState.sleepTimerAuto.get();
+    if (_sleepTimerAuto != sleepTimerAuto) {
+      _sleepTimerAuto = sleepTimerAuto;
+      STchanged = true;
+    }
+    final sleepTimerScheduleStart = _settingState.sleepTimerScheduleStart.get();
+    if (_sleepTimerScheduleStart != sleepTimerScheduleStart) {
+      _sleepTimerScheduleStart = sleepTimerScheduleStart;
+      STchanged = true;
+    }
+    final sleepTimerScheduleEnd = _settingState.sleepTimerScheduleEnd.get();
+    if (_sleepTimerScheduleEnd != sleepTimerScheduleEnd) {
+      _sleepTimerScheduleEnd = sleepTimerScheduleEnd;
+      STchanged = true;
+    }
+    if (STchanged) {
+      await _setSleepTimerSchedule();
+    }
     notifyListeners();
   }
 
@@ -419,7 +459,7 @@ class AudioState extends ChangeNotifier {
         _lastHistory = currentHistory;
         if (_seekSliderValue > 0.95 || (skipped && _markPlayedOnSkip)) {
           await _episodeState.setPlayed(
-            [_episodeBrief!.id],
+            [_episodeId!],
             seconds: currentHistory!.seconds!,
             seekValue: currentHistory!.seekValue!,
           );
@@ -506,19 +546,17 @@ class AudioState extends ChangeNotifier {
       _loadStartPosition();
       _audioDuration = _episodeBrief!.enclosureDuration * 1000;
       _playlistBeingEdited++;
-      if (samePlaylist) {
-        await skipToIndex(_startEpisodeIndex);
-      } else {
-        if (effectiveAutoPlay) {
+      if (effectiveAutoPlay) {
+        if (!samePlaylist) {
           await _audioHandler.replaceQueue(
             _playlist.episodeIds
                 .map((id) => _episodeState[id].mediaItem)
                 .toList(),
           );
-          await skipToIndex(_startEpisodeIndex);
-        } else {
-          await _audioHandler.replaceQueue([_mediaItem!]);
         }
+        await skipToIndex(_startEpisodeIndex);
+      } else {
+        await _audioHandler.replaceQueue([_mediaItem!]);
       }
       _playlistBeingEdited--;
     } else {
@@ -643,15 +681,6 @@ class AudioState extends ChangeNotifier {
         await _audioHandler.replaceQueue([_mediaItem!]);
       }
       await skipToIndex(_startEpisodeIndex);
-
-      if (_settingState.sleepTimerAuto.get()) {
-        if (TimeOfDay.now().isBetween(
-          _settingState.sleepTimerScheduleStart.get(),
-          _settingState.sleepTimerScheduleEnd.get(),
-        )) {
-          startSleepTimer();
-        }
-      }
     }
   }
 
@@ -755,7 +784,7 @@ class AudioState extends ChangeNotifier {
         await saveHistory(savePosition: true);
         _historyPosition = _audioPosition;
         _playerRunning = false;
-        if (_sleepTimerRunning) cancelSleepTimer();
+        if (_sleepTimerRunning) _cancelSleepTimer();
         notifyListeners();
       }
       if (event['preSeekPosition'] != null && !_undoSeekOngoing) {
@@ -775,7 +804,9 @@ class AudioState extends ChangeNotifier {
       }
       // Set seekbar position, handle skipping start and end.
       // Ignore position updates if index doesn't match current index so that history saving is consistent
-      if (event['position'] != null && event['index'] == _episodeIndex) {
+      if (event['position'] != null &&
+          (event['index'] == _episodeIndex ||
+              (!effectiveAutoPlay && event['index'] == 0))) {
         _audioPosition = event['position'].inMilliseconds;
         if (_skipStart && _episodeId != null) {
           _skipStart = false;
@@ -815,15 +846,12 @@ class AudioState extends ChangeNotifier {
         }
         notifyListeners();
       }
-      if (event['duration'] is Duration && _playlistBeingEdited == 0) {
-        _audioDuration = (event['duration'] as Duration).inMilliseconds;
-        notifyListeners();
-      }
+      // if (event['duration'] is Duration && _playlistBeingEdited == 0) {
+      //   _audioDuration = (event['duration'] as Duration).inMilliseconds;
+      //   notifyListeners();
+      // }
       if (event['skipped'] != null) {
-        Future.delayed(
-          Duration(milliseconds: 500),
-          () => saveHistory(skipped: true),
-        );
+        await saveHistory(skipped: true);
       }
     });
   }
@@ -1248,8 +1276,15 @@ class AudioState extends ChangeNotifier {
     _remoteErrorMessage = null;
     if (_playlist.length - _episodeIndex > 1) {
       if (effectiveAutoPlay) {
-        await _audioHandler.skipToNext();
+        await _audioHandler.skipToNext(true);
       } else {
+        if (_markPlayedOnSkip) {
+          await _episodeState.setPlayed(
+            [_episodeId!],
+            seconds: _audioPosition ~/ 1000,
+            seekValue: _seekSliderValue,
+          );
+        }
         if (_playlist.isQueue) {
           _playlist.removeEpisodesAt(_episodeState, 0);
         } else {
@@ -1259,7 +1294,7 @@ class AudioState extends ChangeNotifier {
         await playFromStart();
       }
     } else {
-      await _audioHandler.skipToNext();
+      await _audioHandler.skipToNext(true);
     }
     notifyListeners();
   }
@@ -1326,7 +1361,9 @@ class AudioState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Reloads the current playlist with autoPlay enabled.
   Future<void> _reloadWithAutoPlay() async {
+    dev.log("Reloading player with autoPlay enabled.");
     _playlistBeingEdited++;
     final position = _audioPosition - 3;
     await _audioHandler.replaceQueue(
@@ -1339,7 +1376,9 @@ class AudioState extends ChangeNotifier {
     _playlistBeingEdited--;
   }
 
+  /// Reloads the current playlist with autoPlay disabled.
   Future<void> _reloadWithoutAutoPlay() async {
+    dev.log("Reloading player with autoPlay disabled.");
     _playlistBeingEdited++;
     final position = _audioPosition - 3;
     await _audioHandler.replaceQueue([_mediaItem!]);
@@ -1349,35 +1388,102 @@ class AudioState extends ChangeNotifier {
     _playlistBeingEdited--;
   }
 
-  // Set sleep timer
-  Future<void> startSleepTimer() async {
-    _sleepTimerRunning = true;
-    notifyListeners();
-    _sleepTimerStart = DateTime.now();
-    _stopTimer = Timer(_sleepInterval, () async {
-      if (_sleepWaitEpisodeEnd) {
-        if (_autoPlay) {
-          await _reloadWithoutAutoPlay();
-        }
+  /// Schedules or starts the sleep timer based on the variables.
+  Future<void> _setSleepTimerSchedule() async {
+    if (_sleepTimerAuto) {
+      final now = DateTime.now();
+      if (TimeOfDay.fromDateTime(
+        now,
+      ).isBetween(_sleepTimerScheduleStart, _sleepTimerScheduleEnd)) {
+        await _startSleepTimerAutomatically();
       } else {
-        _sleepTimerRunning = false;
-        if (_playerRunning) {
-          _audioHandler.stop();
-        }
+        await _cancelSleepTimerAutomatically();
       }
-      notifyListeners();
-    });
+    }
   }
 
-  //Cancel sleep timer
-  Future<void> cancelSleepTimer() async {
-    _stopTimer.cancel();
+  /// Starts sleep timer and schedules scheduled end.
+  Future<void> _startSleepTimerAutomatically() async {
+    if (!_sleepTimerRunning) await _startSleepTimer();
+    await sleepTimerScheduleEnd();
+  }
+
+  /// Cancels sleep timer and schedules scheduled start.
+  Future<void> _cancelSleepTimerAutomatically() async {
+    await _cancelSleepTimer();
+    await sleepTimerScheduleStart();
+  }
+
+  /// Starts sleep timer and disables sleep timer schedule for one day or app restart.
+  Future<void> startSleepTimerExplicitly() async {
+    if (!_sleepTimerRunning) await _startSleepTimer();
+    await sleepTimerScheduleStart(Duration(days: 1));
+  }
+
+  /// Cancels sleep timer and disables sleep timer schedule for one day or app restart.
+  Future<void> cancelSleepTimerExplicitly() async {
+    await _cancelSleepTimer();
+    await sleepTimerScheduleStart(Duration(days: 1));
+  }
+
+  /// Schedules the start of auto sleep timer. No checks.
+  Future<void> sleepTimerScheduleStart([
+    Duration deadTime = Duration.zero,
+  ]) async {
+    final now = DateTime.now();
+    final timerDuration = _sleepTimerScheduleStart
+        .after(now.add(deadTime))
+        .difference(now);
+    dev.log("Sleep timer schedule start timer: ${timerDuration.toString()}");
+    _scheduleTimer.cancel();
+    _scheduleTimer = Timer(timerDuration, _startSleepTimerAutomatically);
+  }
+
+  /// Schedules the end of auto sleep timer. No checks.
+  Future<void> sleepTimerScheduleEnd([
+    Duration deadTime = Duration.zero,
+  ]) async {
+    final now = DateTime.now();
+    final timerDuration = _sleepTimerScheduleEnd
+        .after(now.add(deadTime))
+        .difference(now);
+    dev.log("Sleep timer schedule end timer: ${timerDuration.toString()}");
+    _scheduleTimer.cancel();
+    _scheduleTimer = Timer(timerDuration, _cancelSleepTimerAutomatically);
+  }
+
+  /// Starts sleep timer. No checks.
+  Future<void> _startSleepTimer() async {
+    _sleepTimerRunning = true;
+    _sleepTimerStart = DateTime.now();
+    _sleepTimer = Timer(_sleepInterval, _onSleepTimerExpired);
+    notifyListeners();
+  }
+
+  /// Cancels sleep timer. No checks.
+  Future<void> _cancelSleepTimer() async {
+    _sleepTimer.cancel();
     if (sleepWaitingForEpisodeEnd) {
       if (_autoPlay) {
         await _reloadWithAutoPlay();
       }
     }
     _sleepTimerRunning = false;
+    notifyListeners();
+  }
+
+  /// What to do when sleep timer expires.
+  Future<void> _onSleepTimerExpired() async {
+    if (_sleepWaitEpisodeEnd) {
+      if (_autoPlay) {
+        await _reloadWithoutAutoPlay();
+      }
+    } else {
+      _sleepTimerRunning = false;
+      if (_playerRunning) {
+        await _audioHandler.stop();
+      }
+    }
     notifyListeners();
   }
 }
@@ -1437,10 +1543,12 @@ class CustomAudioHandler extends BaseAudioHandler
   bool seekInputBuffer = false;
 
   final SettingState settings;
+  final AudioState audio;
 
   BrowsableLibrary browsableRoot;
 
   CustomAudioHandler(
+    this.audio,
     this.settings,
     this.browsableRoot,
     this.fastForwardInterval,
@@ -1820,7 +1928,7 @@ class CustomAudioHandler extends BaseAudioHandler
         newPosition >= mediaItem.value!.duration!) {
       newPosition = mediaItem.value!.duration!;
     }
-    combinedSeek(position: newPosition);
+    await combinedSeek(position: newPosition);
   }
 
   @override
@@ -1834,12 +1942,23 @@ class CustomAudioHandler extends BaseAudioHandler
   }
 
   @override
-  Future<void> skipToNext() async {
-    customEvent.add({'skipped': mediaItem.value!.extras!['episodeId']});
-    if (queue.value.length - _index == 1) {
-      await stop();
+  Future<void> skipToNext([bool actually = false]) async {
+    if (actually) {
+      customEvent.add({
+        'skipped': (
+          mediaItem.value!.extras!['episodeId'],
+          _position,
+          _player.duration,
+        ),
+      });
+      if (queue.value.length - _index == 1) {
+        await stop();
+      } else {
+        await skipToQueueItem(_index + 1);
+      }
     } else {
-      await skipToQueueItem(_index + 1);
+      // I hate this solution so much. This warrants rewriting the audio state.
+      await audio.skipToNext();
     }
   }
 

@@ -33,7 +33,7 @@ class Playlist {
   bool cached = false;
 
   /// Incremented each time playlist is modified in memory.
-  int _generation = 0;
+  int generation = 0;
 
   bool get isEmpty => episodeIds.isEmpty;
   bool get isNotEmpty => episodeIds.isNotEmpty;
@@ -84,7 +84,7 @@ class Playlist {
     int index, {
     EpisodeCollision ifExists = EpisodeCollision.ignore,
   }) {
-    _generation++;
+    generation++;
     switch (ifExists) {
       case EpisodeCollision.keepExisting:
         newEpisodes.removeWhere((episode) => episodeIds.contains(episode));
@@ -111,7 +111,7 @@ class Playlist {
     int number = 1,
     bool delLocal = true,
   }) {
-    _generation++;
+    generation++;
     int end = index + number;
     List<int> delIds = episodeIds.getRange(index, end).toList();
     episodeIds.removeRange(index, end);
@@ -123,7 +123,7 @@ class Playlist {
   /// Moves episode at [oldIndex] to [newIndex].
   /// Don't directly use on playlists that might be live. Use [AudioState.reorderPlaylist] instead.
   void reorderPlaylist(int oldIndex, int newIndex) {
-    _generation++;
+    generation++;
     final id = episodeIds.removeAt(oldIndex);
     episodeIds.insert(newIndex, id);
   }
@@ -131,7 +131,7 @@ class Playlist {
   /// Clears all episodes in playlist.
   /// Don't directly use on playlists that might be live. Use [AudioState.clearPlaylist] instead.
   void clear() {
-    _generation++;
+    generation++;
     episodeIds.clear();
   }
 
@@ -140,15 +140,6 @@ class Playlist {
     title: name,
     playable: false,
   );
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        other is Playlist && id == other.id && _generation == other._generation;
-  }
-
-  @override
-  int get hashCode => [id, _generation].hashCode;
 }
 
 /// Class that provides a browsable media item

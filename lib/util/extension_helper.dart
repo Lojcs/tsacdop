@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer' as developer;
 
@@ -199,7 +200,7 @@ extension DurationExtension on Duration {
   };
   String toTime() => switch (this) {
     < const Duration(minutes: 1) =>
-      '${inSeconds.toString().padLeft(2, '0')}:${(inMilliseconds % 1000).toString().padLeft(3, '0')}',
+      '${inSeconds.toString().padLeft(2, '0')}:${(inMilliseconds % 1000).toString().padLeft(2, '0')}',
     < const Duration(hours: 1) =>
       '${inMinutes.toString().padLeft(2, '0')}:${(inSeconds % 60).toString().padLeft(2, '0')}',
     < const Duration(days: 1) =>
@@ -211,15 +212,25 @@ extension DurationExtension on Duration {
 
 extension TimeOfDayExtension on TimeOfDay {
   bool isBetween(TimeOfDay start, TimeOfDay end) =>
+      isAtSameTimeAs(start) ||
       (isAfter(start) && isBefore(end)) ||
-      (end.isBefore(start) && isAfter(start)) ||
-      (end.isBefore(start) && isBefore(start));
+      (end.isBefore(start) && (isAfter(start) || isBefore(end)));
+
+  /// The first instance of this after the given time.
+  DateTime after(DateTime time) => time
+      .add(Duration(days: TimeOfDay.fromDateTime(time).isBefore(this) ? 0 : 1))
+      .copyWith(hour: hour, minute: minute, millisecond: 0, microsecond: 0);
+
+  /// The next instance of this after now.
+  DateTime next() => after(DateTime.now());
 }
 
 /// Convenience getters for state objects.
 /// Still do assign these to local vars since Provider.of isn't free.
 extension StateExtension on BuildContext {
   S get s => S.of(this);
+  MaterialLocalizations get materialLocalizations =>
+      MaterialLocalizations.of(this);
   SettingState get settingState =>
       Provider.of<SettingState>(this, listen: false);
   EpisodeState get episodeState =>
