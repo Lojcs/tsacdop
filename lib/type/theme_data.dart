@@ -1,10 +1,19 @@
+import 'dart:io';
 import 'dart:ui';
 
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 
-enum TBrightness { light, dark, black }
+enum TBrightness {
+  light(.light),
+  dark(.dark),
+  black(.dark);
 
-ColorScheme getColorScheme(Color seed, TBrightness brightness) =>
+  const TBrightness(this.brightness);
+  final Brightness brightness;
+}
+
+ColorScheme getColorSchemeFromSeed(Color seed, TBrightness brightness) =>
     switch (brightness) {
       .light => ColorScheme.fromSeed(
         seedColor: seed,
@@ -23,6 +32,23 @@ ColorScheme getColorScheme(Color seed, TBrightness brightness) =>
         surface: Colors.black,
       ),
     };
+
+Future<ColorScheme> getColorSchemeFromPlatform(
+  Color fallback,
+  TBrightness brightness,
+) async {
+  ColorScheme? scheme;
+  if (Platform.isAndroid) {
+    final palette = await DynamicColorPlugin.getCorePalette();
+    scheme = palette?.toColorScheme(brightness: brightness.brightness);
+  }
+  if (scheme == null) {
+    final color = await DynamicColorPlugin.getAccentColor();
+    scheme = getColorSchemeFromSeed(color ?? fallback, brightness);
+  }
+  if (brightness == .black) scheme.copyWith(surface: Colors.black);
+  return scheme;
+}
 
 class TsacdopTheme extends ThemeExtension<TsacdopTheme> {
   final TBrightness brightness;

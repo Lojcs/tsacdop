@@ -154,7 +154,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     backend,
     key: 'useSystemAccentColor',
     defaultValue: false,
-    updateCallback: settingsChanged,
+    updateCallback: themesChanged,
     getLegacy: () => legacyBackend.getBool('useWallpaperThemeKet'),
   );
 

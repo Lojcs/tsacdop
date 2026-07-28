@@ -99,52 +99,23 @@ class MyApp extends StatelessWidget {
       ),
       builder: (context, data, _) {
         return FeatureDiscovery(
-          child: DynamicColorBuilder(
-            builder: (lightDynamic, darkDynamic) {
-              final lightTheme = data.useSystemAccent && lightDynamic != null
-                  ? data.lightTheme.copyWith(
-                      colorScheme: lightDynamic,
-                      extensions: [
-                        TsacdopTheme(TBrightness.light),
-                        ActionBarTheme.light(),
-                        CardColorScheme(lightDynamic, data.trueBlack),
-                      ],
-                    )
-                  : data.lightTheme;
-              var darkTheme = data.trueBlack ? data.blackTheme : data.darkTheme;
-              darkTheme = data.useSystemAccent && darkDynamic != null
-                  ? darkTheme.copyWith(
-                      colorScheme: darkDynamic.copyWith(
-                        surface: data.trueBlack ? Colors.black : null,
-                      ),
-                      extensions: [
-                        TsacdopTheme(
-                          data.trueBlack ? TBrightness.black : TBrightness.dark,
-                        ),
-                        ActionBarTheme.dark(),
-                        CardColorScheme(darkDynamic, data.trueBlack),
-                      ],
-                    )
-                  : darkTheme;
-              return MaterialApp(
-                themeMode: data.themeMode,
-                debugShowCheckedModeBanner: false,
-                title: 'Tsacdop',
-                theme: lightTheme,
-                darkTheme: darkTheme,
-                localizationsDelegates: [
-                  S.delegate,
-                  GlobalMaterialLocalizations.delegate,
-                  GlobalWidgetsLocalizations.delegate,
-                  GlobalCupertinoLocalizations.delegate,
-                ],
-                locale: data.localeOverride,
-                supportedLocales: S.delegate.supportedLocales,
-                home: context.settingState.showIntro.get()
-                    ? SlideIntro(goto: Goto.home)
-                    : Home(),
-              );
-            },
+          child: MaterialApp(
+            themeMode: data.themeMode,
+            debugShowCheckedModeBanner: false,
+            title: 'Tsacdop',
+            theme: data.lightTheme,
+            darkTheme: data.trueBlack ? data.blackTheme : data.darkTheme,
+            localizationsDelegates: [
+              S.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            locale: data.localeOverride,
+            supportedLocales: S.delegate.supportedLocales,
+            home: context.settingState.showIntro.get()
+                ? SlideIntro(goto: Goto.home)
+                : Home(),
           ),
         );
       },

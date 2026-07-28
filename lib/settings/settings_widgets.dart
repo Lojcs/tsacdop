@@ -664,7 +664,7 @@ class SettingsActionButton extends StatelessWidget {
     final cardColorScheme = baseColor == null
         ? context.cardColorScheme
         : CardColorScheme(
-            getColorScheme(baseColor!, context.tbrightness),
+            getColorSchemeFromSeed(baseColor!, context.tbrightness),
             context.trueBlack,
           );
     final borderRadius = BorderRadius.horizontal(

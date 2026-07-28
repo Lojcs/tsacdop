@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer' as dev;
 import 'dart:io';
 
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -42,8 +43,8 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
     if (!settingsInitialized.get()) {
       await _initDefaultSettings();
     }
-    startWorkManager();
-    setThemes();
+    await startWorkManager();
+    await setThemes();
   }
 
   /// Migrates settings from the old [SharedPreferences] backend
@@ -70,7 +71,7 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
   }
 
   /// Sets up the work manager.
-  void startWorkManager() async {
+  Future<void> startWorkManager() async {
     Workmanager().initialize(callbackDispatcher);
     final scheduled = await Workmanager().isScheduledByUniqueName("1");
     if (!scheduled && Platform.isAndroid && autoSync.get()) {
@@ -82,8 +83,8 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
   void settingsChanged() => notifyListeners();
 
   @override
-  void themesChanged() {
-    setThemes();
+  void themesChanged() async {
+    await setThemes();
     notifyListeners();
   }
 
@@ -147,11 +148,16 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
     ),
   );
 
+  Future<ColorScheme> getColorScheme(TBrightness brightness) async =>
+      useSystemAccentColor.get()
+      ? getColorSchemeFromPlatform(accentColor.get(), brightness)
+      : getColorSchemeFromSeed(accentColor.get(), brightness);
+
   late ThemeData lightTheme;
   late ThemeData darkTheme;
   late ThemeData blackTheme;
-  void setThemes() {
-    final lightColorScheme = getColorScheme(accentColor.get(), .light);
+  Future<void> setThemes() async {
+    final lightColorScheme = await getColorScheme(.light);
     lightTheme = _customized(
       ThemeData(
         colorScheme: lightColorScheme,
@@ -176,7 +182,7 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
         ],
       ),
     );
-    final darkColorScheme = getColorScheme(accentColor.get(), .dark);
+    final darkColorScheme = await getColorScheme(.dark);
     darkTheme = _customized(
       ThemeData(
         colorScheme: darkColorScheme,
@@ -190,7 +196,7 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
         ],
       ),
     );
-    final blackColorScheme = getColorScheme(accentColor.get(), .black);
+    final blackColorScheme = await getColorScheme(.black);
     blackTheme = _customized(
       ThemeData(
         colorScheme: blackColorScheme,
@@ -273,8 +279,8 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
       getPref(pref).reset();
     }
     await _initDefaultSettings();
-    startWorkManager();
-    setThemes();
+    await startWorkManager();
+    await setThemes();
   }
 }
 

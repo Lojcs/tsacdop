@@ -275,12 +275,15 @@ class EpisodeBrief extends Equatable {
   Color progressIndicatorColor(BuildContext context) =>
       cardColorScheme(context).progress;
 
-  late final ColorScheme colorSchemeLight = getColorScheme(
+  late final ColorScheme colorSchemeLight = getColorSchemeFromSeed(
     primaryColor,
     .light,
   );
-  late final ColorScheme colorSchemeDark = getColorScheme(primaryColor, .dark);
-  late final ColorScheme colorSchemeBlack = getColorScheme(
+  late final ColorScheme colorSchemeDark = getColorSchemeFromSeed(
+    primaryColor,
+    .dark,
+  );
+  late final ColorScheme colorSchemeBlack = getColorSchemeFromSeed(
     primaryColor,
     .black,
   );

@@ -245,7 +245,7 @@ class PodcastBrief extends Equatable {
     seedColor: primaryColor,
     brightness: Brightness.dark,
   );
-  late final ColorScheme colorSchemeBlack = getColorScheme(
+  late final ColorScheme colorSchemeBlack = getColorSchemeFromSeed(
     primaryColor,
     .black,
   );
