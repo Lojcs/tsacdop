@@ -52,7 +52,7 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m11(service) => "Integrar com ${service}";
 
-  static String m33(filePath) => "Episódio local em ${filePath}";
+  static String m34(filePath) => "Episódio local em ${filePath}";
 
   static String m1(userName) => "Iniciou sessão como ${userName}";
 
@@ -284,7 +284,7 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Carregar seleção"),
         "loadMore": MessageLookupByLibrary.simpleMessage("Carregar mais"),
         "loading": MessageLookupByLibrary.simpleMessage("A carregar"),
-        "localEpisodeDescription": m33,
+        "localEpisodeDescription": m34,
         "localFolder": MessageLookupByLibrary.simpleMessage("Pasta local"),
         "localFolderDescription": MessageLookupByLibrary.simpleMessage(
             "Pasta que irá receber os ficheiros de áudio importados localmente."),

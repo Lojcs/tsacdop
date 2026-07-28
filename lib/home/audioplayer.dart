@@ -555,7 +555,7 @@ class SleepModeState extends State<SleepMode>
                             spacing: 16,
                             children: [
                               Text(
-                                context.s.STExpireAt,
+                                context.s.sleepTimerExpireAt,
                                 style: context.textTheme.titleLarge,
                               ),
                               SleepTimerPicker(
@@ -574,7 +574,7 @@ class SleepModeState extends State<SleepMode>
                             spacing: 16,
                             children: [
                               Text(
-                                context.s.STWaitFor,
+                                context.s.sleepTimerWaitFor,
                                 style: context.textTheme.titleLarge,
                               ),
                               Wrap(

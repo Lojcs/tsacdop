@@ -1,5 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
 
 import '../search/search_api.dart';
@@ -196,38 +197,82 @@ class _InterfaceSettingState extends State<InterfaceSetting> {
                               children: [
                                 SizedBox(
                                   height: 40,
-                                  child: Row(
-                                    mainAxisAlignment: .spaceBetween,
-                                    children: [
-                                      Flexible(
-                                        child: TextFormField(
-                                          textAlign: .center,
-                                          decoration: InputDecoration(
-                                            hintText: s.settingsHomeTabName,
-                                            isDense: true,
-                                            border: InputBorder.none,
+                                  child: Padding(
+                                    padding: .symmetric(horizontal: 4),
+                                    child: Row(
+                                      mainAxisAlignment: .spaceBetween,
+                                      children: [
+                                        // Down
+                                        IconButton(
+                                          visualDensity: .compact,
+                                          onPressed: i == value.length - 1
+                                              ? null
+                                              : () => context
+                                                    .settingState
+                                                    .homeTabs
+                                                    .set(
+                                                      [...value]
+                                                        ..removeAt(i)
+                                                        ..insert(i + 1, tab),
+                                                    ),
+                                          icon: RotatedBox(
+                                            quarterTurns: 1,
+                                            child: Icon(Icons.chevron_right),
                                           ),
-                                          controller: nameControllers[i],
-                                          // initialValue: tab.name,
-                                          onChanged: (name) =>
-                                              context.settingState.homeTabs.set(
-                                                [...value]
-                                                  ..[i] = tab.copyWith(
-                                                    name: name,
-                                                  ),
-                                              ),
                                         ),
-                                      ),
-                                      IconButton(
-                                        onPressed: i == 0
-                                            ? null
-                                            : () => context
-                                                  .settingState
-                                                  .homeTabs
-                                                  .set([...value]..removeAt(i)),
-                                        icon: Icon(Icons.delete),
-                                      ),
-                                    ],
+                                        // Up
+                                        IconButton(
+                                          visualDensity: .compact,
+                                          onPressed: i == 0
+                                              ? null
+                                              : () => context
+                                                    .settingState
+                                                    .homeTabs
+                                                    .set(
+                                                      [...value]
+                                                        ..removeAt(i)
+                                                        ..insert(i - 1, tab),
+                                                    ),
+                                          icon: RotatedBox(
+                                            quarterTurns: 1,
+                                            child: Icon(Icons.chevron_left),
+                                          ),
+                                        ),
+                                        Flexible(
+                                          child: TextFormField(
+                                            textAlign: .center,
+                                            decoration: InputDecoration(
+                                              hintText: s.settingsHomeTabName,
+                                              isDense: true,
+                                              border: InputBorder.none,
+                                            ),
+                                            controller: nameControllers[i],
+                                            // initialValue: tab.name,
+                                            onChanged: (name) => context
+                                                .settingState
+                                                .homeTabs
+                                                .set(
+                                                  [...value]
+                                                    ..[i] = tab.copyWith(
+                                                      name: name,
+                                                    ),
+                                                ),
+                                          ),
+                                        ),
+                                        IconButton(
+                                          visualDensity: .compact,
+                                          onPressed: i == 0
+                                              ? null
+                                              : () => context
+                                                    .settingState
+                                                    .homeTabs
+                                                    .set(
+                                                      [...value]..removeAt(i),
+                                                    ),
+                                          icon: Icon(Icons.delete),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                                 LayoutBuilder(

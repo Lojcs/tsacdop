@@ -39,6 +39,8 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m7(time) => "From ${time}";
 
+  static String m33(icon) => "Tap ${icon} to search podcasts";
+
   static String m8(count) =>
       "${Intl.plural(count, zero: 'Group', one: 'Group', other: 'Groups')}";
 
@@ -52,7 +54,7 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m11(service) => "Integrate with ${service}";
 
-  static String m33(filePath) => "Local episode at ${filePath}";
+  static String m34(filePath) => "Local episode at ${filePath}";
 
   static String m1(userName) => "Logged in as ${userName}";
 
@@ -62,7 +64,7 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m13(count) =>
       "${Intl.plural(count, zero: '0 min', one: '${count} min', other: '${count} mins')}";
 
-  static String m34(count) =>
+  static String m35(count) =>
       "${Intl.plural(count, zero: '${count} months', one: '${count} month', other: '${count} months')}";
 
   static String m14(title) => "Fetch data ${title}";
@@ -87,7 +89,7 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m23(date) => "Removed at ${date}";
 
-  static String m35(start, end) => "Schedule: ${start} - ${end}";
+  static String m36(start, end) => "Schedule: ${start} - ${end}";
 
   static String m24(count) =>
       "${Intl.plural(count, zero: '0 sec', one: '${count} sec', other: '${count} sec')}";
@@ -108,16 +110,14 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m31(version) => "Version: ${version}";
 
-  static String m36(count) =>
+  static String m37(count) =>
       "${Intl.plural(count, zero: '${count} weeks', one: '${count} week', other: '${count} weeks')}";
 
-  static String m37(count) =>
+  static String m38(count) =>
       "${Intl.plural(count, zero: '${count} years', one: '${count} year', other: '${count} years')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
-        "STExpireAt": MessageLookupByLibrary.simpleMessage("Expire At"),
-        "STWaitFor": MessageLookupByLibrary.simpleMessage("Wait For (Minutes)"),
         "add": MessageLookupByLibrary.simpleMessage("Add"),
         "addEpisodeGroup": m2,
         "addNewEpisodeAll": m3,
@@ -236,6 +236,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "fonts": MessageLookupByLibrary.simpleMessage("Fonts"),
         "forward": MessageLookupByLibrary.simpleMessage("Forward"),
         "from": m7,
+        "getStarted": MessageLookupByLibrary.simpleMessage("Get started"),
+        "getStartedDes": m33,
         "globallyDisabled":
             MessageLookupByLibrary.simpleMessage("Globally disabled"),
         "goodNight": MessageLookupByLibrary.simpleMessage("Good Night"),
@@ -296,7 +298,7 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Load All Selected"),
         "loadMore": MessageLookupByLibrary.simpleMessage("Load more"),
         "loading": MessageLookupByLibrary.simpleMessage("Loading"),
-        "localEpisodeDescription": m33,
+        "localEpisodeDescription": m34,
         "localFolder": MessageLookupByLibrary.simpleMessage("Local Folder"),
         "localFolderDescription": MessageLookupByLibrary.simpleMessage(
             "Dummy podcast that collects imported local audio files."),
@@ -323,7 +325,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "minsAgo": m12,
         "minsCount": m13,
         "mobileData": MessageLookupByLibrary.simpleMessage("Mobile Data"),
-        "monthsCount": m34,
+        "monthsCount": m35,
         "moreOptions": MessageLookupByLibrary.simpleMessage("More Options"),
         "network": MessageLookupByLibrary.simpleMessage("Network"),
         "networkErrorDNS":
@@ -426,7 +428,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "schedule": MessageLookupByLibrary.simpleMessage("Schedule"),
         "scheduleDisabled":
             MessageLookupByLibrary.simpleMessage("Schedule disabled."),
-        "scheduleTime": m35,
+        "scheduleTime": m36,
         "search": MessageLookupByLibrary.simpleMessage("Search"),
         "searchApi": MessageLookupByLibrary.simpleMessage("Search Api"),
         "searchEngine": MessageLookupByLibrary.simpleMessage("Search Engine"),
@@ -755,9 +757,12 @@ class MessageLookup extends MessageLookupByLibrary {
         "sleepTimer": MessageLookupByLibrary.simpleMessage("Sleep timer"),
         "sleepTimerCancel":
             MessageLookupByLibrary.simpleMessage("Cancel timer"),
+        "sleepTimerExpireAt": MessageLookupByLibrary.simpleMessage("Expire At"),
         "sleepTimerStart": MessageLookupByLibrary.simpleMessage("Start timer"),
         "sleepTimerWait":
             MessageLookupByLibrary.simpleMessage("Waiting for episode to end"),
+        "sleepTimerWaitFor":
+            MessageLookupByLibrary.simpleMessage("Wait For (Minutes)"),
         "sortBy": MessageLookupByLibrary.simpleMessage("Sort By"),
         "sortOrder": MessageLookupByLibrary.simpleMessage("Sort Order"),
         "status": MessageLookupByLibrary.simpleMessage("Status"),
@@ -822,8 +827,9 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Username required"),
         "version": m31,
         "vpn": MessageLookupByLibrary.simpleMessage("VPN"),
-        "weeksCount": m36,
+        "weeksCount": m37,
+        "welcome": MessageLookupByLibrary.simpleMessage("Welcome to Tsacdop!"),
         "wifi": MessageLookupByLibrary.simpleMessage("Wi-Fi"),
-        "yearsCount": m37
+        "yearsCount": m38
       };
 }

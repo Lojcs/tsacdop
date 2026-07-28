@@ -12,6 +12,7 @@ import '../podcasts/podcastlist.dart';
 import '../state/episode_state.dart';
 import '../state/podcast_state.dart';
 import '../state/settings/setting_state.dart';
+import '../type/podcastgroup.dart';
 import '../util/extension_helper.dart';
 import '../util/hide_player_route.dart';
 import '../util/pageroute.dart';
@@ -72,20 +73,26 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
       selector: (_, settings) => settings.actionBarPodcasts.get().layout,
       builder: (context, layout, _) {
         double previewHeight = layout.getRowHeight(context.width);
-        return Selector<PodcastState, (String, String, List<String>, bool)>(
+        return Selector<
+          PodcastState,
+          ({PodcastGroup group, bool change, int pCount})
+        >(
           selector: (_, pState) {
             final groupId = pState.groupIds[_groupIndex];
             final group = pState.getGroupById(groupId);
-            return (groupId, group.name, group.podcastIds, pState.groupsChange);
+            return (
+              group: group,
+              change: pState.groupsChange,
+              pCount: pState.podcastCount,
+            );
           },
           builder: (context, data, _) {
-            final groupName = data.$2;
-            final podcastIds = data.$3;
-            bool empty = podcastIds.isEmpty;
             return SizedBox(
               height: previewHeight + 140,
               child: DefaultTabController(
-                length: empty ? 3 : podcastIds.length,
+                length: data.group.podcastIds.isEmpty
+                    ? 3
+                    : data.group.podcastIds.length,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
@@ -144,7 +151,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                                     horizontal: 15.0,
                                   ),
                                   child: Text(
-                                    groupName,
+                                    data.group.name,
                                     style: context.textTheme.bodyLarge!
                                         .copyWith(color: context.primaryColor),
                                   ),
@@ -203,13 +210,15 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                               isScrollable: true,
                               dividerHeight: 0,
                               tabAlignment: TabAlignment.start,
-                              tabs: empty
+                              tabs: data.group.podcastIds.isEmpty
                                   ? [
                                       _circleContainer(),
                                       _circleContainer(),
                                       _circleContainer(),
                                     ]
-                                  : podcastIds.map<Widget>((podcastId) {
+                                  : data.group.podcastIds.map<Widget>((
+                                      podcastId,
+                                    ) {
                                       final podcast =
                                           context.podcastState[podcastId];
                                       return Tab(
@@ -247,37 +256,51 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                         color: Colors.transparent,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: empty
+                      child: data.group.podcastIds.isEmpty
                           ? Center(
-                              child: _groupIndex == 0
-                                  ? Text.rich(
-                                      TextSpan(
-                                        style: context.textTheme.titleLarge!
-                                            .copyWith(height: 2),
-                                        children: [
-                                          TextSpan(
-                                            text: 'Welcome to Tsacdop\n',
-                                            style: context.textTheme.titleLarge!
-                                                .copyWith(
-                                                  color: context.primaryColor,
-                                                ),
+                              child: data.pCount == 0
+                                  ? Column(
+                                      mainAxisAlignment: .center,
+                                      children: [
+                                        Text(
+                                          s.welcome,
+                                          style: context
+                                              .textTheme
+                                              .headlineMedium!
+                                              .copyWith(
+                                                color: context.primaryColor,
+                                              ),
+                                        ),
+                                        SizedBox(height: 16),
+                                        Text(
+                                          s.getStarted,
+                                          style: context.textTheme.titleLarge!
+                                              .copyWith(
+                                                color: context.primaryColor,
+                                              ),
+                                        ),
+                                        SizedBox(height: 4),
+                                        DefaultTextStyle(
+                                          style: context.textTheme.titleMedium!,
+                                          child: Builder(
+                                            builder: (context) {
+                                              final text = context.s
+                                                  .getStartedDes("\uFFFC");
+                                              final parts = text.split(
+                                                "\uFFFC",
+                                              );
+                                              return Row(
+                                                mainAxisAlignment: .center,
+                                                children: [
+                                                  Text(parts[0]),
+                                                  Icon(Icons.search),
+                                                  Text(parts[1]),
+                                                ],
+                                              );
+                                            },
                                           ),
-                                          TextSpan(
-                                            text: 'Get started\n',
-                                            style: context.textTheme.titleLarge!
-                                                .copyWith(
-                                                  color: context.primaryColor,
-                                                ),
-                                          ),
-                                          TextSpan(text: 'Tap '),
-                                          WidgetSpan(
-                                            child: Icon(
-                                              Icons.add_circle_outline,
-                                            ),
-                                          ),
-                                          TextSpan(text: ' to search podcasts'),
-                                        ],
-                                      ),
+                                        ),
+                                      ],
                                     )
                                   : Text(
                                       s.noPodcastGroup,
@@ -291,7 +314,9 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                                     ),
                             )
                           : TabBarView(
-                              children: podcastIds.map<Widget>((podcastId) {
+                              children: data.group.podcastIds.map<Widget>((
+                                podcastId,
+                              ) {
                                 return Container(
                                   margin: EdgeInsets.symmetric(horizontal: 5.0),
                                   key: ObjectKey(podcastId),
@@ -361,7 +386,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
         width: 50,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: context.colorScheme.surfaceContainer,
+          color: context.colorScheme.secondaryContainer,
         ),
       ),
     ),

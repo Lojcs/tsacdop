@@ -930,6 +930,26 @@ class S {
     );
   }
 
+  /// `Get started`
+  String get getStarted {
+    return Intl.message(
+      'Get started',
+      name: 'getStarted',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Tap {icon} to search podcasts`
+  String getStartedDes(Object icon) {
+    return Intl.message(
+      'Tap $icon to search podcasts',
+      name: 'getStartedDes',
+      desc: '',
+      args: [icon],
+    );
+  }
+
   /// `Globally disabled`
   String get globallyDisabled {
     return Intl.message(
@@ -4133,20 +4153,20 @@ class S {
   }
 
   /// `Expire At`
-  String get STExpireAt {
+  String get sleepTimerExpireAt {
     return Intl.message(
       'Expire At',
-      name: 'STExpireAt',
+      name: 'sleepTimerExpireAt',
       desc: 'The time (as in time of day) at which the sleep timer will end.',
       args: [],
     );
   }
 
   /// `Wait For (Minutes)`
-  String get STWaitFor {
+  String get sleepTimerWaitFor {
     return Intl.message(
       'Wait For (Minutes)',
-      name: 'STWaitFor',
+      name: 'sleepTimerWaitFor',
       desc: 'The time period the sleep timer will run for.',
       args: [],
     );
@@ -4587,11 +4607,11 @@ class S {
     );
   }
 
-  /// `Wi-Fi`
-  String get wifi {
+  /// `Welcome to Tsacdop!`
+  String get welcome {
     return Intl.message(
-      'Wi-Fi',
-      name: 'wifi',
+      'Welcome to Tsacdop!',
+      name: 'welcome',
       desc: '',
       args: [],
     );
@@ -4607,6 +4627,16 @@ class S {
       name: 'weeksCount',
       desc: '',
       args: [count],
+    );
+  }
+
+  /// `Wi-Fi`
+  String get wifi {
+    return Intl.message(
+      'Wi-Fi',
+      name: 'wifi',
+      desc: '',
+      args: [],
     );
   }
 

@@ -52,7 +52,7 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m11(service) => "${service} ile bağlantı kur";
 
-  static String m33(filePath) => "${filePath} adresindeki yerel bölüm";
+  static String m34(filePath) => "${filePath} adresindeki yerel bölüm";
 
   static String m1(userName) => "${userName} olarak giriş yapıldı";
 
@@ -62,7 +62,7 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m13(count) =>
       "${Intl.plural(count, zero: '0 dk', one: '${count} dk', other: '${count} dk')}";
 
-  static String m34(count) =>
+  static String m35(count) =>
       "${Intl.plural(count, zero: '${count} ay', one: '${count} ay', other: '${count} ay')}";
 
   static String m14(title) => "Bilgiler toplanıyor ${title}";
@@ -107,10 +107,10 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m31(version) => "Version: ${version}";
 
-  static String m36(count) =>
+  static String m37(count) =>
       "${Intl.plural(count, zero: '${count} hafta', one: '${count} hafta', other: '${count} hafta')}";
 
-  static String m37(count) =>
+  static String m38(count) =>
       "${Intl.plural(count, zero: '${count} yıl', one: '${count} yıl', other: '${count} yıl')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
@@ -298,7 +298,7 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Tüm Seçilenleri Yükle"),
         "loadMore": MessageLookupByLibrary.simpleMessage("Daha fazla göster"),
         "loading": MessageLookupByLibrary.simpleMessage("Yükleniyor"),
-        "localEpisodeDescription": m33,
+        "localEpisodeDescription": m34,
         "localFolder": MessageLookupByLibrary.simpleMessage("Yerel Klasör"),
         "localFolderDescription": MessageLookupByLibrary.simpleMessage(
             "İçeri alınmış yerel ses dosyalarını toplayan kukla podcast."),
@@ -328,7 +328,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "minsAgo": m12,
         "minsCount": m13,
         "mobileData": MessageLookupByLibrary.simpleMessage("Mobil Veri"),
-        "monthsCount": m34,
+        "monthsCount": m35,
         "moreOptions": MessageLookupByLibrary.simpleMessage("Daha Çok Seçenek"),
         "network": MessageLookupByLibrary.simpleMessage("Bağlantı"),
         "networkErrorDNS":
@@ -832,8 +832,8 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Kullanıcı adı gerekli"),
         "version": m31,
         "vpn": MessageLookupByLibrary.simpleMessage("VPN"),
-        "weeksCount": m36,
+        "weeksCount": m37,
         "wifi": MessageLookupByLibrary.simpleMessage("Wi-Fi"),
-        "yearsCount": m37
+        "yearsCount": m38
       };
 }

@@ -80,6 +80,9 @@ class PodcastState extends ChangeNotifier {
       _remotePodcastMap[id] ??
       (deletedIds.contains(id) ? _podcastMap[id]! : _podcastMap[id]!);
 
+  /// Number of cached local podcasts.
+  int get podcastCount => _podcastMap.length;
+
   /// Flips to indicate some podcast property changed.
   bool podcastChange = false; // TODO: This doesn't update on sync'n stuff
 
@@ -105,7 +108,7 @@ class PodcastState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Ensures the group with the given id is cached.
+  /// Ensures that all podcasts are cached.
   Future<void> cacheAllPodcasts() async {
     await getPodcasts();
   }

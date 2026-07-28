@@ -217,6 +217,10 @@
       "time": {}
     }
   },
+  "getStarted": "Get started",
+  "@getStarted": {},
+  "getStartedDes": "Tap {icon} to search podcasts",
+  "@getStartedDes": {},
   "globallyDisabled": "Globally disabled",
   "@globallyDisabled": {
     "description": "Indicates that a granular setting was disabled globally"
@@ -994,12 +998,12 @@
   "@sortBy": {},
   "sortOrder": "Sort Order",
   "@sortOrder": {},
-  "STExpireAt": "Expire At",
-  "@STExpireAt": {
+  "sleepTimerExpireAt": "Expire At",
+  "@sleepTimerExpireAt": {
     "description": "The time (as in time of day) at which the sleep timer will end."
   },
-  "STWaitFor": "Wait For (Minutes)",
-  "@STWaitFor": {
+  "sleepTimerWaitFor": "Wait For (Minutes)",
+  "@sleepTimerWaitFor": {
     "description": "The time period the sleep timer will run for."
   },
   "status": "Status",
@@ -1123,10 +1127,12 @@
   },
   "vpn": "VPN",
   "@vpn": {},
-  "wifi": "Wi-Fi",
-  "@wifi": {},
+  "welcome": "Welcome to Tsacdop!",
+  "@welcome": {},
   "weeksCount": "{count, plural, zero{{count} weeks} one{{count} week} other{{count} weeks}}",
   "@weeksCount": {},
+  "wifi": "Wi-Fi",
+  "@wifi": {},
   "yearsCount": "{count, plural, zero{{count} years} one{{count} year} other{{count} years}}",
   "@yearsCount": {}
 }

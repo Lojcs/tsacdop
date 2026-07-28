@@ -41,12 +41,14 @@ Future<ColorScheme> getColorSchemeFromPlatform(
   if (Platform.isAndroid) {
     final palette = await DynamicColorPlugin.getCorePalette();
     scheme = palette?.toColorScheme(brightness: brightness.brightness);
+    if (scheme != null && brightness == .black) {
+      scheme = scheme.copyWith(surface: Colors.black);
+    }
   }
   if (scheme == null) {
     final color = await DynamicColorPlugin.getAccentColor();
     scheme = getColorSchemeFromSeed(color ?? fallback, brightness);
   }
-  if (brightness == .black) scheme.copyWith(surface: Colors.black);
   return scheme;
 }
 
