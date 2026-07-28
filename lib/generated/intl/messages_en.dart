@@ -798,6 +798,10 @@ class MessageLookup extends MessageLookupByLibrary {
         "to": m29,
         "toastAddPlaylist":
             MessageLookupByLibrary.simpleMessage("Added to playlist"),
+        "toastBackupRestoreFailure":
+            MessageLookupByLibrary.simpleMessage("Backup restoration failed!"),
+        "toastBackupRestoreSuccess": MessageLookupByLibrary.simpleMessage(
+            "Backup restoration successful!"),
         "toastDiscovery": MessageLookupByLibrary.simpleMessage(
             "Discovery feature reenabled, please reopen the app"),
         "toastFileError": MessageLookupByLibrary.simpleMessage(

@@ -712,7 +712,7 @@ class SettingsActionButton extends StatelessWidget {
     if (context.trueBlack) {
       return IconTheme(
         data: IconThemeData(
-          color: context.trueBlack ? cardColorScheme.saturated : null,
+          color: context.trueBlack ? cardColorScheme.colorScheme.primary : null,
         ),
         child: child,
       );

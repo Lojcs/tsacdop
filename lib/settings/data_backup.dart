@@ -144,10 +144,25 @@ class DataBackup extends StatelessWidget {
                           type: FileType.any,
                         );
                         if (filePickResult != null && context.mounted) {
-                          context.settingState.restore(
-                            File(filePickResult.files.first.path!),
-                            prefCategories,
-                          );
+                          final restoreResult = await context.settingState
+                              .restore(
+                                File(filePickResult.files.first.path!),
+                                prefCategories,
+                                settingsPasswordController.text != ""
+                                    ? settingsPasswordController.text
+                                    : null,
+                              );
+                          if (restoreResult) {
+                            await Fluttertoast.showToast(
+                              msg: s.toastBackupRestoreSuccess,
+                              gravity: ToastGravity.BOTTOM,
+                            );
+                          } else {
+                            await Fluttertoast.showToast(
+                              msg: s.toastBackupRestoreFailure,
+                              gravity: ToastGravity.BOTTOM,
+                            );
+                          }
                         }
                       }
                     },
@@ -248,10 +263,22 @@ class DataBackup extends StatelessWidget {
                       type: FileType.any,
                     );
                     if (filePickResult != null && context.mounted) {
-                      context.settingState.restoreLegacy(
-                        File(filePickResult.files.first.path!),
-                        prefCategories,
-                      );
+                      final restoreResult = await context.settingState
+                          .restoreLegacy(
+                            File(filePickResult.files.first.path!),
+                            prefCategories,
+                          );
+                      if (restoreResult) {
+                        await Fluttertoast.showToast(
+                          msg: s.toastBackupRestoreSuccess,
+                          gravity: ToastGravity.BOTTOM,
+                        );
+                      } else {
+                        await Fluttertoast.showToast(
+                          msg: s.toastBackupRestoreFailure,
+                          gravity: ToastGravity.BOTTOM,
+                        );
+                      }
                     }
                   }
                 },
@@ -314,7 +341,13 @@ class DataBackup extends StatelessWidget {
                     onPressed: () async {
                       var file = await datedSaveFile(context, "database");
                       if (file != null && context.mounted) {
-                        await DBHelper().backup(file, databaseCategories);
+                        await DBHelper().backup(
+                          file,
+                          databaseCategories,
+                          databasePasswordController.text != ""
+                              ? databasePasswordController.text
+                              : null,
+                        );
                         await saveExternalFile(file);
                       }
                     },
@@ -326,7 +359,13 @@ class DataBackup extends StatelessWidget {
                     onPressed: () async {
                       var file = await datedSaveFile(context, "database");
                       if (file != null && context.mounted) {
-                        await DBHelper().backup(file, databaseCategories);
+                        await DBHelper().backup(
+                          file,
+                          databaseCategories,
+                          databasePasswordController.text != ""
+                              ? databasePasswordController.text
+                              : null,
+                        );
                         await shareFile(file);
                       }
                     },
@@ -348,10 +387,24 @@ class DataBackup extends StatelessWidget {
                           type: FileType.any,
                         );
                         if (filePickResult != null && context.mounted) {
-                          await DBHelper().restore(
+                          final restoreResult = await DBHelper().restore(
                             File(filePickResult.files.first.path!),
                             databaseCategories,
+                            databasePasswordController.text != ""
+                                ? databasePasswordController.text
+                                : null,
                           );
+                          if (restoreResult) {
+                            await Fluttertoast.showToast(
+                              msg: s.toastBackupRestoreSuccess,
+                              gravity: ToastGravity.BOTTOM,
+                            );
+                          } else {
+                            await Fluttertoast.showToast(
+                              msg: s.toastBackupRestoreFailure,
+                              gravity: ToastGravity.BOTTOM,
+                            );
+                          }
                         }
                       }
                     },

@@ -233,9 +233,9 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
 
   Future<void> backup(
     File backupFile,
-    Set<PreferenceCategory> prefClasses, [
+    Set<PreferenceCategory> prefClasses,
     String? password,
-  ]) async {
+  ) async {
     final settingsBackup = SettingsBackup(backupFile, password);
     await settingsBackup.ready;
     final prefSet = PreferenceCategory.getPrefSet(prefClasses);
@@ -246,31 +246,41 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
     await settingsBackup.save();
   }
 
-  Future<void> restore(
+  Future<bool> restore(
     File backupFile,
-    Set<PreferenceCategory> prefClasses, [
+    Set<PreferenceCategory> prefClasses,
     String? password,
-  ]) async {
+  ) async {
     final settingsBackup = SettingsBackup(backupFile, password);
     await settingsBackup.ready;
     final prefSet = PreferenceCategory.getPrefSet(prefClasses);
-    await settingsBackup.load();
-    for (var pref in prefSet) {
-      final backupValue = settingsBackup.getPref(pref).get();
-      getPref(pref).set(backupValue);
+    try {
+      await settingsBackup.load();
+      for (var pref in prefSet) {
+        final backupValue = settingsBackup.getPref(pref).get();
+        await getPref(pref).set(backupValue);
+      }
+      return true;
+    } catch (e) {
+      return false;
     }
   }
 
-  Future<void> restoreLegacy(
+  Future<bool> restoreLegacy(
     File backupFile,
     Set<PreferenceCategory> prefClasses,
   ) async {
-    var data = await backupFile.readAsString();
-    legacyBackend = KeyValueStorage.withBackend(
-      LegacyBackupPreferences(json.decode(data)),
-    );
-    await _migrateSettings(prefClasses);
-    legacyBackend = KeyValueStorage();
+    try {
+      var data = await backupFile.readAsString();
+      legacyBackend = KeyValueStorage.withBackend(
+        LegacyBackupPreferences(json.decode(data)),
+      );
+      await _migrateSettings(prefClasses);
+      legacyBackend = KeyValueStorage();
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   Future<void> reset(Set<PreferenceCategory> prefClasses) async {

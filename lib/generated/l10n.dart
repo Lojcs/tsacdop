@@ -4403,6 +4403,26 @@ class S {
     );
   }
 
+  /// `Backup restoration failed!`
+  String get toastBackupRestoreFailure {
+    return Intl.message(
+      'Backup restoration failed!',
+      name: 'toastBackupRestoreFailure',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Backup restoration successful!`
+  String get toastBackupRestoreSuccess {
+    return Intl.message(
+      'Backup restoration successful!',
+      name: 'toastBackupRestoreSuccess',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Discovery feature reenabled, please reopen the app`
   String get toastDiscovery {
     return Intl.message(

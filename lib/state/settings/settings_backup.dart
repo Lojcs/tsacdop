@@ -20,7 +20,7 @@ class SettingsBackup extends TsacdopSettings<BackupPreferences> {
   Future<void> init() async {}
 
   Future<void> load() async {
-    String serial;
+    String? serial;
     if (password != null) {
       final data = await decryptWithPassword(
         await backupFile.readAsBytes(),
@@ -86,7 +86,8 @@ class BackupPreferences implements SharedPreferencesWithCache {
   @override
   String? getString(String key) => prefs[key] as String?;
   @override
-  List<String>? getStringList(String key) => List<String>.from(prefs[key]);
+  List<String>? getStringList(String key) =>
+      prefs[key] == null ? null : List<String>.from(prefs[key]);
   @override
   Set<String> get keys => prefs.keys.toSet();
   @override

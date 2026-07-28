@@ -459,9 +459,9 @@ class DBHelper {
   /// Backs up database tables to the file.
   Future<void> backup(
     File backupFile,
-    Set<DatabaseCategory> tableCategories, [
+    Set<DatabaseCategory> tableCategories,
     String? password,
-  ]) async {
+  ) async {
     var documentsDirectory = await getDatabasesPath();
     var path = join(documentsDirectory, "backup.db");
     final tables = tableCategories.expand((e) => e.keptTables).toList();
@@ -485,33 +485,38 @@ class DBHelper {
   }
 
   /// Wipes the tables and restores them from the file.
-  Future<void> restore(
+  Future<bool> restore(
     File backupFile,
-    Set<DatabaseCategory> tableCategories, [
+    Set<DatabaseCategory> tableCategories,
     String? password,
-  ]) async {
-    var documentsDirectory = await getDatabasesPath();
-    var path = join(documentsDirectory, "backup.db");
-    if (password != null) {
-      final encrypted = await backupFile.readAsBytes();
-      final data = await decryptWithPassword(encrypted, password);
-      File(path).writeAsBytes(data);
-    } else {
-      File(backupFile.path).copy(path);
-    }
-    final tables = tableCategories.expand((e) => e.keptTables).toList();
-    var dbClient = await database;
-    await dbClient.execute("ATTACH DATABASE ? AS backup", [path]);
-    await dbClient.transaction((txn) async {
-      for (var table in tables) {
-        await txn.rawDelete("DELETE FROM main.$table");
-        await txn.rawInsert(
-          "INSERT INTO TABLE main.$table SELECT * FROM backup.$table",
-        );
+  ) async {
+    try {
+      var documentsDirectory = await getDatabasesPath();
+      var path = join(documentsDirectory, "backup.db");
+      if (password != null) {
+        final encrypted = await backupFile.readAsBytes();
+        final data = await decryptWithPassword(encrypted, password);
+        File(path).writeAsBytes(data);
+      } else {
+        File(backupFile.path).copy(path);
       }
-      await deleteDangling(txn);
-    });
-    await dbClient.execute("DETACH DATABASE backup");
+      final tables = tableCategories.expand((e) => e.keptTables).toList();
+      var dbClient = await database;
+      await dbClient.execute("ATTACH DATABASE ? AS backup", [path]);
+      await dbClient.transaction((txn) async {
+        for (var table in tables) {
+          await txn.rawDelete("DELETE FROM main.$table");
+          await txn.rawInsert(
+            "INSERT INTO TABLE main.$table SELECT * FROM backup.$table",
+          );
+        }
+        await deleteDangling(txn);
+      });
+      await dbClient.execute("DETACH DATABASE backup");
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   /// Wipes the tables.

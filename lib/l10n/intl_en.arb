@@ -1071,6 +1071,10 @@
   },
   "toastAddPlaylist": "Added to playlist",
   "@toastAddPlaylist": {},
+  "toastBackupRestoreFailure": "Backup restoration failed!",
+  "@toastBackupRestoreFailure": {},
+  "toastBackupRestoreSuccess": "Backup restoration successful!",
+  "@toastBackupRestoreSuccess": {},
   "toastDiscovery": "Discovery feature reenabled, please reopen the app",
   "@toastDiscovery": {
     "description": "Toast displayed when user tap Discovery Features Again in settings page."
