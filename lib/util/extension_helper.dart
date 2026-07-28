@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer' as developer;
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -367,3 +368,14 @@ extension ColorExtension on Color {
 //     return Color.lerp(this.secondaryContainer, this.primary, 0.00)!;
 //   }
 // }
+
+extension DirectoryExtension on Directory {
+  Future<int> getSize() async {
+    var size = (await stat()).size;
+    final children = await list(recursive: true, followLinks: false).toList();
+    for (var item in children) {
+      size += (await item.stat()).size;
+    }
+    return size;
+  }
+}

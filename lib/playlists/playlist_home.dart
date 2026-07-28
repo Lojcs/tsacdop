@@ -1018,7 +1018,7 @@ class _NewPlaylistState extends State<_NewPlaylist> {
         );
       }
       final localPodcast = PodcastBrief.localFolder(s, dir);
-      await _dbHelper.savePodcastLocal(localPodcast);
+      await _dbHelper.savePodcastLocal(localPodcast, false);
     }
     final episodeIds = <int>[];
     if (dirPath != null) {

@@ -1303,20 +1303,21 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                         await selectionController.getEpisodesLimitless();
                         selectedEpisodeIds =
                             selectionController.selectedEpisodes;
+                        final origDownloaded = downloaded;
                         downloaded = value;
                         if (context.mounted) {
                           if (value!) {
-                            await context.downloadState.manualDownload(
-                              context,
-                              selectedEpisodeIds,
-                              onSuccess: () {
-                                // TODO: Make the icon reflect this
-                                Fluttertoast.showToast(
-                                  msg: context.s.downloading,
-                                  gravity: ToastGravity.BOTTOM,
-                                );
-                              },
-                            );
+                            final started = await context.downloadState
+                                .manualDownload(context, selectedEpisodeIds);
+                            if (started) {
+                              // TODO: Make the icon reflect this
+                              Fluttertoast.showToast(
+                                msg: context.s.downloading,
+                                gravity: ToastGravity.BOTTOM,
+                              );
+                            } else {
+                              downloaded = origDownloaded;
+                            }
                           } else {
                             List<Future<void>> futures = [];
                             for (var episode in selectedEpisodeIds) {

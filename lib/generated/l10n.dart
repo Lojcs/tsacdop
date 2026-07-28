@@ -50,10 +50,10 @@ class S {
     return Localizations.of<S>(context, S);
   }
 
-  /// `Tsacdop is a elegant and customizable podcast player built with Flutter.`
+  /// `Tsacdop is an elegant and customizable podcast player built with Flutter.`
   String get aboutDes {
     return Intl.message(
-      'Tsacdop is a elegant and customizable podcast player built with Flutter.',
+      'Tsacdop is an elegant and customizable podcast player built with Flutter.',
       name: 'aboutDes',
       desc: '',
       args: [],
@@ -2661,21 +2661,41 @@ class S {
     );
   }
 
-  /// `Auto download`
+  /// `Global auto download`
   String get settingsAutoDownload {
     return Intl.message(
-      'Auto download',
+      'Global auto download',
       name: 'settingsAutoDownload',
       desc: '',
       args: [],
     );
   }
 
-  /// `Download episodes marked new after sync.`
+  /// `Download episodes marked new after sync if the podcast has auto download turned on.`
   String get settingsAutoDownloadDes {
     return Intl.message(
-      'Download episodes marked new after sync.',
+      'Download episodes marked new after sync if the podcast has auto download turned on.',
       name: 'settingsAutoDownloadDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Default auto download`
+  String get settingsAutoDownloadNewPodcast {
+    return Intl.message(
+      'Default auto download',
+      name: 'settingsAutoDownloadNewPodcast',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Auto download setting value for newly subscribed podcasts.`
+  String get settingsAutoDownloadNewPodcastDes {
+    return Intl.message(
+      'Auto download setting value for newly subscribed podcasts.',
+      name: 'settingsAutoDownloadNewPodcastDes',
       desc: '',
       args: [],
     );
@@ -3062,10 +3082,10 @@ class S {
     );
   }
 
-  /// `If approved, downloads will be temporarily allowed on all connections.`
+  /// `If not approved, the download will not be started.`
   String get settingsDownloadAskOnForbiddenDes {
     return Intl.message(
-      'If approved, downloads will be temporarily allowed on all connections.',
+      'If not approved, the download will not be started.',
       name: 'settingsDownloadAskOnForbiddenDes',
       desc: '',
       args: [],

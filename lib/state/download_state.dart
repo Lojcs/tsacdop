@@ -15,6 +15,7 @@ import '../local_storage/sqflite_localpodcast.dart';
 import '../type/episode_task.dart';
 import '../type/episodebrief.dart';
 import '../util/extension_helper.dart';
+import '../util/helpers.dart';
 import '../widgets/general_dialog.dart';
 import 'episode_state.dart';
 import 'settings/setting_state.dart';
@@ -47,7 +48,6 @@ class DownloadState extends ChangeNotifier {
   Completer downloadsComplete = Completer();
   final bool background;
   bool initDone = false;
-  bool downloadWarningApproved = false;
 
   late StreamSubscription<dynamic> _downloaderStream;
   late StreamSubscription<List<ConnectivityResult>> _connectivityStream;
@@ -142,7 +142,7 @@ class DownloadState extends ChangeNotifier {
       await _loadTasks();
       await _bindBackgroundIsolate();
       await _startNetworkListener();
-      await _autoDelete();
+      await autoDelete();
       initDone = true;
       notifyListeners();
     }
@@ -161,7 +161,6 @@ class DownloadState extends ChangeNotifier {
   void notifyListeners() {
     if (initDone) {
       if (_ongoingEpisodeTasks.isEmpty) {
-        downloadWarningApproved = false;
         if (!downloadsComplete.isCompleted) downloadsComplete.complete();
       } else {
         downloadsComplete = Completer();
@@ -174,15 +173,15 @@ class DownloadState extends ChangeNotifier {
   /// auto download on mobile data setting is disabled.
   /// If accepted enables mobile data downloading until all downloads
   /// are finished or app restarts.
-  Future<void> manualDownload(
+  Future<bool> manualDownload(
     BuildContext context,
-    List<int> episodeIds, {
-    VoidCallback? onSuccess,
-  }) async {
+    List<int> episodeIds,
+  ) async {
     final s = context.s;
     final forbidden = await _isConnectionForbidden();
     var showWarning = _settingState.downloadAskOnForbidden.get() && forbidden;
-    if (!downloadWarningApproved && showWarning && context.mounted) {
+    bool downloadWarningApproved = false;
+    if (showWarning && context.mounted) {
       await generalDialog(
         context,
         title: Text(s.cellularConfirm),
@@ -215,9 +214,9 @@ class DownloadState extends ChangeNotifier {
           gravity: ToastGravity.BOTTOM,
         );
       }
-      if (onSuccess != null) {
-        onSuccess();
-      }
+      return true;
+    } else {
+      return false;
     }
   }
 
@@ -301,6 +300,7 @@ class DownloadState extends ChangeNotifier {
       await _episodeState.cacheEpisodes([episodeId]);
       await _episodeState.unsetDownloaded(episodeId);
     }
+    listsUpdate++;
     notifyListeners();
   }
 
@@ -452,7 +452,7 @@ class DownloadState extends ChangeNotifier {
 
   /// Deletes old downloads.
   /// Uses dbHelper directly as caching is done during removal if needed.
-  Future<void> _autoDelete() async {
+  Future<void> autoDelete() async {
     developer.log('Start to auto delete outdated episodes');
     var deleteAfterTime = _settingState.autoDeleteAfterTime.get();
     final deletePlayed = _settingState.autoDeleteAfterPlayed.get();
@@ -477,8 +477,8 @@ class DownloadState extends ChangeNotifier {
     }
     if (deleteIfLargerThan != 0) {
       final dir = _settingState.downloadStoragePath.get();
-      final stat = await Directory(dir).stat();
-      var excess = stat.size - deleteIfLargerThan;
+      final size = await Directory(dir).getSize();
+      var excess = size - deleteIfLargerThan;
       if (excess > 0) {
         final oldDownloads = await _dbHelper.getEpisodes(
           filterDownloaded: true,
@@ -524,15 +524,13 @@ class DownloadState extends ChangeNotifier {
     if (pauseAndResume) {
       final forbidden = await _isConnectionForbidden(connectivity);
       if (forbidden) {
-        if (!downloadWarningApproved) {
-          for (var episodeTask in _ongoingEpisodeTasks.values) {
-            pauseDownload(episodeTask.episodeId);
-          }
+        for (var episodeTask in _ongoingEpisodeTasks.values) {
+          await pauseDownload(episodeTask.episodeId);
         }
       } else {
         for (var episodeTask in _otherEpisodeTasks.values) {
           if (episodeTask.status == DownloadTaskStatus.paused) {
-            resumeDownload(episodeTask.episodeId);
+            await resumeDownload(episodeTask.episodeId);
           }
         }
       }

@@ -16,7 +16,7 @@ import 'history.dart';
 import 'interface.dart';
 import 'playback.dart';
 import 'settings_widgets.dart';
-import 'storage.dart';
+import 'downloads.dart';
 import 'syncing.dart';
 import 'appearance.dart';
 

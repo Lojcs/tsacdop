@@ -43,7 +43,7 @@ class AboutApp extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                Image(image: AssetImage('assets/logo.png'), height: 80),
+                Image.asset("assets/logo.png", height: 80),
                 Text(s.version(version)),
               ],
             ),

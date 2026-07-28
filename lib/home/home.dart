@@ -116,12 +116,14 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
             canPop:
                 // !(_playerKey.currentState != null &&
                 //     _playerKey.currentState!.size! > 100) &&
+                controller.index == controller.length - 1 ||
                 !selectionControllers![controller.index].selectMode,
             onPopInvokedWithResult: (_, __) {
               if (_playerKey.currentState != null &&
                   _playerKey.currentState!.size! > 100) {
                 _playerKey.currentState!.backToMini();
-              } else if (selectionControllers![controller.index].selectMode) {
+              } else if (controller.index != controller.length &&
+                  selectionControllers![controller.index].selectMode) {
                 selectionControllers![controller.index].selectMode = false;
               } else if (Platform.isAndroid) {
                 // _androidAppRetain

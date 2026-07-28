@@ -216,18 +216,18 @@ class _ActionBarButtonState extends State<ActionBarButton>
           state = true;
           break;
       }
-      Future.microtask(() {
-        if (active && !animationController.isCompleted) {
-          animationController.forward();
-          expand(true);
-        } else if (!active &&
-            !(animationController.status == AnimationStatus.reverse ||
-                animationController.value == 0)) {
-          animationController.reverse();
-          expand(false);
-        }
-      }); // This is in a microtask since it sets state during build
     }
+    Future.microtask(() {
+      if (active && !animationController.isCompleted) {
+        animationController.forward();
+        expand(true);
+      } else if (!active &&
+          !(animationController.status == AnimationStatus.reverse ||
+              animationController.value == 0)) {
+        animationController.reverse();
+        expand(false);
+      }
+    }); // This is in a microtask since it sets state during build
   }
 
   @override

@@ -337,7 +337,10 @@ class PodcastState extends ChangeNotifier {
       var (podcastLocal, episodesLocal) = await Isolater(
         _persistFeed,
       ).run((podcastRemote, episodesRemote));
-      await _dbHelper.savePodcastLocal(podcastLocal);
+      await _dbHelper.savePodcastLocal(
+        podcastLocal,
+        _settingState.newPodcastAutoDownload.get(),
+      );
       if (episodesLocal.isNotEmpty) {
         await _dbHelper.saveNewPodcastEpisodes(episodesLocal, _settingState);
       }
@@ -386,7 +389,10 @@ class PodcastState extends ChangeNotifier {
         var (podcastLocal, episodesLocal) = await Isolater(
           _persistFeed,
         ).run((podcast, episodes));
-        await _dbHelper.savePodcastLocal(podcastLocal);
+        await _dbHelper.savePodcastLocal(
+          podcastLocal,
+          settings.newPodcastAutoDownload.get(),
+        );
         if (episodesLocal.isNotEmpty) {
           await _dbHelper.saveNewPodcastEpisodes(episodesLocal, settings);
         }
@@ -559,12 +565,12 @@ class PodcastState extends ChangeNotifier {
       }
 
       if (podcast.autoDownload) {
-        final savedEpisodes = await _dbHelper.getEpisodes(
+        final savedEpisodes = await eState.getEpisodes(
           podcastIds: [podcastId],
           filterNew: true,
           filterDownloaded: false,
         );
-        await startAutoDownload(savedEpisodes);
+        await startAutoDownload(savedEpisodes.map((e) => eState[e]).toList());
       }
       await settings.lastSyncTime.set(DateTime.now());
       notifyListeners();
@@ -586,6 +592,10 @@ class PodcastState extends ChangeNotifier {
       }
     }
     await Future.wait(futures);
+    final downloader = background
+        ? DownloadState(background: true)
+        : _downloadState;
+    await downloader.autoDelete();
     if (!kReleaseMode) {
       final dir = await getApplicationDocumentsDirectory();
       final logFile = File(path.join(dir.path, "syncLog.txt"));

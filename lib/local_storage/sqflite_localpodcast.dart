@@ -696,14 +696,18 @@ class DBHelper {
     return list.first['id'];
   }
 
-  Future<void> savePodcastLocal(PodcastBrief podcastLocal) async {
+  Future<void> savePodcastLocal(
+    PodcastBrief podcastLocal,
+    bool autoSync,
+  ) async {
     var milliseconds = DateTime.now().millisecondsSinceEpoch;
     var dbClient = await database;
     await dbClient.transaction((txn) async {
       await txn.rawInsert(
         """INSERT OR IGNORE INTO PodcastLocal (id, title, imageUrl, rssUrl, 
-          primaryColor, author, description, add_date, imagePath, provider, link, funding) 
-          VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+          primaryColor, author, description, add_date, imagePath, provider,
+          link, funding, auto_download) 
+          VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         [
           podcastLocal.id,
           podcastLocal.title,
@@ -717,6 +721,7 @@ class DBHelper {
           podcastLocal.provider,
           podcastLocal.webpage,
           jsonEncode(podcastLocal.funding),
+          autoSync,
         ],
       );
       if (podcastLocal.id != localFolderId) {

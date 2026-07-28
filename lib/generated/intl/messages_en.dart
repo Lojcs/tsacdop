@@ -119,7 +119,7 @@ class MessageLookup extends MessageLookupByLibrary {
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
         "aboutDes": MessageLookupByLibrary.simpleMessage(
-            "Tsacdop is a elegant and customizable podcast player built with Flutter."),
+            "Tsacdop is an elegant and customizable podcast player built with Flutter."),
         "add": MessageLookupByLibrary.simpleMessage("Add"),
         "addEpisodeGroup": m2,
         "addNewEpisodeAll": m3,
@@ -480,9 +480,14 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage(
                 "If total size of audio downloads exceeds this, the oldest downloads will be deleted."),
         "settingsAutoDownload":
-            MessageLookupByLibrary.simpleMessage("Auto download"),
+            MessageLookupByLibrary.simpleMessage("Global auto download"),
         "settingsAutoDownloadDes": MessageLookupByLibrary.simpleMessage(
-            "Download episodes marked new after sync."),
+            "Download episodes marked new after sync if the podcast has auto download turned on."),
+        "settingsAutoDownloadNewPodcast":
+            MessageLookupByLibrary.simpleMessage("Default auto download"),
+        "settingsAutoDownloadNewPodcastDes":
+            MessageLookupByLibrary.simpleMessage(
+                "Auto download setting value for newly subscribed podcasts."),
         "settingsAutoDownloadOnForbidden": MessageLookupByLibrary.simpleMessage(
             "Auto download on forbidden connections"),
         "settingsAutoDownloadOnForbiddenDes": MessageLookupByLibrary.simpleMessage(
@@ -564,8 +569,9 @@ class MessageLookup extends MessageLookupByLibrary {
             "Are you sure you want to reenable \"Discover Features\"?"),
         "settingsDownloadAskOnForbidden": MessageLookupByLibrary.simpleMessage(
             "Ask when starting download on a forbidden connection"),
-        "settingsDownloadAskOnForbiddenDes": MessageLookupByLibrary.simpleMessage(
-            "If approved, downloads will be temporarily allowed on all connections."),
+        "settingsDownloadAskOnForbiddenDes":
+            MessageLookupByLibrary.simpleMessage(
+                "If not approved, the download will not be started."),
         "settingsDownloadPosition":
             MessageLookupByLibrary.simpleMessage("Download position"),
         "settingsDownloads": MessageLookupByLibrary.simpleMessage("Downloads"),

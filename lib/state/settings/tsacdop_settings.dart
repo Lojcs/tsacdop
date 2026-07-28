@@ -647,6 +647,13 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     updateCallback: settingsChanged,
   );
 
+  late final newPodcastAutoDownload = BoolPreference(
+    backend,
+    key: 'newPodcastAutoDownloadEnabled',
+    defaultValue: false,
+    updateCallback: settingsChanged,
+  );
+
   final String unsetSentinel = "unset_sentinel";
 
   /// Path of downloads storage directory.

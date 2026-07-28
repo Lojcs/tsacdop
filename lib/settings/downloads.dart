@@ -23,6 +23,11 @@ class DownloadsSetting extends StatelessWidget {
               subtitle: s.settingsAutoDownloadDes,
               selector: (_, settings) => settings.autoDownload,
             ),
+            SettingsSwitchTile(
+              title: s.settingsAutoDownloadNewPodcast,
+              subtitle: s.settingsAutoDownloadNewPodcastDes,
+              selector: (_, settings) => settings.newPodcastAutoDownload,
+            ),
             SettingsRadioSheetTile(
               title: s.settingsDownloadPosition,
               selector: (_, settings) => settings.downloadStoragePath,
