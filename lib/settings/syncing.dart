@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../util/extension_helper.dart';
 import 'settings_widgets.dart';
@@ -25,6 +26,16 @@ class SyncingSetting extends StatelessWidget {
               type: .hours,
               canDisable: false,
             ),
+            if (!kReleaseMode)
+              SettingsTile(
+                title: "(Debug) Trigger background sync.",
+                onTap: (context) => context.settingState.debugSync(),
+              ),
+            if (!kReleaseMode)
+              SettingsTile(
+                title: "(Debug) Reset sync time.",
+                onTap: (context) => context.settingState.lastSyncTime.reset(),
+              ),
           ],
         ),
         SettingsSection(

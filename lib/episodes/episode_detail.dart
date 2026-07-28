@@ -405,6 +405,17 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                           color: context.error,
                         ),
                       ),
+                    Selector<EpisodeState, bool>(
+                      selector: (_, eState) => eState[episodeId].isNew,
+                      builder: (context, value, _) => value
+                          ? Text(
+                              context.s.newPlain,
+                              style: context.textTheme.bodyMedium!.copyWith(
+                                color: Colors.red,
+                              ),
+                            )
+                          : Center(),
+                    ),
                   ],
                 ),
               ),

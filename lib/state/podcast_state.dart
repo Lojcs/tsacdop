@@ -26,6 +26,7 @@ import '../util/helpers.dart';
 import 'download_state.dart';
 import 'episode_state.dart';
 import 'settings/setting_state.dart';
+import 'settings/tsacdop_settings.dart';
 
 const deletedPodcastId = "46e48103-06c7-4fe1-a0b1-68aa7205b7f0";
 
@@ -517,8 +518,16 @@ class PodcastState extends ChangeNotifier {
   /// Safe to call from the background.
   Future<int?> syncPodcast(String podcastId) async {
     dev.log("${DateTime.now()} - Syncing podcast with id: $podcastId");
-    final eState = background ? EpisodeState() : _episodeState;
-    final settings = background ? BackgroundSettingState() : _settingState;
+    EpisodeState eState;
+    TsacdopSettings settings;
+    if (background) {
+      settings = BackgroundSettingState();
+      eState = EpisodeState();
+      eState.settingState = settings;
+    } else {
+      settings = _settingState;
+      eState = _episodeState;
+    }
     await _cachePodcast(podcastId);
     final episodes = await eState.getEpisodes(podcastIds: [podcastId]);
     await eState.checkUnsetNew(episodes, syncing: true);

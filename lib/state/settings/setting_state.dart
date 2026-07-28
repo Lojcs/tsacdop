@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer' as dev;
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -19,6 +20,7 @@ void callbackDispatcher() {
       final pState = PodcastState(await getApplicationDocumentsDirectory());
       await pState.ready;
       await pState.syncAllPodcasts();
+      dev.log("${DateTime.now()} - Background sync finished.");
     } else if (task == "gpodder_sync") {}
     return Future.value(true);
   });
@@ -213,6 +215,13 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
     "update_podcasts",
     frequency: autoSyncInterval.get(),
     initialDelay: Duration(seconds: 10),
+    constraints: Constraints(networkType: NetworkType.connected),
+  );
+
+  Future<void> debugSync() => Workmanager().registerOneOffTask(
+    "2",
+    "update_podcasts",
+    initialDelay: Duration(seconds: 1),
     constraints: Constraints(networkType: NetworkType.connected),
   );
 

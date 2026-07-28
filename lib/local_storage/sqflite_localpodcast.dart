@@ -396,7 +396,6 @@ class DBHelper {
 
   Future<void> _v10Update(Database db) async {
     await db.execute("ALTER TABLE Episodes ADD interacted INTEGER DEFAULT 0");
-    await db.rawUpdate("UPDATE Episodes SET interacted = 1");
     await db.execute(
       "CREATE TABLE Playlists(id TEXT PRIMARY KEY, name TEXT, is_local INTEGER, is_queue INTEGER)",
     );
@@ -1285,7 +1284,8 @@ class DBHelper {
       E.milliseconds, E.description, E.number, E.duration, E.enclosure_length,
       E.downloaded, E.download_date, E.media_id, E.episode_image, P.imagePath,
       P.primaryColor, E.explicit, E.chapter_link, SUM(H.listen_time) as play_time,
-      E.is_new, E.display_version_id, P.skip_seconds, P.skip_seconds_end, E.liked""",
+      E.is_new, E.display_version_id, P.skip_seconds, P.skip_seconds_end, E.liked,
+      E.interacted""",
     ];
     List<String> filters = [];
     List arguments = [];
@@ -1491,6 +1491,7 @@ class DBHelper {
   }
 
   Future<void> removeEpisodesNewMark(List<int> ids) async {
+    if (ids.isEmpty) return;
     var dbClient = await database;
     await dbClient.transaction((txn) async {
       await txn.rawUpdate(
@@ -1501,6 +1502,7 @@ class DBHelper {
   }
 
   Future setLiked(List<int> ids) async {
+    if (ids.isEmpty) return;
     var dbClient = await database;
     var milliseconds = DateTime.now().millisecondsSinceEpoch;
     await dbClient.rawUpdate(
@@ -1510,6 +1512,7 @@ class DBHelper {
   }
 
   Future setUnliked(List<int> ids) async {
+    if (ids.isEmpty) return;
     var dbClient = await database;
     await dbClient.rawUpdate(
       "UPDATE Episodes SET liked = 0 WHERE id IN (${(", ?" * ids.length).substring(2)})",
@@ -1583,7 +1586,7 @@ class DBHelper {
         1;
     if (!hideNew && (update || settings.markNewAllowNewSubscription.get())) {
       List<String> stmnt = ["UPDATE Episodes SET is_new = 1 WHERE"];
-      List<String> filters = [" is_new = 1", " feed_id = ?"];
+      List<String> filters = [" is_new = 0", " feed_id = ?"];
       List<String> requirements = [];
       List arguments = [feedId];
       if (!settings.markNewAllowDuplicate.get()) {
@@ -1591,7 +1594,7 @@ class DBHelper {
       }
       var ageMax = settings.markNewRequireAgeMax.get();
       if (ageMax != Duration.zero) {
-        requirements.add(" milliseconds <= ?");
+        requirements.add(" milliseconds >= ?");
         arguments.add(DateTime.now().subtract(ageMax).millisecondsSinceEpoch);
       }
       if (settings.markNewRequireUnseen.get()) {
@@ -1601,7 +1604,9 @@ class DBHelper {
         arguments.addAll(newlyAddedEpisodeUrls);
       }
       var combinator = settings.markNewRequirementCombinator.get();
-      filters.add("(${requirements.join(combinator.sql)})");
+      if (requirements.isNotEmpty) {
+        filters.add("(${requirements.join(combinator.sql)})");
+      }
       stmnt.add(filters.join(" AND"));
       await txn.rawUpdate(stmnt.join(), arguments);
     }
@@ -1737,6 +1742,20 @@ class DBHelper {
     await dbClient.rawDelete(
       "DELETE FROM Playlist_Episode WHERE playlist_id = ?",
       [id],
+    );
+  }
+
+  /// Deletes the episodes (for debugging purposes).
+  Future<void> debugDeleteEpisodes(List<int> ids) async {
+    if (ids.isEmpty) return;
+    var dbClient = await database;
+    await dbClient.rawDelete(
+      "DELETE FROM Episodes WHERE id IN (${(", ?" * ids.length).substring(2)})",
+      ids,
+    );
+    await dbClient.rawDelete(
+      "DELETE FROM Playlist_Episode WHERE episode_id IN (${(", ?" * ids.length).substring(2)})",
+      ids,
     );
   }
 }

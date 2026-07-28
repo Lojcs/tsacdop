@@ -241,7 +241,7 @@ class InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
         await waitForAvatar;
         if (avatarHasFocus) return;
         if (context.mounted) {
-          context.episodeState.setInteracted(widget.episodeId);
+          await context.episodeState.setInteracted(widget.episodeId);
           if (selectable && selectionController!.selectMode) {
             selected = selectionController!.select(widget.index!);
             if (selected) {
@@ -257,9 +257,10 @@ class InteractiveEpisodeCardState extends State<InteractiveEpisodeCard>
           }
         }
       },
-      onShortTapHold: () {
+      onShortTapHold: () async {
         if (avatarHasFocus) return;
         if (selectable && !selected) {
+          await context.episodeState.setInteracted(widget.episodeId);
           _vibrateLongTap();
           if (!selectionController!.selectMode) {
             selectionController!.selectMode = true;

@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
+import '../local_storage/sqflite_localpodcast.dart';
 import '../util/selection_controller.dart';
 
 import '../home/audioplayer.dart';
@@ -1403,6 +1405,30 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
                       ),
                     ),
                   ),
+                  if (!kReleaseMode)
+                    ActionBarButton(
+                      state: secondRow,
+                      buttonType: ActionBarButtonType.onOff,
+                      onPressed: (value) async {
+                        SelectionController selectionController =
+                            Provider.of<SelectionController>(
+                              context,
+                              listen: false,
+                            );
+                        await selectionController.getEpisodesLimitless();
+                        selectedEpisodeIds =
+                            selectionController.selectedEpisodes;
+                        await DBHelper().debugDeleteEpisodes(
+                          selectedEpisodeIds,
+                        );
+                        selectionController.deselectAll();
+                      },
+                      tooltip: "(debug) Delete episodes.",
+                      child: Icon(
+                        Icons.delete_outline,
+                        color: context.actionBarIconColor,
+                      ),
+                    ),
                   Spacer(),
                   ActionBarButton(
                     state: secondRow,

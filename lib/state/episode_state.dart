@@ -12,12 +12,13 @@ import '../type/play_histroy.dart';
 import 'download_state.dart';
 import 'podcast_state.dart';
 import 'settings/setting_state.dart';
+import 'settings/tsacdop_settings.dart';
 
 /// Global class to manage [EpisodeBrief] field updates.
 class EpisodeState extends ChangeNotifier {
   final DBHelper _dbHelper = DBHelper();
 
-  late SettingState _settingState;
+  late TsacdopSettings _settingState;
   late AudioState _audioState;
   late DownloadState _downloadState;
   late PodcastState _podcastState;
@@ -29,6 +30,9 @@ class EpisodeState extends ChangeNotifier {
     _podcastState = context.podcastState;
     _background = false;
   }
+
+  /// Only use in background.
+  set settingState(TsacdopSettings settings) => _settingState = settings;
 
   bool get background => _background;
 
@@ -113,7 +117,7 @@ class EpisodeState extends ChangeNotifier {
     List<String>? customFilters,
     List<String>? customArguements,
   }) async {
-    _settingState.lastUsedTime.set(DateTime.now());
+    if (!background) _settingState.lastUsedTime.set(DateTime.now());
     List<EpisodeBrief> episodes = await _dbHelper.getEpisodes(
       podcastIds: podcastIds,
       excludedFeedIds: excludedFeedIds,
@@ -459,11 +463,11 @@ class EpisodeState extends ChangeNotifier {
     final episode = _episodeMap[id]!;
     if (!episode.isInteracted) {
       await _dbHelper.setInteracted(id);
-      await checkUnsetNew([id], syncing: false);
       changedIds.clear();
       _episodeMap[id] = _episodeMap[id]!.copyWith(isInteracted: true);
       changedIds.add(id);
       globalChange = !globalChange;
+      await checkUnsetNew([id], syncing: false);
       notifyListeners();
     }
   }

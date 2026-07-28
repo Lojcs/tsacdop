@@ -299,8 +299,14 @@ class _PodcastSettingState extends State<PodcastSetting> {
                   ),
                   TextButton(
                     onPressed: () async {
-                      await _pState.unsubscribePodcast(widget.podcastId);
-                      if (context.mounted) Navigator.of(context).pop();
+                      final pState = _pState;
+                      final nav = Navigator.of(context);
+                      nav.pop();
+                      nav.pop();
+                      Future.delayed(
+                        Duration(seconds: 1),
+                        () async => pState.unsubscribePodcast(widget.podcastId),
+                      );
                     },
                     child: Text(s.confirm, style: TextStyle(color: Colors.red)),
                   ),
