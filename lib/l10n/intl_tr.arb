@@ -97,7 +97,7 @@
     "filter": "Filtrele",
     "fonts": "Yazı tipleri",
     "fontStyle": "Yazı tipi stili",
-    "from": "{time} e kadar",
+    "from": "{time} 'dan",
     "@from": {
         "placeholders": {
             "time": {}
@@ -612,7 +612,7 @@
         "description": "Notify user that the change will take effect after app restart."
     },
     "searchInstructions": "Bir podcast'e abone olmak için rss akışı url'sini girin veya adı ile arama yapıp rss akışını açın.",
-    "sortOrder": "Sıralandırma Yönü",
+    "sortOrder": "Sıralama Yönü",
     "localEpisodeDescription": "{filePath} adresindeki yerel bölüm",
     "@localEpisodeDescription": {
         "placeholders": {
@@ -623,7 +623,7 @@
     "@publishDate": {
         "description": "Publish Date sort order"
     },
-    "sortBy": "Sıralandırma Ölçütü",
+    "sortBy": "Sıralama Ölçütü",
     "settingsDiscoveryDes": "\"Keşif Özellikleri\"ni yeniden açmak istediğinizden emin misiniz?",
     "selectMode": "Seçim Modu",
     "deleted": "Silindi",
@@ -684,8 +684,8 @@
         "description": "Settings item, displayed alongside a storage size picker. (in 100 MiBs)"
     },
     "settingsAutoDeleteOldestIfTotalAboveDes": "İndirilen ses dosyalarının toplam büyüklüğü bunu aşıyorsa, en eski indirilenler silinecektir.",
-    "settingsAutoDownload": "Otomatik indirme",
-    "settingsAutoDownloadDes": "Senkronizasyondan sonra yeni işaretli bölümleri indir.",
+    "settingsAutoDownload": "Küresel otomatik indirme",
+    "settingsAutoDownloadDes": "Eğer podcast'in otomatik indirmesi açıksa senkronizasyondan sonra yeni işaretli bölümlerini indir.",
     "settingsAutoDownloadOnForbidden": "Yasak bağlantılar üzerinden otomatik indir",
     "settingsAutoDownloadOnForbiddenDes": "Bu ayar kapalı ise, bağlantı yasak iken başlayan otomatik indirmeler anında duraklatılacaktır.",
     "settingsBackupCategories": "Kategoriler",
@@ -712,7 +712,7 @@
     "settingsDefaultFilterAndroidAuto": "Android Auto Filtreleri",
     "settingsDefaultFilterAndroidAutoDes": "Android Auto'da görünen kütüphaneye uygulanacak filtreler. Sadece ilk 108 madde gösterilecektir.",
     "settingsDownloadAskOnForbidden": "Yasaklı bir bağlantıda indirme başlatırken sor",
-    "settingsDownloadAskOnForbiddenDes": "Onaylanırsa, indirmelere geçici olarak tüm bağlantılarda izin verilir.",
+    "settingsDownloadAskOnForbiddenDes": "Onaylanmazsa, indirme başlamayacaktır.",
     "settingsDownloads": "İndirmeler",
     "settingsDownloadsDes": "Otomatik indirme, otomatik silme ve yasak bağlantılar",
     "settingsEpisodeManagement": "Bölüm Yönetimi",
@@ -788,5 +788,36 @@
     "vpn": "VPN",
     "wifi": "Wi-Fi",
     "weeksCount": "{count, plural, zero{{count} hafta} one{{count} hafta} other{{count} hafta}}",
-    "yearsCount": "{count, plural, zero{{count} yıl} one{{count} yıl} other{{count} yıl}}"
+    "yearsCount": "{count, plural, zero{{count} yıl} one{{count} yıl} other{{count} yıl}}",
+    "aboutDes": "Tsacdop, Flutter ile inşa edilmiş zarif ve özelleştirilebilir bir podcast oynatıcıdır.",
+    "contribute": "Katkıda bulun",
+    "developerOriginal": "Orijinal Geliştirici",
+    "getStarted": "Başlamak için",
+    "getStartedDes": "Podcast aramak için {icon}'a dokun",
+    "keepAndroidOpen": "Google, telefonunuza hangi uygulamaları yükleyebileceğinizi kontrol etmek istiyor.",
+    "keepAndroidOpenDes": "keepandroidopen.org'da daha fazla bilgi edinin ve sesinizi duyurun.",
+    "scheduleDisabled": "Program devre dışı.",
+    "scheduleTime": "Program: {start} - {end}",
+    "@scheduleTime": {
+        "description": "For example 'Schedule: 21:50 - 06:30'",
+        "placeholders": {
+            "start": {},
+            "end": {}
+        }
+    },
+    "settingsAutoDownloadNewPodcast": "Varsayılan otomatik indirme",
+    "settingsAutoDownloadNewPodcastDes": "Yeni abone olunan podcast'lar için varsayılan otomatik indirme ayarı.",
+    "sleepTimerExpireAt": "Bitme Zamanı",
+    "@sleepTimerExpireAt": {
+        "description": "The time (as in time of day) at which the sleep timer will end."
+    },
+    "sleepTimerWaitFor": "Bekleme Zamanı (Dakika)",
+    "@sleepTimerWaitFor": {
+        "description": "The time period the sleep timer will run for."
+    },
+    "suggestName": "Tsacdop-Fork için yeni bir isim öner!",
+    "toastBackupRestoreFailure": "Yedekleme geri yüklenemedi!",
+    "toastBackupRestoreSuccess": "Yedekleme geri yüklendi!",
+    "translate": "Çeviri yap",
+    "welcome": "Tsacdop'a hoş geldiniz!"
 }
