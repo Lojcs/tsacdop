@@ -45,20 +45,6 @@ class LanguagesSetting extends StatelessWidget {
             _langListTile(context, 'Türkçe', Locale('tr')),
             _langListTile(context, 'Ελληνικά', Locale('el')),
             Divider(height: 1),
-            ListTile(
-              onTap: () =>
-                  "https://hosted.weblate.org/projects/tsacdop-fork/".launchUrl,
-              contentPadding: const EdgeInsets.only(left: 20, right: 20),
-              dense: true,
-              title: Align(
-                alignment: Alignment.center,
-                child: Image(
-                  image: AssetImage('assets/weblate.png'),
-                  height: 40,
-                ),
-              ),
-              subtitle: Text(context.s.localizationWeblate, textAlign: .center),
-            ),
           ],
         ),
       ),

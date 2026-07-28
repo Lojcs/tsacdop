@@ -243,7 +243,7 @@ extension StateExtension on BuildContext {
 }
 
 extension StringExtension on String {
-  Future get launchUrl async {
+  Future<void> launchUrl() async {
     if (await canLaunchUrlString(this)) {
       await launchUrlString(this, mode: LaunchMode.externalApplication);
     } else {

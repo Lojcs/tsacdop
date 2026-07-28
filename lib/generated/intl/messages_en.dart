@@ -118,6 +118,8 @@ class MessageLookup extends MessageLookupByLibrary {
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
+        "aboutDes": MessageLookupByLibrary.simpleMessage(
+            "Tsacdop is a elegant and customizable podcast player built with Flutter."),
         "add": MessageLookupByLibrary.simpleMessage("Add"),
         "addEpisodeGroup": m2,
         "addNewEpisodeAll": m3,
@@ -149,6 +151,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "color": MessageLookupByLibrary.simpleMessage("color"),
         "confirm": MessageLookupByLibrary.simpleMessage("CONFIRM"),
         "confirmation": MessageLookupByLibrary.simpleMessage("Confirmation"),
+        "contribute": MessageLookupByLibrary.simpleMessage("Contribute"),
         "createNewPlaylist":
             MessageLookupByLibrary.simpleMessage("New playlist"),
         "darkMode": MessageLookupByLibrary.simpleMessage("Dark mode"),
@@ -169,6 +172,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "deselectAll": MessageLookupByLibrary.simpleMessage("Deselect All"),
         "details": MessageLookupByLibrary.simpleMessage("Details"),
         "developer": MessageLookupByLibrary.simpleMessage("Developer"),
+        "developerOriginal":
+            MessageLookupByLibrary.simpleMessage("Original Developer"),
         "deviceStorage": MessageLookupByLibrary.simpleMessage("Device Storage"),
         "disabled": MessageLookupByLibrary.simpleMessage("Disabled"),
         "dismiss": MessageLookupByLibrary.simpleMessage("Dismiss"),
@@ -775,6 +780,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "subscribeExportDes": MessageLookupByLibrary.simpleMessage(
             "Export OPML file of all podcasts"),
         "subscribed": MessageLookupByLibrary.simpleMessage("Subscribed"),
+        "suggestName": MessageLookupByLibrary.simpleMessage(
+            "Suggest a new name for Tsacdop-Fork!"),
         "sync": MessageLookupByLibrary.simpleMessage("Sync"),
         "syncFinished": MessageLookupByLibrary.simpleMessage("Sync finished"),
         "syncNow": MessageLookupByLibrary.simpleMessage("Sync now"),
@@ -811,6 +818,7 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Time is equal to end time"),
         "toastTimeEqualStart":
             MessageLookupByLibrary.simpleMessage("Time is equal to start time"),
+        "translate": MessageLookupByLibrary.simpleMessage("Translate"),
         "translators": MessageLookupByLibrary.simpleMessage("Translators"),
         "understood": MessageLookupByLibrary.simpleMessage("Understood"),
         "undo": MessageLookupByLibrary.simpleMessage("UNDO"),

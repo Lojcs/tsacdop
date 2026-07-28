@@ -50,6 +50,16 @@ class S {
     return Localizations.of<S>(context, S);
   }
 
+  /// `Tsacdop is a elegant and customizable podcast player built with Flutter.`
+  String get aboutDes {
+    return Intl.message(
+      'Tsacdop is a elegant and customizable podcast player built with Flutter.',
+      name: 'aboutDes',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Add`
   String get add {
     return Intl.message(
@@ -329,6 +339,16 @@ class S {
     );
   }
 
+  /// `Contribute`
+  String get contribute {
+    return Intl.message(
+      'Contribute',
+      name: 'contribute',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `New playlist`
   String get createNewPlaylist {
     return Intl.message(
@@ -470,7 +490,17 @@ class S {
     return Intl.message(
       'Developer',
       name: 'developer',
-      desc: 'Can also translate to About me',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Original Developer`
+  String get developerOriginal {
+    return Intl.message(
+      'Original Developer',
+      name: 'developerOriginal',
+      desc: '',
       args: [],
     );
   }
@@ -4252,6 +4282,16 @@ class S {
     );
   }
 
+  /// `Suggest a new name for Tsacdop-Fork!`
+  String get suggestName {
+    return Intl.message(
+      'Suggest a new name for Tsacdop-Fork!',
+      name: 'suggestName',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Sync`
   String get sync {
     return Intl.message(
@@ -4479,6 +4519,16 @@ class S {
     return Intl.message(
       'Translators',
       name: 'translators',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Translate`
+  String get translate {
+    return Intl.message(
+      'Translate',
+      name: 'translate',
       desc: '',
       args: [],
     );

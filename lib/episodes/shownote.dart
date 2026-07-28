@@ -44,7 +44,7 @@ class ShowNote extends StatelessWidget {
                       audio.seekTo(seconds! * 1000);
                     }
                   } else {
-                    url.launchUrl;
+                    url.launchUrl();
                   }
                 },
               ),

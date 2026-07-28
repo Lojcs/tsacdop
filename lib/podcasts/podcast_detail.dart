@@ -585,7 +585,7 @@ class HostsList extends StatelessWidget {
                   title: 'Link',
                   child: Icon(Icons.link, size: 30, color: Colors.white),
                   backgroundColor: Colors.green[600]!,
-                  onTap: () => pState[podcastId].webpage.launchUrl,
+                  onTap: pState[podcastId].webpage.launchUrl,
                 ),
                 _podcastLink(
                   context,
@@ -596,7 +596,7 @@ class HostsList extends StatelessWidget {
                     color: Colors.white,
                   ),
                   backgroundColor: Colors.blue[600]!,
-                  onTap: () => pState[podcastId].rssUrl.launchUrl,
+                  onTap: pState[podcastId].rssUrl.launchUrl,
                 ),
                 Selector<PodcastState, List<String>>(
                   selector: (_, pState) => pState[podcastId].funding,
@@ -615,7 +615,7 @@ class HostsList extends StatelessWidget {
                                     color: Colors.white,
                                   ),
                                   backgroundColor: Colors.red[600]!,
-                                  onTap: () => funding.launchUrl,
+                                  onTap: funding.launchUrl,
                                 ),
                               )
                               .toList(),
@@ -692,9 +692,7 @@ class HostsList extends StatelessWidget {
             builder: (context, data, _) => Linkify(
               text: data.$1,
               style: context.textTheme.bodyMedium,
-              onOpen: (link) {
-                link.url.launchUrl;
-              },
+              onOpen: (link) => link.url.launchUrl(),
               linkStyle: TextStyle(
                 color: data.$2,
                 decoration: TextDecoration.underline,

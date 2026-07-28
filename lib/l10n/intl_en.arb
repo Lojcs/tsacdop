@@ -1,5 +1,7 @@
 {
   "@@locale": "en",
+  "aboutDes": "Tsacdop is a elegant and customizable podcast player built with Flutter.",
+  "@aboutDes": {},
   "add": "Add",
   "@add": {
     "description": "Subscribe new podcast"
@@ -72,6 +74,8 @@
   "@confirm": {},
   "confirmation": "Confirmation",
   "@confirmation": {},
+  "contribute": "Contribute",
+  "@contribute": {},
   "createNewPlaylist": "New playlist",
   "@createNewPlaylist": {},
   "darkMode": "Dark mode",
@@ -103,9 +107,9 @@
   "details": "Details",
   "@details": {},
   "developer": "Developer",
-  "@developer": {
-    "description": "Can also translate to About me"
-  },
+  "@developer": {},
+  "developerOriginal": "Original Developer",
+  "@developerOriginal": {},
   "deviceStorage": "Device Storage",
   "@deviceStorage": {
     "description": "Refers to files stored on user's device."
@@ -1030,6 +1034,8 @@
   "@subscribed": {},
   "subscribeExportDes": "Export OPML file of all podcasts",
   "@subscribeExportDes": {},
+  "suggestName": "Suggest a new name for Tsacdop-Fork!",
+  "@suggestName": {},
   "sync": "Sync",
   "@sync": {},
   "syncFinished": "Sync finished",
@@ -1099,6 +1105,8 @@
   },
   "translators": "Translators",
   "@translators": {},
+  "translate": "Translate",
+  "@translate": {},
   "understood": "Understood",
   "@understood": {},
   "undo": "UNDO",

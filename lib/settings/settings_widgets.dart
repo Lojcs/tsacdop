@@ -63,17 +63,21 @@ class SettingsPage extends StatelessWidget {
 /// Section of settings items.
 class SettingsSection extends StatelessWidget {
   /// Title of the section.
-  final String title;
+  final String? title;
 
   /// Subtitle of the section.
   final String? subtitle;
+
+  /// Leading widget.
+  final Widget? leading;
 
   /// Items in the section.
   final List<Widget> items;
 
   const SettingsSection({
-    required this.title,
+    this.title,
     this.subtitle,
+    this.leading,
     required this.items,
     super.key,
   });
@@ -84,18 +88,21 @@ class SettingsSection extends StatelessWidget {
       padding: EdgeInsets.only(left: 20, right: 20),
       child: Column(
         children: [
-          ListTile(
-            minTileHeight: 30,
-            contentPadding: .symmetric(horizontal: 10),
-            title: Text(
-              title,
-              style: context.textTheme.titleMedium!.copyWith(
-                color: context.primaryColor,
-              ),
+          if (title != null || subtitle != null || leading != null)
+            ListTile(
+              minTileHeight: 30,
+              contentPadding: .symmetric(horizontal: 10),
+              title: title == null
+                  ? null
+                  : Text(
+                      title!,
+                      style: context.textTheme.titleMedium!.copyWith(
+                        color: context.primaryColor,
+                      ),
+                    ),
+              subtitle: subtitle == null ? null : Text(subtitle!),
+              leading: leading ?? SizedBox(),
             ),
-            subtitle: subtitle != null ? Text(subtitle!) : null,
-            leading: SizedBox(),
-          ),
           ...items,
         ],
       ),
@@ -549,12 +556,16 @@ class SettingsRadioSheetTile<T> extends SettingsValueSubtitleTile<T> {
   /// Options for the radio buttons.
   final Future<List<T>> Function(BuildContext context) getOptions;
 
+  /// Widget at the end of the sheet.
+  final Widget? sheetBody;
+
   const SettingsRadioSheetTile({
     required super.title,
     required super.selector,
     required super.valueToString,
     required this.getOptions,
     super.leading,
+    this.sheetBody,
     super.key,
   });
 
@@ -580,6 +591,7 @@ class SettingsRadioSheetTile<T> extends SettingsValueSubtitleTile<T> {
                     title: Text(valueToString(context, option)),
                     value: option,
                   ),
+                if (sheetBody != null) sheetBody!,
               ],
             ),
           ),

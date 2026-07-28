@@ -30,7 +30,7 @@ class Settings extends StatelessWidget {
     String url,
   ) => ListTile(
     onTap: () {
-      url.launchUrl;
+      url.launchUrl();
       Navigator.pop(context);
     },
     dense: true,
@@ -115,6 +115,26 @@ class Settings extends StatelessWidget {
               valueToString: (_, value) => localeNameOf(value),
               getOptions: (_) async => supportedLocales,
               leading: Icon(LineIcons.language, color: Colors.purpleAccent),
+              sheetBody: ListTile(
+                onTap: "https://hosted.weblate.org/projects/tsacdop-fork/"
+                    .launchUrl,
+                contentPadding: const EdgeInsets.only(left: 20, right: 20),
+                dense: true,
+                title: Align(
+                  alignment: Alignment.center,
+                  child: Image(
+                    image: AssetImage('assets/weblate.png'),
+                    height: 40,
+                  ),
+                ),
+                subtitle: Padding(
+                  padding: .only(top: 8),
+                  child: Text(
+                    context.s.localizationWeblate,
+                    textAlign: .center,
+                  ),
+                ),
+              ),
             ),
             SettingsTile(
               title: s.settingsBackup,
@@ -134,7 +154,7 @@ class Settings extends StatelessWidget {
               title: s.keepAndroidOpen,
               subtitle: s.keepAndroidOpenDes,
               leading: Icon(Icons.lock_outline, color: Colors.deepOrange[400]),
-              onTap: (_) => launchUrlString("https://keepandroidopen.org/"),
+              onTap: (_) => "https://keepandroidopen.org/".launchUrl(),
             ),
             SettingsTile(
               title: s.homeToprightMenuAbout,

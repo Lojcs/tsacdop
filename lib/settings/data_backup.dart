@@ -1059,7 +1059,7 @@ class __GpodderInfoState extends State<_GpodderInfo> {
                     },
                   ),
                   ListTile(
-                    onTap: () => _gpodderUrl.launchUrl,
+                    onTap: _gpodderUrl.launchUrl,
                     title: Text('Visit gpodder.net'),
                     subtitle: Text('Manage subscriptions online'),
                   ),

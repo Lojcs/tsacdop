@@ -48,7 +48,7 @@ class Libries extends StatelessWidget {
                     children: google.map<Widget>((e) {
                       return ListTile(
                         contentPadding: EdgeInsets.symmetric(horizontal: 80),
-                        onTap: () => e.link.launchUrl,
+                        onTap: e.link.launchUrl,
                         title: Text(e.name),
                         subtitle: Text(e.license),
                       );
@@ -69,7 +69,7 @@ class Libries extends StatelessWidget {
                     children: fonts.map<Widget>((e) {
                       return ListTile(
                         contentPadding: EdgeInsets.symmetric(horizontal: 80),
-                        onTap: () => e.link.launchUrl,
+                        onTap: e.link.launchUrl,
                         title: Text(e.name),
                         subtitle: Text(e.license),
                       );
@@ -90,7 +90,7 @@ class Libries extends StatelessWidget {
                     child: Column(
                       children: plugins.map<Widget>((e) {
                         return ListTile(
-                          onTap: () => e.link.launchUrl,
+                          onTap: e.link.launchUrl,
                           contentPadding: EdgeInsets.symmetric(horizontal: 80),
                           title: Text(e.name),
                           subtitle: Text(e.license),

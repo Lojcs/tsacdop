@@ -289,11 +289,27 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                                               final parts = text.split(
                                                 "\uFFFC",
                                               );
+                                              final icon = Icons.search;
                                               return Row(
                                                 mainAxisAlignment: .center,
                                                 children: [
                                                   Text(parts[0]),
-                                                  Icon(Icons.search),
+                                                  Text(
+                                                    String.fromCharCode(
+                                                      icon.codePoint,
+                                                    ),
+                                                    style: context
+                                                        .textTheme
+                                                        .titleLarge!
+                                                        .copyWith(
+                                                          fontFamily:
+                                                              icon.fontFamily,
+                                                          package:
+                                                              icon.fontPackage,
+                                                          fontFamilyFallback: icon
+                                                              .fontFamilyFallback,
+                                                        ),
+                                                  ),
                                                   Text(parts[1]),
                                                 ],
                                               );

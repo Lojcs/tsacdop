@@ -927,7 +927,7 @@ class _ChaptersWidgetState extends State<ChaptersWidget> {
                                 context.onPrimary.withValues(alpha: 0.3),
                               ),
                             ),
-                            onPressed: () => chapters.url!.launchUrl,
+                            onPressed: chapters.url!.launchUrl,
                             child: Text('Visit'),
                           ),
                         ],
