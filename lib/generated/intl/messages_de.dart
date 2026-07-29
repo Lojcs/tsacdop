@@ -154,8 +154,6 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Alle Podcasts"),
         "menuMarkAllListened":
             MessageLookupByLibrary.simpleMessage("Alle als gehört markieren"),
-        "settingsEnableSyncingDes": MessageLookupByLibrary.simpleMessage(
-            "Alle Podcasts im Hintergrund aktualisieren, um die neuesten Episoden zu erhalten"),
         "settingsMarkListenedSkipDes": MessageLookupByLibrary.simpleMessage(
             "Episode automatisch als angehört markieren, wenn zum nächsten Titel gesprungen wurde")
       };

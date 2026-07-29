@@ -157,7 +157,7 @@ class SettingsTile extends SettingsItem {
             contentPadding: .zero,
             minTileHeight: body == null ? null : 30,
             title: Text(title),
-            subtitle: subtitle != null ? Text(subtitle!) : null,
+            subtitle: subtitle == null ? null : Text(subtitle!),
             trailing: Padding(padding: .only(right: 8), child: trailing),
             leading: SizedBox(child: leading),
           ),
@@ -656,7 +656,8 @@ class SettingsCheckboxSheetTile<T> extends SettingsValueTile<Set<T>> {
 class SettingsActionButton extends StatelessWidget {
   const SettingsActionButton({
     required this.onPressed,
-    required this.children,
+    required this.text,
+    this.icon,
     this.baseColor,
     this.active = false,
     this.connectLeft = false,
@@ -665,7 +666,8 @@ class SettingsActionButton extends StatelessWidget {
   });
 
   final VoidCallback onPressed;
-  final List<Widget> children;
+  final Widget text;
+  final Widget? icon;
   final Color? baseColor;
   final bool active;
   final bool connectLeft;
@@ -684,41 +686,42 @@ class SettingsActionButton extends StatelessWidget {
       right: !connectRight ? context.radiusSmall.bottomLeft : Radius.zero,
     );
     final side = BorderSide(color: cardColorScheme.saturated);
-    final child = Material(
-      borderRadius: borderRadius,
-      clipBehavior: .antiAlias,
-      color: active ? cardColorScheme.selected : cardColorScheme.card,
-      child: InkWell(
-        onTap: onPressed,
-        child: Container(
-          width: 60,
-          height: 72,
-          padding: .all(6),
-          decoration: BoxDecoration(
-            borderRadius: borderRadius,
-            border: context.trueBlack
-                ? Border(
-                    top: side,
-                    bottom: side,
-                    left: connectLeft ? .none : side,
-                    right: connectRight ? .none : side,
-                  )
-                : null,
+    return IconTheme(
+      data: IconThemeData(
+        color: context.brightness == .dark
+            ? cardColorScheme.selected
+            : cardColorScheme.saturated,
+        size: 40,
+      ),
+      child: Material(
+        borderRadius: borderRadius,
+        clipBehavior: .antiAlias,
+        color: active ? cardColorScheme.selected : cardColorScheme.card,
+        child: InkWell(
+          onTap: onPressed,
+          child: Container(
+            width: 72,
+            height: 56,
+            padding: .all(6),
+            alignment: .center,
+            decoration: BoxDecoration(
+              borderRadius: borderRadius,
+              border: context.trueBlack
+                  ? Border(
+                      top: side,
+                      bottom: side,
+                      left: connectLeft ? .none : side,
+                      right: connectRight ? .none : side,
+                    )
+                  : null,
+            ),
+            child: icon == null
+                ? text
+                : Stack(alignment: .center, children: [icon!, text]),
           ),
-          child: Column(mainAxisAlignment: .spaceEvenly, children: children),
         ),
       ),
     );
-    if (context.trueBlack) {
-      return IconTheme(
-        data: IconThemeData(
-          color: context.trueBlack ? cardColorScheme.colorScheme.primary : null,
-        ),
-        child: child,
-      );
-    } else {
-      return child;
-    }
   }
 }
 
@@ -745,10 +748,11 @@ class SettingsRequirementCombinatorSubsection
                },
                active: value == .all,
                connectRight: true,
-               children: [
-                 Icon(LineIcons.diceD6),
-                 Text(context.s.settingsRequirementsAll),
-               ],
+               icon: Icon(LineIcons.diceD6),
+               text: Text(
+                 context.s.settingsRequirementsAll,
+                 textAlign: .center,
+               ),
              ),
              SettingsActionButton(
                onPressed: () {
@@ -757,10 +761,11 @@ class SettingsRequirementCombinatorSubsection
                },
                active: value == .any,
                connectLeft: true,
-               children: [
-                 Icon(LineIcons.diceOne),
-                 Text(context.s.settingsRequirementsAny),
-               ],
+               icon: Icon(LineIcons.diceOne),
+               text: Text(
+                 context.s.settingsRequirementsAny,
+                 textAlign: .center,
+               ),
              ),
            ],
          ),

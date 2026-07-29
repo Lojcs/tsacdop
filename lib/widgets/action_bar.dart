@@ -1369,7 +1369,7 @@ class ActionBarButtonSync extends ActionBarControl {
           sharedState.buttonSyncController.reverse();
         }
       },
-      tooltip: context.s.sync,
+      tooltip: context.s.refresh,
       animation: sharedState.buttonSyncController,
       connectLeft: index != 0 && row[index - 1] is ActionBarControl,
       connectRight:

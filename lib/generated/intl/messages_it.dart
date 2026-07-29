@@ -405,10 +405,6 @@ class MessageLookup extends MessageLookupByLibrary {
             "Attiva nuovamente il tutorial"),
         "settingsDownloadPosition":
             MessageLookupByLibrary.simpleMessage("Cartella download"),
-        "settingsEnableSyncing":
-            MessageLookupByLibrary.simpleMessage("Abilita sincronizzazione"),
-        "settingsEnableSyncingDes": MessageLookupByLibrary.simpleMessage(
-            "Ricarica tutti i podcast in background per ottenere gli ultimi episodi"),
         "settingsExportDes": MessageLookupByLibrary.simpleMessage(
             "Esporta e importa le impostazioni dell\'app"),
         "settingsFastForwardSec":

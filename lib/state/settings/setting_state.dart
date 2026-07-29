@@ -258,7 +258,10 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
       await settingsBackup.load();
       for (var pref in prefSet) {
         final backupValue = settingsBackup.getPref(pref).get();
-        await getPref(pref).set(backupValue);
+        final preference = getPref(pref);
+        if (await preference.verify?.call(backupValue) != false) {
+          await preference.set(backupValue);
+        }
       }
       return true;
     } catch (e) {

@@ -560,10 +560,6 @@ class MessageLookup extends MessageLookupByLibrary {
         "settingsDownloads": MessageLookupByLibrary.simpleMessage("İndirmeler"),
         "settingsDownloadsDes": MessageLookupByLibrary.simpleMessage(
             "Otomatik indirme, otomatik silme ve yasak bağlantılar"),
-        "settingsEnableSyncing": MessageLookupByLibrary.simpleMessage(
-            "Otomatik senkronizasyonu aktive et"),
-        "settingsEnableSyncingDes": MessageLookupByLibrary.simpleMessage(
-            "En son yayınlananları görüntülemek için tüm podcastleri arka planda güncelle."),
         "settingsEpisodeManagement":
             MessageLookupByLibrary.simpleMessage("Bölüm Yönetimi"),
         "settingsExportDes": MessageLookupByLibrary.simpleMessage(

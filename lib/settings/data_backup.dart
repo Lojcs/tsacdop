@@ -52,7 +52,8 @@ class DataBackup extends StatelessWidget {
                     },
                     baseColor: Colors.green,
                     connectRight: true,
-                    children: [Icon(LineIcons.save), Text(s.save)],
+                    icon: Icon(LineIcons.save),
+                    text: Text(context.s.save, textAlign: .center),
                   ),
                   SettingsActionButton(
                     onPressed: () async {
@@ -62,7 +63,8 @@ class DataBackup extends StatelessWidget {
                     baseColor: Colors.blue,
                     connectLeft: true,
                     connectRight: true,
-                    children: [Icon(Icons.share), Text(s.share)],
+                    icon: Icon(Icons.share),
+                    text: Text(context.s.share, textAlign: .center),
                   ),
                   SettingsActionButton(
                     onPressed: () async {
@@ -78,7 +80,8 @@ class DataBackup extends StatelessWidget {
                     },
                     baseColor: Colors.amber,
                     connectLeft: true,
-                    children: [Icon(LineIcons.paperclip), Text(s.import)],
+                    icon: Icon(LineIcons.paperclip),
+                    text: Text(context.s.import, textAlign: .center),
                   ),
                 ],
               ),
@@ -110,7 +113,8 @@ class DataBackup extends StatelessWidget {
                     },
                     baseColor: Colors.green,
                     connectRight: true,
-                    children: [Icon(LineIcons.save), Text(s.save)],
+                    icon: Icon(LineIcons.save),
+                    text: Text(context.s.save, textAlign: .center),
                   ),
                   SettingsActionButton(
                     onPressed: () async {
@@ -129,7 +133,8 @@ class DataBackup extends StatelessWidget {
                     baseColor: Colors.blue,
                     connectLeft: true,
                     connectRight: true,
-                    children: [Icon(Icons.share), Text(s.share)],
+                    icon: Icon(Icons.share),
+                    text: Text(context.s.share, textAlign: .center),
                   ),
                   SettingsActionButton(
                     onPressed: () async {
@@ -156,6 +161,7 @@ class DataBackup extends StatelessWidget {
                             await Fluttertoast.showToast(
                               msg: s.toastBackupRestoreSuccess,
                               gravity: ToastGravity.BOTTOM,
+                              toastLength: .LENGTH_LONG,
                             );
                           } else {
                             await Fluttertoast.showToast(
@@ -169,7 +175,8 @@ class DataBackup extends StatelessWidget {
                     baseColor: Colors.amber,
                     connectLeft: true,
                     connectRight: true,
-                    children: [Icon(LineIcons.paperclip), Text(s.import)],
+                    icon: Icon(LineIcons.paperclip),
+                    text: Text(context.s.import, textAlign: .center),
                   ),
                   SettingsActionButton(
                     onPressed: () async {
@@ -179,12 +186,18 @@ class DataBackup extends StatelessWidget {
                         color: Colors.red,
                       );
                       if (result && context.mounted) {
-                        context.settingState.reset(prefCategories);
+                        await context.settingState.reset(prefCategories);
+                        await Fluttertoast.showToast(
+                          msg: s.toastResetSuccessful,
+                          gravity: ToastGravity.BOTTOM,
+                          toastLength: .LENGTH_LONG,
+                        );
                       }
                     },
                     baseColor: Colors.red,
                     connectLeft: true,
-                    children: [Icon(Icons.restore), Text(s.settingsReset)],
+                    icon: Icon(Icons.restore),
+                    text: Text(context.s.settingsReset, textAlign: .center),
                   ),
                 ],
               ),
@@ -272,6 +285,7 @@ class DataBackup extends StatelessWidget {
                         await Fluttertoast.showToast(
                           msg: s.toastBackupRestoreSuccess,
                           gravity: ToastGravity.BOTTOM,
+                          toastLength: .LENGTH_LONG,
                         );
                       } else {
                         await Fluttertoast.showToast(
@@ -283,7 +297,8 @@ class DataBackup extends StatelessWidget {
                   }
                 },
                 baseColor: Colors.amber,
-                children: [Icon(LineIcons.paperclip), Text(s.import)],
+                icon: Icon(LineIcons.paperclip),
+                text: Text(context.s.import, textAlign: .center),
               ),
             ),
             SettingsTile(
@@ -353,7 +368,8 @@ class DataBackup extends StatelessWidget {
                     },
                     baseColor: Colors.green,
                     connectRight: true,
-                    children: [Icon(LineIcons.save), Text(s.save)],
+                    icon: Icon(LineIcons.save),
+                    text: Text(context.s.save, textAlign: .center),
                   ),
                   SettingsActionButton(
                     onPressed: () async {
@@ -372,7 +388,8 @@ class DataBackup extends StatelessWidget {
                     baseColor: Colors.blue,
                     connectLeft: true,
                     connectRight: true,
-                    children: [Icon(Icons.share), Text(s.share)],
+                    icon: Icon(Icons.share),
+                    text: Text(context.s.share, textAlign: .center),
                   ),
                   SettingsActionButton(
                     onPressed: () async {
@@ -398,6 +415,12 @@ class DataBackup extends StatelessWidget {
                             await Fluttertoast.showToast(
                               msg: s.toastBackupRestoreSuccess,
                               gravity: ToastGravity.BOTTOM,
+                              toastLength: .LENGTH_LONG,
+                            );
+                            await Fluttertoast.showToast(
+                              msg: s.toastRestart,
+                              gravity: ToastGravity.BOTTOM,
+                              toastLength: .LENGTH_LONG,
                             );
                           } else {
                             await Fluttertoast.showToast(
@@ -411,7 +434,8 @@ class DataBackup extends StatelessWidget {
                     baseColor: Colors.amber,
                     connectLeft: true,
                     connectRight: true,
-                    children: [Icon(LineIcons.paperclip), Text(s.import)],
+                    icon: Icon(LineIcons.paperclip),
+                    text: Text(s.import, textAlign: .center),
                   ),
                   SettingsActionButton(
                     onPressed: () async {
@@ -422,11 +446,22 @@ class DataBackup extends StatelessWidget {
                       );
                       if (result && context.mounted) {
                         await DBHelper().reset(databaseCategories);
+                        await Fluttertoast.showToast(
+                          msg: s.toastResetSuccessful,
+                          gravity: ToastGravity.BOTTOM,
+                          toastLength: .LENGTH_LONG,
+                        );
+                        await Fluttertoast.showToast(
+                          msg: s.toastRestart,
+                          gravity: ToastGravity.BOTTOM,
+                          toastLength: .LENGTH_LONG,
+                        );
                       }
                     },
                     baseColor: Colors.red,
                     connectLeft: true,
-                    children: [Icon(Icons.restore), Text(s.settingsReset)],
+                    icon: Icon(Icons.restore),
+                    text: Text(context.s.settingsReset, textAlign: .center),
                   ),
                 ],
               ),

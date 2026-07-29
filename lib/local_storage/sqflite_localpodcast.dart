@@ -68,8 +68,8 @@ enum DatabaseCategory {
   history(["PlayHistory", "SubscribeHistory"]),
   playlists(["Playlists", "Playlist_Episode"]);
 
-  const DatabaseCategory(this.keptTables);
-  final List<String> keptTables;
+  const DatabaseCategory(this.tables);
+  final List<String> tables;
 }
 
 class DBHelper {
@@ -464,7 +464,9 @@ class DBHelper {
   ) async {
     var documentsDirectory = await getDatabasesPath();
     var path = join(documentsDirectory, "backup.db");
-    final tables = tableCategories.expand((e) => e.keptTables).toList();
+    var file = File(path);
+    if (file.existsSync()) file.deleteSync();
+    final tables = tableCategories.expand((e) => e.tables).toList();
     var dbClient = await database;
     await dbClient.execute("ATTACH DATABASE ? AS backup", [path]);
     await dbClient.transaction((txn) async {
@@ -476,11 +478,11 @@ class DBHelper {
     });
     await dbClient.execute("DETACH DATABASE backup");
     if (password != null) {
-      final data = await File(path).readAsBytes();
+      final data = await file.readAsBytes();
       final encrypted = await encryptWithPassword(data, password);
       await backupFile.writeAsBytes(encrypted);
     } else {
-      File(path).copy(backupFile.path);
+      file.copy(backupFile.path);
     }
   }
 
@@ -500,18 +502,23 @@ class DBHelper {
       } else {
         File(backupFile.path).copy(path);
       }
-      final tables = tableCategories.expand((e) => e.keptTables).toList();
+      final tables = tableCategories.expand((e) => e.tables).toList();
       var dbClient = await database;
       await dbClient.execute("ATTACH DATABASE ? AS backup", [path]);
-      await dbClient.transaction((txn) async {
-        for (var table in tables) {
-          await txn.rawDelete("DELETE FROM main.$table");
-          await txn.rawInsert(
-            "INSERT INTO TABLE main.$table SELECT * FROM backup.$table",
-          );
-        }
-        await deleteDangling(txn);
-      });
+      try {
+        await dbClient.transaction((txn) async {
+          for (var table in tables) {
+            await txn.rawDelete("DELETE FROM main.$table");
+            await txn.rawInsert(
+              "INSERT INTO main.$table SELECT * FROM backup.$table",
+            );
+          }
+          await deleteDangling(txn);
+        });
+      } catch (e) {
+        await dbClient.execute("DETACH DATABASE backup");
+        rethrow;
+      }
       await dbClient.execute("DETACH DATABASE backup");
       return true;
     } catch (e) {
@@ -521,11 +528,29 @@ class DBHelper {
 
   /// Wipes the tables.
   Future<void> reset(Set<DatabaseCategory> tableCategories) async {
-    final tables = tableCategories.expand((e) => e.keptTables).toList();
+    final tables = tableCategories.expand((e) => e.tables).toList();
     var dbClient = await database;
     await dbClient.transaction((txn) async {
       for (var table in tables) {
-        await dbClient.rawDelete("DELETE FROM main.$table");
+        await txn.rawDelete("DELETE FROM main.$table");
+      }
+      if (tables.contains("Groups")) {
+        await txn.rawInsert(
+          "INSERT INTO Groups(id, name, color) VALUES(?, ?, ?)",
+          [homeGroupId, 'Home', Colors.teal.toargbString()],
+        );
+      }
+      if (tables.contains("Playlists")) {
+        final queue = Playlist(
+          "Queue",
+          id: mainQueueId,
+          isLocal: false,
+          isQueue: true,
+        );
+        await txn.rawInsert(
+          "INSERT INTO Playlists(id, name, is_local, is_queue) VALUES(?, ?, ?, ?)",
+          [queue.id, queue.name, queue.isLocal, queue.isQueue],
+        );
       }
       await deleteDangling(txn);
     });

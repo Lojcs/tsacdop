@@ -410,10 +410,6 @@ class MessageLookup extends MessageLookupByLibrary {
             "Ενεργοποίηση λειτουργιών ανακάλυψης"),
         "settingsDownloadPosition":
             MessageLookupByLibrary.simpleMessage("Λήψη θέσης"),
-        "settingsEnableSyncing":
-            MessageLookupByLibrary.simpleMessage("Ενεργοποίηση συγχρονισμού"),
-        "settingsEnableSyncingDes": MessageLookupByLibrary.simpleMessage(
-            "Ανανέωση όλων των podcast στο παρασκήνιο για τη λήψη των τελευταίων επεισοδίων"),
         "settingsExportDes": MessageLookupByLibrary.simpleMessage(
             "Ρυθμίσεις εξαγωγής και εισαγωγής"),
         "settingsFastForwardSec": MessageLookupByLibrary.simpleMessage(

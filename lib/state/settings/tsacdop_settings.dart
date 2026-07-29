@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -667,6 +669,15 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
       return value == null
           ? null
           : (await getExternalStorageDirectories())![value].path;
+    },
+    verify: (value) async {
+      final options = (await getExternalStorageDirectories())!;
+      for (var option in options) {
+        if (await FileSystemEntity.identical(option.path, value)) {
+          return true;
+        }
+      }
+      return false;
     },
   );
 

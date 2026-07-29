@@ -495,10 +495,10 @@ class S {
     );
   }
 
-  /// `Original Developer`
+  /// `Original developer`
   String get developerOriginal {
     return Intl.message(
-      'Original Developer',
+      'Original developer',
       name: 'developerOriginal',
       desc: '',
       args: [],
@@ -2731,6 +2731,26 @@ class S {
     );
   }
 
+  /// `Auto synchronisation`
+  String get settingsAutoSync {
+    return Intl.message(
+      'Auto synchronisation',
+      name: 'settingsAutoSync',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Periodically refresh all podcasts in the background to get the latest episodes.`
+  String get settingsAutoSyncDes {
+    return Intl.message(
+      'Periodically refresh all podcasts in the background to get the latest episodes.',
+      name: 'settingsAutoSyncDes',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Backup`
   String get settingsBackup {
     return Intl.message(
@@ -3127,26 +3147,6 @@ class S {
     return Intl.message(
       'Episode Management',
       name: 'settingsEpisodeManagement',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Enable auto synchronisation`
-  String get settingsEnableSyncing {
-    return Intl.message(
-      'Enable auto synchronisation',
-      name: 'settingsEnableSyncing',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Refresh all podcasts in the background to get latest episodes.`
-  String get settingsEnableSyncingDes {
-    return Intl.message(
-      'Refresh all podcasts in the background to get latest episodes.',
-      name: 'settingsEnableSyncingDes',
       desc: '',
       args: [],
     );
@@ -4519,6 +4519,26 @@ class S {
     return Intl.message(
       'Episode removed from playlist',
       name: 'toastRemovePlaylist',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Reset successful!`
+  String get toastResetSuccessful {
+    return Intl.message(
+      'Reset successful!',
+      name: 'toastResetSuccessful',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please restart the app immediately.`
+  String get toastRestart {
+    return Intl.message(
+      'Please restart the app immediately.',
+      name: 'toastRestart',
       desc: '',
       args: [],
     );

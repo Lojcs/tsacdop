@@ -143,7 +143,7 @@ class _InterfaceSettingState extends State<InterfaceSetting> {
                 child: LayoutBuilder(
                   builder: (context, constraints) => ActionBar(
                     onConfigurationChanged: (config) =>
-                        context.settingState.actionBarPodcasts.set(config),
+                        context.settingState.actionBarAndroidAuto.set(config),
                     widgetsFirstRow: [
                       ActionBarFilterNew(0, 0),
                       ActionBarFilterLiked(0, 1),

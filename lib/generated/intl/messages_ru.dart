@@ -403,10 +403,6 @@ class MessageLookup extends MessageLookupByLibrary {
             "Повторно активировать руководство"),
         "settingsDownloadPosition":
             MessageLookupByLibrary.simpleMessage("Позиция для скачивания"),
-        "settingsEnableSyncing":
-            MessageLookupByLibrary.simpleMessage("Включить синхронизацию"),
-        "settingsEnableSyncingDes": MessageLookupByLibrary.simpleMessage(
-            "Обновлять все подкасты в фоновом режиме, чтобы получать последние выпуски."),
         "settingsExportDes": MessageLookupByLibrary.simpleMessage(
             "Экспорт и импорт настроек приложения"),
         "settingsFastForwardSec":

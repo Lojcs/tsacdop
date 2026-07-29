@@ -16,8 +16,8 @@ class SyncingSetting extends StatelessWidget {
           title: s.settingsSyncing,
           items: [
             SettingsSwitchTile(
-              title: s.settingsEnableSyncing,
-              subtitle: s.settingsEnableSyncingDes,
+              title: s.settingsAutoSync,
+              subtitle: s.settingsAutoSyncDes,
               selector: (_, settings) => settings.autoSync,
             ),
             SettingsDurationSliderTile(

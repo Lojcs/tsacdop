@@ -333,9 +333,6 @@ class MessageLookup extends MessageLookupByLibrary {
         "settingsDiscovery": MessageLookupByLibrary.simpleMessage("再次功能介绍"),
         "settingsDownloadPosition":
             MessageLookupByLibrary.simpleMessage("下载位置"),
-        "settingsEnableSyncing": MessageLookupByLibrary.simpleMessage("开启自动更新"),
-        "settingsEnableSyncingDes":
-            MessageLookupByLibrary.simpleMessage("在后台更新所有订阅播客"),
         "settingsExportDes": MessageLookupByLibrary.simpleMessage("导出及恢复所有设置项"),
         "settingsFastForwardSec": MessageLookupByLibrary.simpleMessage("快进时间"),
         "settingsFastForwardSecDes":

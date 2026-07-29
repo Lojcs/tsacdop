@@ -173,7 +173,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "details": MessageLookupByLibrary.simpleMessage("Details"),
         "developer": MessageLookupByLibrary.simpleMessage("Developer"),
         "developerOriginal":
-            MessageLookupByLibrary.simpleMessage("Original Developer"),
+            MessageLookupByLibrary.simpleMessage("Original developer"),
         "deviceStorage": MessageLookupByLibrary.simpleMessage("Device Storage"),
         "disabled": MessageLookupByLibrary.simpleMessage("Disabled"),
         "dismiss": MessageLookupByLibrary.simpleMessage("Dismiss"),
@@ -494,6 +494,10 @@ class MessageLookup extends MessageLookupByLibrary {
             "If disabled, auto downloads starting on forbidden connections will be immediately paused."),
         "settingsAutoPlayDes": MessageLookupByLibrary.simpleMessage(
             "Auto play the next episode when an episode ends."),
+        "settingsAutoSync":
+            MessageLookupByLibrary.simpleMessage("Auto synchronisation"),
+        "settingsAutoSyncDes": MessageLookupByLibrary.simpleMessage(
+            "Periodically refresh all podcasts in the background to get the latest episodes."),
         "settingsBackup": MessageLookupByLibrary.simpleMessage("Backup"),
         "settingsBackupCategories":
             MessageLookupByLibrary.simpleMessage("Categories"),
@@ -577,10 +581,6 @@ class MessageLookup extends MessageLookupByLibrary {
         "settingsDownloads": MessageLookupByLibrary.simpleMessage("Downloads"),
         "settingsDownloadsDes": MessageLookupByLibrary.simpleMessage(
             "Auto download, auto delete and forbidden connections"),
-        "settingsEnableSyncing":
-            MessageLookupByLibrary.simpleMessage("Enable auto synchronisation"),
-        "settingsEnableSyncingDes": MessageLookupByLibrary.simpleMessage(
-            "Refresh all podcasts in the background to get latest episodes."),
         "settingsEpisodeManagement":
             MessageLookupByLibrary.simpleMessage("Episode Management"),
         "settingsExportDes": MessageLookupByLibrary.simpleMessage(
@@ -822,6 +822,10 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Podcast recover failed"),
         "toastRemovePlaylist": MessageLookupByLibrary.simpleMessage(
             "Episode removed from playlist"),
+        "toastResetSuccessful":
+            MessageLookupByLibrary.simpleMessage("Reset successful!"),
+        "toastRestart": MessageLookupByLibrary.simpleMessage(
+            "Please restart the app immediately."),
         "toastSettingSaved":
             MessageLookupByLibrary.simpleMessage("Settings saved"),
         "toastTimeEqualEnd":

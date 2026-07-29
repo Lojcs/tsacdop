@@ -392,10 +392,6 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Revoir le tutoriel"),
         "settingsDownloadPosition":
             MessageLookupByLibrary.simpleMessage("Download position"),
-        "settingsEnableSyncing":
-            MessageLookupByLibrary.simpleMessage("Activer la synchronisation"),
-        "settingsEnableSyncingDes": MessageLookupByLibrary.simpleMessage(
-            "Actualiser tous les podcasts en arrière-plan pour toujours afficher les derniers épisodes"),
         "settingsExportDes": MessageLookupByLibrary.simpleMessage(
             "Exporter et importer les paramètres de l\'application."),
         "settingsFastForwardSec":

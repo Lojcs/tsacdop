@@ -439,10 +439,6 @@ class MessageLookup extends MessageLookupByLibrary {
             "¿Estás seguro de que quiere reactivar \"Descubrir Características\"?"),
         "settingsDownloadPosition":
             MessageLookupByLibrary.simpleMessage("Posicion de descarga"),
-        "settingsEnableSyncing":
-            MessageLookupByLibrary.simpleMessage("Activar sincronización"),
-        "settingsEnableSyncingDes": MessageLookupByLibrary.simpleMessage(
-            "Actualizar todos los podcasts en el fondo para obtener episodios mas recientes"),
         "settingsExportDes": MessageLookupByLibrary.simpleMessage(
             "Exportar e importar ajustes de la app"),
         "settingsFastForwardSec":

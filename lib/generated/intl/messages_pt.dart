@@ -465,10 +465,6 @@ class MessageLookup extends MessageLookupByLibrary {
             "Tem a certeza de que deseja reativar o tutorial?"),
         "settingsDownloadPosition":
             MessageLookupByLibrary.simpleMessage("Posição da descarga"),
-        "settingsEnableSyncing":
-            MessageLookupByLibrary.simpleMessage("Ativar sincronização"),
-        "settingsEnableSyncingDes": MessageLookupByLibrary.simpleMessage(
-            "Atualizar todos os podcasts em segundo plano"),
         "settingsExportDes": MessageLookupByLibrary.simpleMessage(
             "Exportar e importar definições da aplicação"),
         "settingsFastForwardSec":
