@@ -885,30 +885,35 @@ class _PlaylistList extends StatelessWidget {
                       children: [
                         Icon(Icons.add),
                         SizedBox(width: 5),
-                        Text('New'),
+                        Text(context.s.newPlaylist),
                       ],
                     ),
-                    onTap: () {
-                      showGeneralDialog(
-                        context: context,
-                        barrierDismissible: true,
-                        barrierLabel: MaterialLocalizations.of(
-                          context,
-                        ).modalBarrierDismissLabel,
-                        barrierColor: Colors.black54,
-                        transitionDuration: const Duration(milliseconds: 200),
-                        pageBuilder: (_, animaiton, secondaryAnimation) =>
-                            _NewPlaylist(
-                              Provider.of<SelectionController>(
-                                context,
-                                listen: false,
-                              ).selectedEpisodes,
-                              color: Provider.of<CardColorScheme>(
-                                context,
-                                listen: false,
-                              ).colorScheme.primary,
-                            ),
-                      );
+                    onTap: () async {
+                      SelectionController selectionController =
+                          Provider.of<SelectionController>(
+                            context,
+                            listen: false,
+                          );
+                      await selectionController.getEpisodesLimitless();
+                      if (context.mounted) {
+                        showGeneralDialog(
+                          context: context,
+                          barrierDismissible: true,
+                          barrierLabel: MaterialLocalizations.of(
+                            context,
+                          ).modalBarrierDismissLabel,
+                          barrierColor: Colors.black54,
+                          transitionDuration: const Duration(milliseconds: 200),
+                          pageBuilder: (_, animaiton, secondaryAnimation) =>
+                              _NewPlaylist(
+                                selectionController.selectedEpisodes,
+                                color: Provider.of<CardColorScheme>(
+                                  context,
+                                  listen: false,
+                                ).colorScheme.primary,
+                              ),
+                        );
+                      }
                     },
                   ),
                   ...data.$1.map<Widget>(

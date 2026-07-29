@@ -136,10 +136,17 @@ class PodcastState extends ChangeNotifier {
     return podcasts.map((pod) => pod.id).toList();
   }
 
+  /// Returns the id of the podcast with given url, if it exists in cache.
   String? checkPodcast(String url) => _podcastMap.entries
       .where((entry) => entry.value.rssUrl == url)
       .firstOrNull
       ?.key;
+
+  /// Wheter a podcast with the given id exists in cache.
+  bool podcastExists(String id) => _podcastMap.containsKey(id);
+
+  /// Wheter a group with the given id exists in cache.
+  bool groupExists(String id) => _groupMap.containsKey(id);
 
   /// Unsubscibes from podcast and deletes local data. Safe to call from the background.
   Future<void> unsubscribePodcast(String podcastId) async {

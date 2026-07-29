@@ -10,6 +10,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
 import '../search/search_widgets.dart';
+import '../type/podcastbrief.dart';
+import '../type/podcastgroup.dart';
 import '../type/tab_configuration.dart';
 import '../util/selection_controller.dart';
 
@@ -263,44 +265,64 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         // TODO: Add pull to refresh?
                         controller: controller,
                         children:
-                            homeTabs
-                                .mapIndexed(
-                                  (i, e) => KeyedSubtree(
-                                    key: Key('tab$i'),
-                                    child:
-                                        ChangeNotifierProvider<
-                                          SelectionController
-                                        >.value(
-                                          value: selectionControllers![i],
-                                          child: _HomeTab(
-                                            key: tabKeys![i],
-                                            Stack(
-                                              children: [
-                                                InteractiveEpisodeGrid(
-                                                  noEpisodesWidget:
-                                                      _NoEpisodes(),
-                                                  refreshNotifier:
-                                                      context.podcastState,
-                                                  openPodcast: true,
-                                                  actionBarConfiguration:
-                                                      e.actionBarConfiguration,
-                                                ),
-                                                MultiSelectPanelIntegration(),
-                                              ],
+                            homeTabs.mapIndexed((i, tab) {
+                              if (!context.podcastState.podcastExists(
+                                tab.actionBarConfiguration.podcastId,
+                              )) {
+                                tab = tab.copyWith(
+                                  actionBarConfiguration: tab
+                                      .actionBarConfiguration
+                                      .copyWith(podcastId: podcastAllId),
+                                );
+                                context.settingState.homeTabs.set(
+                                  [...homeTabs]..[i] = tab,
+                                );
+                              }
+                              if (!context.podcastState.groupExists(
+                                tab.actionBarConfiguration.groupId,
+                              )) {
+                                tab = tab.copyWith(
+                                  actionBarConfiguration: tab
+                                      .actionBarConfiguration
+                                      .copyWith(groupId: allGroupId),
+                                );
+                                context.settingState.homeTabs.set(
+                                  [...homeTabs]..[i] = tab,
+                                );
+                              }
+                              return KeyedSubtree(
+                                key: Key('tab$i'),
+                                child:
+                                    ChangeNotifierProvider<
+                                      SelectionController
+                                    >.value(
+                                      value: selectionControllers![i],
+                                      child: _HomeTab(
+                                        key: tabKeys![i],
+                                        Stack(
+                                          children: [
+                                            InteractiveEpisodeGrid(
+                                              noEpisodesWidget: _NoEpisodes(),
+                                              refreshNotifier:
+                                                  context.podcastState,
+                                              openPodcast: true,
+                                              actionBarConfiguration:
+                                                  tab.actionBarConfiguration,
                                             ),
-                                          ),
+                                            MultiSelectPanelIntegration(),
+                                          ],
                                         ),
-                                  ),
-                                )
-                                .toList()
-                              ..add(
-                                KeyedSubtree(
-                                  key: Key('downloading'),
-                                  child: _HomeTab(
-                                    CustomScrollView(slivers: [DownloadList()]),
-                                  ),
+                                      ),
+                                    ),
+                              );
+                            }).toList()..add(
+                              KeyedSubtree(
+                                key: Key('downloading'),
+                                child: _HomeTab(
+                                  CustomScrollView(slivers: [DownloadList()]),
                                 ),
                               ),
+                            ),
                       ),
                     ),
                   ),

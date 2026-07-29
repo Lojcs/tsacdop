@@ -687,12 +687,7 @@ class SettingsActionButton extends StatelessWidget {
     );
     final side = BorderSide(color: cardColorScheme.saturated);
     return IconTheme(
-      data: IconThemeData(
-        color: context.brightness == .dark
-            ? cardColorScheme.selected
-            : cardColorScheme.saturated,
-        size: 40,
-      ),
+      data: IconThemeData(color: cardColorScheme.saturated, size: 56),
       child: Material(
         borderRadius: borderRadius,
         clipBehavior: .antiAlias,
@@ -702,7 +697,6 @@ class SettingsActionButton extends StatelessWidget {
           child: Container(
             width: 72,
             height: 56,
-            padding: .all(6),
             alignment: .center,
             decoration: BoxDecoration(
               borderRadius: borderRadius,
@@ -717,7 +711,20 @@ class SettingsActionButton extends StatelessWidget {
             ),
             child: icon == null
                 ? text
-                : Stack(alignment: .center, children: [icon!, text]),
+                : Stack(
+                    alignment: .center,
+                    children: [
+                      icon!,
+                      Container(
+                        decoration: BoxDecoration(
+                          color: context.surface.withAlpha(108),
+                          borderRadius: context.radiusTiny,
+                        ),
+                        padding: .symmetric(horizontal: 4),
+                        child: text,
+                      ),
+                    ],
+                  ),
           ),
         ),
       ),
