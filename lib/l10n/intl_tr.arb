@@ -791,7 +791,7 @@
     "yearsCount": "{count, plural, zero{{count} yıl} one{{count} yıl} other{{count} yıl}}",
     "aboutDes": "Tsacdop, Flutter ile inşa edilmiş zarif ve özelleştirilebilir bir podcast oynatıcıdır.",
     "contribute": "Katkıda bulun",
-    "developerOriginal": "Orijinal Geliştirici",
+    "developerOriginal": "Orijinal geliştirici",
     "getStarted": "Başlamak için",
     "getStartedDes": "Podcast aramak için {icon}'a dokun",
     "keepAndroidOpen": "Google, telefonunuza hangi uygulamaları yükleyebileceğinizi kontrol etmek istiyor.",
@@ -819,5 +819,9 @@
     "toastBackupRestoreFailure": "Yedekleme geri yüklenemedi!",
     "toastBackupRestoreSuccess": "Yedekleme geri yüklendi!",
     "translate": "Çeviri yap",
-    "welcome": "Tsacdop'a hoş geldiniz!"
+    "welcome": "Tsacdop'a hoş geldiniz!",
+    "settingsAutoSync": "Otomatik senkronizasyon",
+    "settingsAutoSyncDes": "Son yayınlanan bölümleri edinmek için düzenli olarak tüm podcast'leri arka planda yenile.",
+    "toastResetSuccessful": "Sıfırlama başarılı!",
+    "toastRestart": "Lütfen uygulamayı hemen yeniden başlatın."
 }
