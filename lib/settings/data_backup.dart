@@ -99,7 +99,11 @@ class DataBackup extends StatelessWidget {
                 children: [
                   SettingsActionButton(
                     onPressed: () async {
-                      var file = await datedSaveFile(context, "settings");
+                      var file = await datedSaveFile(
+                        context,
+                        "settings",
+                        "json",
+                      );
                       if (file != null && context.mounted) {
                         await context.settingState.backup(
                           file,
@@ -118,7 +122,11 @@ class DataBackup extends StatelessWidget {
                   ),
                   SettingsActionButton(
                     onPressed: () async {
-                      var file = await datedSaveFile(context, "settings");
+                      var file = await datedSaveFile(
+                        context,
+                        "settings",
+                        "json",
+                      );
                       if (file != null && context.mounted) {
                         await context.settingState.backup(
                           file,
@@ -354,7 +362,11 @@ class DataBackup extends StatelessWidget {
                 children: [
                   SettingsActionButton(
                     onPressed: () async {
-                      var file = await datedSaveFile(context, "database");
+                      var file = await datedSaveFile(
+                        context,
+                        "database",
+                        "db3",
+                      );
                       if (file != null && context.mounted) {
                         await DBHelper().backup(
                           file,
@@ -373,7 +385,11 @@ class DataBackup extends StatelessWidget {
                   ),
                   SettingsActionButton(
                     onPressed: () async {
-                      var file = await datedSaveFile(context, "database");
+                      var file = await datedSaveFile(
+                        context,
+                        "database",
+                        "db3",
+                      );
                       if (file != null && context.mounted) {
                         await DBHelper().backup(
                           file,
@@ -410,6 +426,7 @@ class DataBackup extends StatelessWidget {
                             databasePasswordController.text != ""
                                 ? databasePasswordController.text
                                 : null,
+                            context.downloadState,
                           );
                           if (restoreResult) {
                             await Fluttertoast.showToast(
@@ -445,7 +462,10 @@ class DataBackup extends StatelessWidget {
                         color: Colors.red,
                       );
                       if (result && context.mounted) {
-                        await DBHelper().reset(databaseCategories);
+                        await DBHelper().reset(
+                          databaseCategories,
+                          context.downloadState,
+                        );
                         await Fluttertoast.showToast(
                           msg: s.toastResetSuccessful,
                           gravity: ToastGravity.BOTTOM,
@@ -526,7 +546,11 @@ class DataBackup extends StatelessWidget {
     );
   }
 
-  Future<File?> datedSaveFile(BuildContext context, String type) async {
+  Future<File?> datedSaveFile(
+    BuildContext context,
+    String type,
+    String extension,
+  ) async {
     var tempdir = await getTemporaryDirectory();
     if (context.mounted) {
       var now = DateTime.now();
@@ -536,7 +560,7 @@ class DataBackup extends StatelessWidget {
           now.day.toString() +
           now.second.toString();
       var file = File(
-        path.join(tempdir.path, 'tsacdop_${type}_$datePlus.json'),
+        path.join(tempdir.path, 'tsacdop_${type}_$datePlus.$extension'),
       );
       return file;
     }

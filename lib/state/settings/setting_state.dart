@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:developer' as dev;
 import 'dart:io';
 
-import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,6 +10,7 @@ import 'package:workmanager/workmanager.dart';
 import '../../local_storage/key_value_storage.dart';
 import '../../type/theme_data.dart';
 import '../podcast_state.dart';
+import 'preference.dart';
 import 'settings_backup.dart';
 import 'tsacdop_settings.dart';
 
@@ -55,7 +55,10 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
       final currentPref = getPref(pref);
       if (currentPref.getLegacy != null) {
         final value = await currentPref.getLegacy!();
-        if (value != null) await currentPref.set(value);
+        if (value != null ||
+            (currentPref is ProxyPreference && currentPref.nullAllowed)) {
+          await currentPref.set(value);
+        }
       }
     }
     await legacyBackend.clear();
@@ -259,9 +262,9 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
       for (var pref in prefSet) {
         final backupValue = settingsBackup.getPref(pref).get();
         final preference = getPref(pref);
-        if (await preference.verify?.call(backupValue) != false) {
-          await preference.set(backupValue);
-        }
+        final fixedValue =
+            await preference.fixValue?.call(backupValue) ?? backupValue;
+        await preference.set(fixedValue);
       }
       return true;
     } catch (e) {

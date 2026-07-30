@@ -13,10 +13,10 @@ abstract interface class PreferenceInterface<T> {
   /// Function to get value from legacy [KeyValueStorage].
   Future<T?> Function()? get getLegacy;
 
-  /// Function to verify that the value is valid.
+  /// Function to transform the value so that it's valid to set.
   /// Not called automatically on set, assumed to be called
   /// externally if it's possible to submit invalid values.
-  Future<bool> Function(T value)? verify;
+  Future<T> Function(T value)? get fixValue;
 
   /// Get current value.
   T get();
@@ -48,11 +48,11 @@ sealed class Preference<T> implements PreferenceInterface<T> {
   @override
   final Future<T?> Function()? getLegacy;
 
-  /// Function to verify that the value is valid.
+  /// Function to transform the value so that it's valid to set.
   /// Not called automatically on set, assumed to be called
   /// externally if it's possible to submit invalid values.
   @override
-  Future<bool> Function(T value)? verify;
+  final Future<T> Function(T value)? fixValue;
 
   Preference(
     this.prefs, {
@@ -60,7 +60,7 @@ sealed class Preference<T> implements PreferenceInterface<T> {
     required this.defaultValue,
     this.updateCallback,
     this.getLegacy,
-    this.verify,
+    this.fixValue,
   });
 
   /// Get current value.
@@ -104,7 +104,7 @@ class BoolPreference extends Preference<bool> {
     required super.defaultValue,
     super.updateCallback,
     super.getLegacy,
-    super.verify,
+    super.fixValue,
   });
 
   @override
@@ -121,7 +121,7 @@ class IntPreference extends Preference<int> {
     required super.defaultValue,
     super.updateCallback,
     super.getLegacy,
-    super.verify,
+    super.fixValue,
   });
 
   @override
@@ -138,7 +138,7 @@ class DoublePreference extends Preference<double> {
     required super.defaultValue,
     super.updateCallback,
     super.getLegacy,
-    super.verify,
+    super.fixValue,
   });
 
   @override
@@ -155,7 +155,7 @@ class StringPreference extends Preference<String> {
     required super.defaultValue,
     super.updateCallback,
     super.getLegacy,
-    super.verify,
+    super.fixValue,
   });
 
   @override
@@ -172,7 +172,7 @@ class StringListPreference extends Preference<List<String>> {
     required super.defaultValue,
     super.updateCallback,
     super.getLegacy,
-    super.verify,
+    super.fixValue,
   });
 
   @override
@@ -199,18 +199,24 @@ sealed class ProxyPreference<T, S, P extends Preference<S>>
   @override
   final Future<T?> Function()? getLegacy;
 
-  /// Function to verify that the value is valid.
+  /// Function to transform the value so that it's valid to set.
+  /// Not called automatically on set, assumed to be called
+  /// externally if it's possible to submit invalid values.
   /// Not called automatically on set, assumed to be called
   /// externally if it's possible to submit invalid values.
   @override
-  Future<bool> Function(T value)? verify;
+  final Future<T> Function(T value)? fixValue;
+
+  /// Wheter null is a valid value.
+  final bool nullAllowed;
 
   ProxyPreference(
     this.inner, {
     required this.serialize,
     required this.deserialize,
     this.getLegacy,
-    this.verify,
+    this.fixValue,
+    this.nullAllowed = false,
   });
 
   @override
@@ -230,7 +236,8 @@ class BoolProxyPreference<T> extends ProxyPreference<T, bool, BoolPreference> {
     required T defaultValue,
     void Function()? updateCallback,
     super.getLegacy,
-    super.verify,
+    super.fixValue,
+    super.nullAllowed,
     required super.serialize,
     required super.deserialize,
   }) : super(
@@ -250,7 +257,8 @@ class IntProxyPreference<T> extends ProxyPreference<T, int, IntPreference> {
     required T defaultValue,
     void Function()? updateCallback,
     super.getLegacy,
-    super.verify,
+    super.fixValue,
+    super.nullAllowed,
     required super.serialize,
     required super.deserialize,
   }) : super(
@@ -271,7 +279,8 @@ class DoubleProxyPreference<T>
     required T defaultValue,
     void Function()? updateCallback,
     super.getLegacy,
-    super.verify,
+    super.fixValue,
+    super.nullAllowed,
     required super.serialize,
     required super.deserialize,
   }) : super(
@@ -292,7 +301,8 @@ class StringProxyPreference<T>
     required T defaultValue,
     void Function()? updateCallback,
     super.getLegacy,
-    super.verify,
+    super.fixValue,
+    super.nullAllowed,
     required super.serialize,
     required super.deserialize,
   }) : super(
@@ -313,7 +323,8 @@ class StringListProxyPreference<T extends Iterable>
     required T defaultValue,
     void Function()? updateCallback,
     super.getLegacy,
-    super.verify,
+    super.fixValue,
+    super.nullAllowed,
     required super.serialize,
     required super.deserialize,
   }) : super(
@@ -333,7 +344,6 @@ class DateTimePreference extends IntProxyPreference<DateTime> {
     required super.defaultValue,
     super.updateCallback,
     super.getLegacy,
-    super.verify,
   }) : super(
          serialize: (value) => value.millisecondsSinceEpoch,
          deserialize: (serial) => DateTime.fromMillisecondsSinceEpoch(serial),
@@ -347,7 +357,6 @@ class DurationPreference extends IntProxyPreference<Duration> {
     required super.defaultValue,
     super.updateCallback,
     super.getLegacy,
-    super.verify,
   }) : super(
          serialize: (value) => value.inMilliseconds,
          deserialize: (serial) => Duration(milliseconds: serial),
@@ -361,7 +370,6 @@ class TimeOfDayPreference extends IntProxyPreference<TimeOfDay> {
     required super.defaultValue,
     super.updateCallback,
     super.getLegacy,
-    super.verify,
   }) : super(
          serialize: (value) => value.hour * 60 + value.minute,
          deserialize: (serial) => minutesToTimeOfDay(serial),

@@ -56,6 +56,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
   final GlobalKey<AudioPanelState> _playerKey = GlobalKey<AudioPanelState>();
 
   late final ScrollController _controller;
+  bool loadEpisodeImage = false;
 
   late final double _titleBarMinHeight;
   late final double _titleBarMaxHeight;
@@ -99,6 +100,7 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
         _controller.offset <
             _titleBarMaxHeight + _titleBarMinHeight - _imageTopOffset &&
         _controller.offset > _titleBarMinHeight - 30) {
+      loadEpisodeImage = true;
       _controller.animateTo(
         0,
         duration: Duration(milliseconds: 250),
@@ -330,7 +332,9 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
             child: Image(
               alignment: Alignment.topCenter,
               fit: BoxFit.fitWidth,
-              image: episodeItem.episodeOrPodcastImageProvider,
+              image: loadEpisodeImage
+                  ? episodeItem.episodeImageProvider
+                  : episodeItem.episodeOrPodcastImageProvider,
             ),
           ),
           title: Tooltip(

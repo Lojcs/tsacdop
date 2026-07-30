@@ -1,14 +1,11 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
 
 import '../search/search_api.dart';
 import '../search/search_web.dart';
 import '../state/settings/setting_state.dart';
 import '../type/media_control.dart';
-import '../type/podcastbrief.dart';
-import '../type/podcastgroup.dart';
 import '../type/tab_configuration.dart';
 import '../util/extension_helper.dart';
 import '../widgets/action_bar.dart';
@@ -165,6 +162,15 @@ class _InterfaceSettingState extends State<InterfaceSetting> {
               title: s.settingsHomeTabs,
               selector: (_, settings) => settings.homeTabs,
               bodyBuilder: (context, value) {
+                final settings = context.settingState;
+                Future.microtask(() async {
+                  final fixedHomeTabs = await settings.homeTabs.fixValue!(
+                    value,
+                  );
+                  if (fixedHomeTabs != value) {
+                    await settings.homeTabs.set(fixedHomeTabs);
+                  }
+                });
                 return AnimatedSize(
                   duration: Duration(milliseconds: 300),
                   curve: Curves.easeInOut,
@@ -173,28 +179,6 @@ class _InterfaceSettingState extends State<InterfaceSetting> {
                     mainAxisAlignment: .end,
                     children:
                         value.mapIndexed<Widget>((i, tab) {
-                          if (!context.podcastState.podcastExists(
-                            tab.actionBarConfiguration.podcastId,
-                          )) {
-                            tab = tab.copyWith(
-                              actionBarConfiguration: tab.actionBarConfiguration
-                                  .copyWith(podcastId: podcastAllId),
-                            );
-                            context.settingState.homeTabs.set(
-                              [...value]..[i] = tab,
-                            );
-                          }
-                          if (!context.podcastState.groupExists(
-                            tab.actionBarConfiguration.groupId,
-                          )) {
-                            tab = tab.copyWith(
-                              actionBarConfiguration: tab.actionBarConfiguration
-                                  .copyWith(groupId: allGroupId),
-                            );
-                            context.settingState.homeTabs.set(
-                              [...value]..[i] = tab,
-                            );
-                          }
                           if (i == nameControllers.length) {
                             nameControllers.add(
                               TextEditingController(text: tab.name),

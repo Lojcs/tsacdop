@@ -229,7 +229,7 @@ class EpisodeBrief extends Equatable {
     return AssetImage('assets/avatar_backup.png');
   }
 
-  late final ImageProvider _episodeImageProvider =
+  late final ImageProvider episodeImageProvider =
       ((episodeImageUrl != '')
               ? (File(episodeImageUrl).existsSync())
                     ? FileImage(File(episodeImageUrl))

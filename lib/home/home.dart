@@ -10,13 +10,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
 import '../search/search_widgets.dart';
-import '../type/podcastbrief.dart';
-import '../type/podcastgroup.dart';
 import '../type/tab_configuration.dart';
 import '../util/selection_controller.dart';
 
 import '../playlists/playlist_home.dart';
-import '../state/audio_state.dart';
 import '../state/settings/setting_state.dart';
 import '../util/extension_helper.dart';
 import '../widgets/audiopanel.dart';
@@ -38,7 +35,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> with TickerProviderStateMixin {
   final GlobalKey<AudioPanelState> _playerKey = GlobalKey<AudioPanelState>();
   final GlobalKey searchKey = GlobalKey();
-  late TabController controller;
+  late TabController controller = TabController(length: 1, vsync: this);
 
   final _androidAppRetain = MethodChannel("android_app_retain");
   var feature1OverflowMode = OverflowMode.clipContent;
@@ -46,7 +43,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   double top = 0;
 
   late SettingState settingState = context.settingState;
-  late List<HomeTabConfiguration> homeTabs = settingState.homeTabs.get();
+  List<HomeTabConfiguration> homeTabs = [];
+  late Future<void> updateTabsFuture = updateTabs();
   List<SelectionController>? selectionControllers;
   List<Key>? tabKeys;
   List<Widget>? headerSlivers;
@@ -55,26 +53,30 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   /// This is done here and not in a selector as it changes more seldomly than
   /// most other things (like theme or audio player) and updating it causes visual
   /// disturbance.
-  void updateTabs() {
+  Future<void> updateTabs() async {
     final newHomeTabs = settingState.homeTabs.get();
     if (!newHomeTabs.equals(homeTabs)) {
-      homeTabs = newHomeTabs;
-      final index = controller.index;
-      controller.dispose();
-      controller = TabController(length: homeTabs.length + 1, vsync: this);
-      controller.index = index;
-      headerSlivers = null;
-      selectionControllers = null;
-      tabKeys = null;
-      setState(() {});
+      final fixedHomeTabs = await settingState.homeTabs.fixValue!(newHomeTabs);
+      if (fixedHomeTabs != newHomeTabs) {
+        await settingState.homeTabs.set(fixedHomeTabs);
+      } else {
+        homeTabs = newHomeTabs;
+        final index = controller.index;
+        controller.dispose();
+        controller = TabController(length: homeTabs.length + 1, vsync: this);
+        controller.index = index;
+        headerSlivers = null;
+        selectionControllers = null;
+        tabKeys = null;
+        setState(() {});
+      }
     }
   }
 
   @override
   void initState() {
     super.initState();
-    settingState.addListener(updateTabs);
-    controller = TabController(length: homeTabs.length + 1, vsync: this);
+    settingState.addListener(() => updateTabsFuture = updateTabs());
     SchedulerBinding.instance.addPostFrameCallback((_) {
       FeatureDiscovery.discoverFeatures(context, const <String>{
         addFeature,
@@ -104,235 +106,193 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     tabKeys ??= List.generate(controller.length - 1, (_) => UniqueKey());
     headerSlivers = null;
     // print(context.primaryColor.toargbString());
-    return Selector<AudioState, bool>(
-      selector: (_, audio) => audio.playerRunning,
-      builder: (context, playerRunning, _) {
-        context.originalPadding = MediaQuery.of(context).padding;
-        return AnnotatedRegion<SystemUiOverlayStyle>(
-          value: SystemUiOverlayStyle(
-            statusBarColor: Colors.transparent,
-            statusBarIconBrightness: context.iconBrightness,
-            systemNavigationBarIconBrightness: context.iconBrightness,
-          ),
-          child: PopScope(
-            canPop:
-                // !(_playerKey.currentState != null &&
-                //     _playerKey.currentState!.size! > 100) &&
-                controller.index == controller.length - 1 ||
-                !selectionControllers![controller.index].selectMode,
-            onPopInvokedWithResult: (_, __) {
-              if (_playerKey.currentState != null &&
-                  _playerKey.currentState!.size! > 100) {
-                _playerKey.currentState!.backToMini();
-              } else if (controller.index != controller.length &&
-                  selectionControllers![controller.index].selectMode) {
-                selectionControllers![controller.index].selectMode = false;
-              } else if (Platform.isAndroid) {
-                // _androidAppRetain
-                //     .invokeMethod('sendToBackground'); // This doesn't work
-              }
-            },
-            child: Stack(
-              children: <Widget>[
-                Scaffold(
-                  backgroundColor: context.surface,
-                  body: SafeArea(
-                    child: ExtendedNestedScrollView(
-                      pinnedHeaderSliverHeightBuilder: () => 50,
-                      // floatHeaderSlivers: true,
-                      headerSliverBuilder: (context, innerBoxScrolled) {
-                        // Otherwise this rebuilds every time inner box scrolls
-                        headerSlivers ??= [
-                          SliverToBoxAdapter(
-                            child: Column(
-                              children: <Widget>[
-                                SizedBox(
-                                  height: 50.0,
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
-                                      featureDiscoveryOverlay(
-                                        context,
-                                        featureId: addFeature,
-                                        tapTarget: Icon(Icons.search),
-                                        title: s.featureDiscoverySearch,
-                                        backgroundColor: Colors.cyan[600],
-                                        buttonColor: Colors.cyan[500],
-                                        description:
-                                            s.featureDiscoverySearchDes,
-                                        child: SearchButton(searchKey),
-                                      ),
-                                      GestureDetector(
-                                        onTap: () {
-                                          final settings = context.settingState;
-                                          switch ((
-                                            context.brightness,
-                                            settings.trueBlack.get(),
-                                          )) {
-                                            case (Brightness.light, _):
-                                              settings.themeMode.set(
-                                                ThemeMode.dark,
-                                              );
-                                              settings.trueBlack.set(false);
-                                            case (Brightness.dark, false):
-                                              settings.trueBlack.set(true);
-                                            case (Brightness.dark, true):
-                                              settings.themeMode.set(
-                                                ThemeMode.light,
-                                              );
-                                          }
-                                        },
-                                        child: Text(
-                                          'Tsacdop',
-                                          style: GoogleFonts.quicksand(
-                                            color: context.primaryColor,
-                                            textStyle:
-                                                context.textTheme.headlineLarge,
-                                          ),
-                                        ),
-                                      ),
-                                      featureDiscoveryOverlay(
-                                        context,
-                                        featureId: menuFeature,
-                                        tapTarget: Icon(Icons.more_vert),
-                                        backgroundColor: Colors.cyan[500],
-                                        buttonColor: Colors.cyan[600],
-                                        title: s.featureDiscoveryOMPL,
-                                        description: s.featureDiscoveryOMPLDes,
-                                        child: Padding(
-                                          padding: const EdgeInsets.only(
-                                            right: 5.0,
-                                          ),
-                                          child: HomeMenu(),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                // StatusBar(),
-                              ],
-                            ),
-                          ),
-                          SliverToBoxAdapter(child: ScrollPodcasts()),
-                          Selector<SettingState, List<String>>(
-                            selector: (_, settings) => settings.homeTabs
-                                .get()
-                                .map((t) => t.name)
-                                .toList(),
-                            builder: (context, value, _) => SliverToBoxAdapter(
-                              child: Stack(
+    context.originalPadding = MediaQuery.of(context).padding;
+    return PopScope(
+      canPop:
+          // !(_playerKey.currentState != null &&
+          //     _playerKey.currentState!.size! > 100) &&
+          controller.index == controller.length - 1 ||
+          !selectionControllers![controller.index].selectMode,
+      onPopInvokedWithResult: (_, __) {
+        if (_playerKey.currentState != null &&
+            _playerKey.currentState!.size! > 100) {
+          _playerKey.currentState!.backToMini();
+        } else if (controller.index != controller.length &&
+            selectionControllers![controller.index].selectMode) {
+          selectionControllers![controller.index].selectMode = false;
+        } else if (Platform.isAndroid) {
+          // _androidAppRetain
+          //     .invokeMethod('sendToBackground'); // This doesn't work
+        }
+      },
+      child: Stack(
+        children: <Widget>[
+          Scaffold(
+            backgroundColor: context.surface,
+            body: SafeArea(
+              child: FutureBuilder(
+                future: updateTabsFuture,
+                builder: (context, _) => ExtendedNestedScrollView(
+                  pinnedHeaderSliverHeightBuilder: () => 50,
+                  // floatHeaderSlivers: true,
+                  headerSliverBuilder: (context, innerBoxScrolled) {
+                    // Otherwise this rebuilds every time inner box scrolls
+                    headerSlivers ??= [
+                      SliverToBoxAdapter(
+                        child: Column(
+                          children: <Widget>[
+                            SizedBox(
+                              height: 50.0,
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: <Widget>[
-                                  Padding(
-                                    padding: .only(right: 32),
-                                    child: TabBar(
-                                      isScrollable: true,
-                                      indicatorSize: TabBarIndicatorSize.label,
-                                      controller: controller,
-                                      labelStyle: context.textTheme.titleMedium,
-                                      // labelColor: context.textColor,
-                                      dividerHeight: 0,
-                                      tabAlignment: TabAlignment.start,
-                                      tabs:
-                                          value
-                                              .map((e) => Tab(text: e))
-                                              .toList()
-                                            ..add(Tab(text: s.downloading)),
+                                  featureDiscoveryOverlay(
+                                    context,
+                                    featureId: addFeature,
+                                    tapTarget: Icon(Icons.search),
+                                    title: s.featureDiscoverySearch,
+                                    backgroundColor: Colors.cyan[600],
+                                    buttonColor: Colors.cyan[500],
+                                    description: s.featureDiscoverySearchDes,
+                                    child: SearchButton(searchKey),
+                                  ),
+                                  GestureDetector(
+                                    onTap: () {
+                                      final settings = context.settingState;
+                                      switch ((
+                                        context.brightness,
+                                        settings.trueBlack.get(),
+                                      )) {
+                                        case (Brightness.light, _):
+                                          settings.themeMode.set(
+                                            ThemeMode.dark,
+                                          );
+                                          settings.trueBlack.set(false);
+                                        case (Brightness.dark, false):
+                                          settings.trueBlack.set(true);
+                                        case (Brightness.dark, true):
+                                          settings.themeMode.set(
+                                            ThemeMode.light,
+                                          );
+                                      }
+                                    },
+                                    child: Text(
+                                      'Tsacdop',
+                                      style: GoogleFonts.quicksand(
+                                        color: context.primaryColor,
+                                        textStyle:
+                                            context.textTheme.headlineLarge,
+                                      ),
                                     ),
                                   ),
-                                  Align(
-                                    alignment: .centerRight,
-                                    child: featureDiscoveryOverlay(
-                                      context,
-                                      featureId: playlistFeature,
-                                      tapTarget: Icon(Icons.playlist_play),
-                                      backgroundColor: Colors.cyan[500],
-                                      title: s.featureDiscoveryPlaylist,
-                                      description:
-                                          s.featureDiscoveryPlaylistDes,
-                                      buttonColor: Colors.cyan[600],
-                                      child: _PlaylistButton(),
+                                  featureDiscoveryOverlay(
+                                    context,
+                                    featureId: menuFeature,
+                                    tapTarget: Icon(Icons.more_vert),
+                                    backgroundColor: Colors.cyan[500],
+                                    buttonColor: Colors.cyan[600],
+                                    title: s.featureDiscoveryOMPL,
+                                    description: s.featureDiscoveryOMPLDes,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(
+                                        right: 5.0,
+                                      ),
+                                      child: HomeMenu(),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                          ),
-                        ];
-                        return headerSlivers!;
-                      },
-                      body: TabBarView(
-                        // TODO: Add pull to refresh?
-                        controller: controller,
-                        children:
-                            homeTabs.mapIndexed((i, tab) {
-                              if (!context.podcastState.podcastExists(
-                                tab.actionBarConfiguration.podcastId,
-                              )) {
-                                tab = tab.copyWith(
-                                  actionBarConfiguration: tab
-                                      .actionBarConfiguration
-                                      .copyWith(podcastId: podcastAllId),
-                                );
-                                context.settingState.homeTabs.set(
-                                  [...homeTabs]..[i] = tab,
-                                );
-                              }
-                              if (!context.podcastState.groupExists(
-                                tab.actionBarConfiguration.groupId,
-                              )) {
-                                tab = tab.copyWith(
-                                  actionBarConfiguration: tab
-                                      .actionBarConfiguration
-                                      .copyWith(groupId: allGroupId),
-                                );
-                                context.settingState.homeTabs.set(
-                                  [...homeTabs]..[i] = tab,
-                                );
-                              }
-                              return KeyedSubtree(
-                                key: Key('tab$i'),
-                                child:
-                                    ChangeNotifierProvider<
-                                      SelectionController
-                                    >.value(
-                                      value: selectionControllers![i],
-                                      child: _HomeTab(
-                                        key: tabKeys![i],
-                                        Stack(
-                                          children: [
-                                            InteractiveEpisodeGrid(
-                                              noEpisodesWidget: _NoEpisodes(),
-                                              refreshNotifier:
-                                                  context.podcastState,
-                                              openPodcast: true,
-                                              actionBarConfiguration:
-                                                  tab.actionBarConfiguration,
-                                            ),
-                                            MultiSelectPanelIntegration(),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                              );
-                            }).toList()..add(
-                              KeyedSubtree(
-                                key: Key('downloading'),
-                                child: _HomeTab(
-                                  CustomScrollView(slivers: [DownloadList()]),
-                                ),
+                            // StatusBar(),
+                          ],
+                        ),
+                      ),
+                      SliverToBoxAdapter(child: ScrollPodcasts()),
+                      SliverToBoxAdapter(
+                        child: Stack(
+                          children: <Widget>[
+                            Padding(
+                              padding: .only(right: 32),
+                              child: TabBar(
+                                isScrollable: true,
+                                indicatorSize: TabBarIndicatorSize.label,
+                                controller: controller,
+                                labelStyle: context.textTheme.titleMedium,
+                                // labelColor: context.textColor,
+                                dividerHeight: 0,
+                                tabAlignment: TabAlignment.start,
+                                tabs:
+                                    homeTabs
+                                        .map((e) => Tab(text: e.name))
+                                        .toList()
+                                      ..add(Tab(text: s.downloading)),
                               ),
                             ),
+                            Align(
+                              alignment: .centerRight,
+                              child: featureDiscoveryOverlay(
+                                context,
+                                featureId: playlistFeature,
+                                tapTarget: Icon(Icons.playlist_play),
+                                backgroundColor: Colors.cyan[500],
+                                title: s.featureDiscoveryPlaylist,
+                                description: s.featureDiscoveryPlaylistDes,
+                                buttonColor: Colors.cyan[600],
+                                child: _PlaylistButton(),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
+                    ];
+                    return headerSlivers!;
+                  },
+                  body: TabBarView(
+                    // TODO: Add pull to refresh?
+                    controller: controller,
+                    children:
+                        homeTabs.mapIndexed((i, tab) {
+                          return KeyedSubtree(
+                            key: Key('tab$i'),
+                            child:
+                                ChangeNotifierProvider<
+                                  SelectionController
+                                >.value(
+                                  value: selectionControllers![i],
+                                  child: _HomeTab(
+                                    key: tabKeys![i],
+                                    Stack(
+                                      children: [
+                                        InteractiveEpisodeGrid(
+                                          noEpisodesWidget: _NoEpisodes(),
+                                          refreshNotifier: context.podcastState,
+                                          openPodcast: true,
+                                          actionBarConfiguration:
+                                              tab.actionBarConfiguration,
+                                        ),
+                                        MultiSelectPanelIntegration(),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                          );
+                        }).toList()..add(
+                          KeyedSubtree(
+                            key: Key('downloading'),
+                            child: _HomeTab(
+                              CustomScrollView(slivers: [DownloadList()]),
+                            ),
+                          ),
+                        ),
                   ),
                 ),
-                PlayerWidget(playerKey: _playerKey),
-              ],
+              ),
             ),
           ),
-        );
-      },
+          PlayerWidget(playerKey: _playerKey),
+        ],
+      ),
     );
   }
 }

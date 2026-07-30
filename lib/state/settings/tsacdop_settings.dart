@@ -8,7 +8,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../generated/l10n.dart';
 import '../../local_storage/key_value_storage.dart';
+import '../../type/podcastbrief.dart';
+import '../../type/podcastgroup.dart';
 import '../../type/requirement_combinator.dart';
+import '../podcast_state.dart';
 import 'preference.dart';
 import '../../search/search_api.dart';
 import '../../search/search_web.dart';
@@ -112,6 +115,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
           ),
           _ => Locale("en"),
         },
+    nullAllowed: true,
   );
 
   /// Look and feel settings.
@@ -280,6 +284,19 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
               filterPlayed: hideListened ? false : null,
             );
     },
+    fixValue: (value) async {
+      final podcastState = PodcastState(
+        await getApplicationDocumentsDirectory(),
+      );
+      await podcastState.ready;
+      if (!podcastState.podcastExists(value.podcastId)) {
+        value = value.copyWith(podcastId: podcastAllId);
+      }
+      if (!podcastState.groupExists(value.groupId)) {
+        value = value.copyWith(groupId: allGroupId);
+      }
+      return value;
+    },
   );
 
   /// Android auto filters configuration.
@@ -298,6 +315,19 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
               : ActionBarConfiguration(
                   filterPlayed: hideListened ? false : null,
                 );
+        },
+        fixValue: (value) async {
+          final podcastState = PodcastState(
+            await getApplicationDocumentsDirectory(),
+          );
+          await podcastState.ready;
+          if (!podcastState.podcastExists(value.podcastId)) {
+            value = value.copyWith(podcastId: podcastAllId);
+          }
+          if (!podcastState.groupExists(value.groupId)) {
+            value = value.copyWith(groupId: allGroupId);
+          }
+          return value;
         },
       );
 
@@ -338,6 +368,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
                 name: s.homeTabMenuFavotite,
                 actionBarConfiguration: ActionBarConfiguration(
                   filterPlayed: hideListened ? false : null,
+                  filterLiked: true,
                   layout: EpisodeGridLayout.values[favIndex],
                 ),
               ),
@@ -345,10 +376,45 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
                 name: s.download,
                 actionBarConfiguration: ActionBarConfiguration(
                   filterPlayed: hideListened ? false : null,
+                  filterDownloaded: true,
                   layout: EpisodeGridLayout.values[downloadIndex],
                 ),
               ),
             ];
+    },
+    fixValue: (value) async {
+      final podcastState = PodcastState(
+        await getApplicationDocumentsDirectory(),
+      );
+      await podcastState.ready;
+      bool anyChange = false;
+      for (var i = 0; i < value.length; i++) {
+        var tab = value[i];
+        bool change = false;
+        if (!podcastState.podcastExists(tab.actionBarConfiguration.podcastId)) {
+          tab = tab.copyWith(
+            actionBarConfiguration: tab.actionBarConfiguration.copyWith(
+              podcastId: podcastAllId,
+            ),
+          );
+          change = true;
+        }
+        if (!podcastState.groupExists(tab.actionBarConfiguration.groupId)) {
+          tab = tab.copyWith(
+            actionBarConfiguration: tab.actionBarConfiguration.copyWith(
+              groupId: allGroupId,
+            ),
+          );
+        }
+        if (change) {
+          if (!anyChange) {
+            anyChange = true;
+            value = [...value];
+          }
+          value[i] = tab;
+        }
+      }
+      return value;
     },
   );
 
@@ -670,14 +736,14 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
           ? null
           : (await getExternalStorageDirectories())![value].path;
     },
-    verify: (value) async {
+    fixValue: (value) async {
       final options = (await getExternalStorageDirectories())!;
       for (var option in options) {
         if (await FileSystemEntity.identical(option.path, value)) {
-          return true;
+          return value;
         }
       }
-      return false;
+      return options[0].path;
     },
   );
 
@@ -688,6 +754,13 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
         key: 'forbiddenDownloadConnections',
         defaultValue: {ConnectivityResult.mobile},
         updateCallback: settingsChanged,
+        getLegacy: () async {
+          final value = await legacyBackend.getBool(
+            'downloadUsingData',
+            reverse: true,
+          );
+          return value != false ? null : {ConnectivityResult.mobile};
+        },
         serialize: (value) => value.map(resultToString).toList(),
         deserialize: (serial) => serial.map(stringToResult).toSet(),
       );
@@ -738,7 +811,11 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     updateCallback: settingsChanged,
     getLegacy: () async {
       final value = await legacyBackend.getInt('autoDeleteKey');
-      return value == null ? null : Duration(days: value);
+      return switch (value) {
+        null => null,
+        -1 => .zero,
+        _ => Duration(days: value),
+      };
     },
   );
 

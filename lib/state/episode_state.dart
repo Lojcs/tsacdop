@@ -11,7 +11,6 @@ import '../type/episodebrief.dart';
 import '../type/play_histroy.dart';
 import 'download_state.dart';
 import 'podcast_state.dart';
-import 'settings/setting_state.dart';
 import 'settings/tsacdop_settings.dart';
 
 /// Global class to manage [EpisodeBrief] field updates.

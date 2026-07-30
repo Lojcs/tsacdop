@@ -30,10 +30,28 @@ import 'settings/tsacdop_settings.dart';
 
 const deletedPodcastId = "46e48103-06c7-4fe1-a0b1-68aa7205b7f0";
 
+Future<String> downloadPodcastImage(PodcastBrief podcast) async {
+  final dir = await getApplicationDocumentsDirectory();
+  var imageResponse = await Dio().get<List<int>>(
+    podcast.imageUrl,
+    options: Options(
+      responseType: ResponseType.bytes,
+      receiveTimeout: Duration(seconds: 90),
+    ),
+  );
+  var image = img.decodeImage(Uint8List.fromList(imageResponse.data!))!;
+  img.Image? thumbnail = img.copyResize(image, width: 300);
+  final imagePath = "${dir.path}/${podcast.id}.png";
+  await File(imagePath).writeAsBytes(img.encodePng(thumbnail));
+  return imagePath;
+}
+
 /// Global class to manage [PodcastBrief] field updates.
 class PodcastState extends ChangeNotifier {
   final Directory documents;
   final rootIsolateToken = ServicesBinding.rootIsolateToken!;
+
+  /// Wait for ready after construction.
   PodcastState(this.documents) {
     BackgroundIsolateBinaryMessenger.ensureInitialized(rootIsolateToken);
     ready = _loadGroups();
@@ -143,10 +161,11 @@ class PodcastState extends ChangeNotifier {
       ?.key;
 
   /// Wheter a podcast with the given id exists in cache.
-  bool podcastExists(String id) => _podcastMap.containsKey(id);
+  bool podcastExists(String id) =>
+      id == podcastAllId || _podcastMap.containsKey(id);
 
   /// Wheter a group with the given id exists in cache.
-  bool groupExists(String id) => _groupMap.containsKey(id);
+  bool groupExists(String id) => id == allGroupId || _groupMap.containsKey(id);
 
   /// Unsubscibes from podcast and deletes local data. Safe to call from the background.
   Future<void> unsubscribePodcast(String podcastId) async {
@@ -272,20 +291,9 @@ class PodcastState extends ChangeNotifier {
     (PodcastBrief, List<EpisodeBrief>) data,
   ) async {
     var (podcast, episodes) = data;
-    final dir = await getApplicationDocumentsDirectory();
     try {
-      var imageResponse = await Dio().get<List<int>>(
-        podcast.imageUrl,
-        options: Options(
-          responseType: ResponseType.bytes,
-          receiveTimeout: Duration(seconds: 90),
-        ),
-      );
-      var image = img.decodeImage(Uint8List.fromList(imageResponse.data!))!;
-      img.Image? thumbnail = img.copyResize(image, width: 300);
-      final imagePath = "${dir.path}/${podcast.id}.png";
-      File(imagePath).writeAsBytesSync(img.encodePng(thumbnail));
-      podcast = podcast.copyWith(imagePath: imagePath);
+      final path = await downloadPodcastImage(podcast);
+      podcast = podcast.copyWith(imagePath: path);
     } catch (e) {
       podcast = podcast.copyWith(imagePath: "");
     }
@@ -466,7 +474,6 @@ class PodcastState extends ChangeNotifier {
     (PodcastBrief, Set<String>) data,
   ) async {
     var (podcast, urls) = data;
-    final dir = await getApplicationDocumentsDirectory();
     try {
       final dio = Dio();
       final response = await dio.get<List<int>>(
@@ -506,20 +513,7 @@ class PodcastState extends ChangeNotifier {
             onlyNewEpisodes.length,
           );
           if (podcastNew.imageUrl != podcast.imageUrl) {
-            var imageResponse = await Dio().get<List<int>>(
-              podcastNew.imageUrl,
-              options: Options(
-                responseType: ResponseType.bytes,
-                receiveTimeout: Duration(seconds: 90),
-              ),
-            );
-            var image = img.decodeImage(
-              Uint8List.fromList(imageResponse.data!),
-            )!;
-            img.Image? thumbnail = img.copyResize(image, width: 300);
-            final imagePath = "${dir.path}/${podcast.id}.png";
-            File(imagePath).writeAsBytesSync(img.encodePng(thumbnail));
-            podcastNew = podcastNew.copyWith(imagePath: imagePath);
+            await downloadPodcastImage(podcast);
           }
           return (podcastNew, onlyNewEpisodes);
         }

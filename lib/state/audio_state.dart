@@ -1364,28 +1364,32 @@ class AudioState extends ChangeNotifier {
   /// Reloads the current playlist with autoPlay enabled.
   Future<void> _reloadWithAutoPlay() async {
     dev.log("Reloading player with autoPlay enabled.");
-    _playlistBeingEdited++;
-    final position = _audioPosition - 3;
-    await _audioHandler.replaceQueue(
-      _playlist.episodeIds.map((id) => _episodeState[id].mediaItem).toList(),
-    );
-    await _audioHandler.combinedSeek(
-      index: _startEpisodeIndex,
-      position: Duration(milliseconds: position),
-    );
-    _playlistBeingEdited--;
+    if (playlist.isNotEmpty) {
+      _playlistBeingEdited++;
+      final position = _audioPosition - 3;
+      await _audioHandler.replaceQueue(
+        _playlist.episodeIds.map((id) => _episodeState[id].mediaItem).toList(),
+      );
+      await _audioHandler.combinedSeek(
+        index: _startEpisodeIndex,
+        position: Duration(milliseconds: position),
+      );
+      _playlistBeingEdited--;
+    }
   }
 
   /// Reloads the current playlist with autoPlay disabled.
   Future<void> _reloadWithoutAutoPlay() async {
     dev.log("Reloading player with autoPlay disabled.");
-    _playlistBeingEdited++;
-    final position = _audioPosition - 3;
-    await _audioHandler.replaceQueue([_mediaItem!]);
-    await _audioHandler.combinedSeek(
-      position: Duration(milliseconds: position),
-    );
-    _playlistBeingEdited--;
+    if (playlist.isNotEmpty) {
+      _playlistBeingEdited++;
+      final position = _audioPosition - 3;
+      await _audioHandler.replaceQueue([_mediaItem!]);
+      await _audioHandler.combinedSeek(
+        position: Duration(milliseconds: position),
+      );
+      _playlistBeingEdited--;
+    }
   }
 
   /// Schedules or starts the sleep timer based on the variables.

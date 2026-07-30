@@ -1,4 +1,3 @@
-import 'package:dynamic_color/dynamic_color.dart';
 import 'package:feature_discovery/feature_discovery.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -18,7 +17,6 @@ import 'state/download_state.dart';
 import 'state/podcast_state.dart';
 import 'state/settings/setting_state.dart';
 import 'type/playlist.dart';
-import 'type/theme_data.dart';
 import 'util/extension_helper.dart';
 
 Future main() async {

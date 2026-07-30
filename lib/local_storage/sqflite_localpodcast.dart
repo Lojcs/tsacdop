@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer' as dev;
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -7,6 +8,8 @@ import 'package:html/parser.dart' show parse;
 import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
+import '../state/download_state.dart';
+import '../state/podcast_state.dart';
 import '../state/settings/tsacdop_settings.dart';
 import '../type/fireside_data.dart';
 import '../type/playlist.dart';
@@ -491,6 +494,7 @@ class DBHelper {
     File backupFile,
     Set<DatabaseCategory> tableCategories,
     String? password,
+    DownloadState downloads,
   ) async {
     try {
       var documentsDirectory = await getDatabasesPath();
@@ -498,9 +502,9 @@ class DBHelper {
       if (password != null) {
         final encrypted = await backupFile.readAsBytes();
         final data = await decryptWithPassword(encrypted, password);
-        File(path).writeAsBytes(data);
+        await File(path).writeAsBytes(data);
       } else {
-        File(backupFile.path).copy(path);
+        await File(backupFile.path).copy(path);
       }
       final tables = tableCategories.expand((e) => e.tables).toList();
       var dbClient = await database;
@@ -514,20 +518,25 @@ class DBHelper {
             );
           }
           await deleteDangling(txn);
+          await rescanDownloads(txn, downloads);
         });
-      } catch (e) {
+      } finally {
         await dbClient.execute("DETACH DATABASE backup");
-        rethrow;
       }
-      await dbClient.execute("DETACH DATABASE backup");
+      final podcasts = await getPodcasts();
+      await Future.wait(podcasts.map(downloadPodcastImage));
       return true;
     } catch (e) {
+      print(e);
       return false;
     }
   }
 
   /// Wipes the tables.
-  Future<void> reset(Set<DatabaseCategory> tableCategories) async {
+  Future<void> reset(
+    Set<DatabaseCategory> tableCategories,
+    DownloadState downloads,
+  ) async {
     final tables = tableCategories.expand((e) => e.tables).toList();
     var dbClient = await database;
     await dbClient.transaction((txn) async {
@@ -573,6 +582,30 @@ class DBHelper {
     await dbClient.rawDelete(
       "DELETE FROM Playlist_Episode WHERE playlist_id NOT IN (SELECT id FROM Playlists)",
     );
+  }
+
+  /// Removes the new mark of episodes whose downloads have been deleted.
+  Future<void> rescanDownloads(
+    DatabaseExecutor dbClient,
+    DownloadState downloads,
+  ) async {
+    final downloadedIds = downloads.allDownloads
+        .map((task) => task.episodeId)
+        .toList();
+    int count = 0;
+    if (downloadedIds.isNotEmpty) {
+      count = await dbClient.rawUpdate(
+        """UPDATE Episodes SET downloaded = 'ND', media_id = enclosure_url
+        WHERE downloaded != 'ND' AND id NOT IN (${(", ?" * downloadedIds.length).substring(2)})""",
+        downloadedIds,
+      );
+    } else {
+      count = await dbClient.rawUpdate(
+        """UPDATE Episodes SET downloaded = 'ND', media_id = enclosure_url
+        WHERE downloaded != 'ND'""",
+      );
+    }
+    dev.log("Found and unmarked $count episodes falsely marked downloaded.");
   }
 
   /// Queries the database with the provided options and returns found podcasts.

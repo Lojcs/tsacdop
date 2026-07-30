@@ -221,13 +221,14 @@ class _InteractiveEpisodeGridState extends State<InteractiveEpisodeGrid> {
 
   @override
   Widget build(BuildContext context) {
+    final eState = context.episodeState;
     slivers ??= [...widget.additionalSliversList]
       ..insert(
         widget.sliverInsertIndicies.actionBarIndex,
         ActionBar(
           onConfigurationChanged: (configuration) async {
             _getEpisodeIds = (count, {offset = -1}) =>
-                context.episodeState.getEpisodesWithConfiguration(
+                eState.getEpisodesWithConfiguration(
                   configuration,
                   count,
                   offset: offset,

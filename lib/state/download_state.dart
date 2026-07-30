@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer' as developer;
+import 'dart:developer' as dev;
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:ui';
@@ -15,7 +16,6 @@ import '../local_storage/sqflite_localpodcast.dart';
 import '../type/episode_task.dart';
 import '../type/episodebrief.dart';
 import '../util/extension_helper.dart';
-import '../util/helpers.dart';
 import '../widgets/general_dialog.dart';
 import 'episode_state.dart';
 import 'settings/setting_state.dart';
@@ -404,6 +404,7 @@ class DownloadState extends ChangeNotifier {
         );
       }
     }
+    dev.log("Loaded ${tasks?.length} download tasks.");
   }
 
   /// Registers a port listener for flutter downloader's background isolate.
@@ -453,7 +454,7 @@ class DownloadState extends ChangeNotifier {
   /// Deletes old downloads.
   /// Uses dbHelper directly as caching is done during removal if needed.
   Future<void> autoDelete() async {
-    developer.log('Start to auto delete outdated episodes');
+    developer.log("Start to auto delete outdated episodes");
     var deleteAfterTime = _settingState.autoDeleteAfterTime.get();
     final deletePlayed = _settingState.autoDeleteAfterPlayed.get();
     final deleteIfLargerThan = _settingState.autoDeleteOldestIfTotalAbove.get();
@@ -497,6 +498,7 @@ class DownloadState extends ChangeNotifier {
         await removeDownload(episode.id);
       }
     }
+    developer.log("Auto deleted ${episodes.length} episodes");
   }
 
   /// Listens to network changes to pause or unpause downloads.
