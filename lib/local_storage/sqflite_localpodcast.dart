@@ -109,7 +109,7 @@ class DBHelper {
         episode_count INTEGER DEFAULT 0, skip_seconds INTEGER DEFAULT 0, 
         auto_download INTEGER DEFAULT 0, skip_seconds_end INTEGER DEFAULT 0,
         never_update INTEGER DEFAULT 0, funding TEXT DEFAULT '[]', 
-        hide_new_mark INTEGER DEFAULT 0, rss_hash TEXT DEFAULT '')""",
+        rss_hash TEXT DEFAULT '')""",
     );
     await db.execute("""CREATE TABLE Groups(id TEXT PRIMARY KEY, name TEXT,
         color TEXT)""");
@@ -399,6 +399,7 @@ class DBHelper {
 
   Future<void> _v10Update(Database db) async {
     await db.execute("ALTER TABLE Episodes ADD interacted INTEGER DEFAULT 0");
+    await db.execute("ALTER TABLE PodcastLocal DROP hide_new_mark");
     await db.execute(
       "CREATE TABLE Playlists(id TEXT PRIMARY KEY, name TEXT, is_local INTEGER, is_queue INTEGER)",
     );
@@ -620,7 +621,7 @@ class DBHelper {
     List<String> query = [
       """SELECT P.id, P.title, P.rssUrl, P.author, P.provider, P.hosts, P.description, P.link, P.funding,
       P.imageUrl, P.imagePath, P.background_image, P.primaryColor, P.update_count, P.episode_count,
-      P.hide_new_mark, P.never_update, P.auto_download, P.skip_seconds, P.skip_seconds_end, P.rss_hash
+      P.never_update, P.auto_download, P.skip_seconds, P.skip_seconds_end, P.rss_hash
       FROM PodcastLocal P""",
     ];
     List<String> filters = [];
@@ -679,7 +680,6 @@ class DBHelper {
           primaryColor: (item['primaryColor'] as String).toargbColor(),
           syncEpisodeCount: item['update_count'],
           episodeCount: item['episode_count'],
-          hideNewMark: item['hide_new_mark'] == 1,
           noAutoSync: item['never_update'] == 1,
           autoDownload: item['auto_download'] == 1,
           skipSecondsStart: item['skip_seconds'],
@@ -694,7 +694,6 @@ class DBHelper {
 
   Future<void> savePodcastProperties(
     List<String> ids, {
-    bool? hideNewMark,
     bool? noAutoSync,
     bool? autoDownload,
     int? skipSecondsStart,
@@ -706,13 +705,6 @@ class DBHelper {
     List<String> update = ["UPDATE PodcastLocal SET"];
     List<String> changes = [];
     List arguments = [];
-    if (hideNewMark == false) {
-      go = true;
-      changes.add(" hide_new_mark = 0");
-    } else if (hideNewMark == true) {
-      go = true;
-      changes.add(" hide_new_mark = 1");
-    }
     if (noAutoSync == false) {
       go = true;
       changes.add(" never_update = 0");
@@ -1644,15 +1636,7 @@ class DBHelper {
     required bool update,
     required List<String> newlyAddedEpisodeUrls,
   }) async {
-    final hideNew =
-        Sqflite.firstIntValue(
-          await txn.rawQuery(
-            'SELECT hide_new_mark FROM PodcastLocal WHERE id = ?',
-            [feedId],
-          ),
-        ) ==
-        1;
-    if (!hideNew && (update || settings.markNewAllowNewSubscription.get())) {
+    if (update || settings.markNewAllowNewSubscription.get()) {
       List<String> stmnt = ["UPDATE Episodes SET is_new = 1 WHERE"];
       List<String> filters = [" is_new = 0", " feed_id = ?"];
       List<String> requirements = [];

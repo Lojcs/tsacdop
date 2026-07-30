@@ -3222,6 +3222,26 @@ class S {
     );
   }
 
+  /// `Full stop`
+  String get settingsFullStop {
+    return Intl.message(
+      'Full stop',
+      name: 'settingsFullStop',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Kill the app when stop is pressed.`
+  String get settingsFullStopDes {
+    return Intl.message(
+      'Kill the app when stop is pressed.',
+      name: 'settingsFullStopDes',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `General`
   String get settingsGeneral {
     return Intl.message(
@@ -3402,6 +3422,16 @@ class S {
     );
   }
 
+  /// `Manufacturer layout override`
+  String get settingsManufacturerLayoutOverride {
+    return Intl.message(
+      'Manufacturer layout override',
+      name: 'settingsManufacturerLayoutOverride',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Mark skipped as played`
   String get settingsMarkListenedSkip {
     return Intl.message(
@@ -3432,10 +3462,10 @@ class S {
     );
   }
 
-  /// `The placement of the buttons may differ between devices, Android versions and selections of buttons.`
+  /// `The placement of the buttons may differ between Android distributions, versions and selections of buttons.`
   String get settingsMediaControlsDes {
     return Intl.message(
-      'The placement of the buttons may differ between devices, Android versions and selections of buttons.',
+      'The placement of the buttons may differ between Android distributions, versions and selections of buttons.',
       name: 'settingsMediaControlsDes',
       desc: '',
       args: [],

@@ -24,7 +24,7 @@ class AppearanceSetting extends StatelessWidget {
             SettingsRadioSheetTile(
               title: s.settingsTheme,
               selector: (_, settings) => settings.themeMode,
-              valueToString: (_, value) => switch (value) {
+              valueToString: (_, value) async => switch (value) {
                 .system => s.systemDefault,
                 .light => s.lightMode,
                 .dark => s.darkMode,

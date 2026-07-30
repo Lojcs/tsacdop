@@ -110,7 +110,7 @@ class Settings extends StatelessWidget {
             SettingsRadioSheetTile(
               title: s.settingsLanguage,
               selector: (_, settings) => settings.localeOverride,
-              valueToString: (_, value) => localeNameOf(value),
+              valueToString: (s, value) async => localeNameOf(value, s),
               getOptions: (_) async => supportedLocales,
               leading: Icon(LineIcons.language, color: Colors.purpleAccent),
               sheetBody: ListTile(

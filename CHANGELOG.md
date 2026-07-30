@@ -14,23 +14,31 @@ Release date 2026/07/2?
 * Customizable forbidden network types.
 * Slider based speed changer.
 * Full database backup & restore support.
+* Option to pick categories to backup / restore.
 * Option to encrypt backups.
 
 ### Changed
 * Rewrote settings storage and ui.
-* Reworded and clarified some strings.
+* Reworded and clarified some strings, made more strings translatable.
 * Unknown episode length or sizes now show up as '?'.
 * Play until end sleep timer mode can be used alongside timer.
 
 ### Removed
+These options are superseeded by other options or cause complexity for little gain. If you'd like them back, please let me know.
 * Right click episode popup menu.
 * Option to change the default home screen / podcast groups screen.
 * Option to change the audio panel height.
 * Option to always hide new mark of a podcast.
 
 ### Bugfixes
-* Incorrect play behavior after downloading playing episode.
-* Incorrect play behavior when finishing episode.
+* Incorrect play behaviors:
+    * After downloading playing episode.
+    * When finishing episode.
+    * With sleep timer.
+    * Without auto play.
+* Deleted downloads remaining in list.
+* Queue reorder doesn't refresh queue visual.
+* Remove new mark button doesn't work. (Moved to multiselect)
 
 ## 0.9.3
 Release date 2026/02/26

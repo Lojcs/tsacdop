@@ -326,10 +326,6 @@ class _PodcastSettingState extends State<PodcastSetting> {
     await _pState.changePodcastProperty([widget.podcastId], noAutoSync: boo);
   }
 
-  Future<void> _setHideNewMark(bool boo) async {
-    await _pState.changePodcastProperty([widget.podcastId], hideNewMark: boo);
-  }
-
   Future<void> _saveSkipSecondsStart(int seconds) async {
     await _pState.changePodcastProperty([
       widget.podcastId,

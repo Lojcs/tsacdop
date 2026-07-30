@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../search/search_api.dart';
 import '../search/search_web.dart';
+import '../state/audio_state.dart';
 import '../state/settings/setting_state.dart';
 import '../type/media_control.dart';
 import '../type/tab_configuration.dart';
@@ -56,6 +57,17 @@ class _InterfaceSettingState extends State<InterfaceSetting> {
                 ),
               ),
             ),
+            SettingsSwitchTile(
+              title: s.settingsFullStop,
+              subtitle: s.settingsFullStopDes,
+              selector: (_, settings) => settings.killOnAudioStop,
+            ),
+            SettingsRadioSheetTile(
+              title: s.settingsManufacturerLayoutOverride,
+              selector: (_, settings) => settings.manufacturerOverride,
+              valueToString: (s, value) => value.getDisplayName(s),
+              getOptions: (_) async => ManufacturerControlMapper.values,
+            ),
           ],
         ),
         SettingsSection(
@@ -68,13 +80,13 @@ class _InterfaceSettingState extends State<InterfaceSetting> {
             SettingsRadioSheetTile(
               title: s.settingsSearchApi,
               selector: (_, settings) => settings.searchApi,
-              valueToString: (_, value) => value.name,
+              valueToString: (_, value) async => value.name,
               getOptions: (_) async => SearchApi.values,
             ),
             SettingsRadioSheetTile(
               title: s.settingsSearchEngine,
               selector: (_, settings) => settings.searchEngine,
-              valueToString: (_, value) => value.name,
+              valueToString: (_, value) async => value.name,
               getOptions: (_) async => SearchEngine.values,
             ),
           ],

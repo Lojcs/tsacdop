@@ -349,9 +349,10 @@ class _QueueState extends State<_Queue> {
   @override
   Widget build(BuildContext context) {
     final audio = Provider.of<AudioState>(context, listen: false);
-    return Selector<AudioState, Playlist>(
-      selector: (_, audio) => audio.playlist,
-      builder: (_, playlist, __) {
+    return Selector<AudioState, (Playlist, int)>(
+      selector: (_, audio) => (audio.playlist, audio.playlist.generation),
+      builder: (context, value, _) {
+        final playlist = value.$1;
         List<int> episodeIds = playlist.episodeIds.toList();
         return ReorderableListView.builder(
           itemCount: playlist.length,
@@ -366,26 +367,25 @@ class _QueueState extends State<_Queue> {
             if (mounted) setState(() {});
           },
           scrollDirection: Axis.vertical,
-          itemBuilder: (context, index) {
-            if (audio.playerRunning && index == audio.episodeIndex) {
-              return EpisodeTile(
-                episodeIds[index],
-                key: ValueKey(episodeIds[index]),
-                isPlaying: true,
-                canReorder: true,
-                havePadding: true,
-                tileColor: context.accentBackground,
-              );
-            } else {
-              return DismissibleContainer(
-                playlist: playlist,
-                episodeId: episodeIds[index],
-                index: index,
-                onRemove: () {},
-                key: ValueKey(episodeIds[index]),
-              );
-            }
-          },
+          itemBuilder: (context, index) => Selector<AudioState, bool>(
+            key: ValueKey(episodeIds[index]),
+            selector: (_, audio) =>
+                audio.playerRunning && index == audio.episodeIndex,
+            builder: (context, isPlaying, _) => isPlaying
+                ? EpisodeTile(
+                    episodeIds[index],
+                    isPlaying: true,
+                    canReorder: true,
+                    havePadding: true,
+                    tileColor: context.accentBackground,
+                  )
+                : DismissibleContainer(
+                    playlist: playlist,
+                    episodeId: episodeIds[index],
+                    index: index,
+                    onRemove: () {},
+                  ),
+          ),
         );
       },
     );

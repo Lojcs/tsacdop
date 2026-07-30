@@ -496,6 +496,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.12.0"
+  flutter_exit_app:
+    dependency: "direct main"
+    description:
+      name: flutter_exit_app
+      sha256: daf0b63f56a34423fe3ff154700e095bdb720eb919a1a4145c89fda90eeeb59d
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.2"
   flutter_file_dialog:
     dependency: "direct main"
     description:

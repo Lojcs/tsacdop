@@ -187,7 +187,9 @@ class PodcastState extends ChangeNotifier {
     // final dir = await getApplicationDocumentsDirectory();
     // final episodeImagesPath = "${dir.path}/${podcast.id}";
     // await Directory(episodeImagesPath).delete(recursive: true);
-    await File(podcast.imagePath).delete();
+    try {
+      await File(podcast.imagePath).delete();
+    } catch (e) {}
     if (_podcastMap.remove(podcastId) != null) deletedIds.add(podcastId);
     await _dbHelper.delPodcast(podcastId);
     notifyListeners();
@@ -624,7 +626,6 @@ class PodcastState extends ChangeNotifier {
   /// Changes the given properties of the given podcasts.
   Future<void> changePodcastProperty(
     List<String> ids, {
-    bool? hideNewMark,
     bool? noAutoSync,
     bool? autoDownload,
     int? skipSecondsStart,
@@ -636,7 +637,6 @@ class PodcastState extends ChangeNotifier {
     );
     await _dbHelper.savePodcastProperties(
       ids,
-      hideNewMark: hideNewMark,
       noAutoSync: noAutoSync,
       autoDownload: autoDownload,
       skipSecondsStart: skipSecondsStart,
@@ -645,7 +645,6 @@ class PodcastState extends ChangeNotifier {
     changedIds.clear();
     for (var id in ids) {
       _podcastMap[id] = _podcastMap[id]!.copyWith(
-        hideNewMark: hideNewMark,
         noAutoSync: noAutoSync,
         autoDownload: autoDownload,
         skipSecondsStart: skipSecondsStart,

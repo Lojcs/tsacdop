@@ -75,6 +75,7 @@ dependencies:
   cryptography: ^2.9.0
   country_flags: ^4.1.2
   flutter_svg: ^2.3.0
+  flutter_exit_app: ^2.1.2
 dependency_overrides:
   linkify:
     git:

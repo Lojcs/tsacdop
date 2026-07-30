@@ -37,7 +37,9 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m32(type) => "${type} Filtresi";
 
-  static String m7(time) => "${time} e kadar";
+  static String m7(time) => "${time} \'dan";
+
+  static String m33(icon) => "Podcast aramak için ${icon}\'a dokun";
 
   static String m8(count) =>
       "${Intl.plural(count, zero: 'Grup', one: 'Grup', other: 'Gruplar')}";
@@ -88,6 +90,8 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m23(date) => "${date} tarihinde kaldırıldı";
 
+  static String m36(start, end) => "Program: ${start} - ${end}";
+
   static String m24(count) =>
       "${Intl.plural(count, zero: '0 sn', one: '${count} sn', other: '${count} sn')}";
 
@@ -115,6 +119,8 @@ class MessageLookup extends MessageLookupByLibrary {
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
+        "aboutDes": MessageLookupByLibrary.simpleMessage(
+            "Tsacdop, Flutter ile inşa edilmiş zarif ve özelleştirilebilir bir podcast oynatıcıdır."),
         "add": MessageLookupByLibrary.simpleMessage("Ekle"),
         "addEpisodeGroup": m2,
         "addNewEpisodeAll": m3,
@@ -148,6 +154,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "color": MessageLookupByLibrary.simpleMessage("renk"),
         "confirm": MessageLookupByLibrary.simpleMessage("ONAY"),
         "confirmation": MessageLookupByLibrary.simpleMessage("Onay"),
+        "contribute": MessageLookupByLibrary.simpleMessage("Katkıda bulun"),
         "createNewPlaylist":
             MessageLookupByLibrary.simpleMessage("Yeni çalma listesi"),
         "darkMode": MessageLookupByLibrary.simpleMessage("Karanlık mod"),
@@ -169,6 +176,8 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Tüm Seçimi Kaldır"),
         "details": MessageLookupByLibrary.simpleMessage("Detaylar"),
         "developer": MessageLookupByLibrary.simpleMessage("Geliştirici"),
+        "developerOriginal":
+            MessageLookupByLibrary.simpleMessage("Orijinal geliştirici"),
         "deviceStorage": MessageLookupByLibrary.simpleMessage("Cihaz Hafızası"),
         "disabled": MessageLookupByLibrary.simpleMessage("Devre dışı"),
         "dismiss": MessageLookupByLibrary.simpleMessage("Kaybol"),
@@ -237,6 +246,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "fonts": MessageLookupByLibrary.simpleMessage("Yazı tipleri"),
         "forward": MessageLookupByLibrary.simpleMessage("İleri"),
         "from": m7,
+        "getStarted": MessageLookupByLibrary.simpleMessage("Başlamak için"),
+        "getStartedDes": m33,
         "globallyDisabled":
             MessageLookupByLibrary.simpleMessage("Küresel olarak devre dışı"),
         "goodNight": MessageLookupByLibrary.simpleMessage("İyi Geceler"),
@@ -286,6 +297,10 @@ class MessageLookup extends MessageLookupByLibrary {
             "Podcastler için yeni bir grup oluşturabilirsin."),
         "invalidName":
             MessageLookupByLibrary.simpleMessage("Geçersiz kullanıcı adı"),
+        "keepAndroidOpen": MessageLookupByLibrary.simpleMessage(
+            "Google, telefonunuza hangi uygulamaları yükleyebileceğinizi kontrol etmek istiyor."),
+        "keepAndroidOpenDes": MessageLookupByLibrary.simpleMessage(
+            "keepandroidopen.org\'da daha fazla bilgi edinin ve sesinizi duyurun."),
         "lastUpdate": MessageLookupByLibrary.simpleMessage("Son güncelleme"),
         "later": MessageLookupByLibrary.simpleMessage("Sonra"),
         "lightMode": MessageLookupByLibrary.simpleMessage("Aydınlık mod"),
@@ -424,6 +439,9 @@ class MessageLookup extends MessageLookupByLibrary {
         "satellite": MessageLookupByLibrary.simpleMessage("Uydu"),
         "save": MessageLookupByLibrary.simpleMessage("Kaydet"),
         "schedule": MessageLookupByLibrary.simpleMessage("Program"),
+        "scheduleDisabled":
+            MessageLookupByLibrary.simpleMessage("Program devre dışı."),
+        "scheduleTime": m36,
         "search": MessageLookupByLibrary.simpleMessage("Ara"),
         "searchApi": MessageLookupByLibrary.simpleMessage("Arama Api\'si"),
         "searchEngine": MessageLookupByLibrary.simpleMessage("Arama Motoru"),
@@ -470,15 +488,23 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage(
                 "İndirilen ses dosyalarının toplam büyüklüğü bunu aşıyorsa, en eski indirilenler silinecektir."),
         "settingsAutoDownload":
-            MessageLookupByLibrary.simpleMessage("Otomatik indirme"),
+            MessageLookupByLibrary.simpleMessage("Küresel otomatik indirme"),
         "settingsAutoDownloadDes": MessageLookupByLibrary.simpleMessage(
-            "Senkronizasyondan sonra yeni işaretli bölümleri indir."),
+            "Eğer podcast\'in otomatik indirmesi açıksa senkronizasyondan sonra yeni işaretli bölümlerini indir."),
+        "settingsAutoDownloadNewPodcast":
+            MessageLookupByLibrary.simpleMessage("Varsayılan otomatik indirme"),
+        "settingsAutoDownloadNewPodcastDes": MessageLookupByLibrary.simpleMessage(
+            "Yeni abone olunan podcast\'lar için varsayılan otomatik indirme ayarı."),
         "settingsAutoDownloadOnForbidden": MessageLookupByLibrary.simpleMessage(
             "Yasak bağlantılar üzerinden otomatik indir"),
         "settingsAutoDownloadOnForbiddenDes": MessageLookupByLibrary.simpleMessage(
             "Bu ayar kapalı ise, bağlantı yasak iken başlayan otomatik indirmeler anında duraklatılacaktır."),
         "settingsAutoPlayDes": MessageLookupByLibrary.simpleMessage(
             "Şimdiki bölüm bitince sonraki bölümü otomatik oynat."),
+        "settingsAutoSync":
+            MessageLookupByLibrary.simpleMessage("Otomatik senkronizasyon"),
+        "settingsAutoSyncDes": MessageLookupByLibrary.simpleMessage(
+            "Son yayınlanan bölümleri edinmek için düzenli olarak tüm podcast\'leri arka planda yenile."),
         "settingsBackup": MessageLookupByLibrary.simpleMessage("Yedekleme"),
         "settingsBackupCategories":
             MessageLookupByLibrary.simpleMessage("Kategoriler"),
@@ -553,8 +579,9 @@ class MessageLookup extends MessageLookupByLibrary {
             "\"Keşif Özellikleri\"ni yeniden açmak istediğinizden emin misiniz?"),
         "settingsDownloadAskOnForbidden": MessageLookupByLibrary.simpleMessage(
             "Yasaklı bir bağlantıda indirme başlatırken sor"),
-        "settingsDownloadAskOnForbiddenDes": MessageLookupByLibrary.simpleMessage(
-            "Onaylanırsa, indirmelere geçici olarak tüm bağlantılarda izin verilir."),
+        "settingsDownloadAskOnForbiddenDes":
+            MessageLookupByLibrary.simpleMessage(
+                "Onaylanmazsa, indirme başlamayacaktır."),
         "settingsDownloadPosition":
             MessageLookupByLibrary.simpleMessage("İndirme konumu"),
         "settingsDownloads": MessageLookupByLibrary.simpleMessage("İndirmeler"),
@@ -757,12 +784,16 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Uyku zamanlayıcısı"),
         "sleepTimerCancel":
             MessageLookupByLibrary.simpleMessage("Zamanlayıcıyı iptal et"),
+        "sleepTimerExpireAt":
+            MessageLookupByLibrary.simpleMessage("Bitme Zamanı"),
         "sleepTimerStart":
             MessageLookupByLibrary.simpleMessage("Zamanlayıcıyı başlat"),
         "sleepTimerWait":
             MessageLookupByLibrary.simpleMessage("Bölümün bitmesi bekleniyor"),
-        "sortBy": MessageLookupByLibrary.simpleMessage("Sıralandırma Ölçütü"),
-        "sortOrder": MessageLookupByLibrary.simpleMessage("Sıralandırma Yönü"),
+        "sleepTimerWaitFor":
+            MessageLookupByLibrary.simpleMessage("Bekleme Zamanı (Dakika)"),
+        "sortBy": MessageLookupByLibrary.simpleMessage("Sıralama Ölçütü"),
+        "sortOrder": MessageLookupByLibrary.simpleMessage("Sıralama Yönü"),
         "status": MessageLookupByLibrary.simpleMessage("Durum"),
         "statusAuthError":
             MessageLookupByLibrary.simpleMessage("Doğrulama hatası"),
@@ -773,6 +804,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "subscribeExportDes": MessageLookupByLibrary.simpleMessage(
             "Tüm podcastlerin bulunduğu OPML dosyasını içe aktar"),
         "subscribed": MessageLookupByLibrary.simpleMessage("Abone"),
+        "suggestName": MessageLookupByLibrary.simpleMessage(
+            "Tsacdop-Fork için yeni bir isim öner!"),
         "sync": MessageLookupByLibrary.simpleMessage("Senkronizasyon"),
         "syncFinished":
             MessageLookupByLibrary.simpleMessage("Senkronizasyon bitti"),
@@ -785,6 +818,10 @@ class MessageLookup extends MessageLookupByLibrary {
         "to": m29,
         "toastAddPlaylist":
             MessageLookupByLibrary.simpleMessage("Çalma listesine eklendi"),
+        "toastBackupRestoreFailure":
+            MessageLookupByLibrary.simpleMessage("Yedekleme geri yüklenemedi!"),
+        "toastBackupRestoreSuccess":
+            MessageLookupByLibrary.simpleMessage("Yedekleme geri yüklendi!"),
         "toastDiscovery": MessageLookupByLibrary.simpleMessage(
             "Keşfet özelliği tekrar etkinleştirildi, lütfen uygulamayı kapatıp açın"),
         "toastFileError": MessageLookupByLibrary.simpleMessage(
@@ -805,12 +842,17 @@ class MessageLookup extends MessageLookupByLibrary {
             "Podcast kurtarma başarısız oldu"),
         "toastRemovePlaylist": MessageLookupByLibrary.simpleMessage(
             "Bölüm çalma listesinden kaldırıldı"),
+        "toastResetSuccessful":
+            MessageLookupByLibrary.simpleMessage("Sıfırlama başarılı!"),
+        "toastRestart": MessageLookupByLibrary.simpleMessage(
+            "Lütfen uygulamayı hemen yeniden başlatın."),
         "toastSettingSaved":
             MessageLookupByLibrary.simpleMessage("Ayarlar kaydedildi"),
         "toastTimeEqualEnd":
             MessageLookupByLibrary.simpleMessage("Zaman bitiş zamanına eşit"),
         "toastTimeEqualStart": MessageLookupByLibrary.simpleMessage(
             "Zaman başlangıç zamanına eşit"),
+        "translate": MessageLookupByLibrary.simpleMessage("Çeviri yap"),
         "translators": MessageLookupByLibrary.simpleMessage("Çevirmenler"),
         "understood": MessageLookupByLibrary.simpleMessage("Anlaşıldı"),
         "undo": MessageLookupByLibrary.simpleMessage("GERİ AL"),
@@ -829,6 +871,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "version": m31,
         "vpn": MessageLookupByLibrary.simpleMessage("VPN"),
         "weeksCount": m37,
+        "welcome":
+            MessageLookupByLibrary.simpleMessage("Tsacdop\'a hoş geldiniz!"),
         "wifi": MessageLookupByLibrary.simpleMessage("Wi-Fi"),
         "yearsCount": m38
       };

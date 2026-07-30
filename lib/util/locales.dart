@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../generated/l10n.dart';
+import 'extension_helper.dart';
 
 List<Locale?> supportedLocales = [
   null,
@@ -18,8 +19,7 @@ List<Locale?> supportedLocales = [
   Locale('de'),
 ];
 
-String localeNameOf(Locale? locale) {
-  S s = S.current;
+String localeNameOf(Locale? locale, S s) {
   return switch (locale) {
     null =>
       "${s.systemDefault} (${basicLocaleListResolution(PlatformDispatcher.instance.locales, S.delegate.supportedLocales).toString()})",

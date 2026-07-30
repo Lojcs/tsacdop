@@ -598,6 +598,9 @@ class MessageLookup extends MessageLookupByLibrary {
         "settingsForbiddenDownloadConnectionsDes":
             MessageLookupByLibrary.simpleMessage(
                 "Downloads will be forbidden on selected connections based on the rules above."),
+        "settingsFullStop": MessageLookupByLibrary.simpleMessage("Full stop"),
+        "settingsFullStopDes": MessageLookupByLibrary.simpleMessage(
+            "Kill the app when stop is pressed."),
         "settingsGeneral": MessageLookupByLibrary.simpleMessage("General"),
         "settingsHistory": MessageLookupByLibrary.simpleMessage("History"),
         "settingsHistoryDes":
@@ -625,6 +628,9 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Manage downloads"),
         "settingsManageDownloadDes": MessageLookupByLibrary.simpleMessage(
             "Manage downloaded audio files"),
+        "settingsManufacturerLayoutOverride":
+            MessageLookupByLibrary.simpleMessage(
+                "Manufacturer layout override"),
         "settingsMarkListenedSkip":
             MessageLookupByLibrary.simpleMessage("Mark skipped as played"),
         "settingsMarkListenedSkipDes": MessageLookupByLibrary.simpleMessage(
@@ -632,7 +638,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "settingsMediaControls": MessageLookupByLibrary.simpleMessage(
             "Notification panel media controls"),
         "settingsMediaControlsDes": MessageLookupByLibrary.simpleMessage(
-            "The placement of the buttons may differ between devices, Android versions and selections of buttons."),
+            "The placement of the buttons may differ between Android distributions, versions and selections of buttons."),
         "settingsMenuAutoPlay":
             MessageLookupByLibrary.simpleMessage("Auto play next"),
         "settingsNetworkCellular": MessageLookupByLibrary.simpleMessage(

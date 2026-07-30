@@ -56,9 +56,6 @@ class PodcastBrief extends Equatable {
   final int syncEpisodeCount;
   final int episodeCount;
 
-  /// True: mark new episodes as new, False: don't mark
-  final bool hideNewMark;
-
   /// True: don't auto sync, False: auto sync according to global setting
   final bool noAutoSync;
 
@@ -86,7 +83,6 @@ class PodcastBrief extends Equatable {
     required this.primaryColor,
     required this.syncEpisodeCount,
     required this.episodeCount,
-    required this.hideNewMark,
     required this.noAutoSync,
     required this.autoDownload,
     this.skipSecondsStart = 0,
@@ -118,7 +114,6 @@ class PodcastBrief extends Equatable {
        primaryColor = Colors.teal,
        syncEpisodeCount = 0,
        episodeCount = 0,
-       hideNewMark = true,
        noAutoSync = true,
        autoDownload = false,
        skipSecondsStart = 0,
@@ -152,7 +147,6 @@ class PodcastBrief extends Equatable {
       primaryColor = Colors.teal,
       syncEpisodeCount = 0,
       episodeCount = feed.items?.length ?? 0,
-      hideNewMark = false,
       noAutoSync = false,
       autoDownload = false,
       skipSecondsStart = 0,
@@ -177,7 +171,6 @@ class PodcastBrief extends Equatable {
        rssHash = "",
        imagePath = "",
        syncEpisodeCount = 0,
-       hideNewMark = false,
        noAutoSync = false,
        autoDownload = false,
        skipSecondsStart = 0,
@@ -220,7 +213,6 @@ class PodcastBrief extends Equatable {
       primaryColor: primaryColor,
       syncEpisodeCount: newEpisodeCount,
       episodeCount: episodeCount + newEpisodeCount,
-      hideNewMark: hideNewMark,
       noAutoSync: noAutoSync,
       autoDownload: autoDownload,
       skipSecondsStart: skipSecondsStart,
@@ -304,7 +296,6 @@ class PodcastBrief extends Equatable {
     Color? primaryColor,
     int? syncEpisodeCount,
     int? episodeCount,
-    bool? hideNewMark,
     bool? noAutoSync,
     bool? autoDownload,
     int? skipSecondsStart,
@@ -328,7 +319,6 @@ class PodcastBrief extends Equatable {
     primaryColor: primaryColor ?? this.primaryColor,
     syncEpisodeCount: syncEpisodeCount ?? this.syncEpisodeCount,
     episodeCount: episodeCount ?? this.episodeCount,
-    hideNewMark: hideNewMark ?? this.hideNewMark,
     noAutoSync: noAutoSync ?? this.noAutoSync,
     autoDownload: autoDownload ?? this.autoDownload,
     skipSecondsStart: skipSecondsStart ?? this.skipSecondsStart,

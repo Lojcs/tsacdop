@@ -11,6 +11,7 @@ import '../../local_storage/key_value_storage.dart';
 import '../../type/podcastbrief.dart';
 import '../../type/podcastgroup.dart';
 import '../../type/requirement_combinator.dart';
+import '../audio_state.dart';
 import '../podcast_state.dart';
 import 'preference.dart';
 import '../../search/search_api.dart';
@@ -233,6 +234,25 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
               ],
               _ => null,
             },
+      );
+
+  /// Kill the app when audio stop button is pressed.
+  late final killOnAudioStop = BoolPreference(
+    backend,
+    key: 'killOnAudioStop',
+    defaultValue: false,
+    updateCallback: playbackChanged,
+  );
+
+  /// Override for the manufacturer notification controls mapper.
+  late final manufacturerOverride =
+      StringProxyPreference<ManufacturerControlMapper>(
+        backend,
+        key: 'manufacturerOverride',
+        defaultValue: ManufacturerControlMapper.unset,
+        updateCallback: playbackChanged,
+        serialize: (value) => value.name,
+        deserialize: (serial) => ManufacturerControlMapper.fromName(serial),
       );
 
   /// Default search mode.
@@ -872,6 +892,8 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
         .showNotesFont => showNotesFont,
         .hapticsStrength => hapticsStrength,
         .notificationLayout => notificationLayout,
+        .killOnAudioStop => killOnAudioStop,
+        .manufacturerOverride => manufacturerOverride,
         .searchMode => searchMode,
         .searchApi => searchApi,
         .searchEngine => searchEngine,
@@ -932,6 +954,8 @@ enum TsacdopPreference {
   showNotesFont,
   hapticsStrength,
   notificationLayout,
+  killOnAudioStop,
+  manufacturerOverride,
   searchMode,
   searchApi,
   searchEngine,
@@ -991,6 +1015,8 @@ enum PreferenceCategory {
   ]),
   interface([
     .notificationLayout,
+    .killOnAudioStop,
+    .manufacturerOverride,
     .searchMode,
     .searchApi,
     .searchEngine,

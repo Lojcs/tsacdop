@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
 
+import '../generated/l10n.dart';
 import '../state/settings/preference.dart';
 import '../state/settings/setting_state.dart';
 import '../type/requirement_combinator.dart';
@@ -517,7 +518,7 @@ class SettingsValueSubtitleTile<T> extends SettingsItem {
   final Pref<T> Function(BuildContext context, SettingState settings) selector;
 
   /// Converter to print the value on screen.
-  final String Function(BuildContext context, T value) valueToString;
+  final Future<String> Function(S s, T value) valueToString;
 
   /// Leading widget of the tile.
   final Widget? leading;
@@ -544,7 +545,11 @@ class SettingsValueSubtitleTile<T> extends SettingsItem {
       title: Text(title),
       subtitle: Selector<SettingState, T>(
         selector: (context, settings) => selector(context, settings).get(),
-        builder: (context, value, _) => Text(valueToString(context, value)),
+        builder: (context, value, _) => FutureBuilder(
+          future: valueToString(context.s, value),
+          initialData: "",
+          builder: (context, snapshot) => Text(snapshot.data!),
+        ),
       ),
       leading: SizedBox(child: leading),
     );
@@ -588,7 +593,11 @@ class SettingsRadioSheetTile<T> extends SettingsValueSubtitleTile<T> {
               children: [
                 for (var option in options)
                   RadioListTile(
-                    title: Text(valueToString(context, option)),
+                    title: FutureBuilder(
+                      future: valueToString(context.s, option),
+                      initialData: "",
+                      builder: (context, snapshot) => Text(snapshot.data!),
+                    ),
                     value: option,
                   ),
                 if (sheetBody != null) sheetBody!,

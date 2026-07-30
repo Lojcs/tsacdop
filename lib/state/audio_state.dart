@@ -7,9 +7,11 @@ import 'package:audio_session/audio_session.dart';
 import 'package:collection/collection.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_exit_app/flutter_exit_app.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:just_audio/just_audio.dart';
 
+import '../generated/l10n.dart';
 import '../local_storage/sqflite_localpodcast.dart';
 import '../type/episodebrief.dart';
 import '../type/media_control.dart';
@@ -63,6 +65,14 @@ class AudioState extends ChangeNotifier {
 
   /// Amount of volume boost.
   late double _volumeGain = _settingState.volumeBoostDecibels.get();
+
+  /// Override for manufacturer control mapper.
+  late ManufacturerControlMapper _mapperOverride = _settingState
+      .manufacturerOverride
+      .get();
+
+  /// Wheter to kill the app when stop button is pressed.
+  late bool _killOnAudioStop = _settingState.killOnAudioStop.get();
 
   /// Mark as listened when skipped
   bool get _markPlayedOnSkip => _settingState.markPlayedWhenSkipped.get();
@@ -320,13 +330,16 @@ class AudioState extends ChangeNotifier {
     _settingState.onPlaybackChanged = onPlaybackChanged;
     await initPlaylists();
     await loadSavedPosition();
+    final mapper = await ManufacturerControlMapper.getMapper(_mapperOverride);
     _audioHandler = await AudioService.init(
       builder: () => CustomAudioHandler(
         this,
         _settingState,
         browsableLibrary!,
+        mapper,
         _fastForwardInterval,
         _rewindInterval,
+        _killOnAudioStop,
       ),
       config: _config,
     );
@@ -335,6 +348,7 @@ class AudioState extends ChangeNotifier {
     await _audioHandler.setSkipSilence(_skipSilence);
     await _audioHandler.setVolumeBoost(_volumeBoost);
     await _audioHandler.setVolumeBoostDecibels(_volumeGain);
+    await _audioHandler.setManufacturerControlMapperOverride(_mapperOverride);
     await _loadPlayer();
     await _setSleepTimerSchedule();
     _addHandlerListeners();
@@ -381,6 +395,16 @@ class AudioState extends ChangeNotifier {
     if (_volumeGain != volumeGain) {
       _volumeGain = volumeGain;
       await _audioHandler.setVolumeBoostDecibels(_volumeGain);
+    }
+    final mapperOverride = _settingState.manufacturerOverride.get();
+    if (_mapperOverride != mapperOverride) {
+      _mapperOverride = mapperOverride;
+      await _audioHandler.setManufacturerControlMapperOverride(_mapperOverride);
+    }
+    final killOnAudioStop = _settingState.killOnAudioStop.get();
+    if (_killOnAudioStop != killOnAudioStop) {
+      _killOnAudioStop = killOnAudioStop;
+      _audioHandler.killOnAudioStop = _killOnAudioStop;
     }
     final fastForwardInterval = _settingState.fastForwardInterval.get();
     if (_fastForwardInterval != fastForwardInterval) {
@@ -1492,12 +1516,36 @@ class AudioState extends ChangeNotifier {
   }
 }
 
-/// Samsung and Google treat the media control indicies differently.
-/// These are the mappings from  stored indicies to the indicies the devices want.
-final Map<String, List<int>> manufacturerControlMapper = {
-  "samsung": [1, 2, 0, 3],
-  "Google": [0, 1, 2, 3],
-};
+/// Different manufacturers treat the media control indicies differently.
+/// These are the
+enum ManufacturerControlMapper {
+  unset("", []),
+  google("Google", [0, 1, 2, 3]),
+  samsung("samsung", [1, 2, 0, 3]),
+  xiaomi("Xiaomi", [1, 0, 2, 3]);
+
+  const ManufacturerControlMapper(this.name, this.mapper);
+  factory ManufacturerControlMapper.fromName(String name) =>
+      values.where((e) => e.name == name).firstOrNull ?? google;
+
+  static Future<ManufacturerControlMapper> getMapper(
+    ManufacturerControlMapper mapper,
+  ) async => switch (mapper) {
+    .unset => .fromName((await DeviceInfoPlugin().androidInfo).manufacturer),
+    _ => mapper,
+  };
+
+  final String name;
+  Future<String> getDisplayName(S s) async => switch (this) {
+    .unset =>
+      "${s.systemDefault} (${await (await getMapper(this)).getDisplayName(s)})",
+    .google => "Google (Stock)",
+    .samsung => "Samsung (OneUI)",
+    .xiaomi => "Xiaomi (HyperOS)",
+  };
+  final List<int> mapper;
+  int operator [](int i) => mapper[i];
+}
 
 class CustomAudioHandler extends BaseAudioHandler
     with QueueHandler, SeekHandler {
@@ -1506,6 +1554,8 @@ class CustomAudioHandler extends BaseAudioHandler
 
   Duration fastForwardInterval;
   Duration rewindInterval;
+
+  bool killOnAudioStop;
 
   /// JustAudio audio player
   late final AudioPlayer _player = AudioPlayer(
@@ -1551,12 +1601,16 @@ class CustomAudioHandler extends BaseAudioHandler
 
   BrowsableLibrary browsableRoot;
 
+  ManufacturerControlMapper mapper;
+
   CustomAudioHandler(
     this.audio,
     this.settings,
     this.browsableRoot,
+    this.mapper,
     this.fastForwardInterval,
     this.rewindInterval,
+    this.killOnAudioStop,
   ) {
     _handleInterruption();
   }
@@ -1567,8 +1621,6 @@ class CustomAudioHandler extends BaseAudioHandler
     shuffleOrder: DefaultShuffleOrder(),
     children: [],
   );
-
-  late String manufacturer;
 
   /// Initialises player and its listeners. Call this after construction!
   Future<void> initPlayer() async {
@@ -1581,10 +1633,6 @@ class CustomAudioHandler extends BaseAudioHandler
         // This is ignored on A13 / SDK33 and middle ones are shown.
       ),
     );
-    manufacturer = (await DeviceInfoPlugin().androidInfo).manufacturer;
-    final mapper = manufacturerControlMapper.containsKey(manufacturer)
-        ? manufacturerControlMapper[manufacturer]!
-        : manufacturerControlMapper["Google"]!;
     _playbackEventSubscription = _player.playbackEventStream.distinct().listen((
       event,
     ) async {
@@ -1722,6 +1770,10 @@ class CustomAudioHandler extends BaseAudioHandler
   Future<void> setVolumeBoostDecibels(double gain) => _loudnessEnhancer
       .setTargetGain(gain * 10); // Remove the factor when justaudio is updated.
 
+  Future<void> setManufacturerControlMapperOverride(
+    ManufacturerControlMapper mapperOverride,
+  ) async => mapper = await ManufacturerControlMapper.getMapper(mapperOverride);
+
   @override
   Future<List<MediaItem>> getChildren(
     String parentMediaId, [
@@ -1761,7 +1813,7 @@ class CustomAudioHandler extends BaseAudioHandler
   @override
   Future<void> play() async {
     if (_playerReady) {
-      _player.play();
+      await _player.play();
       await super.play();
       await _seekRelative(Duration(seconds: -3));
     }
@@ -1778,9 +1830,10 @@ class CustomAudioHandler extends BaseAudioHandler
   @override
   Future<void> stop() async {
     await pause();
-    _player.stop();
+    await _player.stop();
     customEvent.add({'playerRunning': false});
     await super.stop();
+    if (killOnAudioStop) await FlutterExitApp.exitApp();
   }
 
   @override
