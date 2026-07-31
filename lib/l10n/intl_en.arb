@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "aboutDes": "Tsacdop is an elegant and customizable podcast player built with Flutter.",
+  "aboutDes": "Tsacdop-Fork is an elegant and customizable podcast player built with Flutter.",
   "@aboutDes": {},
   "add": "Add",
   "@add": {
@@ -840,8 +840,8 @@
   "@settingsManageDownload": {},
   "settingsManageDownloadDes": "Manage downloaded audio files",
   "@settingsManageDownloadDes": {},
-  "settingsManufacturerLayoutOverride": "Manufacturer layout override",
-  "@settingsManufacturerLayoutOverride": {},
+  "settingsManufacturerNotificationLayout": "Manufacturer notification layout",
+  "@settingsManufacturerNotificationLayout": {},
   "settingsMarkListenedSkip": "Mark skipped as played",
   "@settingsMarkListenedSkip": {},
   "settingsMarkListenedSkipDes": "Mark episode as played when skipping to next.",

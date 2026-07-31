@@ -59,7 +59,7 @@ class DownloadsSetting extends StatelessWidget {
               title: s.settingsAutoDeleteAfterTime,
               subtitle: s.settingsAutoDeleteAfterTimeDes,
               selector: (_, settings) => settings.autoDeleteAfterTime,
-              type: .days,
+              type: .log,
             ),
             SettingsBytesSliderTile(
               title: s.settingsAutoDeleteOldestIfTotalAbove,

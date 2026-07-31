@@ -119,7 +119,7 @@ class MessageLookup extends MessageLookupByLibrary {
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
         "aboutDes": MessageLookupByLibrary.simpleMessage(
-            "Tsacdop is an elegant and customizable podcast player built with Flutter."),
+            "Tsacdop-Fork is an elegant and customizable podcast player built with Flutter."),
         "add": MessageLookupByLibrary.simpleMessage("Add"),
         "addEpisodeGroup": m2,
         "addNewEpisodeAll": m3,
@@ -628,9 +628,9 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Manage downloads"),
         "settingsManageDownloadDes": MessageLookupByLibrary.simpleMessage(
             "Manage downloaded audio files"),
-        "settingsManufacturerLayoutOverride":
+        "settingsManufacturerNotificationLayout":
             MessageLookupByLibrary.simpleMessage(
-                "Manufacturer layout override"),
+                "Manufacturer notification layout"),
         "settingsMarkListenedSkip":
             MessageLookupByLibrary.simpleMessage("Mark skipped as played"),
         "settingsMarkListenedSkipDes": MessageLookupByLibrary.simpleMessage(

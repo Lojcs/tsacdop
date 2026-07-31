@@ -34,7 +34,7 @@ kotlin {
 }
 
 android {
-    namespace = "dev.lojcs.tsacdop.profile"
+    namespace = "dev.lojcs.tsacdop"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "28.2.13676358"
 
@@ -53,7 +53,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "dev.lojcs.tsacdop.profile"
+        applicationId "dev.lojcs.tsacdop"
         minSdkVersion flutter.minSdkVersion
         targetSdkVersion 35
         versionCode flutterVersionCode.toInteger()

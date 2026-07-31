@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'dart:developer' as dev;
 import 'dart:io';
 
+import 'package:collection/collection.dart';
+import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:html/parser.dart' show parse;
 import 'package:path/path.dart';
@@ -67,15 +69,31 @@ enum Sorter {
 }
 
 enum DatabaseCategory {
-  podcasts(["PodcastLocal", "Groups", "Podcast_Group", "Episodes"]),
-  history(["PlayHistory", "SubscribeHistory"]),
-  playlists(["Playlists", "Playlist_Episode"]);
+  podcasts({"PodcastLocal", "Groups", "Podcast_Group", "Episodes"}),
+  history({"PlayHistory", "SubscribeHistory"}),
+  playlists({"Playlists", "Playlist_Episode"});
 
   const DatabaseCategory(this.tables);
-  final List<String> tables;
+  final Set<String> tables;
+}
+
+/// Stats for a database file.
+class DatabaseStats extends Equatable {
+  final int version;
+  final Set<DatabaseCategory> completeCategories;
+  final Set<DatabaseCategory> partialCategories;
+  const DatabaseStats({
+    required this.version,
+    required this.completeCategories,
+    required this.partialCategories,
+  });
+
+  @override
+  List<Object?> get props => [version, completeCategories, partialCategories];
 }
 
 class DBHelper {
+  late String documentsDirectory;
   Database? _db;
   Future<Database> get database async {
     if (_db != null) return _db!;
@@ -84,7 +102,7 @@ class DBHelper {
   }
 
   Future<Database> initDb() async {
-    var documentsDirectory = await getDatabasesPath();
+    documentsDirectory = await getDatabasesPath();
     var path = join(documentsDirectory, databaseName);
     var theDb = await openDatabase(
       path,
@@ -211,7 +229,6 @@ class DBHelper {
     _v6Update,
     _v7Update,
     _v8Update,
-    _v9Update,
     _v9Update,
     _v10Update,
   ];
@@ -466,7 +483,6 @@ class DBHelper {
     Set<DatabaseCategory> tableCategories,
     String? password,
   ) async {
-    var documentsDirectory = await getDatabasesPath();
     var path = join(documentsDirectory, "backup.db");
     var file = File(path);
     if (file.existsSync()) file.deleteSync();
@@ -490,6 +506,51 @@ class DBHelper {
     }
   }
 
+  // /// Copies the external file to the standard backup file staging location
+  // /// for use in restore operations.
+  // Future<void> cpExternalStaging(File backupFile) async {
+  //   var stagingPath = join(documentsDirectory, "staging.db");
+  //   await File(backupFile.path).copy(stagingPath);
+  // }
+
+  // /// If provided with a password unencrypts the staged backup and writes
+  // /// it to the standard backup file location.
+  // Future<void> unlockStagedBackup(String? password) async {
+  //   var stagingPath = join(documentsDirectory, "staging.db");
+  //   var backupPath = join(documentsDirectory, "backup.db");
+  //   if (password != null) {
+  //     final encrypted = await File(stagingPath).readAsBytes();
+  //     final data = await decryptWithPassword(encrypted, password);
+  //     await File(backupPath).writeAsBytes(data);
+  //   } else {
+  //     await File(stagingPath).copy(backupPath);
+  //   }
+  // }
+
+  // /// Checks if the file at the standard backup file location is valid.
+  // /// Returns the tables that are available and the version.
+  // Future<DatabaseStats?> checkValidBackup() async {
+  //   var backupPath = join(documentsDirectory, "backup.db");
+  //   try {
+  //     var dbClient = await database;
+  //     await dbClient.execute("ATTACH DATABASE ? AS backup", [backupPath]);
+  //     Try upgrade here.
+  //     final results = await dbClient.rawQuery(
+  //       "SELECT name FROM backup.sqlite_master WHERE type='table'",
+  //     );
+  //     final tables = results.map((t) => t['name']).toSet();
+  //     final categories = DatabaseCategory.values.where(
+  //       (c) => switch (c) {
+  //         .unknown => tables.any(
+  //           (t) => DatabaseCategory.values.none((e) => e.tables.contains(t)),
+  //         ),
+  //       },
+  //     );
+  //   } on DatabaseException catch (e) {
+  //     return null;
+  //   }
+  // }
+
   /// Wipes the tables and restores them from the file.
   Future<bool> restore(
     File backupFile,
@@ -498,7 +559,6 @@ class DBHelper {
     DownloadState downloads,
   ) async {
     try {
-      var documentsDirectory = await getDatabasesPath();
       var path = join(documentsDirectory, "backup.db");
       if (password != null) {
         final encrypted = await backupFile.readAsBytes();

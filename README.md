@@ -14,9 +14,9 @@
 
 Enjoy podcasts with Tsacdop-Fork.
 
-Tsacdop-Fork is a fork of Tsacdop, a podcast player developed with Flutter. A clean, simply beautiful, and friendly app, which is also free and open source.
+Tsacdop-Fork is an elegant and customizable podcast player built with Flutter.
 
-This fork updates the ui, fixes bugs and adds ux features. Gpodder is currently not supported.
+It is a fork of Tsacdop, and has improvements to the ui, ux, customizability and functionality.
 
 Credit to upstream project [tsacdop](https://github.com/tsacdop/tsacdop), the Flutter team and all involved plugins, especially [webfeed](https://github.com/witochandra/webfeed), [Just_Audio](https://pub.dev/packages/just_audio), and [Provider](https://pub.dev/packages/provider).
 
@@ -24,26 +24,26 @@ Credit to upstream project [tsacdop](https://github.com/tsacdop/tsacdop), the Fl
 
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
      alt="Get it on F-Droid"
-     height="80">](https://f-droid.org/packages/dev.lojcs.tsacdop.profile/)
+     height="80">](https://f-droid.org/packages/dev.lojcs.tsacdop/)
 
 Or download the latest APK from the [Releases Section](https://github.com/Lojcs/tsacdop/releases/latest).
 
 ## Features
 
-* Podcast group management
-* Playlists support
-* Sleep timer / speed setting
+* Customizable accent color
+* Light, dark and black themes
+* Auto sync, auto download, auto delete
+* Podcast groups
+* Episode version dedulication
+* Notification customization
+* Sleep timer with programmable schedule
+* Multiple playlists support
+* Speed adjustment, volume boost, skip silence options
+* Podcast search via Podcastindex / iTunes APIs or web search
+* Playback and subscription history
 * OPML file export and import
-* Auto-syncing in the background
-* Listening and subscription history record
-* Dark mode / black mode / accent color
-* Download for offline play
-* Auto-download new episodes / auto-delete downloads
-* Settings backup
-* Skip silence
-* Boost volume
-* Load local audio files
-* Podcastindex & iTunes api + web search
+* Settings and data backups
+* Local audio file loading
 
 More to come...
 

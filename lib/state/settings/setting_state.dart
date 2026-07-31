@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 
+import '../../generated/l10n.dart';
 import '../../local_storage/key_value_storage.dart';
 import '../../type/theme_data.dart';
 import '../podcast_state.dart';
@@ -40,9 +41,8 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
     if (await legacyBackend.getBool('intro') != null) {
       await _migrateSettings(PreferenceCategory.values.toSet());
     }
-    if (!settingsInitialized.get()) {
-      await _initDefaultSettings();
-    }
+    await _initDefaultSettings();
+
     await startWorkManager();
     await setThemes();
   }
@@ -51,6 +51,19 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
   /// to the new [SharedPreferencesWithCache] backend.
   Future<void> _migrateSettings(Set<PreferenceCategory> prefClasses) async {
     final prefSet = PreferenceCategory.getPrefSet(prefClasses);
+    if (prefSet.contains(TsacdopPreference.localeOverride)) {
+      final value = await localeOverride.getLegacy!();
+      S.load(
+        value ??
+            localeOverride.get() ??
+            localeOverride.deserialize(Platform.localeName)!,
+      );
+    } else {
+      S.load(
+        localeOverride.get() ??
+            localeOverride.deserialize(Platform.localeName)!,
+      );
+    }
     for (var pref in prefSet) {
       final currentPref = getPref(pref);
       if (currentPref.getLegacy != null) {
@@ -62,7 +75,6 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
       }
     }
     await legacyBackend.clear();
-    await settingsInitialized.set(true);
   }
 
   /// Initializes default settings that can't auto-initialize.
@@ -70,7 +82,6 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
     if (downloadStoragePath.get() == unsetSentinel) {
       downloadStoragePath.set((await getExternalStorageDirectories())![0].path);
     }
-    await settingsInitialized.set(true);
   }
 
   /// Sets up the work manager.
@@ -100,11 +111,11 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
     notifyListeners();
   }
 
-  late final VoidCallback onPlaybackChanged;
+  VoidCallback? onPlaybackChanged;
 
   @override
   void playbackChanged() {
-    onPlaybackChanged();
+    onPlaybackChanged?.call();
     notifyListeners();
   }
 

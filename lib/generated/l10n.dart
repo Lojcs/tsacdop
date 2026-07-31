@@ -50,10 +50,10 @@ class S {
     return Localizations.of<S>(context, S);
   }
 
-  /// `Tsacdop is an elegant and customizable podcast player built with Flutter.`
+  /// `Tsacdop-Fork is an elegant and customizable podcast player built with Flutter.`
   String get aboutDes {
     return Intl.message(
-      'Tsacdop is an elegant and customizable podcast player built with Flutter.',
+      'Tsacdop-Fork is an elegant and customizable podcast player built with Flutter.',
       name: 'aboutDes',
       desc: '',
       args: [],
@@ -3422,11 +3422,11 @@ class S {
     );
   }
 
-  /// `Manufacturer layout override`
-  String get settingsManufacturerLayoutOverride {
+  /// `Manufacturer notification layout`
+  String get settingsManufacturerNotificationLayout {
     return Intl.message(
-      'Manufacturer layout override',
-      name: 'settingsManufacturerLayoutOverride',
+      'Manufacturer notification layout',
+      name: 'settingsManufacturerNotificationLayout',
       desc: '',
       args: [],
     );

@@ -5,6 +5,7 @@ Release date 2026/07/2?
 
 ### New
 * Fully customizable notification.
+* Option to kill the app when audio is stopped.
 * Option to change default search method.
 * Customizable default filters.
 * Customizable home tabs.
@@ -39,6 +40,7 @@ These options are superseeded by other options or cause complexity for little ga
 * Deleted downloads remaining in list.
 * Queue reorder doesn't refresh queue visual.
 * Remove new mark button doesn't work. (Moved to multiselect)
+* Status and navigation bar colors are properly transparent.
 
 ## 0.9.3
 Release date 2026/02/26

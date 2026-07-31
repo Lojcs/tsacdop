@@ -63,7 +63,7 @@ class _InterfaceSettingState extends State<InterfaceSetting> {
               selector: (_, settings) => settings.killOnAudioStop,
             ),
             SettingsRadioSheetTile(
-              title: s.settingsManufacturerLayoutOverride,
+              title: s.settingsManufacturerNotificationLayout,
               selector: (_, settings) => settings.manufacturerOverride,
               valueToString: (s, value) => value.getDisplayName(s),
               getOptions: (_) async => ManufacturerControlMapper.values,

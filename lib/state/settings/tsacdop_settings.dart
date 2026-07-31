@@ -40,13 +40,6 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     defaultValue: 0,
   );
 
-  /// Version of the setting preferences schema.
-  late final settingsInitialized = BoolPreference(
-    backend,
-    key: 'settingsInitialized',
-    defaultValue: false,
-  );
-
   /// App use times.
 
   /// Last app use time. (Updated at each databse episode fetch)
@@ -110,6 +103,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
           [] => null,
           [""] => null,
           [var languageCode] => Locale(languageCode),
+          [var languageCode, ""] => Locale(languageCode),
           [var languageCode, var scriptCode] => Locale.fromSubtags(
             languageCode: languageCode,
             scriptCode: scriptCode,
@@ -128,7 +122,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     defaultValue: ThemeMode.system,
     updateCallback: settingsChanged,
     getLegacy: () async {
-      final value = await legacyBackend.getInt('theme');
+      final value = await legacyBackend.getInt('themes');
       return value == null ? null : ThemeMode.values[value];
     },
     serialize: (value) => value.index,
@@ -880,7 +874,6 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
   Pref getPref(TsacdopPreference tsacdopPreference) =>
       switch (tsacdopPreference) {
         .settingsVersion => settingsVersion,
-        .settingsInitialized => settingsInitialized,
         .lastUsedTime => lastUsedTime,
         .lastSyncTime => lastSyncTime,
         .showIntro => showIntro,
@@ -942,7 +935,6 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
 
 enum TsacdopPreference {
   settingsVersion,
-  settingsInitialized,
   lastUsedTime,
   lastSyncTime,
   showIntro,
@@ -1002,7 +994,7 @@ enum TsacdopPreference {
 }
 
 enum PreferenceCategory {
-  meta([.settingsVersion, .settingsInitialized]),
+  meta([.settingsVersion]),
   times([.lastUsedTime, .lastSyncTime]),
   general([.showIntro, .localeOverride]),
   lookAndFeel([
@@ -1074,7 +1066,10 @@ enum PreferenceCategory {
 
   static List<TsacdopPreference> getPrefSet(
     Set<PreferenceCategory> prefClasses,
-  ) => prefClasses.expand((e) => e.preferences).toList();
+  ) => [
+    ...prefClasses.expand((e) => e == meta ? [] : e.preferences),
+    ...meta.preferences,
+  ];
 
   static List<TsacdopPreference> allPrefs() =>
       getPrefSet(PreferenceCategory.values.toSet());

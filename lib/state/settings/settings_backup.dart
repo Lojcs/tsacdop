@@ -115,7 +115,7 @@ class LegacyBackupPreferences implements SharedPreferences {
 
   /// Translates old SharedPreferences keys to old SettingsBackup keys and returns the value.
   dynamic getValue(String key) => switch (key) {
-    'theme' => json['theme'],
+    'themes' => json['theme'],
     'accents' => json['accentColor'],
     'realDark' => json['realDark'],
     'useWallpaperThemeKet' => json['useWallpaperTheme'],
