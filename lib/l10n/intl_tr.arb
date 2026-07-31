@@ -729,7 +729,7 @@
     "settingsLookAndFeel": "Görünüş ve His",
     "settingsLookAndFeelDes": "Renkler, yazı tipleri ve titreşimler",
     "settingsMediaControls": "Bildirim paneli medya kontrolleri",
-    "settingsMediaControlsDes": "Düğme konumları cihazlar, Android versiyonları ve seçili düğmelere göre değişebilir.",
+    "settingsMediaControlsDes": "Düğme konumları Android dağıtımları, sürümleri ve düğme seçimleri arasında farklılık gösterebilir.",
     "settingsNewEpisodes": "Yeni Bölümler",
     "settingsNewEpisodesDes": "Yeni bölüm krierleri.",
     "settingsNewEpisodesMark": "Yeni bölümleri işaretle",
@@ -789,7 +789,7 @@
     "wifi": "Wi-Fi",
     "weeksCount": "{count, plural, zero{{count} hafta} one{{count} hafta} other{{count} hafta}}",
     "yearsCount": "{count, plural, zero{{count} yıl} one{{count} yıl} other{{count} yıl}}",
-    "aboutDes": "Tsacdop, Flutter ile inşa edilmiş zarif ve özelleştirilebilir bir podcast oynatıcıdır.",
+    "aboutDes": "Tsacdop-Fork, Flutter ile inşa edilmiş zarif ve özelleştirilebilir bir podcast oynatıcıdır.",
     "contribute": "Katkıda bulun",
     "developerOriginal": "Orijinal geliştirici",
     "getStarted": "Başlamak için",
@@ -823,5 +823,8 @@
     "settingsAutoSync": "Otomatik senkronizasyon",
     "settingsAutoSyncDes": "Son yayınlanan bölümleri edinmek için düzenli olarak tüm podcast'leri arka planda yenile.",
     "toastResetSuccessful": "Sıfırlama başarılı!",
-    "toastRestart": "Lütfen uygulamayı hemen yeniden başlatın."
+    "toastRestart": "Lütfen uygulamayı hemen yeniden başlatın.",
+    "settingsFullStop": "Tamamen dur",
+    "settingsFullStopDes": "Dur'a basıldığında uygulamayı öldür.",
+    "settingsManufacturerNotificationLayout": "Üretici bildirim stili"
 }
