@@ -1,7 +1,7 @@
 # Tsacdop-Fork Changelog
 
 ## 0.10.0
-Release date 2026/07/2?
+Release date 2026/08/04
 
 ### New
 * Fully customizable notification.
@@ -17,6 +17,7 @@ Release date 2026/07/2?
 * Full database backup & restore support.
 * Option to pick categories to backup / restore.
 * Option to encrypt backups.
+* Tapping the displayed group name opens a list to change the group.
 
 ### Changed
 * Rewrote settings storage and ui.
@@ -41,6 +42,10 @@ These options are superseeded by other options or cause complexity for little ga
 * Queue reorder doesn't refresh queue visual.
 * Remove new mark button doesn't work. (Moved to multiselect)
 * Status and navigation bar colors are properly transparent.
+
+### Translations
+* (new) German - mondstern
+* Portuguese - Sergio Marques
 
 ## 0.9.3
 Release date 2026/02/26

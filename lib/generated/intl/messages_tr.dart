@@ -525,7 +525,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "selected": m26,
     "settingStorage": MessageLookupByLibrary.simpleMessage("Depolama"),
     "settings": MessageLookupByLibrary.simpleMessage("Ayarlar"),
-    "settingsAccentColor": MessageLookupByLibrary.simpleMessage("Aksan rengi"),
+    "settingsAccentColor": MessageLookupByLibrary.simpleMessage(
+      "Aksan köken rengi",
+    ),
     "settingsAppIntro": MessageLookupByLibrary.simpleMessage(
       "Uygulama başlangıcı",
     ),
