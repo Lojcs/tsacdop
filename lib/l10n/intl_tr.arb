@@ -352,7 +352,7 @@
         }
     },
     "settings": "Ayarlar",
-    "settingsAccentColor": "Aksan rengi",
+    "settingsAccentColor": "Aksan köken rengi",
     "settingsAccentColorDes": "Katman rengini seç",
     "settingsAppearance": "Görünüm",
     "settingsAppearanceDes": "Renkler ve temalar",
