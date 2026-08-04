@@ -4,6 +4,8 @@ import 'dart:ui';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 
+import '../util/extension_helper.dart';
+
 enum TBrightness {
   light(.light),
   dark(.dark),
@@ -14,20 +16,28 @@ enum TBrightness {
 }
 
 ColorScheme getColorSchemeFromSeed(Color seed, TBrightness brightness) =>
-    switch (brightness) {
-      .light => ColorScheme.fromSeed(
-        seedColor: seed,
-        primary: seed,
+    switch ((
+      brightness,
+      HSVColor.fromColor(seed).transform(
+        (hsv) => hsv
+            .withSaturation(hsv.saturation * 0.7 + 0.3)
+            .withValue(hsv.value * 0.5 + 0.5)
+            .toColor(),
+      ),
+    )) {
+      (.light, var color) => ColorScheme.fromSeed(
+        seedColor: color,
+        primary: color,
         brightness: .light,
       ),
-      .dark => ColorScheme.fromSeed(
-        seedColor: seed,
-        primary: seed,
+      (.dark, var color) => ColorScheme.fromSeed(
+        seedColor: color,
+        primary: color,
         brightness: .dark,
       ),
-      .black => ColorScheme.fromSeed(
-        seedColor: seed,
-        primary: seed,
+      (.black, var color) => ColorScheme.fromSeed(
+        seedColor: color,
+        primary: color,
         brightness: .dark,
         surface: Colors.black,
       ),
@@ -170,7 +180,7 @@ class CardColorScheme extends ThemeExtension<CardColorScheme> {
                : Color.lerp(
                    colorScheme.surfaceContainerLow,
                    colorScheme.primary,
-                   0.1,
+                   0.05,
                  )!),
        selected =
            selected ??

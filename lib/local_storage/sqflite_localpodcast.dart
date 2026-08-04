@@ -483,11 +483,11 @@ class DBHelper {
     Set<DatabaseCategory> tableCategories,
     String? password,
   ) async {
+    var dbClient = await database;
     var path = join(documentsDirectory, "backup.db");
     var file = File(path);
     if (file.existsSync()) file.deleteSync();
     final tables = tableCategories.expand((e) => e.tables).toList();
-    var dbClient = await database;
     await dbClient.execute("ATTACH DATABASE ? AS backup", [path]);
     await dbClient.transaction((txn) async {
       for (var table in tables) {
@@ -559,6 +559,7 @@ class DBHelper {
     DownloadState downloads,
   ) async {
     try {
+      var dbClient = await database;
       var path = join(documentsDirectory, "backup.db");
       if (password != null) {
         final encrypted = await backupFile.readAsBytes();
@@ -568,7 +569,6 @@ class DBHelper {
         await File(backupFile.path).copy(path);
       }
       final tables = tableCategories.expand((e) => e.tables).toList();
-      var dbClient = await database;
       await dbClient.execute("ATTACH DATABASE ? AS backup", [path]);
       try {
         await dbClient.transaction((txn) async {

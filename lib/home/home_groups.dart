@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
@@ -66,6 +68,44 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
     super.dispose();
   }
 
+  Future<void> prevGroup(int groupCount) async {
+    if (groupCount == 1) {
+      Fluttertoast.showToast(
+        msg: context.s.addSomeGroups,
+        gravity: ToastGravity.BOTTOM,
+      );
+    } else {
+      if (mounted) {
+        setState(() => _slideTween = _getSlideTween(20));
+        _controller.forward();
+        await Future.delayed(Duration(milliseconds: 50));
+        if (mounted) {
+          setState(() {
+            (_groupIndex != 0) ? _groupIndex-- : _groupIndex = groupCount - 1;
+          });
+        }
+      }
+    }
+  }
+
+  Future<void> nextGroup(int groupCount) async {
+    if (groupCount == 1) {
+      Fluttertoast.showToast(
+        msg: context.s.addSomeGroups,
+        gravity: ToastGravity.BOTTOM,
+      );
+    } else {
+      setState(() => _slideTween = _getSlideTween(-20));
+      await Future.delayed(Duration(milliseconds: 50));
+      _controller.forward();
+      if (mounted) {
+        setState(() {
+          (_groupIndex < groupCount - 1) ? _groupIndex++ : _groupIndex = 0;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = context.s;
@@ -101,43 +141,9 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                       onVerticalDragEnd: (event) async {
                         final groupCount = context.podcastState.groupIds.length;
                         if (event.primaryVelocity! > 200) {
-                          if (groupCount == 1) {
-                            Fluttertoast.showToast(
-                              msg: s.addSomeGroups,
-                              gravity: ToastGravity.BOTTOM,
-                            );
-                          } else {
-                            if (mounted) {
-                              setState(() => _slideTween = _getSlideTween(20));
-                              _controller.forward();
-                              await Future.delayed(Duration(milliseconds: 50));
-                              if (mounted) {
-                                setState(() {
-                                  (_groupIndex != 0)
-                                      ? _groupIndex--
-                                      : _groupIndex = groupCount - 1;
-                                });
-                              }
-                            }
-                          }
+                          await prevGroup(groupCount);
                         } else if (event.primaryVelocity! < -200) {
-                          if (groupCount == 1) {
-                            Fluttertoast.showToast(
-                              msg: s.addSomeGroups,
-                              gravity: ToastGravity.BOTTOM,
-                            );
-                          } else {
-                            setState(() => _slideTween = _getSlideTween(-20));
-                            await Future.delayed(Duration(milliseconds: 50));
-                            _controller.forward();
-                            if (mounted) {
-                              setState(() {
-                                (_groupIndex < groupCount - 1)
-                                    ? _groupIndex++
-                                    : _groupIndex = 0;
-                              });
-                            }
-                          }
+                          await nextGroup(groupCount);
                         }
                       },
                       child: Column(
@@ -150,10 +156,42 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 15.0,
                                   ),
-                                  child: Text(
-                                    data.group.name,
-                                    style: context.textTheme.bodyLarge!
-                                        .copyWith(color: context.primaryColor),
+                                  child: InkWell(
+                                    onTap: () {
+                                      showModalBottomSheet(
+                                        context: context,
+                                        builder: (context) => ListView(
+                                          children: context
+                                              .podcastState
+                                              .groupIds
+                                              .map(
+                                                (id) => context.podcastState
+                                                    .getGroupById(id),
+                                              )
+                                              .mapIndexed(
+                                                (i, e) => ListTile(
+                                                  leading: SizedBox(),
+                                                  title: Text(e.name),
+                                                  onTap: () => setState(
+                                                    () => _groupIndex = i,
+                                                  ),
+                                                ),
+                                              )
+                                              .toList(),
+                                        ),
+                                      );
+                                    },
+                                    borderRadius: context.radiusTiny,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(5.0),
+                                      child: Text(
+                                        data.group.name,
+                                        style: context.textTheme.bodyLarge!
+                                            .copyWith(
+                                              color: context.primaryColor,
+                                            ),
+                                      ),
+                                    ),
                                   ),
                                 ),
                                 Spacer(),

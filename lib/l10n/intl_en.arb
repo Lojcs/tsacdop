@@ -652,7 +652,7 @@
   "@selectMode": {},
   "settings": "Settings",
   "@settings": {},
-  "settingsAccentColor": "Accent color",
+  "settingsAccentColor": "Accent seed color",
   "@settingsAccentColor": {},
   "settingsAppearance": "Appearance",
   "@settingsAppearance": {},

@@ -28,8 +28,8 @@ import '../../widgets/episodegrid.dart';
 /// To add a new setting:
 /// 1. Create a preference variable in [TsacdopSettings].
 /// 2. Add it to the [TsacdopPreference] enum.
-/// 3. Add it to the [getPref] function.
-/// 4. Add it to a [PreferenceCategory].
+/// 3. Add it to a [PreferenceCategory].
+/// 4. Add it to the [getPref] function.
 abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
   /// Settings about settings.
 
@@ -38,6 +38,13 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     backend,
     key: 'settingsVersion',
     defaultValue: 0,
+  );
+
+  /// Wheter the app is being opened for the first time.
+  late final settingsInitialized = BoolPreference(
+    backend,
+    key: 'settingsInitialized',
+    defaultValue: false,
   );
 
   /// App use times.
@@ -70,7 +77,11 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
     key: 'showIntro',
     defaultValue: true,
     updateCallback: settingsChanged,
-    getLegacy: () => legacyBackend.getBool('intro', reverse: true),
+    getLegacy: () async => switch ((await legacyBackend.getInt('intro'))) {
+      null => null,
+      0 => true,
+      _ => false,
+    },
   );
 
   /// Locale override.
@@ -874,6 +885,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
   Pref getPref(TsacdopPreference tsacdopPreference) =>
       switch (tsacdopPreference) {
         .settingsVersion => settingsVersion,
+        .settingsInitialized => settingsInitialized,
         .lastUsedTime => lastUsedTime,
         .lastSyncTime => lastSyncTime,
         .showIntro => showIntro,
@@ -935,6 +947,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
 
 enum TsacdopPreference {
   settingsVersion,
+  settingsInitialized,
   lastUsedTime,
   lastSyncTime,
   showIntro,
@@ -994,7 +1007,7 @@ enum TsacdopPreference {
 }
 
 enum PreferenceCategory {
-  meta([.settingsVersion]),
+  meta([.settingsVersion, .settingsInitialized]),
   times([.lastUsedTime, .lastSyncTime]),
   general([.showIntro, .localeOverride]),
   lookAndFeel([

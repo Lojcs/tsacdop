@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer' as dev;
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -38,13 +39,17 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
     backend = await SharedPreferencesWithCache.create(
       cacheOptions: SharedPreferencesWithCacheOptions(),
     );
-    if (await legacyBackend.getBool('intro') != null) {
-      await _migrateSettings(PreferenceCategory.values.toSet());
+    if (!settingsInitialized.get()) {
+      final legacyInitialized = await legacyBackend.getInt('intro');
+      if (legacyInitialized != null && legacyInitialized != 0) {
+        await _migrateSettings(PreferenceCategory.values.toSet());
+      }
+      await _initDefaultSettings();
     }
-    await _initDefaultSettings();
 
     await startWorkManager();
     await setThemes();
+    await settingsInitialized.set(true);
   }
 
   /// Migrates settings from the old [SharedPreferences] backend

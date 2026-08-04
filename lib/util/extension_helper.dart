@@ -379,3 +379,7 @@ extension DirectoryExtension on Directory {
     return size;
   }
 }
+
+extension ObjectTransform<T extends Object> on T {
+  R transform<R>(R Function(T o) mapper) => mapper(this);
+}

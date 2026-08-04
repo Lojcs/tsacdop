@@ -38,8 +38,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   late TabController controller = TabController(length: 1, vsync: this);
 
   final _androidAppRetain = MethodChannel("android_app_retain");
-  var feature1OverflowMode = OverflowMode.clipContent;
-  var feature1EnablePulsingAnimation = false;
   double top = 0;
 
   late SettingState settingState = context.settingState;
