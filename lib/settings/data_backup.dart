@@ -99,12 +99,8 @@ class DataBackup extends StatelessWidget {
                 children: [
                   SettingsActionButton(
                     onPressed: () async {
-                      var file = await datedSaveFile(
-                        context,
-                        "settings",
-                        "json",
-                      );
-                      if (file != null && context.mounted) {
+                      var file = await datedSaveFile("settings", "json");
+                      if (context.mounted) {
                         await context.settingState.backup(
                           file,
                           prefCategories,
@@ -122,12 +118,8 @@ class DataBackup extends StatelessWidget {
                   ),
                   SettingsActionButton(
                     onPressed: () async {
-                      var file = await datedSaveFile(
-                        context,
-                        "settings",
-                        "json",
-                      );
-                      if (file != null && context.mounted) {
+                      var file = await datedSaveFile("settings", "json");
+                      if (context.mounted) {
                         await context.settingState.backup(
                           file,
                           prefCategories,
@@ -362,12 +354,8 @@ class DataBackup extends StatelessWidget {
                 children: [
                   SettingsActionButton(
                     onPressed: () async {
-                      var file = await datedSaveFile(
-                        context,
-                        "database",
-                        "db3",
-                      );
-                      if (file != null && context.mounted) {
+                      var file = await datedSaveFile("database", "db3");
+                      if (context.mounted) {
                         await DBHelper().backup(
                           file,
                           databaseCategories,
@@ -385,12 +373,8 @@ class DataBackup extends StatelessWidget {
                   ),
                   SettingsActionButton(
                     onPressed: () async {
-                      var file = await datedSaveFile(
-                        context,
-                        "database",
-                        "db3",
-                      );
-                      if (file != null && context.mounted) {
+                      var file = await datedSaveFile("database", "db3");
+                      if (context.mounted) {
                         await DBHelper().backup(
                           file,
                           databaseCategories,
@@ -544,27 +528,6 @@ class DataBackup extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  Future<File?> datedSaveFile(
-    BuildContext context,
-    String type,
-    String extension,
-  ) async {
-    var tempdir = await getTemporaryDirectory();
-    if (context.mounted) {
-      var now = DateTime.now();
-      var datePlus =
-          now.year.toString() +
-          now.month.toString() +
-          now.day.toString() +
-          now.second.toString();
-      var file = File(
-        path.join(tempdir.path, 'tsacdop_${type}_$datePlus.$extension'),
-      );
-      return file;
-    }
-    return null;
   }
 
   String? prefCategoryToString(

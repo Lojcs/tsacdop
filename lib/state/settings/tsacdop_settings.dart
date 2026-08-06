@@ -310,6 +310,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
             );
     },
     fixValue: (value) async {
+      value = value as ActionBarConfiguration;
       final podcastState = PodcastState(
         await getApplicationDocumentsDirectory(),
       );
@@ -342,6 +343,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
                 );
         },
         fixValue: (value) async {
+          value = value as ActionBarConfiguration;
           final podcastState = PodcastState(
             await getApplicationDocumentsDirectory(),
           );
@@ -408,6 +410,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
             ];
     },
     fixValue: (value) async {
+      value = value as List<HomeTabConfiguration>;
       final podcastState = PodcastState(
         await getApplicationDocumentsDirectory(),
       );
@@ -762,11 +765,14 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
           : (await getExternalStorageDirectories())![value].path;
     },
     fixValue: (value) async {
+      value = value as String;
       final options = (await getExternalStorageDirectories())!;
       for (var option in options) {
-        if (await FileSystemEntity.identical(option.path, value)) {
-          return value;
-        }
+        try {
+          if (await FileSystemEntity.identical(option.path, value)) {
+            return value;
+          }
+        } on PathNotFoundException catch (_) {}
       }
       return options[0].path;
     },

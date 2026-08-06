@@ -11,6 +11,7 @@ import 'package:workmanager/workmanager.dart';
 import '../../generated/l10n.dart';
 import '../../local_storage/key_value_storage.dart';
 import '../../type/theme_data.dart';
+import '../../util/logger.dart';
 import '../podcast_state.dart';
 import 'preference.dart';
 import 'settings_backup.dart';
@@ -40,16 +41,41 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
       cacheOptions: SharedPreferencesWithCacheOptions(),
     );
     if (!settingsInitialized.get()) {
+      await Logger.instance.log("Settings uninitialized.");
       final legacyInitialized = await legacyBackend.getInt('intro');
       if (legacyInitialized != null && legacyInitialized != 0) {
+        await Logger.instance.log(
+          "Legacy settings exist, migrating legacy settings.",
+        );
         await _migrateSettings(PreferenceCategory.values.toSet());
       }
+      await Logger.instance.log("Initializing default settings.");
       await _initDefaultSettings();
+
+      await Logger.instance.log("Settings init complete, listing settings.");
+      final prefSet = PreferenceCategory.getPrefSet(
+        PreferenceCategory.values.toSet(),
+      );
+      for (var pref in prefSet) {
+        final currentPref = getPref(pref);
+        await Logger.instance.log(
+          "Setting value: ${pref.name} (${currentPref.get()})",
+        );
+      }
     }
 
     await startWorkManager();
     await setThemes();
     await settingsInitialized.set(true);
+  }
+
+  Future<void> _earlyLoadLocale([Locale? value]) async {
+    Locale locale =
+        value ??
+        localeOverride.get() ??
+        localeOverride.deserialize(Platform.localeName)!;
+    await S.load(locale);
+    await Logger.instance.log("Early loaded locale: ${locale.toLanguageTag()}");
   }
 
   /// Migrates settings from the old [SharedPreferences] backend
@@ -58,16 +84,9 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
     final prefSet = PreferenceCategory.getPrefSet(prefClasses);
     if (prefSet.contains(TsacdopPreference.localeOverride)) {
       final value = await localeOverride.getLegacy!();
-      S.load(
-        value ??
-            localeOverride.get() ??
-            localeOverride.deserialize(Platform.localeName)!,
-      );
+      await _earlyLoadLocale(value);
     } else {
-      S.load(
-        localeOverride.get() ??
-            localeOverride.deserialize(Platform.localeName)!,
-      );
+      await _earlyLoadLocale();
     }
     for (var pref in prefSet) {
       final currentPref = getPref(pref);
@@ -75,6 +94,9 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
         final value = await currentPref.getLegacy!();
         if (value != null ||
             (currentPref is ProxyPreference && currentPref.nullAllowed)) {
+          await Logger.instance.log(
+            "Migrating setting: ${pref.name} (${currentPref.get()} => $value)",
+          );
           await currentPref.set(value);
         }
       }
@@ -84,6 +106,7 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
 
   /// Initializes default settings that can't auto-initialize.
   Future<void> _initDefaultSettings() async {
+    await _earlyLoadLocale();
     if (downloadStoragePath.get() == unsetSentinel) {
       downloadStoragePath.set((await getExternalStorageDirectories())![0].path);
     }
@@ -278,8 +301,10 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
       for (var pref in prefSet) {
         final backupValue = settingsBackup.getPref(pref).get();
         final preference = getPref(pref);
+        final fixValue = preference.fixValue;
         final fixedValue =
-            await preference.fixValue?.call(backupValue) ?? backupValue;
+            (await (fixValue ?? (v) async => v).call(backupValue)) ??
+            backupValue;
         await preference.set(fixedValue);
       }
       return true;

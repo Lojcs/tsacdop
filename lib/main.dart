@@ -17,48 +17,57 @@ import 'state/download_state.dart';
 import 'state/podcast_state.dart';
 import 'state/settings/setting_state.dart';
 import 'type/playlist.dart';
+import 'util/logger.dart';
 import 'util/extension_helper.dart';
 
 Future main() async {
-  GoogleFonts.config.allowRuntimeFetching = false;
-  LicenseRegistry.addLicense(() async* {
-    final license = await rootBundle.loadString('assets/google_fonts/OFL.txt');
-    yield LicenseEntryWithLineBreaks(['google_fonts'], license);
+  await Logger.instance.run(() async {
+    await Logger.instance.log("App started.");
+    GoogleFonts.config.allowRuntimeFetching = false;
+    LicenseRegistry.addLicense(() async* {
+      final license = await rootBundle.loadString(
+        'assets/google_fonts/OFL.txt',
+      );
+      yield LicenseEntryWithLineBreaks(['google_fonts'], license);
+    });
+
+    timeDilation = 1.0;
+    WidgetsFlutterBinding.ensureInitialized();
+
+    await Logger.instance.log("Settings state starting.");
+    final settings = SettingState();
+    await settings.ready;
+    await Logger.instance.log("Settings state started.");
+
+    final documents = await getApplicationDocumentsDirectory();
+    final podcastState = PodcastState(documents);
+    await podcastState.ready;
+    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        systemNavigationBarColor: Colors.transparent,
+        statusBarColor: Colors.transparent,
+      ),
+    );
+    await Logger.instance.log("Ready to run ui.");
+    runApp(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: settings),
+          ChangeNotifierProvider(create: (_) => EpisodeState()),
+          ChangeNotifierProvider.value(value: podcastState),
+          ChangeNotifierProvider(
+            lazy: false, // TODO: Check if these are actually needed.
+            create: (_) => DownloadState(),
+          ),
+          ChangeNotifierProvider(lazy: false, create: (_) => AudioState()),
+        ],
+        child: MyApp(),
+      ),
+    );
+    // await SystemChrome.setPreferredOrientations(
+    //     [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
   });
-
-  timeDilation = 1.0;
-  WidgetsFlutterBinding.ensureInitialized();
-
-  final settings = SettingState();
-  await settings.ready;
-
-  final documents = await getApplicationDocumentsDirectory();
-  final podcastState = PodcastState(documents);
-  await podcastState.ready;
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider.value(value: settings),
-        ChangeNotifierProvider(create: (_) => EpisodeState()),
-        ChangeNotifierProvider.value(value: podcastState),
-        ChangeNotifierProvider(
-          lazy: false, // TODO: Check if these are actually needed.
-          create: (_) => DownloadState(),
-        ),
-        ChangeNotifierProvider(lazy: false, create: (_) => AudioState()),
-      ],
-      child: MyApp(),
-    ),
-  );
-  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      systemNavigationBarColor: Colors.transparent,
-      statusBarColor: Colors.transparent,
-    ),
-  );
-  // await SystemChrome.setPreferredOrientations(
-  //     [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
 }
 
 class MyApp extends StatelessWidget {
@@ -74,6 +83,7 @@ class MyApp extends StatelessWidget {
     context.audioState.context = context;
     final browsableLibrary = BrowsableLibrary(context);
     context.audioState.browsableLibrary = browsableLibrary;
+    Logger.instance.log("Building ui.");
     return Selector<
       SettingState,
       ({

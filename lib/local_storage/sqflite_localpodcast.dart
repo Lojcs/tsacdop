@@ -23,6 +23,7 @@ import '../type/play_histroy.dart';
 import '../type/podcastbrief.dart';
 import '../type/sub_history.dart';
 import '../util/helpers.dart';
+import '../util/logger.dart';
 
 const databaseName = "podcasts.db";
 
@@ -95,11 +96,7 @@ class DatabaseStats extends Equatable {
 class DBHelper {
   late String documentsDirectory;
   Database? _db;
-  Future<Database> get database async {
-    if (_db != null) return _db!;
-    _db = await initDb();
-    return _db!;
-  }
+  Future<Database> get database async => _db ??= await initDb();
 
   Future<Database> initDb() async {
     documentsDirectory = await getDatabasesPath();
@@ -119,6 +116,7 @@ class DBHelper {
   }
 
   void _onCreate(Database db, int version) async {
+    await Logger.instance.log("Creating database.");
     await db.execute(
       """CREATE TABLE PodcastLocal(id TEXT PRIMARY KEY, title TEXT, 
         imageUrl TEXT, rssUrl TEXT UNIQUE, primaryColor TEXT, author TEXT, 
@@ -214,6 +212,7 @@ class DBHelper {
   }
 
   void _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    await Logger.instance.log("Updating database: $oldVersion => $newVersion");
     if (oldVersion == 7) await _v7Fix(db);
     for (int i = oldVersion; i < newVersion; i++) {
       await updaters[i](db);
@@ -415,6 +414,8 @@ class DBHelper {
   }
 
   Future<void> _v10Update(Database db) async {
+    await Logger.instance.log("Database update: v10");
+    await Logger.instance.log("Creating new tables.");
     await db.execute("ALTER TABLE Episodes ADD interacted INTEGER DEFAULT 0");
     await db.execute("ALTER TABLE PodcastLocal DROP hide_new_mark");
     await db.execute(
@@ -425,6 +426,8 @@ class DBHelper {
         playlist_id TEXT REFERENCES Playlists(id), idx INTEGER,
         PRIMARY KEY (episode_id, playlist_id, idx))""",
     );
+
+    await Logger.instance.log("Enumerating playlists.");
     final playlists = await () async {
       var prefs = await SharedPreferences.getInstance();
       final jString = prefs.getString('playlistsAllKey');
@@ -464,6 +467,7 @@ class DBHelper {
           episodeIds: playlist.episodeIds,
         );
       }
+      await Logger.instance.log("Inserting playlist: ${playlist.toJson()}");
       await db.rawInsert(
         "INSERT INTO Playlists(id, name, is_local, is_queue) VALUES (?, ?, ?, ?)",
         [playlist.id, playlist.name, playlist.isLocal, playlist.isQueue],
@@ -475,6 +479,7 @@ class DBHelper {
         );
       }
     }
+    await Logger.instance.log("Database update v10 complete.");
   }
 
   /// Backs up database tables to the file.

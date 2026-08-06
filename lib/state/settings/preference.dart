@@ -16,7 +16,7 @@ abstract interface class PreferenceInterface<T> {
   /// Function to transform the value so that it's valid to set.
   /// Not called automatically on set, assumed to be called
   /// externally if it's possible to submit invalid values.
-  Future<T> Function(T value)? get fixValue;
+  Future<T> Function(dynamic value)? get fixValue;
 
   /// Get current value.
   T get();
@@ -52,7 +52,7 @@ sealed class Preference<T> implements PreferenceInterface<T> {
   /// Not called automatically on set, assumed to be called
   /// externally if it's possible to submit invalid values.
   @override
-  final Future<T> Function(T value)? fixValue;
+  final Future<T> Function(dynamic value)? fixValue;
 
   Preference(
     this.prefs, {
@@ -205,7 +205,7 @@ sealed class ProxyPreference<T, S, P extends Preference<S>>
   /// Not called automatically on set, assumed to be called
   /// externally if it's possible to submit invalid values.
   @override
-  final Future<T> Function(T value)? fixValue;
+  final Future<T> Function(dynamic value)? fixValue;
 
   /// Wheter null is a valid value.
   final bool nullAllowed;

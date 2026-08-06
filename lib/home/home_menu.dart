@@ -12,6 +12,7 @@ import 'package:share_plus/share_plus.dart';
 import '../backup/opml_helper.dart';
 import '../settings/settings.dart';
 import '../util/extension_helper.dart';
+import '../util/logger.dart';
 import 'about.dart';
 
 class HomeMenu extends StatelessWidget {
@@ -108,7 +109,7 @@ class HomeMenu extends StatelessWidget {
                     children: <Widget>[
                       Icon(LineIcons.scroll),
                       Padding(padding: EdgeInsets.symmetric(horizontal: 5.0)),
-                      Text("Export logs"),
+                      Text("Export sync logs"),
                     ],
                   ),
                 ),
@@ -123,6 +124,20 @@ class HomeMenu extends StatelessWidget {
                       Icon(LineIcons.trash),
                       Padding(padding: EdgeInsets.symmetric(horizontal: 5.0)),
                       Text("Delete logs"),
+                    ],
+                  ),
+                ),
+              ),
+            if (loggingActive)
+              PopupMenuItem(
+                value: 7,
+                child: Container(
+                  padding: EdgeInsets.only(left: 10),
+                  child: Row(
+                    children: <Widget>[
+                      Icon(Icons.save),
+                      Padding(padding: EdgeInsets.symmetric(horizontal: 5.0)),
+                      Text("Save logger log"),
                     ],
                   ),
                 ),
@@ -150,9 +165,11 @@ class HomeMenu extends StatelessWidget {
                   MaterialPageRoute(builder: (context) => AboutApp()),
                 );
               case 5:
-                _exportLogs();
+                await _exportLogs();
               case 6:
-                _deleteLogs();
+                await _deleteLogs();
+              case 7:
+                await Logger.instance.save();
             }
           },
         ),

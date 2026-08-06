@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:intl/intl.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../util/extension_helper.dart';
@@ -168,4 +170,13 @@ Future<List<int>> decryptWithPassword(
   final passwordHash = await Sha256().hash(password.codeUnits);
   final key = SecretKey(passwordHash.bytes);
   return aes.decrypt(box, secretKey: key);
+}
+
+Future<File> datedSaveFile(String type, String extension) async {
+  var tempdir = await getTemporaryDirectory();
+  var datePlus = DateTime.now().toIntString();
+  var file = File(
+    path.join(tempdir.path, 'tsacdop_${type}_$datePlus.$extension'),
+  );
+  return file;
 }

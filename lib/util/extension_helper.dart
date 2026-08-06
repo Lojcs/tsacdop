@@ -183,6 +183,20 @@ extension DateTimeExtension on DateTime {
       return DateFormat.yMMMd().format(toLocal());
     }
   }
+
+  String toIntString([bool ms = false]) => [
+    [
+      year.toString(),
+      month.toString().padLeft(2, "0"),
+      day.toString().padLeft(2, "0"),
+    ].join("-"),
+    [
+      hour.toString().padLeft(2, "0"),
+      minute.toString().padLeft(2, "0"),
+      second.toString().padLeft(2, "0"),
+    ].join("-"),
+    if (ms) millisecond.toString().padLeft(3, "0"),
+  ].join("_");
 }
 
 extension DurationExtension on Duration {

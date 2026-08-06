@@ -58,6 +58,7 @@ class Playlist {
       'id': id,
       'isLocal': isLocal,
       'episodeIdList': episodeIds,
+      'isQueue': isQueue,
     };
   }
 
