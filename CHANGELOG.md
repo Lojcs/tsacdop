@@ -1,5 +1,18 @@
 # Tsacdop-Fork Changelog
 
+## 0.10.1-pre.1
+Release date 2026/08/10
+
+This is a pre release with logging active.
+
+### New
+* Added logging. There was a report of the app freezing (crashing) on v0.10.0, and I'm not sure if the bugfix below fixes it, so this release will log the update process and prompt to save the log if something goes wrong.
+
+### Bugfixes
+* Fixed the app freezing on launch if the first launch after updating to v0.10 was interrupted.
+
+### New
+
 ## 0.10.0
 Release date 2026/08/04
 

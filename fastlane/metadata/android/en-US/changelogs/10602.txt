@@ -1,0 +1,20 @@
+Changes from v0.10.0:
+
+* Crash logging.
+
+Changes from v0.9.3:
+
+* Reorganized and reworded settings.
+* Greater settings customization for:
+    * Notification.
+    * Search.
+    * Filters.
+    * Home tabs.
+    * New episodes.
+    * Auto downloads and auto download deletion.
+    * Forbidden network types.
+* More comprehensive, partial & encrypted backups.
+* Removed some options.
+* Bugfixes.
+
+Check out https://github.com/Lojcs/tsacdop/blob/v0.10.0-pre.1/CHANGELOG.md for full changelog.
