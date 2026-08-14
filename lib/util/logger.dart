@@ -7,7 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'extension_helper.dart';
 import 'helpers.dart';
 
-const bool loggingActive = true;
+const bool loggingActive = false;
 
 abstract class Logger {
   static Logger? _instance;
