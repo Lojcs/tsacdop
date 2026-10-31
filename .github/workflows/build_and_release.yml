@@ -17,13 +17,6 @@ jobs:
     env:
       PUB_CACHE: /tmp/build/.pub-cache
     steps:
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-          cache: gradle
-
       - name: Checkout
         uses: actions/checkout@v7
         with:
@@ -33,6 +26,13 @@ jobs:
         run: |
           mv $GITHUB_WORKSPACE /tmp/build
           ln -s /tmp/build $GITHUB_WORKSPACE
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
 
       - name: Decode keystore and create key.properties
         if: env.KEYSTORE != ''
