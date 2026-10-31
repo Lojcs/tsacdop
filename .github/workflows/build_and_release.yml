@@ -23,15 +23,11 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          submodules: recursive
-          fetch-depth: 0
-      - name: Change directory
+      - name: Clone
         run: |
-          mv $GITHUB_WORKSPACE /tmp/build
-          ln -s /tmp/build $GITHUB_WORKSPACE
+          git clone https://github.com/Lojcs/tsacdop --recurse-submodules
+          mv tsacdop build
+        working-directory: /tmp
 
       - name: Decode keystore and create key.properties
         if: env.KEYSTORE != ''
