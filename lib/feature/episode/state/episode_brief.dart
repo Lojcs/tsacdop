@@ -1,0 +1,393 @@
+import 'dart:io';
+
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:equatable/equatable.dart';
+
+import 'package:audio_service/audio_service.dart';
+import 'package:flutter/material.dart';
+import 'package:linkify/linkify.dart';
+import 'package:webfeed/webfeed.dart';
+import '../../../generated/l10n.dart';
+import '../../podcast/model/podcast_brief.dart';
+import '../../settings/model/theme_data.dart';
+import '../../../core/extension/extension_helper.dart';
+
+String urlFromRssItem(RssItem item) =>
+    item.enclosure != null && item.enclosure!.url != null
+    ? (item.enclosure!.url!.isXimalaya()
+          ? item.enclosure!.url!.split('=').last
+          : item.enclosure!.url!)
+    : "";
+
+class EpisodeBrief extends Equatable {
+  final int id;
+  final String title;
+  final String enclosureUrl;
+  final String podcastId;
+  final String podcastTitle;
+  final int pubDate;
+
+  final String showNotes;
+  final int number;
+  final int enclosureDuration;
+  final int enclosureSize;
+  final bool isDownloaded;
+  final int downloadDate;
+  final String mediaId;
+  final String episodeImageUrl;
+  final String podcastImagePath;
+  final Color primaryColor;
+
+  final bool isExplicit;
+  final bool isLiked;
+  final bool isNew;
+  final bool isPlayed;
+  final bool isDisplayVersion;
+  final bool isInteracted;
+  final List<int>? versions;
+  final int skipSecondsStart;
+  final int skipSecondsEnd;
+  final String chapterLink;
+
+  final DataSource source;
+  EpisodeBrief({
+    required this.id,
+    required this.title,
+    required this.enclosureUrl,
+    required this.podcastId,
+    required this.podcastTitle,
+    required this.pubDate,
+    required this.showNotes,
+    required this.number,
+    required this.enclosureDuration,
+    required this.enclosureSize,
+    required this.isDownloaded,
+    required this.downloadDate,
+    required this.mediaId,
+    required this.episodeImageUrl,
+    required this.podcastImagePath,
+    required this.primaryColor,
+    required this.isExplicit,
+    required this.isLiked,
+    required this.isNew,
+    required this.isPlayed,
+    required this.isDisplayVersion,
+    required this.isInteracted,
+    this.versions,
+    this.skipSecondsStart = 0,
+    this.skipSecondsEnd = 0,
+    required this.chapterLink,
+    required this.source,
+  });
+
+  /// Use for new user episodes not yet in database
+  EpisodeBrief.user({
+    required this.title,
+    required this.enclosureUrl,
+    String? podcastTitle,
+    required this.pubDate,
+    required this.showNotes,
+    required this.enclosureDuration,
+    required this.enclosureSize,
+    required this.mediaId,
+    this.episodeImageUrl = '',
+    Color? primaryColor,
+  }) : id = -1,
+       podcastId = localFolderId,
+       podcastTitle = podcastTitle ?? S.current.localFolder,
+       number = -1,
+       isDownloaded = true,
+       downloadDate = pubDate,
+       podcastImagePath = '',
+       primaryColor = primaryColor ?? Colors.teal,
+       isExplicit = false,
+       isLiked = false,
+       isNew = false,
+       isPlayed = false,
+       isDisplayVersion = true,
+       isInteracted = false,
+       versions = null,
+       skipSecondsStart = 0,
+       skipSecondsEnd = 0,
+       chapterLink = '',
+       source = DataSource.user;
+
+  /// Use for new remote episodes not yet in database
+  EpisodeBrief.fromRssItem(
+    RssItem item,
+    this.podcastId,
+    this.podcastTitle,
+    this.number,
+    this.podcastImagePath,
+    this.primaryColor,
+  ) : id = -1,
+      title = item.title ?? item.itunes?.title ?? "",
+      enclosureUrl = urlFromRssItem(item),
+      pubDate =
+          item.pubDate?.millisecondsSinceEpoch ??
+          DateTime.now().millisecondsSinceEpoch,
+      showNotes = linkifyShownotes(
+        [
+          item.content?.value ?? "",
+          item.description ?? "",
+          item.itunes?.summary ?? "",
+        ].reduce((s1, s2) => s1.length > s2.length ? s1 : s2),
+      ),
+      enclosureDuration = item.itunes?.duration?.inSeconds ?? 0,
+      enclosureSize = item.enclosure?.length ?? 0,
+      isDownloaded = false,
+      downloadDate = 0,
+      mediaId = item.enclosure != null && item.enclosure!.url != null
+          ? (item.enclosure!.url!.isXimalaya()
+                ? item.enclosure!.url!.split('=').last
+                : item.enclosure!.url!)
+          : "",
+      episodeImageUrl = item.itunes?.image?.href ?? '',
+      isExplicit = item.itunes?.explicit ?? false,
+      isLiked = false,
+      isNew =
+          DateTime.now().difference(item.pubDate ?? DateTime(0)) <
+          Duration(days: 1),
+      isPlayed = false,
+      isDisplayVersion = true,
+      isInteracted = false,
+      versions = [],
+      skipSecondsStart = 0,
+      skipSecondsEnd = 0,
+      chapterLink = item.podcastChapters?.url ?? '',
+      source = DataSource.remote;
+
+  /// Linkifies shownotes for html rendering.
+  /// [update] is for updating old format that had url and email saved but timestamp not.
+  static String linkifyShownotes(String shownotes, [bool update = false]) {
+    shownotes = shownotes
+        .replaceAll(RegExp(r'\s?<p>(<br>)?</p>\s?'), '')
+        .replaceAll('\r', '')
+        .trim();
+    final noLinks = !shownotes.contains('<');
+    if (noLinks || update) {
+      final linkList = linkify(
+        shownotes,
+        options: LinkifyOptions(humanize: false),
+        linkifiers: [UrlLinkifier(), EmailLinkifier(), TimeStampLinkifier()],
+      );
+      for (var element in linkList) {
+        switch ((noLinks, element)) {
+          case (true, UrlElement(:var url, :var text)):
+            shownotes = shownotes.replaceAll(
+              url,
+              '<a rel="nofollow" href = $url>$text</a>',
+            );
+          case (true, EmailElement(:var emailAddress)):
+            shownotes = shownotes.replaceAll(
+              emailAddress,
+              '<a rel="nofollow" href = "mailto:$emailAddress">$emailAddress</a>',
+            );
+          case (_, TimeStampElement(:var timeStamp)):
+            shownotes = shownotes.replaceFirst(
+              timeStamp,
+              '<a rel="nofollow" href = "#t=$timeStamp">$timeStamp</a>',
+            );
+        }
+      }
+    }
+    return shownotes;
+  }
+
+  late final MediaItem mediaItem = MediaItem(
+    id: mediaId,
+    title: title,
+    isLive: !isDownloaded,
+    artist: podcastTitle,
+    album: podcastTitle,
+    duration: Duration(seconds: enclosureDuration),
+    // artUri: Uri.parse('file://$podcastImage'),
+    // Andoid auto can't show local images
+    artUri: Uri.parse(
+      episodeImageUrl != '' ? episodeImageUrl : 'file://$podcastImagePath',
+    ),
+    extras: {
+      'episodeId': id,
+      'skipSecondsStart': skipSecondsStart,
+      'skipSecondsEnd': skipSecondsEnd,
+    },
+  );
+
+  ImageProvider get avatarImage {
+    // TODO: Get rid of this
+    if (podcastImagePath != '') {
+      if (File(podcastImagePath).existsSync()) {
+        return FileImage(File(podcastImagePath));
+      }
+    } else if (episodeImageUrl != '') {
+      if (File(episodeImageUrl).existsSync()) {
+        return FileImage(File(episodeImageUrl));
+      } else if (episodeImageUrl != '') {
+        return CachedNetworkImageProvider(episodeImageUrl);
+      }
+    }
+    return AssetImage('assets/avatar_backup.png');
+  }
+
+  late final ImageProvider episodeImageProvider =
+      ((episodeImageUrl != '')
+              ? (File(episodeImageUrl).existsSync())
+                    ? FileImage(File(episodeImageUrl))
+                    : (episodeImageUrl != '')
+                    ? CachedNetworkImageProvider(episodeImageUrl)
+                    : const AssetImage('assets/avatar_backup.png')
+              : const AssetImage('assets/avatar_backup.png'))
+          as ImageProvider;
+
+  late final ImageProvider podcastImageProvider =
+      ((podcastImagePath != '')
+              ? (File(podcastImagePath).existsSync())
+                    ? FileImage(File(podcastImagePath))
+                    : const AssetImage('assets/avatar_backup.png')
+              : const AssetImage('assets/avatar_backup.png'))
+          as ImageProvider;
+
+  // late final ImageProvider
+  //     episodeOrPodcastImageProvider = // TODO: Control internet usage
+  //     _episodeImageProvider != const AssetImage('assets/avatar_backup.png')
+  //         ? _episodeImageProvider
+  //         : podcastImageProvider;
+
+  // Until episode image caching is implemented don't use episode images
+  late final ImageProvider episodeOrPodcastImageProvider = podcastImageProvider;
+
+  Color backgroudColor(BuildContext context) =>
+      colorScheme(context).onSecondaryContainer;
+
+  /// Convenience method to get the card color for current theme
+  Color cardColor(BuildContext context) => cardColorScheme(context).card;
+
+  /// Convenience method to get the selected card color for current theme
+  Color selectedCardColor(BuildContext context) => context.trueBlack
+      ? cardColorSchemeDark.card
+      : cardColorScheme(context).selected;
+
+  /// Convenience method to get the card shadow color for current theme
+  Color cardShadowColor(BuildContext context) =>
+      cardColorScheme(context).shadow;
+
+  /// Convenience method to get the card progress indicator color for current theme
+  Color progressIndicatorColor(BuildContext context) =>
+      cardColorScheme(context).progress;
+
+  late final ColorScheme colorSchemeLight = getColorSchemeFromSeed(
+    primaryColor,
+    .light,
+  );
+  late final ColorScheme colorSchemeDark = getColorSchemeFromSeed(
+    primaryColor,
+    .dark,
+  );
+  late final ColorScheme colorSchemeBlack = getColorSchemeFromSeed(
+    primaryColor,
+    .black,
+  );
+  late final CardColorScheme cardColorSchemeLight = CardColorScheme(
+    colorSchemeLight,
+    false,
+  );
+  late final CardColorScheme cardColorSchemeDark = CardColorScheme(
+    colorSchemeDark,
+    false,
+  );
+  late final CardColorScheme cardColorSchemeBlack = CardColorScheme(
+    colorSchemeBlack,
+    true,
+  );
+
+  late final Color realDarkBorderColor = Color.lerp(
+    colorSchemeDark.primary,
+    Colors.black,
+    0.5,
+  )!;
+  late final Color realDarkBorderColorSelected = Color.lerp(
+    colorSchemeDark.primary,
+    Colors.white,
+    0.5,
+  )!;
+
+  /// Gets the episode color sceme for the provided [context].brightness.
+  /// Caches its results so can be used freely.
+  ColorScheme colorScheme(BuildContext context) =>
+      switch (context.tbrightness) {
+        .light => colorSchemeLight,
+        .dark => colorSchemeDark,
+        .black => colorSchemeBlack,
+      };
+
+  /// Gets the episode card color sceme for the provided [context].brightness.
+  /// Caches its results so can be used freely.
+  CardColorScheme cardColorScheme(BuildContext context) =>
+      switch (context.tbrightness) {
+        .light => cardColorSchemeLight,
+        .dark => cardColorSchemeDark,
+        .black => cardColorSchemeBlack,
+      };
+
+  EpisodeBrief copyWith({
+    int? id,
+    String? title,
+    String? enclosureUrl,
+    String? podcastId,
+    String? podcastTitle,
+    int? pubDate,
+    String? showNotes,
+    int? number,
+    int? enclosureDuration,
+    int? enclosureSize,
+    bool? isDownloaded,
+    int? downloadDate,
+    String? mediaId,
+    String? episodeImageUrl,
+    String? episodeImagePath,
+    String? podcastImagePath,
+    Color? primaryColor,
+    bool? isExplicit,
+    bool? isLiked,
+    bool? isNew,
+    bool? isPlayed,
+    bool? isDisplayVersion,
+    bool? isInteracted,
+    List<int>? versions,
+    int? skipSecondsStart,
+    int? skipSecondsEnd,
+    String? chapterLink,
+    DataSource? source,
+  }) => EpisodeBrief(
+    id: id ?? this.id,
+    title: title ?? this.title,
+    enclosureUrl: enclosureUrl ?? this.enclosureUrl,
+    podcastId: podcastId ?? this.podcastId,
+    podcastTitle: podcastTitle ?? this.podcastTitle,
+    pubDate: pubDate ?? this.pubDate,
+    showNotes: showNotes ?? this.showNotes,
+    number: number ?? this.number,
+    enclosureDuration: enclosureDuration ?? this.enclosureDuration,
+    enclosureSize: enclosureSize ?? this.enclosureSize,
+    isDownloaded: isDownloaded ?? this.isDownloaded,
+    downloadDate: downloadDate ?? this.downloadDate,
+    mediaId: mediaId ?? this.mediaId,
+    episodeImageUrl: episodeImageUrl ?? this.episodeImageUrl,
+    podcastImagePath: podcastImagePath ?? this.podcastImagePath,
+    primaryColor: primaryColor ?? this.primaryColor,
+    isExplicit: isExplicit ?? this.isExplicit,
+    isLiked: isLiked ?? this.isLiked,
+    isNew: isNew ?? this.isNew,
+    isPlayed: isPlayed ?? this.isPlayed,
+    isDisplayVersion: isDisplayVersion ?? this.isDisplayVersion,
+    isInteracted: isInteracted ?? this.isInteracted,
+    versions: versions ?? this.versions,
+    skipSecondsStart: skipSecondsStart ?? this.skipSecondsStart,
+    skipSecondsEnd: skipSecondsEnd ?? this.skipSecondsEnd,
+    chapterLink: chapterLink ?? this.chapterLink,
+    source: source ?? this.source,
+  );
+
+  @override
+  List<Object?> get props => [id, enclosureUrl];
+}

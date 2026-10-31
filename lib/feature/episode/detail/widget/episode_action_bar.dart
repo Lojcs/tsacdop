@@ -1,0 +1,261 @@
+import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import '../../state/episode_state.dart';
+import 'package:provider/provider.dart';
+import '../../../download/widget/episode_download.dart';
+import '../../../player/state/audio_state.dart';
+import '../../state/episode_brief.dart';
+import '../../../../core/extension/extension_helper.dart';
+import '../../../../core/misc/custom_widget.dart';
+
+import '../../../../core/misc/helpers.dart';
+
+class EpisodeActionBar extends StatefulWidget {
+  final int episodeId;
+
+  final GlobalKey? avatarKey;
+  final GlobalKey? heartKey;
+
+  /// Hides the avatar image
+  final bool hide;
+  const EpisodeActionBar(
+    this.episodeId, {
+    this.avatarKey,
+    this.heartKey,
+    this.hide = false,
+    super.key,
+  });
+  @override
+  EpisodeActionBarState createState() => EpisodeActionBarState();
+}
+
+class EpisodeActionBarState extends State<EpisodeActionBar> {
+  late EpisodeState episodeState = Provider.of<EpisodeState>(
+    context,
+    listen: false,
+  );
+
+  /// Only use this for immutable properties or in callbacks.
+  EpisodeBrief get episodeItem => episodeState[widget.episodeId];
+  @override
+  Widget build(BuildContext context) {
+    final audio = Provider.of<AudioState>(context, listen: false);
+    final episodeState = Provider.of<EpisodeState>(context, listen: false);
+    final s = context.s;
+    return Container(
+      height: 50.0,
+      decoration: BoxDecoration(
+        color: context.trueBlack
+            ? context.surface
+            : episodeItem.cardColor(context),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10.0),
+                    child: SizedBox(
+                      height: 30.0,
+                      width: 30.0,
+                      child: widget.hide
+                          ? Center()
+                          : Builder(
+                              builder: (context) => CircleAvatar(
+                                radius: 15,
+                                backgroundImage: episodeItem.avatarImage,
+                                key: widget.avatarKey,
+                              ),
+                            ),
+                    ),
+                  ),
+                  _buttonOnMenu(
+                    child: Selector<EpisodeState, bool>(
+                      selector: (_, episodeState) =>
+                          episodeState[widget.episodeId].isLiked,
+                      builder: (context, value, _) => value
+                          ? Opacity(
+                              opacity: widget.hide ? 0 : 1,
+                              child: Icon(
+                                Icons.favorite,
+                                color: Colors.red,
+                                key: widget.heartKey,
+                              ),
+                            )
+                          : Icon(
+                              Icons.favorite_border,
+                              color:
+                                  Colors.grey[context.brightness ==
+                                          Brightness.light
+                                      ? 700
+                                      : 500],
+                            ),
+                    ),
+                    onTap: () async {
+                      if (episodeItem.isLiked) {
+                        episodeState.unsetLiked([widget.episodeId]);
+                      } else {
+                        episodeState.setLiked([widget.episodeId]);
+                        OverlayEntry overlayEntry;
+                        overlayEntry = createOverlayEntry(
+                          context,
+                          leftOffset: 50,
+                        );
+                        Overlay.of(context).insert(overlayEntry);
+                        await Future.delayed(Duration(seconds: 2));
+                        overlayEntry.remove();
+                      }
+                    },
+                  ),
+                  DownloadButton(episodeId: widget.episodeId),
+                  _buttonOnMenu(
+                    child: Selector<AudioState, List<int?>>(
+                      selector: (_, audio) => audio.playlist.episodeIds,
+                      builder: (_, data, __) => data.contains(widget.episodeId)
+                          ? Icon(
+                              Icons.playlist_add_check,
+                              color: context.primaryColor,
+                            )
+                          : Icon(
+                              Icons.playlist_add,
+                              color:
+                                  Colors.grey[context.brightness ==
+                                          Brightness.light
+                                      ? 700
+                                      : 500],
+                            ),
+                    ),
+                    onTap: () async {
+                      final inPlaylist = Provider.of<AudioState>(
+                        context,
+                        listen: false,
+                      ).playlist.contains(widget.episodeId);
+                      if (inPlaylist) {
+                        await audio.removeFromPlaylist([widget.episodeId]);
+                        await Fluttertoast.showToast(
+                          msg: s.toastRemovePlaylist,
+                          gravity: ToastGravity.BOTTOM,
+                        );
+                      } else {
+                        await audio.addToPlaylist([widget.episodeId]);
+                        await Fluttertoast.showToast(
+                          msg: s.toastAddPlaylist,
+                          gravity: ToastGravity.BOTTOM,
+                        );
+                      }
+                    },
+                  ),
+                  _buttonOnMenu(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      child: Selector<EpisodeState, bool>(
+                        selector: (_, episodeState) =>
+                            episodeState[widget.episodeId].isPlayed,
+                        builder: (context, value, _) => value
+                            ? CustomPaint(
+                                size: Size(25, 20),
+                                painter: ListenedAllPainter(
+                                  context.primaryColor,
+                                  stroke: 2.0,
+                                ),
+                              )
+                            : CustomPaint(
+                                size: Size(25, 20),
+                                painter: MarkListenedPainter(
+                                  Colors.grey[context.brightness ==
+                                          Brightness.light
+                                      ? 700
+                                      : 500]!,
+                                  stroke: 2.0,
+                                ),
+                              ),
+                      ),
+                    ),
+                    onTap: () async {
+                      episodeItem.isPlayed
+                          ? episodeState.unsetPlayed([widget.episodeId])
+                          : episodeState.setPlayed([widget.episodeId]);
+                      Fluttertoast.showToast(
+                        msg: episodeItem.isPlayed
+                            ? s.markNotListened
+                            : s.markListened,
+                        gravity: ToastGravity.BOTTOM,
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Selector<AudioState, (int?, bool)>(
+            selector: (_, audio) => (audio.episodeId, audio.playerRunning),
+            builder: (_, data, __) {
+              return (widget.episodeId == data.$1 && data.$2)
+                  ? Padding(
+                      padding: EdgeInsets.only(right: 30),
+                      child: SizedBox(
+                        width: 20,
+                        height: 15,
+                        child: WaveLoader(color: context.primaryColor),
+                      ),
+                    )
+                  : Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () async {
+                          await audio.loadEpisodeToQueue(widget.episodeId);
+                          if (!audio.playing) {
+                            await audio.resumeAudio();
+                          }
+                        },
+                        child: Container(
+                          alignment: Alignment.center,
+                          height: 50.0,
+                          padding: EdgeInsets.symmetric(horizontal: 20.0),
+                          child: Row(
+                            children: <Widget>[
+                              Text(
+                                s.play.toUpperCase(),
+                                style: TextStyle(
+                                  color: context.primaryColor,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Icon(
+                                Icons.play_arrow,
+                                color: context.primaryColor,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buttonOnMenu({Widget? child, VoidCallback? onTap}) => Material(
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: onTap,
+      child: SizedBox(
+        height: 50,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 15.0),
+          child: child,
+        ),
+      ),
+    ),
+  );
+}

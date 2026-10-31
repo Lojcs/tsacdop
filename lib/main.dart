@@ -7,18 +7,18 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'intro_slider/app_intro.dart';
-import 'state/episode_state.dart';
+import 'feature/intro/widget/app_intro.dart';
+import 'feature/episode/state/episode_state.dart';
 
 import 'generated/l10n.dart';
-import 'home/home.dart';
-import 'state/audio_state.dart';
-import 'state/download_state.dart';
-import 'state/podcast_state.dart';
-import 'state/settings/setting_state.dart';
-import 'type/playlist.dart';
-import 'util/logger.dart';
-import 'util/extension_helper.dart';
+import 'feature/home/widget/home.dart';
+import 'feature/player/state/audio_state.dart';
+import 'feature/download/state/download_state.dart';
+import 'feature/podcast/state/podcast_state.dart';
+import 'feature/settings/state/setting_state.dart';
+import 'feature/player/model/playlist.dart';
+import 'core/misc/logger.dart';
+import 'core/extension/extension_helper.dart';
 
 Future main() async {
   await Logger.instance.run(() async {
