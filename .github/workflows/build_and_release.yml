@@ -1,0 +1,95 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build and Release
+    environment: Build and Release
+    runs-on: ubuntu-latest
+    env:
+      PUB_CACHE: /tmp/build/.pub-cache
+    steps:
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Change directory
+        run: |
+          mv $GITHUB_WORKSPACE /tmp/build
+          ln -s /tmp/build $GITHUB_WORKSPACE
+
+      - name: Decode keystore and create key.properties
+        if: env.KEYSTORE != ''
+        run: |
+          echo "$KEYSTORE" | base64 --decode > $KEYSTORE_PATH
+          echo "storeFile=$KEYSTORE_PATH" >> android/key.properties
+          echo "keyAlias=$KEY_ALIAS" >> android/key.properties
+          echo "storePassword=$KEYSTORE_PASSWORD" >> android/key.properties
+          echo "keyPassword=$KEY_PASSWORD" >> android/key.properties
+        env:
+          KEYSTORE_PATH: /tmp/keystore.jks
+          KEYSTORE: ${{ secrets.KEYSTORE }}
+          KEY_ALIAS: tsacdop
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        working-directory: /tmp/build
+
+      - name: Setup Flutter
+        run: |
+          .flutter/bin/flutter config --no-analytics
+          .flutter/bin/flutter pub get
+        working-directory: /tmp/build
+
+      - name: Build
+        run: |
+          .flutter/bin/flutter build apk --release --split-per-abi
+        working-directory: /tmp/build
+
+      - name: Rename
+        run: |
+          mkdir -p artifacts
+          mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk "artifacts/Tsacdop-Fork-${{ github.ref_name }}-arm64-v8a.apk"
+          mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk "artifacts/Tsacdop-Fork-${{ github.ref_name }}-armeabi-v7a.apk"
+          mv build/app/outputs/flutter-apk/app-x86_64-release.apk "artifacts/Tsacdop-Fork-${{ github.ref_name }}-x86_64.apk"
+        working-directory: /tmp/build
+
+      - name: Upload arm64-v8a
+        uses: actions/upload-artifact@v7
+        with:
+          path: artifacts/Tsacdop-Fork-${{ github.ref_name }}-arm64-v8a.apk
+          if-no-files-found: error
+          archive: false
+      - name: Upload armeabi-v7a
+        uses: actions/upload-artifact@v7
+        with:
+          path: artifacts/Tsacdop-Fork-${{ github.ref_name }}-armeabi-v7a.apk
+          if-no-files-found: error
+          archive: false
+      - name: Upload x86_64
+        uses: actions/upload-artifact@v7
+        with:
+          path: artifacts/Tsacdop-Fork-${{ github.ref_name }}-x86_64.apk
+          if-no-files-found: error
+          archive: false
+
+      - name: Create draft release
+        uses: softprops/action-gh-release@v3
+        with:
+          draft: true
+          files: artifacts/*.apk
