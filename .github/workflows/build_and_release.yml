@@ -20,16 +20,18 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v6
         with:
-          distribution: oracle-openjdk
-          java-version: "25.0.2"
+          distribution: temurin
+          java-version: "25"
 
-      - name: Clone
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Change directory
         run: |
-          git clone https://github.com/Lojcs/tsacdop --recurse-submodules
-          mv tsacdop build
-          cd build
-          git checkout ${{ github.ref_name }}
-        working-directory: /tmp
+          mv $GITHUB_WORKSPACE /tmp/build
+          ln -s /tmp/build $GITHUB_WORKSPACE
 
       - name: Decode keystore and create key.properties
         if: env.KEYSTORE != ''
@@ -69,19 +71,19 @@ jobs:
       - name: Upload arm64-v8a
         uses: actions/upload-artifact@v7
         with:
-          path: /tmp/build/artifacts/Tsacdop-Fork-${{ github.ref_name }}-arm64-v8a.apk
+          path: artifacts/Tsacdop-Fork-${{ github.ref_name }}-arm64-v8a.apk
           if-no-files-found: error
           archive: false
       - name: Upload armeabi-v7a
         uses: actions/upload-artifact@v7
         with:
-          path: /tmp/build/artifacts/Tsacdop-Fork-${{ github.ref_name }}-armeabi-v7a.apk
+          path: artifacts/Tsacdop-Fork-${{ github.ref_name }}-armeabi-v7a.apk
           if-no-files-found: error
           archive: false
       - name: Upload x86_64
         uses: actions/upload-artifact@v7
         with:
-          path: /tmp/build/artifacts/Tsacdop-Fork-${{ github.ref_name }}-x86_64.apk
+          path: artifacts/Tsacdop-Fork-${{ github.ref_name }}-x86_64.apk
           if-no-files-found: error
           archive: false
 
@@ -89,4 +91,4 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           draft: true
-          files: /tmp/build/artifacts/*.apk
+          files: artifacts/*.apk
