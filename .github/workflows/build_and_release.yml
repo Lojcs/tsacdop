@@ -20,7 +20,7 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v6
         with:
-          distribution: temurin
+          distribution: oracle-openjdk
           java-version: "17"
 
       - name: Clone
