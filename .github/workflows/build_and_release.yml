@@ -26,8 +26,9 @@ jobs:
       - name: Clone
         run: |
           git clone https://github.com/Lojcs/tsacdop --recurse-submodules
-          git checkout ${{ github.ref_name }}
           mv tsacdop build
+          cd build
+          git checkout ${{ github.ref_name }}
         working-directory: /tmp
 
       - name: Decode keystore and create key.properties
