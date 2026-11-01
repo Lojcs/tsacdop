@@ -67,19 +67,19 @@ jobs:
       - name: Upload arm64-v8a
         uses: actions/upload-artifact@v7
         with:
-          path: artifacts/Tsacdop-Fork-${{ github.ref_name }}-arm64-v8a.apk
+          path: /tmp/build/artifacts/Tsacdop-Fork-${{ github.ref_name }}-arm64-v8a.apk
           if-no-files-found: error
           archive: false
       - name: Upload armeabi-v7a
         uses: actions/upload-artifact@v7
         with:
-          path: artifacts/Tsacdop-Fork-${{ github.ref_name }}-armeabi-v7a.apk
+          path: /tmp/build/artifacts/Tsacdop-Fork-${{ github.ref_name }}-armeabi-v7a.apk
           if-no-files-found: error
           archive: false
       - name: Upload x86_64
         uses: actions/upload-artifact@v7
         with:
-          path: artifacts/Tsacdop-Fork-${{ github.ref_name }}-x86_64.apk
+          path: /tmp/build/artifacts/Tsacdop-Fork-${{ github.ref_name }}-x86_64.apk
           if-no-files-found: error
           archive: false
 
@@ -87,4 +87,4 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           draft: true
-          files: artifacts/*.apk
+          files: /tmp/build/artifacts/*.apk
