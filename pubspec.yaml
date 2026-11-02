@@ -5,6 +5,7 @@ version: 0.10.1+1062
 publish_to: "none"
 environment:
   sdk: ^3.12.0
+  flutter: 3.44.8
 
 dependencies:
   flutter:
@@ -12,18 +13,18 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   auto_animated: ^3.0.0
-  cached_network_image: ^3.1.0
+  cached_network_image: ^4.0.3
   color_thief_dart: ^0.1.0
   confetti: ^0.8.0
-  cupertino_icons: ^1.0.2
+  cupertino_icons: ^2.0.0
   crypto: ^3.0.1
   dio_cookie_manager: ^3.1.1
   dio: ^5.7.0
   extended_nested_scroll_view: ^6.2.1
   feature_discovery: ^0.14.0
-  file_picker: ^12.0.0-beta.7
+  file_picker: ^13.3.1
   flutter_html: ^3.0.0-beta.2
-  fluttertoast: ^9.0.0
+  fluttertoast: ^10.0.2
   flutter_isolate: ^2.0.0
   flutter_linkify: ^6.0.0
   flutter_file_dialog: ^3.0.2
@@ -36,22 +37,22 @@ dependencies:
   image: ^4.3.0
   json_serializable: ^6.8.0
   json_annotation: ^4.0.1
-  permission_handler: ^12.0.0+1
+  permission_handler: ^13.0.2
   provider: ^6.0.0
   sqflite: ^2.0.0+3
   state_notifier: ^1.0.0
   url_launcher: ^6.0.3
   uuid: ^4.5.1
-  workmanager: ^0.9.0+2
+  workmanager: ^0.10.10
   audio_service: ^0.18.0
   just_audio: ^0.10.5
-  equatable: ^2.0.0
+  equatable: ^3.0.0
   path_provider: ^2.0.1
   http_parser: ^4.0.0
   collection: ^1.15.0-nullsafety.4
   shared_preferences_android: ^2.0.12
-  path_provider_android: 2.2.23 # 2.3 Doesn't build.
-  dynamic_color: ^1.4.0
+  path_provider_android: ^2.3.1 # 2.3 Doesn't build.
+  dynamic_color: ^2.1.0
   focused_menu: ^1.0.5
   linkify: ^5.0.0
   webfeed: ^0.7.0
@@ -65,7 +66,6 @@ dependencies:
   connectivity_plus: ^7.0.0
   device_info_plus: ^13.2.0
   share_plus: ^13.3.0
-  flutter_downloader: ^1.11.8
   intl: any
   xml: any
   flutter_lints: ^5.0.0
@@ -76,6 +76,10 @@ dependencies:
   country_flags: ^4.1.2
   flutter_svg: ^2.3.0
   flutter_exit_app: ^2.1.2
+  background_downloader: ^9.5.9
+  flutter_downloader: ^1.12.1
+  copy_with_extension: ^18.0.0
+  material_ui: ^1.2.0
 dependency_overrides:
   linkify:
     git:
@@ -101,6 +105,7 @@ dev_dependencies:
     sdk: flutter
   build_runner: ^2.1.10
   pubghost: ^1.0.7
+  copy_with_extension_gen: ^18.0.0
 
 flutter:
   assets:

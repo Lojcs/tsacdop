@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:auto_animated/auto_animated.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/service/database.dart';

@@ -5,7 +5,7 @@ import 'package:confetti/confetti.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:line_icons/line_icons.dart';
@@ -68,14 +68,11 @@ class DataBackup extends StatelessWidget {
                   ),
                   SettingsActionButton(
                     onPressed: () async {
-                      var filePickResult = await FilePicker.pickFiles(
+                      var files = await FilePicker.pickFiles(
                         type: FileType.any,
                       );
-                      if (filePickResult != null && context.mounted) {
-                        importOpml(
-                          context,
-                          File(filePickResult.files.first.path!),
-                        );
+                      if (files.isNotEmpty && context.mounted) {
+                        importOpml(context, File(files.first.path!));
                       }
                     },
                     baseColor: Colors.amber,
@@ -145,13 +142,13 @@ class DataBackup extends StatelessWidget {
                         color: Colors.amber,
                       );
                       if (result) {
-                        var filePickResult = await FilePicker.pickFiles(
+                        var files = await FilePicker.pickFiles(
                           type: FileType.any,
                         );
-                        if (filePickResult != null && context.mounted) {
+                        if (files.isNotEmpty && context.mounted) {
                           final restoreResult = await context.settingState
                               .restore(
-                                File(filePickResult.files.first.path!),
+                                File(files.first.path!),
                                 prefCategories,
                                 settingsPasswordController.text != ""
                                     ? settingsPasswordController.text
@@ -272,13 +269,11 @@ class DataBackup extends StatelessWidget {
                     color: Colors.amber,
                   );
                   if (result) {
-                    var filePickResult = await FilePicker.pickFiles(
-                      type: FileType.any,
-                    );
-                    if (filePickResult != null && context.mounted) {
+                    var files = await FilePicker.pickFiles(type: FileType.any);
+                    if (files.isNotEmpty && context.mounted) {
                       final restoreResult = await context.settingState
                           .restoreLegacy(
-                            File(filePickResult.files.first.path!),
+                            File(files.first.path!),
                             prefCategories,
                           );
                       if (restoreResult) {
@@ -400,12 +395,12 @@ class DataBackup extends StatelessWidget {
                         color: Colors.amber,
                       );
                       if (result) {
-                        var filePickResult = await FilePicker.pickFiles(
+                        var files = await FilePicker.pickFiles(
                           type: FileType.any,
                         );
-                        if (filePickResult != null && context.mounted) {
+                        if (files.isNotEmpty && context.mounted) {
                           final restoreResult = await DBHelper().restore(
-                            File(filePickResult.files.first.path!),
+                            File(files.first.path!),
                             databaseCategories,
                             databasePasswordController.text != ""
                                 ? databasePasswordController.text

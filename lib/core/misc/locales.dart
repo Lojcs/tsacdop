@@ -1,9 +1,8 @@
 import 'dart:ui';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../generated/l10n.dart';
-import '../extension/extension_helper.dart';
 
 List<Locale?> supportedLocales = [
   null,

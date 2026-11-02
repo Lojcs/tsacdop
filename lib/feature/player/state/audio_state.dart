@@ -6,7 +6,7 @@ import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:collection/collection.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_exit_app/flutter_exit_app.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:just_audio/just_audio.dart';

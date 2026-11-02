@@ -1,6 +1,6 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:collection/collection.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:uuid/uuid.dart';
 import '../../../generated/l10n.dart';
 import '../state/audio_state.dart';

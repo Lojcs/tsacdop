@@ -6,7 +6,7 @@ import 'package:audio_service/audio_service.dart';
 import 'package:color_thief_dart/color_thief_dart.dart';
 import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:uuid/uuid.dart';
 import 'package:webfeed/webfeed.dart';
 

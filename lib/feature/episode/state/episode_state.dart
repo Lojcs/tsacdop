@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../../generated/l10n.dart';
 import '../../../core/service/database.dart';
 import '../../podcast/model/podcast_brief.dart';

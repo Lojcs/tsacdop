@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart';
 import 'package:feature_discovery/feature_discovery.dart';
-import 'package:flutter/material.dart' hide NestedScrollView, showSearch;
+import 'package:material_ui/material_ui.dart' hide NestedScrollView, showSearch;
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';

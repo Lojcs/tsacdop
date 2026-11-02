@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../player/state/audio_state.dart';
 import '../../state/episode_brief.dart';

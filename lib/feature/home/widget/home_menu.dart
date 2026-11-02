@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
@@ -148,11 +148,9 @@ class HomeMenu extends StatelessWidget {
               case 1:
                 context.podcastState.syncAllPodcasts();
               case 2:
-                var filePickResult = await FilePicker.pickFiles(
-                  type: FileType.any,
-                );
-                if (filePickResult != null && context.mounted) {
-                  importOpml(context, File(filePickResult.files.first.path!));
+                var files = await FilePicker.pickFiles(type: FileType.any);
+                if (files.isNotEmpty && context.mounted) {
+                  importOpml(context, File(files.first.path!));
                 }
               case 3:
                 Navigator.push(

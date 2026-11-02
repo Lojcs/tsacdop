@@ -3,9 +3,8 @@ import 'dart:convert';
 import 'dart:developer' as dev;
 import 'dart:io';
 
-import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:html/parser.dart' show parse;
 import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';

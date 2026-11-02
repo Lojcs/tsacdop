@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flare_flutter/flare_actor.dart';
 import '../../../core/extension/extension_helper.dart';
 
