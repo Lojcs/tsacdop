@@ -1,4 +1,3 @@
-import 'package:feature_discovery/feature_discovery.dart';
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/scheduler.dart';
@@ -8,6 +7,7 @@ import 'package:flutter_localizations/flutter_localizations.dart'
 import 'package:google_fonts/google_fonts.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+
 import 'feature/intro/widget/app_intro.dart';
 import 'feature/episode/state/episode_state.dart';
 
@@ -107,25 +107,23 @@ class MyApp extends StatelessWidget {
         blackTheme: setting.blackTheme,
       ),
       builder: (context, data, _) {
-        return FeatureDiscovery(
-          child: MaterialApp(
-            themeMode: data.themeMode,
-            debugShowCheckedModeBanner: false,
-            title: 'Tsacdop',
-            theme: data.lightTheme,
-            darkTheme: data.trueBlack ? data.blackTheme : data.darkTheme,
-            localizationsDelegates: [
-              S.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            locale: data.localeOverride,
-            supportedLocales: S.delegate.supportedLocales,
-            home: context.settingState.showIntro.get()
-                ? SlideIntro(goto: Goto.home)
-                : Home(),
-          ),
+        return MaterialApp(
+          themeMode: data.themeMode,
+          debugShowCheckedModeBanner: false,
+          title: 'Tsacdop',
+          theme: data.lightTheme,
+          darkTheme: data.trueBlack ? data.blackTheme : data.darkTheme,
+          localizationsDelegates: [
+            S.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          locale: data.localeOverride,
+          supportedLocales: S.delegate.supportedLocales,
+          home: context.settingState.showIntro.get()
+              ? SlideIntro(goto: Goto.home)
+              : Home(),
         );
       },
     );

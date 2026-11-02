@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:auto_animated/auto_animated.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
@@ -357,11 +356,6 @@ class EpisodeGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final options = LiveOptions(
-      delay: Duration.zero,
-      showItemInterval: Duration(milliseconds: 20),
-      showItemDuration: Duration(milliseconds: 50),
-    );
     final scrollController = ScrollController();
     if (episodeIds.isNotEmpty) {
       return SliverPadding(

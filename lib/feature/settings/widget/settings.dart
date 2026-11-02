@@ -1,4 +1,3 @@
-import 'package:feature_discovery/feature_discovery.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:line_icons/line_icons.dart';
@@ -7,7 +6,6 @@ import 'about.dart';
 import '../../intro/widget/app_intro.dart';
 import '../../../core/extension/extension_helper.dart';
 import '../../../core/misc/locales.dart';
-import '../../../core/misc/feature_discovery.dart';
 import '../../../core/misc/general_dialog.dart';
 import 'data_backup.dart';
 import 'history.dart';
@@ -198,49 +196,6 @@ class Settings extends StatelessWidget {
               onTap: (context) => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => LicensePage()),
-              ),
-            ),
-            SettingsTile(
-              title: s.settingsDiscovery,
-              leading: Icon(LineIcons.capsules, color: Colors.pinkAccent),
-              onTap: (context) => generalDialog(
-                context,
-                title: Text(s.settingsDiscovery),
-                content: Text(s.settingsDiscoveryDes),
-                actions: <Widget>[
-                  TextButton(
-                    onPressed: Navigator.of(context).pop,
-                    child: Text(
-                      s.cancel,
-                      style: TextStyle(
-                        color: context.colorScheme.onSecondaryContainer,
-                      ),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      FeatureDiscovery.clearPreferences(context, <String>{
-                        addFeature,
-                        menuFeature,
-                        playlistFeature,
-                        groupsFeature,
-                        addGroupFeature,
-                        configureGroup,
-                        configurePodcast,
-                        podcastFeature,
-                      });
-                      Fluttertoast.showToast(
-                        msg: s.toastDiscovery,
-                        gravity: ToastGravity.BOTTOM,
-                      );
-                      Navigator.of(context).pop();
-                    },
-                    child: Text(
-                      s.confirm,
-                      style: TextStyle(color: context.error),
-                    ),
-                  ),
-                ],
               ),
             ),
             SettingsTile(

@@ -9,6 +9,7 @@ import 'package:html/parser.dart' show parse;
 import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
+
 import '../../feature/download/state/download_state.dart';
 import '../../feature/podcast/state/podcast_state.dart';
 import '../../feature/settings/state/tsacdop_settings.dart';
@@ -152,34 +153,28 @@ class DBHelper {
     await db.execute(
       "CREATE TABLE Playlists(id TEXT PRIMARY KEY, name TEXT, is_local INTEGER, is_queue INTEGER)",
     );
-    await db.execute(
-      """CREATE TABLE Playlist_Episode(episode_id INTEGER REFERENCES Episodes(id),
+    await db.execute("""CREATE TABLE Playlist_Episode(episode_id INTEGER REFERENCES Episodes(id),
         playlist_id TEXT REFERENCES Playlists(id), idx INTEGER,
-        PRIMARY KEY (episode_id, playlist_id, idx))""",
-    );
+        PRIMARY KEY (episode_id, playlist_id, idx))""");
     await db.execute(
       "CREATE INDEX podcast_search ON PodcastLocal (id, rssUrl);",
     );
     await db.execute(
       "CREATE INDEX episode_search ON Episodes (enclosure_url, feed_id);",
     );
-    await db.execute(
-      """CREATE TRIGGER episode_version_downloaded_trigger AFTER UPDATE OF downloaded ON Episodes
+    await db.execute("""CREATE TRIGGER episode_version_downloaded_trigger AFTER UPDATE OF downloaded ON Episodes
         WHEN (NEW.downloaded != 'ND' AND NEW.display_version_id != NEW.id) BEGIN
         UPDATE Episodes SET display_version_id = NEW.id
         WHERE (display_version_id = NEW.display_version_id AND (downloaded = 'ND' OR id = NEW.id));
         END
-        """,
-    ); // Change display version of undownloaded episodes to the newly downloaded version on episode download. Other downloaded versions remain as display versions.
-    await db.execute(
-      """CREATE TRIGGER episode_version_undownloaded_trigger AFTER UPDATE OF downloaded ON Episodes
+        """); // Change display version of undownloaded episodes to the newly downloaded version on episode download. Other downloaded versions remain as display versions.
+    await db.execute("""CREATE TRIGGER episode_version_undownloaded_trigger AFTER UPDATE OF downloaded ON Episodes
         WHEN (NEW.downloaded = 'ND') BEGIN
         UPDATE Episodes SET display_version_id = (SELECT id FROM Episodes
         WHERE (feed_id = NEW.feed_id AND title = NEW.title AND display_version_id = id)
         ORDER BY download_date DESC LIMIT 1) WHERE display_version_id = NEW.display_version_id;
         END
-        """,
-    ); // Change display version of undownloaded episodes to the newest downloaded version (if exists) on episode download removal.
+        """); // Change display version of undownloaded episodes to the newest downloaded version (if exists) on episode download removal.
     await db.execute(
       "CREATE INDEX general_chronological ON Episodes (milliseconds ASC);",
     );
@@ -206,7 +201,7 @@ class DBHelper {
     );
     await db.rawInsert(
       "INSERT INTO Playlists(id, name, is_local, is_queue) VALUES(?, ?, ?, ?)",
-      [queue.id, queue.name, queue.isLocal, queue.isQueue],
+      [queue.id, queue.name, queue.isLocal ? 1 : 0, queue.isQueue ? 1 : 0],
     );
   }
 
@@ -310,23 +305,19 @@ class DBHelper {
         END
         """,
     ); // Preserve existing display version(s) on new version insertion.
-    await db.execute(
-      """CREATE TRIGGER episode_version_downloaded_trigger AFTER UPDATE OF downloaded ON Episodes
+    await db.execute("""CREATE TRIGGER episode_version_downloaded_trigger AFTER UPDATE OF downloaded ON Episodes
         WHEN (NEW.downloaded != 'ND' AND NEW.display_version_id != NEW.id) BEGIN
         UPDATE Episodes SET display_version_id = NEW.id
         WHERE (display_version_id = NEW.display_version_id AND (downloaded = 'ND' OR id = NEW.id));
         END
-        """,
-    ); // Change display version of undownloaded episodes to the newly downloaded version on episode download. Other downloaded versions remain as display versions.
-    await db.execute(
-      """CREATE TRIGGER episode_version_undownloaded_trigger AFTER UPDATE OF downloaded ON Episodes
+        """); // Change display version of undownloaded episodes to the newly downloaded version on episode download. Other downloaded versions remain as display versions.
+    await db.execute("""CREATE TRIGGER episode_version_undownloaded_trigger AFTER UPDATE OF downloaded ON Episodes
         WHEN (NEW.downloaded = 'ND') BEGIN
         UPDATE Episodes SET display_version_id = (SELECT id FROM Episodes
         WHERE (feed_id = NEW.feed_id AND title = NEW.title AND display_version_id = id)
         ORDER BY download_date DESC LIMIT 1) WHERE display_version_id = NEW.display_version_id;
         END
-        """,
-    ); // Change display version of undownloaded episodes to the newest downloaded version (if exists) on episode download removal.
+        """); // Change display version of undownloaded episodes to the newest downloaded version (if exists) on episode download removal.
     List<Map> podcasts = await db.rawQuery("SELECT id FROM PodcastLocal");
     List<Future> futures = [];
     for (var podcast in podcasts) {
@@ -420,11 +411,9 @@ class DBHelper {
     await db.execute(
       "CREATE TABLE Playlists(id TEXT PRIMARY KEY, name TEXT, is_local INTEGER, is_queue INTEGER)",
     );
-    await db.execute(
-      """CREATE TABLE Playlist_Episode(episode_id INTEGER REFERENCES Episodes(id),
+    await db.execute("""CREATE TABLE Playlist_Episode(episode_id INTEGER REFERENCES Episodes(id),
         playlist_id TEXT REFERENCES Playlists(id), idx INTEGER,
-        PRIMARY KEY (episode_id, playlist_id, idx))""",
-    );
+        PRIMARY KEY (episode_id, playlist_id, idx))""");
 
     await Logger.instance.log("Enumerating playlists.");
     final playlists = await () async {
@@ -469,7 +458,12 @@ class DBHelper {
       await Logger.instance.log("Inserting playlist: ${playlist.toJson()}");
       await db.rawInsert(
         "INSERT INTO Playlists(id, name, is_local, is_queue) VALUES (?, ?, ?, ?)",
-        [playlist.id, playlist.name, playlist.isLocal, playlist.isQueue],
+        [
+          playlist.id,
+          playlist.name,
+          playlist.isLocal ? 1 : 0,
+          playlist.isQueue ? 1 : 0,
+        ],
       );
       for (var (i, episodeId) in playlist.episodeIds.indexed) {
         await db.rawInsert(
@@ -623,7 +617,7 @@ class DBHelper {
         );
         await txn.rawInsert(
           "INSERT INTO Playlists(id, name, is_local, is_queue) VALUES(?, ?, ?, ?)",
-          [queue.id, queue.name, queue.isLocal, queue.isQueue],
+          [queue.id, queue.name, queue.isLocal ? 1 : 0, queue.isQueue ? 1 : 0],
         );
       }
       await deleteDangling(txn);
@@ -1043,10 +1037,8 @@ class DBHelper {
 
   Future<List<SubHistory>> getSubHistory() async {
     var dbClient = await database;
-    List<Map> list = await dbClient.rawQuery(
-      """SELECT title, rss_url, add_date, remove_date, status FROM SubscribeHistory
-      ORDER BY add_date DESC""",
-    );
+    List<Map> list = await dbClient.rawQuery("""SELECT title, rss_url, add_date, remove_date, status FROM SubscribeHistory
+      ORDER BY add_date DESC""");
     return list
         .map(
           (record) => SubHistory(
@@ -1565,9 +1557,9 @@ class DBHelper {
           podcastId: i['feed_id'],
           podcastTitle: i['feed_title'],
           pubDate: i['milliseconds'],
-          showNotes: parse(
-            parse(i['description']).body!.text,
-          ).documentElement!.text,
+          showNotes: parse(parse(i['description']).body!.text)
+              .documentElement!
+              .text,
           number: i['number'],
           enclosureDuration: i['duration'],
           enclosureSize: i['enclosure_length'],
@@ -1642,15 +1634,6 @@ class DBHelper {
       "UPDATE Episodes SET liked = 0 WHERE id IN (${(", ?" * ids.length).substring(2)})",
       [...ids],
     );
-  }
-
-  Future<bool> isDownloaded(String url) async {
-    var dbClient = await database;
-    List<Map> list = await dbClient.rawQuery(
-      "SELECT id FROM Episodes WHERE enclosure_url = ? AND enclosure_url != media_id",
-      [url],
-    );
-    return list.isNotEmpty;
   }
 
   /// Sets the episode as downloaded and saves its mediaId, download task id
@@ -1822,7 +1805,12 @@ class DBHelper {
     var dbClient = await database;
     await dbClient.rawInsert(
       "INSERT OR REPLACE INTO Playlists(id, name, is_local, is_queue) VALUES(?, ?, ?, ?)",
-      [playlist.id, playlist.name, playlist.isLocal, playlist.isQueue ? 1 : 0],
+      [
+        playlist.id,
+        playlist.name,
+        playlist.isLocal ? 1 : 0,
+        playlist.isQueue ? 1 : 0,
+      ],
     );
     for (var (i, episodeId) in playlist.episodeIds.indexed) {
       await dbClient.rawInsert(

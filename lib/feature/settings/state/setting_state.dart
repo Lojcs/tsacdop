@@ -61,11 +61,31 @@ class SettingState extends TsacdopSettings with ChangeNotifier {
           "Setting value: ${pref.name} (${currentPref.get()})",
         );
       }
+    } else {
+      await _upgradeSettings();
     }
 
     await startWorkManager();
     await setThemes();
     await settingsInitialized.set(true);
+  }
+
+  Future<void> _upgradeSettings() async {
+    final oldVersion = settingsVersion.get();
+    final newVersion = settingsVersion.defaultValue;
+    await Logger.instance.log("Upgrading settings: $oldVersion => $newVersion");
+    for (int i = oldVersion; i < newVersion; i++) {
+      await updaters[i]();
+    }
+    await settingsVersion.set(newVersion);
+  }
+
+  late List<Future<void> Function()> updaters = [_v1Upgrade];
+
+  /// Clears feature discovery flags.
+  Future<void> _v1Upgrade() async {
+    final instance = await SharedPreferences.getInstance();
+    await instance.clear();
   }
 
   Future<void> _earlyLoadLocale([Locale? value]) async {

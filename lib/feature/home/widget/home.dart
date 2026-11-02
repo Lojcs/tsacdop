@@ -2,13 +2,13 @@ import 'dart:io';
 
 import 'package:collection/collection.dart';
 import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart';
-import 'package:feature_discovery/feature_discovery.dart';
 import 'package:material_ui/material_ui.dart' hide NestedScrollView, showSearch;
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
+
 import '../../search/widget/search_widgets.dart';
 import '../model/tab_configuration.dart';
 import '../../episode/grid/state/selection_controller.dart';
@@ -18,7 +18,6 @@ import '../../settings/state/setting_state.dart';
 import '../../../core/extension/extension_helper.dart';
 import '../../player/widget/audio_panel.dart';
 import '../../episode/grid/widget/episode_grid.dart';
-import '../../../core/misc/feature_discovery.dart';
 import '../../episode/grid/widget/multiselect_bar.dart';
 import '../../player/widget/audio_player.dart';
 import 'download_list.dart';
@@ -75,15 +74,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     settingState.addListener(() => updateTabsFuture = updateTabs());
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      FeatureDiscovery.discoverFeatures(context, const <String>{
-        addFeature,
-        menuFeature,
-        playlistFeature,
-        //groupsFeature,
-        //podcastFeature,
-      });
-    });
   }
 
   @override
@@ -145,16 +135,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: <Widget>[
-                                  featureDiscoveryOverlay(
-                                    context,
-                                    featureId: addFeature,
-                                    tapTarget: Icon(Icons.search),
-                                    title: s.featureDiscoverySearch,
-                                    backgroundColor: Colors.cyan[600],
-                                    buttonColor: Colors.cyan[500],
-                                    description: s.featureDiscoverySearchDes,
-                                    child: SearchButton(searchKey),
-                                  ),
+                                  SearchButton(searchKey),
                                   GestureDetector(
                                     onTap: () {
                                       final settings = context.settingState;
@@ -184,20 +165,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                       ),
                                     ),
                                   ),
-                                  featureDiscoveryOverlay(
-                                    context,
-                                    featureId: menuFeature,
-                                    tapTarget: Icon(Icons.more_vert),
-                                    backgroundColor: Colors.cyan[500],
-                                    buttonColor: Colors.cyan[600],
-                                    title: s.featureDiscoveryOMPL,
-                                    description: s.featureDiscoveryOMPLDes,
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(
-                                        right: 5.0,
-                                      ),
-                                      child: HomeMenu(),
-                                    ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 5.0),
+                                    child: HomeMenu(),
                                   ),
                                 ],
                               ),
@@ -229,16 +199,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                             ),
                             Align(
                               alignment: .centerRight,
-                              child: featureDiscoveryOverlay(
-                                context,
-                                featureId: playlistFeature,
-                                tapTarget: Icon(Icons.playlist_play),
-                                backgroundColor: Colors.cyan[500],
-                                title: s.featureDiscoveryPlaylist,
-                                description: s.featureDiscoveryPlaylistDes,
-                                buttonColor: Colors.cyan[600],
-                                child: _PlaylistButton(),
-                              ),
+                              child: _PlaylistButton(),
                             ),
                           ],
                         ),

@@ -1420,9 +1420,8 @@ class AudioState extends ChangeNotifier {
   Future<void> _setSleepTimerSchedule() async {
     if (_sleepTimerAuto) {
       final now = DateTime.now();
-      if (TimeOfDay.fromDateTime(
-        now,
-      ).isBetween(_sleepTimerScheduleStart, _sleepTimerScheduleEnd)) {
+      if (TimeOfDay.fromDateTime(now)
+          .isBetween(_sleepTimerScheduleStart, _sleepTimerScheduleEnd)) {
         await _startSleepTimerAutomatically();
       } else {
         await _cancelSleepTimerAutomatically();
@@ -1915,7 +1914,7 @@ class CustomAudioHandler extends BaseAudioHandler
 
   /// Position and or index combined seek.
   /// Use this instead of calling [AudioPlayer.seek] or [_innerCombinedSeek] directly.
-  Future<void> combinedSeek({final Duration? position, int? index}) async {
+  Future<void> combinedSeek({Duration? position, int? index}) async {
     if (!playing || (position != _position) || (index != _index)) {
       seekTarget = SeekTarget(position: position, index: index);
       seekInputBuffer = true;

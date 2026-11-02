@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 
-import 'package:feature_discovery/feature_discovery.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -11,7 +10,6 @@ import '../model/podcast_group.dart';
 import '../../../core/extension/extension_helper.dart';
 import '../../../core/route/page_route.dart';
 import '../../../core/misc/custom_widget.dart';
-import '../../../core/misc/feature_discovery.dart';
 import '../../../core/misc/general_dialog.dart';
 import '../../../core/widget/custom_tab_view.dart';
 import 'podcast_group.dart';
@@ -45,13 +43,6 @@ class _PodcastManageState extends State<PodcastManage>
         )..addListener(() {
           if (mounted) setState(() => _menuValue = _menuAnimation.value);
         });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      FeatureDiscovery.discoverFeatures(context, const <String>{
-        addGroupFeature,
-        configureGroup,
-        configurePodcast,
-      });
-    });
   }
 
   @override
@@ -71,29 +62,19 @@ class _PodcastManageState extends State<PodcastManage>
           title: Text(context.s.groups(2)),
           leading: CustomBackButton(),
           actions: <Widget>[
-            featureDiscoveryOverlay(
-              context,
-              featureId: addGroupFeature,
-              tapTarget: Icon(Icons.add),
-              title: s.featureDiscoveryGroup,
-              backgroundColor: Colors.cyan[600],
-              description: s.featureDiscoveryGroupDes,
-              buttonColor: Colors.cyan[500],
-              child: IconButton(
-                splashRadius: 20,
-                onPressed: () => showGeneralDialog(
-                  context: context,
-                  barrierDismissible: true,
-                  barrierLabel: MaterialLocalizations.of(
-                    context,
-                  ).modalBarrierDismissLabel,
-                  barrierColor: Colors.black54,
-                  transitionDuration: const Duration(milliseconds: 200),
-                  pageBuilder: (context, animaiton, secondaryAnimation) =>
-                      AddGroup(),
-                ),
-                icon: Icon(Icons.add_circle_outline),
+            IconButton(
+              splashRadius: 20,
+              onPressed: () => showGeneralDialog(
+                context: context,
+                barrierDismissible: true,
+                barrierLabel: MaterialLocalizations.of(context)
+                    .modalBarrierDismissLabel,
+                barrierColor: Colors.black54,
+                transitionDuration: const Duration(milliseconds: 200),
+                pageBuilder: (context, animaiton, secondaryAnimation) =>
+                    AddGroup(),
               ),
+              icon: Icon(Icons.add_circle_outline),
             ),
             IconButton(
               splashRadius: 20,
@@ -129,18 +110,9 @@ class _PodcastManageState extends State<PodcastManage>
                           ),
                         ),
                       ),
-                      pageBuilder: (context, index) => featureDiscoveryOverlay(
-                        context,
-                        featureId: configurePodcast,
-                        tapTarget: Text(s.podcast(1)),
-                        title: s.featureDiscoveryGroupPodcast,
-                        backgroundColor: Colors.cyan[600],
-                        buttonColor: Colors.cyan[500],
-                        description: s.featureDiscoveryGroupPodcastDes,
-                        child: PodcastGroupList(
-                          groupId: groupIds[index],
-                          key: ValueKey<String?>(groupIds[index]),
-                        ),
+                      pageBuilder: (context, index) => PodcastGroupList(
+                        groupId: groupIds[index],
+                        key: ValueKey<String?>(groupIds[index]),
                       ),
                       onPositionChange: (value) {
                         // setState(() =>
@@ -326,45 +298,36 @@ class _PodcastManageState extends State<PodcastManage>
 
   Widget _faButton() {
     final s = context.s;
-    return featureDiscoveryOverlay(
-      context,
-      featureId: configureGroup,
-      tapTarget: Icon(Icons.menu),
-      title: s.featureDiscoveryEditGroup,
-      backgroundColor: Colors.cyan[600],
-      description: s.featureDiscoveryEditGroupDes,
-      buttonColor: Colors.cyan[500],
-      child: InkWell(
-        onTap: () async {
-          !_showSetting
-              ? _menuController.forward()
-              : await _menuController.reverse();
-          if (mounted) {
-            setState(() {
-              _showSetting = !_showSetting;
-            });
-          }
-        },
-        child: Container(
-          width: 50,
-          height: 50,
-          decoration: BoxDecoration(
-            color: context.primaryColor,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey[700]!.withValues(alpha: 0.5),
-                blurRadius: 1,
-                offset: Offset(1, 1),
-              ),
-            ],
-          ),
-          alignment: Alignment.center,
-          child: AnimatedIcon(
-            color: Colors.white,
-            icon: AnimatedIcons.menu_close,
-            progress: _menuController,
-          ),
+    return InkWell(
+      onTap: () async {
+        !_showSetting
+            ? _menuController.forward()
+            : await _menuController.reverse();
+        if (mounted) {
+          setState(() {
+            _showSetting = !_showSetting;
+          });
+        }
+      },
+      child: Container(
+        width: 50,
+        height: 50,
+        decoration: BoxDecoration(
+          color: context.primaryColor,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey[700]!.withValues(alpha: 0.5),
+              blurRadius: 1,
+              offset: Offset(1, 1),
+            ),
+          ],
+        ),
+        alignment: Alignment.center,
+        child: AnimatedIcon(
+          color: Colors.white,
+          icon: AnimatedIcons.menu_close,
+          progress: _menuController,
         ),
       ),
     );
