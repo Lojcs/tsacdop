@@ -11,9 +11,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:marquee/marquee.dart';
 import 'package:provider/provider.dart';
-import '../../episode/detail/widget/shownote.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
+import '../../episode/detail/widget/shownote.dart';
 import '../../episode/detail/widget/episode_detail.dart';
 import 'playlist_home.dart';
 import '../state/audio_state.dart';
@@ -223,9 +223,8 @@ class AudioActions extends StatelessWidget {
                   side: BorderSide(
                     color: data
                         ? context.primaryColor
-                        : Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withValues(alpha: 0.12),
+                        : Theme.of(context).colorScheme.onSurface
+                              .withValues(alpha: 0.12),
                   ),
                 ),
               ),
@@ -259,9 +258,8 @@ class AudioActions extends StatelessWidget {
                   side: BorderSide(
                     color: data
                         ? context.primaryColor
-                        : Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withValues(alpha: 0.12),
+                        : Theme.of(context).colorScheme.onSurface
+                              .withValues(alpha: 0.12),
                   ),
                 ),
                 padding: EdgeInsets.symmetric(horizontal: 10),
@@ -295,9 +293,8 @@ class AudioActions extends StatelessWidget {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(100.0),
                           side: BorderSide(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withValues(alpha: 0.12),
+                            color: Theme.of(context).colorScheme.onSurface
+                                .withValues(alpha: 0.12),
                           ),
                         ),
                       ),
@@ -1687,6 +1684,24 @@ class _ControlPanelState extends State<ControlPanel>
                                   ),
                                 ),
                               if (_setSpeed > 0)
+                                Opacity(
+                                  opacity: _setSpeed,
+                                  child: Selector<AudioState, double>(
+                                    selector: (_, audio) => audio.visualSpeed,
+                                    builder: (_, currentSpeed, __) =>
+                                        IconButton(
+                                          padding: EdgeInsets.zero,
+                                          visualDensity: .compact,
+                                          onPressed: () {
+                                            audio.setVisualSpeed(1);
+                                            context.settingState.audioSpeedRatio
+                                                .set(1);
+                                          },
+                                          icon: Icon(Icons.restart_alt),
+                                        ),
+                                  ),
+                                ),
+                              if (_setSpeed > 0)
                                 Expanded(
                                   child: Opacity(
                                     opacity: _setSpeed,
@@ -1708,6 +1723,7 @@ class _ControlPanelState extends State<ControlPanel>
                                               max: 5,
                                               divisions: 18,
                                               value: currentSpeed,
+                                              secondaryTrackValue: 1,
                                               onChanged: audio.setVisualSpeed,
                                               onChangeEnd: context
                                                   .settingState
@@ -1846,20 +1862,12 @@ class _ControlPanelState extends State<ControlPanel>
   }
 }
 
-class DiscSpinner extends StatefulWidget {
+class DiscSpinner extends StatelessWidget {
   const DiscSpinner({super.key});
 
   @override
-  State<DiscSpinner> createState() => _DiscSpinnerState();
-}
-
-class _DiscSpinnerState extends State<DiscSpinner> {
-  late final audioState = context.audioState;
-
-  bool firstTime = true;
-
-  @override
   Widget build(BuildContext context) {
+    final audioState = context.audioState;
     return SizedBox(
       height: 30,
       width: 30,
@@ -1875,26 +1883,21 @@ class _DiscSpinnerState extends State<DiscSpinner> {
           child: Stack(
             alignment: Alignment.center,
             children: <Widget>[
-              Selector<AudioState, int>(
-                selector: (context, audio) => audio.audioPosition,
-
-                builder: (context, value, child) {
-                  var firstRun = false;
-                  if (firstTime) {
-                    firstTime = false;
-                    firstRun = true;
-                  }
-                  return AnimatedRotation(
-                    // key: GlobalObjectKey("disc_spinner"),
-                    turns: (firstRun ? 2 : 0) + value * 0.0004,
-                    duration: Duration(seconds: 1),
-                    curve: Curves.easeOut,
-                    child: CircleAvatar(
-                      backgroundColor: data.$3!.backgroudColor(context),
-                      backgroundImage: data.$3!.episodeOrPodcastImageProvider,
-                    ),
-                  );
-                },
+              Selector<AudioState, (double, Tween<double>)>(
+                selector: (context, audio) => (
+                  audio.audioPositionAnimValue,
+                  audio.audioPositionAnimTween,
+                ),
+                builder: (context, value, _) => _SmoothRotated(
+                  value: value.$1,
+                  onValueChanged: (value) =>
+                      audioState.audioPositionAnimValue = value,
+                  rotationTween: value.$2,
+                  child: CircleAvatar(
+                    backgroundColor: data.$3!.backgroudColor(context),
+                    backgroundImage: data.$3!.episodeOrPodcastImageProvider,
+                  ),
+                ),
               ),
               if (!data.$1 && !data.$2)
                 Icon(Icons.play_arrow, color: Colors.white),
@@ -1904,5 +1907,65 @@ class _DiscSpinnerState extends State<DiscSpinner> {
         ),
       ),
     );
+  }
+}
+
+class _SmoothRotated extends StatefulWidget {
+  final double value;
+  final void Function(double value) onValueChanged;
+  final Tween<double> rotationTween;
+  final Widget child;
+  const new({
+    super.key,
+    required this.value,
+    required this.onValueChanged,
+    required this.rotationTween,
+    required this.child,
+  });
+
+  @override
+  State<_SmoothRotated> createState() => __SmoothRotatedState();
+}
+
+class __SmoothRotatedState extends State<_SmoothRotated>
+    with SingleTickerProviderStateMixin {
+  late final controller = AnimationController(
+    vsync: this,
+    value: widget.value,
+    duration: Duration(seconds: 1),
+  );
+  late final animation = CurvedAnimation(
+    parent: controller,
+    curve: Curves.easeOut,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    controller.addListener(() => widget.onValueChanged(controller.value));
+    controller.forward();
+  }
+
+  late var rotationAnimation = widget.rotationTween.animate(animation);
+
+  @override
+  void didUpdateWidget(covariant _SmoothRotated oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.rotationTween != widget.rotationTween) {
+      controller.value = 0;
+      rotationAnimation = widget.rotationTween.animate(animation);
+      controller.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RotationTransition(turns: rotationAnimation, child: widget.child);
   }
 }

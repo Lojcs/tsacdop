@@ -136,8 +136,24 @@ class AudioState extends ChangeNotifier {
   /// Current episode duration (ms).
   int _audioDuration = 0;
 
+  /// Source value of [_audioPosition].
+  int _audioPositionSource = 0;
+
   /// Current episode position (ms).
-  int _audioPosition = 0;
+  int get _audioPosition => _audioPositionSource;
+  set _audioPosition(int pos) {
+    final curvePos = _audioPositionAnimCurve.transform(audioPositionAnimValue);
+    final animPos = _audioPositionAnimTween.transform(curvePos);
+    _audioPositionAnimTween = Tween(begin: animPos, end: pos * 0.0004);
+    audioPositionAnimValue = 0;
+    _audioPositionSource = pos;
+  }
+
+  /// Curve tween used in animation.
+  final _audioPositionAnimCurve = CurveTween(curve: Curves.easeOut);
+
+  /// Tween for animating the audio position.
+  Tween<double> _audioPositionAnimTween = Tween(begin: 0, end: 0);
 
   /// Position of the seek in progress (ms). -1 to indicate no seek in progress.
   int get _liveSeekPosition =>
@@ -270,6 +286,9 @@ class AudioState extends ChangeNotifier {
   /// Current episode position (ms).
   int get audioPosition =>
       _liveSeekPosition != -1 ? _liveSeekPosition : _audioPosition;
+
+  Tween<double> get audioPositionAnimTween => _audioPositionAnimTween;
+  double audioPositionAnimValue = 0;
 
   /// Current episode's start position (ms).
   int get historyPosition => _historyPosition;

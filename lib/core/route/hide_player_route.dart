@@ -32,7 +32,7 @@ class HidePlayerRoute extends ModalRoute<void> {
             //   curve: Curves.fastOutSlowIn,
             //   reverseCurve: Curves.fastOutSlowIn.flipped,
             // );
-            final playerHeight = 70;
+            final playerHeight = 70 + 5;
             return Transform.translate(
               offset: Offset(
                 context.width * (1 - Curves.easeOut.transform(animation.value)),
@@ -43,7 +43,7 @@ class HidePlayerRoute extends ModalRoute<void> {
                 height:
                     context.height -
                     (playerRunning
-                        ? playerHeight + MediaQuery.of(context).padding.bottom
+                        ? playerHeight + context.originalPadding.bottom
                         : 0),
                 decoration: BoxDecoration(),
                 clipBehavior: Clip.hardEdge,
