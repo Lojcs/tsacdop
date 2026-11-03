@@ -537,5 +537,289 @@
         "placeholders": {
             "version": {}
         }
-    }
+    },
+    "sleepTimerCancel": "",
+    "moreOptions": "",
+    "deleted": "",
+    "keepAndroidOpenDes": "",
+    "settingsRequirementsAll": "",
+    "settingsNewEpisodesMarkDuplicate": "",
+    "settingsLegacy": "",
+    "close": "",
+    "newPlain": "",
+    "@newPlain": {
+        "description": "Word to describe a new episode (and use in filterType)"
+    },
+    "settingsBackupConfirmationDatabaseOverwrite": "",
+    "deviceStorage": "",
+    "@deviceStorage": {
+        "description": "Refers to files stored on user's device."
+    },
+    "settingsTrueBlackDes": "",
+    "settingsNewEpisodesMarkNewPodcast": "",
+    "settingsPlaybackDes": "",
+    "settingsRequirements": "",
+    "settingsBackupDatabasePlaylists": "",
+    "settingsNewEpisodesUnmarkDes": "",
+    "sleepTimerStart": "",
+    "@sleepTimerStart": {
+        "description": "The timer length is displayed underneath."
+    },
+    "settingsDownloads": "",
+    "settingsBackupDatabaseHistory": "",
+    "settingsBackupDatabase": "",
+    "toastBackupRestoreFailure": "",
+    "subscribed": "",
+    "vpn": "",
+    "welcome": "",
+    "settingsNewEpisodesMarkDes": "",
+    "settingsSTWaitEpisodeEnd": "",
+    "settingsBackupDatabaseBackupFile": "",
+    "skipToPrevious": "",
+    "settingsUseSystemAccentColor": "",
+    "settingsDefaultFilterAndroidAuto": "",
+    "keepAndroidOpen": "",
+    "searchWeb": "",
+    "settingsAutoDownloadOnForbidden": "",
+    "mobileData": "",
+    "settingsPlayerState": "",
+    "settingsAutoDeleteAfterTime": "",
+    "@settingsAutoDeleteAfterTime": {
+        "description": "Settings item, displayed alongide a day count picker."
+    },
+    "settingsInterfaceDes": "",
+    "downloadDate": "",
+    "@downloadDate": {
+        "description": "Download Date sort order"
+    },
+    "downloading": "",
+    "settingsNewEpisodesUnmarkWaitSyncDes": "",
+    "settingsDiscoveryDes": "",
+    "settingsSTWaitEpisodeEndDes": "",
+    "translate": "",
+    "sortBy": "",
+    "yearsCount": "",
+    "settingsDownloadAskOnForbidden": "",
+    "settingsHomeTabName": "",
+    "settingsEpisodeManagement": "",
+    "before": "",
+    "@before": {
+        "description": "Used in a button to select episodes before the selected one(s) on a list. Not used for time"
+    },
+    "settingsBackupDatabaseBackupFileDes": "",
+    "settingsDefaultFilters": "",
+    "settingsRequirementsDes": "",
+    "@settingsRequirementsDes": {
+        "description": "Displayed alongside buttons to pick 'All' or 'Any'."
+    },
+    "haptics": "",
+    "@haptics": {
+        "description": "Haptic Feedback (vibrations)"
+    },
+    "scheduleDisabled": "",
+    "settingsNewEpisodes": "",
+    "settingsHomeTabs": "",
+    "settingsBackupCategoriesDes": "",
+    "settingsBackupPasswordDes": "",
+    "none": "",
+    "@none": {
+        "description": "Indicates that no option was selected among the given options."
+    },
+    "wifi": "",
+    "settingsHomeTabAdd": "",
+    "localEpisodeDescription": "",
+    "@localEpisodeDescription": {
+        "placeholders": {
+            "filePath": {}
+        }
+    },
+    "monthsCount": "",
+    "settingsPlayback": "",
+    "settingsNewEpisodesUnmarkWaitSync": "",
+    "settingsFullStop": "",
+    "localFolder": "",
+    "@localFolder": {
+        "description": "Podcast name for episodes imported from audio files on device"
+    },
+    "unsupported": "",
+    "settingsBackupConfirmationSettingsOverwrite": "",
+    "playlistExists": "",
+    "settingsBackupDatabaseCategoriesDes": "",
+    "settingsAutoDownloadNewPodcastDes": "",
+    "settingsLookAndFeel": "",
+    "settingsAutoDeleteAfterPlayed": "",
+    "sleepTimerExpireAt": "",
+    "@sleepTimerExpireAt": {
+        "description": "The time (as in time of day) at which the sleep timer will end."
+    },
+    "settingsMediaControls": "",
+    "settingsNewEpisodesMarkAge": "",
+    "settingsBackupCategoriesImportDes": "",
+    "interaction": "",
+    "@interaction": {
+        "description": "Interaction setting menu section title"
+    },
+    "settingsColors": "",
+    "settingsSearchMode": "",
+    "settingsDefaultFilterAndroidAutoDes": "",
+    "filterType": "",
+    "@filterType": {
+        "description": "To use with different episode filter types. Noun, not verb. Ex: {Downloaded} Filter, {Played} Filter, {Group} Filter...",
+        "placeholders": {
+            "type": {}
+        }
+    },
+    "displayVersion": "",
+    "@displayVersion": {
+        "description": "The version of an episode displayed by default. Used with filterType."
+    },
+    "settingsBackupConfirmationDatabaseReset": "",
+    "settingsLanguage": "",
+    "settingsDownloadsDes": "",
+    "settingsNewEpisodesUnmarkInteractedDes": "",
+    "developerOriginal": "",
+    "settingsBackupDatabasePodcasts": "",
+    "settingsNewEpisodesUnmarkPlayed": "",
+    "searchEngine": "",
+    "settingsAutoDownloadDes": "",
+    "suggestName": "",
+    "deselectAll": "",
+    "settingsAutoDownloadNewPodcast": "",
+    "syncStarted": "",
+    "neverAutoUpdateDes": "",
+    "opmlFile": "",
+    "getStarted": "",
+    "settingsHomeTabNew": "",
+    "networkErrorDNS": "",
+    "@networkErrorDNS": {
+        "description": "Notify the user that the host address couldn't be found."
+    },
+    "sleepTimerWait": "",
+    "settingsNewEpisodesUnmarkPlayedDes": "",
+    "settingsRequirementsAny": "",
+    "searchApi": "",
+    "forward": "",
+    "settingsNewEpisodesMarkUnseenDes": "",
+    "settingsBackupCategories": "",
+    "settingsNewEpisodesUnmarkAge": "",
+    "details": "",
+    "sync": "",
+    "capitalDefault": "",
+    "settingsNewEpisodesUnmark": "",
+    "deletedPodcastDesc": "",
+    "between": "",
+    "@between": {
+        "description": "Used in a button to select episodes between the selected one(s) on a list"
+    },
+    "settingsReset": "",
+    "notificationSubscribing": "",
+    "settingsPauseDownloadOnForbiddenConnectedDes": "",
+    "settingsAutoDownloadOnForbiddenDes": "",
+    "settingsForbiddenDownloadConnectionsDes": "",
+    "random": "",
+    "@random": {
+        "description": "Random sort order"
+    },
+    "settingsNewEpisodesMarkAgeDes": "",
+    "settingsSearchEngine": "",
+    "settingsForbiddenDownloadConnections": "",
+    "selectMode": "",
+    "globallyDisabled": "",
+    "@globallyDisabled": {
+        "description": "Indicates that a granular setting was disabled globally"
+    },
+    "settingsAutoDeleteAfterTimeDes": "",
+    "@settingsAutoDeleteAfterTimeDes": {
+        "description": "Settings item, displayed alongide a day count picker."
+    },
+    "settingsGeneral": "",
+    "settingsMediaControlsDes": "",
+    "settingsNewEpisodesDes": "",
+    "settingsNewEpisodesMarkDuplicateDes": "",
+    "loadAllSelected": "",
+    "@loadAllSelected": {
+        "description": "Tooltip for button that loads all episodes included in a selection."
+    },
+    "aboutDes": "",
+    "settingsNewEpisodesUnmarkAgeDes": "",
+    "disabled": "",
+    "settingsFullStopDes": "",
+    "removeDownload": "",
+    "satellite": "",
+    "settingsNewEpisodesMarkUnseen": "",
+    "sleepTimerWaitFor": "",
+    "@sleepTimerWaitFor": {
+        "description": "The time period the sleep timer will run for."
+    },
+    "syncFinished": "",
+    "settingsAutoSync": "",
+    "toastResetSuccessful": "",
+    "podcastList": "",
+    "settingsSearchApi": "",
+    "scheduleTime": "",
+    "@scheduleTime": {
+        "description": "For example 'Schedule: 21:50 - 06:30'",
+        "placeholders": {
+            "start": {},
+            "end": {}
+        }
+    },
+    "hapticsDes": "",
+    "@hapticsDes": {
+        "description": "Haptic Feedback settings item description"
+    },
+    "settingsDownloadAskOnForbiddenDes": "",
+    "settingsBackupLegacyFileDes": "",
+    "sortOrder": "",
+    "settingsBackupConfirmationSettingsReset": "",
+    "settingsNewEpisodesUnmarkInteracted": "",
+    "settingsManufacturerNotificationLayout": "",
+    "importingOpml": "",
+    "notificationAddingGroups": "",
+    "restartAppForEffect": "",
+    "@restartAppForEffect": {
+        "description": "Notify user that the change will take effect after app restart."
+    },
+    "localFolderDescription": "",
+    "settingsAutoDownload": "",
+    "localizationWeblate": "",
+    "loading": "",
+    "settingsAutoDeleteOldestIfTotalAboveDes": "",
+    "getStartedDes": "",
+    "settingsLookAndFeelDes": "",
+    "noEpisodesFound": "",
+    "settingsPauseDownloadOnForbiddenConnected": "",
+    "settingsBackupFile": "",
+    "settingsNewEpisodesMarkNewPodcastDes": "",
+    "settingsAutoSyncDes": "",
+    "newPlaylist": "",
+    "after": "",
+    "@after": {
+        "description": "Used in a button to select episodes after the selected one(s) on a list. Not used for time"
+    },
+    "apiSearch": "",
+    "settingsSyncingInterval": "",
+    "settingsBackupLegacyFile": "",
+    "settingsNewEpisodesMark": "",
+    "settingsAutoDeleteOldestIfTotalAbove": "",
+    "@settingsAutoDeleteOldestIfTotalAbove": {
+        "description": "Settings item, displayed alongside a storage size picker. (in 100 MiBs)"
+    },
+    "confirmation": "",
+    "settingsTrueBlack": "",
+    "searchInstructions": "",
+    "toastRestart": "",
+    "settingsBackupPassword": "",
+    "weeksCount": "",
+    "toastBackupRestoreSuccess": "",
+    "duration": "",
+    "@duration": {
+        "description": "Duration sort order"
+    },
+    "deletedEpisodeDesc": "",
+    "publishDate": "",
+    "@publishDate": {
+        "description": "Publish Date sort order"
+    },
+    "contribute": ""
 }
