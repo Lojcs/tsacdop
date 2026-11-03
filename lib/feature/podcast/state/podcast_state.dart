@@ -14,10 +14,13 @@ import 'package:flutter/services.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:webfeed/webfeed.dart';
+
 import '../../../core/service/database.dart';
 import '../widget/opml_helper.dart';
 import '../../episode/state/episode_brief.dart';
+
 import 'package:image/image.dart' as img;
+
 import 'fireside_data.dart';
 import '../model/podcast_brief.dart';
 import '../../group/model/podcast_group.dart';
@@ -351,9 +354,8 @@ class PodcastState extends ChangeNotifier {
           developer.log(e.toString(), name: 'Fatch fireside data error');
         }
       }
-      var (podcastLocal, episodesLocal) = await Isolater(
-        _persistFeed,
-      ).run((podcastRemote, episodesRemote));
+      var (podcastLocal, episodesLocal) = await Isolater(_persistFeed)
+          .run((podcastRemote, episodesRemote));
       await _dbHelper.savePodcastLocal(
         podcastLocal,
         _settingState.newPodcastAutoDownload.get(),
@@ -403,9 +405,8 @@ class PodcastState extends ChangeNotifier {
             developer.log(e.toString(), name: 'Fatch fireside data error');
           }
         }
-        var (podcastLocal, episodesLocal) = await Isolater(
-          _persistFeed,
-        ).run((podcast, episodes));
+        var (podcastLocal, episodesLocal) = await Isolater(_persistFeed)
+            .run((podcast, episodes));
         await _dbHelper.savePodcastLocal(
           podcastLocal,
           settings.newPodcastAutoDownload.get(),
@@ -595,9 +596,8 @@ class PodcastState extends ChangeNotifier {
       }
     }
     await Future.wait(futures);
-    final downloader = background
-        ? DownloadState(background: true)
-        : _downloadState;
+    final downloader = background ? DownloadState() : _downloadState;
+    await downloader.ready;
     await downloader.autoDelete();
     if (!kReleaseMode) {
       final dir = await getApplicationDocumentsDirectory();
@@ -614,9 +614,8 @@ class PodcastState extends ChangeNotifier {
   /// Starts downloading the episodes. Safe to call from the background.
   Future<void> startAutoDownload(List<EpisodeBrief> episodes) async {
     if (episodes.length < 100 && episodes.isNotEmpty) {
-      final downloader = background
-          ? DownloadState(background: true)
-          : _downloadState;
+      final downloader = background ? DownloadState() : _downloadState;
+      await downloader.ready;
       for (var episode in episodes) {
         await downloader.autoDownload(episode);
       }

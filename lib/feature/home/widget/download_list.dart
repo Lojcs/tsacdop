@@ -1,5 +1,4 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:provider/provider.dart';
 
 import '../../episode/detail/widget/episode_detail.dart';
@@ -20,25 +19,25 @@ Widget _downloadButton(EpisodeTask task, BuildContext context) {
   return Row(
     mainAxisSize: MainAxisSize.min,
     children: [
-      switch (task.status) {
-        DownloadTaskStatus.undefined => SizedBox(width: 10, height: 10),
-        DownloadTaskStatus.enqueued => IconButton(
+      switch (task.status?.status) {
+        null => SizedBox(width: 10, height: 10),
+        .enqueued || .waitingToRetry => IconButton(
           splashRadius: 20,
           icon: Icon(Icons.pause_circle_filled),
           onPressed: () => downloader.pauseDownload(task.episodeId),
         ),
-        DownloadTaskStatus.running => IconButton(
+        .running => IconButton(
           splashRadius: 20,
           icon: Icon(Icons.pause_circle_filled),
           onPressed: () => downloader.pauseDownload(task.episodeId),
         ),
-        DownloadTaskStatus.complete => Center(),
-        DownloadTaskStatus.failed || DownloadTaskStatus.canceled => IconButton(
+        .complete => Center(),
+        .failed || .canceled || .notFound => IconButton(
           splashRadius: 20,
           icon: Icon(Icons.refresh, color: Colors.red),
           onPressed: () => downloader.retryDownload(task.episodeId),
         ),
-        DownloadTaskStatus.paused => IconButton(
+        .paused => IconButton(
           splashRadius: 20,
           icon: Icon(Icons.play_circle_filled),
           onPressed: () => downloader.resumeDownload(task.episodeId),
@@ -56,88 +55,88 @@ Widget _downloadButton(EpisodeTask task, BuildContext context) {
 class _DownloadListState extends State<DownloadList> {
   @override
   Widget build(BuildContext context) {
-    return Selector<DownloadState, double>(
-      selector: (_, dState) => dState.listsUpdate,
-      builder: (context, _, __) {
-        final tasks = context.downloadState.allDownloads
-            .where((eTask) => eTask.status != DownloadTaskStatus.complete)
-            .toList();
-        return tasks.isNotEmpty
-            ? SliverPadding(
-                padding: EdgeInsets.symmetric(vertical: 5.0),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final task = tasks[index];
-                    final episode = context.episodeState[task.episodeId];
-                    return ListTile(
-                      onTap: () => Navigator.push(
-                        context,
-                        ScaleRoute(page: EpisodeDetail(task.episodeId)),
-                      ),
-                      title: SizedBox(
-                        height: 40,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: <Widget>[
-                            Expanded(
-                              flex: 5,
-                              child: Text(
-                                episode.title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+    return Selector<DownloadState, List<int>>(
+      selector: (_, dState) => dState.ongoingEpisodeTasks.keys.toList(),
+      builder: (context, ids, __) => ids.isNotEmpty
+          ? SliverPadding(
+              padding: EdgeInsets.symmetric(vertical: 5.0),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  return Selector<DownloadState, EpisodeTask>(
+                    selector: (_, dState) =>
+                        dState.ongoingEpisodeTasks[ids[index]]!,
+                    builder: (context, task, __) {
+                      final episode = context.episodeState[task.episodeId];
+                      return ListTile(
+                        onTap: () => Navigator.push(
+                          context,
+                          ScaleRoute(page: EpisodeDetail(task.episodeId)),
+                        ),
+                        title: SizedBox(
+                          height: 40,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: <Widget>[
+                              Expanded(
+                                flex: 5,
+                                child: Text(
+                                  episode.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
-                            ),
-                            Expanded(
-                              flex: 1,
-                              child:
-                                  tasks[index].progress >= 0 &&
-                                      (tasks[index].status !=
-                                              DownloadTaskStatus.failed &&
-                                          tasks[index].status !=
-                                              DownloadTaskStatus.canceled)
-                                  ? Container(
-                                      width: 40.0,
-                                      height: 20.0,
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 2,
-                                      ),
-                                      alignment: Alignment.center,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.all(
-                                          Radius.circular(6),
+                              Expanded(
+                                flex: 1,
+                                child:
+                                    task.progress != null &&
+                                        task.progress!.progress >= 0 &&
+                                        (task.status != null &&
+                                            task.status!.status != .failed &&
+                                            task.status!.status != .canceled)
+                                    ? Container(
+                                        width: 40.0,
+                                        height: 20.0,
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 2,
                                         ),
-                                        color: Colors.red,
-                                      ),
-                                      child: Text(
-                                        '${tasks[index].progress}%',
-                                        textAlign: TextAlign.center,
-                                        maxLines: 1,
-                                        style: TextStyle(color: Colors.white),
-                                      ),
-                                    )
-                                  : Container(height: 40),
-                            ),
-                          ],
+                                        alignment: Alignment.center,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.all(
+                                            Radius.circular(6),
+                                          ),
+                                          color: Colors.red,
+                                        ),
+                                        child: Text(
+                                          '${(task.progress!.progress * 100).toInt()}%',
+                                          textAlign: TextAlign.center,
+                                          maxLines: 1,
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                      )
+                                    : Container(height: 40),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      subtitle: SizedBox(
-                        height: 2,
-                        child: LinearProgressIndicator(
-                          value: tasks[index].progress / 100,
+                        subtitle: SizedBox(
+                          height: 2,
+                          child: LinearProgressIndicator(
+                            value: task.progress?.progress ?? 0,
+                          ),
                         ),
-                      ),
-                      leading: CircleAvatar(
-                        radius: 20,
-                        backgroundImage: episode.avatarImage,
-                      ),
-                      trailing: _downloadButton(tasks[index], context),
-                    );
-                  }, childCount: tasks.length),
-                ),
-              )
-            : SliverToBoxAdapter(child: Center());
-      },
+                        leading: CircleAvatar(
+                          radius: 20,
+                          backgroundImage: episode.avatarImage,
+                        ),
+                        trailing: _downloadButton(task, context),
+                      );
+                    },
+                  );
+                }, childCount: ids.length),
+              ),
+            )
+          : SliverToBoxAdapter(child: Center()),
     );
   }
 }

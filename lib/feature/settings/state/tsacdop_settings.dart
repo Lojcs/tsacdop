@@ -37,7 +37,7 @@ abstract class TsacdopSettings<T extends SharedPreferencesWithCache> {
   late final settingsVersion = IntPreference(
     backend,
     key: 'settingsVersion',
-    defaultValue: 1,
+    defaultValue: 0,
   );
 
   /// Wheter the app is being opened for the first time.

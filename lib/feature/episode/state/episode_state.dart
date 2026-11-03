@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+
 import '../../../generated/l10n.dart';
 import '../../../core/service/database.dart';
 import '../../podcast/model/podcast_brief.dart';
@@ -196,9 +197,8 @@ class EpisodeState extends ChangeNotifier {
     List<int> ids, {
     bool deleteFromDatabase = true,
   }) async {
-    final dState = background
-        ? DownloadState(background: true)
-        : _downloadState;
+    final dState = background ? DownloadState() : _downloadState;
+    await dState.ready;
     final downloaded = await getEpisodes(
       episodeIds: ids,
       filterDownloaded: true,
@@ -320,9 +320,9 @@ class EpisodeState extends ChangeNotifier {
               combinator.combine(
                 e.$2,
                 duration >=
-                    DateTime.fromMillisecondsSinceEpoch(
-                      e.$1.pubDate,
-                    ).toLocal().difference(DateTime.now()),
+                    DateTime.fromMillisecondsSinceEpoch(e.$1.pubDate)
+                        .toLocal()
+                        .difference(DateTime.now()),
               ),
             ),
           )
@@ -390,7 +390,6 @@ class EpisodeState extends ChangeNotifier {
   Future<void> setDownloaded(
     int episodeId, {
     required String mediaId,
-    required String taskId,
     int? size,
     int? duration,
   }) async {
@@ -402,7 +401,6 @@ class EpisodeState extends ChangeNotifier {
     await _dbHelper.setDownloaded(
       episodeId,
       mediaId: mediaId,
-      taskId: taskId,
       size: size ?? _episodeMap[episodeId]!.enclosureSize,
       duration: duration ?? _episodeMap[episodeId]!.enclosureDuration,
     );

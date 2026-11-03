@@ -5,146 +5,146 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:ui';
 
+import 'package:background_downloader/background_downloader.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 
 import '../../../core/service/database.dart';
-import 'episode_task.dart';
 import '../../episode/state/episode_brief.dart';
 import '../../../core/extension/extension_helper.dart';
 import '../../../core/misc/general_dialog.dart';
 import '../../episode/state/episode_state.dart';
 import '../../settings/state/setting_state.dart';
-
-@pragma('vm:entry-point')
-void downloadCallback(String id, int status, int progress) {
-  developer.log(
-    'Flutter downloader task with id $id : (${DownloadTaskStatus.fromInt(status)}) $progress',
-  );
-  final send = IsolateNameServer.lookupPortByName('downloader_send_port')!;
-  send.send([id, status, progress]);
-}
+import 'episode_task.dart';
 
 /// State object that manages episode downloads. [EpisodeState] aware.
+/// Uses [FileDownloader] database tracking for only ongoing downloads.
 class DownloadState extends ChangeNotifier {
   final DBHelper _dbHelper = DBHelper();
   late SettingState _settingState = SettingState();
   late EpisodeState _episodeState;
+  bool background = true;
 
   set context(BuildContext context) {
     _settingState = context.settingState;
     _episodeState = context.episodeState;
+    background = false;
   }
 
-  /// episode id : [EpisodeTask]
-  final Map<int, EpisodeTask> _ongoingEpisodeTasks = {};
+  /// Downloader instance.
+  final FileDownloader downloader = FileDownloader();
 
+  /// Tasks that are [TaskStatus.isNotFinalState]
   /// episode id : [EpisodeTask]
-  final Map<int, EpisodeTask> _otherEpisodeTasks = {};
-  Completer downloadsComplete = Completer();
-  final bool background;
-  bool initDone = false;
+  final Map<int, EpisodeTask> ongoingEpisodeTasks = {};
 
-  late StreamSubscription<dynamic> _downloaderStream;
+  late StreamSubscription<TaskUpdate> _taskUpdateSubscription;
+  late StreamSubscription<TaskRecord> _taskRecordSubscription;
   late StreamSubscription<List<ConnectivityResult>> _connectivityStream;
 
-  /// Returns [EpisodeTask] for episode with id [episodeId] if it exists.
-  EpisodeTask? operator [](int episodeId) =>
-      _ongoingEpisodeTasks[episodeId] ?? _otherEpisodeTasks[episodeId];
+  /// Increments to indicate that the download lists have been modified.
+  double listsGeneration = 0;
 
-  List<EpisodeTask> get ongoingDownloads =>
-      _ongoingEpisodeTasks.values.toList();
-  List<EpisodeTask> get otherDownloads => _otherEpisodeTasks.values.toList();
-  List<EpisodeTask> get allDownloads => [
-    ..._ongoingEpisodeTasks.values,
-    ..._otherEpisodeTasks.values,
-  ];
-
-  /// Flips to indicate that the download lists have been modified.
-  double listsUpdate = 0;
-
-  /// Returns [EpisodeTask] for episode with id [taskId] if it exists.
-  EpisodeTask? _getTaskWithId(String taskId) {
-    final ongoingTask = _ongoingEpisodeTasks.values.where(
-      (eTask) => eTask.taskId == taskId,
-    );
-    if (ongoingTask.isNotEmpty) {
-      return ongoingTask.first;
-    } else {
-      final otherTask = _otherEpisodeTasks.values.where(
-        (eTask) => eTask.taskId == taskId,
-      );
-      if (otherTask.isNotEmpty) {
-        return otherTask.first;
-      } else {
-        return null;
-      }
-    }
-  }
-
-  /// Adds task to the correct task list.
-  void _addTask(EpisodeTask eTask) {
-    if (eTask.status == DownloadTaskStatus.running ||
-        eTask.status == DownloadTaskStatus.enqueued) {
-      _ongoingEpisodeTasks[eTask.episodeId] = eTask;
-      _otherEpisodeTasks.remove(eTask.episodeId);
-    } else {
-      _otherEpisodeTasks[eTask.episodeId] = eTask;
-      _ongoingEpisodeTasks.remove(eTask.episodeId);
-    }
-    listsUpdate++;
+  /// Removes and cancels an ongoing task.
+  Future<void> _removeTask(int episodeId) async {
+    ongoingEpisodeTasks.remove(episodeId);
+    final taskId = episodeId.toString();
+    await downloader.cancelTaskWithId(taskId);
+    await downloader.database.deleteRecordWithId(taskId);
     notifyListeners();
-  }
-
-  /// Removes and returns task from the correct task list based on either its episode or task id.
-  EpisodeTask? _removeTask({int? episodeId, String? taskId}) {
-    EpisodeTask? ret;
-    if (episodeId != null) {
-      ret =
-          _ongoingEpisodeTasks.remove(episodeId) ??
-          _otherEpisodeTasks.remove(episodeId);
-    } else if (taskId != null) {
-      final ongoingTask = _ongoingEpisodeTasks.values.where(
-        (eTask) => eTask.taskId == taskId,
-      );
-      if (ongoingTask.isNotEmpty) {
-        ret = _ongoingEpisodeTasks.remove(ongoingTask.first.episodeId);
-      } else {
-        final otherTask = _otherEpisodeTasks.values.where(
-          (eTask) => eTask.taskId == taskId,
-        );
-        if (otherTask.isNotEmpty) {
-          ret = _otherEpisodeTasks.remove(otherTask.first.episodeId);
-        }
-      }
-    }
-    notifyListeners();
-    return ret;
   }
 
   /// Create download state. Foreground mode requires the assignment of [context]
   /// and updates [EpisodeState] with download status and notifies its listeners.
   /// Background mode updates the database directly and doesn't notify.
   /// [downloadsComplete] is signaled when all downloads are finished.
-  DownloadState({this.background = false}) {
+  ///
+  /// Wait for [ready] before using.
+  new() {
     ready = _init();
   }
 
   /// Seperate function to keep async functions ordered.
   Future<void> _init() async {
-    if (!FlutterDownloader.initialized) {
-      await FlutterDownloader.initialize();
-      await _settingState.ready;
-      await _loadTasks();
-      await _bindBackgroundIsolate();
-      await _startNetworkListener();
-      await autoDelete();
-      initDone = true;
-      notifyListeners();
+    await downloader.ready;
+    _listenToUpdates();
+    downloader.configureNotification(
+      running: TaskNotification("Downloading episode", "{displayName}"),
+      progressBar: true,
+    );
+    await downloader.start();
+    await _settingState.ready;
+    await _startNetworkListener();
+    await autoDelete();
+    notifyListeners();
+  }
+
+  void _listenToUpdates() {
+    _taskUpdateSubscription = downloader.updates.listen(_taskUpdateListener);
+    _taskRecordSubscription = downloader.database.updates.listen(
+      _taskRecordListener,
+    );
+  }
+
+  Future<void> _taskUpdateListener(TaskUpdate update) async {
+    final episodeId = int.parse(update.task.taskId);
+    final EpisodeTask task;
+    if (ongoingEpisodeTasks.containsKey(episodeId)) {
+      task = ongoingEpisodeTasks[episodeId]!;
+    } else {
+      task = .fromDownloadTask(update.task as DownloadTask);
+    }
+    switch (update) {
+      case TaskStatusUpdate _:
+        ongoingEpisodeTasks[episodeId] = task.copyWith(
+          status: update,
+          pendingAction: false,
+        );
+      case TaskProgressUpdate _:
+        ongoingEpisodeTasks[episodeId] = task.copyWith(progress: update);
+    }
+    notifyListeners();
+  }
+
+  Future<void> _taskRecordListener(TaskRecord record) async {
+    if (record.status == .complete) {
+      await _onDownloadFinished(record.task as DownloadTask);
+    } else {
+      if (!background) {
+        await _episodeState.cacheEpisodes([int.parse(record.taskId)]);
+      }
+    }
+  }
+
+  /// Saves the finished download to the database.
+  Future<void> _onDownloadFinished(DownloadTask downloadTask) async {
+    final episodeId = int.parse(downloadTask.taskId);
+    await _removeTask(episodeId);
+    // I tried to combine these two but audioplayer only seems to work if the
+    // file name is uri encoded and file only works if it is not.
+    final filePath = await downloadTask.filePath();
+    var fileStat = await File(filePath).stat();
+    final fileUri = Uri.file(filePath).toString();
+    var duration = await AudioPlayer().setUrl(fileUri);
+    if (!background) {
+      await _episodeState.cacheEpisodes([episodeId]);
+      await _episodeState.setDownloaded(
+        episodeId,
+        mediaId: fileUri,
+        size: fileStat.size,
+        duration: duration?.inSeconds ?? 0,
+      );
+    } else {
+      await _dbHelper.setDownloaded(
+        episodeId,
+        mediaId: fileUri,
+        size: fileStat.size,
+        duration: duration?.inSeconds ?? 0,
+      );
     }
   }
 
@@ -152,21 +152,10 @@ class DownloadState extends ChangeNotifier {
 
   @override
   void dispose() async {
-    await _downloaderStream.cancel();
+    await _taskUpdateSubscription.cancel();
+    await _taskRecordSubscription.cancel();
     await _connectivityStream.cancel();
     super.dispose();
-  }
-
-  @override
-  void notifyListeners() {
-    if (initDone) {
-      if (_ongoingEpisodeTasks.isEmpty) {
-        if (!downloadsComplete.isCompleted) downloadsComplete.complete();
-      } else {
-        downloadsComplete = Completer();
-      }
-      super.notifyListeners();
-    }
   }
 
   /// Starts the downloads, prompting the user if on mobile data and
@@ -234,221 +223,103 @@ class DownloadState extends ChangeNotifier {
   }
 
   /// Starts the download of an episode.
-  Future<void> download(
-    EpisodeBrief episode, {
-    bool showNotification = true,
-  }) async {
-    if (!episode.isDownloaded && this[episode.id] == null) {
+  Future<void> download(EpisodeBrief episode) async {
+    if (!episode.isDownloaded && !ongoingEpisodeTasks.containsKey(episode.id)) {
       final dir = _settingState.downloadStoragePath.get();
-      final localPath = path.join(
-        dir,
-        episode.podcastTitle.replaceAll('/', ''),
-      );
-      final saveDir = Directory(localPath);
-      if (!saveDir.existsSync()) await saveDir.create();
-      final dateFull = DateTime.now().toIso8601String();
-      var cleanTitle = episode.title.replaceAll('/', '');
-      final extension = episode.enclosureUrl
-          .split('/')
-          .last
-          .split('.')
-          .last
-          .split('?')
-          .first;
-      final titleTail = " - $dateFull.$extension";
-      if (cleanTitle.length > 100 - titleTail.length) {
-        cleanTitle = cleanTitle.substring(0, 100 - titleTail.length);
-      }
-      final fileName = '$cleanTitle$titleTail';
-      var taskId = await FlutterDownloader.enqueue(
-        fileName: fileName,
-        url: episode.enclosureUrl,
-        savedDir: localPath,
-        showNotification: showNotification,
-        openFileFromNotification: false,
-      );
-      if (taskId != null) {
-        _addTask(EpisodeTask(episode.id, taskId));
+      final episodeTask = await EpisodeTask.newTask(episode, dir);
+      final started = await downloader.enqueue(episodeTask.downloadTask);
+      if (started) {
+        ongoingEpisodeTasks[episode.id] = episodeTask;
       }
     }
   }
 
-  /// Removes an episode's download.
   Future<void> removeDownload(int episodeId) async {
-    final episodeTask = this[episodeId];
-    if (episodeTask != null && episodeTask.pendingAction != true) {
-      await _removeDownloadInternal(
-        episodeId: episodeId,
-        taskId: episodeTask.taskId,
-      );
+    if (ongoingEpisodeTasks.containsKey(episodeId)) {
+      await removeOngoingDownload(episodeId);
+    } else {
+      await removeCompletedDownload(episodeId);
     }
   }
 
-  Future<void> _removeDownloadInternal({
-    required int episodeId,
-    required String taskId,
-  }) async {
-    _removeTask(episodeId: episodeId);
-    await FlutterDownloader.remove(taskId: taskId, shouldDeleteContent: true);
+  /// Cancels and removes a currently ongoing download.
+  Future<void> removeOngoingDownload(int episodeId) async {
+    if (ongoingEpisodeTasks.containsKey(episodeId)) {
+      final task = ongoingEpisodeTasks[episodeId]!;
+      if (task.pendingAction != true) {
+        await _removeTask(episodeId);
+      }
+    }
+  }
+
+  /// Removes a completed download and unmarks the episode.
+  Future<void> removeCompletedDownload(int episodeId) async {
+    final EpisodeBrief episode;
     if (background) {
-      final episode = await _dbHelper.getEpisodes(episodeIds: [episodeId]);
+      episode = (await _dbHelper.getEpisodes(episodeIds: [episodeId])).first;
       await _dbHelper.unsetDownloaded(
         episodeId,
-        enclosureUrl: episode.first.enclosureUrl,
+        enclosureUrl: episode.enclosureUrl,
       );
     } else {
       await _episodeState.cacheEpisodes([episodeId]);
+      episode = _episodeState[episodeId];
       await _episodeState.unsetDownloaded(episodeId);
     }
-    listsUpdate++;
-    notifyListeners();
+    final file = Uri.parse(episode.mediaId).toFile();
+    if (await file.exists()) await file.delete();
   }
+
+  /// Removes a download missing from the database.
+  Future<void> removeDanglingDownload(String uri) async {
+    final file = Uri.parse(uri).toFile();
+    if (await file.exists()) await file.delete();
+  }
+
+  /// Returns the uris of all downloaded files.
+  Future<Set<String>> getAllFileUris() async =>
+      (await Future.wait(
+            (await getExternalStorageDirectories())!.map(
+              (dir) => dir.list().toList(),
+            ),
+          ))
+          .expand((e) => e)
+          .whereType<File>()
+          .map((file) => Uri.file(file.path).toString())
+          .toSet();
 
   /// Retries an episode's failed download.
   Future<void> retryDownload(int episodeId) async {
-    final episodeTask = _otherEpisodeTasks[episodeId];
-    if (episodeTask != null && episodeTask.pendingAction != true) {
-      _otherEpisodeTasks[episodeId] = episodeTask.copyWith(pendingAction: true);
-      var newTaskId = await FlutterDownloader.retry(taskId: episodeTask.taskId);
-      await FlutterDownloader.remove(taskId: episodeTask.taskId);
-      _addTask(episodeTask.copyWith(taskId: newTaskId));
+    if (ongoingEpisodeTasks.containsKey(episodeId)) {
+      final task = ongoingEpisodeTasks[episodeId]!;
+      if (task.pendingAction != true) {
+        await _removeTask(episodeId);
+        ongoingEpisodeTasks[episodeId] = task.copyWith(pendingAction: true);
+        await downloader.enqueue(task.downloadTask);
+      }
     }
   }
 
   /// Pauses an episode's ongoing download.
   Future<void> pauseDownload(int episodeId) async {
-    final episodeTask = _ongoingEpisodeTasks[episodeId];
-    if (episodeTask != null && episodeTask.pendingAction != true) {
-      _ongoingEpisodeTasks[episodeId] = episodeTask.copyWith(
-        pendingAction: true,
-      );
-      if (episodeTask.progress >= 0) {
-        await FlutterDownloader.pause(taskId: episodeTask.taskId);
+    if (ongoingEpisodeTasks.containsKey(episodeId)) {
+      final task = ongoingEpisodeTasks[episodeId]!;
+      if (task.pendingAction != true) {
+        ongoingEpisodeTasks[episodeId] = task.copyWith(pendingAction: true);
+        await downloader.pause(task.downloadTask);
       }
     }
   }
 
   /// Resumes an episode's ongoing download.
   Future<void> resumeDownload(int episodeId) async {
-    final episodeTask = _otherEpisodeTasks[episodeId];
-    if (episodeTask != null && episodeTask.pendingAction != true) {
-      _otherEpisodeTasks[episodeId] = episodeTask.copyWith(pendingAction: true);
-      var newTaskId = await FlutterDownloader.resume(
-        taskId: episodeTask.taskId,
-      );
-      await FlutterDownloader.remove(taskId: episodeTask.taskId);
-      _addTask(episodeTask.copyWith(taskId: newTaskId));
-    }
-  }
-
-  /// Loads [DownloadTask]s from the downloader and saves them as [EpisodeTask]s.
-  /// Removes downloads for episodes no longer in the database.
-  /// Unsets downloaded status for downloads externally deleted.
-  /// Sets downloaded status for downloads that exist but aren't marked.
-  Future<void> _loadTasks() async {
-    var tasks = await FlutterDownloader.loadTasks();
-    if (tasks != null && tasks.isNotEmpty) {
-      final episodes = await _dbHelper.getEpisodes(
-        episodeUrls: tasks.map((task) => task.url).toList(),
-      );
-      final episodeUrls = {for (var ep in episodes) ep.enclosureUrl: ep};
-      final downloadedEpisodeUrls = episodes
-          .where((ep) => ep.isDownloaded)
-          .toSet();
-      for (var task in tasks) {
-        final episode = episodeUrls[task.url];
-        if (episode == null) {
-          // Episode removed from the database
-          FlutterDownloader.remove(
-            taskId: task.taskId,
-            shouldDeleteContent: true,
-          );
-        } else {
-          var episodeTask = EpisodeTask(
-            episode.id,
-            task.taskId,
-            status: task.status,
-          );
-          if (task.status == DownloadTaskStatus.complete) {
-            episodeTask = episodeTask.copyWith(progress: 100);
-            final marked = downloadedEpisodeUrls.contains(episode);
-            final exists = File(
-              path.join(task.savedDir, task.filename),
-            ).existsSync();
-            if (marked && !exists) {
-              // Episode marked as downloaded but file isn't there.
-              await _removeDownloadInternal(
-                episodeId: episode.id,
-                taskId: task.taskId,
-              );
-            } else if (!marked && exists) {
-              // Episode download is finished but it isn't marked as downloaded.
-              _addTask(episodeTask);
-              await _onDownloadFinished(episodeTask);
-            } else {
-              // Normal finished download.
-              _addTask(episodeTask);
-            }
-          } else {
-            // Normal ongoing download.
-            _addTask(episodeTask);
-          }
-        }
-      }
-      if (!background) {
-        _episodeState.cacheEpisodes(
-          allDownloads
-              .where((eTask) => eTask.status != DownloadTaskStatus.complete)
-              .map((task) => task.episodeId)
-              .toList(),
-        );
+    if (ongoingEpisodeTasks.containsKey(episodeId)) {
+      final task = ongoingEpisodeTasks[episodeId]!;
+      if (task.pendingAction != true) {
+        ongoingEpisodeTasks[episodeId] = task.copyWith(pendingAction: true);
+        await downloader.resume(task.downloadTask);
       }
     }
-    dev.log("Loaded ${tasks?.length} download tasks.");
-  }
-
-  /// Registers a port listener for flutter downloader's background isolate.
-  Future<void> _bindBackgroundIsolate() async {
-    final port = ReceivePort();
-    final isSuccess = IsolateNameServer.registerPortWithName(
-      port.sendPort,
-      'downloader_send_port',
-    );
-    if (!isSuccess) {
-      IsolateNameServer.removePortNameMapping('downloader_send_port');
-      await _bindBackgroundIsolate();
-      return;
-    }
-
-    _downloaderStream = port.listen((dynamic data) async {
-      String id = data[0];
-      int status = data[1];
-      int progress = data[2];
-      var episodeTask = _getTaskWithId(id);
-      if (episodeTask != null) {
-        episodeTask = episodeTask.copyWith(
-          status: DownloadTaskStatus.fromInt(status),
-          progress: progress,
-          pendingAction: false,
-        );
-
-        switch (episodeTask.status) {
-          case DownloadTaskStatus.undefined:
-            break;
-          case DownloadTaskStatus.enqueued || DownloadTaskStatus.running:
-            break;
-          case DownloadTaskStatus.complete:
-            await _onDownloadFinished(episodeTask);
-            break;
-          case DownloadTaskStatus.failed ||
-              DownloadTaskStatus.canceled ||
-              DownloadTaskStatus.paused:
-            break;
-        }
-        _addTask(episodeTask);
-      }
-    });
-    await FlutterDownloader.registerCallback(downloadCallback);
   }
 
   /// Deletes old downloads.
@@ -495,7 +366,7 @@ class DownloadState extends ChangeNotifier {
     }
     if (episodes.isNotEmpty) {
       for (var episode in episodes) {
-        await removeDownload(episode.id);
+        await removeOngoingDownload(episode.id);
       }
     }
     developer.log("Auto deleted ${episodes.length} episodes");
@@ -526,52 +397,10 @@ class DownloadState extends ChangeNotifier {
     if (pauseAndResume) {
       final forbidden = await _isConnectionForbidden(connectivity);
       if (forbidden) {
-        for (var episodeTask in _ongoingEpisodeTasks.values) {
-          await pauseDownload(episodeTask.episodeId);
-        }
+        await downloader.pauseAll();
       } else {
-        for (var episodeTask in _otherEpisodeTasks.values) {
-          if (episodeTask.status == DownloadTaskStatus.paused) {
-            await resumeDownload(episodeTask.episodeId);
-          }
-        }
+        await downloader.resumeAll();
       }
-    }
-  }
-
-  /// Saves the finished download to the database.
-  Future<void> _onDownloadFinished(EpisodeTask episodeTask) async {
-    listsUpdate++;
-    final completeTask = await FlutterDownloader.loadTasksWithRawQuery(
-      query: "SELECT * FROM task WHERE task_id = '${episodeTask.taskId}'",
-    );
-    // I tried to combine these two but audioplayer only seems to work if the
-    // file name is uri encoded and file only works if it is not.
-    final fileUri =
-        'file://${path.join(completeTask!.first.savedDir, Uri.encodeComponent(completeTask.first.filename!))}';
-    final filePath = path.join(
-      completeTask.first.savedDir,
-      completeTask.first.filename!,
-    );
-    var fileStat = await File(filePath).stat();
-    var duration = await AudioPlayer().setUrl(fileUri);
-    if (!background) {
-      await _episodeState.cacheEpisodes([episodeTask.episodeId]);
-      await _episodeState.setDownloaded(
-        episodeTask.episodeId,
-        mediaId: fileUri,
-        taskId: episodeTask.taskId,
-        size: fileStat.size,
-        duration: duration?.inSeconds ?? 0,
-      );
-    } else {
-      await _dbHelper.setDownloaded(
-        episodeTask.episodeId,
-        mediaId: fileUri,
-        taskId: episodeTask.taskId,
-        size: fileStat.size,
-        duration: duration?.inSeconds ?? 0,
-      );
     }
   }
 }

@@ -2816,6 +2816,16 @@ class S {
     );
   }
 
+  /// `Folder to save new downloads:`
+  String get settingsDownloadPositionDes {
+    return Intl.message(
+      'Folder to save new downloads:',
+      name: 'settingsDownloadPositionDes',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Episode Management`
   String get settingsEpisodeManagement {
     return Intl.message(

@@ -67,9 +67,9 @@ dependencies:
   flutter_svg: ^2.3.0
   flutter_exit_app: ^2.1.2
   background_downloader: ^9.5.9
-  flutter_downloader: ^1.12.1
   copy_with_extension: ^18.0.0
   material_ui: ^1.2.0
+  html: ^0.15.6
 
 dependency_overrides:
   shared_preferences_android: 2.4.27 # 2.5 has a bug

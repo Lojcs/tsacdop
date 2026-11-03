@@ -535,14 +535,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.4.8"
-  flutter_downloader:
-    dependency: "direct main"
-    description:
-      name: flutter_downloader
-      sha256: "84e2dddc0f9f1f63f76dda9757736970d924106680b00f06ad3b216b563de916"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.12.1"
   flutter_exit_app:
     dependency: "direct main"
     description:
@@ -665,7 +657,7 @@ packages:
     source: hosted
     version: "2.2.0"
   html:
-    dependency: "direct overridden"
+    dependency: "direct main"
     description:
       name: html
       sha256: "6d1264f2dffa1b1101c25a91dff0dc2daee4c18e87cd8538729773c073dbf602"

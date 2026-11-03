@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 
@@ -42,7 +41,7 @@ class _DownloadButtonState extends State<DownloadButton> {
   Widget build(BuildContext context) {
     return Selector<DownloadState, EpisodeTask?>(
       selector: (_, dState) {
-        var task = dState[widget.episodeId];
+        var task = dState.ongoingEpisodeTasks[widget.episodeId];
         return task;
       },
       builder: (context, task, _) {
@@ -58,15 +57,15 @@ class _DownloadButtonState extends State<DownloadButton> {
               ),
               height: 20.0,
               width:
-                  (task?.status == DownloadTaskStatus.running ||
-                      task?.status == DownloadTaskStatus.enqueued)
+                  (task?.status?.status == .running ||
+                      task?.status?.status == .enqueued)
                   ? 50.0
                   : 0,
               alignment: Alignment.center,
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Text(
-                  '${math.max<int>(task?.progress ?? 0, 0)}%',
+                  '${((task?.progress?.progress ?? 0) * 100).toInt()}%',
                   style: TextStyle(color: Colors.white),
                 ),
               ),
@@ -78,8 +77,8 @@ class _DownloadButtonState extends State<DownloadButton> {
   }
 
   Widget _downloadButton(EpisodeTask? task, BuildContext context) {
-    switch (task?.status) {
-      case null || DownloadTaskStatus.undefined:
+    switch (task?.status?.status) {
+      case null:
         return _buttonOnMenu(
           Center(
             child: SizedBox(
@@ -98,7 +97,7 @@ class _DownloadButtonState extends State<DownloadButton> {
           () =>
               context.downloadState.manualDownload(context, [widget.episodeId]),
         );
-      case DownloadTaskStatus.enqueued || DownloadTaskStatus.running:
+      case .enqueued || .running || .waitingToRetry:
         return Material(
           color: Colors.transparent,
           child: InkWell(
@@ -118,7 +117,7 @@ class _DownloadButtonState extends State<DownloadButton> {
                       color: context.primaryColor,
                       fraction: fraction,
                       progressColor: context.primaryColor,
-                      progress: task!.progress / 100,
+                      progress: (task!.progress?.progress ?? 0),
                     ),
                   ),
                 ),
@@ -126,7 +125,7 @@ class _DownloadButtonState extends State<DownloadButton> {
             ),
           ),
         );
-      case DownloadTaskStatus.complete:
+      case .complete:
         return Material(
           color: Colors.transparent,
           child: InkWell(
@@ -150,12 +149,12 @@ class _DownloadButtonState extends State<DownloadButton> {
             ),
           ),
         );
-      case DownloadTaskStatus.failed || DownloadTaskStatus.canceled:
+      case .failed || .canceled || .notFound:
         return _buttonOnMenu(
           Icon(Icons.refresh, color: Colors.red),
           () => context.downloadState.pauseDownload(widget.episodeId),
         );
-      case DownloadTaskStatus.paused:
+      case .paused:
         return Material(
           color: Colors.transparent,
           child: InkWell(
@@ -175,7 +174,7 @@ class _DownloadButtonState extends State<DownloadButton> {
                       color: context.primaryColor,
                       fraction: 1,
                       progressColor: context.primaryColor,
-                      progress: task!.progress / 100,
+                      progress: (task!.progress?.progress ?? 0),
                       pauseProgress: fraction,
                     ),
                   ),

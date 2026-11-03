@@ -784,6 +784,8 @@
   "@settingsDownloadPosition": {
     "description": "Choose folder for downloads."
   },
+  "settingsDownloadPositionDes": "Folder to save new downloads:",
+  "@settingsDownloadPositionDes": {},
   "settingsEpisodeManagement": "Episode Management",
   "@settingsEpisodeManagement": {},
   "settingsExportDes": "Export, import and reset app settings.",

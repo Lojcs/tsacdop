@@ -683,6 +683,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "settingsDownloadPosition": MessageLookupByLibrary.simpleMessage(
       "Download position",
     ),
+    "settingsDownloadPositionDes": MessageLookupByLibrary.simpleMessage(
+      "Folder to save new downloads:",
+    ),
     "settingsDownloads": MessageLookupByLibrary.simpleMessage("Downloads"),
     "settingsDownloadsDes": MessageLookupByLibrary.simpleMessage(
       "Auto download, auto delete and forbidden connections",

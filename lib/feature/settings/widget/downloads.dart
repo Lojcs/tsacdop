@@ -31,7 +31,8 @@ class DownloadsSetting extends StatelessWidget {
             SettingsRadioSheetTile(
               title: s.settingsDownloadPosition,
               selector: (_, settings) => settings.downloadStoragePath,
-              valueToString: (_, value) async => value,
+              valueToString: (_, value) async =>
+                  "${s.settingsDownloadPositionDes}\n$value",
               getOptions: (context) async => [
                 for (var dir in (await getExternalStorageDirectories())!)
                   dir.path,

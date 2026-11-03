@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../core/service/database.dart';
 import '../state/selection_controller.dart';
 
@@ -899,9 +899,8 @@ class _PlaylistList extends StatelessWidget {
                         showGeneralDialog(
                           context: context,
                           barrierDismissible: true,
-                          barrierLabel: MaterialLocalizations.of(
-                            context,
-                          ).modalBarrierDismissLabel,
+                          barrierLabel: MaterialLocalizations.of(context)
+                              .modalBarrierDismissLabel,
                           barrierColor: Colors.black54,
                           transitionDuration: const Duration(milliseconds: 200),
                           pageBuilder: (_, animaiton, secondaryAnimation) =>
@@ -1095,7 +1094,6 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
       final dState = context.downloadState;
       for (var id in selectedEpisodeIds) {
         var episode = eState[id];
-        var task = dState[id];
         if (!likedSet) {
           liked = episode.isLiked;
           likedSet = true;
@@ -1108,11 +1106,11 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
         } else if (episode.isPlayed != played) {
           played = null;
         }
-        final episodeDownloaded = switch (task?.status) {
-          null => false,
-          DownloadTaskStatus.complete => true,
-          _ => null,
-        };
+        final episodeDownloaded = episode.isDownloaded
+            ? true
+            : dState.ongoingEpisodeTasks.containsKey(id)
+            ? null
+            : false;
         if (!downloadedSet) {
           downloaded = episodeDownloaded;
           downloadedSet = true;

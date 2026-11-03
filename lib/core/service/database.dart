@@ -621,6 +621,7 @@ class DBHelper {
         );
       }
       await deleteDangling(txn);
+      await rescanDownloads(txn, downloads);
     });
   }
 
@@ -644,27 +645,36 @@ class DBHelper {
   }
 
   /// Removes the new mark of episodes whose downloads have been deleted.
+  /// Deletes downloads of episodes that don't exist in the database or are not marked downloaded.
   Future<void> rescanDownloads(
     DatabaseExecutor dbClient,
     DownloadState downloads,
   ) async {
-    final downloadedIds = downloads.allDownloads
-        .map((task) => task.episodeId)
-        .toList();
-    int count = 0;
-    if (downloadedIds.isNotEmpty) {
-      count = await dbClient.rawUpdate(
+    final downloadedUris = await downloads.getAllFileUris();
+    final result = await dbClient.rawQuery(
+      "SELECT media_id FROM media_id FROM Episodes WHERE downloaded != 'ND'",
+    );
+    final mediaIds = result.map((e) => e['media_id']).toSet();
+    final missingDownloads = mediaIds.difference(downloadedUris);
+    final danglingDownloads = downloadedUris.difference(mediaIds);
+    if (missingDownloads.isNotEmpty) {
+      await dbClient.rawUpdate(
         """UPDATE Episodes SET downloaded = 'ND', media_id = enclosure_url
-        WHERE downloaded != 'ND' AND id NOT IN (${(", ?" * downloadedIds.length).substring(2)})""",
-        downloadedIds,
+        WHERE media_id IN (${(", ?" * missingDownloads.length).substring(2)})""",
+        missingDownloads.toList(),
       );
-    } else {
-      count = await dbClient.rawUpdate(
-        """UPDATE Episodes SET downloaded = 'ND', media_id = enclosure_url
-        WHERE downloaded != 'ND'""",
+      dev.log(
+        "Found and unmarked ${missingDownloads.length} episodes falsely marked downloaded.",
       );
     }
-    dev.log("Found and unmarked $count episodes falsely marked downloaded.");
+    if (danglingDownloads.isNotEmpty) {
+      await Future.wait(
+        danglingDownloads.map(downloads.removeDanglingDownload),
+      );
+      dev.log(
+        "Found and removed ${danglingDownloads.length} downloads not marked downloaded.",
+      );
+    }
   }
 
   /// Queries the database with the provided options and returns found podcasts.
@@ -834,7 +844,7 @@ class DBHelper {
           podcastLocal.provider,
           podcastLocal.webpage,
           jsonEncode(podcastLocal.funding),
-          autoSync,
+          autoSync ? 1 : 0,
         ],
       );
       if (podcastLocal.id != localFolderId) {
@@ -1641,7 +1651,6 @@ class DBHelper {
   Future<void> setDownloaded(
     int episodeId, {
     required String mediaId,
-    required String taskId,
     required int size,
     required int duration,
   }) async {
@@ -1650,7 +1659,7 @@ class DBHelper {
     await dbClient.rawUpdate(
       """UPDATE Episodes SET downloaded = ?, download_date = ?, media_id = ?,
         enclosure_length = ?, duration = ? WHERE id = ?""",
-      [taskId, milliseconds, mediaId, size, duration, episodeId],
+      ["YES", milliseconds, mediaId, size, duration, episodeId],
     );
   }
 
