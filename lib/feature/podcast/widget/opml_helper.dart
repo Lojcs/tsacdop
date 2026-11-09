@@ -8,6 +8,7 @@ import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:xml/xml.dart' as xml;
+
 import '../state/podcast_state.dart';
 import '../../../core/extension/extension_helper.dart';
 
@@ -126,13 +127,13 @@ void importOpml(BuildContext context, File file) async {
     context.podcastState.subscribeOpml(opml);
     showDialog(context: context, builder: (context) => OpmlImportPopup());
   } catch (e) {
-    developer.log(e.toString(), name: 'OMPL parse error');
+    developer.log(e.toString(), name: 'OPML parse error');
     Fluttertoast.showToast(msg: s.toastFileError, gravity: ToastGravity.TOP);
   }
 }
 
-Future<File> exportOmpl(BuildContext context) async {
-  final opml = PodcastsBackup.omplBuilder(context.podcastState);
+Future<File> exportOpml(BuildContext context, OpmlExportOptions options) async {
+  final opml = await PodcastsBackup.opmlBuilder(context.podcastState, options);
   final tempdir = await getTemporaryDirectory();
   final now = DateTime.now();
   final datePlus =
@@ -141,17 +142,22 @@ Future<File> exportOmpl(BuildContext context) async {
       now.day.toString() +
       now.second.toString();
   final file = File(path.join(tempdir.path, 'tsacdop_opml_$datePlus.xml'));
-  await file.writeAsString(opml.toXmlString());
+  await file.writeAsString(opml.toXmlString(pretty: true));
   return file;
 }
 
-class OmplOutline {
+class OpmlExportOptions({
+  required var bool includePlainList,
+  required var bool includeGroups,
+});
+
+class OpmlOutline {
   final String? text;
   final String? xmlUrl;
-  OmplOutline({this.text, this.xmlUrl});
+  OpmlOutline({this.text, this.xmlUrl});
 
-  factory OmplOutline.parse(xml.XmlElement element) {
-    return OmplOutline(
+  factory OpmlOutline.parse(xml.XmlElement element) {
+    return OpmlOutline(
       text: element.getAttribute("text")?.trim(),
       xmlUrl: element.getAttribute("xmlUrl")?.trim(),
     );
@@ -159,14 +165,18 @@ class OmplOutline {
 }
 
 class PodcastsBackup {
-  static xml.XmlNode omplBuilder(PodcastState podcastState) {
+  static Future<xml.XmlNode> opmlBuilder(
+    PodcastState podcastState,
+    OpmlExportOptions options,
+  ) async {
     final groupIds = podcastState.groupIds;
+    final podcastIds = await podcastState.getPodcasts();
     var builder = xml.XmlBuilder();
     builder.processing('xml', 'version="1.0" encoding="UTF-8"');
     builder.element(
-      'ompl',
+      'opml',
       nest: () {
-        builder.attribute('version', '1.0');
+        builder.attribute('version', '2.0');
         builder.element(
           'head',
           nest: () {
@@ -176,29 +186,47 @@ class PodcastsBackup {
         builder.element(
           'body',
           nest: () {
-            for (var groupId in groupIds) {
-              final group = podcastState.getGroupById(groupId);
-              builder.element(
-                'outline',
-                nest: () {
-                  builder.attribute('text', group.name);
-                  builder.attribute('title', group.name);
-                  for (var e in group.podcastIds.map(
-                    (id) => podcastState[id],
-                  )) {
-                    builder.element(
-                      'outline',
-                      nest: () {
-                        builder.attribute('type', 'rss');
-                        builder.attribute('text', e.title);
-                        builder.attribute('title', e.title);
-                        builder.attribute('xmlUrl', e.rssUrl);
-                      },
-                      isSelfClosing: true,
-                    );
-                  }
-                },
-              );
+            if (options.includePlainList) {
+              for (var podcastId in podcastIds) {
+                final podcast = podcastState[podcastId];
+                builder.element(
+                  'outline',
+                  nest: () {
+                    builder.attribute('type', 'rss');
+                    builder.attribute('text', podcast.title);
+                    builder.attribute('title', podcast.title);
+                    builder.attribute('xmlUrl', podcast.rssUrl);
+                  },
+                  isSelfClosing: true,
+                );
+              }
+            }
+            if (options.includeGroups) {
+              for (var groupId in groupIds) {
+                final group = podcastState.getGroupById(groupId);
+                builder.element(
+                  'outline',
+                  nest: () {
+                    builder.attribute('type', 'group');
+                    builder.attribute('text', group.name);
+                    builder.attribute('title', group.name);
+                    for (var e in group.podcastIds.map(
+                      (id) => podcastState[id],
+                    )) {
+                      builder.element(
+                        'outline',
+                        nest: () {
+                          builder.attribute('type', 'rss');
+                          builder.attribute('text', e.title);
+                          builder.attribute('title', e.title);
+                          builder.attribute('xmlUrl', e.rssUrl);
+                        },
+                        isSelfClosing: true,
+                      );
+                    }
+                  },
+                );
+              }
             }
           },
         );
@@ -207,8 +235,8 @@ class PodcastsBackup {
     return builder.buildDocument();
   }
 
-  static Map<String, List<OmplOutline>> parseOPML(String opml) {
-    var data = <String, List<OmplOutline>>{};
+  static Map<String, List<OpmlOutline>> parseOPML(String opml) {
+    var data = <String, List<OpmlOutline>>{};
     // var opml = file.readAsStringSync();
     var content = xml.XmlDocument.parse(opml);
     var title = content
@@ -218,23 +246,23 @@ class PodcastsBackup {
         .first
         .innerText;
     developer.log(title, name: 'Import OPML');
-    var groups = content.findAllElements('body').first.findElements('outline');
-    if (title != 'Tsacdop Feed Groups') {
-      var total = content
-          .findAllElements('outline')
-          .map((ele) => OmplOutline.parse(ele))
-          .toList();
-      data['Home'] = total;
-      return data;
-    }
-
-    for (var element in groups) {
-      var title = element.getAttribute('title');
-      var total = element
-          .findElements('outline')
-          .map((ele) => OmplOutline.parse(ele))
-          .toList();
-      data[title!] = total;
+    var outlines = content
+        .findAllElements('body')
+        .first
+        .findElements('outline');
+    data['Home'] = [];
+    for (final outline in outlines) {
+      final type = outline.getAttribute('type');
+      if (type == "rss") {
+        data['Home']!.add(.parse(outline));
+      } else if (type == null || type == "group") {
+        var title = outline.getAttribute('title');
+        var total = outline
+            .findElements('outline')
+            .map((ele) => OpmlOutline.parse(ele))
+            .toList();
+        data[title!] = total;
+      }
     }
     return data;
   }

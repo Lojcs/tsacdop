@@ -2620,6 +2620,56 @@ class S {
     );
   }
 
+  /// `OPML file categories to export.`
+  String get settingsBackupOPMLCategoriesDes {
+    return Intl.message(
+      'OPML file categories to export.',
+      name: 'settingsBackupOPMLCategoriesDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Grouped Podcasts`
+  String get settingsBackupOPMLCategoriesGroupedPodcasts {
+    return Intl.message(
+      'Grouped Podcasts',
+      name: 'settingsBackupOPMLCategoriesGroupedPodcasts',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Groups aren't supported by most players and may cause podcasts to show up multiple times during import.`
+  String get settingsBackupOPMLCategoriesGroupedPodcastsDes {
+    return Intl.message(
+      'Groups aren\'t supported by most players and may cause podcasts to show up multiple times during import.',
+      name: 'settingsBackupOPMLCategoriesGroupedPodcastsDes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Podcasts`
+  String get settingsBackupOPMLCategoriesPlainPodcasts {
+    return Intl.message(
+      'Podcasts',
+      name: 'settingsBackupOPMLCategoriesPlainPodcasts',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Plain podcast list for players that don't recurse into groups.`
+  String get settingsBackupOPMLCategoriesPlainPodcastsDes {
+    return Intl.message(
+      'Plain podcast list for players that don\'t recurse into groups.',
+      name: 'settingsBackupOPMLCategoriesPlainPodcastsDes',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Backup Password`
   String get settingsBackupPassword {
     return Intl.message(

@@ -29,6 +29,10 @@ class DataBackup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final opmlExportOptions = OpmlExportOptions(
+      includeGroups: true,
+      includePlainList: true,
+    );
     final prefCategories = {...PreferenceCategory.values};
     final settingsPasswordController = TextEditingController();
     final databaseCategories = {...DatabaseCategory.values};
@@ -47,7 +51,7 @@ class DataBackup extends StatelessWidget {
                 children: [
                   SettingsActionButton(
                     onPressed: () async {
-                      final file = await exportOmpl(context);
+                      final file = await exportOpml(context, opmlExportOptions);
                       await saveExternalFile(file);
                     },
                     baseColor: Colors.green,
@@ -57,7 +61,7 @@ class DataBackup extends StatelessWidget {
                   ),
                   SettingsActionButton(
                     onPressed: () async {
-                      var file = await exportOmpl(context);
+                      var file = await exportOpml(context, opmlExportOptions);
                       await shareFile(file);
                     },
                     baseColor: Colors.blue,
@@ -82,6 +86,50 @@ class DataBackup extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+            SettingsTile(
+              title: s.settingsBackupCategories,
+              subtitle: s.settingsBackupOPMLCategoriesDes,
+              onTap: (context) {
+                if (context.mounted) {
+                  showGeneralSheet(
+                    context,
+                    title: s.settingsBackupCategories,
+                    child: StatefulBuilder(
+                      builder: (context, setState) => Column(
+                        children: [
+                          CheckboxListTile(
+                            title: Text(
+                              s.settingsBackupOPMLCategoriesPlainPodcasts,
+                            ),
+                            subtitle: Text(
+                              s.settingsBackupOPMLCategoriesPlainPodcastsDes,
+                            ),
+                            enabled: opmlExportOptions.includeGroups,
+                            value: opmlExportOptions.includePlainList,
+                            onChanged: (value) => setState(
+                              () => opmlExportOptions.includePlainList = value!,
+                            ),
+                          ),
+                          CheckboxListTile(
+                            title: Text(
+                              s.settingsBackupOPMLCategoriesGroupedPodcasts,
+                            ),
+                            subtitle: Text(
+                              s.settingsBackupOPMLCategoriesGroupedPodcastsDes,
+                            ),
+                            enabled: opmlExportOptions.includePlainList,
+                            value: opmlExportOptions.includeGroups,
+                            onChanged: (value) => setState(
+                              () => opmlExportOptions.includeGroups = value!,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+              },
             ),
           ],
         ),

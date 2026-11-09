@@ -631,6 +631,21 @@ class MessageLookup extends MessageLookupByLibrary {
     "settingsBackupLegacyFileDes": MessageLookupByLibrary.simpleMessage(
       "Import backups created before v0.10.",
     ),
+    "settingsBackupOPMLCategoriesDes": MessageLookupByLibrary.simpleMessage(
+      "OPML file categories to export.",
+    ),
+    "settingsBackupOPMLCategoriesGroupedPodcasts":
+        MessageLookupByLibrary.simpleMessage("Grouped Podcasts"),
+    "settingsBackupOPMLCategoriesGroupedPodcastsDes":
+        MessageLookupByLibrary.simpleMessage(
+          "Groups aren\'t supported by most players and may cause podcasts to show up multiple times during import.",
+        ),
+    "settingsBackupOPMLCategoriesPlainPodcasts":
+        MessageLookupByLibrary.simpleMessage("Podcasts"),
+    "settingsBackupOPMLCategoriesPlainPodcastsDes":
+        MessageLookupByLibrary.simpleMessage(
+          "Plain podcast list for players that don\'t recurse into groups.",
+        ),
     "settingsBackupPassword": MessageLookupByLibrary.simpleMessage(
       "Backup Password",
     ),

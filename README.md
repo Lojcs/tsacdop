@@ -118,40 +118,6 @@ If you have an issue or found a bug, please raise a GitHub issue. Pull requests 
 * Background task
   + workmanager
 
-### Directory Structure
-
-``` 
-UI
-src
-└──home
-   ├──home.dart [Homepage]
-   ├──searc_podcast.dart [Search Page]
-   └──playlist.dart [Playlist Page]
-└──podcasts
-   ├──podcast_manage.dart [Group Page]
-   └──podcast_detail.dart [Podcast Page]
-└──episodes
-   └──episode_detail.dart [Episode Page]
-└──settings
-   └──setting.dart [Setting Page]
-
-STATE
-src
-└──state
-   ├──audio_state.dart [Audio State]
-   ├──download_state.dart [Episode Download]
-   ├──podcast_group.dart [Podcast Groups]
-   ├──refresh_podcast.dart [Episode Refresh]
-   └──setting_state.dart [Setting]
-
-Service
-src
-└──service
-   ├──api_service.dart [Podcast Search]
-   ├──gpodder_api.dart [Gpodder intergate]
-   └──ompl_builde.dart [OMPL export]
-``` -->
-
 ## Contact
 
 You can reach out to me on [Matrix](https://matrix.to/#/#tsacdop-fork:matrix.org) or email me [lojcsgit+tsacdop@gmail.com](mailto:<lojcsgit+tsacdop@gmail.com>). I'm not active on upstream's Telegram / Reddit groups.

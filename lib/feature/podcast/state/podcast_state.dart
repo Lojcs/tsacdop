@@ -426,7 +426,7 @@ class PodcastState extends ChangeNotifier {
   Future<void> subscribeOpml(String opml) async {
     opmlProgress.reset();
     var rssExp = RegExp(r'^(https?):\/\/(.*)');
-    Map<String, List<OmplOutline>> data = PodcastsBackup.parseOPML(opml);
+    Map<String, List<OpmlOutline>> data = PodcastsBackup.parseOPML(opml);
     List<(String, List<String>)> groups = [];
     for (var entry in data.entries) {
       final group = (entry.key, <String>[]);
