@@ -1,7 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../../player/state/audio_state.dart';
-import '../../state/episode_brief.dart';
+import '../../model/episode_brief.dart';
 import '../../../../core/route/predictive_back_page.dart';
 import 'episode_card.dart';
 import '../../detail/widget/episode_detail.dart';

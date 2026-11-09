@@ -5,18 +5,17 @@ import 'package:dio/dio.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../settings/widget/about.dart';
-import '../../episode/state/episode_brief.dart';
+import '../../episode/model/episode_brief.dart';
 import '../../podcast/model/podcast_brief.dart';
 import 'search_controller.dart';
 
 typedef AddPodcasts = void Function(Iterable<PodcastBrief> feedUrls);
 typedef AddEpisodes = void Function(Iterable<EpisodeBrief> episodes);
-typedef QueryApi =
-    Future<void> Function(
-      String query,
-      AddPodcasts addFeeds,
-      AddEpisodes addEpisodes,
-    );
+typedef QueryApi = Future<void> Function(
+  String query,
+  AddPodcasts addFeeds,
+  AddEpisodes addEpisodes,
+);
 
 enum SearchApi {
   podcastIndex(

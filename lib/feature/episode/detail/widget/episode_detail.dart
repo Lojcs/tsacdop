@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+
 import '../../card/widget/episode_info_widgets.dart';
 import 'episode_action_bar.dart';
 import 'shownote.dart';
@@ -14,7 +15,7 @@ import '../../../player/widget/audio_player.dart';
 import '../../../../core/service/database.dart';
 import '../../../player/state/audio_state.dart';
 import '../../state/episode_state.dart';
-import '../../state/episode_brief.dart';
+import '../../model/episode_brief.dart';
 import '../../../player/model/play_history.dart';
 import '../../../../core/extension/extension_helper.dart';
 import '../../../player/widget/audio_panel.dart';
@@ -191,9 +192,9 @@ class _EpisodeDetailState extends State<EpisodeDetail> {
                                   maxLines: 3,
                                   text: TextSpan(
                                     text: episodeItem.title,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.headlineMedium,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headlineMedium,
                                   ),
                                   textDirection: TextDirection.ltr,
                                 );

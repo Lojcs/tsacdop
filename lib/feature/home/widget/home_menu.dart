@@ -9,7 +9,7 @@ import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../podcast/widget/opml_helper.dart';
+import '../../podcast/detail/widget/opml_helper.dart';
 import '../../settings/widget/settings.dart';
 import '../../../core/extension/extension_helper.dart';
 import '../../../core/misc/logger.dart';

@@ -21,7 +21,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/service/database.dart';
 import '../state/audio_state.dart';
 import '../../episode/state/episode_state.dart';
-import '../../episode/state/episode_brief.dart';
+import '../../episode/model/episode_brief.dart';
 import '../model/play_history.dart';
 import '../model/playlist.dart';
 import '../../podcast/model/podcast_brief.dart';
@@ -356,10 +356,7 @@ class _QueueState extends State<_Queue> {
           onReorder: (oldIndex, newIndex) async {
             if (newIndex > oldIndex) newIndex -= 1;
             final episode = episodeIds.removeAt(oldIndex);
-            episodeIds.insert(
-              newIndex,
-              episode,
-            ); // Without this the animation isn't smooth as the below call takes time to complete (I think)
+            episodeIds.insert(newIndex, episode); // Without this the animation isn't smooth as the below call takes time to complete (I think)
             await audio.reorderPlaylist(oldIndex, newIndex);
             if (mounted) setState(() {});
           },
@@ -484,9 +481,7 @@ class _HistoryState extends State<_History> {
                   ).createShader(bounds);
                 },
                 child: Container(
-                  margin: EdgeInsets.symmetric(
-                    vertical: 0.5,
-                  ), // Prevents visual glitch where the white shows through on the top or bottom
+                  margin: EdgeInsets.symmetric(vertical: 0.5), // Prevents visual glitch where the white shows through on the top or bottom
                   height: 25,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
@@ -861,9 +856,8 @@ class _PlaylistsState extends State<_Playlists> {
                   showGeneralDialog(
                     context: context,
                     barrierDismissible: true,
-                    barrierLabel: MaterialLocalizations.of(
-                      context,
-                    ).modalBarrierDismissLabel,
+                    barrierLabel: MaterialLocalizations.of(context)
+                        .modalBarrierDismissLabel,
                     barrierColor: Colors.black54,
                     transitionDuration: const Duration(milliseconds: 200),
                     pageBuilder: (context, animaiton, secondaryAnimation) =>
@@ -1047,8 +1041,7 @@ class _NewPlaylistState extends State<_NewPlaylist> {
       final image = img.decodeImage(metadata.albumArt!)!;
       final thumbnail = img.copyResize(image, width: 300);
       var uuid = Uuid().v4();
-      imagePath =
-          "${dir.path}/fromLocalFolder/$uuid.png"; // TODO: I couldn't get this to show up on the notification :(
+      imagePath = "${dir.path}/fromLocalFolder/$uuid.png"; // TODO: I couldn't get this to show up on the notification :(
       final file = File(imagePath);
       file.createSync(recursive: true);
       file.writeAsBytesSync(img.encodePng(thumbnail));

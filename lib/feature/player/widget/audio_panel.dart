@@ -285,6 +285,7 @@ class AudioPanelState extends State<AudioPanel> with TickerProviderStateMixin {
       }
     } else if ((event.primaryVelocity ?? 0) > 300 ||
         _slideDirection == SlideDirection.down) {
+      // Could also be a simple else.
       if (_animation.value > widget.midHeight) {
         _animatePanel(end: widget.midHeight);
       } else {

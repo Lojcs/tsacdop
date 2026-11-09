@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import '../../podcast/state/podcast_state.dart';
 import '../../../core/extension/extension_helper.dart';
 import '../../../core/misc/general_dialog.dart';
-import '../../podcast/widget/podcast_settings.dart';
+import '../../podcast/detail/widget/podcast_settings.dart';
 
 class PodcastGroupList extends StatelessWidget {
   final String groupId;
@@ -17,12 +17,12 @@ class PodcastGroupList extends StatelessWidget {
     return Container(
       color: context.accentBackgroundWeak,
       child: Selector<PodcastState, List<String>>(
-        selector: (_, pState) => pState.getGroupById(groupId).podcastIds,
+        selector: (_, pState) => pState.getGroupById(groupId)!.podcastIds,
         builder: (context, podcastIds, _) => ReorderableListView(
           onReorder: (oldIndex, newIndex) {
             if (newIndex > oldIndex) newIndex -= 1;
             context.podcastState
-                .getGroupById(groupId)
+                .getGroupById(groupId)!
                 .reorderGroup(oldIndex, newIndex);
             Fluttertoast.showToast(
               msg: context.s.toastSettingSaved,
@@ -114,7 +114,7 @@ class __PodcastCardState extends State<_PodcastCard>
                                 padding: EdgeInsets.only(right: 5.0),
                                 child: Selector<PodcastState, String>(
                                   selector: (_, pState) =>
-                                      pState.getGroupById(groupId).name,
+                                      pState.getGroupById(groupId)!.name,
                                   builder: (context, name, _) => Text(name),
                                 ),
                               );
@@ -163,7 +163,7 @@ class __PodcastCardState extends State<_PodcastCard>
                           padding: EdgeInsets.only(left: 5.0),
                           child: Selector<PodcastState, bool>(
                             selector: (_, pState) => pState
-                                .getGroupById(groupId)
+                                .getGroupById(groupId)!
                                 .podcastIds
                                 .contains(widget.podcastId),
                             builder: (context, contains, _) => FilterChip(
@@ -172,7 +172,7 @@ class __PodcastCardState extends State<_PodcastCard>
                               key: ValueKey<String>(groupId),
                               label: Selector<PodcastState, String>(
                                 selector: (_, pState) =>
-                                    pState.getGroupById(groupId).name,
+                                    pState.getGroupById(groupId)!.name,
                                 builder: (context, name, _) => Text(name),
                               ),
                               selected: contains,
@@ -228,7 +228,7 @@ class RenameGroup extends StatefulWidget {
 
 class _RenameGroupState extends State<RenameGroup> {
   late final TextEditingController _controller = TextEditingController(
-    text: context.podcastState.getGroupById(widget.groupId).name,
+    text: context.podcastState.getGroupById(widget.groupId)!.name,
   );
   String? _newName;
 

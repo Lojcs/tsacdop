@@ -5,7 +5,7 @@ import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:equatable/equatable.dart';
 import 'package:path/path.dart' as path;
 
-import '../../episode/state/episode_brief.dart';
+import '../../episode/model/episode_brief.dart';
 
 part "episode_task.g.dart";
 

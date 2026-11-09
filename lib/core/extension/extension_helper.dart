@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import 'package:url_launcher/url_launcher_string.dart';
+
 import '../../generated/l10n.dart';
 import '../../feature/player/state/audio_state.dart';
 import '../../feature/download/state/download_state.dart';
@@ -93,6 +94,8 @@ extension ContextExtension on BuildContext {
   );
   bool get trueBlack =>
       settingState.trueBlack.get() && brightness == Brightness.dark;
+  Color get trueBlackBorderColor =>
+      Color.lerp(primaryColor, Colors.black, 0.5)!;
   EdgeInsets get originalPadding =>
       Provider.of<SettingState>(this, listen: false).originalPadding ??
       EdgeInsets.all(0);

@@ -5,9 +5,10 @@ import 'package:material_ui/material_ui.dart';
 import 'package:focused_menu/focused_menu.dart';
 import 'package:provider/provider.dart';
 import 'package:vibration/vibration.dart';
+
 import '../../state/episode_state.dart';
 import '../../../settings/state/setting_state.dart';
-import '../../state/episode_brief.dart';
+import '../../model/episode_brief.dart';
 import '../../../../core/extension/extension_helper.dart';
 
 import '../../../../core/service/database.dart';
@@ -16,7 +17,7 @@ import '../../../player/model/play_history.dart';
 import '../../grid/state/selection_controller.dart';
 import 'episode_info_widgets.dart';
 import '../../grid/widget/episode_grid.dart';
-import 'episode_route.dart';
+import 'episode_card_detail_route.dart';
 
 /// [EpisodeCard] widget that responds to user interaction.
 class InteractiveEpisodeCard extends StatefulWidget {
@@ -767,9 +768,8 @@ class EpisodeCard extends StatelessWidget {
                 )
               : Center(),
           Padding(
-            padding: EdgeInsets.all(
-              layout == EpisodeGridLayout.small ? 6 : 8,
-            ).copyWith(bottom: layout == EpisodeGridLayout.small ? 8 : 8),
+            padding: EdgeInsets.all(layout == EpisodeGridLayout.small ? 6 : 8)
+                .copyWith(bottom: layout == EpisodeGridLayout.small ? 8 : 8),
             child: Row(
               children: [
                 if (layout == EpisodeGridLayout.large)

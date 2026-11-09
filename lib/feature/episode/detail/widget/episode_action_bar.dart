@@ -1,10 +1,13 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+
 import '../../state/episode_state.dart';
+
 import 'package:provider/provider.dart';
+
 import '../../../download/widget/episode_download.dart';
 import '../../../player/state/audio_state.dart';
-import '../../state/episode_brief.dart';
+import '../../model/episode_brief.dart';
 import '../../../../core/extension/extension_helper.dart';
 import '../../../../core/misc/custom_widget.dart';
 

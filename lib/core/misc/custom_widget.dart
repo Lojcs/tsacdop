@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/scheduler.dart';
 
-import '../../feature/episode/state/episode_brief.dart';
+import '../../feature/episode/model/episode_brief.dart';
 import '../extension/extension_helper.dart';
 import '../../feature/episode/grid/widget/episode_grid.dart';
 

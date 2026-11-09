@@ -7,7 +7,7 @@ import '../../group/model/podcast_group.dart';
 import '../../home/model/tab_configuration.dart';
 import '../../../core/extension/extension_helper.dart';
 import '../../player/state/audio_state.dart';
-import 'episode_brief.dart';
+import '../model/episode_brief.dart';
 
 import '../../player/model/play_history.dart';
 import '../../download/state/download_state.dart';
@@ -157,7 +157,7 @@ class EpisodeState extends ChangeNotifier {
   }) async {
     final List<String> groupPodcastIds = configuration.groupId == allGroupId
         ? []
-        : _podcastState.getGroupById(configuration.groupId).podcastIds;
+        : _podcastState.getGroupById(configuration.groupId)!.podcastIds;
     return getEpisodes(
       podcastIds: configuration.podcastId != podcastAllId
           ? groupPodcastIds.isEmpty ||

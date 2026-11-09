@@ -2,6 +2,7 @@ import 'package:audio_service/audio_service.dart';
 import 'package:collection/collection.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:uuid/uuid.dart';
+
 import '../../../generated/l10n.dart';
 import '../state/audio_state.dart';
 import '../../episode/state/episode_state.dart';
@@ -206,7 +207,7 @@ class BrowsableLibrary {
           break;
         case [groupsId]:
           root[parentMediaId] = podcastState.groupIds
-              .map((id) => podcastState.getGroupById(id).mediaItem)
+              .map((id) => podcastState.getGroupById(id)!.mediaItem)
               .toList();
           break;
         case ['grp', final id, ...]:

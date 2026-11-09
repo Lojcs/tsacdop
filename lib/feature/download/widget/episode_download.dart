@@ -40,10 +40,7 @@ class _DownloadButtonState extends State<DownloadButton> {
   @override
   Widget build(BuildContext context) {
     return Selector<DownloadState, EpisodeTask?>(
-      selector: (_, dState) {
-        var task = dState.ongoingEpisodeTasks[widget.episodeId];
-        return task;
-      },
+      selector: (_, dState) => dState[widget.episodeId],
       builder: (context, task, _) {
         return Row(
           children: <Widget>[

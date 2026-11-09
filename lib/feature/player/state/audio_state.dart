@@ -13,7 +13,7 @@ import 'package:just_audio/just_audio.dart';
 
 import '../../../generated/l10n.dart';
 import '../../../core/service/database.dart';
-import '../../episode/state/episode_brief.dart';
+import '../../episode/model/episode_brief.dart';
 import '../model/media_control.dart';
 import '../model/play_history.dart';
 import '../model/playlist.dart';

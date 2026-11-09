@@ -9,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
 
+import '../../group/carousel/widget/group_carousel.dart';
 import '../../search/widget/search_widgets.dart';
 import '../model/tab_configuration.dart';
 import '../../episode/grid/state/selection_controller.dart';
@@ -176,6 +177,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                           ],
                         ),
                       ),
+                      SliverToBoxAdapter(child: GroupCarousel()),
                       SliverToBoxAdapter(child: ScrollPodcasts()),
                       SliverToBoxAdapter(
                         child: Stack(

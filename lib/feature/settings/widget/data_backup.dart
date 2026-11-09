@@ -15,7 +15,7 @@ import 'package:workmanager/workmanager.dart';
 
 import '../state/key_value_storage.dart';
 import '../../../core/legacy/gpodder_api.dart';
-import '../../podcast/widget/opml_helper.dart';
+import '../../podcast/detail/widget/opml_helper.dart';
 import '../../../core/service/database.dart';
 import '../state/tsacdop_settings.dart';
 import '../../../core/extension/extension_helper.dart';

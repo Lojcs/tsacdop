@@ -51,3 +51,5 @@ devtools_options.yaml
 android/build/reports/problems/problems-report.html
 *key.properties
 ios/Flutter/ephemeral
+# Widget Preview related
+.widget_preview/

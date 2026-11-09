@@ -19,7 +19,7 @@ import 'playlist_home.dart';
 import '../state/audio_state.dart';
 import '../../settings/state/setting_state.dart';
 import '../model/chapter.dart';
-import '../../episode/state/episode_brief.dart';
+import '../../episode/model/episode_brief.dart';
 import '../model/playlist.dart';
 import '../../../core/extension/extension_helper.dart';
 import '../../../core/route/page_route.dart';
@@ -1723,7 +1723,6 @@ class _ControlPanelState extends State<ControlPanel>
                                               max: 5,
                                               divisions: 18,
                                               value: currentSpeed,
-                                              secondaryTrackValue: 1,
                                               onChanged: audio.setVisualSpeed,
                                               onChangeEnd: context
                                                   .settingState

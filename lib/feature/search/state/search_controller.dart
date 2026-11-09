@@ -6,7 +6,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../episode/state/episode_state.dart';
 import '../../podcast/state/podcast_state.dart';
 import '../../settings/state/setting_state.dart';
-import '../../episode/state/episode_brief.dart';
+import '../../episode/model/episode_brief.dart';
 import 'search_api.dart';
 import 'search_web.dart';
 

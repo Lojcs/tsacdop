@@ -8,8 +8,9 @@ import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:xml/xml.dart' as xml;
-import '../state/podcast_state.dart';
-import '../../../core/extension/extension_helper.dart';
+
+import '../../state/podcast_state.dart';
+import '../../../../core/extension/extension_helper.dart';
 
 class OpmlProgress extends Equatable {
   final void Function(OpmlProgress) setProgress;
@@ -177,7 +178,7 @@ class PodcastsBackup {
           'body',
           nest: () {
             for (var groupId in groupIds) {
-              final group = podcastState.getGroupById(groupId);
+              final group = podcastState.getGroupById(groupId)!;
               builder.element(
                 'outline',
                 nest: () {

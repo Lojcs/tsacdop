@@ -55,16 +55,16 @@ Widget _downloadButton(EpisodeTask task, BuildContext context) {
 class _DownloadListState extends State<DownloadList> {
   @override
   Widget build(BuildContext context) {
-    return Selector<DownloadState, List<int>>(
-      selector: (_, dState) => dState.ongoingEpisodeTasks.keys.toList(),
-      builder: (context, ids, __) => ids.isNotEmpty
+    return Selector<DownloadState, int>(
+      selector: (_, dState) => dState.taskCount,
+      builder: (context, count, __) => count != 0
           ? SliverPadding(
               padding: EdgeInsets.symmetric(vertical: 5.0),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
                   return Selector<DownloadState, EpisodeTask>(
                     selector: (_, dState) =>
-                        dState.ongoingEpisodeTasks[ids[index]]!,
+                        dState[dState.getEpisodeIdAt(index)]!,
                     builder: (context, task, __) {
                       final episode = context.episodeState[task.episodeId];
                       return ListTile(
@@ -133,7 +133,7 @@ class _DownloadListState extends State<DownloadList> {
                       );
                     },
                   );
-                }, childCount: ids.length),
+                }, childCount: count),
               ),
             )
           : SliverToBoxAdapter(child: Center()),

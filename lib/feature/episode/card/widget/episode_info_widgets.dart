@@ -4,7 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
-import '../../../podcast/widget/podcast_detail.dart';
+import '../../../podcast/detail/widget/podcast_detail.dart';
 import '../../state/episode_state.dart';
 import '../../../../core/extension/extension_helper.dart';
 import '../../../../core/route/hide_player_route.dart';

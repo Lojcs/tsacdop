@@ -13,8 +13,9 @@ import 'package:just_audio/just_audio.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
+import '../../../core/misc/ListedMap.dart';
 import '../../../core/service/database.dart';
-import '../../episode/state/episode_brief.dart';
+import '../../episode/model/episode_brief.dart';
 import '../../../core/extension/extension_helper.dart';
 import '../../../core/misc/general_dialog.dart';
 import '../../episode/state/episode_state.dart';
@@ -40,18 +41,20 @@ class DownloadState extends ChangeNotifier {
 
   /// Tasks that are [TaskStatus.isNotFinalState]
   /// episode id : [EpisodeTask]
-  final Map<int, EpisodeTask> ongoingEpisodeTasks = {};
+  final ListedMap<int, EpisodeTask> _ongoingEpisodeTasks = .blank();
+
+  int get taskCount => _ongoingEpisodeTasks.length;
+  bool taskExists(int episodeId) => _ongoingEpisodeTasks.containsKey(episodeId);
+  int getEpisodeIdAt(int index) => _ongoingEpisodeTasks.elementAt(index);
+  EpisodeTask? operator [](int episodeId) => _ongoingEpisodeTasks[episodeId];
 
   late StreamSubscription<TaskUpdate> _taskUpdateSubscription;
   late StreamSubscription<TaskRecord> _taskRecordSubscription;
   late StreamSubscription<List<ConnectivityResult>> _connectivityStream;
 
-  /// Increments to indicate that the download lists have been modified.
-  double listsGeneration = 0;
-
   /// Removes and cancels an ongoing task.
   Future<void> _removeTask(int episodeId) async {
-    ongoingEpisodeTasks.remove(episodeId);
+    _ongoingEpisodeTasks.remove(episodeId);
     final taskId = episodeId.toString();
     await downloader.cancelTaskWithId(taskId);
     await downloader.database.deleteRecordWithId(taskId);
@@ -93,19 +96,19 @@ class DownloadState extends ChangeNotifier {
   Future<void> _taskUpdateListener(TaskUpdate update) async {
     final episodeId = int.parse(update.task.taskId);
     final EpisodeTask task;
-    if (ongoingEpisodeTasks.containsKey(episodeId)) {
-      task = ongoingEpisodeTasks[episodeId]!;
+    if (_ongoingEpisodeTasks.containsKey(episodeId)) {
+      task = _ongoingEpisodeTasks[episodeId]!;
     } else {
       task = .fromDownloadTask(update.task as DownloadTask);
     }
     switch (update) {
       case TaskStatusUpdate _:
-        ongoingEpisodeTasks[episodeId] = task.copyWith(
+        _ongoingEpisodeTasks[episodeId] = task.copyWith(
           status: update,
           pendingAction: false,
         );
       case TaskProgressUpdate _:
-        ongoingEpisodeTasks[episodeId] = task.copyWith(progress: update);
+        _ongoingEpisodeTasks[episodeId] = task.copyWith(progress: update);
     }
     notifyListeners();
   }
@@ -224,18 +227,19 @@ class DownloadState extends ChangeNotifier {
 
   /// Starts the download of an episode.
   Future<void> download(EpisodeBrief episode) async {
-    if (!episode.isDownloaded && !ongoingEpisodeTasks.containsKey(episode.id)) {
+    if (!episode.isDownloaded &&
+        !_ongoingEpisodeTasks.containsKey(episode.id)) {
       final dir = _settingState.downloadStoragePath.get();
       final episodeTask = await EpisodeTask.newTask(episode, dir);
       final started = await downloader.enqueue(episodeTask.downloadTask);
       if (started) {
-        ongoingEpisodeTasks[episode.id] = episodeTask;
+        _ongoingEpisodeTasks[episode.id] = episodeTask;
       }
     }
   }
 
   Future<void> removeDownload(int episodeId) async {
-    if (ongoingEpisodeTasks.containsKey(episodeId)) {
+    if (_ongoingEpisodeTasks.containsKey(episodeId)) {
       await removeOngoingDownload(episodeId);
     } else {
       await removeCompletedDownload(episodeId);
@@ -244,8 +248,8 @@ class DownloadState extends ChangeNotifier {
 
   /// Cancels and removes a currently ongoing download.
   Future<void> removeOngoingDownload(int episodeId) async {
-    if (ongoingEpisodeTasks.containsKey(episodeId)) {
-      final task = ongoingEpisodeTasks[episodeId]!;
+    if (_ongoingEpisodeTasks.containsKey(episodeId)) {
+      final task = _ongoingEpisodeTasks[episodeId]!;
       if (task.pendingAction != true) {
         await _removeTask(episodeId);
       }
@@ -290,11 +294,11 @@ class DownloadState extends ChangeNotifier {
 
   /// Retries an episode's failed download.
   Future<void> retryDownload(int episodeId) async {
-    if (ongoingEpisodeTasks.containsKey(episodeId)) {
-      final task = ongoingEpisodeTasks[episodeId]!;
+    if (_ongoingEpisodeTasks.containsKey(episodeId)) {
+      final task = _ongoingEpisodeTasks[episodeId]!;
       if (task.pendingAction != true) {
         await _removeTask(episodeId);
-        ongoingEpisodeTasks[episodeId] = task.copyWith(pendingAction: true);
+        _ongoingEpisodeTasks[episodeId] = task.copyWith(pendingAction: true);
         await downloader.enqueue(task.downloadTask);
       }
     }
@@ -302,10 +306,10 @@ class DownloadState extends ChangeNotifier {
 
   /// Pauses an episode's ongoing download.
   Future<void> pauseDownload(int episodeId) async {
-    if (ongoingEpisodeTasks.containsKey(episodeId)) {
-      final task = ongoingEpisodeTasks[episodeId]!;
+    if (_ongoingEpisodeTasks.containsKey(episodeId)) {
+      final task = _ongoingEpisodeTasks[episodeId]!;
       if (task.pendingAction != true) {
-        ongoingEpisodeTasks[episodeId] = task.copyWith(pendingAction: true);
+        _ongoingEpisodeTasks[episodeId] = task.copyWith(pendingAction: true);
         await downloader.pause(task.downloadTask);
       }
     }
@@ -313,10 +317,10 @@ class DownloadState extends ChangeNotifier {
 
   /// Resumes an episode's ongoing download.
   Future<void> resumeDownload(int episodeId) async {
-    if (ongoingEpisodeTasks.containsKey(episodeId)) {
-      final task = ongoingEpisodeTasks[episodeId]!;
+    if (_ongoingEpisodeTasks.containsKey(episodeId)) {
+      final task = _ongoingEpisodeTasks[episodeId]!;
       if (task.pendingAction != true) {
-        ongoingEpisodeTasks[episodeId] = task.copyWith(pendingAction: true);
+        _ongoingEpisodeTasks[episodeId] = task.copyWith(pendingAction: true);
         await downloader.resume(task.downloadTask);
       }
     }

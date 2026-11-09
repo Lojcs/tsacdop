@@ -8,21 +8,22 @@ import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
-import '../state/podcast_state.dart';
-import '../../settings/model/theme_data.dart';
-import '../../episode/grid/widget/action_bar.dart';
 
-import '../../player/widget/audio_player.dart';
-import '../../../core/service/database.dart';
-import '../../player/state/audio_state.dart';
-import '../state/fireside_data.dart';
-import '../../../core/extension/extension_helper.dart';
-import '../../episode/grid/state/selection_controller.dart';
-import '../../player/widget/audio_panel.dart';
-import '../../../core/misc/custom_widget.dart';
-import '../../episode/grid/widget/episode_grid.dart';
-import '../../../core/misc/general_dialog.dart';
-import '../../episode/grid/widget/multiselect_bar.dart';
+import '../../state/podcast_state.dart';
+import '../../../settings/model/theme_data.dart';
+import '../../../episode/grid/widget/action_bar.dart';
+
+import '../../../player/widget/audio_player.dart';
+import '../../../../core/service/database.dart';
+import '../../../player/state/audio_state.dart';
+import '../../state/fireside_data.dart';
+import '../../../../core/extension/extension_helper.dart';
+import '../../../episode/grid/state/selection_controller.dart';
+import '../../../player/widget/audio_panel.dart';
+import '../../../../core/misc/custom_widget.dart';
+import '../../../episode/grid/widget/episode_grid.dart';
+import '../../../../core/misc/general_dialog.dart';
+import '../../../episode/grid/widget/multiselect_bar.dart';
 import 'podcast_settings.dart';
 
 class PodcastDetail extends StatefulWidget {

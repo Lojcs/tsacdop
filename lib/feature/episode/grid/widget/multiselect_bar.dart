@@ -1108,7 +1108,7 @@ class _MultiselectActionBarState extends State<_MultiselectActionBar> {
         }
         final episodeDownloaded = episode.isDownloaded
             ? true
-            : dState.ongoingEpisodeTasks.containsKey(id)
+            : dState.taskExists(id)
             ? null
             : false;
         if (!downloadedSet) {

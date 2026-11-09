@@ -7,7 +7,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/service/database.dart';
-import '../../podcast/widget/podcast_detail.dart';
+import '../../podcast/carousel/widget/podcast_carousel.dart';
+import '../../podcast/detail/widget/podcast_detail.dart';
 import '../../group/widget/podcast_manage.dart';
 import '../../group/widget/podcast_list.dart';
 import '../../episode/state/episode_state.dart';
@@ -118,7 +119,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
         >(
           selector: (_, pState) {
             final groupId = pState.groupIds[_groupIndex];
-            final group = pState.getGroupById(groupId);
+            final group = pState.getGroupById(groupId)!;
             return (
               group: group,
               change: pState.groupsChange,
@@ -165,7 +166,7 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                                               .groupIds
                                               .map(
                                                 (id) => context.podcastState
-                                                    .getGroupById(id),
+                                                    .getGroupById(id)!,
                                               )
                                               .mapIndexed(
                                                 (i, e) => ListTile(
@@ -227,198 +228,9 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
                               ],
                             ),
                           ),
-                          Container(
-                            height: 70,
-                            alignment: Alignment.centerLeft,
-                            color: Colors.transparent,
-                            child: TabBar(
-                              enableFeedback: false,
-                              splashFactory: NoSplash.splashFactory,
-                              labelPadding: EdgeInsets.fromLTRB(
-                                6.0,
-                                5.0,
-                                6.0,
-                                10.0,
-                              ),
-                              indicator: CircleTabIndicator(
-                                color: context.primaryColor,
-                                radius: 3,
-                              ),
-                              isScrollable: true,
-                              dividerHeight: 0,
-                              tabAlignment: TabAlignment.start,
-                              tabs: data.group.podcastIds.isEmpty
-                                  ? [
-                                      _circleContainer(),
-                                      _circleContainer(),
-                                      _circleContainer(),
-                                    ]
-                                  : data.group.podcastIds.map<Widget>((
-                                      podcastId,
-                                    ) {
-                                      final podcast =
-                                          context.podcastState[podcastId];
-                                      return Tab(
-                                        child: Transform.translate(
-                                          offset: Offset(
-                                            0,
-                                            _slideTween
-                                                .animate(_controller)
-                                                .value,
-                                          ),
-                                          child: LimitedBox(
-                                            maxHeight: 50,
-                                            maxWidth: 50,
-                                            child: CircleAvatar(
-                                              backgroundColor:
-                                                  podcast.primaryColor,
-                                              backgroundImage:
-                                                  podcast.avatarImage,
-                                              child: _updateIndicator(
-                                                podcastId,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    }).toList(),
-                            ),
-                          ),
+                          PodcastCarousel(groupId: data.group.id),
                         ],
                       ),
-                    ),
-                    Container(
-                      height: previewHeight + 40,
-                      decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: data.group.podcastIds.isEmpty
-                          ? Center(
-                              child: data.pCount == 0
-                                  ? Column(
-                                      mainAxisAlignment: .center,
-                                      children: [
-                                        Text(
-                                          s.welcome,
-                                          style: context
-                                              .textTheme
-                                              .headlineMedium!
-                                              .copyWith(
-                                                color: context.primaryColor,
-                                              ),
-                                        ),
-                                        SizedBox(height: 16),
-                                        Text(
-                                          s.getStarted,
-                                          style: context.textTheme.titleLarge!
-                                              .copyWith(
-                                                color: context.primaryColor,
-                                              ),
-                                        ),
-                                        SizedBox(height: 4),
-                                        DefaultTextStyle(
-                                          style: context.textTheme.titleMedium!,
-                                          child: Builder(
-                                            builder: (context) {
-                                              final text = context.s
-                                                  .getStartedDes("\uFFFC");
-                                              final parts = text.split(
-                                                "\uFFFC",
-                                              );
-                                              final icon = Icons.search;
-                                              return Row(
-                                                mainAxisAlignment: .center,
-                                                children: [
-                                                  Text(parts[0]),
-                                                  Text(
-                                                    String.fromCharCode(
-                                                      icon.codePoint,
-                                                    ),
-                                                    style: context
-                                                        .textTheme
-                                                        .titleLarge!
-                                                        .copyWith(
-                                                          fontFamily:
-                                                              icon.fontFamily,
-                                                          package:
-                                                              icon.fontPackage,
-                                                          fontFamilyFallback: icon
-                                                              .fontFamilyFallback,
-                                                        ),
-                                                  ),
-                                                  Text(parts[1]),
-                                                ],
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                      ],
-                                    )
-                                  : Text(
-                                      s.noPodcastGroup,
-                                      style: TextStyle(
-                                        color: context
-                                            .textTheme
-                                            .bodyMedium!
-                                            .color!
-                                            .withValues(alpha: 0.5),
-                                      ),
-                                    ),
-                            )
-                          : TabBarView(
-                              children: data.group.podcastIds.map<Widget>((
-                                podcastId,
-                              ) {
-                                return Container(
-                                  margin: EdgeInsets.symmetric(horizontal: 5.0),
-                                  key: ObjectKey(podcastId),
-                                  child: Material(
-                                    color: Colors.transparent,
-                                    child: FutureBuilder<List<int>>(
-                                      future: _getPodcastPreview(
-                                        podcastId,
-                                        layout.getVerticalCount(
-                                          context.width,
-                                          context.height,
-                                        ),
-                                      ),
-                                      builder: (context, snapshot) => InkWell(
-                                        borderRadius: BorderRadius.circular(20),
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            HidePlayerRoute(
-                                              PodcastDetail(
-                                                podcastId: podcastId,
-                                                initIds: snapshot.hasData
-                                                    ? snapshot.data!
-                                                    : null,
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                        child: PodcastPreview(
-                                          podcastId: podcastId,
-                                          previewIds: snapshot.hasData
-                                              ? snapshot.data!.sublist(
-                                                  0,
-                                                  math.min(
-                                                    layout.getHorizontalCount(
-                                                      context.width,
-                                                    ),
-                                                    snapshot.data!.length,
-                                                  ),
-                                                )
-                                              : [],
-                                          layout: layout,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
                     ),
                   ],
                 ),
@@ -428,54 +240,6 @@ class _ScrollPodcastsState extends State<ScrollPodcasts>
         );
       },
     );
-  }
-
-  Widget _circleContainer() => Tab(
-    child: Transform.translate(
-      offset: Offset(0, _slideTween.animate(_controller).value),
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 10),
-        height: 50,
-        width: 50,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: context.colorScheme.secondaryContainer,
-        ),
-      ),
-    ),
-  );
-
-  Widget _updateIndicator(String podcastId) => Selector<PodcastState, int>(
-    selector: (_, pState) => pState[podcastId].syncEpisodeCount,
-    builder: (context, count, _) => count > 0
-        ? Align(
-            alignment: Alignment.bottomRight,
-            child: Container(
-              alignment: Alignment.center,
-              height: 10,
-              width: 10,
-              decoration: BoxDecoration(
-                color: context.primaryColor,
-                border: Border.all(color: context.surface, width: 2),
-                shape: BoxShape.circle,
-              ),
-            ),
-          )
-        : Center(),
-  );
-
-  Future<List<int>> _getPodcastPreview(String podcastId, int limit) async {
-    if (context.mounted) {
-      return Provider.of<EpisodeState>(context, listen: false).getEpisodes(
-        podcastIds: [podcastId],
-        sortBy: Sorter.pubDate,
-        sortOrder: SortOrder.desc,
-        limit: limit,
-        filterDuplicateVersions: false,
-      );
-    } else {
-      return Future.value([]);
-    }
   }
 }
 

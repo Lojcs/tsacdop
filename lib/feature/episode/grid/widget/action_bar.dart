@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
+
 import '../../../podcast/model/podcast_brief.dart';
 import '../../../group/model/podcast_group.dart';
 import '../../../home/model/tab_configuration.dart';
@@ -601,7 +602,7 @@ class ActionBarDropdownGroups extends ActionBarFilter {
           for (var groupId in sharedState.groups) {
             final name = groupId == allGroupId
                 ? context.s.all
-                : context.podcastState.getGroupById(groupId).name;
+                : context.podcastState.getGroupById(groupId)!.name;
             final groupNameTest = TextPainter(
               text: TextSpan(
                 text: name,
@@ -623,7 +624,7 @@ class ActionBarDropdownGroups extends ActionBarFilter {
           expandedChild: Text(
             data == allGroupId
                 ? context.s.all
-                : context.podcastState.getGroupById(data).name,
+                : context.podcastState.getGroupById(data)!.name,
             style: Theme.of(context).textTheme.titleMedium,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -631,7 +632,7 @@ class ActionBarDropdownGroups extends ActionBarFilter {
           itemBuilder: () => sharedState.groups.map((groupId) {
             final name = groupId == allGroupId
                 ? context.s.all
-                : context.podcastState.getGroupById(groupId).name;
+                : context.podcastState.getGroupById(groupId)!.name;
             return MyPopupMenuItem(
               value: groupId,
               child: Tooltip(
@@ -1350,7 +1351,7 @@ class ActionBarButtonSync extends ActionBarControl {
           if (sharedState.podcastId != podcastAllId) {
             await pState.syncPodcast(sharedState.podcastId);
           } else if (sharedState.groupId != allGroupId) {
-            final ids = pState.getGroupById(sharedState.groupId).podcastIds;
+            final ids = pState.getGroupById(sharedState.groupId)!.podcastIds;
             Queue<Future<int?>> futures = Queue();
             for (var id in ids) {
               if (futures.length >= 8) await futures.removeFirst();

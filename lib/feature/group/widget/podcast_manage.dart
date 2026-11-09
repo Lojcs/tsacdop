@@ -105,7 +105,7 @@ class _PodcastManageState extends State<PodcastManage>
                           ),
                           child: Selector<PodcastState, String>(
                             selector: (_, pState) =>
-                                pState.getGroupById(groupIds[index]).name,
+                                pState.getGroupById(groupIds[index])!.name,
                             builder: (context, name, _) => Text(name),
                           ),
                         ),

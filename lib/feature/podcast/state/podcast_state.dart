@@ -15,9 +15,10 @@ import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:webfeed/webfeed.dart';
 
+import '../../../core/misc/ListedMap.dart';
 import '../../../core/service/database.dart';
-import '../widget/opml_helper.dart';
-import '../../episode/state/episode_brief.dart';
+import '../detail/widget/opml_helper.dart';
+import '../../episode/model/episode_brief.dart';
 
 import 'package:image/image.dart' as img;
 
@@ -108,13 +109,19 @@ class PodcastState extends ChangeNotifier {
   bool podcastChange = false; // TODO: This doesn't update on sync'n stuff
 
   /// group id : PodcastGroup
-  final Map<String, PodcastGroup> _groupMap = {};
+  final ListedMap<String, PodcastGroup> _groupMap = .blank();
 
   /// Gets the list of groupIds
-  List<String> get groupIds => _groupMap.keys.toList();
+  List<String> get groupIds => _groupMap.keys;
+
+  /// Number of groups.
+  int get groupCount => _groupMap.length;
+
+  /// Gets the group id at an index.
+  String getGroupIdAt(int index) => _groupMap.elementAt(index);
 
   /// Gets the group with id [id]
-  PodcastGroup getGroupById(String id) => _groupMap[id]!;
+  PodcastGroup? getGroupById(String id) => _groupMap[id];
 
   /// Flips to indicate some group property changed.
   bool groupsChange = false;

@@ -12,14 +12,14 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:webfeed/webfeed.dart';
 
-import '../../../core/service/database.dart';
-import '../state/podcast_state.dart';
-import '../../settings/state/setting_state.dart';
-import '../../player/model/play_history.dart';
-import '../../../core/extension/extension_helper.dart';
-import '../../../core/misc/helpers.dart';
-import '../../../core/misc/custom_widget.dart';
-import '../../../core/widget/duration_picker.dart';
+import '../../../../core/service/database.dart';
+import '../../state/podcast_state.dart';
+import '../../../settings/state/setting_state.dart';
+import '../../../player/model/play_history.dart';
+import '../../../../core/extension/extension_helper.dart';
+import '../../../../core/misc/helpers.dart';
+import '../../../../core/misc/custom_widget.dart';
+import '../../../../core/widget/duration_picker.dart';
 
 enum MarkStatus { start, complete, none }
 

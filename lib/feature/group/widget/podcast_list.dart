@@ -9,9 +9,9 @@ import '../../../core/extension/extension_helper.dart';
 import '../../../core/route/page_route.dart';
 import '../../../core/misc/custom_widget.dart';
 import '../../../core/misc/general_dialog.dart';
-import '../../podcast/widget/podcast_detail.dart';
+import '../../podcast/detail/widget/podcast_detail.dart';
 import 'podcast_manage.dart';
-import '../../podcast/widget/podcast_settings.dart';
+import '../../podcast/detail/widget/podcast_settings.dart';
 
 class PodcastList extends StatefulWidget {
   const PodcastList({super.key});

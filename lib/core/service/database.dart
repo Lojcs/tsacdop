@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../feature/download/state/download_state.dart';
+import '../../feature/episode/model/episode_query.dart';
 import '../../feature/podcast/state/podcast_state.dart';
 import '../../feature/settings/state/tsacdop_settings.dart';
 import '../../feature/podcast/state/fireside_data.dart';
@@ -18,7 +19,7 @@ import '../../feature/player/model/playlist.dart';
 import '../../feature/group/model/podcast_group.dart';
 import '../extension/extension_helper.dart';
 
-import '../../feature/episode/state/episode_brief.dart';
+import '../../feature/episode/model/episode_brief.dart';
 import '../../feature/player/model/play_history.dart';
 import '../../feature/podcast/model/podcast_brief.dart';
 import '../../feature/settings/model/sub_history.dart';
@@ -1373,10 +1374,40 @@ class DBHelper {
     });
   }
 
+  /// Queries the database with the query and returns found episodes.
+  /// Filters are tri-state (null - no filter, true - only, false - exclude)
+  /// Do not use this directly from ui, use [EpisodeState] instead.
+  Future<List<EpisodeBrief>> getEpisodesWithQuery(EpisodeQuery query) =>
+      _getEpisodes(
+        podcastIds: query.podcastIds,
+        excludedFeedIds: query.excludedFeedIds,
+        episodeIds: query.episodeIds,
+        excludedEpisodeIds: query.excludedEpisodeIds,
+        episodeUrls: query.episodeUrls,
+        excludedEpisodeUrls: query.excludedEpisodeUrls,
+        episodeTitles: query.episodeTitles,
+        excludedEpisodeTitles: query.excludedEpisodeTitles,
+        likeEpisodeTitles: query.likeEpisodeTitles,
+        excludedLikeEpisodeTitles: query.excludedLikeEpisodeTitles,
+        sortBy: query.sortBy,
+        sortOrder: query.sortOrder,
+        rangeParameters: query.rangeParameters,
+        rangeDelimiters: query.rangeDelimiters,
+        filterNew: query.filterNew,
+        filterLiked: query.filterLiked,
+        filterPlayed: query.filterPlayed,
+        filterDownloaded: query.filterDownloaded,
+        filterDuplicateVersions: query.filterDuplicateVersions,
+        filterAutoDownload: query.filterAutoDownload,
+        filterInteracted: query.filterInteracted,
+        customFilters: query.customFilters,
+        customArguments: query.customArguments,
+      );
+
   /// Queries the database with the provided options and returns found episodes.
   /// Filters are tri-state (null - no filter, true - only, false - exclude)
   /// Do not use this directly from ui, use [EpisodeState] instead.
-  Future<List<EpisodeBrief>> getEpisodes(
+  Future<List<EpisodeBrief>> _getEpisodes(
   // TODO: Optimize the query via indexes and intersects
   {
     List<String>? podcastIds,
@@ -1405,6 +1436,7 @@ class DBHelper {
     List<String>? customFilters,
     List<String>? customArguments,
   }) async {
+    print("Got episodes");
     List<String> query = [
       """SELECT E.id, E.title, E.enclosure_url, E.feed_id, P.title as feed_title,
       E.milliseconds, E.description, E.number, E.duration, E.enclosure_length,
