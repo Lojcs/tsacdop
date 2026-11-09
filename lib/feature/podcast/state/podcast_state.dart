@@ -382,6 +382,7 @@ class PodcastState extends ChangeNotifier {
   /// Safe to call from the background.
   Future<String?> subscribePodcastByUrl(String feedUrl) async {
     final settings = background ? BackgroundSettingState() : _settingState;
+    await settings.ready;
     if (checkPodcast(feedUrl) == null) {
       var (podcast, episodes) = await Isolater(_fetchFeed).run(feedUrl);
       // Sometimes podcasts have multiple rss feeds.
@@ -535,6 +536,7 @@ class PodcastState extends ChangeNotifier {
     TsacdopSettings settings;
     if (background) {
       settings = BackgroundSettingState();
+      await settings.ready;
       eState = EpisodeState();
       eState.settingState = settings;
     } else {

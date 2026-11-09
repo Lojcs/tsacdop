@@ -20,8 +20,7 @@ Widget _downloadButton(EpisodeTask task, BuildContext context) {
     mainAxisSize: MainAxisSize.min,
     children: [
       switch (task.status?.status) {
-        null => SizedBox(width: 10, height: 10),
-        .enqueued || .waitingToRetry => IconButton(
+        null || .enqueued || .waitingToRetry => IconButton(
           splashRadius: 20,
           icon: Icon(Icons.pause_circle_filled),
           onPressed: () => downloader.pauseDownload(task.episodeId),
@@ -46,7 +45,7 @@ Widget _downloadButton(EpisodeTask task, BuildContext context) {
       IconButton(
         splashRadius: 20,
         icon: Icon(Icons.close),
-        onPressed: () => downloader.removeDownload(task.episodeId),
+        onPressed: () => downloader.removeOngoingDownload(task.episodeId),
       ),
     ],
   );
@@ -90,10 +89,7 @@ class _DownloadListState extends State<DownloadList> {
                                 flex: 1,
                                 child:
                                     task.progress != null &&
-                                        task.progress!.progress >= 0 &&
-                                        (task.status != null &&
-                                            task.status!.status != .failed &&
-                                            task.status!.status != .canceled)
+                                        task.progress!.progress >= 0
                                     ? Container(
                                         width: 40.0,
                                         height: 20.0,
