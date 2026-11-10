@@ -20,102 +20,122 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'ru';
 
-  static String m2(groupName, count) =>
+  static String m0(groupName, count) =>
       "${Intl.plural(count, zero: '', one: '${count} выпуск в ${groupName} добавлен в плейлист', few: '${count} выпуска в ${groupName} добавлены в плейлист', many: '${count} выпусков в ${groupName} добавлены в плейлист', other: '${count} выпусков в ${groupName} добавлены в плейлист')}";
 
-  static String m3(count) =>
+  static String m1(count) =>
       "${Intl.plural(count, zero: '', one: '${count} выпуск добавлен в плейлист', few: '${count} выпуска добавлены в плейлист', many: '${count} выпусков добавлены в плейлист', other: '${count} выпусков добавлены в плейлист')}";
 
-  static String m4(count) =>
+  static String m2(count) =>
       "${Intl.plural(count, zero: 'Сегодня', one: 'День назад', few: '${count} дня назад', many: '${count} дней назад', other: '${count} дней назад')}";
 
-  static String m5(count) =>
+  static String m3(count) =>
       "${Intl.plural(count, zero: 'Никогда', one: 'День', few: '${count} дня', many: '${count} дней', other: '${count} дней')}";
 
-  static String m6(count) =>
+  static String m4(count) =>
       "${Intl.plural(count, zero: '', one: 'выпуск', few: 'выпуска', many: 'выпусков', other: 'выпусков')}";
 
-  static String m7(time) => "С ${time}";
+  static String m5(type) => "";
+
+  static String m6(time) => "С ${time}";
+
+  static String m7(icon) => "";
 
   static String m8(count) =>
       "${Intl.plural(count, zero: 'Группа', one: 'Группа', few: 'Группы', many: 'Групп', other: 'Групп')}";
 
-  static String m0(host) => "Размещено на ${host}";
-
-  static String m9(count) =>
-      "${Intl.plural(count, zero: 'В течение часа', one: 'Час назад', few: '${count} часа назад', many: '${count} часов назад', other: '${count} часов назад')}";
+  static String m9(host) => "Размещено на ${host}";
 
   static String m10(count) =>
+      "${Intl.plural(count, zero: 'В течение часа', one: 'Час назад', few: '${count} часа назад', many: '${count} часов назад', other: '${count} часов назад')}";
+
+  static String m11(count) =>
       "${Intl.plural(count, zero: '0 час.', one: '${count} час.', few: '${count} час.', many: '${count} час.', other: '${count} час.')}";
 
-  static String m11(service) => "Интегрировать с  ${service}";
+  static String m12(service) => "Интегрировать с  ${service}";
 
-  static String m1(userName) => "Авторизован как ${userName}";
+  static String m13(filePath) => "";
 
-  static String m12(count) =>
+  static String m14(userName) => "Авторизован как ${userName}";
+
+  static String m15(count) =>
       "${Intl.plural(count, zero: 'Только что', one: 'Минуту назад', few: '${count} минуты назад', many: '${count} минут назад', other: '${count} минут назад')}";
 
-  static String m13(count) =>
+  static String m16(count) =>
       "${Intl.plural(count, zero: '0 мин.', one: '${count} мин.', few: '${count} мин.', many: '${count} мин.', other: '${count} мин.')}";
 
-  static String m14(title) => "Получить данные ${title}";
+  static String m17(count) => "";
 
-  static String m15(title) => "Подписка не удалась, ошибка сети ${title}";
+  static String m18(title) => "Получить данные ${title}";
 
-  static String m16(title) => "Подписаться на ${title}";
+  static String m19(title) => "Подписка не удалась, ошибка сети ${title}";
 
-  static String m17(title) =>
+  static String m20(title) => "Подписаться на ${title}";
+
+  static String m21(title) =>
       "Подписка не удалась, подкаст уже существует ${title}";
 
-  static String m18(title) => "Успешная подписка на ${title}";
+  static String m22(title) => "Успешная подписка на ${title}";
 
-  static String m19(title) => "Обновить ${title}";
+  static String m23(title) => "Обновить ${title}";
 
-  static String m20(title) => "Ошибка обновления ${title}";
-
-  static String m21(count) =>
-      "${Intl.plural(count, zero: '', one: 'Подкаст', few: 'Подкаста', many: 'Подкастов', other: 'Подкастов')}";
-
-  static String m22(date) => "Опубликовано ${date}";
-
-  static String m23(date) => "Удалено ${date}";
-
-  static String m24(count) =>
-      "${Intl.plural(count, zero: '0 сек', one: '${count} сек', few: '${count} сек', many: '${count} сек', other: '${count} сек')}";
+  static String m24(title) => "Ошибка обновления ${title}";
 
   static String m25(count) =>
-      "${Intl.plural(count, zero: 'Только что', one: 'Секунду назад', few: '${count} секунды назад', many: '${count} секунд назад', other: '${count} секунд назад')}";
+      "${Intl.plural(count, zero: '', one: 'Подкаст', few: 'Подкаста', many: 'Подкастов', other: 'Подкастов')}";
 
-  static String m26(count) => "выбрано ${count}";
+  static String m26(date) => "Опубликовано ${date}";
 
-  static String m27(time) => "Время остановки ${time}";
+  static String m27(date) => "Удалено ${date}";
 
-  static String m28(time) => "Осталось ${time}";
+  static String m28(start, end) => "";
 
-  static String m29(time) => "До ${time}";
+  static String m29(count) =>
+      "${Intl.plural(count, zero: '0 сек', one: '${count} сек', few: '${count} сек', many: '${count} сек', other: '${count} сек')}";
 
   static String m30(count) =>
+      "${Intl.plural(count, zero: 'Только что', one: 'Секунду назад', few: '${count} секунды назад', many: '${count} секунд назад', other: '${count} секунд назад')}";
+
+  static String m31(count) => "выбрано ${count}";
+
+  static String m32(time) => "Время остановки ${time}";
+
+  static String m33(time) => "Осталось ${time}";
+
+  static String m34(time) => "До ${time}";
+
+  static String m35(count) =>
       "${Intl.plural(count, zero: 'Нет обновлений', one: 'Обновлен ${count} выпуск', few: 'Обновлено ${count} выпуска', many: 'Обновлены ${count} выпусков', other: 'Обновлены ${count} выпусков')}";
 
-  static String m31(version) => "Версия: ${version}";
+  static String m36(version) => "Версия: ${version}";
+
+  static String m37(count) => "";
+
+  static String m38(count) => "";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
+    "aboutDes": MessageLookupByLibrary.simpleMessage(""),
     "add": MessageLookupByLibrary.simpleMessage("Добавить"),
-    "addEpisodeGroup": m2,
-    "addNewEpisodeAll": m3,
+    "addEpisodeGroup": m0,
+    "addNewEpisodeAll": m1,
     "addNewEpisodeTooltip": MessageLookupByLibrary.simpleMessage(
       "Добавить новые выпуски в плейлист",
     ),
     "addSomeGroups": MessageLookupByLibrary.simpleMessage(
       "Добавить несколько групп",
     ),
+    "after": MessageLookupByLibrary.simpleMessage(""),
     "all": MessageLookupByLibrary.simpleMessage("Все"),
+    "apiSearch": MessageLookupByLibrary.simpleMessage(""),
     "autoDownload": MessageLookupByLibrary.simpleMessage("Автозагрузка"),
     "back": MessageLookupByLibrary.simpleMessage("Назад"),
+    "before": MessageLookupByLibrary.simpleMessage(""),
+    "between": MessageLookupByLibrary.simpleMessage(""),
     "boostVolume": MessageLookupByLibrary.simpleMessage("Усиление громкости"),
     "buffering": MessageLookupByLibrary.simpleMessage("Буферизация"),
     "cancel": MessageLookupByLibrary.simpleMessage("ОТМЕНА"),
+    "capitalDefault": MessageLookupByLibrary.simpleMessage(""),
     "cellularConfirm": MessageLookupByLibrary.simpleMessage(
       "Предупреждение о мобильной сети",
     ),
@@ -127,12 +147,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "chooseA": MessageLookupByLibrary.simpleMessage("Выберите"),
     "clear": MessageLookupByLibrary.simpleMessage("Очистить"),
     "clearAll": MessageLookupByLibrary.simpleMessage("Очистить все"),
+    "close": MessageLookupByLibrary.simpleMessage(""),
     "color": MessageLookupByLibrary.simpleMessage("цвет"),
     "confirm": MessageLookupByLibrary.simpleMessage("ПОДТВЕРДИТЬ"),
+    "confirmation": MessageLookupByLibrary.simpleMessage(""),
+    "contribute": MessageLookupByLibrary.simpleMessage(""),
     "createNewPlaylist": MessageLookupByLibrary.simpleMessage("Новый плейлист"),
     "darkMode": MessageLookupByLibrary.simpleMessage("Темная"),
-    "daysAgo": m4,
-    "daysCount": m5,
+    "daysAgo": m2,
+    "daysCount": m3,
     "defaultQueueReminder": MessageLookupByLibrary.simpleMessage(
       "Это очередь по умолчанию. Ее удалить нельзя.",
     ),
@@ -143,20 +166,32 @@ class MessageLookup extends MessageLookupByLibrary {
       "Выберите поисковую систему подкастов по умолчанию",
     ),
     "delete": MessageLookupByLibrary.simpleMessage("Удалить"),
+    "deleted": MessageLookupByLibrary.simpleMessage(""),
+    "deletedEpisodeDesc": MessageLookupByLibrary.simpleMessage(""),
+    "deletedPodcastDesc": MessageLookupByLibrary.simpleMessage(""),
+    "deselectAll": MessageLookupByLibrary.simpleMessage(""),
+    "details": MessageLookupByLibrary.simpleMessage(""),
     "developer": MessageLookupByLibrary.simpleMessage("Разработчик"),
+    "developerOriginal": MessageLookupByLibrary.simpleMessage(""),
+    "deviceStorage": MessageLookupByLibrary.simpleMessage(""),
+    "disabled": MessageLookupByLibrary.simpleMessage(""),
     "dismiss": MessageLookupByLibrary.simpleMessage("Отклонить"),
+    "displayVersion": MessageLookupByLibrary.simpleMessage(""),
     "done": MessageLookupByLibrary.simpleMessage("Готово"),
     "download": MessageLookupByLibrary.simpleMessage("Загружено"),
+    "downloadDate": MessageLookupByLibrary.simpleMessage(""),
     "downloadRemovedToast": MessageLookupByLibrary.simpleMessage(
       "Загрузка удалена",
     ),
     "downloadStart": MessageLookupByLibrary.simpleMessage("Загрузка"),
     "downloaded": MessageLookupByLibrary.simpleMessage("Загружено"),
+    "downloading": MessageLookupByLibrary.simpleMessage(""),
+    "duration": MessageLookupByLibrary.simpleMessage(""),
     "editGroupName": MessageLookupByLibrary.simpleMessage(
       "Изменить название группы",
     ),
     "endOfEpisode": MessageLookupByLibrary.simpleMessage("Конец выпуска"),
-    "episode": m6,
+    "episode": m4,
     "fastForward": MessageLookupByLibrary.simpleMessage("Перемотка вперед"),
     "fastRewind": MessageLookupByLibrary.simpleMessage("Быстрая перемотка"),
     "featureDiscoveryEditGroup": MessageLookupByLibrary.simpleMessage(
@@ -220,9 +255,14 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "feedbackTelegram": MessageLookupByLibrary.simpleMessage("Telegram"),
     "filter": MessageLookupByLibrary.simpleMessage("Фильтр"),
+    "filterType": m5,
     "fontStyle": MessageLookupByLibrary.simpleMessage("Стиль шрифта"),
     "fonts": MessageLookupByLibrary.simpleMessage("Шрифты"),
-    "from": m7,
+    "forward": MessageLookupByLibrary.simpleMessage(""),
+    "from": m6,
+    "getStarted": MessageLookupByLibrary.simpleMessage(""),
+    "getStartedDes": m7,
+    "globallyDisabled": MessageLookupByLibrary.simpleMessage(""),
     "goodNight": MessageLookupByLibrary.simpleMessage("Спокойной ночи"),
     "gpodderLoginDes": MessageLookupByLibrary.simpleMessage(
       "Поздравляем! Вы успешно связали учетную запись gpodder.net. Tsacdop будет автоматически синхронизировать подписки на вашем устройстве с вашей учетной записью gpodder.net.",
@@ -234,6 +274,8 @@ class MessageLookup extends MessageLookupByLibrary {
       "Вы уверены, что хотите удалить эту группу? Подкасты будут перемещены в домашнюю группу.",
     ),
     "groups": m8,
+    "haptics": MessageLookupByLibrary.simpleMessage(""),
+    "hapticsDes": MessageLookupByLibrary.simpleMessage(""),
     "hideListenedSetting": MessageLookupByLibrary.simpleMessage(
       "Скрыть прослушанное",
     ),
@@ -257,11 +299,13 @@ class MessageLookup extends MessageLookupByLibrary {
     "homeToprightMenuRefreshAll": MessageLookupByLibrary.simpleMessage(
       "Обновить все",
     ),
-    "hostedOn": m0,
-    "hoursAgo": m9,
-    "hoursCount": m10,
+    "hostedOn": m9,
+    "hoursAgo": m10,
+    "hoursCount": m11,
     "import": MessageLookupByLibrary.simpleMessage("Импорт"),
-    "intergateWith": m11,
+    "importingOpml": MessageLookupByLibrary.simpleMessage(""),
+    "interaction": MessageLookupByLibrary.simpleMessage(""),
+    "intergateWith": m12,
     "introFourthPage": MessageLookupByLibrary.simpleMessage(
       "Длительное нажатие на выпуск запускает быстрые действия.",
     ),
@@ -274,6 +318,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "invalidName": MessageLookupByLibrary.simpleMessage(
       "Неверное имя пользователя",
     ),
+    "keepAndroidOpen": MessageLookupByLibrary.simpleMessage(""),
+    "keepAndroidOpenDes": MessageLookupByLibrary.simpleMessage(""),
     "lastUpdate": MessageLookupByLibrary.simpleMessage("Последнее обновление"),
     "later": MessageLookupByLibrary.simpleMessage("Позже"),
     "lightMode": MessageLookupByLibrary.simpleMessage("Светлая"),
@@ -282,8 +328,14 @@ class MessageLookup extends MessageLookupByLibrary {
     "liked": MessageLookupByLibrary.simpleMessage("Нравится"),
     "listen": MessageLookupByLibrary.simpleMessage("Слушать"),
     "listened": MessageLookupByLibrary.simpleMessage("Прослушано"),
+    "loadAllSelected": MessageLookupByLibrary.simpleMessage(""),
     "loadMore": MessageLookupByLibrary.simpleMessage("Загрузить еще"),
-    "loggedInAs": m1,
+    "loading": MessageLookupByLibrary.simpleMessage(""),
+    "localEpisodeDescription": m13,
+    "localFolder": MessageLookupByLibrary.simpleMessage(""),
+    "localFolderDescription": MessageLookupByLibrary.simpleMessage(""),
+    "localizationWeblate": MessageLookupByLibrary.simpleMessage(""),
+    "loggedInAs": m14,
     "login": MessageLookupByLibrary.simpleMessage("Войти"),
     "loginFailed": MessageLookupByLibrary.simpleMessage(
       "Не удалось авторизоваться",
@@ -307,29 +359,41 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "menuViewRSS": MessageLookupByLibrary.simpleMessage("Доступ к RSS-каналу"),
     "menuVisitSite": MessageLookupByLibrary.simpleMessage("Посетить сайт"),
-    "minsAgo": m12,
-    "minsCount": m13,
+    "minsAgo": m15,
+    "minsCount": m16,
+    "mobileData": MessageLookupByLibrary.simpleMessage(""),
+    "monthsCount": m17,
+    "moreOptions": MessageLookupByLibrary.simpleMessage(""),
     "network": MessageLookupByLibrary.simpleMessage("Сеть"),
+    "networkErrorDNS": MessageLookupByLibrary.simpleMessage(""),
     "neverAutoUpdate": MessageLookupByLibrary.simpleMessage(
       "Выключить автоматическое обновление",
     ),
+    "neverAutoUpdateDes": MessageLookupByLibrary.simpleMessage(""),
     "newGroup": MessageLookupByLibrary.simpleMessage("Создать новую группу"),
+    "newPlain": MessageLookupByLibrary.simpleMessage(""),
+    "newPlaylist": MessageLookupByLibrary.simpleMessage(""),
     "newestFirst": MessageLookupByLibrary.simpleMessage("Начиная с новых"),
     "next": MessageLookupByLibrary.simpleMessage("Следующий"),
+    "noEpisodesFound": MessageLookupByLibrary.simpleMessage(""),
     "noPodcastGroup": MessageLookupByLibrary.simpleMessage(
       "В этой группе нет подкастов",
     ),
     "noShownote": MessageLookupByLibrary.simpleMessage(
       "Для этого выпуска нет примечаний.",
     ),
-    "notificaitonFatch": m14,
-    "notificationNetworkError": m15,
-    "notificationSubscribe": m16,
-    "notificationSubscribeExisted": m17,
-    "notificationSuccess": m18,
-    "notificationUpdate": m19,
-    "notificationUpdateError": m20,
+    "none": MessageLookupByLibrary.simpleMessage(""),
+    "notificaitonFatch": m18,
+    "notificationAddingGroups": MessageLookupByLibrary.simpleMessage(""),
+    "notificationNetworkError": m19,
+    "notificationSubscribe": m20,
+    "notificationSubscribeExisted": m21,
+    "notificationSubscribing": MessageLookupByLibrary.simpleMessage(""),
+    "notificationSuccess": m22,
+    "notificationUpdate": m23,
+    "notificationUpdateError": m24,
     "oldestFirst": MessageLookupByLibrary.simpleMessage("Начиная со старых"),
+    "opmlFile": MessageLookupByLibrary.simpleMessage(""),
     "passwdRequired": MessageLookupByLibrary.simpleMessage("Требуется пароль"),
     "password": MessageLookupByLibrary.simpleMessage("Пароль"),
     "pause": MessageLookupByLibrary.simpleMessage("Пауза"),
@@ -346,12 +410,14 @@ class MessageLookup extends MessageLookupByLibrary {
     "playerHeightShort": MessageLookupByLibrary.simpleMessage("Низкий"),
     "playerHeightTall": MessageLookupByLibrary.simpleMessage("Высокий"),
     "playing": MessageLookupByLibrary.simpleMessage("Проигрывается"),
+    "playlistExists": MessageLookupByLibrary.simpleMessage(""),
     "playlistNameEmpty": MessageLookupByLibrary.simpleMessage(
       "Название плейлиста пустое",
     ),
     "playlists": MessageLookupByLibrary.simpleMessage("Плейлисты"),
     "plugins": MessageLookupByLibrary.simpleMessage("Плагины"),
-    "podcast": m21,
+    "podcast": m25,
+    "podcastList": MessageLookupByLibrary.simpleMessage(""),
     "podcastSubscribed": MessageLookupByLibrary.simpleMessage(
       "Подписка оформлена",
     ),
@@ -373,7 +439,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "privacyPolicy": MessageLookupByLibrary.simpleMessage(
       "Политика конфиденциальности",
     ),
-    "published": m22,
+    "publishDate": MessageLookupByLibrary.simpleMessage(""),
+    "published": m26,
     "publishedDaily": MessageLookupByLibrary.simpleMessage(
       "Публикуется ежедневно",
     ),
@@ -387,6 +454,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Публикуется ежегодно",
     ),
     "queue": MessageLookupByLibrary.simpleMessage("Очередь"),
+    "random": MessageLookupByLibrary.simpleMessage(""),
     "recoverSubscribe": MessageLookupByLibrary.simpleMessage(
       "Восстановить подписку",
     ),
@@ -396,27 +464,37 @@ class MessageLookup extends MessageLookupByLibrary {
     "removeConfirm": MessageLookupByLibrary.simpleMessage(
       "Подтверждение удаления",
     ),
+    "removeDownload": MessageLookupByLibrary.simpleMessage(""),
     "removeNewMark": MessageLookupByLibrary.simpleMessage(
       "Удалить новую пометку",
     ),
     "removePodcastDes": MessageLookupByLibrary.simpleMessage(
       "Вы уверены, что хотите отказаться от подписки?",
     ),
-    "removedAt": m23,
+    "removedAt": m27,
+    "restartAppForEffect": MessageLookupByLibrary.simpleMessage(""),
+    "satellite": MessageLookupByLibrary.simpleMessage(""),
     "save": MessageLookupByLibrary.simpleMessage("Сохранить"),
     "schedule": MessageLookupByLibrary.simpleMessage("Расписание"),
+    "scheduleDisabled": MessageLookupByLibrary.simpleMessage(""),
+    "scheduleTime": m28,
     "search": MessageLookupByLibrary.simpleMessage("Поиск"),
+    "searchApi": MessageLookupByLibrary.simpleMessage(""),
+    "searchEngine": MessageLookupByLibrary.simpleMessage(""),
     "searchEpisode": MessageLookupByLibrary.simpleMessage("Поиск выпуска"),
     "searchHelper": MessageLookupByLibrary.simpleMessage(
       "Введите название подкаста, ключевые слова или введите URL канала.",
     ),
+    "searchInstructions": MessageLookupByLibrary.simpleMessage(""),
     "searchInvalidRss": MessageLookupByLibrary.simpleMessage(
       "Неверная ссылка RSS",
     ),
     "searchPodcast": MessageLookupByLibrary.simpleMessage("Искать подкасты"),
-    "secCount": m24,
-    "secondsAgo": m25,
-    "selected": m26,
+    "searchWeb": MessageLookupByLibrary.simpleMessage(""),
+    "secCount": m29,
+    "secondsAgo": m30,
+    "selectMode": MessageLookupByLibrary.simpleMessage(""),
+    "selected": m31,
     "settingStorage": MessageLookupByLibrary.simpleMessage("Хранилище"),
     "settings": MessageLookupByLibrary.simpleMessage("Настройки"),
     "settingsAccentColor": MessageLookupByLibrary.simpleMessage("Цвет акцента"),
@@ -434,24 +512,82 @@ class MessageLookup extends MessageLookupByLibrary {
     "settingsAutoDelete": MessageLookupByLibrary.simpleMessage(
       "Автоудаление загрузок через",
     ),
+    "settingsAutoDeleteAfterPlayed": MessageLookupByLibrary.simpleMessage(""),
+    "settingsAutoDeleteAfterTime": MessageLookupByLibrary.simpleMessage(""),
+    "settingsAutoDeleteAfterTimeDes": MessageLookupByLibrary.simpleMessage(""),
     "settingsAutoDeleteDes": MessageLookupByLibrary.simpleMessage(
       "По умолчанию 30 дней",
+    ),
+    "settingsAutoDeleteOldestIfTotalAbove":
+        MessageLookupByLibrary.simpleMessage(""),
+    "settingsAutoDeleteOldestIfTotalAboveDes":
+        MessageLookupByLibrary.simpleMessage(""),
+    "settingsAutoDownload": MessageLookupByLibrary.simpleMessage(""),
+    "settingsAutoDownloadDes": MessageLookupByLibrary.simpleMessage(""),
+    "settingsAutoDownloadNewPodcast": MessageLookupByLibrary.simpleMessage(""),
+    "settingsAutoDownloadNewPodcastDes": MessageLookupByLibrary.simpleMessage(
+      "",
+    ),
+    "settingsAutoDownloadOnForbidden": MessageLookupByLibrary.simpleMessage(""),
+    "settingsAutoDownloadOnForbiddenDes": MessageLookupByLibrary.simpleMessage(
+      "",
     ),
     "settingsAutoPlayDes": MessageLookupByLibrary.simpleMessage(
       "Автоматическое воспроизведение следующего выпуска в плейлисте",
     ),
+    "settingsAutoSync": MessageLookupByLibrary.simpleMessage(""),
+    "settingsAutoSyncDes": MessageLookupByLibrary.simpleMessage(""),
     "settingsBackup": MessageLookupByLibrary.simpleMessage(
       "Резервное копирование",
     ),
+    "settingsBackupCategories": MessageLookupByLibrary.simpleMessage(""),
+    "settingsBackupCategoriesDes": MessageLookupByLibrary.simpleMessage(""),
+    "settingsBackupCategoriesImportDes": MessageLookupByLibrary.simpleMessage(
+      "",
+    ),
+    "settingsBackupConfirmationDatabaseOverwrite":
+        MessageLookupByLibrary.simpleMessage(""),
+    "settingsBackupConfirmationDatabaseReset":
+        MessageLookupByLibrary.simpleMessage(""),
+    "settingsBackupConfirmationSettingsOverwrite":
+        MessageLookupByLibrary.simpleMessage(""),
+    "settingsBackupConfirmationSettingsReset":
+        MessageLookupByLibrary.simpleMessage(""),
+    "settingsBackupDatabase": MessageLookupByLibrary.simpleMessage(""),
+    "settingsBackupDatabaseBackupFile": MessageLookupByLibrary.simpleMessage(
+      "",
+    ),
+    "settingsBackupDatabaseBackupFileDes": MessageLookupByLibrary.simpleMessage(
+      "",
+    ),
+    "settingsBackupDatabaseCategoriesDes": MessageLookupByLibrary.simpleMessage(
+      "",
+    ),
+    "settingsBackupDatabaseHistory": MessageLookupByLibrary.simpleMessage(""),
+    "settingsBackupDatabasePlaylists": MessageLookupByLibrary.simpleMessage(""),
+    "settingsBackupDatabasePodcasts": MessageLookupByLibrary.simpleMessage(""),
     "settingsBackupDes": MessageLookupByLibrary.simpleMessage(
       "Резервное копирование данных приложения",
     ),
+    "settingsBackupFile": MessageLookupByLibrary.simpleMessage(""),
+    "settingsBackupLegacyFile": MessageLookupByLibrary.simpleMessage(""),
+    "settingsBackupLegacyFileDes": MessageLookupByLibrary.simpleMessage(""),
+    "settingsBackupPassword": MessageLookupByLibrary.simpleMessage(""),
+    "settingsBackupPasswordDes": MessageLookupByLibrary.simpleMessage(""),
     "settingsBoostVolume": MessageLookupByLibrary.simpleMessage(
       "Уровень усиления громкости",
     ),
     "settingsBoostVolumeDes": MessageLookupByLibrary.simpleMessage(
       "Изменение уровня усиления громкости",
     ),
+    "settingsColors": MessageLookupByLibrary.simpleMessage(""),
+    "settingsDefaultFilterAndroidAuto": MessageLookupByLibrary.simpleMessage(
+      "",
+    ),
+    "settingsDefaultFilterAndroidAutoDes": MessageLookupByLibrary.simpleMessage(
+      "",
+    ),
+    "settingsDefaultFilters": MessageLookupByLibrary.simpleMessage(""),
     "settingsDefaultGrid": MessageLookupByLibrary.simpleMessage(
       "Вид сетки по умолчанию",
     ),
@@ -470,9 +606,17 @@ class MessageLookup extends MessageLookupByLibrary {
     "settingsDiscovery": MessageLookupByLibrary.simpleMessage(
       "Повторно активировать руководство",
     ),
+    "settingsDiscoveryDes": MessageLookupByLibrary.simpleMessage(""),
+    "settingsDownloadAskOnForbidden": MessageLookupByLibrary.simpleMessage(""),
+    "settingsDownloadAskOnForbiddenDes": MessageLookupByLibrary.simpleMessage(
+      "",
+    ),
     "settingsDownloadPosition": MessageLookupByLibrary.simpleMessage(
       "Позиция для скачивания",
     ),
+    "settingsDownloads": MessageLookupByLibrary.simpleMessage(""),
+    "settingsDownloadsDes": MessageLookupByLibrary.simpleMessage(""),
+    "settingsEpisodeManagement": MessageLookupByLibrary.simpleMessage(""),
     "settingsExportDes": MessageLookupByLibrary.simpleMessage(
       "Экспорт и импорт настроек приложения",
     ),
@@ -486,28 +630,48 @@ class MessageLookup extends MessageLookupByLibrary {
     "settingsFeedbackDes": MessageLookupByLibrary.simpleMessage(
       "Ошибки и пожелания",
     ),
+    "settingsForbiddenDownloadConnections":
+        MessageLookupByLibrary.simpleMessage(""),
+    "settingsForbiddenDownloadConnectionsDes":
+        MessageLookupByLibrary.simpleMessage(""),
+    "settingsFullStop": MessageLookupByLibrary.simpleMessage(""),
+    "settingsFullStopDes": MessageLookupByLibrary.simpleMessage(""),
+    "settingsGeneral": MessageLookupByLibrary.simpleMessage(""),
     "settingsHistory": MessageLookupByLibrary.simpleMessage("История"),
     "settingsHistoryDes": MessageLookupByLibrary.simpleMessage(
       "Данные о прослушивании",
     ),
+    "settingsHomeTabAdd": MessageLookupByLibrary.simpleMessage(""),
+    "settingsHomeTabName": MessageLookupByLibrary.simpleMessage(""),
+    "settingsHomeTabNew": MessageLookupByLibrary.simpleMessage(""),
+    "settingsHomeTabs": MessageLookupByLibrary.simpleMessage(""),
     "settingsInfo": MessageLookupByLibrary.simpleMessage("Информация"),
     "settingsInterface": MessageLookupByLibrary.simpleMessage("Интерфейс"),
+    "settingsInterfaceDes": MessageLookupByLibrary.simpleMessage(""),
+    "settingsLanguage": MessageLookupByLibrary.simpleMessage(""),
+    "settingsLegacy": MessageLookupByLibrary.simpleMessage(""),
     "settingsLibraries": MessageLookupByLibrary.simpleMessage("Библиотеки"),
     "settingsLibrariesDes": MessageLookupByLibrary.simpleMessage(
       "Библиотеки с открытым исходным кодом, используемые в этом приложении",
     ),
+    "settingsLookAndFeel": MessageLookupByLibrary.simpleMessage(""),
+    "settingsLookAndFeelDes": MessageLookupByLibrary.simpleMessage(""),
     "settingsManageDownload": MessageLookupByLibrary.simpleMessage(
       "Управление загрузками",
     ),
     "settingsManageDownloadDes": MessageLookupByLibrary.simpleMessage(
       "Управление загруженными аудиофайлами",
     ),
+    "settingsManufacturerNotificationLayout":
+        MessageLookupByLibrary.simpleMessage(""),
     "settingsMarkListenedSkip": MessageLookupByLibrary.simpleMessage(
       "Отметить как прослушанный, если пропущен",
     ),
     "settingsMarkListenedSkipDes": MessageLookupByLibrary.simpleMessage(
       "Автоматическая отметка выпуска как прослушанного при переходе к следующему",
     ),
+    "settingsMediaControls": MessageLookupByLibrary.simpleMessage(""),
+    "settingsMediaControlsDes": MessageLookupByLibrary.simpleMessage(""),
     "settingsMenuAutoPlay": MessageLookupByLibrary.simpleMessage(
       "Автовоспроизведение",
     ),
@@ -517,6 +681,52 @@ class MessageLookup extends MessageLookupByLibrary {
     "settingsNetworkCellularDes": MessageLookupByLibrary.simpleMessage(
       "Запрашивать подтверждение при использовании мобильной сети для загрузки выпусков",
     ),
+    "settingsNewEpisodes": MessageLookupByLibrary.simpleMessage(""),
+    "settingsNewEpisodesDes": MessageLookupByLibrary.simpleMessage(""),
+    "settingsNewEpisodesMark": MessageLookupByLibrary.simpleMessage(""),
+    "settingsNewEpisodesMarkAge": MessageLookupByLibrary.simpleMessage(""),
+    "settingsNewEpisodesMarkAgeDes": MessageLookupByLibrary.simpleMessage(""),
+    "settingsNewEpisodesMarkDes": MessageLookupByLibrary.simpleMessage(""),
+    "settingsNewEpisodesMarkDuplicate": MessageLookupByLibrary.simpleMessage(
+      "",
+    ),
+    "settingsNewEpisodesMarkDuplicateDes": MessageLookupByLibrary.simpleMessage(
+      "",
+    ),
+    "settingsNewEpisodesMarkNewPodcast": MessageLookupByLibrary.simpleMessage(
+      "",
+    ),
+    "settingsNewEpisodesMarkNewPodcastDes":
+        MessageLookupByLibrary.simpleMessage(""),
+    "settingsNewEpisodesMarkUnseen": MessageLookupByLibrary.simpleMessage(""),
+    "settingsNewEpisodesMarkUnseenDes": MessageLookupByLibrary.simpleMessage(
+      "",
+    ),
+    "settingsNewEpisodesUnmark": MessageLookupByLibrary.simpleMessage(""),
+    "settingsNewEpisodesUnmarkAge": MessageLookupByLibrary.simpleMessage(""),
+    "settingsNewEpisodesUnmarkAgeDes": MessageLookupByLibrary.simpleMessage(""),
+    "settingsNewEpisodesUnmarkDes": MessageLookupByLibrary.simpleMessage(""),
+    "settingsNewEpisodesUnmarkInteracted": MessageLookupByLibrary.simpleMessage(
+      "",
+    ),
+    "settingsNewEpisodesUnmarkInteractedDes":
+        MessageLookupByLibrary.simpleMessage(""),
+    "settingsNewEpisodesUnmarkPlayed": MessageLookupByLibrary.simpleMessage(""),
+    "settingsNewEpisodesUnmarkPlayedDes": MessageLookupByLibrary.simpleMessage(
+      "",
+    ),
+    "settingsNewEpisodesUnmarkWaitSync": MessageLookupByLibrary.simpleMessage(
+      "",
+    ),
+    "settingsNewEpisodesUnmarkWaitSyncDes":
+        MessageLookupByLibrary.simpleMessage(""),
+    "settingsPauseDownloadOnForbiddenConnected":
+        MessageLookupByLibrary.simpleMessage(""),
+    "settingsPauseDownloadOnForbiddenConnectedDes":
+        MessageLookupByLibrary.simpleMessage(""),
+    "settingsPlayback": MessageLookupByLibrary.simpleMessage(""),
+    "settingsPlaybackDes": MessageLookupByLibrary.simpleMessage(""),
+    "settingsPlayerState": MessageLookupByLibrary.simpleMessage(""),
     "settingsPopupMenu": MessageLookupByLibrary.simpleMessage(
       "Всплывающее меню выпусков",
     ),
@@ -524,6 +734,11 @@ class MessageLookup extends MessageLookupByLibrary {
       "Настройка всплывающего меню выпусков",
     ),
     "settingsPrefrence": MessageLookupByLibrary.simpleMessage("Предпочтения"),
+    "settingsRequirements": MessageLookupByLibrary.simpleMessage(""),
+    "settingsRequirementsAll": MessageLookupByLibrary.simpleMessage(""),
+    "settingsRequirementsAny": MessageLookupByLibrary.simpleMessage(""),
+    "settingsRequirementsDes": MessageLookupByLibrary.simpleMessage(""),
+    "settingsReset": MessageLookupByLibrary.simpleMessage(""),
     "settingsRewindSec": MessageLookupByLibrary.simpleMessage(
       "Секунды перемотки назад",
     ),
@@ -545,6 +760,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "settingsSTMode": MessageLookupByLibrary.simpleMessage(
       "Автоматический режим таймера сна",
     ),
+    "settingsSTWaitEpisodeEnd": MessageLookupByLibrary.simpleMessage(""),
+    "settingsSTWaitEpisodeEndDes": MessageLookupByLibrary.simpleMessage(""),
+    "settingsSearchApi": MessageLookupByLibrary.simpleMessage(""),
+    "settingsSearchEngine": MessageLookupByLibrary.simpleMessage(""),
+    "settingsSearchMode": MessageLookupByLibrary.simpleMessage(""),
     "settingsSpeeds": MessageLookupByLibrary.simpleMessage("Скорости"),
     "settingsSpeedsDes": MessageLookupByLibrary.simpleMessage(
       "Настроить доступные скорости",
@@ -553,6 +773,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "settingsSyncingDes": MessageLookupByLibrary.simpleMessage(
       "Обновление подкастов в фоновом режиме",
     ),
+    "settingsSyncingInterval": MessageLookupByLibrary.simpleMessage(""),
     "settingsTapToOpenPopupMenu": MessageLookupByLibrary.simpleMessage(
       "Нажмите для открытия всплывающего меню",
     ),
@@ -560,6 +781,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Для открытия страницы выпуска нажмите и удерживайте",
     ),
     "settingsTheme": MessageLookupByLibrary.simpleMessage("Тема"),
+    "settingsTrueBlack": MessageLookupByLibrary.simpleMessage(""),
+    "settingsTrueBlackDes": MessageLookupByLibrary.simpleMessage(""),
+    "settingsUseSystemAccentColor": MessageLookupByLibrary.simpleMessage(""),
     "share": MessageLookupByLibrary.simpleMessage("Поделиться"),
     "showNotesFonts": MessageLookupByLibrary.simpleMessage(
       "Показать шрифт заметок",
@@ -573,7 +797,15 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "skipSilence": MessageLookupByLibrary.simpleMessage("Пропускать тишину"),
     "skipToNext": MessageLookupByLibrary.simpleMessage("Перейти к следующему"),
+    "skipToPrevious": MessageLookupByLibrary.simpleMessage(""),
     "sleepTimer": MessageLookupByLibrary.simpleMessage("Таймер сна"),
+    "sleepTimerCancel": MessageLookupByLibrary.simpleMessage(""),
+    "sleepTimerExpireAt": MessageLookupByLibrary.simpleMessage(""),
+    "sleepTimerStart": MessageLookupByLibrary.simpleMessage(""),
+    "sleepTimerWait": MessageLookupByLibrary.simpleMessage(""),
+    "sleepTimerWaitFor": MessageLookupByLibrary.simpleMessage(""),
+    "sortBy": MessageLookupByLibrary.simpleMessage(""),
+    "sortOrder": MessageLookupByLibrary.simpleMessage(""),
     "status": MessageLookupByLibrary.simpleMessage("Статус"),
     "statusAuthError": MessageLookupByLibrary.simpleMessage(
       "Ошибка аутентификации",
@@ -585,14 +817,21 @@ class MessageLookup extends MessageLookupByLibrary {
     "subscribeExportDes": MessageLookupByLibrary.simpleMessage(
       "Экспорт OPML-файла всех подкастов",
     ),
+    "subscribed": MessageLookupByLibrary.simpleMessage(""),
+    "suggestName": MessageLookupByLibrary.simpleMessage(""),
+    "sync": MessageLookupByLibrary.simpleMessage(""),
+    "syncFinished": MessageLookupByLibrary.simpleMessage(""),
     "syncNow": MessageLookupByLibrary.simpleMessage("Синхронизировать"),
+    "syncStarted": MessageLookupByLibrary.simpleMessage(""),
     "systemDefault": MessageLookupByLibrary.simpleMessage("По умолчанию"),
-    "timeLastPlayed": m27,
-    "timeLeft": m28,
-    "to": m29,
+    "timeLastPlayed": m32,
+    "timeLeft": m33,
+    "to": m34,
     "toastAddPlaylist": MessageLookupByLibrary.simpleMessage(
       "Добавлен в плейлист",
     ),
+    "toastBackupRestoreFailure": MessageLookupByLibrary.simpleMessage(""),
+    "toastBackupRestoreSuccess": MessageLookupByLibrary.simpleMessage(""),
     "toastDiscovery": MessageLookupByLibrary.simpleMessage(
       "Руководство сброшено. Перезапустите приложение.",
     ),
@@ -621,6 +860,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "toastRemovePlaylist": MessageLookupByLibrary.simpleMessage(
       "Выпуск удален из плейлиста",
     ),
+    "toastResetSuccessful": MessageLookupByLibrary.simpleMessage(""),
+    "toastRestart": MessageLookupByLibrary.simpleMessage(""),
     "toastSettingSaved": MessageLookupByLibrary.simpleMessage(
       "Настройки сохранены",
     ),
@@ -630,6 +871,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "toastTimeEqualStart": MessageLookupByLibrary.simpleMessage(
       "Время соответствует времени начала",
     ),
+    "translate": MessageLookupByLibrary.simpleMessage(""),
     "translators": MessageLookupByLibrary.simpleMessage("Переводчики"),
     "understood": MessageLookupByLibrary.simpleMessage("Понятно"),
     "undo": MessageLookupByLibrary.simpleMessage("ВЕРНУТЬ"),
@@ -637,8 +879,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "unliked": MessageLookupByLibrary.simpleMessage(
       "Выпуск удален из избранного",
     ),
+    "unsupported": MessageLookupByLibrary.simpleMessage(""),
     "updateDate": MessageLookupByLibrary.simpleMessage("Дата обновления"),
-    "updateEpisodesCount": m30,
+    "updateEpisodesCount": m35,
     "updateFailed": MessageLookupByLibrary.simpleMessage(
       "Ошибка обновления, ошибка сети",
     ),
@@ -646,6 +889,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "usernameRequired": MessageLookupByLibrary.simpleMessage(
       "Требуется имя пользователя",
     ),
-    "version": m31,
+    "version": m36,
+    "vpn": MessageLookupByLibrary.simpleMessage(""),
+    "weeksCount": m37,
+    "welcome": MessageLookupByLibrary.simpleMessage(""),
+    "wifi": MessageLookupByLibrary.simpleMessage(""),
+    "yearsCount": m38,
   };
 }

@@ -1,5 +1,25 @@
 # Tsacdop-Fork Changelog
 
+## 0.10.2
+Release date 2026/11/10
+
+### New
+* Player speed reset button.
+* Option to export opml as plain podcast list, grouped podcast list or both.
+
+### Bugfixes
+* Background sync race condition.
+* Downloader not working on some devices.
+* Improved exported OPML compatibility.
+
+### Ui fixes
+* Player disc spin smoothing is consistent across screens.
+* Podcast screen transition no longer clips the player.
+
+### Other
+* Added Github action for reproducible builds.
+* Changed the downloader package to background_downloader.
+
 ## 0.10.1
 Release date 2026/08/15
 

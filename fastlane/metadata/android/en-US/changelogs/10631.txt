@@ -1,0 +1,16 @@
+Changes from v0.10.1:
+
+### New
+* Player speed reset button.
+* Option to export opml as plain podcast list, grouped podcast list or both.
+
+### Bugfixes
+* Background sync race condition.
+* Downloader not working on some devices.
+* Improved exported OPML compatibility.
+
+### Ui fixes
+* Player disc spin smoothing consistency.
+* Podcast screen transition no longer clips the player.
+
+Check out https://github.com/Lojcs/tsacdop/blob/v0.10.2/CHANGELOG.md for full changelog.

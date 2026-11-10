@@ -20,96 +20,96 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'tr';
 
-  static String m2(groupName, count) =>
+  static String m0(groupName, count) =>
       "${Intl.plural(count, zero: '', one: '${groupName} deki ${count} bölüm çalma listesine eklendi', other: '${groupName} deki ${count} bölüm çalma listesine eklendi')}";
 
-  static String m3(count) =>
+  static String m1(count) =>
       "${Intl.plural(count, zero: '', one: '${count} bölüm çalma listesine eklendi', other: '${count} bölüm çalma listesine eklendi')}";
 
-  static String m4(count) =>
+  static String m2(count) =>
       "${Intl.plural(count, zero: 'Bugün', one: '${count} gün önce', other: '${count} gün önce')}";
 
-  static String m5(count) =>
+  static String m3(count) =>
       "${Intl.plural(count, zero: '${count} gün', one: '${count} gün', other: '${count} gün')}";
 
-  static String m6(count) =>
+  static String m4(count) =>
       "${Intl.plural(count, zero: '', one: 'Bölüm', other: 'Bölümler')}";
 
-  static String m32(type) => "${type} Filtresi";
+  static String m5(type) => "${type} Filtresi";
 
-  static String m7(time) => "${time} \'dan";
+  static String m6(time) => "${time} \'dan";
 
-  static String m33(icon) => "Podcast aramak için ${icon}\'a dokun";
+  static String m7(icon) => "Podcast aramak için ${icon}\'a dokun";
 
   static String m8(count) =>
       "${Intl.plural(count, zero: 'Grup', one: 'Grup', other: 'Gruplar')}";
 
-  static String m0(host) => "${host} da depolanır";
-
-  static String m9(count) =>
-      "${Intl.plural(count, zero: 'Geçen saat', one: '${count} saat önce', other: '${count} saat önce')}";
+  static String m9(host) => "${host} da depolanır";
 
   static String m10(count) =>
+      "${Intl.plural(count, zero: 'Geçen saat', one: '${count} saat önce', other: '${count} saat önce')}";
+
+  static String m11(count) =>
       "${Intl.plural(count, zero: '0 saat', one: '${count} saat', other: '${count} saat')}";
 
-  static String m11(service) => "${service} ile bağlantı kur";
+  static String m12(service) => "${service} ile bağlantı kur";
 
-  static String m34(filePath) => "${filePath} adresindeki yerel bölüm";
+  static String m13(filePath) => "${filePath} adresindeki yerel bölüm";
 
-  static String m1(userName) => "${userName} olarak giriş yapıldı";
+  static String m14(userName) => "${userName} olarak giriş yapıldı";
 
-  static String m12(count) =>
+  static String m15(count) =>
       "${Intl.plural(count, zero: 'Şimdi', one: '${count} dakika önce', other: '${count} dakika önce')}";
 
-  static String m13(count) =>
+  static String m16(count) =>
       "${Intl.plural(count, zero: '0 dk', one: '${count} dk', other: '${count} dk')}";
 
-  static String m35(count) =>
+  static String m17(count) =>
       "${Intl.plural(count, zero: '${count} ay', one: '${count} ay', other: '${count} ay')}";
 
-  static String m14(title) => "Bilgiler toplanıyor ${title}";
+  static String m18(title) => "Bilgiler toplanıyor ${title}";
 
-  static String m15(title) =>
+  static String m19(title) =>
       "Abonelik başarısız oldu, bağlantı hatası ${title}";
 
-  static String m16(title) => "Abone ol ${title}";
+  static String m20(title) => "Abone ol ${title}";
 
-  static String m17(title) =>
+  static String m21(title) =>
       "Abonelik başarısız oldu, podcast zaten mevcut ${title}";
 
-  static String m18(title) => "${title}\'a başarıyla abone olundu";
+  static String m22(title) => "${title}\'a başarıyla abone olundu";
 
-  static String m19(title) => "Güncelleme ${title}";
+  static String m23(title) => "Güncelleme ${title}";
 
-  static String m20(title) => "Güncelleme hatası ${title}";
-
-  static String m21(count) =>
-      "${Intl.plural(count, zero: '', one: 'Podcast', other: 'Podcast\'ler')}";
-
-  static String m22(date) => "${date} tarihinde yayınlandı";
-
-  static String m23(date) => "${date} tarihinde kaldırıldı";
-
-  static String m36(start, end) => "Program: ${start} - ${end}";
-
-  static String m24(count) =>
-      "${Intl.plural(count, zero: '0 sn', one: '${count} sn', other: '${count} sn')}";
+  static String m24(title) => "Güncelleme hatası ${title}";
 
   static String m25(count) =>
-      "${Intl.plural(count, zero: 'Şimdi', one: '${count} saniye önce', other: '${count} saniye önce')}";
+      "${Intl.plural(count, zero: '', one: 'Podcast', other: 'Podcast\'ler')}";
 
-  static String m26(count) => "${count} seçilen";
+  static String m26(date) => "${date} tarihinde yayınlandı";
 
-  static String m27(time) => "En son ${time}";
+  static String m27(date) => "${date} tarihinde kaldırıldı";
 
-  static String m28(time) => "${time} Kaldı";
+  static String m28(start, end) => "Program: ${start} - ${end}";
 
-  static String m29(time) => "${time} \'a";
+  static String m29(count) =>
+      "${Intl.plural(count, zero: '0 sn', one: '${count} sn', other: '${count} sn')}";
 
   static String m30(count) =>
+      "${Intl.plural(count, zero: 'Şimdi', one: '${count} saniye önce', other: '${count} saniye önce')}";
+
+  static String m31(count) => "${count} seçilen";
+
+  static String m32(time) => "En son ${time}";
+
+  static String m33(time) => "${time} Kaldı";
+
+  static String m34(time) => "${time} \'a";
+
+  static String m35(count) =>
       "${Intl.plural(count, zero: 'Güncelleme yok', one: '${count} bölüm güncellendi', other: '${count} bölüm güncellendi')}";
 
-  static String m31(version) => "Version: ${version}";
+  static String m36(version) => "Version: ${version}";
 
   static String m37(count) =>
       "${Intl.plural(count, zero: '${count} hafta', one: '${count} hafta', other: '${count} hafta')}";
@@ -123,8 +123,8 @@ class MessageLookup extends MessageLookupByLibrary {
       "Tsacdop-Fork, Flutter ile inşa edilmiş zarif ve özelleştirilebilir bir podcast oynatıcıdır.",
     ),
     "add": MessageLookupByLibrary.simpleMessage("Ekle"),
-    "addEpisodeGroup": m2,
-    "addNewEpisodeAll": m3,
+    "addEpisodeGroup": m0,
+    "addNewEpisodeAll": m1,
     "addNewEpisodeTooltip": MessageLookupByLibrary.simpleMessage(
       "Çalma listesine yeni bölüm ekle",
     ),
@@ -160,8 +160,8 @@ class MessageLookup extends MessageLookupByLibrary {
       "Yeni çalma listesi",
     ),
     "darkMode": MessageLookupByLibrary.simpleMessage("Karanlık mod"),
-    "daysAgo": m4,
-    "daysCount": m5,
+    "daysAgo": m2,
+    "daysCount": m3,
     "defaultQueueReminder": MessageLookupByLibrary.simpleMessage(
       "Varsayılan sıralama kaldırılamaz.",
     ),
@@ -203,7 +203,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Grubun adını değiştir",
     ),
     "endOfEpisode": MessageLookupByLibrary.simpleMessage("Sonuna kadar oynat"),
-    "episode": m6,
+    "episode": m4,
     "fastForward": MessageLookupByLibrary.simpleMessage("İleri sar"),
     "fastRewind": MessageLookupByLibrary.simpleMessage("Geri sar"),
     "featureDiscoveryEditGroup": MessageLookupByLibrary.simpleMessage(
@@ -265,13 +265,13 @@ class MessageLookup extends MessageLookupByLibrary {
     "feedbackPlay": MessageLookupByLibrary.simpleMessage("Play Store\'da oyla"),
     "feedbackTelegram": MessageLookupByLibrary.simpleMessage("Gruba katıl"),
     "filter": MessageLookupByLibrary.simpleMessage("Filtrele"),
-    "filterType": m32,
+    "filterType": m5,
     "fontStyle": MessageLookupByLibrary.simpleMessage("Yazı tipi stili"),
     "fonts": MessageLookupByLibrary.simpleMessage("Yazı tipleri"),
     "forward": MessageLookupByLibrary.simpleMessage("İleri"),
-    "from": m7,
+    "from": m6,
     "getStarted": MessageLookupByLibrary.simpleMessage("Başlamak için"),
-    "getStartedDes": m33,
+    "getStartedDes": m7,
     "globallyDisabled": MessageLookupByLibrary.simpleMessage(
       "Küresel olarak devre dışı",
     ),
@@ -309,15 +309,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "homeToprightMenuRefreshAll": MessageLookupByLibrary.simpleMessage(
       "Hepsini yenile",
     ),
-    "hostedOn": m0,
-    "hoursAgo": m9,
-    "hoursCount": m10,
+    "hostedOn": m9,
+    "hoursAgo": m10,
+    "hoursCount": m11,
     "import": MessageLookupByLibrary.simpleMessage("İçe aktar"),
     "importingOpml": MessageLookupByLibrary.simpleMessage(
       "OPML dosyası içeri alınıyor.",
     ),
     "interaction": MessageLookupByLibrary.simpleMessage("Etkileşim"),
-    "intergateWith": m11,
+    "intergateWith": m12,
     "introFourthPage": MessageLookupByLibrary.simpleMessage(
       "Bölüm resmine uzun basarak hızlı menüyü açabilirsin.",
     ),
@@ -349,7 +349,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "loadMore": MessageLookupByLibrary.simpleMessage("Daha fazla göster"),
     "loading": MessageLookupByLibrary.simpleMessage("Yükleniyor"),
-    "localEpisodeDescription": m34,
+    "localEpisodeDescription": m13,
     "localFolder": MessageLookupByLibrary.simpleMessage("Yerel Klasör"),
     "localFolderDescription": MessageLookupByLibrary.simpleMessage(
       "İçeri alınmış yerel ses dosyalarını toplayan kukla podcast.",
@@ -357,7 +357,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "localizationWeblate": MessageLookupByLibrary.simpleMessage(
       "Bu uygulamanın çervrilmesine açık kaynaklı uygulamalara sundukları destek sayesinde Hosted Weblate\'te katkıda bulunabilirsiniz.",
     ),
-    "loggedInAs": m1,
+    "loggedInAs": m14,
     "login": MessageLookupByLibrary.simpleMessage("Giriş"),
     "loginFailed": MessageLookupByLibrary.simpleMessage("Giriş başarısız"),
     "logout": MessageLookupByLibrary.simpleMessage("Çıkış yap"),
@@ -381,10 +381,10 @@ class MessageLookup extends MessageLookupByLibrary {
       "RSS akışını ziyaret et",
     ),
     "menuVisitSite": MessageLookupByLibrary.simpleMessage("Siteyi ziyaret et"),
-    "minsAgo": m12,
-    "minsCount": m13,
+    "minsAgo": m15,
+    "minsCount": m16,
     "mobileData": MessageLookupByLibrary.simpleMessage("Mobil Veri"),
-    "monthsCount": m35,
+    "monthsCount": m17,
     "moreOptions": MessageLookupByLibrary.simpleMessage("Daha Çok Seçenek"),
     "network": MessageLookupByLibrary.simpleMessage("Bağlantı"),
     "networkErrorDNS": MessageLookupByLibrary.simpleMessage(
@@ -411,19 +411,19 @@ class MessageLookup extends MessageLookupByLibrary {
       "Bu bölüm için her hangi bir not mevcut değil.",
     ),
     "none": MessageLookupByLibrary.simpleMessage("Hiçbiri"),
-    "notificaitonFatch": m14,
+    "notificaitonFatch": m18,
     "notificationAddingGroups": MessageLookupByLibrary.simpleMessage(
       "Gruplar ekleniyor ve düzenleniyor.",
     ),
-    "notificationNetworkError": m15,
-    "notificationSubscribe": m16,
-    "notificationSubscribeExisted": m17,
+    "notificationNetworkError": m19,
+    "notificationSubscribe": m20,
+    "notificationSubscribeExisted": m21,
     "notificationSubscribing": MessageLookupByLibrary.simpleMessage(
       "Podcastlere abone olunuyor.",
     ),
-    "notificationSuccess": m18,
-    "notificationUpdate": m19,
-    "notificationUpdateError": m20,
+    "notificationSuccess": m22,
+    "notificationUpdate": m23,
+    "notificationUpdateError": m24,
     "oldestFirst": MessageLookupByLibrary.simpleMessage("Önce eskiler"),
     "opmlFile": MessageLookupByLibrary.simpleMessage("OPML dosyası"),
     "passwdRequired": MessageLookupByLibrary.simpleMessage("Parola gerekli"),
@@ -448,7 +448,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "playlists": MessageLookupByLibrary.simpleMessage("Çalma listeleri"),
     "plugins": MessageLookupByLibrary.simpleMessage("Eklentiler"),
-    "podcast": m21,
+    "podcast": m25,
     "podcastList": MessageLookupByLibrary.simpleMessage("Podcast Listesi"),
     "podcastSubscribed": MessageLookupByLibrary.simpleMessage(
       "Podcaste abone olundu",
@@ -470,7 +470,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Gizlilik sözleşmesi",
     ),
     "publishDate": MessageLookupByLibrary.simpleMessage("Yayın Tarihi"),
-    "published": m22,
+    "published": m26,
     "publishedDaily": MessageLookupByLibrary.simpleMessage("Günlük"),
     "publishedMonthly": MessageLookupByLibrary.simpleMessage("Aylık"),
     "publishedWeekly": MessageLookupByLibrary.simpleMessage("Haftalık"),
@@ -493,7 +493,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "removePodcastDes": MessageLookupByLibrary.simpleMessage(
       "Aboneliği sonlandırmak istediğine emin misin?",
     ),
-    "removedAt": m23,
+    "removedAt": m27,
     "restartAppForEffect": MessageLookupByLibrary.simpleMessage(
       "Değişiklerin etki göstermesi için uygulamayı yeniden başlatın.",
     ),
@@ -503,7 +503,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "scheduleDisabled": MessageLookupByLibrary.simpleMessage(
       "Program devre dışı.",
     ),
-    "scheduleTime": m36,
+    "scheduleTime": m28,
     "search": MessageLookupByLibrary.simpleMessage("Ara"),
     "searchApi": MessageLookupByLibrary.simpleMessage("Arama Api\'si"),
     "searchEngine": MessageLookupByLibrary.simpleMessage("Arama Motoru"),
@@ -519,10 +519,10 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "searchPodcast": MessageLookupByLibrary.simpleMessage("Podcast ara"),
     "searchWeb": MessageLookupByLibrary.simpleMessage("Web Araması"),
-    "secCount": m24,
-    "secondsAgo": m25,
+    "secCount": m29,
+    "secondsAgo": m30,
     "selectMode": MessageLookupByLibrary.simpleMessage("Seçim Modu"),
-    "selected": m26,
+    "selected": m31,
     "settingStorage": MessageLookupByLibrary.simpleMessage("Depolama"),
     "settings": MessageLookupByLibrary.simpleMessage("Ayarlar"),
     "settingsAccentColor": MessageLookupByLibrary.simpleMessage(
@@ -643,6 +643,21 @@ class MessageLookup extends MessageLookupByLibrary {
     "settingsBackupLegacyFileDes": MessageLookupByLibrary.simpleMessage(
       "v0.10\'dan önce yapılmış yedekleri içe aktar.",
     ),
+    "settingsBackupOPMLCategoriesDes": MessageLookupByLibrary.simpleMessage(
+      "Dışa aktarılacak OPML dosyası kategorileri.",
+    ),
+    "settingsBackupOPMLCategoriesGroupedPodcasts":
+        MessageLookupByLibrary.simpleMessage("Gruplanmış Podcastler"),
+    "settingsBackupOPMLCategoriesGroupedPodcastsDes":
+        MessageLookupByLibrary.simpleMessage(
+          "Gruplar çoğu oynatıcı tarafından desteklenmez ve içe aktarım sırasında podcastlerin birden fazla kez görünmesine sebep olabilir.",
+        ),
+    "settingsBackupOPMLCategoriesPlainPodcasts":
+        MessageLookupByLibrary.simpleMessage("Podcastler"),
+    "settingsBackupOPMLCategoriesPlainPodcastsDes":
+        MessageLookupByLibrary.simpleMessage(
+          "Grupların içine bakmayan oynatıcılar için basit podcast listesi.",
+        ),
     "settingsBackupPassword": MessageLookupByLibrary.simpleMessage(
       "Yedekleme Parolası",
     ),
@@ -694,6 +709,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "settingsDownloadPosition": MessageLookupByLibrary.simpleMessage(
       "İndirme konumu",
+    ),
+    "settingsDownloadPositionDes": MessageLookupByLibrary.simpleMessage(
+      "Yeni indirmelerin kaydedileceği klasör:",
     ),
     "settingsDownloads": MessageLookupByLibrary.simpleMessage("İndirmeler"),
     "settingsDownloadsDes": MessageLookupByLibrary.simpleMessage(
@@ -996,9 +1014,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Senkronizasyon başladı",
     ),
     "systemDefault": MessageLookupByLibrary.simpleMessage("Sistemi izle"),
-    "timeLastPlayed": m27,
-    "timeLeft": m28,
-    "to": m29,
+    "timeLastPlayed": m32,
+    "timeLeft": m33,
+    "to": m34,
     "toastAddPlaylist": MessageLookupByLibrary.simpleMessage(
       "Çalma listesine eklendi",
     ),
@@ -1061,7 +1079,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "unsupported": MessageLookupByLibrary.simpleMessage("Desteklenmiyor"),
     "updateDate": MessageLookupByLibrary.simpleMessage("Güncellenme tarihi"),
-    "updateEpisodesCount": m30,
+    "updateEpisodesCount": m35,
     "updateFailed": MessageLookupByLibrary.simpleMessage(
       "Güncelleme başarısız, bağlantı hatası",
     ),
@@ -1069,7 +1087,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "usernameRequired": MessageLookupByLibrary.simpleMessage(
       "Kullanıcı adı gerekli",
     ),
-    "version": m31,
+    "version": m36,
     "vpn": MessageLookupByLibrary.simpleMessage("VPN"),
     "weeksCount": m37,
     "welcome": MessageLookupByLibrary.simpleMessage("Tsacdop\'a hoş geldiniz!"),

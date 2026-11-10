@@ -7,7 +7,7 @@ import 'settings_widgets.dart';
 import '../../../core/extension/extension_helper.dart';
 import '../../../core/misc/custom_widget.dart';
 
-const String version = '0.10.1';
+const String version = '0.10.2';
 
 class AboutApp extends StatelessWidget {
   const AboutApp({super.key});

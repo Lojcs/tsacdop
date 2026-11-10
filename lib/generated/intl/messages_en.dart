@@ -20,95 +20,95 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'en';
 
-  static String m2(groupName, count) =>
+  static String m0(groupName, count) =>
       "${Intl.plural(count, zero: '', one: '${count} episode in ${groupName} added to playlist', other: '${count} episodes in ${groupName} added to playlist')}";
 
-  static String m3(count) =>
+  static String m1(count) =>
       "${Intl.plural(count, zero: '', one: '${count} episode added to playlist', other: '${count} episodes added to playlist')}";
 
-  static String m4(count) =>
+  static String m2(count) =>
       "${Intl.plural(count, zero: 'Today', one: '${count} day ago', other: '${count} days ago')}";
 
-  static String m5(count) =>
+  static String m3(count) =>
       "${Intl.plural(count, zero: '${count} days', one: '${count} day', other: '${count} days')}";
 
-  static String m6(count) =>
+  static String m4(count) =>
       "${Intl.plural(count, zero: '', one: 'Episode', other: 'Episodes')}";
 
-  static String m32(type) => "${type} Filter";
+  static String m5(type) => "${type} Filter";
 
-  static String m7(time) => "From ${time}";
+  static String m6(time) => "From ${time}";
 
-  static String m33(icon) => "Tap ${icon} to search podcasts";
+  static String m7(icon) => "Tap ${icon} to search podcasts";
 
   static String m8(count) =>
       "${Intl.plural(count, zero: 'Group', one: 'Group', other: 'Groups')}";
 
-  static String m0(host) => "Hosted on ${host}";
-
-  static String m9(count) =>
-      "${Intl.plural(count, zero: 'This hour', one: '${count} hour ago', other: '${count} hours ago')}";
+  static String m9(host) => "Hosted on ${host}";
 
   static String m10(count) =>
+      "${Intl.plural(count, zero: 'This hour', one: '${count} hour ago', other: '${count} hours ago')}";
+
+  static String m11(count) =>
       "${Intl.plural(count, zero: '0 hours', one: '${count} hour', other: '${count} hours')}";
 
-  static String m11(service) => "Integrate with ${service}";
+  static String m12(service) => "Integrate with ${service}";
 
-  static String m34(filePath) => "Local episode at ${filePath}";
+  static String m13(filePath) => "Local episode at ${filePath}";
 
-  static String m1(userName) => "Logged in as ${userName}";
+  static String m14(userName) => "Logged in as ${userName}";
 
-  static String m12(count) =>
+  static String m15(count) =>
       "${Intl.plural(count, zero: 'Just now', one: '${count} minute ago', other: '${count} minutes ago')}";
 
-  static String m13(count) =>
+  static String m16(count) =>
       "${Intl.plural(count, zero: '0 min', one: '${count} min', other: '${count} mins')}";
 
-  static String m35(count) =>
+  static String m17(count) =>
       "${Intl.plural(count, zero: '${count} months', one: '${count} month', other: '${count} months')}";
 
-  static String m14(title) => "Fetch data ${title}";
+  static String m18(title) => "Fetch data ${title}";
 
-  static String m15(title) => "Subscribing failed, network error ${title}";
+  static String m19(title) => "Subscribing failed, network error ${title}";
 
-  static String m16(title) => "Subscribe ${title}";
+  static String m20(title) => "Subscribe ${title}";
 
-  static String m17(title) =>
+  static String m21(title) =>
       "Subscribing failed, podcast already exists ${title}";
 
-  static String m18(title) => "Subscribed successfully ${title}";
+  static String m22(title) => "Subscribed successfully ${title}";
 
-  static String m19(title) => "Update ${title}";
+  static String m23(title) => "Update ${title}";
 
-  static String m20(title) => "Update error ${title}";
-
-  static String m21(count) =>
-      "${Intl.plural(count, zero: '', one: 'Podcast', other: 'Podcasts')}";
-
-  static String m22(date) => "Published at ${date}";
-
-  static String m23(date) => "Removed at ${date}";
-
-  static String m36(start, end) => "Schedule: ${start} - ${end}";
-
-  static String m24(count) =>
-      "${Intl.plural(count, zero: '0 sec', one: '${count} sec', other: '${count} sec')}";
+  static String m24(title) => "Update error ${title}";
 
   static String m25(count) =>
-      "${Intl.plural(count, zero: 'Just now', one: '${count} second ago', other: '${count} seconds ago')}";
+      "${Intl.plural(count, zero: '', one: 'Podcast', other: 'Podcasts')}";
 
-  static String m26(count) => "${count} selected";
+  static String m26(date) => "Published at ${date}";
 
-  static String m27(time) => "Last time ${time}";
+  static String m27(date) => "Removed at ${date}";
 
-  static String m28(time) => "${time} Left";
+  static String m28(start, end) => "Schedule: ${start} - ${end}";
 
-  static String m29(time) => "To ${time}";
+  static String m29(count) =>
+      "${Intl.plural(count, zero: '0 sec', one: '${count} sec', other: '${count} sec')}";
 
   static String m30(count) =>
+      "${Intl.plural(count, zero: 'Just now', one: '${count} second ago', other: '${count} seconds ago')}";
+
+  static String m31(count) => "${count} selected";
+
+  static String m32(time) => "Last time ${time}";
+
+  static String m33(time) => "${time} Left";
+
+  static String m34(time) => "To ${time}";
+
+  static String m35(count) =>
       "${Intl.plural(count, zero: 'No update', one: 'Updated ${count} episode', other: 'Updated ${count} episodes')}";
 
-  static String m31(version) => "Version: ${version}";
+  static String m36(version) => "Version: ${version}";
 
   static String m37(count) =>
       "${Intl.plural(count, zero: '${count} weeks', one: '${count} week', other: '${count} weeks')}";
@@ -122,8 +122,8 @@ class MessageLookup extends MessageLookupByLibrary {
       "Tsacdop-Fork is an elegant and customizable podcast player built with Flutter.",
     ),
     "add": MessageLookupByLibrary.simpleMessage("Add"),
-    "addEpisodeGroup": m2,
-    "addNewEpisodeAll": m3,
+    "addEpisodeGroup": m0,
+    "addNewEpisodeAll": m1,
     "addNewEpisodeTooltip": MessageLookupByLibrary.simpleMessage(
       "Add new episodes to playlist",
     ),
@@ -157,8 +157,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "contribute": MessageLookupByLibrary.simpleMessage("Contribute"),
     "createNewPlaylist": MessageLookupByLibrary.simpleMessage("New playlist"),
     "darkMode": MessageLookupByLibrary.simpleMessage("Dark mode"),
-    "daysAgo": m4,
-    "daysCount": m5,
+    "daysAgo": m2,
+    "daysCount": m3,
     "defaultQueueReminder": MessageLookupByLibrary.simpleMessage(
       "This is the default queue, can\'\'t be removed.",
     ),
@@ -198,7 +198,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "duration": MessageLookupByLibrary.simpleMessage("Duration"),
     "editGroupName": MessageLookupByLibrary.simpleMessage("Edit group name"),
     "endOfEpisode": MessageLookupByLibrary.simpleMessage("Play until end"),
-    "episode": m6,
+    "episode": m4,
     "fastForward": MessageLookupByLibrary.simpleMessage("Fast forward"),
     "fastRewind": MessageLookupByLibrary.simpleMessage("Fast rewind"),
     "featureDiscoveryEditGroup": MessageLookupByLibrary.simpleMessage(
@@ -260,13 +260,13 @@ class MessageLookup extends MessageLookupByLibrary {
     "feedbackPlay": MessageLookupByLibrary.simpleMessage("Rate on Play Store"),
     "feedbackTelegram": MessageLookupByLibrary.simpleMessage("Join group"),
     "filter": MessageLookupByLibrary.simpleMessage("Filter"),
-    "filterType": m32,
+    "filterType": m5,
     "fontStyle": MessageLookupByLibrary.simpleMessage("Font style"),
     "fonts": MessageLookupByLibrary.simpleMessage("Fonts"),
     "forward": MessageLookupByLibrary.simpleMessage("Forward"),
-    "from": m7,
+    "from": m6,
     "getStarted": MessageLookupByLibrary.simpleMessage("Get started"),
-    "getStartedDes": m33,
+    "getStartedDes": m7,
     "globallyDisabled": MessageLookupByLibrary.simpleMessage(
       "Globally disabled",
     ),
@@ -306,15 +306,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "homeToprightMenuRefreshAll": MessageLookupByLibrary.simpleMessage(
       "Refresh all",
     ),
-    "hostedOn": m0,
-    "hoursAgo": m9,
-    "hoursCount": m10,
+    "hostedOn": m9,
+    "hoursAgo": m10,
+    "hoursCount": m11,
     "import": MessageLookupByLibrary.simpleMessage("Import"),
     "importingOpml": MessageLookupByLibrary.simpleMessage(
       "Importing OPML file.",
     ),
     "interaction": MessageLookupByLibrary.simpleMessage("Interaction"),
-    "intergateWith": m11,
+    "intergateWith": m12,
     "introFourthPage": MessageLookupByLibrary.simpleMessage(
       "You can long press on episode card for quick actions.",
     ),
@@ -344,7 +344,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "loadMore": MessageLookupByLibrary.simpleMessage("Load more"),
     "loading": MessageLookupByLibrary.simpleMessage("Loading"),
-    "localEpisodeDescription": m34,
+    "localEpisodeDescription": m13,
     "localFolder": MessageLookupByLibrary.simpleMessage("Local Folder"),
     "localFolderDescription": MessageLookupByLibrary.simpleMessage(
       "Dummy podcast that collects imported local audio files.",
@@ -352,7 +352,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "localizationWeblate": MessageLookupByLibrary.simpleMessage(
       "You can contribute to the localization of this app on hosted Weblate thanks to their support of open source projects.",
     ),
-    "loggedInAs": m1,
+    "loggedInAs": m14,
     "login": MessageLookupByLibrary.simpleMessage("Login"),
     "loginFailed": MessageLookupByLibrary.simpleMessage("Login failed"),
     "logout": MessageLookupByLibrary.simpleMessage("Logout"),
@@ -372,10 +372,10 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "menuViewRSS": MessageLookupByLibrary.simpleMessage("Visit RSS Feed"),
     "menuVisitSite": MessageLookupByLibrary.simpleMessage("Visit Site"),
-    "minsAgo": m12,
-    "minsCount": m13,
+    "minsAgo": m15,
+    "minsCount": m16,
     "mobileData": MessageLookupByLibrary.simpleMessage("Mobile Data"),
-    "monthsCount": m35,
+    "monthsCount": m17,
     "moreOptions": MessageLookupByLibrary.simpleMessage("More Options"),
     "network": MessageLookupByLibrary.simpleMessage("Network"),
     "networkErrorDNS": MessageLookupByLibrary.simpleMessage(
@@ -402,19 +402,19 @@ class MessageLookup extends MessageLookupByLibrary {
       "No show notes available for this episode.",
     ),
     "none": MessageLookupByLibrary.simpleMessage("None"),
-    "notificaitonFatch": m14,
+    "notificaitonFatch": m18,
     "notificationAddingGroups": MessageLookupByLibrary.simpleMessage(
       "Adding and organizing groups.",
     ),
-    "notificationNetworkError": m15,
-    "notificationSubscribe": m16,
-    "notificationSubscribeExisted": m17,
+    "notificationNetworkError": m19,
+    "notificationSubscribe": m20,
+    "notificationSubscribeExisted": m21,
     "notificationSubscribing": MessageLookupByLibrary.simpleMessage(
       "Subscribing to podcasts.",
     ),
-    "notificationSuccess": m18,
-    "notificationUpdate": m19,
-    "notificationUpdateError": m20,
+    "notificationSuccess": m22,
+    "notificationUpdate": m23,
+    "notificationUpdateError": m24,
     "oldestFirst": MessageLookupByLibrary.simpleMessage("Oldest first"),
     "opmlFile": MessageLookupByLibrary.simpleMessage("OPML file"),
     "passwdRequired": MessageLookupByLibrary.simpleMessage("Password required"),
@@ -439,7 +439,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "playlists": MessageLookupByLibrary.simpleMessage("Playlists"),
     "plugins": MessageLookupByLibrary.simpleMessage("Plugins"),
-    "podcast": m21,
+    "podcast": m25,
     "podcastList": MessageLookupByLibrary.simpleMessage("Podcast List"),
     "podcastSubscribed": MessageLookupByLibrary.simpleMessage(
       "Podcast subscribed",
@@ -461,7 +461,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "privacyPolicy": MessageLookupByLibrary.simpleMessage("Privacy Policy"),
     "publishDate": MessageLookupByLibrary.simpleMessage("Publish Date"),
-    "published": m22,
+    "published": m26,
     "publishedDaily": MessageLookupByLibrary.simpleMessage("Published daily"),
     "publishedMonthly": MessageLookupByLibrary.simpleMessage(
       "Published monthly",
@@ -484,7 +484,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "removePodcastDes": MessageLookupByLibrary.simpleMessage(
       "Are you sure you want to unsubscribe?",
     ),
-    "removedAt": m23,
+    "removedAt": m27,
     "restartAppForEffect": MessageLookupByLibrary.simpleMessage(
       "Restart the app for the changes to take effect.",
     ),
@@ -494,7 +494,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "scheduleDisabled": MessageLookupByLibrary.simpleMessage(
       "Schedule disabled.",
     ),
-    "scheduleTime": m36,
+    "scheduleTime": m28,
     "search": MessageLookupByLibrary.simpleMessage("Search"),
     "searchApi": MessageLookupByLibrary.simpleMessage("Search Api"),
     "searchEngine": MessageLookupByLibrary.simpleMessage("Search Engine"),
@@ -512,10 +512,10 @@ class MessageLookup extends MessageLookupByLibrary {
       "Search for podcasts",
     ),
     "searchWeb": MessageLookupByLibrary.simpleMessage("Web Search"),
-    "secCount": m24,
-    "secondsAgo": m25,
+    "secCount": m29,
+    "secondsAgo": m30,
     "selectMode": MessageLookupByLibrary.simpleMessage("Selection Mode"),
-    "selected": m26,
+    "selected": m31,
     "settingStorage": MessageLookupByLibrary.simpleMessage("Storage"),
     "settings": MessageLookupByLibrary.simpleMessage("Settings"),
     "settingsAccentColor": MessageLookupByLibrary.simpleMessage(
@@ -984,9 +984,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "syncNow": MessageLookupByLibrary.simpleMessage("Sync now"),
     "syncStarted": MessageLookupByLibrary.simpleMessage("Sync started"),
     "systemDefault": MessageLookupByLibrary.simpleMessage("System default"),
-    "timeLastPlayed": m27,
-    "timeLeft": m28,
-    "to": m29,
+    "timeLastPlayed": m32,
+    "timeLeft": m33,
+    "to": m34,
     "toastAddPlaylist": MessageLookupByLibrary.simpleMessage(
       "Added to playlist",
     ),
@@ -1047,7 +1047,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "unsupported": MessageLookupByLibrary.simpleMessage("Unsupported"),
     "updateDate": MessageLookupByLibrary.simpleMessage("Update date"),
-    "updateEpisodesCount": m30,
+    "updateEpisodesCount": m35,
     "updateFailed": MessageLookupByLibrary.simpleMessage(
       "Update failed, network error",
     ),
@@ -1055,7 +1055,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "usernameRequired": MessageLookupByLibrary.simpleMessage(
       "Username required",
     ),
-    "version": m31,
+    "version": m36,
     "vpn": MessageLookupByLibrary.simpleMessage("VPN"),
     "weeksCount": m37,
     "welcome": MessageLookupByLibrary.simpleMessage("Welcome to Tsacdop!"),
