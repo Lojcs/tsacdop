@@ -826,5 +826,11 @@
     "toastRestart": "Lütfen uygulamayı hemen yeniden başlatın.",
     "settingsFullStop": "Tamamen dur",
     "settingsFullStopDes": "Dur'a basıldığında uygulamayı öldür.",
-    "settingsManufacturerNotificationLayout": "Üretici bildirim stili"
+    "settingsManufacturerNotificationLayout": "Üretici bildirim stili",
+    "settingsBackupOPMLCategoriesDes": "Dışa aktarılacak OPML dosyası kategorileri.",
+    "settingsBackupOPMLCategoriesGroupedPodcasts": "Gruplanmış Podcastler",
+    "settingsBackupOPMLCategoriesGroupedPodcastsDes": "Gruplar çoğu oynatıcı tarafından desteklenmez ve içe aktarım sırasında podcastlerin birden fazla kez görünmesine sebep olabilir.",
+    "settingsBackupOPMLCategoriesPlainPodcasts": "Podcastler",
+    "settingsBackupOPMLCategoriesPlainPodcastsDes": "Grupların içine bakmayan oynatıcılar için basit podcast listesi.",
+    "settingsDownloadPositionDes": "Yeni indirmelerin kaydedileceği klasör:"
 }
