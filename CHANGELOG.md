@@ -1,6 +1,16 @@
 # Tsacdop-Fork Changelog
 
 ## 0.10.2
+Release date 2026/11/12
+
+### Bugfixes
+* Shownotes formatting.
+* Downloads manage screen.
+
+### Other
+* Fixed reproducible builds.
+
+## 0.10.2
 Release date 2026/11/11
 
 ### New
@@ -10,7 +20,7 @@ Release date 2026/11/11
 ### Bugfixes
 * Background sync race condition.
 * Downloader not working on some devices.
-* Improved exported OPML compatibility.
+* Exported OPML incompatibility.
 
 ### Ui fixes
 * Player disc spin smoothing is consistent across screens.

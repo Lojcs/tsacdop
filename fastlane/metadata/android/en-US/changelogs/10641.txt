@@ -1,0 +1,22 @@
+Changes from v0.10.2:
+
+### Bugfixes
+* Shownotes formatting.
+* Downloads manage screen.
+
+Changes from v0.10.1:
+
+### New
+* Player speed reset button.
+* OPML export options.
+
+### Bugfixes
+* Background sync race condition.
+* Downloader not working on some devices.
+* Exported OPML incompatibility.
+
+### Ui fixes
+* Player disc spin smoothing consistency.
+* Podcast screen transition no longer clips the player.
+
+Check out https://github.com/Lojcs/tsacdop/blob/v0.10.3/CHANGELOG.md for full changelog.
