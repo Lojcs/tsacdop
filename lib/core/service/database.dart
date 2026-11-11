@@ -1567,9 +1567,7 @@ class DBHelper {
           podcastId: i['feed_id'],
           podcastTitle: i['feed_title'],
           pubDate: i['milliseconds'],
-          showNotes: parse(parse(i['description']).body!.text)
-              .documentElement!
-              .text,
+          showNotes: i['description'],
           number: i['number'],
           enclosureDuration: i['duration'],
           enclosureSize: i['enclosure_length'],

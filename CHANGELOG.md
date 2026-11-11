@@ -1,7 +1,7 @@
 # Tsacdop-Fork Changelog
 
 ## 0.10.2
-Release date 2026/11/10
+Release date 2026/11/11
 
 ### New
 * Player speed reset button.
