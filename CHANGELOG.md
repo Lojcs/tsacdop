@@ -1,6 +1,6 @@
 # Tsacdop-Fork Changelog
 
-## 0.10.2
+## 0.10.3
 Release date 2026/11/12
 
 ### Bugfixes
