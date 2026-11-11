@@ -140,7 +140,6 @@ class _DownloadsManageState extends State<DownloadsManage> {
             color: context.surface,
             child: Stack(
               children: <Widget>[
-                Expanded(child: ColoredBox(color: context.surface)),
                 CustomScrollView(
                   controller: _controller
                     ..addListener(() async {
@@ -215,9 +214,9 @@ class _DownloadsManageState extends State<DownloadsManage> {
                                                 .toStringAsFixed(1),
                                       style: GoogleFonts.cairo(
                                         textStyle: TextStyle(
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.secondary,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .secondary,
                                           fontSize: 50,
                                         ),
                                       ),
@@ -227,9 +226,9 @@ class _DownloadsManageState extends State<DownloadsManage> {
                                           ? 'Mb'
                                           : 'Gb',
                                       style: TextStyle(
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.secondary,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .secondary,
                                         fontSize: 20,
                                       ),
                                     ),
